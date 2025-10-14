@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
-import 'package:window_manager/window_manager.dart'; // NOVO IMPORT
+import 'package:window_manager/window_manager.dart';
+
+// NOVO: Importar providers para acessar o repositoryProvider
+import 'providers/providers.dart'; 
 import 'ui/dashboard_page.dart';
 
-// O main() agora é assíncrono para usar o window_manager
+// O main() agora é assíncrono
 void main() async {
   // 1. Inicialização do Flutter e Window Manager
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,7 +33,24 @@ void main() async {
     await windowManager.focus();
   });
   
-  runApp(const ProviderScope(child: MyApp()));
+  // 5. NOVO: Pré-carregamento do Repositório Hive
+  final container = ProviderContainer();
+  try {
+    // Força o Riverpod a esperar a conclusão do ProjectRepository.init()
+    await container.read(repositoryProvider.future);
+  } catch (e, stack) {
+    // Trata ou loga qualquer erro de inicialização do Hive
+    debugPrint('Erro ao inicializar o repositório: $e\n$stack');
+    // Nota: A aplicação continuará, mas pode não ter dados se o Hive falhar
+  }
+
+  // 6. NOVO: Passa o container pré-carregado para a aplicação
+  runApp(
+    UncontrolledProviderScope(
+      container: container,
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -39,7 +59,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final darkScheme = ColorScheme.fromSeed(
-      seedColor: const Color(0xFF5A6B7A), 
+      seedColor: const Color(0xFF5A6B7A), // blue-grey accent similar to Cursor
       brightness: Brightness.dark,
     );
 
@@ -70,10 +90,8 @@ class MyApp extends StatelessWidget {
       title: 'DAW Project Manager',
       themeMode: ThemeMode.dark,
       theme: baseTheme,
-      darkTheme: baseTheme, 
-      // Agora o DashboardPage é o widget principal, 
-      // pois a CustomWindow (do bitsdojo) não é mais necessária.
-      home: const DashboardPage(), 
+      darkTheme: baseTheme, // Usando o mesmo tema base para darkTheme
+      home: const DashboardPage(),
     );
   }
 }

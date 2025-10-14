@@ -42,6 +42,10 @@ class MusicProject {
   @HiveField(12)
   final String? musicalKey; // e.g., C#m, F major, user editable
 
+  // NOVO CAMPO
+  @HiveField(13)
+  final String? notes; // Notes about the project, user editable
+
   const MusicProject({
     required this.id,
     required this.filePath,
@@ -56,6 +60,7 @@ class MusicProject {
     this.status = 'Draft',
     this.bpm,
     this.musicalKey,
+    this.notes, // NOVO CAMPO NO CONSTRUTOR
   });
 
   String get displayName => (customDisplayName != null && customDisplayName!.trim().isNotEmpty)
@@ -76,6 +81,7 @@ class MusicProject {
     DateTime? updatedAt,
     double? bpm,
     String? musicalKey,
+    String? notes, // NOVO CAMPO NO COPYWITH
   }) {
     return MusicProject(
       id: id ?? this.id,
@@ -91,6 +97,7 @@ class MusicProject {
       updatedAt: updatedAt ?? this.updatedAt,
       bpm: bpm ?? this.bpm,
       musicalKey: musicalKey ?? this.musicalKey,
+      notes: notes ?? this.notes, // NOVO CAMPO
     );
   }
 }
@@ -120,13 +127,14 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
       updatedAt: fields[10] as DateTime,
       bpm: fields[11] as double?,
       musicalKey: fields[12] as String?,
+      notes: fields.containsKey(13) ? fields[13] as String? : null, // NOVO CAMPO
     );
   }
 
   @override
   void write(BinaryWriter writer, MusicProject obj) {
     writer
-      ..writeByte(13)
+      ..writeByte(14) // Tinha 13, agora são 14 campos (0-13)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -152,8 +160,8 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
       ..writeByte(11)
       ..write(obj.bpm)
       ..writeByte(12)
-      ..write(obj.musicalKey);
+      ..write(obj.musicalKey)
+      ..writeByte(13) // NOVO CAMPO
+      ..write(obj.notes);
   }
 }
-
-

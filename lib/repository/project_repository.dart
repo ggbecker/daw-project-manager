@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 
@@ -54,6 +53,7 @@ class ProjectRepository {
     }
   }
 
+  // LÓGICA CORRIGIDA para preservar campos customizados
   Future<void> upsertFromFileSystemEntity(FileSystemEntity entity) async {
     final isLogicBundle = entity is Directory && entity.path.toLowerCase().endsWith('.logicx');
     final filePath = entity.path;
@@ -64,25 +64,28 @@ class ProjectRepository {
     final lastModified = stat.modified;
 
     final existing = getByPath(filePath);
-    final project = (existing ?? MusicProject(
-      id: _uuid.v4(),
+    
+    // Cria o objeto base, usando os dados existentes se houver, 
+    // mas atualizando os campos que vêm do sistema de arquivos (size, lastModified, fileName, etc.)
+    final projectToSave = MusicProject(
+      id: existing?.id ?? _uuid.v4(),
       filePath: filePath,
       fileName: fileName,
       fileSizeBytes: size,
       lastModifiedAt: lastModified,
       fileExtension: ext,
-      createdAt: DateTime.now(),
+      createdAt: existing?.createdAt ?? DateTime.now(),
       updatedAt: DateTime.now(),
-    )).copyWith(
-      // preserve user-edited fileName if existing
-      fileName: existing?.fileName ?? fileName,
-      fileSizeBytes: size,
-      lastModifiedAt: lastModified,
-      fileExtension: ext,
-      updatedAt: DateTime.now(),
+      
+      // PRESERVAÇÃO: Estes campos foram editados pelo usuário e devem ser mantidos
+      customDisplayName: existing?.customDisplayName, // <--- PRESERVA
+      status: existing?.status ?? 'Draft',             // <--- PRESERVA
+      bpm: existing?.bpm,                             // <--- PRESERVA
+      musicalKey: existing?.musicalKey,               // <--- PRESERVA
+      notes: existing?.notes,                         // <--- NOVO: PRESERVA NOTAS
     );
 
-    await projectsBox.put(project.id, project);
+    await projectsBox.put(projectToSave.id, projectToSave);
   }
 
   List<MusicProject> getAllProjects() => projectsBox.values.toList(growable: false);
@@ -98,22 +101,9 @@ class ProjectRepository {
   // Stream watch for Riverpod StreamProvider usage
   Stream<BoxEvent> watchProjects() => projectsBox.watch();
   
-  // CORREÇÃO: Novo método para observar a lista completa
+  // MÉTODO NOVO/CORRIGIDO: Retorna a lista completa a cada mudança do Hive
   Stream<List<MusicProject>> watchAllProjects() {
-    // 1. Emite o valor inicial da lista
-    final controller = StreamController<List<MusicProject>>()
-      ..add(projectsBox.values.toList());
-
-    // 2. Observa o Box do Hive
-    projectsBox.watch().listen((event) {
-      // 3. A cada evento, mapeia e adiciona a lista completa ao stream
-      controller.add(projectsBox.values.toList());
-    });
-
-    return controller.stream;
-    // Alternativamente, se preferir uma sintaxe mais concisa:
-    // return projectsBox.watch().map((_) => projectsBox.values.toList()).startWith(projectsBox.values.toList());
-    // O mapeamento Box.watch().map((_) => Box.values.toList()) também funciona, mas o manual com StreamController garante o valor inicial imediatamente.
+    return projectsBox.watch().map((_) => projectsBox.values.toList());
   }
   
   Stream<BoxEvent> watchRoots() => rootsBox.watch();

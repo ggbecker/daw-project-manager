@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart'; // NOVO IMPORT
+import 'package:path/path.dart' as p; // NOVO IMPORT
 
 import '../models/music_project.dart';
 import '../providers/providers.dart';
@@ -19,6 +21,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
   late TextEditingController _nameCtrl;
   late TextEditingController _bpmCtrl;
   late TextEditingController _keyCtrl;
+  late TextEditingController _notesCtrl; // NOVO CONTROLLER
 
   @override
   void initState() {
@@ -26,6 +29,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
     _nameCtrl = TextEditingController();
     _bpmCtrl = TextEditingController();
     _keyCtrl = TextEditingController();
+    _notesCtrl = TextEditingController(); // INICIALIZA
   }
 
   @override
@@ -33,8 +37,42 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
     _nameCtrl.dispose();
     _bpmCtrl.dispose();
     _keyCtrl.dispose();
+    _notesCtrl.dispose(); // DISPOSE
     super.dispose();
   }
+
+  // NOVO: Função para abrir o diretório pai
+  Future<void> _openProjectFolder(String filePath) async {
+    // Determina o caminho da pasta: Se for um arquivo, pega o diretório pai. Se for um diretório, pega ele mesmo.
+    final folderPath = (FileSystemEntity.typeSync(filePath) == FileSystemEntityType.file) 
+        ? p.dirname(filePath) 
+        : filePath;
+
+    final Uri uri = Uri.directory(folderPath);
+
+    try {
+        if (await launchUrl(uri)) {
+          return;
+        }
+    } catch (_) {
+      // Tenta métodos nativos como fallback se o launchUrl falhar
+    }
+    
+    try {
+      if (Platform.isWindows) {
+        await Process.run('explorer', [folderPath]);
+      } else if (Platform.isMacOS) {
+        await Process.run('open', [folderPath]); 
+      } else if (Platform.isLinux) {
+        await Process.run('xdg-open', [folderPath]);
+      }
+    } catch (e) {
+       if (mounted) {
+         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not open folder: $e')));
+       }
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -52,9 +90,25 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
         error: (_, __) => const Center(child: Text('Failed to load')),
         data: (repo) {
           final project = repo.getAllProjects().firstWhere((p) => p.id == widget.projectId);
-          _nameCtrl.text = project.fileName;
-          _bpmCtrl.text = project.bpm?.toString() ?? '';
-          _keyCtrl.text = project.musicalKey ?? '';
+
+          // Sincroniza controllers com os dados do projeto
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            final currentName = project.customDisplayName ?? project.fileName;
+            if (_nameCtrl.text != currentName) {
+               _nameCtrl.text = currentName;
+            }
+            if (_bpmCtrl.text != (project.bpm?.toString() ?? '')) {
+              _bpmCtrl.text = project.bpm?.toString() ?? '';
+            }
+            if (_keyCtrl.text != (project.musicalKey ?? '')) {
+              _keyCtrl.text = project.musicalKey ?? '';
+            }
+            // NOVO: Sincroniza Notas
+            if (_notesCtrl.text != (project.notes ?? '')) {
+              _notesCtrl.text = project.notes ?? '';
+            }
+          });
+
           return Padding(
             padding: const EdgeInsets.all(16),
             child: Form(
@@ -67,9 +121,11 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                   const SizedBox(height: 16),
                   Text('Last modified: ${project.lastModifiedAt}'),
                   const SizedBox(height: 24),
+                  
+                  // Campo para editar o nome de exibição customizado
                   TextFormField(
                     controller: _nameCtrl,
-                    decoration: const InputDecoration(labelText: 'File Name (editable)'),
+                    decoration: const InputDecoration(labelText: 'Display Name (editable)'),
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -82,16 +138,42 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                     controller: _keyCtrl,
                     decoration: const InputDecoration(labelText: 'Key (e.g., C#m, F major)'),
                   ),
+                  const SizedBox(height: 12),
+                  
+                  // NOVO: CAMPO DE NOTAS
+                  TextFormField(
+                    controller: _notesCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Notes',
+                      alignLabelWithHint: true,
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLines: 5,
+                    keyboardType: TextInputType.multiline,
+                  ),
+
                   const SizedBox(height: 24),
                   Row(
                     children: [
+                      // BOTÃO: SAVE (LÓGICA ATUALIZADA)
                       ElevatedButton.icon(
                         onPressed: () async {
+                          // O campo name atualiza customDisplayName. Se o texto for vazio ou igual ao nome do arquivo original, ele deve ser null.
+                          final nameText = _nameCtrl.text.trim();
+                          final newCustomDisplayName = (nameText.isEmpty || nameText == project.fileName) 
+                              ? null 
+                              : nameText;
+                          
+                          final notesText = _notesCtrl.text.trim();
+                          final newNotes = notesText.isEmpty ? null : notesText;
+
                           final updated = project.copyWith(
-                            fileName: _nameCtrl.text.trim().isEmpty ? project.fileName : _nameCtrl.text.trim(),
+                            customDisplayName: newCustomDisplayName,
                             bpm: _bpmCtrl.text.trim().isEmpty ? null : double.tryParse(_bpmCtrl.text.trim()),
                             musicalKey: _keyCtrl.text.trim().isEmpty ? null : _keyCtrl.text.trim(),
+                            notes: newNotes, // NOVO: Salva Notas
                           );
+
                           await repo.updateProject(updated);
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Saved')));
@@ -101,6 +183,16 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                         label: const Text('Save'),
                       ),
                       const SizedBox(width: 12),
+                      
+                      // NOVO: BOTÃO OPEN FOLDER
+                      ElevatedButton.icon(
+                        onPressed: () => _openProjectFolder(project.filePath),
+                        icon: const Icon(Icons.folder_open),
+                        label: const Text('Open Folder'),
+                      ),
+                      const SizedBox(width: 12),
+
+                      // BOTÃO OPEN IN DAW (Existente)
                       ElevatedButton.icon(
                         onPressed: () async {
                           try {
@@ -108,8 +200,14 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                               await Process.start('open', [project.filePath]);
                             } else if (Platform.isWindows) {
                               await Process.start('cmd', ['/c', 'start', '', project.filePath]);
+                            } else {
+                              await Process.start(project.filePath, []);
                             }
-                          } catch (_) {}
+                          } catch (_) {
+                             if (mounted) {
+                               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to launch DAW')));
+                             }
+                          }
                         },
                         icon: const Icon(Icons.open_in_new),
                         label: const Text('Open in DAW'),
@@ -125,5 +223,3 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
     );
   }
 }
-
-
