@@ -20,7 +20,6 @@ class DashboardPage extends ConsumerStatefulWidget {
 }
 
 class _DashboardPageState extends ConsumerState<DashboardPage> {
-  // Campos de estado desnecessários foram removidos
   bool _scanning = false;
 
   Future<void> _scanAll() async {
@@ -54,10 +53,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     final repoAsync = ref.watch(repositoryProvider);
     final roots = ref.watch(scanRootsProvider);
     
-    // Observa o estado (QueryParams) do Notifier
+    // Observa o estado ATUAL (QueryParams) do nosso Notifier v3
     final currentParams = ref.watch(queryParamsNotifierProvider);
 
-    // Agora apenas observamos o projectsProvider, que já está filtrado e ordenado
+    // Observa a lista de projetos, que é reativa (filtrada/ordenada por projectsProvider)
     final projects = ref.watch(projectsProvider);
 
     return Scaffold(
@@ -69,13 +68,16 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
               child: TextField(
+                // Usa um TextEditingController para gerenciar a posição do cursor
+                controller: TextEditingController(text: currentParams.searchText)
+                  ..selection = TextSelection.fromPosition(TextPosition(offset: currentParams.searchText.length)),
                 decoration: const InputDecoration(
                   hintText: 'Search by name...',
                   isDense: true,
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.search),
                 ),
-                // CHAMA O MÉTODO DO NOTIFIER (sintaxe Riverpod v3)
+                // Chama o método do Notifier v3 para atualizar o filtro
                 onChanged: (text) {
                   ref.read(queryParamsNotifierProvider.notifier).setSearchText(text);
                 },
@@ -84,10 +86,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
           ),
           IconButton(
             tooltip: 'Toggle sort',
-            // CHAMA O MÉTODO DO NOTIFIER (sintaxe Riverpod v3)
+            // Chama o método do Notifier v3 para alternar a ordenação
             onPressed: () {
               ref.read(queryParamsNotifierProvider.notifier).toggleSortDesc();
             },
+            // Usa o estado de ordenação lido do provedor
             icon: Icon(currentParams.sortDesc ? Icons.sort_by_alpha : Icons.sort),
           ),
           const SizedBox(width: 8),
@@ -160,6 +163,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   label: Text(_scanning ? 'Scanning…' : 'Rescan'),
                 ),
                 const Spacer(),
+                // Exibe o contador de projetos
                 repoAsync.when(
                   loading: () => const SizedBox.shrink(),
                   error: (_, __) => const SizedBox.shrink(),
@@ -209,6 +213,46 @@ class _PlutoProjectsTable extends StatefulWidget {
 }
 
 class _PlutoProjectsTableState extends State<_PlutoProjectsTable> {
+  // 1. O Manager agora é NULÁVEL, pois 'isLoaded' não existe no 8.0.0.
+  // Será inicializado em onLoaded.
+  PlutoGridStateManager? stateManager; 
+
+  // 2. Método para mapear MusicProject para PlutoRow
+  List<PlutoRow> _mapProjectsToRows(List<MusicProject> projects) {
+    return projects.map((p) {
+      return PlutoRow(cells: {
+        'name': PlutoCell(value: p.displayName),
+        'status': PlutoCell(value: p.status),
+        'bpm': PlutoCell(value: p.bpm?.toString() ?? ''),
+        'key': PlutoCell(value: p.musicalKey ?? ''),
+        'lastModified': PlutoCell(value: widget.dateFormat.format(p.lastModifiedAt)),
+        'launch': PlutoCell(value: ''),
+        'data': PlutoCell(value: p), // hidden data cell
+      });
+    }).toList();
+  }
+
+  // 3. ESSENCIAL: Gerencia as mudanças nas propriedades do Widget
+  @override
+  void didUpdateWidget(_PlutoProjectsTable oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    
+    // Verifica se a lista de projetos mudou
+    if (oldWidget.projects != widget.projects) {
+      
+      // CORREÇÃO: Usa a checagem de nulidade para garantir que o stateManager foi inicializado
+      if (stateManager != null) { 
+        
+        final newRows = _mapProjectsToRows(widget.projects);
+        
+        // Atualiza o stateManager do PlutoGrid com as novas linhas
+        // Note o uso de '!' para acessar a variável não-nula
+        stateManager!.removeRows(stateManager!.rows, notify: false); // Remove sem notificar (mais rápido)
+        stateManager!.insertRows(0, newRows);       // Insere e notifica
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final columns = [
@@ -298,20 +342,16 @@ class _PlutoProjectsTableState extends State<_PlutoProjectsTable> {
       ),
     ];
 
-    final rows = widget.projects.map((p) {
-      return PlutoRow(cells: {
-        'name': PlutoCell(value: p.displayName),
-        'status': PlutoCell(value: p.status),
-        'bpm': PlutoCell(value: p.bpm?.toString() ?? ''),
-        'key': PlutoCell(value: p.musicalKey ?? ''),
-        'lastModified': PlutoCell(value: widget.dateFormat.format(p.lastModifiedAt)),
-        'launch': PlutoCell(value: ''),
-        'data': PlutoCell(value: p), // hidden data cell
-      });
-    }).toList();
+    // Mapeia a lista reativa de projetos para as linhas iniciais do PlutoGrid
+    final initialRows = _mapProjectsToRows(widget.projects);
+
     return PlutoGrid(
       columns: columns,
-      rows: rows,
+      rows: initialRows, 
+      // 4. ESSENCIAL: Conecta o Manager
+      onLoaded: (PlutoGridOnLoadedEvent event) {
+        stateManager = event.stateManager;
+      },
       configuration: PlutoGridConfiguration(
         style: PlutoGridStyleConfig(
           gridBackgroundColor: const Color(0xFF1E1F22),

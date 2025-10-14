@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 
@@ -97,9 +98,22 @@ class ProjectRepository {
   // Stream watch for Riverpod StreamProvider usage
   Stream<BoxEvent> watchProjects() => projectsBox.watch();
   
-  // MÉTODO NOVO/CORRIGIDO: Retorna a lista completa a cada mudança do Hive
+  // CORREÇÃO: Novo método para observar a lista completa
   Stream<List<MusicProject>> watchAllProjects() {
-    return projectsBox.watch().map((_) => projectsBox.values.toList());
+    // 1. Emite o valor inicial da lista
+    final controller = StreamController<List<MusicProject>>()
+      ..add(projectsBox.values.toList());
+
+    // 2. Observa o Box do Hive
+    projectsBox.watch().listen((event) {
+      // 3. A cada evento, mapeia e adiciona a lista completa ao stream
+      controller.add(projectsBox.values.toList());
+    });
+
+    return controller.stream;
+    // Alternativamente, se preferir uma sintaxe mais concisa:
+    // return projectsBox.watch().map((_) => projectsBox.values.toList()).startWith(projectsBox.values.toList());
+    // O mapeamento Box.watch().map((_) => Box.values.toList()) também funciona, mas o manual com StreamController garante o valor inicial imediatamente.
   }
   
   Stream<BoxEvent> watchRoots() => rootsBox.watch();

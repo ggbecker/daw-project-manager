@@ -47,10 +47,10 @@ class QueryParams {
   }
 }
 
-// CORREÇÃO ESSENCIAL PARA RIVERPOD V3: Usa Notifier<T>
+// CORREÇÃO ESSENCIAL PARA RIVERPOD V3: Usa Notifier<T> (em vez de StateNotifier<T>)
 class QueryParamsNotifier extends Notifier<QueryParams> {
   
-  // CORREÇÃO ESSENCIAL PARA RIVERPOD V3: O construtor é o método build()
+  // CORREÇÃO ESSENCIAL PARA RIVERPOD V3: O construtor v3 é o método build()
   @override
   QueryParams build() {
     return const QueryParams();
@@ -65,28 +65,31 @@ class QueryParamsNotifier extends Notifier<QueryParams> {
   }
 }
 
-// CORREÇÃO ESSENCIAL PARA RIVERPOD V3: Usa NotifierProvider
+// CORREÇÃO ESSENCIAL PARA RIVERPOD V3: Usa NotifierProvider (em vez de StateNotifierProvider)
 final queryParamsNotifierProvider = NotifierProvider<QueryParamsNotifier, QueryParams>(() {
   return QueryParamsNotifier();
 });
 
+// REMOVEMOS: projectsWatchProvider (substituído pela reatividade do stream abaixo)
 
-// NOVO PROVIDER: Stream que emite a lista bruta de projetos (Usa o método watchAllProjects do Repo)
+// NOVO PROVIDER CORRIGIDO: Stream que emite a lista bruta de projetos
+// Ele usa o novo método watchAllProjects() do repositório (que você precisa garantir que existe)
 final allProjectsStreamProvider = StreamProvider<List<MusicProject>>((ref) async* {
   final repo = await ref.watch(repositoryProvider.future);
+  // OBSERVAÇÃO: Este método (repo.watchAllProjects()) deve existir e retornar Stream<List<MusicProject>>
   yield* repo.watchAllProjects();
 });
 
 
 // PROVIDER CORRIGIDO: Agora observa o allProjectsStreamProvider e o Notifier
 final projectsProvider = Provider<List<MusicProject>>((ref) {
-  // Observa o stream de todos os projetos (retorna um AsyncValue)
+  // 1. Observa o stream de todos os projetos (retorna um AsyncValue)
   final allProjectsAsync = ref.watch(allProjectsStreamProvider);
   
-  // Observa o estado ATUAL (QueryParams) do nosso novo Notifier
+  // 2. Observa o estado ATUAL (QueryParams) do nosso novo Notifier
   final params = ref.watch(queryParamsNotifierProvider);
 
-  // Usa .whenData para acessar a lista quando estiver pronta e aplicar o filtro/ordenação
+  // 3. Usa .whenData para acessar a lista quando estiver pronta e aplicar o filtro/ordenação
   return allProjectsAsync.whenData((allProjects) {
     var projects = allProjects;
 
@@ -97,6 +100,7 @@ final projectsProvider = Provider<List<MusicProject>>((ref) {
     }
     
     // --- Ordenação ---
+    // A ordenação é feita pela data de modificação
     projects.sort((a, b) => a.lastModifiedAt.compareTo(b.lastModifiedAt));
     if (params.sortDesc) {
       projects = projects.reversed.toList();
@@ -105,7 +109,8 @@ final projectsProvider = Provider<List<MusicProject>>((ref) {
     return projects;
   }).when(
     data: (projects) => projects,
-    loading: () => const <MusicProject>[],
+    // Garante que a lista não é nula, mesmo carregando ou com erro
+    loading: () => const <MusicProject>[], 
     error: (_, __) => const <MusicProject>[],
   );
 });
