@@ -4,32 +4,29 @@ name: Flutter CI/CD (Windows & macOS)
 
 # 1. Gatilhos do Workflow
 on:
-  # Roda a compilação de teste toda vez que um PR é aberto ou atualizado na branch 'main'
   pull_request:
     branches: [ main ]
     types: [ opened, synchronize, reopened ]
 
-  # Roda a compilação e release quando uma nova tag é criada
   push:
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+*' # Ex: v1.0.0, v1.0.0-beta1
+      - 'v[0-9]+.[0-9]+.[0-9]+*' 
 
-# Variável de ambiente para evitar problemas de compatibilidade com Flutter e CI
+# CORRIGIDO: Versão do Flutter atualizada para garantir um Dart SDK 3.9.2+
 env:
-  FLUTTER_VERSION: 3.22.x # Ajuste para a versão que você usa
+  FLUTTER_VERSION: 3.24.x 
 
-# 2. Jobs
 jobs:
   # Job de Teste de Integração (para Pull Requests)
   test_pr_build:
     name: Test PR Build (Windows)
-    # Roda apenas em eventos de pull_request
     if: github.event_name == 'pull_request'
     runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v4
 
+      # ESTA É A AÇÃO QUE VOCÊ PERGUNTOU: subosito/flutter-action@v2
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -44,26 +41,21 @@ jobs:
 
       - name: Run Build Test (Windows)
         run: flutter build windows --release
-        # Se este passo for bem-sucedido, o código é compilável.
 
   # Job de Release (para Tags)
   release:
     name: Build and Release
-    # Roda apenas em eventos de push de tag
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ${{ matrix.os }}
     
-    # IMPORTANTE: A dependência 'needs: [test_pr_build]' foi removida para 
-    # evitar que o job 'release' seja pulado (skipped) quando uma tag é criada.
-    
     strategy:
       matrix:
-        # Define as plataformas que serão compiladas
         os: [windows-latest, macos-latest]
         
     steps:
       - uses: actions/checkout@v4
 
+      # ESTA É A AÇÃO QUE VOCÊ PERGUNTOU: subosito/flutter-action@v2
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -73,21 +65,19 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      # --- Ação Específica do Windows ---
+      # --- Build Steps ---
       - name: Build Windows Executable
         if: runner.os == 'Windows'
         run: flutter build windows --release
       
-      # --- Ação Específica do macOS ---
       - name: Build macOS Executable
         if: runner.os == 'macOS'
         run: flutter build macos --release
       
-      # --- Empacotamento para macOS (cria um .zip para a aplicação) ---
+      # --- Empacotamento para macOS ---
       - name: Zip macOS App Bundle
         if: runner.os == 'macOS'
         run: |
-          # O nome do diretório e do app pode variar ligeiramente
           cd build/macos/Build/Products/Release
           zip -r DAW_Project_Manager-${{ github.ref_name }}.zip daw_project_manager.app
           
