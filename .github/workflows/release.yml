@@ -4,24 +4,25 @@ name: Flutter CI/CD (Windows & macOS)
 
 # 1. Gatilhos do Workflow
 on:
-  # Roda a compilação de teste toda vez que um PR é aberto ou atualizado na branch 'main'
   pull_request:
     branches: [ main ]
     types: [ opened, synchronize, reopened ]
 
-  # Roda a compilação e release quando uma nova tag é criada
   push:
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+*' # Ex: v1.0.0, v1.0.0-beta1
+      - 'v[0-9]+.[0-9]+.[0-9]+*' 
 
-# A versão hardcoded será usada em ambos os jobs
+# Variáveis para Setup
 env:
-  FLUTTER_VERSION_FIXED: 3.19.0 
+  # Versão do Dart SDK exigida pelo seu pubspec.yaml (ex: ^3.9.2)
+  DART_SDK_VERSION: 3.9.x 
+  # Versão base do Flutter. Usaremos o canal 'beta' para esta versão 
+  # para garantir que o Flutter seja compatível com o Dart SDK mais novo.
+  FLUTTER_BASE_VERSION: 3.24.x 
 
 # 2. Jobs
 jobs:
   # Job de Teste de Integração (para Pull Requests)
-  # Mantemos o job de PR simples, apenas para garantir a compilação
   test_pr_build:
     name: Test PR Build (Windows)
     if: github.event_name == 'pull_request'
@@ -30,11 +31,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Flutter ${{ env.FLUTTER_VERSION_FIXED }}
+      # NOVO PASSO: Configurar o Dart SDK explicitamente
+      - name: Setup Dart SDK ${{ env.DART_SDK_VERSION }}
+        uses: dart-lang/setup-dart@v1
+        with:
+          version: ${{ env.DART_SDK_VERSION }}
+
+      # Setup Flutter (canal beta)
+      - name: Setup Flutter ${{ env.FLUTTER_BASE_VERSION }} (Beta)
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: ${{ env.FLUTTER_VERSION_FIXED }}
-          channel: 'stable' # Usaremos o canal stable para esta versão
+          flutter-version: ${{ env.FLUTTER_BASE_VERSION }}
+          channel: 'beta' 
 
       - name: Get dependencies & Build Test
         run: |
@@ -51,12 +59,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Flutter ${{ env.FLUTTER_VERSION_FIXED }}
+      # NOVO PASSO: Configurar o Dart SDK explicitamente
+      - name: Setup Dart SDK ${{ env.DART_SDK_VERSION }}
+        uses: dart-lang/setup-dart@v1
+        with:
+          version: ${{ env.DART_SDK_VERSION }}
+
+      # Setup Flutter (canal beta)
+      - name: Setup Flutter ${{ env.FLUTTER_BASE_VERSION }} (Beta)
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: ${{ env.FLUTTER_VERSION_FIXED }}
-          channel: 'stable'
-      - run: flutter --version
+          flutter-version: ${{ env.FLUTTER_BASE_VERSION }}
+          channel: 'beta'
 
       - name: Get dependencies
         run: flutter pub get
@@ -66,11 +80,10 @@ jobs:
       
       - name: Zip macOS App Bundle
         run: |
-          # Navega até o diretório de Release e compacta o bundle .app
           cd build/macos/Build/Products/Release
           zip -r DAW_Project_Manager-${{ github.ref_name }}.zip daw_project_manager.app
           
-      # Criação do Release (feito apenas no primeiro job para evitar duplicatas)
+      # Criação do Release (Feito apenas neste job)
       - name: Create GitHub Release
         id: create_release
         uses: actions/create-release@v1
@@ -99,18 +112,24 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: windows-latest
     
-    # Este job precisa que o release_macos tenha criado a Release antes de anexar
+    # Depende do job de macOS para garantir que o Release já tenha sido criado
     needs: [release_macos] 
     
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Flutter ${{ env.FLUTTER_VERSION_FIXED }}
+      # NOVO PASSO: Configurar o Dart SDK explicitamente
+      - name: Setup Dart SDK ${{ env.DART_SDK_VERSION }}
+        uses: dart-lang/setup-dart@v1
+        with:
+          version: ${{ env.DART_SDK_VERSION }}
+
+      # Setup Flutter (canal beta)
+      - name: Setup Flutter ${{ env.FLUTTER_BASE_VERSION }} (Beta)
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: ${{ env.FLUTTER_VERSION_FIXED }}
-          channel: 'stable'
-      - run: flutter --version
+          flutter-version: ${{ env.FLUTTER_BASE_VERSION }}
+          channel: 'beta'
 
       - name: Get dependencies
         run: flutter pub get
@@ -118,16 +137,12 @@ jobs:
       - name: Build Windows Executable
         run: flutter build windows --release
       
-      # Anexar Artefato do Windows
-      # Usamos a ação 'upload-release-asset' em vez de 'create-release' (que só cria)
+      # Anexar Artefato do Windows (anexa ao Release criado no job 'release_macos')
       - name: Upload Windows Release Asset
         uses: actions/upload-release-asset@v1
         env:
-          # Para uploads posteriores, precisamos do ID do Release criado no job anterior
-          # Como o job anterior criou a Release, vamos pesquisar pela tag.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          # Precisamos de uma URL de upload válida, que podemos obter buscando a Release pela tag
           upload_url: ${{ github.event.release.upload_url || format('https://uploads.github.com/repos/{0}/releases/{1}/assets', github.repository, needs.release_macos.outputs.release_id) }}
           asset_path: build/windows/x64/runner/Release/daw_project_manager.exe
           asset_name: DAW_Project_Manager_Windows.exe
