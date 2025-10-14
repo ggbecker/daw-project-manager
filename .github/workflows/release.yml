@@ -104,12 +104,16 @@ jobs:
           cd build/macos/Build/Products/Release
           zip -r DAW_Project_Manager-${{ github.ref_name }}.zip daw_project_manager.app
           
-      # 5. Compila o Instalador Inno Setup (Apenas para Windows)
-      - name: Compile Windows Installer (Inno Setup)
+      # 5. NOVO PASSO 1/2: Instala o Inno Setup via Chocolatey (Apenas para Windows)
+      - name: Install Inno Setup
         if: matrix.is_installer == true
-        uses: mikw/action-build-setup@v1.4.0 # NOVA AÇÃO
-        with:
-          innosetup_file: installer.iss # Indica o arquivo de script
+        run: choco install innosetup
+
+      # 5. NOVO PASSO 2/2: Compila o Instalador Inno Setup (Apenas para Windows)
+      - name: Compile Windows Installer (ISCC)
+        if: matrix.is_installer == true
+        # O compilador 'ISCC' estará no PATH após a instalação via choco
+        run: iscc installer.iss
           
       # 6. Encontra a URL de Upload do Release existente
       - name: Find Existing Release URL
@@ -137,8 +141,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          # A ação 'mikw/action-build-setup' coloca o instalador na raiz do workspace.
-          # Removemos o prefixo 'output/' que a ação anterior usava.
+          # Para Windows: O compilador ISCC salva o EXE na raiz.
           asset_path: ${{ matrix.asset_path }}
           asset_name: ${{ matrix.asset_name }}
           asset_content_type: ${{ matrix.asset_content_type }}
