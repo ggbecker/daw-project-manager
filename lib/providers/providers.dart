@@ -34,37 +34,80 @@ class QueryParams {
   final String searchText;
   final bool sortDesc;
   const QueryParams({this.searchText = '', this.sortDesc = true});
+  
+  // Adiciona o método copyWith para facilitar a atualização
+  QueryParams copyWith({
+    String? searchText,
+    bool? sortDesc,
+  }) {
+    return QueryParams(
+      searchText: searchText ?? this.searchText,
+      sortDesc: sortDesc ?? this.sortDesc,
+    );
+  }
 }
 
-final queryParamsProvider = Provider<QueryParams>((ref) => const QueryParams());
+// CORREÇÃO ESSENCIAL PARA RIVERPOD V3: Usa Notifier<T>
+class QueryParamsNotifier extends Notifier<QueryParams> {
+  
+  // CORREÇÃO ESSENCIAL PARA RIVERPOD V3: O construtor é o método build()
+  @override
+  QueryParams build() {
+    return const QueryParams();
+  }
 
-final projectsWatchProvider = StreamProvider<void>((ref) async* {
-  final repo = await ref.watch(repositoryProvider.future);
-  yield* repo.watchProjects().map((_) => null);
+  void setSearchText(String text) {
+    state = state.copyWith(searchText: text);
+  }
+
+  void toggleSortDesc() {
+    state = state.copyWith(sortDesc: !state.sortDesc);
+  }
+}
+
+// CORREÇÃO ESSENCIAL PARA RIVERPOD V3: Usa NotifierProvider
+final queryParamsNotifierProvider = NotifierProvider<QueryParamsNotifier, QueryParams>(() {
+  return QueryParamsNotifier();
 });
 
+
+// NOVO PROVIDER: Stream que emite a lista bruta de projetos (Usa o método watchAllProjects do Repo)
+final allProjectsStreamProvider = StreamProvider<List<MusicProject>>((ref) async* {
+  final repo = await ref.watch(repositoryProvider.future);
+  yield* repo.watchAllProjects();
+});
+
+
+// PROVIDER CORRIGIDO: Agora observa o allProjectsStreamProvider e o Notifier
 final projectsProvider = Provider<List<MusicProject>>((ref) {
-  // Watch for changes in Hive box
-  ref.watch(projectsWatchProvider);
-  final repoAsync = ref.watch(repositoryProvider);
-  final params = ref.watch(queryParamsProvider);
-  return repoAsync.maybeWhen(
-    data: (repo) {
-      var projects = repo.getAllProjects();
-      if (params.searchText.trim().isNotEmpty) {
-        final needle = params.searchText.toLowerCase();
-        projects = projects.where((p) => p.displayName.toLowerCase().contains(needle)).toList();
-      }
-      projects.sort((a, b) => a.lastModifiedAt.compareTo(b.lastModifiedAt));
-      if (params.sortDesc) {
-        projects = projects.reversed.toList();
-      }
-      return projects;
-    },
-    orElse: () => const <MusicProject>[],
+  // Observa o stream de todos os projetos (retorna um AsyncValue)
+  final allProjectsAsync = ref.watch(allProjectsStreamProvider);
+  
+  // Observa o estado ATUAL (QueryParams) do nosso novo Notifier
+  final params = ref.watch(queryParamsNotifierProvider);
+
+  // Usa .whenData para acessar a lista quando estiver pronta e aplicar o filtro/ordenação
+  return allProjectsAsync.whenData((allProjects) {
+    var projects = allProjects;
+
+    // --- Aplicação dos Filtros ---
+    if (params.searchText.trim().isNotEmpty) {
+      final needle = params.searchText.toLowerCase();
+      projects = projects.where((p) => p.displayName.toLowerCase().contains(needle)).toList();
+    }
+    
+    // --- Ordenação ---
+    projects.sort((a, b) => a.lastModifiedAt.compareTo(b.lastModifiedAt));
+    if (params.sortDesc) {
+      projects = projects.reversed.toList();
+    }
+    
+    return projects;
+  }).when(
+    data: (projects) => projects,
+    loading: () => const <MusicProject>[],
+    error: (_, __) => const <MusicProject>[],
   );
 });
 
 final dateFormatProvider = Provider<DateFormat>((ref) => DateFormat.yMMMd().add_jm());
-
-

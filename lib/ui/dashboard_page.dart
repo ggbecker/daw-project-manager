@@ -20,8 +20,7 @@ class DashboardPage extends ConsumerStatefulWidget {
 }
 
 class _DashboardPageState extends ConsumerState<DashboardPage> {
-  String _searchText = '';
-  bool _sortDesc = true;
+  // Campos de estado desnecessários foram removidos
   bool _scanning = false;
 
   Future<void> _scanAll() async {
@@ -54,19 +53,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     final dateFormat = ref.watch(dateFormatProvider);
     final repoAsync = ref.watch(repositoryProvider);
     final roots = ref.watch(scanRootsProvider);
-    // trigger rebuilds when projects change
-    ref.watch(projectsWatchProvider);
-    final projects = repoAsync.maybeWhen(
-      data: (repo) => repo.getAllProjects(),
-      orElse: () => const <MusicProject>[],
-    );
-    List<MusicProject> filtered = projects
-        .where((p) => p.displayName.toLowerCase().contains(_searchText.toLowerCase()))
-        .toList()
-      ..sort((a, b) => a.lastModifiedAt.compareTo(b.lastModifiedAt));
-    if (_sortDesc) {
-      filtered = filtered.reversed.toList();
-    }
+    
+    // Observa o estado (QueryParams) do Notifier
+    final currentParams = ref.watch(queryParamsNotifierProvider);
+
+    // Agora apenas observamos o projectsProvider, que já está filtrado e ordenado
+    final projects = ref.watch(projectsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -83,14 +75,20 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.search),
                 ),
-                onChanged: (text) => setState(() => _searchText = text),
+                // CHAMA O MÉTODO DO NOTIFIER (sintaxe Riverpod v3)
+                onChanged: (text) {
+                  ref.read(queryParamsNotifierProvider.notifier).setSearchText(text);
+                },
               ),
             ),
           ),
           IconButton(
             tooltip: 'Toggle sort',
-            onPressed: () => setState(() => _sortDesc = !_sortDesc),
-            icon: const Icon(Icons.sort),
+            // CHAMA O MÉTODO DO NOTIFIER (sintaxe Riverpod v3)
+            onPressed: () {
+              ref.read(queryParamsNotifierProvider.notifier).toggleSortDesc();
+            },
+            icon: Icon(currentParams.sortDesc ? Icons.sort_by_alpha : Icons.sort),
           ),
           const SizedBox(width: 8),
           Builder(
@@ -165,7 +163,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 repoAsync.when(
                   loading: () => const SizedBox.shrink(),
                   error: (_, __) => const SizedBox.shrink(),
-                  data: (repo) => Text('Roots: ${repo.getRoots().length}   Projects: ${repo.getAllProjects().length}'),
+                  data: (repo) => Text('Roots: ${repo.getRoots().length}   Projects: ${projects.length}'),
                 ),
               ],
             ),
@@ -194,12 +192,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 ),
               ),
             ),
-          Expanded(child: _PlutoProjectsTable(projects: filtered, dateFormat: dateFormat)),
+          Expanded(child: _PlutoProjectsTable(projects: projects, dateFormat: dateFormat)),
         ],
       ),
     );
   }
-}
+} // Fim da classe _DashboardPageState
 
 class _PlutoProjectsTable extends StatefulWidget {
   final List<MusicProject> projects;
@@ -350,5 +348,3 @@ class _PlutoProjectsTableState extends State<_PlutoProjectsTable> {
     );
   }
 }
-
-
