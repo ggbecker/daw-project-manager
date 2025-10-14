@@ -2,7 +2,7 @@
 
 name: Flutter CI/CD (Windows & macOS)
 
-# PERMISSÃO NECESSÁRIA para o upload funcionar.
+# PERMISSÃO: Necessária para que a ação 'upload-release-asset' funcione.
 permissions:
   contents: write 
 
@@ -56,20 +56,26 @@ jobs:
     strategy:
       matrix:
         include:
+          # --- CONFIGURAÇÃO MAC OS (ZIP) ---
           - os: macos-latest
             os_name: macOS
             command: flutter build macos --release
             asset_path: build/macos/Build/Products/Release/DAW_Project_Manager-${{ github.ref_name }}.zip
             asset_name: DAW_Project_Manager_macOS.zip
-            zip_needed: true
-            asset_content_type: application/zip # CORREÇÃO: Content Type para ZIP
+            is_zip: true # Flag para o passo de zip
+            asset_content_type: application/zip
+            is_installer: false
+            
+          # --- CONFIGURAÇÃO WINDOWS (INSTALADOR EXE) ---
           - os: windows-latest
             os_name: Windows
             command: flutter build windows --release
-            asset_path: build/windows/x64/runner/Release/daw_project_manager.exe
-            asset_name: DAW_Project_Manager_Windows.exe
-            zip_needed: false
-            asset_content_type: application/vnd.microsoft.portable-executable # CORREÇÃO: Content Type para EXE
+            # O nome do arquivo EXE de saída do Inno Setup (será prefixado com 'output/')
+            asset_path: DAW_Project_Manager_Installer_${{ github.ref_name }}.exe 
+            asset_name: DAW_Project_Manager_Installer_Windows.exe
+            is_zip: false # Flag para o passo de zip (não usa)
+            asset_content_type: application/vnd.microsoft.portable-executable 
+            is_installer: true # Flag para o passo do instalador
             
     steps:
       - uses: actions/checkout@v4
@@ -87,18 +93,27 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      # 3. Build (Comando é específico da Matrix)
+      # 3. Build
       - name: Build ${{ matrix.os_name }} Executable
         run: ${{ matrix.command }}
       
       # 4. Zip (Apenas para macOS)
       - name: Zip macOS App Bundle
-        if: matrix.zip_needed == true
+        if: matrix.is_zip == true
         run: |
+          # macOS: Compacta o bundle .app
           cd build/macos/Build/Products/Release
           zip -r DAW_Project_Manager-${{ github.ref_name }}.zip daw_project_manager.app
           
-      # 5. Encontra a URL de Upload do Release existente
+      # 5. Compila o Instalador Inno Setup (Apenas para Windows)
+      - name: Compile Windows Installer (Inno Setup)
+        if: matrix.is_installer == true
+        uses: jrsoftware/issc-action@v3
+        with:
+          # Assume que o arquivo 'installer.iss' está na raiz do repositório
+          script: installer.iss
+          
+      # 6. Encontra a URL de Upload do Release existente
       - name: Find Existing Release URL
         id: find_release
         uses: actions/github-script@v6
@@ -118,13 +133,14 @@ jobs:
               core.setFailed(`Release with tag ${process.env.RELEASE_TAG} not found. Please create a Release manually on GitHub matching this tag before pushing the tag.`);
             }
 
-      # 6. Upload do Artefato
+      # 7. Upload do Artefato
       - name: Upload ${{ matrix.os_name }} Release Asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.find_release.outputs.upload_url }} 
-          asset_path: ${{ matrix.asset_path }}
+          # Para Windows: o arquivo está em output/ e é o EXE.
+          # Para macOS: o arquivo está na pasta de build e é o ZIP.
+          asset_path: ${{ matrix.is_installer == true && format('output/{0}', matrix.asset_path) || matrix.asset_path }}
           asset_name: ${{ matrix.asset_name }}
-          asset_content_type: ${{ matrix.asset_content_type }} # CORREÇÃO APLICADA
+          asset_content_type: ${{ matrix.asset_content_type }}
