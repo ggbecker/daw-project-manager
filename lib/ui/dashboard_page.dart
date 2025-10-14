@@ -5,12 +5,55 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/foundation.dart';
+import 'package:window_manager/window_manager.dart'; 
+
 import '../services/scanner_service.dart';
 import 'project_detail_page.dart';
 
 import '../models/music_project.dart';
 import '../providers/providers.dart';
 import '../repository/project_repository.dart';
+
+// WIDGET CORRIGIDO: Botões de controle da janela usando window_manager
+class WindowButtons extends StatelessWidget {
+  const WindowButtons({super.key});
+
+  // Função auxiliar assíncrona para alternar entre maximizar e restaurar
+  void _toggleMaximize() async {
+    if (await windowManager.isMaximized()) {
+      windowManager.restore();
+    } else {
+      windowManager.maximize();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        // Minimize
+        IconButton(
+          icon: const Icon(Icons.minimize, size: 18, color: Colors.white70),
+          onPressed: () => windowManager.minimize(),
+        ),
+        // Maximize/Restore
+        IconButton(
+          icon: const Icon(Icons.crop_square_sharp, size: 18, color: Colors.white70),
+          onPressed: _toggleMaximize, 
+        ),
+        // Close
+        IconButton(
+          icon: const Icon(Icons.close, size: 18, color: Colors.white70),
+          onPressed: () => windowManager.close(), 
+          splashColor: Colors.transparent, 
+          highlightColor: const Color(0xFFC42B1C), 
+        ),
+      ],
+    );
+  }
+}
+
 
 class DashboardPage extends ConsumerStatefulWidget {
   const DashboardPage({super.key});
@@ -53,128 +96,164 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     final repoAsync = ref.watch(repositoryProvider);
     final roots = ref.watch(scanRootsProvider);
     
-    // Observa o estado ATUAL (QueryParams) do nosso Notifier v3
     final currentParams = ref.watch(queryParamsNotifierProvider);
 
-    // Observa a lista de projetos, que é reativa (filtrada/ordenada por projectsProvider)
     final projects = ref.watch(projectsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('DAW Project Manager'),
-        actions: [
-          SizedBox(
-            width: 360,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-              child: TextField(
-                // Usa um TextEditingController para gerenciar a posição do cursor
-                controller: TextEditingController(text: currentParams.searchText)
-                  ..selection = TextSelection.fromPosition(TextPosition(offset: currentParams.searchText.length)),
-                decoration: const InputDecoration(
-                  hintText: 'Search by name...',
-                  isDense: true,
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.search),
-                ),
-                // Chama o método do Notifier v3 para atualizar o filtro
-                onChanged: (text) {
-                  ref.read(queryParamsNotifierProvider.notifier).setSearchText(text);
-                },
-              ),
-            ),
-          ),
-          IconButton(
-            tooltip: 'Toggle sort',
-            // Chama o método do Notifier v3 para alternar a ordenação
-            onPressed: () {
-              ref.read(queryParamsNotifierProvider.notifier).toggleSortDesc();
-            },
-            // Usa o estado de ordenação lido do provedor
-            icon: Icon(currentParams.sortDesc ? Icons.sort_by_alpha : Icons.sort),
-          ),
-          const SizedBox(width: 8),
-          Builder(
-            builder: (context) {
-              return IconButton(
-                tooltip: 'Clear Library (projects & roots)',
-                icon: const Icon(Icons.delete_forever),
-                onPressed: () async {
-                  final confirm = await showDialog<bool>(
-                    context: context,
-                    builder: (ctx) => AlertDialog(
-                      backgroundColor: const Color(0xFF2B2D31),
-                      title: const Text('Clear Library'),
-                      content: const Text('This will remove all saved projects and source folders. Continue?'),
-                      actions: [
-                        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-                        ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Clear')),
-                      ],
-                    ),
-                  );
-                  if (confirm == true) {
-                    final repo = await ref.read(repositoryProvider.future);
-                    await repo.clearAllData();
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Library cleared.')));
-                    }
-                  }
-                },
-              );
-            },
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
+      appBar: null, 
       body: Column(
         children: [
+          // ----------------------------------------------------
+          // LÓGICA DE WINDOW BAR: APENAS MOSTRA A BARRA PERSONALIZADA SE NÃO ESTIVER EM DEBUG
+          if (!kDebugMode) 
+            GestureDetector(
+              onPanStart: (_) => windowManager.startDragging(),
+              // LÓGICA CORRIGIDA para alternar maximizar/restaurar no double tap
+              onDoubleTap: () async {
+                if (await windowManager.isMaximized()) {
+                  windowManager.restore();
+                } else {
+                  windowManager.maximize();
+                }
+              }, 
+              child: Container(
+                color: const Color(0xFF2B2D31), // Cor de fundo da AppBar
+                height: 40, // Altura padrão para a barra
+                child: Row(
+                  children: [
+                    // Título da Aplicação
+                    const Padding(
+                      padding: EdgeInsets.only(left: 12),
+                      child: Text(
+                        'DAW Project Manager', 
+                        style: TextStyle(color: Colors.white70, fontSize: 16),
+                      ),
+                    ),
+                    const Spacer(), // Espaçador para empurrar os botões para a direita
+                    // Botões de minimizar, maximizar e fechar
+                    const WindowButtons(),
+                  ],
+                ),
+              ),
+            ),
+          // ----------------------------------------------------
+          
+          // CONTEÚDO DA BARRA DE AÇÕES E PESQUISA
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                ElevatedButton.icon(
-                  onPressed: _scanning
-                      ? null
-                      : () async {
-                          final path = await FilePicker.platform.getDirectoryPath(dialogTitle: 'Select root folder');
-                          if (path != null) {
-                            final repo = await ref.read(repositoryProvider.future);
-                            await repo.addRoot(path);
-                            await _scanAll();
-                          }
-                        },
-                  icon: const Icon(Icons.create_new_folder_outlined),
-                  label: const Text('Add Root & Scan'),
+                // Ações de Root e Scan
+                Row(
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: _scanning
+                          ? null
+                          : () async {
+                              final path = await FilePicker.platform.getDirectoryPath(dialogTitle: 'Select root folder');
+                              if (path != null) {
+                                final repo = await ref.read(repositoryProvider.future);
+                                await repo.addRoot(path);
+                                await _scanAll();
+                              }
+                            },
+                      icon: const Icon(Icons.create_new_folder_outlined),
+                      label: const Text('Add Root & Scan'),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton.icon(
+                      onPressed: _scanning
+                          ? null
+                          : () async {
+                              await _scanAll();
+                            },
+                      icon: _scanning
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.refresh),
+                      label: Text(_scanning ? 'Scanning…' : 'Rescan'),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                ElevatedButton.icon(
-                  onPressed: _scanning
-                      ? null
-                      : () async {
-                          await _scanAll();
+                
+                // Área de Pesquisa e Filtro
+                Row(
+                  children: [
+                    SizedBox(
+                      width: 250,
+                      child: TextField(
+                        controller: TextEditingController(text: currentParams.searchText)
+                          ..selection = TextSelection.fromPosition(TextPosition(offset: currentParams.searchText.length)),
+                        decoration: const InputDecoration(
+                          hintText: 'Search by name...',
+                          isDense: true,
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.search),
+                        ),
+                        onChanged: (text) {
+                          ref.read(queryParamsNotifierProvider.notifier).setSearchText(text);
                         },
-                  icon: _scanning
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.refresh),
-                  label: Text(_scanning ? 'Scanning…' : 'Rescan'),
-                ),
-                const Spacer(),
-                // Exibe o contador de projetos
-                repoAsync.when(
-                  loading: () => const SizedBox.shrink(),
-                  error: (_, __) => const SizedBox.shrink(),
-                  data: (repo) => Text('Roots: ${repo.getRoots().length}   Projects: ${projects.length}'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      tooltip: 'Toggle sort',
+                      onPressed: () {
+                        ref.read(queryParamsNotifierProvider.notifier).toggleSortDesc();
+                      },
+                      icon: Icon(currentParams.sortDesc ? Icons.sort_by_alpha : Icons.sort),
+                    ),
+                    const SizedBox(width: 8),
+                    // Exibe o contador de projetos
+                    repoAsync.when(
+                      loading: () => const SizedBox.shrink(),
+                      error: (_, __) => const SizedBox.shrink(),
+                      data: (repo) => Text('Roots: ${repo.getRoots().length}   Projects: ${projects.length}'),
+                    ),
+                    const SizedBox(width: 8),
+                    Builder(
+                      builder: (context) {
+                        return IconButton(
+                          tooltip: 'Clear Library (projects & roots)',
+                          icon: const Icon(Icons.delete_forever),
+                          onPressed: () async {
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                backgroundColor: const Color(0xFF2B2D31),
+                                title: const Text('Clear Library'),
+                                content: const Text('This will remove all saved projects and source folders. Continue?'),
+                                actions: [
+                                  TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                                  ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Clear')),
+                                ],
+                              ),
+                            );
+                            if (confirm == true) {
+                              final repo = await ref.read(repositoryProvider.future);
+                              await repo.clearAllData();
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Library cleared.')));
+                              }
+                            }
+                          },
+                        );
+                      },
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
+          
           if (roots.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Wrap(
@@ -201,7 +280,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       ),
     );
   }
-} // Fim da classe _DashboardPageState
+} 
 
 class _PlutoProjectsTable extends StatefulWidget {
   final List<MusicProject> projects;
@@ -213,11 +292,8 @@ class _PlutoProjectsTable extends StatefulWidget {
 }
 
 class _PlutoProjectsTableState extends State<_PlutoProjectsTable> {
-  // 1. O Manager agora é NULÁVEL, pois 'isLoaded' não existe no 8.0.0.
-  // Será inicializado em onLoaded.
   PlutoGridStateManager? stateManager; 
 
-  // 2. Método para mapear MusicProject para PlutoRow
   List<PlutoRow> _mapProjectsToRows(List<MusicProject> projects) {
     return projects.map((p) {
       return PlutoRow(cells: {
@@ -227,28 +303,23 @@ class _PlutoProjectsTableState extends State<_PlutoProjectsTable> {
         'key': PlutoCell(value: p.musicalKey ?? ''),
         'lastModified': PlutoCell(value: widget.dateFormat.format(p.lastModifiedAt)),
         'launch': PlutoCell(value: ''),
-        'data': PlutoCell(value: p), // hidden data cell
+        'data': PlutoCell(value: p),
       });
     }).toList();
   }
 
-  // 3. ESSENCIAL: Gerencia as mudanças nas propriedades do Widget
   @override
   void didUpdateWidget(_PlutoProjectsTable oldWidget) {
     super.didUpdateWidget(oldWidget);
     
-    // Verifica se a lista de projetos mudou
     if (oldWidget.projects != widget.projects) {
       
-      // CORREÇÃO: Usa a checagem de nulidade para garantir que o stateManager foi inicializado
       if (stateManager != null) { 
         
         final newRows = _mapProjectsToRows(widget.projects);
         
-        // Atualiza o stateManager do PlutoGrid com as novas linhas
-        // Note o uso de '!' para acessar a variável não-nula
-        stateManager!.removeRows(stateManager!.rows, notify: false); // Remove sem notificar (mais rápido)
-        stateManager!.insertRows(0, newRows);       // Insere e notifica
+        stateManager!.removeRows(stateManager!.rows, notify: false);
+        stateManager!.insertRows(0, newRows);
       }
     }
   }
@@ -295,40 +366,59 @@ class _PlutoProjectsTableState extends State<_PlutoProjectsTable> {
         minWidth: 160,
       ),
       PlutoColumn(
-        title: 'Launch',
+        title: 'Actions',
         field: 'launch',
         type: PlutoColumnType.text(),
-        width: 120,
-        minWidth: 100,
+        width: 220,
+        minWidth: 180,
         renderer: (ctx) {
           final project = ctx.row.cells['data']!.value as MusicProject;
-          return ElevatedButton(
-            onPressed: () async {
-              final exists = File(project.filePath).existsSync() || Directory(project.filePath).existsSync();
-              if (!exists) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('File missing.')));
-                }
-                return;
-              }
-              try {
-                if (Platform.isMacOS) {
-                  await Process.start('open', [project.filePath]);
-                } else if (Platform.isWindows) {
-                  await Process.start('cmd', ['/c', 'start', '', project.filePath]);
-                } else {
-                  await Process.start(project.filePath, []);
-                }
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Launching ${project.displayName}…')));
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to launch: $e')));
-                }
-              }
-            },
-            child: const Text('Launch'),
+          
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // BOTÃO: VIEW (Detalhes)
+              ElevatedButton(
+                onPressed: () async {
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => ProjectDetailPage(projectId: project.id)),
+                  );
+                },
+                child: const Text('View'),
+              ),
+              const SizedBox(width: 8), 
+              // BOTÃO: LAUNCH (Abrir DAW)
+              ElevatedButton(
+                onPressed: () async {
+                  final exists = File(project.filePath).existsSync() || Directory(project.filePath).existsSync();
+                  if (!exists) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('File missing.')));
+                    }
+                    return;
+                  }
+                  try {
+                    // Lançamento específico para Windows e macOS
+                    if (Platform.isMacOS) {
+                      await Process.start('open', [project.filePath]);
+                    } else if (Platform.isWindows) {
+                      await Process.start('cmd', ['/c', 'start', '', project.filePath]);
+                    } else {
+                      // Fallback para outros sistemas operacionais (e.g. Linux)
+                      await Process.start(project.filePath, []);
+                    }
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Launching ${project.displayName}…')));
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to launch: $e')));
+                    }
+                  }
+                },
+                child: const Text('Launch'),
+              ),
+            ],
           );
         },
       ),
@@ -340,15 +430,13 @@ class _PlutoProjectsTableState extends State<_PlutoProjectsTable> {
         width: 0,
         hide: true,
       ),
-    ];
+    ]; // <-- Semicolon final do array de colunas
 
-    // Mapeia a lista reativa de projetos para as linhas iniciais do PlutoGrid
     final initialRows = _mapProjectsToRows(widget.projects);
 
     return PlutoGrid(
       columns: columns,
       rows: initialRows, 
-      // 4. ESSENCIAL: Conecta o Manager
       onLoaded: (PlutoGridOnLoadedEvent event) {
         stateManager = event.stateManager;
       },
@@ -376,14 +464,7 @@ class _PlutoProjectsTableState extends State<_PlutoProjectsTable> {
         ),
       ),
       onRowChecked: null,
-      onSelected: (e) async {
-        final project = e.row?.cells['data']?.value as MusicProject?;
-        if (project != null) {
-          await Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => ProjectDetailPage(projectId: project.id)),
-          );
-        }
-      },
+      onSelected: null, 
       createFooter: (stateManager) => const SizedBox.shrink(),
     );
   }
