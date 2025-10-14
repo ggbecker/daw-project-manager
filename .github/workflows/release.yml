@@ -52,7 +52,9 @@ jobs:
     # Roda apenas em eventos de push de tag
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ${{ matrix.os }}
-    needs: [test_pr_build] # Garante que o PR build de teste passou (se aplicável)
+    
+    # IMPORTANTE: A dependência 'needs: [test_pr_build]' foi removida para 
+    # evitar que o job 'release' seja pulado (skipped) quando uma tag é criada.
     
     strategy:
       matrix:
@@ -81,10 +83,11 @@ jobs:
         if: runner.os == 'macOS'
         run: flutter build macos --release
       
-      # --- Empacotamento para macOS ---
+      # --- Empacotamento para macOS (cria um .zip para a aplicação) ---
       - name: Zip macOS App Bundle
         if: runner.os == 'macOS'
         run: |
+          # O nome do diretório e do app pode variar ligeiramente
           cd build/macos/Build/Products/Release
           zip -r DAW_Project_Manager-${{ github.ref_name }}.zip daw_project_manager.app
           
