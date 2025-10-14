@@ -62,7 +62,7 @@ jobs:
             command: flutter build macos --release
             asset_path: build/macos/Build/Products/Release/DAW_Project_Manager-${{ github.ref_name }}.zip
             asset_name: DAW_Project_Manager_macOS.zip
-            is_zip: true # Flag para o passo de zip
+            is_zip: true 
             asset_content_type: application/zip
             is_installer: false
             
@@ -70,12 +70,11 @@ jobs:
           - os: windows-latest
             os_name: Windows
             command: flutter build windows --release
-            # O nome do arquivo EXE de saída do Inno Setup (será prefixado com 'output/')
             asset_path: DAW_Project_Manager_Installer_${{ github.ref_name }}.exe 
             asset_name: DAW_Project_Manager_Installer_Windows.exe
-            is_zip: false # Flag para o passo de zip (não usa)
+            is_zip: false 
             asset_content_type: application/vnd.microsoft.portable-executable 
-            is_installer: true # Flag para o passo do instalador
+            is_installer: true
             
     steps:
       - uses: actions/checkout@v4
@@ -108,10 +107,9 @@ jobs:
       # 5. Compila o Instalador Inno Setup (Apenas para Windows)
       - name: Compile Windows Installer (Inno Setup)
         if: matrix.is_installer == true
-        uses: jrsoftware/issc-action@v3
+        uses: mikw/action-build-setup@v1.4.0 # NOVA AÇÃO
         with:
-          # Assume que o arquivo 'installer.iss' está na raiz do repositório
-          script: installer.iss
+          innosetup_file: installer.iss # Indica o arquivo de script
           
       # 6. Encontra a URL de Upload do Release existente
       - name: Find Existing Release URL
@@ -139,8 +137,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          # Para Windows: o arquivo está em output/ e é o EXE.
-          # Para macOS: o arquivo está na pasta de build e é o ZIP.
-          asset_path: ${{ matrix.is_installer == true && format('output/{0}', matrix.asset_path) || matrix.asset_path }}
+          # A ação 'mikw/action-build-setup' coloca o instalador na raiz do workspace.
+          # Removemos o prefixo 'output/' que a ação anterior usava.
+          asset_path: ${{ matrix.asset_path }}
           asset_name: ${{ matrix.asset_name }}
           asset_content_type: ${{ matrix.asset_content_type }}
