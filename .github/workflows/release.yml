@@ -14,7 +14,7 @@ on:
 
   push:
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+*' 
+      - '[0-9]+.[0-9]+.[0-9]+*'
 
 # Variáveis de Configuração
 env:
