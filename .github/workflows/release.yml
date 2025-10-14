@@ -1,0 +1,128 @@
+# .github/workflows/release.yaml
+
+name: Flutter CI/CD (Windows & macOS)
+
+# 1. Gatilhos do Workflow
+on:
+  # Roda a compilação de teste toda vez que um PR é aberto ou atualizado na branch 'main'
+  pull_request:
+    branches: [ main ]
+    types: [ opened, synchronize, reopened ]
+
+  # Roda a compilação e release quando uma nova tag é criada
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*' # Ex: v1.0.0, v1.0.0-beta1
+
+# Variável de ambiente para evitar problemas de compatibilidade com Flutter e CI
+env:
+  FLUTTER_VERSION: 3.22.x # Ajuste para a versão que você usa
+
+# 2. Jobs
+jobs:
+  # Job de Teste de Integração (para Pull Requests)
+  test_pr_build:
+    name: Test PR Build (Windows)
+    # Roda apenas em eventos de pull_request
+    if: github.event_name == 'pull_request'
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+
+      - name: Flutter doctor
+        run: flutter doctor -v
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Run Build Test (Windows)
+        run: flutter build windows --release
+        # Se este passo for bem-sucedido, o código é compilável.
+
+  # Job de Release (para Tags)
+  release:
+    name: Build and Release
+    # Roda apenas em eventos de push de tag
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ${{ matrix.os }}
+    needs: [test_pr_build] # Garante que o PR build de teste passou (se aplicável)
+    
+    strategy:
+      matrix:
+        # Define as plataformas que serão compiladas
+        os: [windows-latest, macos-latest]
+        
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      # --- Ação Específica do Windows ---
+      - name: Build Windows Executable
+        if: runner.os == 'Windows'
+        run: flutter build windows --release
+      
+      # --- Ação Específica do macOS ---
+      - name: Build macOS Executable
+        if: runner.os == 'macOS'
+        run: flutter build macos --release
+      
+      # --- Empacotamento para macOS ---
+      - name: Zip macOS App Bundle
+        if: runner.os == 'macOS'
+        run: |
+          cd build/macos/Build/Products/Release
+          zip -r DAW_Project_Manager-${{ github.ref_name }}.zip daw_project_manager.app
+          
+      # ----------------------------------------------------
+      # Configuração do Release no GitHub
+      # ----------------------------------------------------
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+
+      # Anexar Artefato do Windows
+      - name: Upload Windows Release Asset
+        if: runner.os == 'Windows'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: build/windows/x64/runner/Release/daw_project_manager.exe
+          asset_name: DAW_Project_Manager_Windows.exe
+          asset_content_type: application/vnd.microsoft.portable-executable
+
+      # Anexar Artefato do macOS
+      - name: Upload macOS Release Asset
+        if: runner.os == 'macOS'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: build/macos/Build/Products/Release/DAW_Project_Manager-${{ github.ref_name }}.zip
+          asset_name: DAW_Project_Manager_macOS.zip
+          asset_content_type: application/zip

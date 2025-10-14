@@ -152,7 +152,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                       onPressed: _scanning
                           ? null
                           : () async {
-                              final path = await FilePicker.platform.getDirectoryPath(dialogTitle: 'Select root folder');
+                              final path = await FilePicker.platform.getDirectoryPath(dialogTitle: 'Select a projects folder');
                               if (path != null) {
                                 final repo = await ref.read(repositoryProvider.future);
                                 await repo.addRoot(path);
@@ -160,7 +160,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                               }
                             },
                       icon: const Icon(Icons.create_new_folder_outlined),
-                      label: const Text('Add Root & Scan'),
+                      label: const Text('Add Projects Folder'),
                     ),
                     const SizedBox(width: 12),
                     ElevatedButton.icon(
