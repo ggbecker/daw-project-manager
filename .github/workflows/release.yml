@@ -14,11 +14,8 @@ on:
 
 # Variáveis para Setup
 env:
-  # Versão do Dart SDK exigida pelo seu pubspec.yaml (ex: ^3.9.2)
   DART_SDK_VERSION: 3.9.x 
-  # Versão base do Flutter. Usaremos o canal 'beta' para esta versão 
-  # para garantir que o Flutter seja compatível com o Dart SDK mais novo.
-  FLUTTER_BASE_VERSION: 3.24.x 
+  FLUTTER_BASE_VERSION: 3.24.x # Ação encontrará a versão mais recente deste prefixo no canal 'beta'
 
 # 2. Jobs
 jobs:
@@ -31,21 +28,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # NOVO PASSO: Configurar o Dart SDK explicitamente
+      # 1. Configurar o Dart SDK
       - name: Setup Dart SDK ${{ env.DART_SDK_VERSION }}
         uses: dart-lang/setup-dart@v1
         with:
           version: ${{ env.DART_SDK_VERSION }}
 
-      - name: Get dependencies dart
-        run: dart pub get
-
-      # Setup Flutter (canal beta)
+      # 2. Setup Flutter (canal beta)
       - name: Setup Flutter ${{ env.FLUTTER_BASE_VERSION }} (Beta)
         uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_BASE_VERSION }}
           channel: 'beta' 
+          
+      # NOVO PASSO: Executar Flutter Upgrade
+      - name: Run Flutter Upgrade
+        run: flutter upgrade
 
       - name: Get dependencies & Build Test
         run: |
@@ -62,21 +60,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # NOVO PASSO: Configurar o Dart SDK explicitamente
+      # 1. Configurar o Dart SDK
       - name: Setup Dart SDK ${{ env.DART_SDK_VERSION }}
         uses: dart-lang/setup-dart@v1
         with:
           version: ${{ env.DART_SDK_VERSION }}
 
-      - name: Get dependencies dart
-        run: dart pub get
-
-      # Setup Flutter (canal beta)
+      # 2. Setup Flutter (canal beta)
       - name: Setup Flutter ${{ env.FLUTTER_BASE_VERSION }} (Beta)
         uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_BASE_VERSION }}
           channel: 'beta'
+          
+      # NOVO PASSO: Executar Flutter Upgrade
+      - name: Run Flutter Upgrade
+        run: flutter upgrade
 
       - name: Get dependencies
         run: flutter pub get
@@ -124,21 +123,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # NOVO PASSO: Configurar o Dart SDK explicitamente
+      # 1. Configurar o Dart SDK
       - name: Setup Dart SDK ${{ env.DART_SDK_VERSION }}
         uses: dart-lang/setup-dart@v1
         with:
           version: ${{ env.DART_SDK_VERSION }}
 
-      - name: Get dependencies dart
-        run: dart pub get
-
-      # Setup Flutter (canal beta)
+      # 2. Setup Flutter (canal beta)
       - name: Setup Flutter ${{ env.FLUTTER_BASE_VERSION }} (Beta)
         uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_BASE_VERSION }}
           channel: 'beta'
+
+      # NOVO PASSO: Executar Flutter Upgrade
+      - name: Run Flutter Upgrade
+        run: flutter upgrade
 
       - name: Get dependencies
         run: flutter pub get
