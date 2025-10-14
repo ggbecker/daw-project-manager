@@ -56,6 +56,7 @@ jobs:
         with:
           flutter-version: ${{ env.FLUTTER_VERSION_FIXED }}
           channel: 'stable'
+      - run: flutter --version
 
       - name: Get dependencies
         run: flutter pub get
@@ -109,6 +110,7 @@ jobs:
         with:
           flutter-version: ${{ env.FLUTTER_VERSION_FIXED }}
           channel: 'stable'
+      - run: flutter --version
 
       - name: Get dependencies
         run: flutter pub get
