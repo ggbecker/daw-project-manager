@@ -11,7 +11,7 @@ AppUpdatesURL=https://www.github.com/ggbecker/daw-project-manager
 DefaultDirName={autopf}\DAW Project Manager
 DefaultGroupName=DAW Project Manager
 ; Nome do arquivo de saída
-OutputBaseFileName=DAW_Project_Manager_Installer_{#SetupSetting("AppVersion")}
+OutputBaseFileName=DAW_Project_Manager_Installer_v{#SetupSetting("AppVersion")}
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
