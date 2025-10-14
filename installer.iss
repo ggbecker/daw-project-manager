@@ -10,7 +10,8 @@ AppSupportURL=https://www.github.com/ggbecker/daw-project-manager
 AppUpdatesURL=https://www.github.com/ggbecker/daw-project-manager
 DefaultDirName={autopf}\DAW Project Manager
 DefaultGroupName=DAW Project Manager
-OutputBaseFileName=DAW_Project_Manager_Installer_{#SetupSetting("AppVersion")} ; Nome do arquivo de saída
+; Nome do arquivo de saída
+OutputBaseFileName=DAW_Project_Manager_Installer_{#SetupSetting("AppVersion")}
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
@@ -21,7 +22,8 @@ WizardStyle=modern
 [Files]
 ; Inclui todos os arquivos da pasta de release do Flutter.
 ; Source: Pasta de Release do Flutter | DestDir: Pasta de instalação
-Source: "build\windows\x64\runner\Release\*" ; A pasta que contém o EXE, DLLs e pasta 'data'
+; A pasta que contém o EXE, DLLs e pasta 'data'
+Source: "build\windows\x64\runner\Release\*"
 DestDir: "{app}"
 Flags: recursesubdirs createallsubdirs
 
@@ -42,4 +44,4 @@ Name: "{autodesktop}\DAW Project Manager"; Filename: "{app}\daw_project_manager.
 
 [Code]
 ; Se o seu projeto tiver ícone, coloque-o na raiz do projeto e adicione a linha:
-; SetupIconFile=app_icon.ico
+SetupIconFile=app_icon.ico
