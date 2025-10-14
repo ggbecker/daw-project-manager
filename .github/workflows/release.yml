@@ -70,7 +70,7 @@ jobs:
           - os: windows-latest
             os_name: Windows
             command: flutter build windows --release
-            asset_path: DAW_Project_Manager_Installer_${{ github.ref_name }}.exe 
+            asset_path: Output/DAW_Project_Manager_Installer_${{ github.ref_name }}.exe 
             asset_name: DAW_Project_Manager_Installer_Windows.exe
             is_zip: false 
             asset_content_type: application/vnd.microsoft.portable-executable 
