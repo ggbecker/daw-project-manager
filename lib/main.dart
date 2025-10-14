@@ -3,11 +3,38 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
 import 'package:window_manager/window_manager.dart';
 
-// NOVO: Importar providers para acessar o repositoryProvider
-import 'providers/providers.dart'; 
+// NOVO: Importar providers e serviços para a lógica de auto-scan
+import 'providers/providers.dart';
+import 'repository/project_repository.dart';
+import 'services/scanner_service.dart';
+
 import 'ui/dashboard_page.dart';
 
-// O main() agora é assíncrono
+// NOVO: Função para executar o scan
+Future<void> _runInitialScan(ProjectRepository repo) async {
+  try {
+    // 1. Limpa arquivos que não existem mais
+    await repo.clearMissingFiles();
+    
+    // 2. Cria o scanner e processa as raízes de scan
+    final scanner = ScannerService();
+    for (final root in repo.getRoots()) {
+      await for (final entity in scanner.scanDirectory(root.path)) {
+        await repo.upsertFromFileSystemEntity(entity);
+      }
+    }
+    if (kDebugMode) {
+      print("Initial scan completed successfully.");
+    }
+  } catch (e, st) {
+    if (kDebugMode) {
+      print("Error during initial scan: $e");
+      print(st);
+    }
+  }
+}
+
+
 void main() async {
   // 1. Inicialização do Flutter e Window Manager
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,31 +47,31 @@ void main() async {
     minimumSize: initialSize,
     center: true,
     title: "DAW Project Manager",
-    
-    // 3. LÓGICA CONDICIONAL: 
-    // Debug: TitleBarStyle.normal (Barra nativa)
-    // Release: TitleBarStyle.hidden (Sem barra)
     titleBarStyle: kDebugMode ? TitleBarStyle.normal : TitleBarStyle.hidden,
   );
   
-  // 4. Criação e exibição da janela
+  // 3. Criação e exibição da janela
   await windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.show();
     await windowManager.focus();
   });
   
-  // 5. NOVO: Pré-carregamento do Repositório Hive
+  // NOVO: 4. Configuração do Riverpod e Auto-Scan
   final container = ProviderContainer();
   try {
-    // Força o Riverpod a esperar a conclusão do ProjectRepository.init()
-    await container.read(repositoryProvider.future);
-  } catch (e, stack) {
-    // Trata ou loga qualquer erro de inicialização do Hive
-    debugPrint('Erro ao inicializar o repositório: $e\n$stack');
-    // Nota: A aplicação continuará, mas pode não ter dados se o Hive falhar
+    // 4a. Pré-carrega o Repositório Hive (o FutureProvider)
+    final repo = await container.read(repositoryProvider.future);
+    
+    // 4b. Executa o Scan Inicial em segundo plano (não aguardamos o Future)
+    // O await repo... em cima garante que o Hive está pronto antes do scan.
+    _runInitialScan(repo);
+    
+  } catch (e) {
+    if (kDebugMode) print("Failed to initialize repository or run initial scan: $e");
   }
 
-  // 6. NOVO: Passa o container pré-carregado para a aplicação
+
+  // 5. Roda o app com o container já configurado
   runApp(
     UncontrolledProviderScope(
       container: container,
@@ -53,13 +80,14 @@ void main() async {
   );
 }
 
+// ... (O resto da classe MyApp permanece o mesmo)
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     final darkScheme = ColorScheme.fromSeed(
-      seedColor: const Color(0xFF5A6B7A), // blue-grey accent similar to Cursor
+      seedColor: const Color(0xFF5A6B7A), 
       brightness: Brightness.dark,
     );
 
@@ -90,7 +118,6 @@ class MyApp extends StatelessWidget {
       title: 'DAW Project Manager',
       themeMode: ThemeMode.dark,
       theme: baseTheme,
-      darkTheme: baseTheme, // Usando o mesmo tema base para darkTheme
       home: const DashboardPage(),
     );
   }

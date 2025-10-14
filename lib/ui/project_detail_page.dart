@@ -125,7 +125,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                   // Campo para editar o nome de exibição customizado
                   TextFormField(
                     controller: _nameCtrl,
-                    decoration: const InputDecoration(labelText: 'Display Name (editable)'),
+                    decoration: const InputDecoration(labelText: 'Project Name'),
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
