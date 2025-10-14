@@ -37,6 +37,9 @@ jobs:
         with:
           version: ${{ env.DART_SDK_VERSION }}
 
+      - name: Get dependencies dart
+        run: dart pub get
+
       # Setup Flutter (canal beta)
       - name: Setup Flutter ${{ env.FLUTTER_BASE_VERSION }} (Beta)
         uses: subosito/flutter-action@v2
@@ -64,6 +67,9 @@ jobs:
         uses: dart-lang/setup-dart@v1
         with:
           version: ${{ env.DART_SDK_VERSION }}
+
+      - name: Get dependencies dart
+        run: dart pub get
 
       # Setup Flutter (canal beta)
       - name: Setup Flutter ${{ env.FLUTTER_BASE_VERSION }} (Beta)
@@ -123,6 +129,9 @@ jobs:
         uses: dart-lang/setup-dart@v1
         with:
           version: ${{ env.DART_SDK_VERSION }}
+
+      - name: Get dependencies dart
+        run: dart pub get
 
       # Setup Flutter (canal beta)
       - name: Setup Flutter ${{ env.FLUTTER_BASE_VERSION }} (Beta)
