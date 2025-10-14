@@ -15,7 +15,7 @@ on:
 # Variáveis para Setup
 env:
   DART_SDK_VERSION: 3.9.x 
-  FLUTTER_BASE_VERSION: 3.24.x # Ação encontrará a versão mais recente deste prefixo no canal 'beta'
+  FLUTTER_BASE_VERSION: 3.24.x 
 
 # 2. Jobs
 jobs:
@@ -28,20 +28,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # 1. Configurar o Dart SDK
       - name: Setup Dart SDK ${{ env.DART_SDK_VERSION }}
         uses: dart-lang/setup-dart@v1
         with:
           version: ${{ env.DART_SDK_VERSION }}
 
-      # 2. Setup Flutter (canal beta)
       - name: Setup Flutter ${{ env.FLUTTER_BASE_VERSION }} (Beta)
         uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_BASE_VERSION }}
-          channel: 'beta' 
-          
-      # NOVO PASSO: Executar Flutter Upgrade
+          channel: 'beta'
+
       - name: Run Flutter Upgrade
         run: flutter upgrade
 
@@ -53,27 +50,28 @@ jobs:
 
   # Job de Release para macOS
   release_macos:
-    name: Build and Release (macOS)
+    name: Build and Upload (macOS)
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: macos-latest
+    
+    # NOVO: Define o output para a URL de upload que será usada pelo job de Windows
+    outputs:
+      release_upload_url: ${{ steps.find_release.outputs.upload_url }}
     
     steps:
       - uses: actions/checkout@v4
 
-      # 1. Configurar o Dart SDK
       - name: Setup Dart SDK ${{ env.DART_SDK_VERSION }}
         uses: dart-lang/setup-dart@v1
         with:
           version: ${{ env.DART_SDK_VERSION }}
 
-      # 2. Setup Flutter (canal beta)
       - name: Setup Flutter ${{ env.FLUTTER_BASE_VERSION }} (Beta)
         uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_BASE_VERSION }}
           channel: 'beta'
-          
-      # NOVO PASSO: Executar Flutter Upgrade
+
       - name: Run Flutter Upgrade
         run: flutter upgrade
 
@@ -88,17 +86,26 @@ jobs:
           cd build/macos/Build/Products/Release
           zip -r DAW_Project_Manager-${{ github.ref_name }}.zip daw_project_manager.app
           
-      # Criação do Release (Feito apenas neste job)
-      - name: Create GitHub Release
-        id: create_release
-        uses: actions/create-release@v1
+      # NOVO PASSO: Encontra a URL de Upload do Release existente
+      - name: Find Existing Release URL
+        id: find_release
+        uses: actions/github-script@v6
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ github.ref_name }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref_name }}
-          draft: false
-          prerelease: false
+          script: |
+            try {
+              // Usa o octokit para buscar o Release pela Tag
+              const { data: release } = await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag: process.env.RELEASE_TAG,
+              });
+              // Define o output que será usado por este job e pelo job de Windows
+              core.setOutput('upload_url', release.upload_url);
+            } catch (error) {
+              core.setFailed(`Release with tag ${process.env.RELEASE_TAG} not found. Please create a Release manually on GitHub matching this tag before pushing the tag.`);
+            }
 
       # Anexar Artefato do macOS
       - name: Upload macOS Release Asset
@@ -106,37 +113,35 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          # Usa o output do passo anterior
+          upload_url: ${{ steps.find_release.outputs.upload_url }} 
           asset_path: build/macos/Build/Products/Release/DAW_Project_Manager-${{ github.ref_name }}.zip
           asset_name: DAW_Project_Manager_macOS.zip
           asset_content_type: application/zip
 
   # Job de Release para Windows
   release_windows:
-    name: Build and Release (Windows)
+    name: Build and Upload (Windows)
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: windows-latest
     
-    # Depende do job de macOS para garantir que o Release já tenha sido criado
+    # Depende do job de macOS para obter a URL de upload
     needs: [release_macos] 
     
     steps:
       - uses: actions/checkout@v4
 
-      # 1. Configurar o Dart SDK
       - name: Setup Dart SDK ${{ env.DART_SDK_VERSION }}
         uses: dart-lang/setup-dart@v1
         with:
           version: ${{ env.DART_SDK_VERSION }}
 
-      # 2. Setup Flutter (canal beta)
       - name: Setup Flutter ${{ env.FLUTTER_BASE_VERSION }} (Beta)
         uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_BASE_VERSION }}
           channel: 'beta'
 
-      # NOVO PASSO: Executar Flutter Upgrade
       - name: Run Flutter Upgrade
         run: flutter upgrade
 
@@ -146,13 +151,14 @@ jobs:
       - name: Build Windows Executable
         run: flutter build windows --release
       
-      # Anexar Artefato do Windows (anexa ao Release criado no job 'release_macos')
+      # Anexar Artefato do Windows (anexa ao Release existente)
       - name: Upload Windows Release Asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ github.event.release.upload_url || format('https://uploads.github.com/repos/{0}/releases/{1}/assets', github.repository, needs.release_macos.outputs.release_id) }}
+          # Usa o output do job 'release_macos' para a URL
+          upload_url: ${{ needs.release_macos.outputs.release_upload_url }}
           asset_path: build/windows/x64/runner/Release/daw_project_manager.exe
           asset_name: DAW_Project_Manager_Windows.exe
           asset_content_type: application/vnd.microsoft.portable-executable
