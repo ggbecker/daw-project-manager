@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart'; 
 import 'package:window_manager/window_manager.dart'; 
 
 import '../services/scanner_service.dart';
@@ -64,6 +65,44 @@ class DashboardPage extends ConsumerStatefulWidget {
 
 class _DashboardPageState extends ConsumerState<DashboardPage> {
   bool _scanning = false;
+  
+  // 1. FocusNode para a barra de pesquisa
+  final FocusNode _searchFocusNode = FocusNode();
+  
+  // FocusNode auxiliar para o RawKeyboardListener
+  final FocusNode _globalRawKeyListenerFocusNode = FocusNode();
+
+  @override
+  void dispose() {
+    _searchFocusNode.dispose(); 
+    _globalRawKeyListenerFocusNode.dispose(); 
+    super.dispose();
+  }
+
+  // 🚨 MÉTODO ATUALIZADO: Inclui Ctrl+R para Rescan
+  void _handleRawKeyEvent(RawKeyEvent event) {
+    // Escutar apenas o evento de tecla para baixo (RawKeyDownEvent)
+    if (event is! RawKeyDownEvent) return;
+
+    // Verificar se Ctrl (ou Cmd/Meta no macOS) está pressionado
+    final bool isControlOrMetaPressed = event.isControlPressed || event.isMetaPressed;
+    
+    // 1. Lógica para Ctrl + F
+    final bool isKeyF = event.logicalKey == LogicalKeyboardKey.keyF;
+    if (isKeyF && isControlOrMetaPressed) {
+      _searchFocusNode.requestFocus();
+      return; // Consome o evento
+    }
+
+    // 2. Lógica para Ctrl + R
+    final bool isKeyR = event.logicalKey == LogicalKeyboardKey.keyR;
+    if (isKeyR && isControlOrMetaPressed) {
+      // Chama a função de Rescan
+      _scanAll(); 
+      return; // Consome o evento
+    }
+  }
+
 
   Future<void> _scanAll() async {
     if (_scanning) return;
@@ -95,188 +134,194 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     final dateFormat = ref.watch(dateFormatProvider);
     final repoAsync = ref.watch(repositoryProvider);
     final roots = ref.watch(scanRootsProvider);
-    
     final currentParams = ref.watch(queryParamsNotifierProvider);
-
     final projects = ref.watch(projectsProvider);
 
-    return Scaffold(
-      appBar: null, 
-      body: Column(
-        children: [
-          // ----------------------------------------------------
-          // LÓGICA DE WINDOW BAR: APENAS MOSTRA A BARRA PERSONALIZADA SE NÃO ESTIVER EM DEBUG
-          if (!kDebugMode) 
-            GestureDetector(
-              onPanStart: (_) => windowManager.startDragging(),
-              // LÓGICA CORRIGIDA para alternar maximizar/restaurar no double tap
-              onDoubleTap: () async {
-                if (await windowManager.isMaximized()) {
-                  windowManager.restore();
-                } else {
-                  windowManager.maximize();
-                }
-              }, 
-              child: Container(
-                color: const Color(0xFF2B2D31), // Cor de fundo da AppBar
-                height: 40, // Altura padrão para a barra
-                child: Row(
-                  children: [
-                    // Título da Aplicação
-                    const Padding(
-                      padding: EdgeInsets.only(left: 12),
-                      child: Text(
-                        'DAW Project Manager', 
-                        style: TextStyle(color: Colors.white70, fontSize: 16),
+    // RawKeyboardListener no topo, com autofocus para a tentativa mais agressiva de ignorar o foco do PlutoGrid.
+    return RawKeyboardListener( 
+      focusNode: _globalRawKeyListenerFocusNode,
+      autofocus: true, 
+      onKey: _handleRawKeyEvent, 
+      child: Scaffold(
+        appBar: null, 
+        body: Column(
+          children: [
+            // ----------------------------------------------------
+            // LÓGICA DE WINDOW BAR: APENHAS MOSTRA A BARRA PERSONALIZADA SE NÃO ESTIVER EM DEBUG
+            if (!kDebugMode) 
+              GestureDetector(
+                onPanStart: (_) => windowManager.startDragging(),
+                // LÓGICA CORRIGIDA para alternar maximizar/restaurar no double tap
+                onDoubleTap: () async {
+                  if (await windowManager.isMaximized()) {
+                    windowManager.restore();
+                  } else {
+                    windowManager.maximize();
+                  }
+                }, 
+                child: Container(
+                  color: const Color(0xFF2B2D31), // Cor de fundo da AppBar
+                  height: 40, // Altura padrão para a barra
+                  child: Row(
+                    children: [
+                      // Título da Aplicação
+                      const Padding(
+                        padding: EdgeInsets.only(left: 12),
+                        child: Text(
+                          'DAW Project Manager', 
+                          style: TextStyle(color: Colors.white70, fontSize: 16),
+                        ),
                       ),
-                    ),
-                    const Spacer(), // Espaçador para empurrar os botões para a direita
-                    // Botões de minimizar, maximizar e fechar
-                    const WindowButtons(),
-                  ],
+                      const Spacer(), // Espaçador para empurrar os botões para a direita
+                      // Botões de minimizar, maximizar e fechar
+                      const WindowButtons(),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          // ----------------------------------------------------
-          
-          // CONTEÚDO DA BARRA DE AÇÕES E PESQUISA
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Ações de Root e Scan
-                Row(
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: _scanning
-                          ? null
-                          : () async {
-                              final path = await FilePicker.platform.getDirectoryPath(dialogTitle: 'Select a projects folder');
-                              if (path != null) {
-                                final repo = await ref.read(repositoryProvider.future);
-                                await repo.addRoot(path);
-                                await _scanAll();
-                              }
-                            },
-                      icon: const Icon(Icons.create_new_folder_outlined),
-                      label: const Text('Add Projects Folder'),
-                    ),
-                    const SizedBox(width: 12),
-                    ElevatedButton.icon(
-                      onPressed: _scanning
-                          ? null
-                          : () async {
-                              await _scanAll();
-                            },
-                      icon: _scanning
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.refresh),
-                      label: Text(_scanning ? 'Scanning…' : 'Rescan'),
-                    ),
-                  ],
-                ),
-                
-                // Área de Pesquisa e Filtro
-                Row(
-                  children: [
-                    SizedBox(
-                      width: 250,
-                      child: TextField(
-                        controller: TextEditingController(text: currentParams.searchText)
-                          ..selection = TextSelection.fromPosition(TextPosition(offset: currentParams.searchText.length)),
-                        decoration: const InputDecoration(
-                          hintText: 'Search by name...',
-                          isDense: true,
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.search),
-                        ),
-                        onChanged: (text) {
-                          ref.read(queryParamsNotifierProvider.notifier).setSearchText(text);
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      tooltip: 'Toggle sort',
-                      onPressed: () {
-                        ref.read(queryParamsNotifierProvider.notifier).toggleSortDesc();
-                      },
-                      icon: Icon(currentParams.sortDesc ? Icons.sort_by_alpha : Icons.sort),
-                    ),
-                    const SizedBox(width: 8),
-                    // Exibe o contador de projetos
-                    repoAsync.when(
-                      loading: () => const SizedBox.shrink(),
-                      error: (_, __) => const SizedBox.shrink(),
-                      data: (repo) => Text('Roots: ${repo.getRoots().length}   Projects: ${projects.length}'),
-                    ),
-                    const SizedBox(width: 8),
-                    Builder(
-                      builder: (context) {
-                        return IconButton(
-                          tooltip: 'Clear Library (projects & roots)',
-                          icon: const Icon(Icons.delete_forever),
-                          onPressed: () async {
-                            final confirm = await showDialog<bool>(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                backgroundColor: const Color(0xFF2B2D31),
-                                title: const Text('Clear Library'),
-                                content: const Text('This will remove all saved projects and source folders. Continue?'),
-                                actions: [
-                                  TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-                                  ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Clear')),
-                                ],
-                              ),
-                            );
-                            if (confirm == true) {
-                              final repo = await ref.read(repositoryProvider.future);
-                              await repo.clearAllData();
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Library cleared.')));
-                              }
-                            }
-                          },
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          
-          if (roots.isNotEmpty)
+            // ----------------------------------------------------
+            
+            // CONTEÚDO DA BARRA DE AÇÕES E PESQUISA
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    for (final r in roots)
-                      Chip(
-                        label: Text(r.path),
-                        deleteIcon: const Icon(Icons.close),
-                        onDeleted: () async {
-                          final repo = await ref.read(repositoryProvider.future);
-                          await repo.removeRoot(r.id);
-                        },
-                        backgroundColor: const Color(0xFF2B2D31),
-                        labelStyle: const TextStyle(color: Colors.white70),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Ações de Root e Scan
+                  Row(
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: _scanning
+                            ? null
+                            : () async {
+                                  final path = await FilePicker.platform.getDirectoryPath(dialogTitle: 'Select a projects folder');
+                                  if (path != null) {
+                                    final repo = await ref.read(repositoryProvider.future);
+                                    await repo.addRoot(path);
+                                    await _scanAll();
+                                  }
+                                },
+                        icon: const Icon(Icons.create_new_folder_outlined),
+                        label: const Text('Add Projects Folder'),
                       ),
-                  ],
-                ),
+                      const SizedBox(width: 12),
+                      ElevatedButton.icon(
+                        onPressed: _scanning
+                            ? null
+                            : () async {
+                                  await _scanAll();
+                                },
+                        icon: _scanning
+                            ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                            : const Icon(Icons.refresh),
+                        label: Text(_scanning ? 'Scanning…' : 'Rescan'),
+                      ),
+                    ],
+                  ),
+                  
+                  // Área de Pesquisa e Filtro
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 250,
+                        child: TextField(
+                          // Associar o FocusNode ao TextField
+                          focusNode: _searchFocusNode, 
+                          controller: TextEditingController(text: currentParams.searchText)
+                            ..selection = TextSelection.fromPosition(TextPosition(offset: currentParams.searchText.length)),
+                          decoration: const InputDecoration(
+                            hintText: 'Search by name...',
+                            isDense: true,
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.search),
+                          ),
+                          onChanged: (text) {
+                            ref.read(queryParamsNotifierProvider.notifier).setSearchText(text);
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        tooltip: 'Toggle sort',
+                        onPressed: () {
+                          ref.read(queryParamsNotifierProvider.notifier).toggleSortDesc();
+                        },
+                        icon: Icon(currentParams.sortDesc ? Icons.sort_by_alpha : Icons.sort),
+                      ),
+                      const SizedBox(width: 8),
+                      // Exibe o contador de projetos
+                      repoAsync.when(
+                        loading: () => const SizedBox.shrink(),
+                        error: (_, __) => const SizedBox.shrink(),
+                        data: (repo) => Text('Roots: ${repo.getRoots().length}   Projects: ${projects.length}'),
+                      ),
+                      const SizedBox(width: 8),
+                      Builder(
+                        builder: (context) {
+                          return IconButton(
+                            tooltip: 'Clear Library (projects & roots)',
+                            icon: const Icon(Icons.delete_forever),
+                            onPressed: () async {
+                              final confirm = await showDialog<bool>(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  backgroundColor: const Color(0xFF2B2D31),
+                                  title: const Text('Clear Library'),
+                                  content: const Text('This will remove all saved projects and source folders. Continue?'),
+                                  actions: [
+                                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                                    ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Clear')),
+                                  ],
+                                ),
+                              );
+                              if (confirm == true) {
+                                final repo = await ref.read(repositoryProvider.future);
+                                await repo.clearAllData();
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Library cleared.')));
+                                }
+                              }
+                            },
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-          Expanded(child: _PlutoProjectsTable(projects: projects, dateFormat: dateFormat)),
-        ],
+            
+            if (roots.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final r in roots)
+                        Chip(
+                          label: Text(r.path),
+                          deleteIcon: const Icon(Icons.close),
+                          onDeleted: () async {
+                            final repo = await ref.read(repositoryProvider.future);
+                            await repo.removeRoot(r.id);
+                          },
+                          backgroundColor: const Color(0xFF2B2D31),
+                          labelStyle: const TextStyle(color: Colors.white70),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            Expanded(child: _PlutoProjectsTable(projects: projects, dateFormat: dateFormat)),
+          ],
+        ),
       ),
     );
   }
@@ -414,6 +459,7 @@ class _PlutoProjectsTableState extends State<_PlutoProjectsTable> {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to launch: $e')));
                     }
+                    return;
                   }
                 },
                 child: const Text('Launch'),
