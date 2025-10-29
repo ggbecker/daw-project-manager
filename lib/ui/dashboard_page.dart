@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart'; 
 import 'package:window_manager/window_manager.dart'; 
+import 'package:path/path.dart' as path; // 🚨 NOVO IMPORT
 
 import '../services/scanner_service.dart';
 import 'project_detail_page.dart';
@@ -79,7 +80,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     super.dispose();
   }
 
-  // 🚨 MÉTODO ATUALIZADO: Inclui Ctrl+R para Rescan
+  // MÉTODO FINAL: Inclui Ctrl+F e Ctrl+R
   void _handleRawKeyEvent(RawKeyEvent event) {
     // Escutar apenas o evento de tecla para baixo (RawKeyDownEvent)
     if (event is! RawKeyDownEvent) return;
@@ -137,7 +138,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     final currentParams = ref.watch(queryParamsNotifierProvider);
     final projects = ref.watch(projectsProvider);
 
-    // RawKeyboardListener no topo, com autofocus para a tentativa mais agressiva de ignorar o foco do PlutoGrid.
+    // RawKeyboardListener no topo.
     return RawKeyboardListener( 
       focusNode: _globalRawKeyListenerFocusNode,
       autofocus: true, 
@@ -151,7 +152,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
             if (!kDebugMode) 
               GestureDetector(
                 onPanStart: (_) => windowManager.startDragging(),
-                // LÓGICA CORRIGIDA para alternar maximizar/restaurar no double tap
+                // LÓGICA para alternar maximizar/restaurar no double tap
                 onDoubleTap: () async {
                   if (await windowManager.isMaximized()) {
                     windowManager.restore();
@@ -378,7 +379,7 @@ class _PlutoProjectsTableState extends State<_PlutoProjectsTable> {
         type: PlutoColumnType.text(),
         enableColumnDrag: true,
         enableContextMenu: false,
-        width: 380,
+        width: 600,
         minWidth: 200,
         frozen: PlutoColumnFrozen.start,
       ),
@@ -414,14 +415,59 @@ class _PlutoProjectsTableState extends State<_PlutoProjectsTable> {
         title: 'Actions',
         field: 'launch',
         type: PlutoColumnType.text(),
-        width: 220,
-        minWidth: 180,
+        width: 360, // 🚨 LARGURA AUMENTADA para caber 3 botões
+        minWidth: 260,
         renderer: (ctx) {
           final project = ctx.row.cells['data']!.value as MusicProject;
+          
+          // Lógica para determinar o diretório pai
+          final String projectPath = project.filePath;
+          final String folderPath = FileSystemEntity.isDirectorySync(projectPath)
+              ? projectPath // Se for um diretório, usa o próprio caminho
+              : path.dirname(projectPath); // Se for um arquivo, usa o diretório pai
           
           return Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // 🚨 NOVO BOTÃO: OPEN FOLDER
+              ElevatedButton(
+                onPressed: () async {
+                  final exists = Directory(folderPath).existsSync();
+                  if (!exists) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Folder missing.')));
+                    }
+                    return;
+                  }
+                  
+                  try {
+                    // Lógica para abrir o diretório no explorador de arquivos nativo
+                    if (Platform.isMacOS) {
+                      await Process.start('open', [folderPath]);
+                    } else if (Platform.isWindows) {
+                      // Usar 'explorer' para Windows
+                      await Process.start('explorer', [folderPath]);
+                    } else if (Platform.isLinux) {
+                      // Usar 'xdg-open' para a maioria dos ambientes Linux
+                      await Process.start('xdg-open', [folderPath]);
+                    } else {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('OS not supported for opening folder.')));
+                      }
+                      return;
+                    }
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Opening folder for ${project.displayName}…')));
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to open folder: $e')));
+                    }
+                  }
+                },
+                child: const Text('Open Folder'),
+              ),
+              const SizedBox(width: 8),
               // BOTÃO: VIEW (Detalhes)
               ElevatedButton(
                 onPressed: () async {

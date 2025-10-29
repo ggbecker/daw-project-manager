@@ -41,7 +41,7 @@ void main() async {
   await windowManager.ensureInitialized();
 
   // 2. Configurações da Janela
-  const initialSize = Size(1200, 700);
+  const initialSize = Size(1920, 1080);
   WindowOptions windowOptions = WindowOptions(
     size: initialSize,
     minimumSize: initialSize,
