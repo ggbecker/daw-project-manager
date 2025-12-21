@@ -100,6 +100,24 @@ body {
     background: var(--primary-light);
 }
 
+.donate-link {
+    background: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    color: var(--text-primary) !important;
+    font-weight: 600;
+}
+
+.donate-link:hover {
+    background: linear-gradient(135deg, #ff5a8d 0%, #ff7fa0 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 107, 157, 0.3);
+}
+
+.donate-link svg {
+    fill: var(--text-primary);
+}
+
 /* Hero Section */
 .hero {
     background: linear-gradient(135deg, var(--bg-darker) 0%, var(--bg-dark) 100%);
