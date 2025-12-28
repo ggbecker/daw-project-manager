@@ -59,6 +59,9 @@ class MusicProject {
   @HiveField(17)
   final bool hidden; // Whether the project is hidden from the list
 
+  @HiveField(18)
+  final String? previewSongPath; // Path to preview audio file
+
   const MusicProject({
     required this.id,
     required this.filePath,
@@ -78,6 +81,7 @@ class MusicProject {
     this.dawVersion,
     this.todos = const [],
     this.hidden = false,
+    this.previewSongPath,
   });
 
   String get displayName => (customDisplayName != null && customDisplayName!.trim().isNotEmpty)
@@ -103,6 +107,7 @@ class MusicProject {
     String? dawVersion,
     List<TodoItem>? todos,
     bool? hidden,
+    String? previewSongPath,
   }) {
     return MusicProject(
       id: id ?? this.id,
@@ -123,6 +128,7 @@ class MusicProject {
       dawVersion: dawVersion ?? this.dawVersion,
       todos: todos ?? this.todos,
       hidden: hidden ?? this.hidden,
+      previewSongPath: previewSongPath ?? this.previewSongPath,
     );
   }
 }
@@ -160,13 +166,14 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
           ? (fields[16] as List).cast<TodoItem>()
           : const [],
       hidden: fields.containsKey(17) ? (fields[17] as bool) : false,
+      previewSongPath: fields.containsKey(18) ? fields[18] as String? : null,
     );
   }
 
   @override
   void write(BinaryWriter writer, MusicProject obj) {
     writer
-      ..writeByte(18) // Agora são 18 campos (0-17)
+      ..writeByte(19) // Agora são 19 campos (0-18)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -202,6 +209,8 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
       ..writeByte(16)
       ..write(obj.todos)
       ..writeByte(17)
-      ..write(obj.hidden);
+      ..write(obj.hidden)
+      ..writeByte(18)
+      ..write(obj.previewSongPath);
   }
 }

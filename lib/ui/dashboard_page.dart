@@ -9,6 +9,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart'; 
 import 'package:window_manager/window_manager.dart'; 
 import 'package:path/path.dart' as path; // 🚨 NOVO IMPORT
+import 'package:url_launcher/url_launcher.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 import '../services/scanner_service.dart';
 import 'project_detail_page.dart';
@@ -25,7 +27,7 @@ import '../providers/providers.dart';
 import '../repository/project_repository.dart';
 import 'package:uuid/uuid.dart';
 
-const String kAppVersion = '1.4.0';
+const String kAppVersion = '1.5.0';
 
 // WIDGET CORRIGIDO: Botões de controle da janela usando window_manager
 class WindowButtons extends StatelessWidget {
@@ -427,8 +429,27 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                         ),
                       ),
                       const Spacer(), // Espaçador para empurrar os botões para a direita
-                      const ThemeSwitcher(),
                       const SizedBox(width: 4),
+                      // Donate button
+                      Tooltip(
+                        message: 'Support the project',
+                        child: TextButton.icon(
+                          icon: const Icon(Icons.card_giftcard, size: 18, color: Colors.white70),
+                          label: const Text(
+                            'Support',
+                            style: TextStyle(color: Colors.white70, fontSize: 14),
+                          ),
+                          onPressed: () async {
+                            final uri = Uri.parse('https://www.paypal.com/donate/?hosted_button_id=QHVVZ3LAF39BL');
+                            if (await canLaunchUrl(uri)) {
+                              await launchUrl(uri, mode: LaunchMode.externalApplication);
+                            } 
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const ThemeSwitcher(),
+                      const SizedBox(width: 8),
                       const LanguageSwitcher(),
                       const SizedBox(width: 8),
                       // Botões de minimizar, maximizar e fechar
@@ -1361,6 +1382,35 @@ class _PlutoProjectsTable extends ConsumerStatefulWidget {
 class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   PlutoGridStateManager? stateManager;
   
+  Future<void> _playPreviewSong(MusicProject project) async {
+    if (project.previewSongPath == null || project.previewSongPath!.isEmpty) {
+      return;
+    }
+    
+    final file = File(project.previewSongPath!);
+    if (!await file.exists()) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Preview song file not found')),
+        );
+      }
+      return;
+    }
+    
+    // Show popup dialog with audio player
+    if (mounted) {
+      await showDialog(
+        context: context,
+        builder: (dialogContext) => _PreviewSongDialog(
+          project: project,
+          onClose: () {
+            // Callback when dialog closes - can be used for cleanup if needed
+          },
+        ),
+      );
+    }
+  }
+  
   Future<void> _writeBpmToFile(MusicProject project, double? bpm) async {
     try {
       final projectDir = File(project.filePath).parent;
@@ -1479,6 +1529,184 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     return null;
   }
 
+  Future<void> _launchProject(MusicProject project) async {
+    final exists = File(project.filePath).existsSync() || Directory(project.filePath).existsSync();
+    if (!exists) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.fileMissing)));
+      }
+      return;
+    }
+    try {
+      // Lançamento específico para Windows e macOS
+      if (Platform.isMacOS) {
+        await Process.start('open', [project.filePath]);
+      } else if (Platform.isWindows) {
+        await Process.start('cmd', ['/c', 'start', '', project.filePath]);
+      } else {
+        // Fallback para outros sistemas operacionais (e.g. Linux)
+        await Process.start(project.filePath, []);
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.launchingProject(project.displayName))));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.failedToLaunch(e.toString()))));
+      }
+    }
+  }
+
+  Future<void> _viewProjectDetails(MusicProject project) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => ProjectDetailPage(projectId: project.id)),
+    );
+  }
+
+  Future<void> _openProjectFolder(MusicProject project) async {
+    final String projectPath = project.filePath;
+    final String folderPath = FileSystemEntity.isDirectorySync(projectPath)
+        ? projectPath // Se for um diretório, usa o próprio caminho
+        : path.dirname(projectPath); // Se for um arquivo, usa o diretório pai
+    
+    final exists = Directory(folderPath).existsSync();
+    if (!exists) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.fileMissing)));
+      }
+      return;
+    }
+    
+    try {
+      // Lógica para abrir o diretório no explorador de arquivos nativo
+      if (Platform.isMacOS) {
+        await Process.start('open', [folderPath]);
+      } else if (Platform.isWindows) {
+        // Usar 'explorer' para Windows
+        await Process.start('explorer', [folderPath]);
+      } else if (Platform.isLinux) {
+        // Usar 'xdg-open' para a maioria dos ambientes Linux
+        await Process.start('xdg-open', [folderPath]);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.osNotSupportedForOpeningFolder)));
+        }
+        return;
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.openingFolder(project.displayName))));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.failedToOpenFolder(e.toString()))));
+      }
+    }
+  }
+
+  Future<void> _showContextMenu(BuildContext context, MusicProject project, Offset position) async {
+    final l10n = AppLocalizations.of(context)!;
+    
+    final result = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        position.dx,
+        position.dy,
+        position.dx,
+        position.dy,
+      ),
+      items: [
+        PopupMenuItem<String>(
+          value: 'launch',
+          child: Row(
+            children: [
+              const Icon(Icons.open_in_new, size: 20),
+              const SizedBox(width: 8),
+              Text(l10n.tooltipLaunchInDaw),
+            ],
+          ),
+        ),
+        PopupMenuItem<String>(
+          value: 'view',
+          child: Row(
+            children: [
+              const Icon(Icons.assignment, size: 20),
+              const SizedBox(width: 8),
+              Text(l10n.tooltipViewDetails),
+            ],
+          ),
+        ),
+        PopupMenuItem<String>(
+          value: 'openFolder',
+          child: Row(
+            children: [
+              const Icon(Icons.folder_open, size: 20),
+              const SizedBox(width: 8),
+              Text(l10n.openFolder),
+            ],
+          ),
+        ),
+        PopupMenuItem<String>(
+          value: project.hidden ? 'unhide' : 'hide',
+          child: Row(
+            children: [
+              Icon(
+                project.hidden ? Icons.visibility : Icons.visibility_off,
+                size: 20,
+                color: project.hidden ? Colors.green.shade300 : Colors.red.shade300,
+              ),
+              const SizedBox(width: 8),
+              Text(project.hidden ? l10n.unhide : l10n.hide),
+            ],
+          ),
+        ),
+      ],
+      color: Theme.of(context).cardColor,
+    );
+
+    if (result != null && mounted) {
+      switch (result) {
+        case 'launch':
+          await _launchProject(project);
+          break;
+        case 'view':
+          await _viewProjectDetails(project);
+          break;
+        case 'openFolder':
+          await _openProjectFolder(project);
+          break;
+        case 'hide':
+          final confirm = await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              backgroundColor: Theme.of(context).cardColor,
+              title: Text(l10n.hide),
+              content: Text(l10n.hideProjectMessage(project.displayName)),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: Text(l10n.cancel),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red.shade300,
+                  ),
+                  child: Text(l10n.hide),
+                ),
+              ],
+            ),
+          );
+          if (confirm == true) {
+            widget.onHideProjects([project.id]);
+          }
+          break;
+        case 'unhide':
+          widget.onUnhideProjects([project.id]);
+          break;
+      }
+    }
+  }
+
   List<PlutoRow> _mapProjectsToRows(List<MusicProject> projects) {
     return projects.map((p) {
       // Combine DAW type and version into a single string
@@ -1581,6 +1809,19 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         width: 600,
         minWidth: 200,
         frozen: PlutoColumnFrozen.start,
+        renderer: (rendererContext) {
+          final project = rendererContext.row.cells['data']?.value as MusicProject?;
+          if (project == null) {
+            return Text(rendererContext.cell.value.toString());
+          }
+          
+          return GestureDetector(
+            onSecondaryTapDown: (TapDownDetails details) {
+              _showContextMenu(context, project, details.globalPosition);
+            },
+            child: Text(rendererContext.cell.value.toString()),
+          );
+        },
       ),
       PlutoColumn(
         title: l10n.phase,
@@ -1589,14 +1830,24 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         width: 140,
         minWidth: 120,
         renderer: (rendererContext) {
+          final project = rendererContext.row.cells['data']?.value as MusicProject?;
           final status = rendererContext.cell.value as String? ?? '';
           final translatedStatus = _translateStatus(context, status);
-          return Text(
+          final textWidget = Text(
             translatedStatus,
             style: TextStyle(
               color: _getStatusColor(status),
               fontWeight: FontWeight.w500,
             ),
+          );
+          
+          if (project == null) return textWidget;
+          
+          return GestureDetector(
+            onSecondaryTapDown: (TapDownDetails details) {
+              _showContextMenu(context, project, details.globalPosition);
+            },
+            child: textWidget,
           );
         },
       ),
@@ -1607,10 +1858,11 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         width: 140,
         minWidth: 100,
         renderer: (rendererContext) {
+          final project = rendererContext.row.cells['data']?.value as MusicProject?;
           final dawType = rendererContext.cell.value as String? ?? '';
           final logoPath = _getDawLogoPath(dawType);
           
-          return Row(
+          final content = Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               if (logoPath != null)
@@ -1631,6 +1883,15 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               ),
             ],
           );
+          
+          if (project == null) return content;
+          
+          return GestureDetector(
+            onSecondaryTapDown: (TapDownDetails details) {
+              _showContextMenu(context, project, details.globalPosition);
+            },
+            child: content,
+          );
         },
       ),
       PlutoColumn(
@@ -1640,6 +1901,19 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         width: 100,
         minWidth: 80,
         enableEditingMode: true,
+        renderer: (rendererContext) {
+          final project = rendererContext.row.cells['data']?.value as MusicProject?;
+          final textWidget = Text(rendererContext.cell.value.toString());
+          
+          if (project == null) return textWidget;
+          
+          return GestureDetector(
+            onSecondaryTapDown: (TapDownDetails details) {
+              _showContextMenu(context, project, details.globalPosition);
+            },
+            child: textWidget,
+          );
+        },
       ),
       PlutoColumn(
         title: AppLocalizations.of(context)!.key.split(' ').first, // Get just "Key" from "Key (e.g., C#m, F major)"
@@ -1648,6 +1922,19 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         width: 120,
         minWidth: 100,
         enableEditingMode: true,
+        renderer: (rendererContext) {
+          final project = rendererContext.row.cells['data']?.value as MusicProject?;
+          final textWidget = Text(rendererContext.cell.value.toString());
+          
+          if (project == null) return textWidget;
+          
+          return GestureDetector(
+            onSecondaryTapDown: (TapDownDetails details) {
+              _showContextMenu(context, project, details.globalPosition);
+            },
+            child: textWidget,
+          );
+        },
       ),
       PlutoColumn(
         title: AppLocalizations.of(context)!.lastModifiedColumn,
@@ -1664,44 +1951,48 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           final status = project.status;
           
           // If status is "Finished", show green
-          if (status == 'Finished') {
-            return Text(
-              rendererContext.cell.value.toString(),
-              style: const TextStyle(color: Colors.green),
-            );
-          }
-          
-          final now = DateTime.now();
-          final lastModified = project.lastModifiedAt;
-          
-          // Calculate color based on age of lastModifiedAt
-          final daysSinceModified = now.difference(lastModified).inDays;
           Color textColor;
-          
-          if (daysSinceModified < 21) {
-            // Recent (0-21 days): default white
-            textColor = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
-          } else if (daysSinceModified < 60) {
-            // Medium (21-60 days): yellow/orange gradient
-            final ratio = (daysSinceModified - 21) / 39.0; // 0 to 1 from 21 to 60 days
-            textColor = Color.lerp(
-              Colors.yellow.shade300,
-              Colors.orange.shade400,
-              ratio,
-            )!;
+          if (status == 'Finished') {
+            textColor = Colors.green;
           } else {
-            // Old (60+ days): orange to red gradient
-            final ratio = ((daysSinceModified - 60) / 60.0).clamp(0.0, 1.0); // 0 to 1 from 60 to 120 days
-            textColor = Color.lerp(
-              Colors.orange.shade400,
-              Colors.red.shade400,
-              ratio,
-            )!;
+            final now = DateTime.now();
+            final lastModified = project.lastModifiedAt;
+            
+            // Calculate color based on age of lastModifiedAt
+            final daysSinceModified = now.difference(lastModified).inDays;
+            
+            if (daysSinceModified < 21) {
+              // Recent (0-21 days): default white
+              textColor = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
+            } else if (daysSinceModified < 60) {
+              // Medium (21-60 days): yellow/orange gradient
+              final ratio = (daysSinceModified - 21) / 39.0; // 0 to 1 from 21 to 60 days
+              textColor = Color.lerp(
+                Colors.yellow.shade300,
+                Colors.orange.shade400,
+                ratio,
+              )!;
+            } else {
+              // Old (60+ days): orange to red gradient
+              final ratio = ((daysSinceModified - 60) / 60.0).clamp(0.0, 1.0); // 0 to 1 from 60 to 120 days
+              textColor = Color.lerp(
+                Colors.orange.shade400,
+                Colors.red.shade400,
+                ratio,
+              )!;
+            }
           }
           
-          return Text(
+          final textWidget = Text(
             rendererContext.cell.value.toString(),
             style: TextStyle(color: textColor),
+          );
+          
+          return GestureDetector(
+            onSecondaryTapDown: (TapDownDetails details) {
+              _showContextMenu(context, project, details.globalPosition);
+            },
+            child: textWidget,
           );
         },
       ),
@@ -1720,41 +2011,35 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               ? projectPath // Se for um diretório, usa o próprio caminho
               : path.dirname(projectPath); // Se for um arquivo, usa o diretório pai
           
-          return Row(
+          return GestureDetector(
+            onSecondaryTapDown: (TapDownDetails details) {
+              _showContextMenu(context, project, details.globalPosition);
+            },
+            child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // Play Preview Song button (only if preview song exists)
+              if (project.previewSongPath != null && project.previewSongPath!.isNotEmpty)
+                IconButton(
+                  icon: const Icon(Icons.play_arrow),
+                  tooltip: 'Play Preview',
+                  onPressed: () => _playPreviewSong(project),
+                  color: Colors.green,
+                ),
+              // Separator (only if preview button is shown)
+              if (project.previewSongPath != null && project.previewSongPath!.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Text(
+                    '|',
+                    style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5), fontSize: 18),
+                  ),
+                ),
               // Launch button
               IconButton(
                 icon: const Icon(Icons.open_in_new),
                 tooltip: AppLocalizations.of(context)!.tooltipLaunchInDaw,
-                onPressed: () async {
-                  final exists = File(project.filePath).existsSync() || Directory(project.filePath).existsSync();
-                  if (!exists) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.fileMissing)));
-                    }
-                    return;
-                  }
-                  try {
-                    // Lançamento específico para Windows e macOS
-                    if (Platform.isMacOS) {
-                      await Process.start('open', [project.filePath]);
-                    } else if (Platform.isWindows) {
-                      await Process.start('cmd', ['/c', 'start', '', project.filePath]);
-                    } else {
-                      // Fallback para outros sistemas operacionais (e.g. Linux)
-                      await Process.start(project.filePath, []);
-                    }
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.launchingProject(project.displayName))));
-                    }
-                  } catch (e) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.failedToLaunch(e.toString()))));
-                    }
-                    return;
-                  }
-                },
+                onPressed: () => _launchProject(project),
               ),
               // Separator
               Padding(
@@ -1768,50 +2053,13 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               IconButton(
                 icon: const Icon(Icons.assignment),
                 tooltip: AppLocalizations.of(context)!.tooltipViewDetails,
-                onPressed: () async {
-                  await Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => ProjectDetailPage(projectId: project.id)),
-                  );
-                },
+                onPressed: () => _viewProjectDetails(project),
               ),
               // Open Folder button
               IconButton(
                 icon: const Icon(Icons.folder_open),
                 tooltip: AppLocalizations.of(context)!.openFolder,
-                onPressed: () async {
-                  final exists = Directory(folderPath).existsSync();
-                  if (!exists) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.fileMissing)));
-                    }
-                    return;
-                  }
-                  
-                  try {
-                    // Lógica para abrir o diretório no explorador de arquivos nativo
-                    if (Platform.isMacOS) {
-                      await Process.start('open', [folderPath]);
-                    } else if (Platform.isWindows) {
-                      // Usar 'explorer' para Windows
-                      await Process.start('explorer', [folderPath]);
-                    } else if (Platform.isLinux) {
-                      // Usar 'xdg-open' para a maioria dos ambientes Linux
-                      await Process.start('xdg-open', [folderPath]);
-                    } else {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.osNotSupportedForOpeningFolder)));
-                      }
-                      return;
-                    }
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.openingFolder(project.displayName))));
-                    }
-                  } catch (e) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.failedToOpenFolder(e.toString()))));
-                    }
-                  }
-                },
+                onPressed: () => _openProjectFolder(project),
               ),
               // Separator
               Padding(
@@ -1862,6 +2110,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                 },
               ),
             ],
+          ),
           );
         },
       ),
@@ -1878,11 +2127,11 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     final initialRows = _mapProjectsToRows(widget.projects);
 
     return PlutoGrid(
-      columns: columns,
-      rows: initialRows, 
-      onLoaded: (PlutoGridOnLoadedEvent event) {
-        stateManager = event.stateManager;
-      },
+          columns: columns,
+          rows: initialRows,
+          onLoaded: (PlutoGridOnLoadedEvent event) {
+            stateManager = event.stateManager;
+          },
       onChanged: (PlutoGridOnChangedEvent event) async {
         final project = event.row.cells['data']?.value as MusicProject?;
         if (project == null) return;
@@ -2009,6 +2258,212 @@ class _ReleaseTitleDialogState extends State<_ReleaseTitleDialog> {
           child: Text(AppLocalizations.of(context)!.create),
         ),
       ],
+    );
+  }
+}
+
+class _PreviewSongDialog extends StatefulWidget {
+  final MusicProject project;
+  final VoidCallback onClose;
+
+  const _PreviewSongDialog({
+    required this.project,
+    required this.onClose,
+  });
+
+  @override
+  State<_PreviewSongDialog> createState() => _PreviewSongDialogState();
+}
+
+class _PreviewSongDialogState extends State<_PreviewSongDialog> {
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  bool _isPlaying = false;
+  Duration _duration = Duration.zero;
+  Duration _position = Duration.zero;
+
+  @override
+  void initState() {
+    super.initState();
+    _audioPlayer.onPlayerStateChanged.listen((state) {
+      if (mounted) {
+        setState(() {
+          _isPlaying = state == PlayerState.playing;
+        });
+      }
+    });
+    _audioPlayer.onDurationChanged.listen((duration) {
+      if (mounted) {
+        setState(() {
+          _duration = duration;
+        });
+      }
+    });
+    _audioPlayer.onPositionChanged.listen((position) {
+      if (mounted) {
+        setState(() {
+          _position = position;
+        });
+      }
+    });
+    
+    // Auto-start playback when dialog opens
+    _startPlayback();
+  }
+
+  Future<void> _startPlayback() async {
+    if (widget.project.previewSongPath == null || widget.project.previewSongPath!.isEmpty) {
+      return;
+    }
+
+    final file = File(widget.project.previewSongPath!);
+    if (!await file.exists()) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Preview song file not found')),
+        );
+        Navigator.pop(context);
+      }
+      return;
+    }
+
+    try {
+      await _audioPlayer.play(DeviceFileSource(widget.project.previewSongPath!));
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to play preview: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.stop();
+    _audioPlayer.dispose();
+    widget.onClose();
+    super.dispose();
+  }
+
+  Future<void> _togglePlayPause() async {
+    try {
+      if (_isPlaying) {
+        await _audioPlayer.pause();
+      } else {
+        if (_position == Duration.zero || _position >= _duration) {
+          await _audioPlayer.play(DeviceFileSource(widget.project.previewSongPath!));
+        } else {
+          await _audioPlayer.resume();
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to play preview: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  Future<void> _stop() async {
+    await _audioPlayer.stop();
+    setState(() {
+      _position = Duration.zero;
+    });
+  }
+
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final minutes = twoDigits(duration.inMinutes.remainder(60));
+    final seconds = twoDigits(duration.inSeconds.remainder(60));
+    return '$minutes:$seconds';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: Theme.of(context).cardColor,
+      title: Row(
+        children: [
+          Expanded(
+            child: Text(
+              widget.project.displayName,
+              style: TextStyle(
+                color: Theme.of(context).textTheme.titleLarge?.color,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
+      ),
+      content: SizedBox(
+        width: 400,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              path.basename(widget.project.previewSongPath ?? ''),
+              style: TextStyle(
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+                fontSize: 14,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 16),
+            // Audio player controls
+            Row(
+              children: [
+                IconButton(
+                  icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
+                  onPressed: _togglePlayPause,
+                  iconSize: 32,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.stop),
+                  onPressed: _isPlaying || _position > Duration.zero ? _stop : null,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    children: [
+                      Slider(
+                        value: _duration.inMilliseconds > 0
+                            ? _position.inMilliseconds.toDouble()
+                            : 0.0,
+                        max: _duration.inMilliseconds > 0
+                            ? _duration.inMilliseconds.toDouble()
+                            : 100.0,
+                        onChanged: (value) async {
+                          final position = Duration(milliseconds: value.toInt());
+                          await _audioPlayer.seek(position);
+                        },
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            _formatDuration(_position),
+                            style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color, fontSize: 12),
+                          ),
+                          Text(
+                            _formatDuration(_duration),
+                            style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
