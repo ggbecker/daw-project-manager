@@ -219,6 +219,7 @@ class ProjectRepository {
       notes: existing?.notes,                         // <--- NOVO: PRESERVA NOTAS
       dawType: dawType,                                // <--- SEMPRE ATUALIZA DO ARQUIVO
       dawVersion: dawVersion,                          // <--- USA EXISTENTE OU EXTRAÍDO (preserva se já existe)
+      previewSongPath: existing?.previewSongPath,     // <--- PRESERVA PREVIEW SONG
     );
 
     await projectsBox.put(projectToSave.id, projectToSave);

@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:window_manager/window_manager.dart'; 
 import 'package:path/path.dart' as path; // 🚨 NOVO IMPORT
 import 'package:url_launcher/url_launcher.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 import '../services/scanner_service.dart';
 import 'project_detail_page.dart';
@@ -1381,6 +1382,35 @@ class _PlutoProjectsTable extends ConsumerStatefulWidget {
 class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   PlutoGridStateManager? stateManager;
   
+  Future<void> _playPreviewSong(MusicProject project) async {
+    if (project.previewSongPath == null || project.previewSongPath!.isEmpty) {
+      return;
+    }
+    
+    final file = File(project.previewSongPath!);
+    if (!await file.exists()) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Preview song file not found')),
+        );
+      }
+      return;
+    }
+    
+    // Show popup dialog with audio player
+    if (mounted) {
+      await showDialog(
+        context: context,
+        builder: (dialogContext) => _PreviewSongDialog(
+          project: project,
+          onClose: () {
+            // Callback when dialog closes - can be used for cleanup if needed
+          },
+        ),
+      );
+    }
+  }
+  
   Future<void> _writeBpmToFile(MusicProject project, double? bpm) async {
     try {
       final projectDir = File(project.filePath).parent;
@@ -1988,6 +2018,23 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // Play Preview Song button (only if preview song exists)
+              if (project.previewSongPath != null && project.previewSongPath!.isNotEmpty)
+                IconButton(
+                  icon: const Icon(Icons.play_arrow),
+                  tooltip: 'Play Preview',
+                  onPressed: () => _playPreviewSong(project),
+                  color: Colors.green,
+                ),
+              // Separator (only if preview button is shown)
+              if (project.previewSongPath != null && project.previewSongPath!.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Text(
+                    '|',
+                    style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5), fontSize: 18),
+                  ),
+                ),
               // Launch button
               IconButton(
                 icon: const Icon(Icons.open_in_new),
@@ -2211,6 +2258,212 @@ class _ReleaseTitleDialogState extends State<_ReleaseTitleDialog> {
           child: Text(AppLocalizations.of(context)!.create),
         ),
       ],
+    );
+  }
+}
+
+class _PreviewSongDialog extends StatefulWidget {
+  final MusicProject project;
+  final VoidCallback onClose;
+
+  const _PreviewSongDialog({
+    required this.project,
+    required this.onClose,
+  });
+
+  @override
+  State<_PreviewSongDialog> createState() => _PreviewSongDialogState();
+}
+
+class _PreviewSongDialogState extends State<_PreviewSongDialog> {
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  bool _isPlaying = false;
+  Duration _duration = Duration.zero;
+  Duration _position = Duration.zero;
+
+  @override
+  void initState() {
+    super.initState();
+    _audioPlayer.onPlayerStateChanged.listen((state) {
+      if (mounted) {
+        setState(() {
+          _isPlaying = state == PlayerState.playing;
+        });
+      }
+    });
+    _audioPlayer.onDurationChanged.listen((duration) {
+      if (mounted) {
+        setState(() {
+          _duration = duration;
+        });
+      }
+    });
+    _audioPlayer.onPositionChanged.listen((position) {
+      if (mounted) {
+        setState(() {
+          _position = position;
+        });
+      }
+    });
+    
+    // Auto-start playback when dialog opens
+    _startPlayback();
+  }
+
+  Future<void> _startPlayback() async {
+    if (widget.project.previewSongPath == null || widget.project.previewSongPath!.isEmpty) {
+      return;
+    }
+
+    final file = File(widget.project.previewSongPath!);
+    if (!await file.exists()) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Preview song file not found')),
+        );
+        Navigator.pop(context);
+      }
+      return;
+    }
+
+    try {
+      await _audioPlayer.play(DeviceFileSource(widget.project.previewSongPath!));
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to play preview: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.stop();
+    _audioPlayer.dispose();
+    widget.onClose();
+    super.dispose();
+  }
+
+  Future<void> _togglePlayPause() async {
+    try {
+      if (_isPlaying) {
+        await _audioPlayer.pause();
+      } else {
+        if (_position == Duration.zero || _position >= _duration) {
+          await _audioPlayer.play(DeviceFileSource(widget.project.previewSongPath!));
+        } else {
+          await _audioPlayer.resume();
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to play preview: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  Future<void> _stop() async {
+    await _audioPlayer.stop();
+    setState(() {
+      _position = Duration.zero;
+    });
+  }
+
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final minutes = twoDigits(duration.inMinutes.remainder(60));
+    final seconds = twoDigits(duration.inSeconds.remainder(60));
+    return '$minutes:$seconds';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: Theme.of(context).cardColor,
+      title: Row(
+        children: [
+          Expanded(
+            child: Text(
+              widget.project.displayName,
+              style: TextStyle(
+                color: Theme.of(context).textTheme.titleLarge?.color,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
+      ),
+      content: SizedBox(
+        width: 400,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              path.basename(widget.project.previewSongPath ?? ''),
+              style: TextStyle(
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+                fontSize: 14,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 16),
+            // Audio player controls
+            Row(
+              children: [
+                IconButton(
+                  icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
+                  onPressed: _togglePlayPause,
+                  iconSize: 32,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.stop),
+                  onPressed: _isPlaying || _position > Duration.zero ? _stop : null,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    children: [
+                      Slider(
+                        value: _duration.inMilliseconds > 0
+                            ? _position.inMilliseconds.toDouble()
+                            : 0.0,
+                        max: _duration.inMilliseconds > 0
+                            ? _duration.inMilliseconds.toDouble()
+                            : 100.0,
+                        onChanged: (value) async {
+                          final position = Duration(milliseconds: value.toInt());
+                          await _audioPlayer.seek(position);
+                        },
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            _formatDuration(_position),
+                            style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color, fontSize: 12),
+                          ),
+                          Text(
+                            _formatDuration(_duration),
+                            style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

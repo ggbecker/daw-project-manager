@@ -6,6 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart'; // NOVO IMPORT
 import 'package:path/path.dart' as p; // NOVO IMPORT
 import 'package:window_manager/window_manager.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:intl/intl.dart';
 
 import '../models/music_project.dart';
 import '../models/todo_item.dart';
@@ -320,6 +323,33 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                     ),
 
                     const SizedBox(height: 24),
+                    
+                    // Preview Song Section
+                    _PreviewSongPlayer(
+                      project: project,
+                      onSongRemoved: () async {
+                        final updated = project.copyWith(previewSongPath: null);
+                        await repo.updateProject(updated);
+                        if (mounted) {
+                          ref.invalidate(allProjectsStreamProvider);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Preview song removed')),
+                          );
+                        }
+                      },
+                      onSongChanged: (filePath) async {
+                        final updated = project.copyWith(previewSongPath: filePath);
+                        await repo.updateProject(updated);
+                        if (mounted) {
+                          ref.invalidate(allProjectsStreamProvider);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Preview song added')),
+                          );
+                        }
+                      },
+                    ),
+
+                    const SizedBox(height: 24),
                     // TODO List
                     TodoListWidget(
                     todos: project.todos,
@@ -430,6 +460,227 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
       ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+class _PreviewSongPlayer extends StatefulWidget {
+  final MusicProject project;
+  final VoidCallback onSongRemoved;
+  final Function(String) onSongChanged;
+
+  const _PreviewSongPlayer({
+    required this.project,
+    required this.onSongRemoved,
+    required this.onSongChanged,
+  });
+
+  @override
+  State<_PreviewSongPlayer> createState() => _PreviewSongPlayerState();
+}
+
+class _PreviewSongPlayerState extends State<_PreviewSongPlayer> {
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  bool _isPlaying = false;
+  Duration _duration = Duration.zero;
+  Duration _position = Duration.zero;
+
+  @override
+  void initState() {
+    super.initState();
+    _audioPlayer.onPlayerStateChanged.listen((state) {
+      if (mounted) {
+        setState(() {
+          _isPlaying = state == PlayerState.playing;
+        });
+      }
+    });
+    _audioPlayer.onDurationChanged.listen((duration) {
+      if (mounted) {
+        setState(() {
+          _duration = duration;
+        });
+      }
+    });
+    _audioPlayer.onPositionChanged.listen((position) {
+      if (mounted) {
+        setState(() {
+          _position = position;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
+  Future<void> _togglePlayPause() async {
+    if (widget.project.previewSongPath == null || widget.project.previewSongPath!.isEmpty) {
+      return;
+    }
+
+    final file = File(widget.project.previewSongPath!);
+    if (!await file.exists()) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Preview song file not found')),
+        );
+      }
+      return;
+    }
+
+    try {
+      if (_isPlaying) {
+        await _audioPlayer.pause();
+      } else {
+        if (_position == Duration.zero || _position >= _duration) {
+          await _audioPlayer.play(DeviceFileSource(widget.project.previewSongPath!));
+        } else {
+          await _audioPlayer.resume();
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to play preview: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  Future<void> _stop() async {
+    await _audioPlayer.stop();
+    setState(() {
+      _position = Duration.zero;
+    });
+  }
+
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final minutes = twoDigits(duration.inMinutes.remainder(60));
+    final seconds = twoDigits(duration.inSeconds.remainder(60));
+    return '$minutes:$seconds';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Preview Song',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).textTheme.titleMedium?.color,
+              ),
+            ),
+            const SizedBox(height: 12),
+            if (widget.project.previewSongPath != null && widget.project.previewSongPath!.isNotEmpty)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          p.basename(widget.project.previewSongPath!),
+                          style: TextStyle(
+                            color: Theme.of(context).textTheme.bodyMedium?.color,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete),
+                        color: Colors.red.shade300,
+                        onPressed: widget.onSongRemoved,
+                        tooltip: 'Remove preview song',
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  // Audio player controls
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
+                        onPressed: _togglePlayPause,
+                        iconSize: 32,
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.stop),
+                        onPressed: _isPlaying || _position > Duration.zero ? _stop : null,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          children: [
+                            Slider(
+                              value: _duration.inMilliseconds > 0
+                                  ? _position.inMilliseconds.toDouble()
+                                  : 0.0,
+                              max: _duration.inMilliseconds > 0
+                                  ? _duration.inMilliseconds.toDouble()
+                                  : 100.0,
+                              onChanged: (value) async {
+                                final position = Duration(milliseconds: value.toInt());
+                                await _audioPlayer.seek(position);
+                              },
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  _formatDuration(_position),
+                                  style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color, fontSize: 12),
+                                ),
+                                Text(
+                                  _formatDuration(_duration),
+                                  style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color, fontSize: 12),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              )
+            else
+              Text(
+                'No preview song selected',
+                style: TextStyle(
+                  color: Theme.of(context).textTheme.bodySmall?.color,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            const SizedBox(height: 8),
+            ElevatedButton.icon(
+              onPressed: () async {
+                final result = await FilePicker.platform.pickFiles(
+                  type: FileType.custom,
+                  allowedExtensions: ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'],
+                );
+                if (result != null && result.files.single.path != null) {
+                  widget.onSongChanged(result.files.single.path!);
+                }
+              },
+              icon: const Icon(Icons.audio_file),
+              label: Text(widget.project.previewSongPath != null && widget.project.previewSongPath!.isNotEmpty
+                  ? 'Change Preview Song'
+                  : 'Select Preview Song'),
+            ),
+          ],
+        ),
       ),
     );
   }
