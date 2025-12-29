@@ -777,5 +777,22 @@
   "importBackupDialogTitle": "Importa Backup",
   "invalidBackupFileFormat": "Formato file di backup non valido: versione mancante",
   "profileNameRequiredForNewProfile": "Il nome del profilo è obbligatorio quando si crea un nuovo profilo",
-  "currentProfileRequired": "Il profilo corrente è obbligatorio per la modalità unisci o sostituisci"
+  "currentProfileRequired": "Il profilo corrente è obbligatorio per la modalità unisci o sostituisci",
+  "previewSong": "Brano di Anteprima",
+  "previewSongRemoved": "Brano di anteprima rimosso",
+  "previewSongAdded": "Brano di anteprima aggiunto",
+  "previewSongFileNotFound": "File del brano di anteprima non trovato",
+  "failedToPlayPreview": "Impossibile riprodurre l'anteprima: {error}",
+  "@failedToPlayPreview": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "removePreviewSong": "Rimuovi brano di anteprima",
+  "noPreviewSongSelected": "Nessun brano di anteprima selezionato",
+  "changePreviewSong": "Cambia Brano di Anteprima",
+  "selectPreviewSong": "Seleziona Brano di Anteprima",
+  "dropAudioFileHere": "Rilascia il file audio qui"
 }

@@ -51,6 +51,7 @@ dependencies:
   path_provider: ^2.1.1
   archive: ^3.4.0
   audioplayers: ^6.0.0
+  desktop_drop: ^0.4.3
 
 dev_dependencies:
   flutter_test:

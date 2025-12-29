@@ -877,4 +877,36 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get currentProfileRequired =>
       'Current profile is required for merge or replace mode';
+
+  @override
+  String get previewSong => 'Preview Song';
+
+  @override
+  String get previewSongRemoved => 'Preview song removed';
+
+  @override
+  String get previewSongAdded => 'Preview song added';
+
+  @override
+  String get previewSongFileNotFound => 'Preview song file not found';
+
+  @override
+  String failedToPlayPreview(String error) {
+    return 'Failed to play preview: $error';
+  }
+
+  @override
+  String get removePreviewSong => 'Remove preview song';
+
+  @override
+  String get noPreviewSongSelected => 'No preview song selected';
+
+  @override
+  String get changePreviewSong => 'Change Preview Song';
+
+  @override
+  String get selectPreviewSong => 'Select Preview Song';
+
+  @override
+  String get dropAudioFileHere => 'Drop audio file here';
 }

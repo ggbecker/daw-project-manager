@@ -879,4 +879,37 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get currentProfileRequired =>
       'Il profilo corrente è obbligatorio per la modalità unisci o sostituisci';
+
+  @override
+  String get previewSong => 'Brano di Anteprima';
+
+  @override
+  String get previewSongRemoved => 'Brano di anteprima rimosso';
+
+  @override
+  String get previewSongAdded => 'Brano di anteprima aggiunto';
+
+  @override
+  String get previewSongFileNotFound =>
+      'File del brano di anteprima non trovato';
+
+  @override
+  String failedToPlayPreview(String error) {
+    return 'Impossibile riprodurre l\'anteprima: $error';
+  }
+
+  @override
+  String get removePreviewSong => 'Rimuovi brano di anteprima';
+
+  @override
+  String get noPreviewSongSelected => 'Nessun brano di anteprima selezionato';
+
+  @override
+  String get changePreviewSong => 'Cambia Brano di Anteprima';
+
+  @override
+  String get selectPreviewSong => 'Seleziona Brano di Anteprima';
+
+  @override
+  String get dropAudioFileHere => 'Rilascia il file audio qui';
 }

@@ -882,4 +882,37 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get currentProfileRequired =>
       'Le profil actuel est requis pour le mode fusionner ou remplacer';
+
+  @override
+  String get previewSong => 'Chanson d\'Aperçu';
+
+  @override
+  String get previewSongRemoved => 'Chanson d\'aperçu supprimée';
+
+  @override
+  String get previewSongAdded => 'Chanson d\'aperçu ajoutée';
+
+  @override
+  String get previewSongFileNotFound =>
+      'Fichier de chanson d\'aperçu introuvable';
+
+  @override
+  String failedToPlayPreview(String error) {
+    return 'Échec de la lecture de l\'aperçu : $error';
+  }
+
+  @override
+  String get removePreviewSong => 'Supprimer la chanson d\'aperçu';
+
+  @override
+  String get noPreviewSongSelected => 'Aucune chanson d\'aperçu sélectionnée';
+
+  @override
+  String get changePreviewSong => 'Changer la Chanson d\'Aperçu';
+
+  @override
+  String get selectPreviewSong => 'Sélectionner une Chanson d\'Aperçu';
+
+  @override
+  String get dropAudioFileHere => 'Déposez le fichier audio ici';
 }

@@ -884,4 +884,36 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get currentProfileRequired =>
       'Das aktuelle Profil ist für den Modus Zusammenführen oder Ersetzen erforderlich';
+
+  @override
+  String get previewSong => 'Vorschau-Song';
+
+  @override
+  String get previewSongRemoved => 'Vorschau-Song entfernt';
+
+  @override
+  String get previewSongAdded => 'Vorschau-Song hinzugefügt';
+
+  @override
+  String get previewSongFileNotFound => 'Vorschau-Song-Datei nicht gefunden';
+
+  @override
+  String failedToPlayPreview(String error) {
+    return 'Wiedergabe der Vorschau fehlgeschlagen: $error';
+  }
+
+  @override
+  String get removePreviewSong => 'Vorschau-Song entfernen';
+
+  @override
+  String get noPreviewSongSelected => 'Kein Vorschau-Song ausgewählt';
+
+  @override
+  String get changePreviewSong => 'Vorschau-Song ändern';
+
+  @override
+  String get selectPreviewSong => 'Vorschau-Song auswählen';
+
+  @override
+  String get dropAudioFileHere => 'Audio-Datei hier ablegen';
 }

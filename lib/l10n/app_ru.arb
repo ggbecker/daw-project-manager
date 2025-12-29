@@ -777,5 +777,22 @@
   "importBackupDialogTitle": "Импорт резервной копии",
   "invalidBackupFileFormat": "Неверный формат файла резервной копии: отсутствует версия",
   "profileNameRequiredForNewProfile": "Имя профиля обязательно при создании нового профиля",
-  "currentProfileRequired": "Текущий профиль обязателен для режима объединения или замены"
+  "currentProfileRequired": "Текущий профиль обязателен для режима объединения или замены",
+  "previewSong": "Превью Трека",
+  "previewSongRemoved": "Превью трека удалено",
+  "previewSongAdded": "Превью трека добавлено",
+  "previewSongFileNotFound": "Файл превью трека не найден",
+  "failedToPlayPreview": "Не удалось воспроизвести превью: {error}",
+  "@failedToPlayPreview": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "removePreviewSong": "Удалить превью трека",
+  "noPreviewSongSelected": "Превью трека не выбрано",
+  "changePreviewSong": "Изменить Превью Трека",
+  "selectPreviewSong": "Выбрать Превью Трека",
+  "dropAudioFileHere": "Перетащите аудиофайл сюда"
 }

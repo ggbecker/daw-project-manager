@@ -865,4 +865,36 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get currentProfileRequired => '合并或替换模式需要当前配置文件';
+
+  @override
+  String get previewSong => '预览歌曲';
+
+  @override
+  String get previewSongRemoved => '预览歌曲已删除';
+
+  @override
+  String get previewSongAdded => '预览歌曲已添加';
+
+  @override
+  String get previewSongFileNotFound => '未找到预览歌曲文件';
+
+  @override
+  String failedToPlayPreview(String error) {
+    return '播放预览失败: $error';
+  }
+
+  @override
+  String get removePreviewSong => '删除预览歌曲';
+
+  @override
+  String get noPreviewSongSelected => '未选择预览歌曲';
+
+  @override
+  String get changePreviewSong => '更改预览歌曲';
+
+  @override
+  String get selectPreviewSong => '选择预览歌曲';
+
+  @override
+  String get dropAudioFileHere => '将音频文件拖放到此处';
 }
