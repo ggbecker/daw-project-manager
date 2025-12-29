@@ -777,5 +777,22 @@
   "importBackupDialogTitle": "Importar Respaldo",
   "invalidBackupFileFormat": "Formato de archivo de respaldo inválido: falta la versión",
   "profileNameRequiredForNewProfile": "El nombre del perfil es obligatorio al crear un nuevo perfil",
-  "currentProfileRequired": "El perfil actual es obligatorio para el modo combinar o reemplazar"
+  "currentProfileRequired": "El perfil actual es obligatorio para el modo combinar o reemplazar",
+  "previewSong": "Canción de Vista Previa",
+  "previewSongRemoved": "Canción de vista previa eliminada",
+  "previewSongAdded": "Canción de vista previa agregada",
+  "previewSongFileNotFound": "Archivo de canción de vista previa no encontrado",
+  "failedToPlayPreview": "Error al reproducir vista previa: {error}",
+  "@failedToPlayPreview": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "removePreviewSong": "Eliminar canción de vista previa",
+  "noPreviewSongSelected": "No se ha seleccionado ninguna canción de vista previa",
+  "changePreviewSong": "Cambiar Canción de Vista Previa",
+  "selectPreviewSong": "Seleccionar Canción de Vista Previa",
+  "dropAudioFileHere": "Suelte el archivo de audio aquí"
 }

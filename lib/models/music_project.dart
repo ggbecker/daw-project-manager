@@ -108,6 +108,7 @@ class MusicProject {
     List<TodoItem>? todos,
     bool? hidden,
     String? previewSongPath,
+    bool clearPreviewSongPath = false,
   }) {
     return MusicProject(
       id: id ?? this.id,
@@ -128,7 +129,7 @@ class MusicProject {
       dawVersion: dawVersion ?? this.dawVersion,
       todos: todos ?? this.todos,
       hidden: hidden ?? this.hidden,
-      previewSongPath: previewSongPath ?? this.previewSongPath,
+      previewSongPath: clearPreviewSongPath ? null : (previewSongPath ?? this.previewSongPath),
     );
   }
 }

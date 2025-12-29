@@ -777,5 +777,22 @@
   "importBackupDialogTitle": "导入备份",
   "invalidBackupFileFormat": "无效的备份文件格式: 缺少版本",
   "profileNameRequiredForNewProfile": "创建新配置文件时需要配置文件名称",
-  "currentProfileRequired": "合并或替换模式需要当前配置文件"
+  "currentProfileRequired": "合并或替换模式需要当前配置文件",
+  "previewSong": "预览歌曲",
+  "previewSongRemoved": "预览歌曲已删除",
+  "previewSongAdded": "预览歌曲已添加",
+  "previewSongFileNotFound": "未找到预览歌曲文件",
+  "failedToPlayPreview": "播放预览失败: {error}",
+  "@failedToPlayPreview": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "removePreviewSong": "删除预览歌曲",
+  "noPreviewSongSelected": "未选择预览歌曲",
+  "changePreviewSong": "更改预览歌曲",
+  "selectPreviewSong": "选择预览歌曲",
+  "dropAudioFileHere": "将音频文件拖放到此处"
 }

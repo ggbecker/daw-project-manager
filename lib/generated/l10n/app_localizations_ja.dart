@@ -869,4 +869,36 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get currentProfileRequired => 'マージまたは置き換えモードには現在のプロフィールが必要です';
+
+  @override
+  String get previewSong => 'プレビュー曲';
+
+  @override
+  String get previewSongRemoved => 'プレビュー曲が削除されました';
+
+  @override
+  String get previewSongAdded => 'プレビュー曲が追加されました';
+
+  @override
+  String get previewSongFileNotFound => 'プレビュー曲のファイルが見つかりません';
+
+  @override
+  String failedToPlayPreview(String error) {
+    return 'プレビューの再生に失敗しました: $error';
+  }
+
+  @override
+  String get removePreviewSong => 'プレビュー曲を削除';
+
+  @override
+  String get noPreviewSongSelected => 'プレビュー曲が選択されていません';
+
+  @override
+  String get changePreviewSong => 'プレビュー曲を変更';
+
+  @override
+  String get selectPreviewSong => 'プレビュー曲を選択';
+
+  @override
+  String get dropAudioFileHere => 'オーディオファイルをここにドロップ';
 }

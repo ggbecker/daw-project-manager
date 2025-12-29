@@ -879,4 +879,36 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get currentProfileRequired =>
       'Текущий профиль обязателен для режима объединения или замены';
+
+  @override
+  String get previewSong => 'Превью Трека';
+
+  @override
+  String get previewSongRemoved => 'Превью трека удалено';
+
+  @override
+  String get previewSongAdded => 'Превью трека добавлено';
+
+  @override
+  String get previewSongFileNotFound => 'Файл превью трека не найден';
+
+  @override
+  String failedToPlayPreview(String error) {
+    return 'Не удалось воспроизвести превью: $error';
+  }
+
+  @override
+  String get removePreviewSong => 'Удалить превью трека';
+
+  @override
+  String get noPreviewSongSelected => 'Превью трека не выбрано';
+
+  @override
+  String get changePreviewSong => 'Изменить Превью Трека';
+
+  @override
+  String get selectPreviewSong => 'Выбрать Превью Трека';
+
+  @override
+  String get dropAudioFileHere => 'Перетащите аудиофайл сюда';
 }

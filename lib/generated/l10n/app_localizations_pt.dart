@@ -879,4 +879,37 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get currentProfileRequired =>
       'O perfil atual é obrigatório para o modo mesclar ou substituir';
+
+  @override
+  String get previewSong => 'Música de Prévia';
+
+  @override
+  String get previewSongRemoved => 'Música de prévia removida';
+
+  @override
+  String get previewSongAdded => 'Música de prévia adicionada';
+
+  @override
+  String get previewSongFileNotFound =>
+      'Arquivo de música de prévia não encontrado';
+
+  @override
+  String failedToPlayPreview(String error) {
+    return 'Falha ao reproduzir prévia: $error';
+  }
+
+  @override
+  String get removePreviewSong => 'Remover música de prévia';
+
+  @override
+  String get noPreviewSongSelected => 'Nenhuma música de prévia selecionada';
+
+  @override
+  String get changePreviewSong => 'Alterar Música de Prévia';
+
+  @override
+  String get selectPreviewSong => 'Selecionar Música de Prévia';
+
+  @override
+  String get dropAudioFileHere => 'Solte o arquivo de áudio aqui';
 }

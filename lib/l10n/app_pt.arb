@@ -777,5 +777,22 @@
   "importBackupDialogTitle": "Importar Backup",
   "invalidBackupFileFormat": "Formato de arquivo de backup inválido: versão ausente",
   "profileNameRequiredForNewProfile": "O nome do perfil é obrigatório ao criar um novo perfil",
-  "currentProfileRequired": "O perfil atual é obrigatório para o modo mesclar ou substituir"
+  "currentProfileRequired": "O perfil atual é obrigatório para o modo mesclar ou substituir",
+  "previewSong": "Música de Prévia",
+  "previewSongRemoved": "Música de prévia removida",
+  "previewSongAdded": "Música de prévia adicionada",
+  "previewSongFileNotFound": "Arquivo de música de prévia não encontrado",
+  "failedToPlayPreview": "Falha ao reproduzir prévia: {error}",
+  "@failedToPlayPreview": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "removePreviewSong": "Remover música de prévia",
+  "noPreviewSongSelected": "Nenhuma música de prévia selecionada",
+  "changePreviewSong": "Alterar Música de Prévia",
+  "selectPreviewSong": "Selecionar Música de Prévia",
+  "dropAudioFileHere": "Solte o arquivo de áudio aqui"
 }

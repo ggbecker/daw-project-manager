@@ -880,4 +880,38 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get currentProfileRequired =>
       'El perfil actual es obligatorio para el modo combinar o reemplazar';
+
+  @override
+  String get previewSong => 'Canción de Vista Previa';
+
+  @override
+  String get previewSongRemoved => 'Canción de vista previa eliminada';
+
+  @override
+  String get previewSongAdded => 'Canción de vista previa agregada';
+
+  @override
+  String get previewSongFileNotFound =>
+      'Archivo de canción de vista previa no encontrado';
+
+  @override
+  String failedToPlayPreview(String error) {
+    return 'Error al reproducir vista previa: $error';
+  }
+
+  @override
+  String get removePreviewSong => 'Eliminar canción de vista previa';
+
+  @override
+  String get noPreviewSongSelected =>
+      'No se ha seleccionado ninguna canción de vista previa';
+
+  @override
+  String get changePreviewSong => 'Cambiar Canción de Vista Previa';
+
+  @override
+  String get selectPreviewSong => 'Seleccionar Canción de Vista Previa';
+
+  @override
+  String get dropAudioFileHere => 'Suelte el archivo de audio aquí';
 }

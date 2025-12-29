@@ -777,5 +777,22 @@
   "importBackupDialogTitle": "バックアップをインポート",
   "invalidBackupFileFormat": "無効なバックアップファイル形式: バージョンがありません",
   "profileNameRequiredForNewProfile": "新しいプロフィールを作成する際は、プロフィール名が必要です",
-  "currentProfileRequired": "マージまたは置き換えモードには現在のプロフィールが必要です"
+  "currentProfileRequired": "マージまたは置き換えモードには現在のプロフィールが必要です",
+  "previewSong": "プレビュー曲",
+  "previewSongRemoved": "プレビュー曲が削除されました",
+  "previewSongAdded": "プレビュー曲が追加されました",
+  "previewSongFileNotFound": "プレビュー曲のファイルが見つかりません",
+  "failedToPlayPreview": "プレビューの再生に失敗しました: {error}",
+  "@failedToPlayPreview": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "removePreviewSong": "プレビュー曲を削除",
+  "noPreviewSongSelected": "プレビュー曲が選択されていません",
+  "changePreviewSong": "プレビュー曲を変更",
+  "selectPreviewSong": "プレビュー曲を選択",
+  "dropAudioFileHere": "オーディオファイルをここにドロップ"
 }

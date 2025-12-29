@@ -1540,6 +1540,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Current profile is required for merge or replace mode'**
   String get currentProfileRequired;
+
+  /// No description provided for @previewSong.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview Song'**
+  String get previewSong;
+
+  /// No description provided for @previewSongRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview song removed'**
+  String get previewSongRemoved;
+
+  /// No description provided for @previewSongAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview song added'**
+  String get previewSongAdded;
+
+  /// No description provided for @previewSongFileNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview song file not found'**
+  String get previewSongFileNotFound;
+
+  /// No description provided for @failedToPlayPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to play preview: {error}'**
+  String failedToPlayPreview(String error);
+
+  /// No description provided for @removePreviewSong.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove preview song'**
+  String get removePreviewSong;
+
+  /// No description provided for @noPreviewSongSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'No preview song selected'**
+  String get noPreviewSongSelected;
+
+  /// No description provided for @changePreviewSong.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Preview Song'**
+  String get changePreviewSong;
+
+  /// No description provided for @selectPreviewSong.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Preview Song'**
+  String get selectPreviewSong;
+
+  /// No description provided for @dropAudioFileHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop audio file here'**
+  String get dropAudioFileHere;
 }
 
 class _AppLocalizationsDelegate

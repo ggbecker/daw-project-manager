@@ -777,5 +777,22 @@
   "importBackupDialogTitle": "Importer la Sauvegarde",
   "invalidBackupFileFormat": "Format de fichier de sauvegarde invalide : version manquante",
   "profileNameRequiredForNewProfile": "Le nom du profil est requis lors de la création d'un nouveau profil",
-  "currentProfileRequired": "Le profil actuel est requis pour le mode fusionner ou remplacer"
+  "currentProfileRequired": "Le profil actuel est requis pour le mode fusionner ou remplacer",
+  "previewSong": "Chanson d'Aperçu",
+  "previewSongRemoved": "Chanson d'aperçu supprimée",
+  "previewSongAdded": "Chanson d'aperçu ajoutée",
+  "previewSongFileNotFound": "Fichier de chanson d'aperçu introuvable",
+  "failedToPlayPreview": "Échec de la lecture de l'aperçu : {error}",
+  "@failedToPlayPreview": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "removePreviewSong": "Supprimer la chanson d'aperçu",
+  "noPreviewSongSelected": "Aucune chanson d'aperçu sélectionnée",
+  "changePreviewSong": "Changer la Chanson d'Aperçu",
+  "selectPreviewSong": "Sélectionner une Chanson d'Aperçu",
+  "dropAudioFileHere": "Déposez le fichier audio ici"
 }
