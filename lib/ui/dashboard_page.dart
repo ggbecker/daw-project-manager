@@ -673,13 +673,13 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                       children: [
                         Flexible(
                           child: SizedBox(
-                            width: 250,
+                            width: 400,
                             child: TextField(
                               // Associar o FocusNode ao TextField
                               focusNode: _searchFocusNode, 
                               controller: _searchController,
                               decoration: InputDecoration(
-                                hintText: AppLocalizations.of(context)!.searchProjects,
+                                hintText: '${AppLocalizations.of(context)!.searchProjects} (${Platform.isMacOS ? 'Cmd+F' : 'Ctrl+F'})',
                                 isDense: true,
                                 border: const OutlineInputBorder(),
                                 prefixIcon: const Icon(Icons.search),
