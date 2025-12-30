@@ -468,7 +468,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                 children: [
                   // Ações de Root e Scan
                   Flexible(
-                    flex: 3,
+                    flex: 2,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -667,14 +667,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
 
                   // Área de Pesquisa e Filtro
                   Flexible(
-                    flex: 2,
+                    flex: 3,
                     child: Row(
-                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Flexible(
-                          child: SizedBox(
-                            width: 400,
-                            child: TextField(
+                        SizedBox(
+                          width: 400,
+                          child: TextField(
                               // Associar o FocusNode ao TextField
                               focusNode: _searchFocusNode, 
                               controller: _searchController,
@@ -697,9 +695,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                 ref.read(queryParamsNotifierProvider.notifier).setSearchText(text);
                               },
                             ),
-                          ),
                         ),
                         const SizedBox(width: 8),
+                        const Spacer(),
                         // Exibe o contador de projetos
                         Flexible(
                           child: repoAsync.when(
