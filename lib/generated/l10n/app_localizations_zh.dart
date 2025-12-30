@@ -131,6 +131,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get searchProjects => '搜索项目...';
 
   @override
+  String get searchReleases => '搜索发布...';
+
+  @override
+  String get noReleasesFound => '未找到发布';
+
+  @override
   String get deepScanTooltip =>
       '深度扫描从项目文件中提取完整的元数据：\n• BPM（每分钟节拍数）\n• 音乐调性\n• DAW版本\n这较慢，但提供完整信息。';
 

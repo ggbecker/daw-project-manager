@@ -50,6 +50,8 @@
   "delete": "Supprimer",
   "addFolder": "Ajouter un Dossier",
   "searchProjects": "Rechercher des projets...",
+  "searchReleases": "Rechercher des sorties...",
+  "noReleasesFound": "Aucune sortie trouvée",
   "deepScanTooltip": "Le Scan Approfondi extrait les métadonnées complètes des fichiers de projet:\n• BPM (Battements Par Minute)\n• Tonalité Musicale\n• Version du DAW\nC'est plus lent mais fournit des informations complètes.",
   "deepScanConfirm": "Cela scannera tous les projets et extraira les métadonnées complètes (BPM, Tonalité, Version du DAW). Cela peut prendre un certain temps. Continuer?",
   "metadataExtractedSuccessfully": "Métadonnées extraites avec succès",

@@ -863,7 +863,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                               decoration: InputDecoration(
                                 hintText: _tabController.index == 0
                                     ? '${AppLocalizations.of(context)!.searchProjects} (${Platform.isMacOS ? 'Cmd+F' : 'Ctrl+F'})'
-                                    : 'Search releases... (${Platform.isMacOS ? 'Cmd+F' : 'Ctrl+F'})',
+                                    : '${AppLocalizations.of(context)!.searchReleases} (${Platform.isMacOS ? 'Cmd+F' : 'Ctrl+F'})',
                                 isDense: true,
                                 border: const OutlineInputBorder(),
                                 prefixIcon: const Icon(Icons.search),

@@ -138,7 +138,7 @@ class _ReleasesTabPageState extends ConsumerState<ReleasesTabPage> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'No releases found',
+                    AppLocalizations.of(context)!.noReleasesFound,
                     style: TextStyle(
                       fontSize: 18,
                       color: Theme.of(context).textTheme.bodyMedium?.color,

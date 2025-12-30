@@ -132,6 +132,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get searchProjects => 'Buscar proyectos...';
 
   @override
+  String get searchReleases => 'Buscar lanzamientos...';
+
+  @override
+  String get noReleasesFound => 'No se encontraron lanzamientos';
+
+  @override
   String get deepScanTooltip =>
       'El Escaneo Profundo extrae metadatos completos de los archivos de proyecto:\n• BPM (Pulsos Por Minuto)\n• Tonalidad Musical\n• Versión del DAW\nEsto es más lento pero proporciona información completa.';
 

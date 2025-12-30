@@ -352,6 +352,18 @@ abstract class AppLocalizations {
   /// **'Search projects...'**
   String get searchProjects;
 
+  /// No description provided for @searchReleases.
+  ///
+  /// In en, this message translates to:
+  /// **'Search releases...'**
+  String get searchReleases;
+
+  /// No description provided for @noReleasesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No releases found'**
+  String get noReleasesFound;
+
   /// No description provided for @deepScanTooltip.
   ///
   /// In en, this message translates to:

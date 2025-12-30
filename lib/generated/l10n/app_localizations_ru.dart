@@ -132,6 +132,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get searchProjects => 'Поиск проектов...';
 
   @override
+  String get searchReleases => 'Поиск релизов...';
+
+  @override
+  String get noReleasesFound => 'Релизы не найдены';
+
+  @override
   String get deepScanTooltip =>
       'Глубокое сканирование извлекает полные метаданные из файлов проекта:\n• BPM (ударов в минуту)\n• Музыкальная тональность\n• Версия DAW\nЭто медленнее, но предоставляет полную информацию.';
 

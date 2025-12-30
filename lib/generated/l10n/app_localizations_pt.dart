@@ -132,6 +132,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get searchProjects => 'Pesquisar projetos...';
 
   @override
+  String get searchReleases => 'Pesquisar lançamentos...';
+
+  @override
+  String get noReleasesFound => 'Nenhum lançamento encontrado';
+
+  @override
   String get deepScanTooltip =>
       'A Varredura Profunda extrai metadados completos dos arquivos de projeto:\n• BPM (Batidas Por Minuto)\n• Tom Musical\n• Versão do DAW\nIsso é mais lento, mas fornece informações completas.';
 
