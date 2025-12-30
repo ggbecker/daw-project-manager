@@ -132,6 +132,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchProjects => 'Search projects...';
 
   @override
+  String get searchReleases => 'Search releases...';
+
+  @override
+  String get noReleasesFound => 'No releases found';
+
+  @override
   String get deepScanTooltip =>
       'Deep Scan extracts full metadata from project files:\n• BPM (Beats Per Minute)\n• Musical Key\n• DAW Version\nThis is slower but provides complete information.';
 

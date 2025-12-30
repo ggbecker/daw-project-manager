@@ -50,6 +50,8 @@
   "delete": "Excluir",
   "addFolder": "Adicionar Pasta",
   "searchProjects": "Pesquisar projetos...",
+  "searchReleases": "Pesquisar lançamentos...",
+  "noReleasesFound": "Nenhum lançamento encontrado",
   "deepScanTooltip": "A Varredura Profunda extrai metadados completos dos arquivos de projeto:\n• BPM (Batidas Por Minuto)\n• Tom Musical\n• Versão do DAW\nIsso é mais lento, mas fornece informações completas.",
   "deepScanConfirm": "Isso escaneará todos os projetos e extrairá metadados completos (BPM, Tom, Versão do DAW). Isso pode levar um tempo. Continuar?",
   "metadataExtractedSuccessfully": "Metadados extraídos com sucesso",

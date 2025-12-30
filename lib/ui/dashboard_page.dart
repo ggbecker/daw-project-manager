@@ -27,7 +27,7 @@ import '../providers/providers.dart';
 import '../repository/project_repository.dart';
 import 'package:uuid/uuid.dart';
 
-const String kAppVersion = '1.5.1';
+const String kAppVersion = '1.5.2';
 
 // WIDGET CORRIGIDO: Botões de controle da janela usando window_manager
 class WindowButtons extends StatelessWidget {
@@ -68,6 +68,39 @@ class WindowButtons extends StatelessWidget {
   }
 }
 
+// Intent classes for keyboard shortcuts
+class _SearchIntent extends Intent {
+  const _SearchIntent();
+}
+
+class _RescanIntent extends Intent {
+  const _RescanIntent();
+}
+
+// Action classes for keyboard shortcuts
+class _SearchAction extends Action<_SearchIntent> {
+  final VoidCallback onSearch;
+
+  _SearchAction(this.onSearch);
+
+  @override
+  Object? invoke(_SearchIntent intent) {
+    onSearch();
+    return null;
+  }
+}
+
+class _RescanAction extends Action<_RescanIntent> {
+  final VoidCallback onRescan;
+
+  _RescanAction(this.onRescan);
+
+  @override
+  Object? invoke(_RescanIntent intent) {
+    onRescan();
+    return null;
+  }
+}
 
 class DashboardPage extends ConsumerStatefulWidget {
   const DashboardPage({super.key});
@@ -84,72 +117,197 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
   // 1. FocusNode para a barra de pesquisa
   final FocusNode _searchFocusNode = FocusNode();
   
-  // FocusNode auxiliar para o RawKeyboardListener
-  final FocusNode _globalRawKeyListenerFocusNode = FocusNode();
-  
+  // FocusNode para capturar eventos de teclado globalmente (debug)
+  final FocusNode _debugKeyboardFocusNode = FocusNode();
+
   // TextEditingController para a barra de pesquisa
   late final TextEditingController _searchController;
+  
+  // Flag to track if Ctrl+F was recently pressed (to prevent aggressive focus recovery)
+  bool _shouldMaintainSearchFocus = false;
+  DateTime? _lastCtrlFPressTime;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _searchController = TextEditingController();
+    
+    // Add listener to TabController to rebuild when tab changes (for search placeholder update)
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) {
+        setState(() {}); // Rebuild to update search placeholder when tab animation completes
+      }
+    });
+    
+    // Add listener to FocusNode to track focus changes
+    // Only aggressively recover focus if Ctrl+F was recently pressed
+    _searchFocusNode.addListener(() {
+      // Only try to recover focus if Ctrl+F was recently pressed (within last 1 second)
+      if (!_searchFocusNode.hasFocus && _shouldMaintainSearchFocus && _searchFocusNode.canRequestFocus) {
+        final now = DateTime.now();
+        if (_lastCtrlFPressTime != null && now.difference(_lastCtrlFPressTime!).inSeconds < 1) {
+          // Check if something else stole the focus
+          final thief = FocusManager.instance.primaryFocus;
+          if (thief != null && thief != _searchFocusNode) {
+            // Unfocus the thief and request focus again
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!_searchFocusNode.hasFocus && _shouldMaintainSearchFocus) {
+                final currentThief = FocusManager.instance.primaryFocus;
+                if (currentThief != null && currentThief != _searchFocusNode) {
+                  currentThief.unfocus();
+                }
+                if (_searchFocusNode.canRequestFocus) {
+                  _searchFocusNode.requestFocus();
+                }
+              }
+            });
+          }
+        } else {
+          // Ctrl+F was not recent, stop trying to maintain focus
+          _shouldMaintainSearchFocus = false;
+        }
+      }
+    });
   }
 
   @override
   void dispose() {
     _tabController.dispose();
-    _searchFocusNode.dispose(); 
-    _globalRawKeyListenerFocusNode.dispose();
+    _searchFocusNode.dispose();
+    _debugKeyboardFocusNode.dispose();
     _searchController.dispose();
     super.dispose();
   }
-
-
-  // MÉTODO FINAL: Inclui Ctrl+F e Ctrl+R
-  void _handleRawKeyEvent(RawKeyEvent event) {
-    try {
-      // Escutar apenas o evento de tecla para baixo (RawKeyDownEvent)
-      if (event is! RawKeyDownEvent) return;
-
-      // Ignore modifier-only events (Alt, Ctrl, Shift alone) to avoid Flutter framework assertion errors
-      final logicalKey = event.logicalKey;
-      if (logicalKey == LogicalKeyboardKey.altLeft ||
-          logicalKey == LogicalKeyboardKey.altRight ||
-          logicalKey == LogicalKeyboardKey.controlLeft ||
-          logicalKey == LogicalKeyboardKey.controlRight ||
-          logicalKey == LogicalKeyboardKey.shiftLeft ||
-          logicalKey == LogicalKeyboardKey.shiftRight ||
-          logicalKey == LogicalKeyboardKey.metaLeft ||
-          logicalKey == LogicalKeyboardKey.metaRight) {
+  
+  // Track last processed key to avoid duplicate processing
+  LogicalKeyboardKey? _lastProcessedKey;
+  DateTime? _lastProcessedTime;
+  
+  // Method to track all keyboard events and handle shortcuts directly
+  void _handleDebugKeyEvent(RawKeyEvent event) {
+    if (event is! RawKeyDownEvent) return;
+    
+    final logicalKey = event.logicalKey;
+    final isControl = event.isControlPressed;
+    final isMeta = event.isMetaPressed;
+    
+    // Handle Ctrl+F / Cmd+F directly in RawKeyboardListener
+    if (logicalKey == LogicalKeyboardKey.keyF && (isControl || isMeta)) {
+      // Prevent duplicate processing (same key pressed multiple times in quick succession)
+      final now = DateTime.now();
+      if (_lastProcessedKey == logicalKey && 
+          _lastProcessedTime != null && 
+          now.difference(_lastProcessedTime!).inMilliseconds < 100) {
         return;
       }
-
-      // Verificar se Ctrl (ou Cmd/Meta no macOS) está pressionado
-      final bool isControlOrMetaPressed = event.isControlPressed || event.isMetaPressed;
       
-      // 1. Lógica para Ctrl + F
-      final bool isKeyF = event.logicalKey == LogicalKeyboardKey.keyF;
-      if (isKeyF && isControlOrMetaPressed) {
-        _searchFocusNode.requestFocus();
-        return; // Consome o evento
-      }
-
-      // 2. Lógica para Ctrl + R
-      final bool isKeyR = event.logicalKey == LogicalKeyboardKey.keyR;
-      if (isKeyR && isControlOrMetaPressed) {
-        // Chama a função de Rescan
-        _scanAll(); 
-        return; // Consome o evento
-      }
-    } catch (e) {
-      // Silently ignore keyboard handling errors to prevent crashes
-      // This can happen due to Flutter framework issues with modifier keys on Windows
-      if (kDebugMode) {
-        print('Keyboard event handling error (ignored): $e');
-      }
+      _lastProcessedKey = logicalKey;
+      _lastProcessedTime = now;
+      
+      // Set flag to maintain focus for the next 1 second (only when Ctrl+F is pressed)
+      _shouldMaintainSearchFocus = true;
+      _lastCtrlFPressTime = DateTime.now();
+      
+      // Execute the action directly
+      _focusSearchAndSelectAll();
+      return;
     }
+    
+    // Handle Ctrl+R / Cmd+R directly in RawKeyboardListener
+    if (logicalKey == LogicalKeyboardKey.keyR && (isControl || isMeta)) {
+      // Prevent duplicate processing
+      final now = DateTime.now();
+      if (_lastProcessedKey == logicalKey && 
+          _lastProcessedTime != null && 
+          now.difference(_lastProcessedTime!).inMilliseconds < 100) {
+        return;
+      }
+      
+      _lastProcessedKey = logicalKey;
+      _lastProcessedTime = now;
+      
+      // Execute the action directly
+      _scanAll();
+      return;
+    }
+  }
+
+
+  // Método para focar na busca e selecionar texto
+  void _focusSearchAndSelectAll() {
+    // Set flag to maintain focus for the next 1 second (only when Ctrl+F is pressed)
+    _shouldMaintainSearchFocus = true;
+    _lastCtrlFPressTime = DateTime.now();
+    
+    // CRITICAL: First, unfocus ALL widgets to prevent PlutoGrid or other widgets from stealing focus
+    final primaryFocus = FocusManager.instance.primaryFocus;
+    if (primaryFocus != null && primaryFocus != _searchFocusNode) {
+      primaryFocus.unfocus();
+    }
+    
+    // Use multiple post-frame callbacks to ensure focus is maintained
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Unfocus again to be sure (in case something grabbed focus in the meantime)
+      final currentFocus = FocusManager.instance.primaryFocus;
+      if (currentFocus != null && currentFocus != _searchFocusNode) {
+        currentFocus.unfocus();
+      }
+      
+      // First attempt: request focus
+      if (_searchFocusNode.canRequestFocus) {
+        _searchFocusNode.requestFocus();
+        
+        // Second post-frame callback to ensure focus is maintained and select text
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          // If focus was lost or stolen, unfocus the thief and try again
+          if (!_searchFocusNode.hasFocus) {
+            final thief = FocusManager.instance.primaryFocus;
+            if (thief != null && thief != _searchFocusNode) {
+              thief.unfocus();
+            }
+            
+            if (_searchFocusNode.canRequestFocus) {
+              _searchFocusNode.requestFocus();
+            }
+          }
+          
+          // Select text if there is any
+          if (_searchController.text.isNotEmpty) {
+            _searchController.selection = TextSelection(
+              baseOffset: 0,
+              extentOffset: _searchController.text.length,
+            );
+          }
+          
+          // Third post-frame callback as final check
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            // Final attempt if focus is still lost
+            if (!_searchFocusNode.hasFocus) {
+              final thief = FocusManager.instance.primaryFocus;
+              if (thief != null && thief != _searchFocusNode) {
+                thief.unfocus();
+              }
+              
+              if (_searchFocusNode.canRequestFocus) {
+                _searchFocusNode.requestFocus();
+              }
+            }
+            
+            // Fourth callback - aggressive focus maintenance
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!_searchFocusNode.hasFocus && _searchFocusNode.canRequestFocus) {
+                final thief = FocusManager.instance.primaryFocus;
+                if (thief != null && thief != _searchFocusNode) {
+                  thief.unfocus();
+                }
+                _searchFocusNode.requestFocus();
+              }
+            });
+          });
+        });
+      }
+    });
   }
 
 
@@ -379,16 +537,42 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
     final visibleCount = filteredProjects.where((p) => !p.hidden).length;
     final hiddenCount = filteredProjects.where((p) => p.hidden).length;
 
-    // RawKeyboardListener no topo.
-    return Stack(
-      children: [
-        RawKeyboardListener(
-          focusNode: _globalRawKeyListenerFocusNode,
-          autofocus: true, 
-          onKey: _handleRawKeyEvent, 
-          child: Scaffold(
-        appBar: null, 
-        body: Column(
+    // RawKeyboardListener is now the primary handler for Ctrl+F and Ctrl+R
+    // This ensures it works even when other widgets (like PlutoGrid) have focus
+    return RawKeyboardListener(
+      focusNode: _debugKeyboardFocusNode,
+      autofocus: true, // Autofocus to ensure we capture keyboard events
+      onKey: _handleDebugKeyEvent,
+      child: FocusScope(
+        child: Shortcuts(
+          shortcuts: <LogicalKeySet, Intent>{
+            // Keep Shortcuts as backup (though RawKeyboardListener handles it directly)
+            LogicalKeySet(
+              Platform.isMacOS ? LogicalKeyboardKey.meta : LogicalKeyboardKey.control,
+              LogicalKeyboardKey.keyF,
+            ): const _SearchIntent(),
+            LogicalKeySet(
+              Platform.isMacOS ? LogicalKeyboardKey.meta : LogicalKeyboardKey.control,
+              LogicalKeyboardKey.keyR,
+            ): const _RescanIntent(),
+          },
+          child: Actions(
+            actions: <Type, Action<Intent>>{
+              _SearchIntent: _SearchAction(() {
+                _focusSearchAndSelectAll();
+              }),
+              _RescanIntent: _RescanAction(() {
+                _scanAll();
+              }),
+            },
+          child: Focus(
+            autofocus: true,
+            canRequestFocus: true,
+            child: Stack(
+            children: [
+              Scaffold(
+                appBar: null, 
+                body: Column(
           children: [
             // ----------------------------------------------------
             // LÓGICA DE WINDOW BAR: APENHAS MOSTRA A BARRA PERSONALIZADA SE NÃO ESTIVER EM DEBUG
@@ -468,7 +652,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                 children: [
                   // Ações de Root e Scan
                   Flexible(
-                    flex: 3,
+                    flex: 2,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -667,19 +851,19 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
 
                   // Área de Pesquisa e Filtro
                   Flexible(
-                    flex: 2,
+                    flex: 3,
                     child: Row(
-                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Flexible(
-                          child: SizedBox(
-                            width: 250,
-                            child: TextField(
+                        SizedBox(
+                          width: 400,
+                          child: TextField(
                               // Associar o FocusNode ao TextField
                               focusNode: _searchFocusNode, 
                               controller: _searchController,
                               decoration: InputDecoration(
-                                hintText: AppLocalizations.of(context)!.searchProjects,
+                                hintText: _tabController.index == 0
+                                    ? '${AppLocalizations.of(context)!.searchProjects} (${Platform.isMacOS ? 'Cmd+F' : 'Ctrl+F'})'
+                                    : '${AppLocalizations.of(context)!.searchReleases} (${Platform.isMacOS ? 'Cmd+F' : 'Ctrl+F'})',
                                 isDense: true,
                                 border: const OutlineInputBorder(),
                                 prefixIcon: const Icon(Icons.search),
@@ -697,9 +881,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                 ref.read(queryParamsNotifierProvider.notifier).setSearchText(text);
                               },
                             ),
-                          ),
                         ),
                         const SizedBox(width: 8),
+                        const Spacer(),
                         // Exibe o contador de projetos
                         Flexible(
                           child: repoAsync.when(
@@ -960,39 +1144,45 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                     },
                     isAnyOperation: isAnyOperation,
                   ),
-                  const ReleasesTabPage(),
+                  ReleasesTabPage(
+                    searchText: _tabController.index == 1 ? currentParams.searchText : null,
+                  ),
                 ],
               ),
             ),
           ],
-        ),
-      ),
-        ),
-        // Loading overlay
-        if (isAnyOperation)
-          Container(
-            color: Colors.black54,
-            child: Center(
-              child: Card(
-                color: Theme.of(context).cardColor,
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const CircularProgressIndicator(),
-                      const SizedBox(height: 16),
-                      Text(
-                        isProfileSwitching ? AppLocalizations.of(context)!.switchingProfiles : AppLocalizations.of(context)!.scanningProjects,
-                        style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
-                      ),
-                    ],
-                  ),
                 ),
               ),
-            ),
+              // Loading overlay
+              if (isAnyOperation)
+                Container(
+                  color: Colors.black54,
+                  child: Center(
+                    child: Card(
+                      color: Theme.of(context).cardColor,
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const CircularProgressIndicator(),
+                            const SizedBox(height: 16),
+                            Text(
+                              isProfileSwitching ? AppLocalizations.of(context)!.switchingProfiles : AppLocalizations.of(context)!.scanningProjects,
+                              style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
-      ],
+        ),
+      ),
+      ),
+      ),
     );
   }
 } 
@@ -1787,6 +1977,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         enableContextMenu: false,
         enableFilterMenuItem: false,
         enableSorting: false,
+        enableEditingMode: false,
         renderer: (rendererContext) {
           final project = rendererContext.row.cells['data']?.value as MusicProject?;
           if (project == null) return const SizedBox.shrink();
@@ -1806,6 +1997,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         type: PlutoColumnType.text(),
         enableColumnDrag: true,
         enableContextMenu: false,
+        enableEditingMode: false,
         width: 600,
         minWidth: 200,
         frozen: PlutoColumnFrozen.start,
@@ -1827,6 +2019,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         title: l10n.phase,
         field: 'status',
         type: PlutoColumnType.text(),
+        enableEditingMode: false,
         width: 140,
         minWidth: 120,
         renderer: (rendererContext) {
@@ -1855,6 +2048,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         title: AppLocalizations.of(context)!.daw,
         field: 'dawType',
         type: PlutoColumnType.text(),
+        enableEditingMode: false,
         width: 140,
         minWidth: 100,
         renderer: (rendererContext) {
@@ -1940,6 +2134,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         title: AppLocalizations.of(context)!.lastModifiedColumn,
         field: 'lastModified',
         type: PlutoColumnType.text(),
+        enableEditingMode: false,
         width: 200,
         minWidth: 160,
         renderer: (rendererContext) {
@@ -2000,6 +2195,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         title: AppLocalizations.of(context)!.actions,
         field: 'launch',
         type: PlutoColumnType.text(),
+        enableEditingMode: false,
         width: 250, // Increased width to accommodate hidden button
         minWidth: 220,
         renderer: (ctx) {
@@ -2119,6 +2315,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         title: 'data',
         field: 'data',
         type: PlutoColumnType.text(),
+        enableEditingMode: false,
         width: 0,
         hide: true,
       ),

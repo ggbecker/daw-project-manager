@@ -16,7 +16,9 @@ import 'release_detail_page.dart';
 import 'dialogs/add_to_release_dialog.dart';
 
 class ReleasesTabPage extends ConsumerStatefulWidget {
-  const ReleasesTabPage({super.key});
+  final String? searchText;
+  
+  const ReleasesTabPage({super.key, this.searchText});
 
   @override
   ConsumerState<ReleasesTabPage> createState() => _ReleasesTabPageState();
@@ -112,7 +114,42 @@ class _ReleasesTabPageState extends ConsumerState<ReleasesTabPage> {
         ),
       ),
       data: (releases) {
-        if (releases.isEmpty) {
+        // Filter releases by search text if provided
+        var filteredReleases = releases;
+        if (widget.searchText != null && widget.searchText!.trim().isNotEmpty) {
+          final searchLower = widget.searchText!.toLowerCase().trim();
+          filteredReleases = releases.where((release) {
+            return release.title.toLowerCase().contains(searchLower) ||
+                   (release.description?.toLowerCase().contains(searchLower) ?? false);
+          }).toList();
+        }
+        
+        if (filteredReleases.isEmpty) {
+          // Show different message if search filtered everything out
+          if (widget.searchText != null && widget.searchText!.trim().isNotEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.search_off,
+                    size: 64,
+                    color: Theme.of(context).textTheme.bodySmall?.color,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    AppLocalizations.of(context)!.noReleasesFound,
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Theme.of(context).textTheme.bodyMedium?.color,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+          
+          // Original empty state
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -157,7 +194,7 @@ class _ReleasesTabPageState extends ConsumerState<ReleasesTabPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    AppLocalizations.of(context)!.releasesCount(releases.length),
+                    AppLocalizations.of(context)!.releasesCount(filteredReleases.length),
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   ElevatedButton.icon(
@@ -172,7 +209,7 @@ class _ReleasesTabPageState extends ConsumerState<ReleasesTabPage> {
             // Releases table
             Expanded(
               child: _ReleasesTable(
-                releases: releases,
+                releases: filteredReleases,
                 projects: projects,
                 dateFormat: _dateFormat,
               ),
