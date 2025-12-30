@@ -1787,6 +1787,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         enableContextMenu: false,
         enableFilterMenuItem: false,
         enableSorting: false,
+        enableEditingMode: false,
         renderer: (rendererContext) {
           final project = rendererContext.row.cells['data']?.value as MusicProject?;
           if (project == null) return const SizedBox.shrink();
@@ -1806,6 +1807,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         type: PlutoColumnType.text(),
         enableColumnDrag: true,
         enableContextMenu: false,
+        enableEditingMode: false,
         width: 600,
         minWidth: 200,
         frozen: PlutoColumnFrozen.start,
@@ -1827,6 +1829,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         title: l10n.phase,
         field: 'status',
         type: PlutoColumnType.text(),
+        enableEditingMode: false,
         width: 140,
         minWidth: 120,
         renderer: (rendererContext) {
@@ -1855,6 +1858,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         title: AppLocalizations.of(context)!.daw,
         field: 'dawType',
         type: PlutoColumnType.text(),
+        enableEditingMode: false,
         width: 140,
         minWidth: 100,
         renderer: (rendererContext) {
@@ -1940,6 +1944,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         title: AppLocalizations.of(context)!.lastModifiedColumn,
         field: 'lastModified',
         type: PlutoColumnType.text(),
+        enableEditingMode: false,
         width: 200,
         minWidth: 160,
         renderer: (rendererContext) {
@@ -2000,6 +2005,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         title: AppLocalizations.of(context)!.actions,
         field: 'launch',
         type: PlutoColumnType.text(),
+        enableEditingMode: false,
         width: 250, // Increased width to accommodate hidden button
         minWidth: 220,
         renderer: (ctx) {
@@ -2119,6 +2125,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         title: 'data',
         field: 'data',
         type: PlutoColumnType.text(),
+        enableEditingMode: false,
         width: 0,
         hide: true,
       ),
