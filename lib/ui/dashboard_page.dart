@@ -134,11 +134,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
     _searchController = TextEditingController();
     
     // Add listener to TabController to rebuild when tab changes (for search placeholder update)
-    _tabController.addListener(() {
-      if (!_tabController.indexIsChanging) {
-        setState(() {}); // Rebuild to update search placeholder when tab animation completes
-      }
-    });
+    _tabController.addListener(_onTabChanged);
     
     // Add listener to FocusNode to track focus changes
     // Only aggressively recover focus if Ctrl+F was recently pressed
@@ -171,8 +167,30 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
     });
   }
 
+  void _onTabChanged() {
+    if (!_tabController.indexIsChanging && mounted) {
+      // Sync search controller with the appropriate tab's search state
+      final currentTabIndex = _tabController.index;
+      if (currentTabIndex == 0) {
+        // Projects tab
+        final projectsSearch = ref.read(projectsSearchProvider);
+        if (_searchController.text != projectsSearch) {
+          _searchController.text = projectsSearch;
+        }
+      } else {
+        // Releases tab
+        final releasesSearch = ref.read(releasesSearchProvider);
+        if (_searchController.text != releasesSearch) {
+          _searchController.text = releasesSearch;
+        }
+      }
+      setState(() {}); // Rebuild to update search placeholder when tab animation completes
+    }
+  }
+
   @override
   void dispose() {
+    _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     _searchFocusNode.dispose();
     _debugKeyboardFocusNode.dispose();
@@ -479,7 +497,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
     final dateFormat = ref.watch(dateFormatProvider);
     final repoAsync = ref.watch(repositoryProvider);
     final roots = ref.watch(scanRootsProvider);
-    final currentParams = ref.watch(queryParamsNotifierProvider);
+    // Get current search text based on active tab
+    final currentSearch = _tabController.index == 0
+        ? ref.watch(projectsSearchProvider)
+        : ref.watch(releasesSearchProvider);
     final projects = ref.watch(projectsProvider);
     final hiddenMode = ref.watch(showHiddenProjectsProvider);
     final hiddenNotifier = ref.read(showHiddenProjectsProvider.notifier);
@@ -490,9 +511,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
     final isAnyOperation = isScanning || isProfileSwitching || _extractingMetadata;
     
     // Sync search controller with provider state
-    if (_searchController.text != currentParams.searchText) {
-      _searchController.text = currentParams.searchText;
-      _searchController.selection = TextSelection.fromPosition(TextPosition(offset: currentParams.searchText.length));
+    if (_searchController.text != currentSearch) {
+      _searchController.text = currentSearch;
+      _searchController.selection = TextSelection.fromPosition(TextPosition(offset: currentSearch.length));
     }
     
     // Get all projects and filter out preserved projects (same logic as projectsProvider)
@@ -867,18 +888,35 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                 isDense: true,
                                 border: const OutlineInputBorder(),
                                 prefixIcon: const Icon(Icons.search),
-                                suffixIcon: currentParams.searchText.isNotEmpty
-                                    ? IconButton(
-                                        icon: const Icon(Icons.close),
-                                        onPressed: () {
-                                          _searchController.clear();
-                                          ref.read(queryParamsNotifierProvider.notifier).setSearchText('');
-                                        },
-                                      )
-                                    : null,
+                                suffixIcon: () {
+                                  // Get current search text based on active tab
+                                  final currentSearch = _tabController.index == 0
+                                      ? ref.read(projectsSearchProvider)
+                                      : ref.read(releasesSearchProvider);
+                                  return currentSearch.isNotEmpty
+                                      ? IconButton(
+                                          icon: const Icon(Icons.close),
+                                          onPressed: () {
+                                            _searchController.clear();
+                                            if (_tabController.index == 0) {
+                                              ref.read(projectsSearchProvider.notifier).clear();
+                                            } else {
+                                              ref.read(releasesSearchProvider.notifier).clear();
+                                            }
+                                          },
+                                        )
+                                      : null;
+                                }(),
                               ),
                               onChanged: (text) {
-                                ref.read(queryParamsNotifierProvider.notifier).setSearchText(text);
+                                // Update the appropriate search provider based on current tab
+                                if (_tabController.index == 0) {
+                                  // Projects tab
+                                  ref.read(projectsSearchProvider.notifier).setSearchText(text);
+                                } else {
+                                  // Releases tab
+                                  ref.read(releasesSearchProvider.notifier).setSearchText(text);
+                                }
                               },
                             ),
                         ),
@@ -1144,9 +1182,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                     },
                     isAnyOperation: isAnyOperation,
                   ),
-                  ReleasesTabPage(
-                    searchText: _tabController.index == 1 ? currentParams.searchText : null,
-                  ),
+                  const ReleasesTabPage(),
                 ],
               ),
             ),

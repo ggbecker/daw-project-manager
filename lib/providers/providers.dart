@@ -114,6 +114,45 @@ final queryParamsNotifierProvider = NotifierProvider<QueryParamsNotifier, QueryP
   return QueryParamsNotifier();
 });
 
+// Separate search providers for Projects and Releases tabs
+class ProjectsSearchNotifier extends Notifier<String> {
+  @override
+  String build() {
+    return '';
+  }
+
+  void setSearchText(String text) {
+    state = text;
+  }
+
+  void clear() {
+    state = '';
+  }
+}
+
+final projectsSearchProvider = NotifierProvider<ProjectsSearchNotifier, String>(() {
+  return ProjectsSearchNotifier();
+});
+
+class ReleasesSearchNotifier extends Notifier<String> {
+  @override
+  String build() {
+    return '';
+  }
+
+  void setSearchText(String text) {
+    state = text;
+  }
+
+  void clear() {
+    state = '';
+  }
+}
+
+final releasesSearchProvider = NotifierProvider<ReleasesSearchNotifier, String>(() {
+  return ReleasesSearchNotifier();
+});
+
 // Show hidden projects state provider
 // 0 = show only visible (default)
 // 1 = show all (visible + hidden)
@@ -226,8 +265,10 @@ final projectsProvider = Provider<List<MusicProject>>((ref) {
     }
     
     // --- Aplicação dos Filtros ---
-    if (params.searchText.trim().isNotEmpty) {
-      final needle = params.searchText.toLowerCase();
+    // Use projects search provider instead of queryParams
+    final projectsSearch = ref.watch(projectsSearchProvider);
+    if (projectsSearch.trim().isNotEmpty) {
+      final needle = projectsSearch.toLowerCase();
       projects = projects.where((p) => p.displayName.toLowerCase().contains(needle)).toList();
     }
     

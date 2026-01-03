@@ -16,9 +16,7 @@ import 'release_detail_page.dart';
 import 'dialogs/add_to_release_dialog.dart';
 
 class ReleasesTabPage extends ConsumerStatefulWidget {
-  final String? searchText;
-  
-  const ReleasesTabPage({super.key, this.searchText});
+  const ReleasesTabPage({super.key});
 
   @override
   ConsumerState<ReleasesTabPage> createState() => _ReleasesTabPageState();
@@ -100,6 +98,9 @@ class _ReleasesTabPageState extends ConsumerState<ReleasesTabPage> {
     final allProjectsAsync = ref.watch(allProjectsStreamProvider);
     // Use allProjects to include preserved projects, not just filtered projectsProvider
     final projects = allProjectsAsync.value ?? [];
+    
+    // Use releases search provider instead of widget.searchText
+    final releasesSearch = ref.watch(releasesSearchProvider);
 
     return releasesAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -116,8 +117,8 @@ class _ReleasesTabPageState extends ConsumerState<ReleasesTabPage> {
       data: (releases) {
         // Filter releases by search text if provided
         var filteredReleases = releases;
-        if (widget.searchText != null && widget.searchText!.trim().isNotEmpty) {
-          final searchLower = widget.searchText!.toLowerCase().trim();
+        if (releasesSearch.trim().isNotEmpty) {
+          final searchLower = releasesSearch.toLowerCase().trim();
           filteredReleases = releases.where((release) {
             return release.title.toLowerCase().contains(searchLower) ||
                    (release.description?.toLowerCase().contains(searchLower) ?? false);
@@ -126,7 +127,7 @@ class _ReleasesTabPageState extends ConsumerState<ReleasesTabPage> {
         
         if (filteredReleases.isEmpty) {
           // Show different message if search filtered everything out
-          if (widget.searchText != null && widget.searchText!.trim().isNotEmpty) {
+          if (releasesSearch.trim().isNotEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
