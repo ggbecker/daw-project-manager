@@ -2459,6 +2459,10 @@ class _ReleaseTitleDialogState extends State<_ReleaseTitleDialog> {
   }
 }
 
+class _TogglePlayPauseIntent extends Intent {
+  const _TogglePlayPauseIntent();
+}
+
 class _PreviewSongDialog extends StatefulWidget {
   final MusicProject project;
   final VoidCallback onClose;
@@ -2578,87 +2582,105 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: Theme.of(context).cardColor,
-      title: Row(
-        children: [
-          Expanded(
-            child: Text(
-              widget.project.displayName,
-              style: TextStyle(
-                color: Theme.of(context).textTheme.titleLarge?.color,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
+    return Shortcuts(
+      shortcuts: {
+        SingleActivator(LogicalKeyboardKey.space): const _TogglePlayPauseIntent(),
+      },
+      child: Actions(
+        actions: {
+          _TogglePlayPauseIntent: CallbackAction<_TogglePlayPauseIntent>(
+            onInvoke: (_) {
+              _togglePlayPause();
+              return null;
+            },
           ),
-          IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ],
-      ),
-      content: SizedBox(
-        width: 400,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              path.basename(widget.project.previewSongPath ?? ''),
-              style: TextStyle(
-                color: Theme.of(context).textTheme.bodyMedium?.color,
-                fontSize: 14,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 16),
-            // Audio player controls
-            Row(
+        },
+        child: Focus(
+          autofocus: true,
+          child: AlertDialog(
+            backgroundColor: Theme.of(context).cardColor,
+            title: Row(
               children: [
-                IconButton(
-                  icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
-                  onPressed: _togglePlayPause,
-                  iconSize: 32,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.stop),
-                  onPressed: _isPlaying || _position > Duration.zero ? _stop : null,
-                ),
-                const SizedBox(width: 8),
                 Expanded(
-                  child: Column(
-                    children: [
-                      Slider(
-                        value: _duration.inMilliseconds > 0
-                            ? _position.inMilliseconds.toDouble()
-                            : 0.0,
-                        max: _duration.inMilliseconds > 0
-                            ? _duration.inMilliseconds.toDouble()
-                            : 100.0,
-                        onChanged: (value) async {
-                          final position = Duration(milliseconds: value.toInt());
-                          await _audioPlayer.seek(position);
-                        },
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            _formatDuration(_position),
-                            style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color, fontSize: 12),
-                          ),
-                          Text(
-                            _formatDuration(_duration),
-                            style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color, fontSize: 12),
-                          ),
-                        ],
-                      ),
-                    ],
+                  child: Text(
+                    widget.project.displayName,
+                    style: TextStyle(
+                      color: Theme.of(context).textTheme.titleLarge?.color,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
                 ),
               ],
             ),
-          ],
+            content: SizedBox(
+              width: 400,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    path.basename(widget.project.previewSongPath ?? ''),
+                    style: TextStyle(
+                      color: Theme.of(context).textTheme.bodyMedium?.color,
+                      fontSize: 14,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 16),
+                  // Audio player controls
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
+                        onPressed: _togglePlayPause,
+                        iconSize: 32,
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.stop),
+                        onPressed: _isPlaying || _position > Duration.zero ? _stop : null,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          children: [
+                            Slider(
+                              value: _duration.inMilliseconds > 0
+                                  ? _position.inMilliseconds.toDouble()
+                                  : 0.0,
+                              max: _duration.inMilliseconds > 0
+                                  ? _duration.inMilliseconds.toDouble()
+                                  : 100.0,
+                              onChanged: (value) async {
+                                final position = Duration(milliseconds: value.toInt());
+                                await _audioPlayer.seek(position);
+                              },
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  _formatDuration(_position),
+                                  style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color, fontSize: 12),
+                                ),
+                                Text(
+                                  _formatDuration(_duration),
+                                  style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color, fontSize: 12),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );

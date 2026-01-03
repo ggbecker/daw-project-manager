@@ -755,8 +755,13 @@ class _PreviewSongPlayer extends StatefulWidget {
   State<_PreviewSongPlayer> createState() => _PreviewSongPlayerState();
 }
 
+class _TogglePlayPauseIntent extends Intent {
+  const _TogglePlayPauseIntent();
+}
+
 class _PreviewSongPlayerState extends State<_PreviewSongPlayer> {
   final AudioPlayer _audioPlayer = AudioPlayer();
+  final FocusNode _focusNode = FocusNode();
   bool _isPlaying = false;
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
@@ -791,6 +796,7 @@ class _PreviewSongPlayerState extends State<_PreviewSongPlayer> {
   @override
   void dispose() {
     _audioPlayer.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -1047,68 +1053,89 @@ class _PreviewSongPlayerState extends State<_PreviewSongPlayer> {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      // Audio player controls
-                      Row(
-                        children: [
-                          IconButton(
-                            icon: Icon(
-                              _isPlaying ? Icons.pause : Icons.play_arrow,
+                      // Audio player controls with keyboard shortcuts
+                      Shortcuts(
+                        shortcuts: {
+                          SingleActivator(LogicalKeyboardKey.space): const _TogglePlayPauseIntent(),
+                        },
+                        child: Actions(
+                          actions: {
+                            _TogglePlayPauseIntent: CallbackAction<_TogglePlayPauseIntent>(
+                              onInvoke: (_) {
+                                _togglePlayPause();
+                                return null;
+                              },
                             ),
-                            onPressed: _togglePlayPause,
-                            iconSize: 32,
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.stop),
-                            onPressed: _isPlaying || _position > Duration.zero
-                                ? _stop
-                                : null,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Column(
+                          },
+                          child: Focus(
+                            focusNode: _focusNode,
+                              child: Row(
                               children: [
-                                Slider(
-                                  value: _duration.inMilliseconds > 0
-                                      ? _position.inMilliseconds.toDouble()
-                                      : 0.0,
-                                  max: _duration.inMilliseconds > 0
-                                      ? _duration.inMilliseconds.toDouble()
-                                      : 100.0,
-                                  onChanged: (value) async {
-                                    final position = Duration(
-                                      milliseconds: value.toInt(),
-                                    );
-                                    await _audioPlayer.seek(position);
+                                IconButton(
+                                  icon: Icon(
+                                    _isPlaying ? Icons.pause : Icons.play_arrow,
+                                  ),
+                                  onPressed: () {
+                                    _focusNode.requestFocus();
+                                    _togglePlayPause();
                                   },
+                                  iconSize: 32,
                                 ),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      _formatDuration(_position),
-                                      style: TextStyle(
-                                        color: Theme.of(
-                                          context,
-                                        ).textTheme.bodySmall?.color,
-                                        fontSize: 12,
+                                IconButton(
+                                  icon: const Icon(Icons.stop),
+                                  onPressed: _isPlaying || _position > Duration.zero
+                                      ? _stop
+                                      : null,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Column(
+                                    children: [
+                                      Slider(
+                                        value: _duration.inMilliseconds > 0
+                                            ? _position.inMilliseconds.toDouble()
+                                            : 0.0,
+                                        max: _duration.inMilliseconds > 0
+                                            ? _duration.inMilliseconds.toDouble()
+                                            : 100.0,
+                                        onChanged: (value) async {
+                                          final position = Duration(
+                                            milliseconds: value.toInt(),
+                                          );
+                                          await _audioPlayer.seek(position);
+                                        },
                                       ),
-                                    ),
-                                    Text(
-                                      _formatDuration(_duration),
-                                      style: TextStyle(
-                                        color: Theme.of(
-                                          context,
-                                        ).textTheme.bodySmall?.color,
-                                        fontSize: 12,
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            _formatDuration(_position),
+                                            style: TextStyle(
+                                              color: Theme.of(
+                                                context,
+                                              ).textTheme.bodySmall?.color,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                          Text(
+                                            _formatDuration(_duration),
+                                            style: TextStyle(
+                                              color: Theme.of(
+                                                context,
+                                              ).textTheme.bodySmall?.color,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
                           ),
-                        ],
+                        ),
                       ),
                     ],
                   )
