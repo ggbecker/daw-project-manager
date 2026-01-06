@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import '../utils/app_paths.dart';
 
 // Theme type enum
 enum AppThemeType {
@@ -11,17 +15,54 @@ enum AppThemeType {
 class ThemeTypeNotifier extends Notifier<AppThemeType> {
   @override
   AppThemeType build() {
+    // Load theme asynchronously after build
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      _loadTheme();
+    });
     return AppThemeType.neonDark; // Default to neon dark
   }
 
-  void setThemeType(AppThemeType type) {
-    state = type;
+  Future<void> _loadTheme() async {
+    try {
+      final appDataPath = await getLocalAppDataPath();
+      Hive.init(appDataPath);
+      final settingsBox = await Hive.openBox<String>('settings');
+      final savedTheme = settingsBox.get('theme');
+      if (savedTheme != null && savedTheme.isNotEmpty) {
+        final themeType = AppThemeType.values.firstWhere(
+          (e) => e.name == savedTheme,
+          orElse: () => AppThemeType.neonDark,
+        );
+        state = themeType;
+      }
+    } catch (_) {
+      // Use default theme if loading fails
+    }
   }
 
-  void cycle() {
-    state = state == AppThemeType.neonDark
+  Future<void> setThemeType(AppThemeType type) async {
+    // Update state synchronously to trigger immediate rebuild
+    state = type;
+    if (kDebugMode) {
+      print('Theme changed to: ${type.name}');
+    }
+    try {
+      final appDataPath = await getLocalAppDataPath();
+      Hive.init(appDataPath);
+      final settingsBox = await Hive.openBox<String>('settings');
+      await settingsBox.put('theme', type.name);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Failed to save theme: $e');
+      }
+    }
+  }
+
+  Future<void> cycle() async {
+    final newTheme = state == AppThemeType.neonDark
         ? AppThemeType.classicDark
         : AppThemeType.neonDark;
+    await setThemeType(newTheme);
   }
 }
 
