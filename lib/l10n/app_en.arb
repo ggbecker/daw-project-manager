@@ -796,6 +796,161 @@
   "noPreviewSongSelected": "No preview song selected",
   "changePreviewSong": "Change Preview Song",
   "selectPreviewSong": "Select Preview Song",
-  "dropAudioFileHere": "Drop audio file here"
+  "dropAudioFileHere": "Drop audio file here",
+  "projectAge": "Project age: {age}",
+  "@projectAge": {
+    "placeholders": {
+      "age": {
+        "type": "String"
+      }
+    }
+  },
+  "createdDate": "created {date}",
+  "@createdDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "completedIn": "Completed in: {duration}",
+  "@completedIn": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "finishedDate": "finished {date}",
+  "@finishedDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "dateToday": "today",
+  "dateYesterday": "yesterday",
+  "dateDaysAgo": "{count} days ago",
+  "@dateDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dateWeeksAgo": "{count} week{plural} ago",
+  "@dateWeeksAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      }
+    }
+  },
+  "dateMonthsAgo": "{count} month{plural} ago",
+  "@dateMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      }
+    }
+  },
+  "dateYearsAgo": "{count} year{plural} ago",
+  "@dateYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      }
+    }
+  },
+  "ageYearsMonths": "{years} year{yearPlural}, {months} month{monthPlural}",
+  "@ageYearsMonths": {
+    "placeholders": {
+      "years": {
+        "type": "int"
+      },
+      "yearPlural": {
+        "type": "String"
+      },
+      "months": {
+        "type": "int"
+      },
+      "monthPlural": {
+        "type": "String"
+      }
+    }
+  },
+  "ageYears": "{years} year{plural}",
+  "@ageYears": {
+    "placeholders": {
+      "years": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      }
+    }
+  },
+  "ageMonthsDays": "{months} month{monthPlural}, {days} day{dayPlural}",
+  "@ageMonthsDays": {
+    "placeholders": {
+      "months": {
+        "type": "int"
+      },
+      "monthPlural": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      },
+      "dayPlural": {
+        "type": "String"
+      }
+    }
+  },
+  "ageMonths": "{months} month{plural}",
+  "@ageMonths": {
+    "placeholders": {
+      "months": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      }
+    }
+  },
+  "ageDays": "{days} day{plural}",
+  "@ageDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      }
+    }
+  },
+  "ageHours": "{hours} hour{plural}",
+  "@ageHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      }
+    }
+  },
+  "ageJustNow": "Just now",
+  "ageLessThanHour": "Less than an hour"
 }
 

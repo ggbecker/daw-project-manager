@@ -80,24 +80,76 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
   }
 
   String _formatDate(DateTime date) {
+    final l10n = AppLocalizations.of(context)!;
     final now = DateTime.now();
     final diff = now.difference(date);
     
     if (diff.inDays == 0) {
-      return 'today';
+      return l10n.dateToday;
     } else if (diff.inDays == 1) {
-      return 'yesterday';
+      return l10n.dateYesterday;
     } else if (diff.inDays < 7) {
-      return '${diff.inDays} days ago';
+      return l10n.dateDaysAgo(diff.inDays);
     } else if (diff.inDays < 30) {
       final weeks = diff.inDays ~/ 7;
-      return '$weeks week${weeks > 1 ? 's' : ''} ago';
+      return l10n.dateWeeksAgo(weeks, weeks > 1 ? 's' : '');
     } else if (diff.inDays < 365) {
       final months = diff.inDays ~/ 30;
-      return '$months month${months > 1 ? 's' : ''} ago';
+      return l10n.dateMonthsAgo(months, months > 1 ? 's' : '');
     } else {
       final years = diff.inDays ~/ 365;
-      return '$years year${years > 1 ? 's' : ''} ago';
+      return l10n.dateYearsAgo(years, years > 1 ? 's' : '');
+    }
+  }
+
+  String _formatDuration(Duration duration) {
+    final l10n = AppLocalizations.of(context)!;
+    final years = duration.inDays ~/ 365;
+    final months = (duration.inDays % 365) ~/ 30;
+    final days = duration.inDays % 30;
+    
+    if (years > 0) {
+      if (months > 0) {
+        return l10n.ageYearsMonths(years, years > 1 ? 's' : '', months, months > 1 ? 's' : '');
+      }
+      return l10n.ageYears(years, years > 1 ? 's' : '');
+    } else if (months > 0) {
+      if (days > 0) {
+        return l10n.ageMonthsDays(months, months > 1 ? 's' : '', days, days > 1 ? 's' : '');
+      }
+      return l10n.ageMonths(months, months > 1 ? 's' : '');
+    } else if (days > 0) {
+      return l10n.ageDays(days, days > 1 ? 's' : '');
+    } else if (duration.inHours > 0) {
+      return l10n.ageHours(duration.inHours, duration.inHours > 1 ? 's' : '');
+    } else {
+      return l10n.ageJustNow;
+    }
+  }
+
+  String? _formatCompletionDuration(Duration? duration) {
+    if (duration == null) return null;
+    final l10n = AppLocalizations.of(context)!;
+    final years = duration.inDays ~/ 365;
+    final months = (duration.inDays % 365) ~/ 30;
+    final days = duration.inDays % 30;
+    
+    if (years > 0) {
+      if (months > 0) {
+        return l10n.ageYearsMonths(years, years > 1 ? 's' : '', months, months > 1 ? 's' : '');
+      }
+      return l10n.ageYears(years, years > 1 ? 's' : '');
+    } else if (months > 0) {
+      if (days > 0) {
+        return l10n.ageMonthsDays(months, months > 1 ? 's' : '', days, days > 1 ? 's' : '');
+      }
+      return l10n.ageMonths(months, months > 1 ? 's' : '');
+    } else if (days > 0) {
+      return l10n.ageDays(days, days > 1 ? 's' : '');
+    } else if (duration.inHours > 0) {
+      return l10n.ageHours(duration.inHours, duration.inHours > 1 ? 's' : '');
+    } else {
+      return l10n.ageLessThanHour;
     }
   }
 
@@ -351,7 +403,7 @@ updatedProject.lastModifiedAt.toString(),
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          'Project age: ${updatedProject.projectAgeFormatted}',
+                          AppLocalizations.of(context)!.projectAge(_formatDuration(updatedProject.projectAge)),
                           style: TextStyle(
                             color: Theme.of(context).textTheme.bodySmall?.color,
                           ),
@@ -359,7 +411,7 @@ updatedProject.lastModifiedAt.toString(),
                         if (updatedProject.fileCreatedAt != null) ...[
                           const SizedBox(width: 8),
                           Text(
-                            '(created ${_formatDate(updatedProject.fileCreatedAt!)})',
+                            '(${AppLocalizations.of(context)!.createdDate(_formatDate(updatedProject.fileCreatedAt!))})',
                             style: TextStyle(
                               color: Theme.of(context).textTheme.bodySmall?.color,
                               fontSize: 12,
@@ -369,7 +421,7 @@ updatedProject.lastModifiedAt.toString(),
                       ],
                     ),
                     // Time to completion (only show for finished projects)
-                    if (updatedProject.timeToCompletionFormatted != null) ...[
+                    if (updatedProject.timeToCompletion != null) ...[
                       const SizedBox(height: 4),
                       Row(
                         children: [
@@ -380,7 +432,7 @@ updatedProject.lastModifiedAt.toString(),
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            'Completed in: ${updatedProject.timeToCompletionFormatted}',
+                            AppLocalizations.of(context)!.completedIn(_formatCompletionDuration(updatedProject.timeToCompletion)!),
                             style: TextStyle(
                               color: Theme.of(context).textTheme.bodySmall?.color,
                             ),
@@ -388,7 +440,7 @@ updatedProject.lastModifiedAt.toString(),
                           if (updatedProject.statusChangedAt != null) ...[
                             const SizedBox(width: 8),
                             Text(
-                              '(finished ${_formatDate(updatedProject.statusChangedAt!)})',
+                              '(${AppLocalizations.of(context)!.finishedDate(_formatDate(updatedProject.statusChangedAt!))})',
                               style: TextStyle(
                                 color: Theme.of(context).textTheme.bodySmall?.color,
                                 fontSize: 12,
