@@ -73,6 +73,7 @@ class MetadataExtractor {
       // Nuendo uses similar format to Cubase
       final metadata = await _extractFromCubaseFile(filePath);
       bpm = metadata.bpm ?? bpm;
+      key = metadata.key ?? key;
       dawVersion = metadata.dawVersion ?? dawVersion;
     }
 
