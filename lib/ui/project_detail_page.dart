@@ -79,6 +79,28 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
     }
   }
 
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final diff = now.difference(date);
+    
+    if (diff.inDays == 0) {
+      return 'today';
+    } else if (diff.inDays == 1) {
+      return 'yesterday';
+    } else if (diff.inDays < 7) {
+      return '${diff.inDays} days ago';
+    } else if (diff.inDays < 30) {
+      final weeks = diff.inDays ~/ 7;
+      return '$weeks week${weeks > 1 ? 's' : ''} ago';
+    } else if (diff.inDays < 365) {
+      final months = diff.inDays ~/ 30;
+      return '$months month${months > 1 ? 's' : ''} ago';
+    } else {
+      final years = diff.inDays ~/ 365;
+      return '$years year${years > 1 ? 's' : ''} ago';
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -315,9 +337,67 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                             const SizedBox(height: 16),
                     Text(
                       AppLocalizations.of(context)!.lastModified(
-                        updatedProject.lastModifiedAt.toString(),
+updatedProject.lastModifiedAt.toString(),
                       ),
                     ),
+                    const SizedBox(height: 8),
+                    // Project age display
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.access_time,
+                          size: 16,
+                          color: Theme.of(context).textTheme.bodySmall?.color,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Project age: ${updatedProject.projectAgeFormatted}',
+                          style: TextStyle(
+                            color: Theme.of(context).textTheme.bodySmall?.color,
+                          ),
+                        ),
+                        if (updatedProject.fileCreatedAt != null) ...[
+                          const SizedBox(width: 8),
+                          Text(
+                            '(created ${_formatDate(updatedProject.fileCreatedAt!)})',
+                            style: TextStyle(
+                              color: Theme.of(context).textTheme.bodySmall?.color,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    // Time to completion (only show for finished projects)
+                    if (updatedProject.timeToCompletionFormatted != null) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.emoji_events,
+                            size: 16,
+                            color: Colors.amber,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Completed in: ${updatedProject.timeToCompletionFormatted}',
+                            style: TextStyle(
+                              color: Theme.of(context).textTheme.bodySmall?.color,
+                            ),
+                          ),
+                          if (updatedProject.statusChangedAt != null) ...[
+                            const SizedBox(width: 8),
+                            Text(
+                              '(finished ${_formatDate(updatedProject.statusChangedAt!)})',
+                              style: TextStyle(
+                                color: Theme.of(context).textTheme.bodySmall?.color,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
                             const SizedBox(height: 24),
 
                             // Campo para editar o nome de exibição customizado
@@ -607,6 +687,12 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                         ? null
                                         : notesText;
 
+                                    // Determine new status and check if it changed
+                                    final newStatus = _selectedPhase != null
+                                        ? _translateStatusToEnglish(_selectedPhase!)
+                                        : 'Idea';
+                                    final statusChanged = project.status != newStatus;
+
                                     final updated = project.copyWith(
                                       customDisplayName: newCustomDisplayName,
                                       bpm: _bpmCtrl.text.trim().isEmpty
@@ -618,11 +704,8 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                           ? null
                                           : _keyCtrl.text.trim(),
                                       notes: newNotes, // NOVO: Salva Notas
-                                      status: _selectedPhase != null
-                                          ? _translateStatusToEnglish(
-                                              _selectedPhase!,
-                                            )
-                                          : 'Idea', // Save project phase
+                                      status: newStatus, // Save project phase
+                                      statusChangedAt: statusChanged ? DateTime.now() : null,
                                     );
 
                                     await repo.updateProject(updated);

@@ -1367,7 +1367,12 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
       for (final projectId in _selectedProjectIds) {
         try {
           final project = allProjects.firstWhere((p) => p.id == projectId);
-          final updated = project.copyWith(status: newStatus);
+          // Track when status changes
+          final statusChanged = project.status != newStatus;
+          final updated = project.copyWith(
+            status: newStatus,
+            statusChangedAt: statusChanged ? DateTime.now() : null,
+          );
           await repo.updateProject(updated);
           successCount++;
         } catch (e) {
