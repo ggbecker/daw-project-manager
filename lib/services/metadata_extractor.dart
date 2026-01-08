@@ -392,7 +392,11 @@ class MetadataExtractor {
       // The format is: "MusicalTempo" ... "Float" ... [8 bytes of tempo value]
       bpm = _extractCubaseBpm(bytes);
       
-      return ProjectMetadata(bpm: bpm, dawVersion: dawVersion);
+      // === Extract Key/Scale from MusicalSignature metadata ===
+      // The key is stored in a CmRational object after the MusicalSignature tag
+      final key = _extractCubaseKey(bytes);
+      
+      return ProjectMetadata(bpm: bpm, key: key, dawVersion: dawVersion);
     } catch (e) {
       // If parsing fails, return empty metadata
       return ProjectMetadata();
@@ -475,6 +479,140 @@ class MetadataExtractor {
     } catch (e) {
       return null;
     }
+  }
+  
+  /// Extracts key/scale from Cubase file by searching for MusicalSignature metadata
+  /// The key is stored in a CmRational object - 8 bytes of packed data
+  /// Format: MusicalSignature -> ... -> CmRational -> [11 bytes offset] -> [8 bytes data]
+  static String? _extractCubaseKey(Uint8List bytes) {
+    try {
+      // Search for "MusicalSignature" string in the binary file
+      final musicalSigTag = utf8.encode('MusicalSignature');
+      final cmRationalTag = utf8.encode('CmRational');
+      
+      int? musicalSigIndex;
+      for (int i = 0; i <= bytes.length - musicalSigTag.length; i++) {
+        bool found = true;
+        for (int j = 0; j < musicalSigTag.length; j++) {
+          if (bytes[i + j] != musicalSigTag[j]) {
+            found = false;
+            break;
+          }
+        }
+        if (found) {
+          musicalSigIndex = i;
+          break;
+        }
+      }
+      
+      if (musicalSigIndex == null) {
+        return null;
+      }
+      
+      // Search for "CmRational" type indicator after MusicalSignature
+      // Limit search to a reasonable range (e.g., 200 bytes after the tag)
+      final searchEnd = (musicalSigIndex + musicalSigTag.length + 200).clamp(0, bytes.length);
+      int? cmRationalIndex;
+      
+      for (int i = musicalSigIndex + musicalSigTag.length; i <= searchEnd - cmRationalTag.length; i++) {
+        bool found = true;
+        for (int j = 0; j < cmRationalTag.length; j++) {
+          if (bytes[i + j] != cmRationalTag[j]) {
+            found = false;
+            break;
+          }
+        }
+        if (found) {
+          cmRationalIndex = i;
+          break;
+        }
+      }
+      
+      if (cmRationalIndex == null) {
+        return null;
+      }
+      
+      // The key data starts 11 bytes after the end of "CmRational"
+      // Read 8 bytes of key signature data
+      final dataOffset = 11;
+      final valueStart = cmRationalIndex + cmRationalTag.length + dataOffset;
+      
+      if (valueStart + 8 > bytes.length) {
+        return null;
+      }
+      
+      // Read the 8-byte signature pattern
+      final keyBytes = bytes.sublist(valueStart, valueStart + 8);
+      
+      // Known key patterns from analysis (first 4 bytes are significant, last 4 are zeros)
+      // These patterns are based on the CmRational encoding
+      final knownPatterns = _getCubaseKeyPatterns();
+      
+      // Convert to hex string for matching
+      final hexPattern = keyBytes.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ');
+      
+      // Try exact match first
+      if (knownPatterns.containsKey(hexPattern)) {
+        return knownPatterns[hexPattern];
+      }
+      
+      // Try matching just the first 4 bytes (last 4 are typically zeros)
+      final first4Hex = keyBytes.sublist(0, 4).map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ');
+      for (final entry in knownPatterns.entries) {
+        if (entry.key.startsWith(first4Hex)) {
+          return entry.value;
+        }
+      }
+      
+      // If no exact match, try to decode the pattern mathematically
+      // The CmRational appears to encode root note and scale type in a packed format
+      return _decodeCubaseKeyPattern(keyBytes);
+    } catch (e) {
+      return null;
+    }
+  }
+  
+  /// Known Cubase key signature patterns (from binary analysis)
+  /// Format: "HH HH HH HH HH HH HH HH" -> "Key Scale"
+  static Map<String, String> _getCubaseKeyPatterns() {
+    return {
+      // Major keys (analyzed patterns)
+      '39 88 20 50 00 00 00 00': 'C Major',
+      '3C 4A D8 A0 00 00 00 00': 'D Major',
+      // Minor keys (analyzed patterns)
+      'B3 D6 64 40 00 00 00 00': 'D Minor',
+      // Additional patterns will be added as they are discovered
+      // The encoding appears to use a complex packed format
+    };
+  }
+  
+  /// Attempts to decode Cubase key pattern mathematically
+  /// This is a fallback when the pattern isn't in our known list
+  static String? _decodeCubaseKeyPattern(List<int> keyBytes) {
+    // The CmRational type suggests this might be stored as a rational number
+    // Try interpreting as different numeric formats
+    
+    if (keyBytes.length < 8) return null;
+    
+    // Check if last 4 bytes are zeros (common pattern)
+    final hasZeroPadding = keyBytes[4] == 0 && keyBytes[5] == 0 && 
+                           keyBytes[6] == 0 && keyBytes[7] == 0;
+    
+    if (!hasZeroPadding) {
+      return null; // Unknown format
+    }
+    
+    // Try to interpret the first 4 bytes
+    // Based on the patterns:
+    // C Major: 39 88 20 50 -> some encoding
+    // D Major: 3C 4A D8 A0 -> shifted by ~2 semitones
+    // D Minor: B3 D6 64 40 -> same root, different scale type
+    
+    // The significant byte differences suggest a bit-field encoding
+    // For now, return null for unknown patterns
+    // Future: reverse-engineer the exact bit layout
+    
+    return null;
   }
 
   /// Searches for BPM information in text files
