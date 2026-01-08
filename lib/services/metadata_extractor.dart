@@ -393,10 +393,9 @@ class MetadataExtractor {
       // The format is: "MusicalTempo" ... "Float" ... [8 bytes of tempo value]
       bpm = _extractCubaseBpm(bytes);
       
-      // === Extract Key/Scale from MusicalSignature metadata ===
-      // The key is stored in a CmRational object after the MusicalSignature tag
-      // Note: The encoding includes project-specific data, so pattern matching
-      // may not always work. We fallback to filename-based extraction if needed.
+      // === Extract Key/Scale from ScaleHelper fields ===
+      // Uses "ScaleHelper Root Key" and "ScaleHelper Scale Type" fields
+      // which store direct indices for root note and scale type
       String? key = _extractCubaseKey(bytes);
       
       // If pattern matching failed, try to extract from embedded filename
@@ -492,18 +491,10 @@ class MetadataExtractor {
     }
   }
   
-  /// Extracts key/scale from Cubase file using the most reliable method available:
-  /// 1. First tries "ScaleHelper Root Key" and "ScaleHelper Scale Type" fields (most reliable)
-  /// 2. Falls back to CmRational pattern matching if ScaleHelper fields not found
+  /// Extracts key/scale from Cubase file using ScaleHelper fields
+  /// These fields store direct indices for root note and scale type
   static String? _extractCubaseKey(Uint8List bytes) {
-    // Try the reliable ScaleHelper method first
-    final scaleHelperResult = _extractCubaseKeyFromScaleHelper(bytes);
-    if (scaleHelperResult != null) {
-      return scaleHelperResult;
-    }
-    
-    // Fall back to CmRational pattern matching
-    return _extractCubaseKeyFromCmRational(bytes);
+    return _extractCubaseKeyFromScaleHelper(bytes);
   }
   
   /// Extracts key/scale from Cubase "ScaleHelper Root Key" and "ScaleHelper Scale Type" fields
@@ -617,132 +608,6 @@ class MetadataExtractor {
     return scaleNames[index];
   }
   
-  /// Legacy method: extracts key from CmRational pattern matching
-  /// Less reliable but works as fallback when ScaleHelper fields aren't present
-  static String? _extractCubaseKeyFromCmRational(Uint8List bytes) {
-    try {
-      // Search for "MusicalSignature" string in the binary file
-      final musicalSigTag = utf8.encode('MusicalSignature');
-      final cmRationalTag = utf8.encode('CmRational');
-      
-      int? musicalSigIndex = _findPattern(bytes, musicalSigTag);
-      if (musicalSigIndex == null) return null;
-      
-      // Search for "CmRational" type indicator after MusicalSignature
-      final searchEnd = (musicalSigIndex + musicalSigTag.length + 200).clamp(0, bytes.length);
-      int? cmRationalIndex;
-      
-      for (int i = musicalSigIndex + musicalSigTag.length; i <= searchEnd - cmRationalTag.length; i++) {
-        bool found = true;
-        for (int j = 0; j < cmRationalTag.length; j++) {
-          if (bytes[i + j] != cmRationalTag[j]) {
-            found = false;
-            break;
-          }
-        }
-        if (found) {
-          cmRationalIndex = i;
-          break;
-        }
-      }
-      
-      if (cmRationalIndex == null) return null;
-      
-      // Structure after CmRational: data at offset +5 to +8 (4 bytes)
-      final dataStart = cmRationalIndex + cmRationalTag.length;
-      if (dataStart + 9 > bytes.length) return null;
-      
-      final keyRootBytes = bytes.sublist(dataStart + 5, dataStart + 9);
-      final keyRootHex = keyRootBytes.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ');
-      
-      // Look up the complete key signature from the pattern
-      return _getCubaseKeySignature(keyRootHex);
-    } catch (e) {
-      return null;
-    }
-  }
-  
-  /// Known Cubase key signature patterns (from binary analysis)
-  /// Maps 4-byte hex pattern to complete key signature (root + scale)
-  /// The pattern encodes BOTH the root note AND the specific scale type
-  /// Patterns extracted from 36+ reference .cpr files
-  static String? _getCubaseKeySignature(String hexPattern) {
-    const knownKeys = {
-      // === MAJOR SCALE (all 12 root notes) ===
-      '79 08 FB F0': 'C Major',
-      'B7 2E 91 F0': 'C# Major',
-      '79 09 73 F0': 'D Major',
-      '90 07 6B E0': 'D# Major',
-      'EB 97 5A 70': 'E Major',
-      '3D 04 A1 E0': 'F Major',
-      '3B 36 E8 B0': 'F# Major',
-      '28 E2 7E B0': 'G Major',
-      '3D 10 43 40': 'G# Major',
-      '79 09 7F F0': 'A Major',
-      '17 BD 99 80': 'A# Major',
-      'AE A5 FB 50': 'B Major',
-      
-      // === MINOR SCALE (all 12 root notes) ===
-      '80 47 6B 90': 'C Minor',
-      '17 BE 36 A0': 'C# Minor',
-      '6A F7 A6 00': 'D Minor',
-      '3B 37 6B C0': 'D# Minor',
-      'EB 95 B5 30': 'E Minor',
-      '32 04 AB 00': 'F Minor',
-      '32 04 9B A0': 'F# Minor',
-      '29 5C 8F 90': 'G Minor',
-      '3B 36 FB D0': 'G# Minor',
-      '3B 36 DC E0': 'A Minor',
-      '77 E0 5C E0': 'A# Minor',
-      '90 08 15 30': 'B Minor',
-      
-      // === PHRYGIAN SCALE (all 12 root notes) ===
-      'EB 96 D0 70': 'C Phrygian',
-      '57 DA B4 A0': 'C# Phrygian',
-      'B7 2E 4D 20': 'D Phrygian',
-      '32 04 C6 60': 'D# Phrygian',
-      '6A F7 31 C0': 'E Phrygian',
-      '17 BD 51 80': 'F Phrygian',
-      '26 E7 00 00': 'F# Phrygian',
-      '26 E6 D6 90': 'G Phrygian',
-      '57 DA 71 E0': 'G# Phrygian',
-      '79 08 FA 40': 'A Phrygian',
-      'B7 2E E2 90': 'A# Phrygian',
-      'DB AD 0F 80': 'B Phrygian',
-      
-      // === DORIAN SCALE (discovered patterns) ===
-      '3F A9 99 50': 'D Dorian',     // from 120d_dorian.cpr
-      
-      // === ALTERNATIVE/LEGACY PATTERNS ===
-      // Some older Cubase versions may use different patterns
-      '3D 10 04 10': 'C Major',      // alternative C Major
-      '39 88 15 50': 'C Major',      // alternative C Major
-      '39 88 20 50': 'C Major',      // alternative C Major
-      '3C 4A D8 A0': 'D Major',      // alternative D Major
-      'B3 D6 64 40': 'D Minor',      // alternative D Minor
-      '3B 37 A6 10': 'D Minor',      // alternative D Minor
-      '74 B2 FB 40': 'G Minor',      // alternative G Minor
-    };
-    
-    return knownKeys[hexPattern];
-  }
-  
-  /// Maps Cubase scale flag to scale category
-  /// NOTE: The scale flag is NOT reliable for determining scale type!
-  /// Analysis of 36 files shows the flag varies even within the same scale.
-  /// This is kept only as a hint when pattern matching fails.
-  static String? _getCubaseScaleCategory(int scaleFlag) {
-    // The flag doesn't reliably indicate scale type
-    // Values 0x00, 0x01, 0x02 appear across Major, Minor, and Phrygian scales
-    // We return a generic hint based on common associations
-    const scaleCategories = {
-      0x00: 'Unknown',
-      0x01: 'Unknown', 
-      0x02: 'Unknown',
-    };
-    
-    return scaleCategories[scaleFlag];
-  }
   
   /// Extracts key signature from the embedded filename in the .cpr file
   /// Cubase embeds the filename path which often contains the key in the name
