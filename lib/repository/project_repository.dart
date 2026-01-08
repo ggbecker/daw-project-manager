@@ -199,6 +199,25 @@ class ProjectRepository {
     // Preserve existing DAW version if extraction didn't find anything (e.g., during lightweight scan)
     final dawVersion = extractedMetadata?.dawVersion ?? existing?.dawVersion;
     
+    // Detect file creation date from filesystem
+    // On Windows, stat.changed is the creation time
+    // On other platforms, we fall back to lastModified as an approximation
+    // IMPORTANT: Once fileCreatedAt is set, it should NEVER be overridden
+    DateTime? fileCreatedAt = existing?.fileCreatedAt;
+    if (fileCreatedAt == null) {
+      // Try to get file creation time
+      // On Windows, stat.changed returns file creation time
+      // On Unix-like systems, it returns inode change time (not creation)
+      // We use stat.changed on Windows, otherwise fall back to lastModified
+      if (Platform.isWindows) {
+        fileCreatedAt = stat.changed;
+      } else {
+        // On macOS/Linux, use the earlier of modified and changed times
+        // as a best approximation of creation time
+        fileCreatedAt = stat.changed.isBefore(stat.modified) ? stat.changed : stat.modified;
+      }
+    }
+    
     // Cria o objeto base, usando os dados existentes se houver, 
     // mas atualizando os campos que vêm do sistema de arquivos (size, lastModified, fileName, etc.)
     final projectToSave = MusicProject(
@@ -220,6 +239,8 @@ class ProjectRepository {
       dawType: dawType,                                // <--- SEMPRE ATUALIZA DO ARQUIVO
       dawVersion: dawVersion,                          // <--- USA EXISTENTE OU EXTRAÍDO (preserva se já existe)
       previewSongPath: existing?.previewSongPath,     // <--- PRESERVA PREVIEW SONG
+      fileCreatedAt: fileCreatedAt,                   // <--- FILE CREATION DATE (never override once set)
+      statusChangedAt: existing?.statusChangedAt,     // <--- PRESERVA STATUS CHANGE DATE
     );
 
     await projectsBox.put(projectToSave.id, projectToSave);

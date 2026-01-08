@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:path/path.dart' as p;
 import 'package:xml/xml.dart';
 
@@ -71,6 +72,8 @@ class MetadataExtractor {
     } else if (ext == '.cpr' || ext == '.npr') {
       // Nuendo uses similar format to Cubase
       final metadata = await _extractFromCubaseFile(filePath);
+      bpm = metadata.bpm ?? bpm;
+      key = metadata.key ?? key;
       dawVersion = metadata.dawVersion ?? dawVersion;
     }
 
@@ -312,9 +315,9 @@ class MetadataExtractor {
     }
   }
 
-  /// Extracts version from Cubase .cpr file
-  /// Looks for hex pattern: 00 10 56 65 72 73 69 6F 6E (which is "00 10 Version")
-  /// Then extracts the version string that follows (e.g., " 13.0.4" -> "13")
+  /// Extracts version and BPM from Cubase .cpr file
+  /// Version: Looks for hex pattern: 00 10 56 65 72 73 69 6F 6E (which is "00 10 Version")
+  /// BPM: Looks for "MusicalTempo" tag followed by "Float" type, then reads 8 bytes as IEEE 754 double
   static Future<ProjectMetadata> _extractFromCubaseFile(String filePath) async {
     try {
       final file = File(filePath);
@@ -325,15 +328,19 @@ class MetadataExtractor {
       // Read file as bytes
       final bytes = await file.readAsBytes();
       
+      String? dawVersion;
+      double? bpm;
+      
+      // === Extract DAW Version ===
       // Hex pattern: 00 10 56 65 72 73 69 6F 6E (which is "00 10 Version" in ASCII)
-      final pattern = [0x00, 0x10, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6F, 0x6E];
+      final versionPattern = [0x00, 0x10, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6F, 0x6E];
       
       // Find the pattern in the file
       int? patternIndex;
-      for (int i = 0; i <= bytes.length - pattern.length; i++) {
+      for (int i = 0; i <= bytes.length - versionPattern.length; i++) {
         bool found = true;
-        for (int j = 0; j < pattern.length; j++) {
-          if (bytes[i + j] != pattern[j]) {
+        for (int j = 0; j < versionPattern.length; j++) {
+          if (bytes[i + j] != versionPattern[j]) {
             found = false;
             break;
           }
@@ -344,52 +351,361 @@ class MetadataExtractor {
         }
       }
       
-      if (patternIndex == null) {
-        return ProjectMetadata();
-      }
-      
-      // Skip the pattern (9 bytes) and look for version string
-      // Version typically starts with a space (0x20) followed by digits and dots
-      int versionStart = patternIndex + pattern.length;
-      
-      // Find the start of the version (skip whitespace if any)
-      while (versionStart < bytes.length && bytes[versionStart] == 0x20) {
-        versionStart++;
-      }
-      
-      // Extract version string until we hit a null byte or non-printable character
-      final versionBytes = <int>[];
-      for (int i = versionStart; i < bytes.length; i++) {
-        final byte = bytes[i];
-        // Stop at null byte or non-printable characters (except space, dot, digits)
-        if (byte == 0x00 || (byte < 0x20 && byte != 0x09 && byte != 0x0A && byte != 0x0D)) {
-          break;
+      if (patternIndex != null) {
+        // Skip the pattern (9 bytes) and look for version string
+        // Version typically starts with a space (0x20) followed by digits and dots
+        int versionStart = patternIndex + versionPattern.length;
+        
+        // Find the start of the version (skip whitespace if any)
+        while (versionStart < bytes.length && bytes[versionStart] == 0x20) {
+          versionStart++;
         }
-        // Include space, dot, digits, and letters
-        if ((byte >= 0x20 && byte <= 0x7E) || byte == 0x09 || byte == 0x0A || byte == 0x0D) {
-          versionBytes.add(byte);
-        } else {
-          break;
+        
+        // Extract version string until we hit a null byte or non-printable character
+        final versionBytes = <int>[];
+        for (int i = versionStart; i < bytes.length; i++) {
+          final byte = bytes[i];
+          // Stop at null byte or non-printable characters (except space, dot, digits)
+          if (byte == 0x00 || (byte < 0x20 && byte != 0x09 && byte != 0x0A && byte != 0x0D)) {
+            break;
+          }
+          // Include space, dot, digits, and letters
+          if ((byte >= 0x20 && byte <= 0x7E) || byte == 0x09 || byte == 0x0A || byte == 0x0D) {
+            versionBytes.add(byte);
+          } else {
+            break;
+          }
+        }
+        
+        if (versionBytes.isNotEmpty) {
+          // Convert to string and extract major version
+          final versionString = utf8.decode(versionBytes).trim();
+          // Extract major version (e.g., "13.0.4" -> "13")
+          final parts = versionString.split('.');
+          if (parts.isNotEmpty) {
+            dawVersion = parts[0].trim();
+          }
         }
       }
       
-      if (versionBytes.isEmpty) {
-        return ProjectMetadata();
+      // === Extract BPM from MusicalTempo metadata ===
+      // Cubase stores tempo as a 64-bit double-precision float (IEEE 754, big-endian)
+      // The format is: "MusicalTempo" ... "Float" ... [8 bytes of tempo value]
+      bpm = _extractCubaseBpm(bytes);
+      
+      // === Extract Key/Scale from ScaleHelper fields ===
+      // Uses "ScaleHelper Root Key" and "ScaleHelper Scale Type" fields
+      // which store direct indices for root note and scale type
+      String? key = _extractCubaseKey(bytes);
+      
+      // If pattern matching failed, try to extract from embedded filename
+      if (key == null || key.startsWith('Unknown') || key.startsWith('?')) {
+        final filenameKey = _extractKeyFromEmbeddedFilename(bytes);
+        if (filenameKey != null) {
+          key = filenameKey;
+        }
       }
       
-      // Convert to string and extract major version
-      final versionString = utf8.decode(versionBytes).trim();
-      // Extract major version (e.g., "13.0.4" -> "13")
-      final parts = versionString.split('.');
-      String? dawVersion;
-      if (parts.isNotEmpty) {
-        dawVersion = parts[0].trim();
-      }
-      
-      return ProjectMetadata(dawVersion: dawVersion);
+      return ProjectMetadata(bpm: bpm, key: key, dawVersion: dawVersion);
     } catch (e) {
       // If parsing fails, return empty metadata
       return ProjectMetadata();
+    }
+  }
+  
+  /// Extracts BPM from Cubase file by searching for MusicalTempo metadata
+  /// The tempo is stored as IEEE 754 64-bit double (big-endian) after the "Float" type indicator
+  static double? _extractCubaseBpm(Uint8List bytes) {
+    try {
+      // Search for "MusicalTempo" string in the binary file
+      final musicalTempoTag = utf8.encode('MusicalTempo');
+      final floatTag = utf8.encode('Float');
+      
+      int? musicalTempoIndex;
+      for (int i = 0; i <= bytes.length - musicalTempoTag.length; i++) {
+        bool found = true;
+        for (int j = 0; j < musicalTempoTag.length; j++) {
+          if (bytes[i + j] != musicalTempoTag[j]) {
+            found = false;
+            break;
+          }
+        }
+        if (found) {
+          musicalTempoIndex = i;
+          break;
+        }
+      }
+      
+      if (musicalTempoIndex == null) {
+        return null;
+      }
+      
+      // Search for "Float" type indicator after MusicalTempo
+      // Limit search to a reasonable range (e.g., 100 bytes after the tag)
+      final searchEnd = (musicalTempoIndex + musicalTempoTag.length + 100).clamp(0, bytes.length);
+      int? floatIndex;
+      
+      for (int i = musicalTempoIndex + musicalTempoTag.length; i <= searchEnd - floatTag.length; i++) {
+        bool found = true;
+        for (int j = 0; j < floatTag.length; j++) {
+          if (bytes[i + j] != floatTag[j]) {
+            found = false;
+            break;
+          }
+        }
+        if (found) {
+          floatIndex = i;
+          break;
+        }
+      }
+      
+      if (floatIndex == null) {
+        return null;
+      }
+      
+      // After "Float", skip padding bytes (typically 2-4 bytes) and read the 8-byte double value
+      // The exact offset may vary, so we'll try a few common offsets
+      final possibleOffsets = [2, 3, 4, 5, 6];
+      
+      for (final offset in possibleOffsets) {
+        final valueStart = floatIndex + floatTag.length + offset;
+        
+        if (valueStart + 8 > bytes.length) {
+          continue;
+        }
+        
+        // Read 8 bytes as big-endian IEEE 754 double
+        final byteData = ByteData.sublistView(bytes, valueStart, valueStart + 8);
+        final tempoValue = byteData.getFloat64(0, Endian.big);
+        
+        // Validate: BPM should be in a reasonable range (e.g., 20-999)
+        if (tempoValue >= 20.0 && tempoValue <= 999.0) {
+          // Round to 2 decimal places for cleaner display
+          return double.parse(tempoValue.toStringAsFixed(2));
+        }
+      }
+      
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+  
+  /// Extracts key/scale from Cubase file using ScaleHelper fields
+  /// These fields store direct indices for root note and scale type
+  static String? _extractCubaseKey(Uint8List bytes) {
+    return _extractCubaseKeyFromScaleHelper(bytes);
+  }
+  
+  /// Extracts key/scale from Cubase "ScaleHelper Root Key" and "ScaleHelper Scale Type" fields
+  /// These fields store direct indices: RootKey (0-11 chromatic) and ScaleType (list index)
+  static String? _extractCubaseKeyFromScaleHelper(Uint8List bytes) {
+    try {
+      // Search for "ScaleHelper Root Key" tag
+      final rootKeyTag = utf8.encode('ScaleHelper Root Key');
+      final scaleTypeTag = utf8.encode('ScaleHelper Scale Type');
+      
+      int? rootKeyIndex = _findPattern(bytes, rootKeyTag);
+      int? scaleTypeIndex = _findPattern(bytes, scaleTypeTag);
+      
+      if (rootKeyIndex == null || scaleTypeIndex == null) {
+        return null;
+      }
+      
+      // Extract root key value (4-byte little-endian int at offset +10 after tag)
+      final rootKeyValueStart = rootKeyIndex + rootKeyTag.length + 10;
+      if (rootKeyValueStart + 4 > bytes.length) return null;
+      
+      final rootKeyBytes = bytes.sublist(rootKeyValueStart, rootKeyValueStart + 4);
+      final rootKeyValue = ByteData.sublistView(Uint8List.fromList(rootKeyBytes))
+          .getInt32(0, Endian.little);
+      
+      // Extract scale type value (4-byte little-endian int at offset +10 after tag)
+      final scaleTypeValueStart = scaleTypeIndex + scaleTypeTag.length + 10;
+      if (scaleTypeValueStart + 4 > bytes.length) return null;
+      
+      final scaleTypeBytes = bytes.sublist(scaleTypeValueStart, scaleTypeValueStart + 4);
+      final scaleTypeValue = ByteData.sublistView(Uint8List.fromList(scaleTypeBytes))
+          .getInt32(0, Endian.little);
+      
+      // Map root key to note name (chromatic scale from C)
+      final rootNote = _getCubaseRootNote(rootKeyValue);
+      final scaleName = _getCubaseScaleName(scaleTypeValue);
+      
+      if (rootNote != null && scaleName != null) {
+        return '$rootNote $scaleName';
+      }
+      
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+  
+  /// Helper to find a byte pattern in data
+  static int? _findPattern(Uint8List bytes, List<int> pattern) {
+    for (int i = 0; i <= bytes.length - pattern.length; i++) {
+      bool found = true;
+      for (int j = 0; j < pattern.length; j++) {
+        if (bytes[i + j] != pattern[j]) {
+          found = false;
+          break;
+        }
+      }
+      if (found) return i;
+    }
+    return null;
+  }
+  
+  /// Maps Cubase root key index to note name
+  /// Index 0-11 represents chromatic scale from C
+  static String? _getCubaseRootNote(int index) {
+    const rootNotes = [
+      'C', 'C#', 'D', 'D#', 'E', 'F', 
+      'F#', 'G', 'G#', 'A', 'A#', 'B'
+    ];
+    if (index >= 0 && index < rootNotes.length) {
+      return rootNotes[index];
+    }
+    return null;
+  }
+  
+  /// Maps Cubase scale type index to scale name
+  /// Based on the order scales appear in Cubase's ScaleSetSaver XML
+  static String? _getCubaseScaleName(int index) {
+    const scaleNames = {
+      0: 'Major',
+      1: 'Minor',                  // Aeolian (natural minor)
+      2: 'Harmonic Minor',
+      3: 'Melodic Minor',
+      4: 'Blues',
+      5: 'Pentatonic',
+      6: 'Mixolydic 9/11',
+      7: 'Lydic Diminished',
+      8: 'Blues 2',
+      9: 'Major Augmented',
+      10: 'Arabian',
+      11: 'Balinese',
+      12: 'Hungarian',
+      13: 'Oriental',
+      14: 'Raga Todi',
+      15: 'Chinese',
+      16: 'Hungarian 2',
+      17: 'Japanese 1',
+      18: 'Japanese 2',
+      19: 'Persian',
+      20: 'Diminished',
+      21: 'Whole Tone',
+      22: 'Blues 3',
+      23: 'Dorian',
+      24: 'Phrygian',
+      25: 'Lydian',
+      26: 'Mixolydian',
+      27: 'Aeolian',               // Duplicate of Minor
+      28: 'Locrian',
+      29: 'No Scale',
+    };
+    return scaleNames[index];
+  }
+  
+  
+  /// Extracts key signature from the embedded filename in the .cpr file
+  /// Cubase embeds the filename path which often contains the key in the name
+  /// e.g., "g_minor.cpr" or "C#_Major_Project.cpr"
+  static String? _extractKeyFromEmbeddedFilename(Uint8List bytes) {
+    try {
+      // Search for .cpr extension to find embedded filename
+      final cprTag = utf8.encode('.cpr');
+      
+      int? cprPos;
+      for (int i = bytes.length - 1; i >= 0; i--) {
+        if (i + cprTag.length <= bytes.length) {
+          bool found = true;
+          for (int j = 0; j < cprTag.length; j++) {
+            if (bytes[i + j] != cprTag[j]) {
+              found = false;
+              break;
+            }
+          }
+          if (found) {
+            cprPos = i;
+            break;
+          }
+        }
+      }
+      
+      if (cprPos == null) return null;
+      
+      // Extract filename (go backwards to find start)
+      int filenameStart = cprPos;
+      while (filenameStart > 0 && bytes[filenameStart - 1] >= 0x20 && bytes[filenameStart - 1] < 0x7F) {
+        filenameStart--;
+        // Stop at path separator or if we've gone too far
+        if (bytes[filenameStart] == 0x2F || bytes[filenameStart] == 0x5C || cprPos - filenameStart > 100) {
+          filenameStart++;
+          break;
+        }
+      }
+      
+      final filenameBytes = bytes.sublist(filenameStart, cprPos);
+      final filename = utf8.decode(filenameBytes, allowMalformed: true).toLowerCase();
+      
+      // Parse key from filename patterns like "g_minor", "c#_major", "d_phrygian"
+      final notePatterns = {
+        'c#': 'C#', 'c_sharp': 'C#', 'csharp': 'C#', 'db': 'C#',
+        'd#': 'D#', 'd_sharp': 'D#', 'dsharp': 'D#', 'eb': 'D#',
+        'f#': 'F#', 'f_sharp': 'F#', 'fsharp': 'F#', 'gb': 'F#',
+        'g#': 'G#', 'g_sharp': 'G#', 'gsharp': 'G#', 'ab': 'G#',
+        'a#': 'A#', 'a_sharp': 'A#', 'asharp': 'A#', 'bb': 'A#',
+        'c': 'C', 'd': 'D', 'e': 'E', 'f': 'F', 'g': 'G', 'a': 'A', 'b': 'B',
+      };
+      
+      final scalePatterns = {
+        'major': 'Major', 'maj': 'Major',
+        'minor': 'Minor', 'min': 'Minor',
+        'dorian': 'Dorian', 'dor': 'Dorian',
+        'phrygian': 'Phrygian', 'phryg': 'Phrygian',
+        'lydian': 'Lydian', 'lyd': 'Lydian',
+        'mixolydian': 'Mixolydian', 'mixo': 'Mixolydian',
+        'aeolian': 'Minor', 'aeol': 'Minor',
+        'locrian': 'Locrian', 'loc': 'Locrian',
+      };
+      
+      String? foundNote;
+      String? foundScale;
+      
+      // Look for scale first (to avoid matching single letters in scale names)
+      for (final entry in scalePatterns.entries) {
+        if (filename.contains(entry.key)) {
+          foundScale = entry.value;
+          break;
+        }
+      }
+      
+      // Then look for note (prioritize sharps/flats)
+      for (final entry in notePatterns.entries) {
+        if (filename.contains(entry.key)) {
+          // For single letters, require underscore or start of string
+          if (entry.key.length == 1) {
+            final idx = filename.indexOf(entry.key);
+            if (idx == 0 || filename[idx - 1] == '_' || filename[idx - 1] == '-') {
+              foundNote = entry.value;
+              break;
+            }
+          } else {
+            foundNote = entry.value;
+            break;
+          }
+        }
+      }
+      
+      if (foundNote != null && foundScale != null) {
+        return '$foundNote $foundScale';
+      }
+      
+      return null;
+    } catch (e) {
+      return null;
     }
   }
 

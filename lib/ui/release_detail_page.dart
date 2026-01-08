@@ -1477,6 +1477,7 @@ class _AudioFileItemState extends ConsumerState<_AudioFileItem> {
   bool _isPlaying = false;
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
+  double _volume = 1.0;
 
   @override
   void initState() {
@@ -1691,6 +1692,27 @@ class _AudioFileItemState extends ConsumerState<_AudioFileItem> {
                         ],
                       ),
                     ],
+                  ),
+                ),
+                // Volume control
+                const SizedBox(width: 8),
+                Icon(
+                  _volume == 0 ? Icons.volume_off : (_volume < 0.5 ? Icons.volume_down : Icons.volume_up),
+                  size: 20,
+                  color: Theme.of(context).textTheme.bodySmall?.color,
+                ),
+                SizedBox(
+                  width: 80,
+                  child: Slider(
+                    value: _volume,
+                    min: 0.0,
+                    max: 1.0,
+                    onChanged: (value) async {
+                      setState(() {
+                        _volume = value;
+                      });
+                      await _audioPlayer.setVolume(value);
+                    },
                   ),
                 ),
               ],

@@ -1367,7 +1367,12 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
       for (final projectId in _selectedProjectIds) {
         try {
           final project = allProjects.firstWhere((p) => p.id == projectId);
-          final updated = project.copyWith(status: newStatus);
+          // Track when status changes
+          final statusChanged = project.status != newStatus;
+          final updated = project.copyWith(
+            status: newStatus,
+            statusChangedAt: statusChanged ? DateTime.now() : null,
+          );
           await repo.updateProject(updated);
           successCount++;
         } catch (e) {
@@ -2517,6 +2522,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
   bool _isPlaying = false;
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
+  double _volume = 1.0;
 
   @override
   void initState() {
@@ -2709,6 +2715,27 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
                               ],
                             ),
                           ],
+                        ),
+                      ),
+                      // Volume control
+                      const SizedBox(width: 8),
+                      Icon(
+                        _volume == 0 ? Icons.volume_off : (_volume < 0.5 ? Icons.volume_down : Icons.volume_up),
+                        size: 20,
+                        color: Theme.of(context).textTheme.bodySmall?.color,
+                      ),
+                      SizedBox(
+                        width: 80,
+                        child: Slider(
+                          value: _volume,
+                          min: 0.0,
+                          max: 1.0,
+                          onChanged: (value) async {
+                            setState(() {
+                              _volume = value;
+                            });
+                            await _audioPlayer.setVolume(value);
+                          },
                         ),
                       ),
                     ],

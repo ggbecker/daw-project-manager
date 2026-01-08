@@ -62,6 +62,12 @@ class MusicProject {
   @HiveField(18)
   final String? previewSongPath; // Path to preview audio file
 
+  @HiveField(19)
+  final DateTime? fileCreatedAt; // Actual file creation date from filesystem (never changes once set)
+
+  @HiveField(20)
+  final DateTime? statusChangedAt; // When the status was last changed (for tracking completion time)
+
   const MusicProject({
     required this.id,
     required this.filePath,
@@ -82,11 +88,84 @@ class MusicProject {
     this.todos = const [],
     this.hidden = false,
     this.previewSongPath,
+    this.fileCreatedAt,
+    this.statusChangedAt,
   });
 
   String get displayName => (customDisplayName != null && customDisplayName!.trim().isNotEmpty)
       ? customDisplayName!.trim()
       : fileName;
+
+  /// Returns the project age based on file creation date
+  /// Falls back to lastModifiedAt if fileCreatedAt is not available
+  Duration get projectAge {
+    final startDate = fileCreatedAt ?? lastModifiedAt;
+    return DateTime.now().difference(startDate);
+  }
+
+  /// Returns a human-readable project age string
+  String get projectAgeFormatted {
+    final age = projectAge;
+    final years = age.inDays ~/ 365;
+    final months = (age.inDays % 365) ~/ 30;
+    final days = age.inDays % 30;
+    
+    if (years > 0) {
+      if (months > 0) {
+        return '$years year${years > 1 ? 's' : ''}, $months month${months > 1 ? 's' : ''}';
+      }
+      return '$years year${years > 1 ? 's' : ''}';
+    } else if (months > 0) {
+      if (days > 0) {
+        return '$months month${months > 1 ? 's' : ''}, $days day${days > 1 ? 's' : ''}';
+      }
+      return '$months month${months > 1 ? 's' : ''}';
+    } else if (days > 0) {
+      return '$days day${days > 1 ? 's' : ''}';
+    } else if (age.inHours > 0) {
+      return '${age.inHours} hour${age.inHours > 1 ? 's' : ''}';
+    } else {
+      return 'Just now';
+    }
+  }
+
+  /// Returns the time it took to complete the project (from creation to finished status)
+  /// Returns null if status is not 'Finished' or dates are not available
+  Duration? get timeToCompletion {
+    if (status != 'Finished' || statusChangedAt == null) {
+      return null;
+    }
+    final startDate = fileCreatedAt ?? createdAt;
+    return statusChangedAt!.difference(startDate);
+  }
+
+  /// Returns a human-readable time to completion string
+  String? get timeToCompletionFormatted {
+    final duration = timeToCompletion;
+    if (duration == null) return null;
+    
+    final years = duration.inDays ~/ 365;
+    final months = (duration.inDays % 365) ~/ 30;
+    final days = duration.inDays % 30;
+    
+    if (years > 0) {
+      if (months > 0) {
+        return '$years year${years > 1 ? 's' : ''}, $months month${months > 1 ? 's' : ''}';
+      }
+      return '$years year${years > 1 ? 's' : ''}';
+    } else if (months > 0) {
+      if (days > 0) {
+        return '$months month${months > 1 ? 's' : ''}, $days day${days > 1 ? 's' : ''}';
+      }
+      return '$months month${months > 1 ? 's' : ''}';
+    } else if (days > 0) {
+      return '$days day${days > 1 ? 's' : ''}';
+    } else if (duration.inHours > 0) {
+      return '${duration.inHours} hour${duration.inHours > 1 ? 's' : ''}';
+    } else {
+      return 'Less than an hour';
+    }
+  }
 
   MusicProject copyWith({
     String? id,
@@ -109,6 +188,8 @@ class MusicProject {
     bool? hidden,
     String? previewSongPath,
     bool clearPreviewSongPath = false,
+    DateTime? fileCreatedAt,
+    DateTime? statusChangedAt,
   }) {
     return MusicProject(
       id: id ?? this.id,
@@ -130,6 +211,8 @@ class MusicProject {
       todos: todos ?? this.todos,
       hidden: hidden ?? this.hidden,
       previewSongPath: clearPreviewSongPath ? null : (previewSongPath ?? this.previewSongPath),
+      fileCreatedAt: fileCreatedAt ?? this.fileCreatedAt,
+      statusChangedAt: statusChangedAt ?? this.statusChangedAt,
     );
   }
 }
@@ -168,13 +251,15 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
           : const [],
       hidden: fields.containsKey(17) ? (fields[17] as bool) : false,
       previewSongPath: fields.containsKey(18) ? fields[18] as String? : null,
+      fileCreatedAt: fields.containsKey(19) ? fields[19] as DateTime? : null,
+      statusChangedAt: fields.containsKey(20) ? fields[20] as DateTime? : null,
     );
   }
 
   @override
   void write(BinaryWriter writer, MusicProject obj) {
     writer
-      ..writeByte(19) // Agora são 19 campos (0-18)
+      ..writeByte(21) // Now 21 fields (0-20)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -201,7 +286,7 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
       ..write(obj.bpm)
       ..writeByte(12)
       ..write(obj.musicalKey)
-      ..writeByte(13) // NOVO CAMPO
+      ..writeByte(13)
       ..write(obj.notes)
       ..writeByte(14)
       ..write(obj.dawType)
@@ -212,6 +297,10 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
       ..writeByte(17)
       ..write(obj.hidden)
       ..writeByte(18)
-      ..write(obj.previewSongPath);
+      ..write(obj.previewSongPath)
+      ..writeByte(19)
+      ..write(obj.fileCreatedAt)
+      ..writeByte(20)
+      ..write(obj.statusChangedAt);
   }
 }

@@ -79,6 +79,80 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
     }
   }
 
+  String _formatDate(DateTime date) {
+    final l10n = AppLocalizations.of(context)!;
+    final now = DateTime.now();
+    final diff = now.difference(date);
+    
+    if (diff.inDays == 0) {
+      return l10n.dateToday;
+    } else if (diff.inDays == 1) {
+      return l10n.dateYesterday;
+    } else if (diff.inDays < 7) {
+      return l10n.dateDaysAgo(diff.inDays);
+    } else if (diff.inDays < 30) {
+      final weeks = diff.inDays ~/ 7;
+      return l10n.dateWeeksAgo(weeks, weeks > 1 ? 's' : '');
+    } else if (diff.inDays < 365) {
+      final months = diff.inDays ~/ 30;
+      return l10n.dateMonthsAgo(months, months > 1 ? 's' : '');
+    } else {
+      final years = diff.inDays ~/ 365;
+      return l10n.dateYearsAgo(years, years > 1 ? 's' : '');
+    }
+  }
+
+  String _formatDuration(Duration duration) {
+    final l10n = AppLocalizations.of(context)!;
+    final years = duration.inDays ~/ 365;
+    final months = (duration.inDays % 365) ~/ 30;
+    final days = duration.inDays % 30;
+    
+    if (years > 0) {
+      if (months > 0) {
+        return l10n.ageYearsMonths(years, years > 1 ? 's' : '', months, months > 1 ? 's' : '');
+      }
+      return l10n.ageYears(years, years > 1 ? 's' : '');
+    } else if (months > 0) {
+      if (days > 0) {
+        return l10n.ageMonthsDays(months, months > 1 ? 's' : '', days, days > 1 ? 's' : '');
+      }
+      return l10n.ageMonths(months, months > 1 ? 's' : '');
+    } else if (days > 0) {
+      return l10n.ageDays(days, days > 1 ? 's' : '');
+    } else if (duration.inHours > 0) {
+      return l10n.ageHours(duration.inHours, duration.inHours > 1 ? 's' : '');
+    } else {
+      return l10n.ageJustNow;
+    }
+  }
+
+  String? _formatCompletionDuration(Duration? duration) {
+    if (duration == null) return null;
+    final l10n = AppLocalizations.of(context)!;
+    final years = duration.inDays ~/ 365;
+    final months = (duration.inDays % 365) ~/ 30;
+    final days = duration.inDays % 30;
+    
+    if (years > 0) {
+      if (months > 0) {
+        return l10n.ageYearsMonths(years, years > 1 ? 's' : '', months, months > 1 ? 's' : '');
+      }
+      return l10n.ageYears(years, years > 1 ? 's' : '');
+    } else if (months > 0) {
+      if (days > 0) {
+        return l10n.ageMonthsDays(months, months > 1 ? 's' : '', days, days > 1 ? 's' : '');
+      }
+      return l10n.ageMonths(months, months > 1 ? 's' : '');
+    } else if (days > 0) {
+      return l10n.ageDays(days, days > 1 ? 's' : '');
+    } else if (duration.inHours > 0) {
+      return l10n.ageHours(duration.inHours, duration.inHours > 1 ? 's' : '');
+    } else {
+      return l10n.ageLessThanHour;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -315,9 +389,67 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                             const SizedBox(height: 16),
                     Text(
                       AppLocalizations.of(context)!.lastModified(
-                        updatedProject.lastModifiedAt.toString(),
+updatedProject.lastModifiedAt.toString(),
                       ),
                     ),
+                    const SizedBox(height: 8),
+                    // Project age display
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.access_time,
+                          size: 16,
+                          color: Theme.of(context).textTheme.bodySmall?.color,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          AppLocalizations.of(context)!.projectAge(_formatDuration(updatedProject.projectAge)),
+                          style: TextStyle(
+                            color: Theme.of(context).textTheme.bodySmall?.color,
+                          ),
+                        ),
+                        if (updatedProject.fileCreatedAt != null) ...[
+                          const SizedBox(width: 8),
+                          Text(
+                            '(${AppLocalizations.of(context)!.createdDate(_formatDate(updatedProject.fileCreatedAt!))})',
+                            style: TextStyle(
+                              color: Theme.of(context).textTheme.bodySmall?.color,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    // Time to completion (only show for finished projects)
+                    if (updatedProject.timeToCompletion != null) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.emoji_events,
+                            size: 16,
+                            color: Colors.amber,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            AppLocalizations.of(context)!.completedIn(_formatCompletionDuration(updatedProject.timeToCompletion)!),
+                            style: TextStyle(
+                              color: Theme.of(context).textTheme.bodySmall?.color,
+                            ),
+                          ),
+                          if (updatedProject.statusChangedAt != null) ...[
+                            const SizedBox(width: 8),
+                            Text(
+                              '(${AppLocalizations.of(context)!.finishedDate(_formatDate(updatedProject.statusChangedAt!))})',
+                              style: TextStyle(
+                                color: Theme.of(context).textTheme.bodySmall?.color,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
                             const SizedBox(height: 24),
 
                             // Campo para editar o nome de exibição customizado
@@ -607,6 +739,12 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                         ? null
                                         : notesText;
 
+                                    // Determine new status and check if it changed
+                                    final newStatus = _selectedPhase != null
+                                        ? _translateStatusToEnglish(_selectedPhase!)
+                                        : 'Idea';
+                                    final statusChanged = project.status != newStatus;
+
                                     final updated = project.copyWith(
                                       customDisplayName: newCustomDisplayName,
                                       bpm: _bpmCtrl.text.trim().isEmpty
@@ -618,11 +756,8 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                           ? null
                                           : _keyCtrl.text.trim(),
                                       notes: newNotes, // NOVO: Salva Notas
-                                      status: _selectedPhase != null
-                                          ? _translateStatusToEnglish(
-                                              _selectedPhase!,
-                                            )
-                                          : 'Idea', // Save project phase
+                                      status: newStatus, // Save project phase
+                                      statusChangedAt: statusChanged ? DateTime.now() : null,
                                     );
 
                                     await repo.updateProject(updated);
@@ -766,6 +901,7 @@ class _PreviewSongPlayerState extends State<_PreviewSongPlayer> {
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
   bool _isDraggingOver = false;
+  double _volume = 1.0;
 
   @override
   void initState() {
@@ -1130,6 +1266,27 @@ class _PreviewSongPlayerState extends State<_PreviewSongPlayer> {
                                         ],
                                       ),
                                     ],
+                                  ),
+                                ),
+                                // Volume control
+                                const SizedBox(width: 8),
+                                Icon(
+                                  _volume == 0 ? Icons.volume_off : (_volume < 0.5 ? Icons.volume_down : Icons.volume_up),
+                                  size: 20,
+                                  color: Theme.of(context).textTheme.bodySmall?.color,
+                                ),
+                                SizedBox(
+                                  width: 80,
+                                  child: Slider(
+                                    value: _volume,
+                                    min: 0.0,
+                                    max: 1.0,
+                                    onChanged: (value) async {
+                                      setState(() {
+                                        _volume = value;
+                                      });
+                                      await _audioPlayer.setVolume(value);
+                                    },
                                   ),
                                 ),
                               ],
