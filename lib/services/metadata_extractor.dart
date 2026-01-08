@@ -482,8 +482,10 @@ class MetadataExtractor {
   }
   
   /// Extracts key/scale from Cubase file by searching for MusicalSignature metadata
-  /// The key is stored in a CmRational object - 8 bytes of packed data
-  /// Format: MusicalSignature -> ... -> CmRational -> [11 bytes offset] -> [8 bytes data]
+  /// The key is stored in a CmRational object with the following structure:
+  /// CmRational (10 bytes) + null (1 byte) + scale_field (4 bytes) + key_root (4 bytes)
+  /// - Scale type is at offset +4: 0x00 = Major, 0x02 = Minor
+  /// - Key root identifier is at offset +5 to +8 (4 bytes)
   static String? _extractCubaseKey(Uint8List bytes) {
     try {
       // Search for "MusicalSignature" string in the binary file
@@ -532,85 +534,77 @@ class MetadataExtractor {
         return null;
       }
       
-      // The key data starts 11 bytes after the end of "CmRational"
-      // Read 8 bytes of key signature data
-      final dataOffset = 11;
-      final valueStart = cmRationalIndex + cmRationalTag.length + dataOffset;
+      // Structure after CmRational (10 bytes):
+      // Offset +0: 1 null byte
+      // Offset +1-4: 4-byte field, last byte (offset +4) is scale type (00=Major, 02=Minor)
+      // Offset +5-8: 4-byte key root identifier
+      final dataStart = cmRationalIndex + cmRationalTag.length;
       
-      if (valueStart + 8 > bytes.length) {
+      if (dataStart + 9 > bytes.length) {
         return null;
       }
       
-      // Read the 8-byte signature pattern
-      final keyBytes = bytes.sublist(valueStart, valueStart + 8);
+      // Read scale type flag at offset +4
+      final scaleFlag = bytes[dataStart + 4];
+      final isMinor = scaleFlag == 0x02;
       
-      // Known key patterns from analysis (first 4 bytes are significant, last 4 are zeros)
-      // These patterns are based on the CmRational encoding
-      final knownPatterns = _getCubaseKeyPatterns();
+      // Read 4-byte key root pattern at offset +5
+      final keyRootBytes = bytes.sublist(dataStart + 5, dataStart + 9);
+      final keyRootHex = keyRootBytes.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ');
       
-      // Convert to hex string for matching
-      final hexPattern = keyBytes.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ');
+      // Look up the key root in known patterns
+      final keyRoot = _getCubaseKeyRoot(keyRootHex);
       
-      // Try exact match first
-      if (knownPatterns.containsKey(hexPattern)) {
-        return knownPatterns[hexPattern];
+      if (keyRoot != null) {
+        // Combine key root with scale type
+        final scaleType = isMinor ? 'Minor' : 'Major';
+        return '$keyRoot $scaleType';
       }
       
-      // Try matching just the first 4 bytes (last 4 are typically zeros)
-      final first4Hex = keyBytes.sublist(0, 4).map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ');
-      for (final entry in knownPatterns.entries) {
-        if (entry.key.startsWith(first4Hex)) {
-          return entry.value;
-        }
-      }
-      
-      // If no exact match, try to decode the pattern mathematically
-      // The CmRational appears to encode root note and scale type in a packed format
-      return _decodeCubaseKeyPattern(keyBytes);
+      // If we don't recognize the root pattern but know the scale type,
+      // try to decode it mathematically
+      return _decodeCubaseKeyPattern(keyRootBytes, isMinor);
     } catch (e) {
       return null;
     }
   }
   
-  /// Known Cubase key signature patterns (from binary analysis)
-  /// Format: "HH HH HH HH HH HH HH HH" -> "Key Scale"
-  static Map<String, String> _getCubaseKeyPatterns() {
-    return {
-      // Major keys (analyzed patterns)
-      '39 88 20 50 00 00 00 00': 'C Major',
-      '3C 4A D8 A0 00 00 00 00': 'D Major',
-      // Minor keys (analyzed patterns)
-      'B3 D6 64 40 00 00 00 00': 'D Minor',
-      // Additional patterns will be added as they are discovered
-      // The encoding appears to use a complex packed format
+  /// Known Cubase key root patterns (from binary analysis)
+  /// Maps 4-byte hex pattern to root note name
+  static String? _getCubaseKeyRoot(String hexPattern) {
+    // These patterns were extracted from actual .cpr files
+    // The encoding appears to be a complex format, not simple indices
+    const knownRoots = {
+      // C root patterns (from c_major.cpr, 145bpm.cpr)
+      '3D 10 04 10': 'C',
+      '39 88 15 50': 'C',  // Alternative C pattern (from 135bpm.cpr)
+      '39 88 20 50': 'C',  // Another C variant
+      
+      // D root patterns
+      '3C 4A D8 A0': 'D',  // D Major pattern (from d_major.cpr)
+      'B3 D6 64 40': 'D',  // D Minor pattern (from d_minor.cpr)
+      '3B 37 A6 10': 'D',  // D Minor alternative (from 120d_minor.cpr)
+      
+      // Additional patterns to be discovered...
+      // Note: The same root note can have different patterns depending on
+      // whether it's Major or Minor, suggesting the encoding is complex
     };
+    
+    return knownRoots[hexPattern];
   }
   
   /// Attempts to decode Cubase key pattern mathematically
   /// This is a fallback when the pattern isn't in our known list
-  static String? _decodeCubaseKeyPattern(List<int> keyBytes) {
-    // The CmRational type suggests this might be stored as a rational number
-    // Try interpreting as different numeric formats
+  static String? _decodeCubaseKeyPattern(List<int> keyRootBytes, bool isMinor) {
+    if (keyRootBytes.length < 4) return null;
     
-    if (keyBytes.length < 8) return null;
+    // The CmRational encoding is complex and doesn't follow a simple pattern
+    // Different root notes have vastly different byte patterns
+    // For now, we can only reliably determine Major vs Minor from the flag
     
-    // Check if last 4 bytes are zeros (common pattern)
-    final hasZeroPadding = keyBytes[4] == 0 && keyBytes[5] == 0 && 
-                           keyBytes[6] == 0 && keyBytes[7] == 0;
-    
-    if (!hasZeroPadding) {
-      return null; // Unknown format
-    }
-    
-    // Try to interpret the first 4 bytes
-    // Based on the patterns:
-    // C Major: 39 88 20 50 -> some encoding
-    // D Major: 3C 4A D8 A0 -> shifted by ~2 semitones
-    // D Minor: B3 D6 64 40 -> same root, different scale type
-    
-    // The significant byte differences suggest a bit-field encoding
-    // For now, return null for unknown patterns
-    // Future: reverse-engineer the exact bit layout
+    // If we have valid bytes but don't recognize the pattern,
+    // we could return just the scale type
+    // But it's better to return null than an incomplete result
     
     return null;
   }
