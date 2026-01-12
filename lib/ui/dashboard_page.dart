@@ -27,7 +27,7 @@ import '../providers/providers.dart';
 import '../repository/project_repository.dart';
 import 'package:uuid/uuid.dart';
 
-const String kAppVersion = '1.5.4';
+const String kAppVersion = '1.6.1';
 
 // WIDGET CORRIGIDO: Botões de controle da janela usando window_manager
 class WindowButtons extends StatelessWidget {
