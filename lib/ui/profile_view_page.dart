@@ -11,6 +11,7 @@ import '../models/profile.dart';
 import '../providers/providers.dart';
 import '../repository/profile_repository.dart';
 import '../utils/app_paths.dart';
+import '../utils/mobile_utils.dart';
 import '../generated/l10n/app_localizations.dart';
 import 'dashboard_page.dart' show WindowButtons;
 
@@ -802,56 +803,66 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
   @override
   Widget build(BuildContext context) {
     final profileAsync = ref.watch(currentProfileProvider);
+    final isMobile = MobileUtils.isMobile();
 
     return Scaffold(
-      appBar: null,
+      appBar: isMobile
+          ? AppBar(
+              title: Text(AppLocalizations.of(context)!.profile),
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => Navigator.pop(context),
+              ),
+            )
+          : null,
       body: Column(
         children: [
-          // Window title bar at the top
-          GestureDetector(
-            onPanStart: (_) => windowManager.startDragging(),
-            onDoubleTap: () async {
-              if (await windowManager.isMaximized()) {
-                windowManager.restore();
-              } else {
-                windowManager.maximize();
-              }
-            },
-            child: Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
-                border: Border(
-                  bottom: BorderSide(
-                    color: Theme.of(context).dividerColor,
-                    width: 1,
-                  ),
-                ),
-              ),
-              height: 40,
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.arrow_back, color: Theme.of(context).textTheme.bodyMedium?.color, size: 20),
-                    onPressed: () => Navigator.pop(context),
-                    tooltip: AppLocalizations.of(context)!.back,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 4),
-                    child: Text(
-                      AppLocalizations.of(context)!.profile,
-                      style: TextStyle(
-                        color: Theme.of(context).textTheme.titleMedium?.color,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
+          // Window title bar at the top (desktop only)
+          if (!isMobile)
+            GestureDetector(
+              onPanStart: (_) => windowManager.startDragging(),
+              onDoubleTap: () async {
+                if (await windowManager.isMaximized()) {
+                  windowManager.restore();
+                } else {
+                  windowManager.maximize();
+                }
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  border: Border(
+                    bottom: BorderSide(
+                      color: Theme.of(context).dividerColor,
+                      width: 1,
                     ),
                   ),
-                  const Spacer(),
-                  const WindowButtons(),
-                ],
+                ),
+                height: 40,
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.arrow_back, color: Theme.of(context).textTheme.bodyMedium?.color, size: 20),
+                      onPressed: () => Navigator.pop(context),
+                      tooltip: AppLocalizations.of(context)!.back,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 4),
+                      child: Text(
+                        AppLocalizations.of(context)!.profile,
+                        style: TextStyle(
+                          color: Theme.of(context).textTheme.titleMedium?.color,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    const WindowButtons(),
+                  ],
+                ),
               ),
             ),
-          ),
           Expanded(
             child: profileAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -893,28 +904,121 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
   }
 
   Widget _buildProfileContent(Profile profile) {
+    final isMobile = MobileUtils.isMobile();
     return SingleChildScrollView(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: MobileUtils.getResponsivePadding(context),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Profile Header
                       Card(
                         child: Padding(
-                          padding: const EdgeInsets.all(24.0),
-                          child: Row(
-                            children: [
-                              // Profile Photo
-                              if (profile.photoPath != null && File(profile.photoPath!).existsSync())
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Image.file(
-                                    File(profile.photoPath!),
-                                    width: 120,
-                                    height: 120,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(
+                          padding: EdgeInsets.all(isMobile ? 16.0 : 24.0),
+                          child: isMobile
+                              ? Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Profile Photo
+                                    Center(
+                                      child: profile.photoPath != null && File(profile.photoPath!).existsSync()
+                                          ? ClipRRect(
+                                              borderRadius: BorderRadius.circular(12),
+                                              child: Image.file(
+                                                File(profile.photoPath!),
+                                                width: 100,
+                                                height: 100,
+                                                fit: BoxFit.cover,
+                                                errorBuilder: (context, error, stackTrace) {
+                                                  return Container(
+                                                    width: 100,
+                                                    height: 100,
+                                                    decoration: BoxDecoration(
+                                                      color: Theme.of(context).cardColor,
+                                                      borderRadius: BorderRadius.circular(12),
+                                                    ),
+                                                    child: const Icon(Icons.person, size: 50),
+                                                  );
+                                                },
+                                              ),
+                                            )
+                                          : Container(
+                                              width: 100,
+                                              height: 100,
+                                              decoration: BoxDecoration(
+                                                color: Theme.of(context).cardColor,
+                                                borderRadius: BorderRadius.circular(12),
+                                              ),
+                                              child: const Icon(Icons.person, size: 50),
+                                            ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    // Profile Name and Info
+                                    Center(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            profile.name,
+                                            style: Theme.of(context).textTheme.headlineSmall,
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            'Created: ${profile.createdAt.toString().split('.')[0]}',
+                                            style: Theme.of(context).textTheme.bodySmall,
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    // Download Buttons - Stack vertically on mobile
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: Column(
+                                        children: [
+                                          ElevatedButton.icon(
+                                            icon: const Icon(Icons.select_all, size: 18),
+                                            label: const Text('Select Files'),
+                                            onPressed: () => _showSelectFilesDialog(profile),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          ElevatedButton.icon(
+                                            icon: const Icon(Icons.download, size: 18),
+                                            label: const Text('Download All'),
+                                            onPressed: () => _downloadAllFiles(profile),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : Row(
+                                  children: [
+                                    // Profile Photo
+                                    if (profile.photoPath != null && File(profile.photoPath!).existsSync())
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: Image.file(
+                                          File(profile.photoPath!),
+                                          width: 120,
+                                          height: 120,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (context, error, stackTrace) {
+                                            return Container(
+                                              width: 120,
+                                              height: 120,
+                                              decoration: BoxDecoration(
+                                                color: Theme.of(context).cardColor,
+                                                borderRadius: BorderRadius.circular(12),
+                                              ),
+                                              child: const Icon(Icons.person, size: 60),
+                                            );
+                                          },
+                                        ),
+                                      )
+                                    else
+                                      Container(
                                         width: 120,
                                         height: 120,
                                         decoration: BoxDecoration(
@@ -922,57 +1026,44 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
                                           borderRadius: BorderRadius.circular(12),
                                         ),
                                         child: const Icon(Icons.person, size: 60),
-                                      );
-                                    },
-                                  ),
-                                )
-                              else
-                                Container(
-                                  width: 120,
-                                  height: 120,
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context).cardColor,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: const Icon(Icons.person, size: 60),
-                                ),
-                              const SizedBox(width: 24),
-                              // Profile Name and Info
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      profile.name,
-                                      style: Theme.of(context).textTheme.headlineSmall,
+                                      ),
+                                    const SizedBox(width: 24),
+                                    // Profile Name and Info
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            profile.name,
+                                            style: Theme.of(context).textTheme.headlineSmall,
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            'Created: ${profile.createdAt.toString().split('.')[0]}',
+                                            style: Theme.of(context).textTheme.bodySmall,
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'Created: ${profile.createdAt.toString().split('.')[0]}',
-                                      style: Theme.of(context).textTheme.bodySmall,
+                                    // Download Buttons
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        ElevatedButton.icon(
+                                          icon: const Icon(Icons.select_all, size: 18),
+                                          label: const Text('Select Files'),
+                                          onPressed: () => _showSelectFilesDialog(profile),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        ElevatedButton.icon(
+                                          icon: const Icon(Icons.download, size: 18),
+                                          label: const Text('Download All'),
+                                          onPressed: () => _downloadAllFiles(profile),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
-                              ),
-                              // Download Buttons
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  ElevatedButton.icon(
-                                    icon: const Icon(Icons.select_all, size: 18),
-                                    label: const Text('Select Files'),
-                                    onPressed: () => _showSelectFilesDialog(profile),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  ElevatedButton.icon(
-                                    icon: const Icon(Icons.download, size: 18),
-                                    label: const Text('Download All'),
-                                    onPressed: () => _downloadAllFiles(profile),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -1081,11 +1172,12 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
                                     );
                                   }
 
+                                  final isMobile = MobileUtils.isMobile();
                                   return GridView.builder(
                                     shrinkWrap: true,
                                     physics: const NeverScrollableScrollPhysics(),
-                                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: 3,
+                                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: isMobile ? 2 : 3,
                                       crossAxisSpacing: 12,
                                       mainAxisSpacing: 12,
                                       childAspectRatio: 1.0,

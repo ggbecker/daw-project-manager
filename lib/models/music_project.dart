@@ -60,13 +60,19 @@ class MusicProject {
   final bool hidden; // Whether the project is hidden from the list
 
   @HiveField(18)
-  final String? previewSongPath; // Path to preview audio file
+  final String? previewSongPath; // Path to preview audio file (local path or "drive://fileId" as fallback if download failed)
 
   @HiveField(19)
   final DateTime? fileCreatedAt; // Actual file creation date from filesystem (never changes once set)
 
   @HiveField(20)
   final DateTime? statusChangedAt; // When the status was last changed (for tracking completion time)
+
+  @HiveField(21)
+  final String? previewSongFileName; // Original filename of the preview song (for display purposes)
+
+  @HiveField(22)
+  final String? previewSongHash; // MD5 hash of the preview song file (for change detection)
 
   const MusicProject({
     required this.id,
@@ -90,6 +96,8 @@ class MusicProject {
     this.previewSongPath,
     this.fileCreatedAt,
     this.statusChangedAt,
+    this.previewSongFileName,
+    this.previewSongHash,
   });
 
   String get displayName => (customDisplayName != null && customDisplayName!.trim().isNotEmpty)
@@ -190,6 +198,10 @@ class MusicProject {
     bool clearPreviewSongPath = false,
     DateTime? fileCreatedAt,
     DateTime? statusChangedAt,
+    String? previewSongFileName,
+    bool clearPreviewSongFileName = false,
+    String? previewSongHash,
+    bool clearPreviewSongHash = false,
   }) {
     return MusicProject(
       id: id ?? this.id,
@@ -213,6 +225,8 @@ class MusicProject {
       previewSongPath: clearPreviewSongPath ? null : (previewSongPath ?? this.previewSongPath),
       fileCreatedAt: fileCreatedAt ?? this.fileCreatedAt,
       statusChangedAt: statusChangedAt ?? this.statusChangedAt,
+      previewSongFileName: clearPreviewSongFileName ? null : (previewSongFileName ?? this.previewSongFileName),
+      previewSongHash: clearPreviewSongHash ? null : (previewSongHash ?? this.previewSongHash),
     );
   }
 }
@@ -253,13 +267,15 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
       previewSongPath: fields.containsKey(18) ? fields[18] as String? : null,
       fileCreatedAt: fields.containsKey(19) ? fields[19] as DateTime? : null,
       statusChangedAt: fields.containsKey(20) ? fields[20] as DateTime? : null,
+      previewSongFileName: fields.containsKey(21) ? fields[21] as String? : null,
+      previewSongHash: fields.containsKey(22) ? fields[22] as String? : null,
     );
   }
 
   @override
   void write(BinaryWriter writer, MusicProject obj) {
     writer
-      ..writeByte(21) // Now 21 fields (0-20)
+      ..writeByte(23) // Now 23 fields (0-22)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -301,6 +317,10 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
       ..writeByte(19)
       ..write(obj.fileCreatedAt)
       ..writeByte(20)
-      ..write(obj.statusChangedAt);
+      ..write(obj.statusChangedAt)
+      ..writeByte(21)
+      ..write(obj.previewSongFileName)
+      ..writeByte(22)
+      ..write(obj.previewSongHash);
   }
 }

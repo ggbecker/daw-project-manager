@@ -24,8 +24,7 @@ class ThemeTypeNotifier extends Notifier<AppThemeType> {
 
   Future<void> _loadTheme() async {
     try {
-      final appDataPath = await getLocalAppDataPath();
-      Hive.init(appDataPath);
+      await ensureHiveInitialized();
       final settingsBox = await Hive.openBox<String>('settings');
       final savedTheme = settingsBox.get('theme');
       if (savedTheme != null && savedTheme.isNotEmpty) {
@@ -47,8 +46,7 @@ class ThemeTypeNotifier extends Notifier<AppThemeType> {
       print('Theme changed to: ${type.name}');
     }
     try {
-      final appDataPath = await getLocalAppDataPath();
-      Hive.init(appDataPath);
+      await ensureHiveInitialized();
       final settingsBox = await Hive.openBox<String>('settings');
       await settingsBox.put('theme', type.name);
     } catch (e) {

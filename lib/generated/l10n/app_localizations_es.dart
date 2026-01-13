@@ -920,4 +920,290 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get dropAudioFileHere => 'Suelte el archivo de audio aquí';
+
+  @override
+  String projectAge(String age) {
+    return 'Antigüedad del proyecto: $age';
+  }
+
+  @override
+  String createdDate(String date) {
+    return 'creado $date';
+  }
+
+  @override
+  String completedIn(String duration) {
+    return 'Completado en: $duration';
+  }
+
+  @override
+  String finishedDate(String date) {
+    return 'finalizado $date';
+  }
+
+  @override
+  String get dateToday => 'hoy';
+
+  @override
+  String get dateYesterday => 'ayer';
+
+  @override
+  String dateDaysAgo(int count) {
+    return 'hace $count días';
+  }
+
+  @override
+  String dateWeeksAgo(int count, String plural) {
+    return 'hace $count semana$plural';
+  }
+
+  @override
+  String dateMonthsAgo(int count, String plural) {
+    return 'hace $count meses';
+  }
+
+  @override
+  String dateYearsAgo(int count, String plural) {
+    return 'hace $count año$plural';
+  }
+
+  @override
+  String ageYearsMonths(
+    int years,
+    String yearPlural,
+    int months,
+    String monthPlural,
+  ) {
+    return '$years año$yearPlural, $months meses';
+  }
+
+  @override
+  String ageYears(int years, String plural) {
+    return '$years año$plural';
+  }
+
+  @override
+  String ageMonthsDays(
+    int months,
+    String monthPlural,
+    int days,
+    String dayPlural,
+  ) {
+    return '$months meses, $days día$dayPlural';
+  }
+
+  @override
+  String ageMonths(int months, String plural) {
+    return '$months meses';
+  }
+
+  @override
+  String ageDays(int days, String plural) {
+    return '$days día$plural';
+  }
+
+  @override
+  String ageHours(int hours, String plural) {
+    return '$hours hora$plural';
+  }
+
+  @override
+  String get ageJustNow => 'Ahora mismo';
+
+  @override
+  String get ageLessThanHour => 'Menos de una hora';
+
+  @override
+  String get viewProfile => 'Ver Perfil';
+
+  @override
+  String get googleDriveSync => 'Sincronización de Google Drive';
+
+  @override
+  String get googleDriveSyncDescription =>
+      'Sincroniza tus datos con Google Drive para hacer copias de seguridad y restaurar entre dispositivos.';
+
+  @override
+  String get manageGoogleDriveSync =>
+      'Gestionar Sincronización de Google Drive';
+
+  @override
+  String get signInToGoogleDrive => 'Iniciar sesión en Google Drive';
+
+  @override
+  String get syncNow => 'Sincronizar Ahora';
+
+  @override
+  String get uploadBackup => 'Subir Copia de Seguridad';
+
+  @override
+  String get downloadBackup => 'Descargar Copia de Seguridad';
+
+  @override
+  String get signOut => 'Cerrar Sesión';
+
+  @override
+  String get downloadPreviewSongs => 'Descargar canciones de vista previa';
+
+  @override
+  String get downloadPreviewSongsExplanation =>
+      'Si está desmarcado, se omitirán las canciones de vista previa (ahorra tiempo y almacenamiento). Puedes descargarlas más tarde si es necesario.';
+
+  @override
+  String get replaceLocalData => 'Reemplazar Datos Locales';
+
+  @override
+  String get downloadBackupConfirmation =>
+      'Esto reemplazará tus datos locales con la copia de seguridad de Google Drive.\n\n¿Estás seguro de que deseas continuar?';
+
+  @override
+  String get enterAuthorizationCode => 'Ingresar Código de Autorización';
+
+  @override
+  String get authorizationCode => 'Código de Autorización';
+
+  @override
+  String get pasteCodeFromBrowser => 'Pega el código del navegador';
+
+  @override
+  String get sessionActive => 'Sesión activa';
+
+  @override
+  String get signedIn => 'Conectado';
+
+  @override
+  String get creatingInitialBackup => 'Creando copia de seguridad inicial...';
+
+  @override
+  String get successfullySignedInAndBackedUp =>
+      'Inicio de sesión exitoso y copia de seguridad creada en Google Drive';
+
+  @override
+  String get successfullySignedInAndBackedUpMessage =>
+      '¡Inicio de sesión exitoso y copia de seguridad creada en Google Drive!';
+
+  @override
+  String get successfullySignedInToGoogleDrive =>
+      'Inicio de sesión exitoso en Google Drive';
+
+  @override
+  String get successfullySignedInToGoogleDriveMessage =>
+      '¡Inicio de sesión exitoso en Google Drive!';
+
+  @override
+  String get signInCancelledOrFailed =>
+      'Inicio de sesión cancelado o fallido. Consulta la consola para más detalles.';
+
+  @override
+  String get failedToLaunchBrowser => 'Error al abrir el navegador';
+
+  @override
+  String get signInCancelled => 'Inicio de sesión cancelado';
+
+  @override
+  String get failedToExchangeAuthorizationCode =>
+      'Error al intercambiar código de autorización';
+
+  @override
+  String errorSigningIn(String error) {
+    return 'Error al iniciar sesión: $error';
+  }
+
+  @override
+  String get unknownError => 'Error desconocido';
+
+  @override
+  String get googleSignInError => 'Error de Inicio de Sesión de Google';
+
+  @override
+  String get developerConsoleNotSetUp =>
+      'La consola de desarrollador no está configurada correctamente. Por favor, verifica tu configuración OAuth en Google Cloud Console.';
+
+  @override
+  String get platformError => 'Error de Plataforma';
+
+  @override
+  String get signedOutFromGoogleDrive => 'Sesión cerrada en Google Drive';
+
+  @override
+  String errorSigningOut(String error) {
+    return 'Error al cerrar sesión: $error';
+  }
+
+  @override
+  String get syncing => 'Sincronizando...';
+
+  @override
+  String get errorNoProfileSelected =>
+      'Error: No se ha seleccionado ningún perfil';
+
+  @override
+  String syncCompleted(
+    int projectsAdded,
+    int projectsUpdated,
+    int releasesAdded,
+    int releasesUpdated,
+  ) {
+    return '¡Sincronización completada! Proyectos: +$projectsAdded ~$projectsUpdated, Lanzamientos: +$releasesAdded ~$releasesUpdated';
+  }
+
+  @override
+  String errorSyncing(String error) {
+    return 'Error al sincronizar: $error';
+  }
+
+  @override
+  String get uploadingBackup => 'Subiendo copia de seguridad...';
+
+  @override
+  String get backupUploadedSuccessfully =>
+      '¡Copia de seguridad subida con éxito!';
+
+  @override
+  String get backupUploadedSuccessfullyMessage =>
+      '¡Copia de seguridad subida con éxito a Google Drive!';
+
+  @override
+  String errorUploadingBackup(String error) {
+    return 'Error al subir copia de seguridad: $error';
+  }
+
+  @override
+  String get downloadingBackup => 'Descargando copia de seguridad...';
+
+  @override
+  String get noBackupFileFound =>
+      'No se encontró ningún archivo de copia de seguridad en Google Drive. Crea una copia de seguridad primero sincronizando tus datos.';
+
+  @override
+  String get noBackupFileFoundStatus =>
+      'No se encontró ningún archivo de copia de seguridad. Crea una copia de seguridad primero.';
+
+  @override
+  String get downloadCancelled => 'Descarga cancelada';
+
+  @override
+  String backupDownloaded(
+    int projectsAdded,
+    int projectsUpdated,
+    int releasesAdded,
+    int releasesUpdated,
+  ) {
+    return '¡Copia de seguridad descargada! Proyectos: +$projectsAdded ~$projectsUpdated, Lanzamientos: +$releasesAdded ~$releasesUpdated';
+  }
+
+  @override
+  String errorDownloadingBackup(String error) {
+    return 'Error al descargar copia de seguridad: $error';
+  }
+
+  @override
+  String signedInAs(String email) {
+    return 'Conectado como: $email';
+  }
+
+  @override
+  String lastSync(String date) {
+    return 'Última sincronización: $date';
+  }
 }

@@ -28,9 +28,8 @@ class ProjectRepository {
   });
 
   static Future<ProjectRepository> init(ProfileRepository profileRepo) async {
-    // Initialize Hive with LocalAppData directory
-    final appDataPath = await getLocalAppDataPath();
-    Hive.init(appDataPath);
+    // Initialize Hive with LocalAppData directory (only once)
+    await ensureHiveInitialized();
     
     if (!Hive.isAdapterRegistered(1)) {
       Hive.registerAdapter(MusicProjectAdapter());
@@ -45,7 +44,7 @@ class ProjectRepository {
       Hive.registerAdapter(ReleaseFileAdapter());
     }
     if (!Hive.isAdapterRegistered(6)) {
-      Hive.registerAdapter(TodoItemAdapter());
+Hive.registerAdapter(TodoItemAdapter());
     }
 
     // Get current profile
@@ -61,6 +60,11 @@ class ProjectRepository {
     final roots = await Hive.openBox<ScanRoot>('${profileId}_roots');
     final releases = await Hive.openBox<Release>('${profileId}_releases');
     
+    if (kDebugMode) {
+      print('ProjectRepository.init: Opened boxes for profile $profileId');
+      print('  Projects box: ${projects.length} projects');
+    }
+    
     return ProjectRepository(
       profileId: profileId,
       projectsBox: projects,
@@ -71,8 +75,8 @@ class ProjectRepository {
   
   /// Reinitialize with a different profile
   static Future<ProjectRepository> initWithProfile(ProfileRepository profileRepo, String profileId) async {
-    final appDataPath = await getLocalAppDataPath();
-    Hive.init(appDataPath);
+    // Ensure Hive is initialized (only once)
+    await ensureHiveInitialized();
     
     // Use profile-specific box names
     final projects = await Hive.openBox<MusicProject>('${profileId}_projects');
@@ -236,6 +240,8 @@ class ProjectRepository {
       bpm: bpm,                                        // <--- USA EXISTENTE OU EXTRAÍDO
       musicalKey: key,                                 // <--- USA EXISTENTE OU EXTRAÍDO
       notes: existing?.notes,                         // <--- NOVO: PRESERVA NOTAS
+      todos: existing?.todos ?? const [],             // <--- CRITICAL: PRESERVA TODOS
+      hidden: existing?.hidden ?? false,               // <--- CRITICAL: PRESERVA HIDDEN STATUS
       dawType: dawType,                                // <--- SEMPRE ATUALIZA DO ARQUIVO
       dawVersion: dawVersion,                          // <--- USA EXISTENTE OU EXTRAÍDO (preserva se já existe)
       previewSongPath: existing?.previewSongPath,     // <--- PRESERVA PREVIEW SONG
@@ -285,9 +291,20 @@ class ProjectRepository {
   // MÉTODO NOVO/CORRIGIDO: Retorna a lista completa a cada mudança do Hive
   Stream<List<MusicProject>> watchAllProjects() async* {
     // Emit initial value immediately
-    yield projectsBox.values.toList();
-    // Then watch for changes
-    yield* projectsBox.watch().map((_) => projectsBox.values.toList());
+    final initialProjects = projectsBox.values.toList();
+    if (kDebugMode) {
+      print('watchAllProjects: Emitting initial ${initialProjects.length} projects for profile $profileId');
+    }
+    yield initialProjects;
+    
+    // Then watch for changes - this will emit whenever ANY project is added/updated/deleted
+    yield* projectsBox.watch().map((event) {
+      final projects = projectsBox.values.toList();
+    if (kDebugMode) {
+      print('watchAllProjects: Box changed, emitting ${projects.length} projects for profile $profileId');
+    }
+      return projects;
+    });
   }
   
   Stream<BoxEvent> watchRoots() => rootsBox.watch();
@@ -317,6 +334,15 @@ class ProjectRepository {
   }
 
   Future<void> clearMissingFiles() async {
+    // On Android, we're only syncing metadata from desktop, so files don't exist locally
+    // Don't delete projects on Android - they're metadata-only
+    if (Platform.isAndroid) {
+      if (kDebugMode) {
+        print('clearMissingFiles: Skipping on Android (metadata-only mode)');
+      }
+      return;
+    }
+    
     final toDelete = <dynamic>[];
     for (final entry in projectsBox.values) {
       if (!File(entry.filePath).existsSync() && !Directory(entry.filePath).existsSync()) {

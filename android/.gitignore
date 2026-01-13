@@ -1,14 +1,4 @@
-gradle-wrapper.jar
-/.gradle
-/captures/
-/gradlew
-/gradlew.bat
-/local.properties
-GeneratedPluginRegistrant.java
-.cxx/
-
-# Remember to never publicly share your keystore.
-# See https://flutter.dev/to/reference-keystore
+# Add this to your existing .gitignore or create it if it doesn't exist
 key.properties
-**/*.keystore
-**/*.jks
+*.keystore
+*.jks

@@ -878,7 +878,7 @@ abstract class AppLocalizations {
   /// **'Select Tracks'**
   String get selectTracks;
 
-  /// No description provided for @continueButton.
+  /// Button to continue with authorization code
   ///
   /// In en, this message translates to:
   /// **'Continue'**
@@ -1612,6 +1612,434 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Drop audio file here'**
   String get dropAudioFileHere;
+
+  /// No description provided for @projectAge.
+  ///
+  /// In en, this message translates to:
+  /// **'Project age: {age}'**
+  String projectAge(String age);
+
+  /// No description provided for @createdDate.
+  ///
+  /// In en, this message translates to:
+  /// **'created {date}'**
+  String createdDate(String date);
+
+  /// No description provided for @completedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed in: {duration}'**
+  String completedIn(String duration);
+
+  /// No description provided for @finishedDate.
+  ///
+  /// In en, this message translates to:
+  /// **'finished {date}'**
+  String finishedDate(String date);
+
+  /// No description provided for @dateToday.
+  ///
+  /// In en, this message translates to:
+  /// **'today'**
+  String get dateToday;
+
+  /// No description provided for @dateYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'yesterday'**
+  String get dateYesterday;
+
+  /// No description provided for @dateDaysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days ago'**
+  String dateDaysAgo(int count);
+
+  /// No description provided for @dateWeeksAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} week{plural} ago'**
+  String dateWeeksAgo(int count, String plural);
+
+  /// No description provided for @dateMonthsAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} month{plural} ago'**
+  String dateMonthsAgo(int count, String plural);
+
+  /// No description provided for @dateYearsAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} year{plural} ago'**
+  String dateYearsAgo(int count, String plural);
+
+  /// No description provided for @ageYearsMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'{years} year{yearPlural}, {months} month{monthPlural}'**
+  String ageYearsMonths(
+    int years,
+    String yearPlural,
+    int months,
+    String monthPlural,
+  );
+
+  /// No description provided for @ageYears.
+  ///
+  /// In en, this message translates to:
+  /// **'{years} year{plural}'**
+  String ageYears(int years, String plural);
+
+  /// No description provided for @ageMonthsDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{months} month{monthPlural}, {days} day{dayPlural}'**
+  String ageMonthsDays(
+    int months,
+    String monthPlural,
+    int days,
+    String dayPlural,
+  );
+
+  /// No description provided for @ageMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'{months} month{plural}'**
+  String ageMonths(int months, String plural);
+
+  /// No description provided for @ageDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} day{plural}'**
+  String ageDays(int days, String plural);
+
+  /// No description provided for @ageHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} hour{plural}'**
+  String ageHours(int hours, String plural);
+
+  /// No description provided for @ageJustNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get ageJustNow;
+
+  /// No description provided for @ageLessThanHour.
+  ///
+  /// In en, this message translates to:
+  /// **'Less than an hour'**
+  String get ageLessThanHour;
+
+  /// Button to view profile details
+  ///
+  /// In en, this message translates to:
+  /// **'View Profile'**
+  String get viewProfile;
+
+  /// Title for Google Drive sync section
+  ///
+  /// In en, this message translates to:
+  /// **'Google Drive Sync'**
+  String get googleDriveSync;
+
+  /// Description text for Google Drive sync feature
+  ///
+  /// In en, this message translates to:
+  /// **'Sync your data with Google Drive to backup and restore across devices.'**
+  String get googleDriveSyncDescription;
+
+  /// Button to open Google Drive sync management page
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Google Drive Sync'**
+  String get manageGoogleDriveSync;
+
+  /// Button to sign in to Google Drive
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to Google Drive'**
+  String get signInToGoogleDrive;
+
+  /// Button to sync data with Google Drive
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Now'**
+  String get syncNow;
+
+  /// Button to upload backup to Google Drive
+  ///
+  /// In en, this message translates to:
+  /// **'Upload Backup'**
+  String get uploadBackup;
+
+  /// Button to download backup from Google Drive
+  ///
+  /// In en, this message translates to:
+  /// **'Download Backup'**
+  String get downloadBackup;
+
+  /// Button to sign out from Google Drive
+  ///
+  /// In en, this message translates to:
+  /// **'Sign Out'**
+  String get signOut;
+
+  /// Checkbox label for downloading preview songs
+  ///
+  /// In en, this message translates to:
+  /// **'Download preview songs'**
+  String get downloadPreviewSongs;
+
+  /// Explanation text for preview songs download option
+  ///
+  /// In en, this message translates to:
+  /// **'If unchecked, preview songs will be skipped (saves time and storage). You can download them later if needed.'**
+  String get downloadPreviewSongsExplanation;
+
+  /// Button to confirm replacing local data with backup
+  ///
+  /// In en, this message translates to:
+  /// **'Replace Local Data'**
+  String get replaceLocalData;
+
+  /// Confirmation message for downloading backup
+  ///
+  /// In en, this message translates to:
+  /// **'This will replace your local data with the backup from Google Drive.\n\nAre you sure you want to continue?'**
+  String get downloadBackupConfirmation;
+
+  /// Dialog title for entering authorization code
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Authorization Code'**
+  String get enterAuthorizationCode;
+
+  /// Label for authorization code input field
+  ///
+  /// In en, this message translates to:
+  /// **'Authorization Code'**
+  String get authorizationCode;
+
+  /// Hint text for authorization code input field
+  ///
+  /// In en, this message translates to:
+  /// **'Paste the code from the browser'**
+  String get pasteCodeFromBrowser;
+
+  /// Status message when Google Drive session is active
+  ///
+  /// In en, this message translates to:
+  /// **'Session active'**
+  String get sessionActive;
+
+  /// Status message when signed in to Google Drive
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in'**
+  String get signedIn;
+
+  /// Status message when creating initial backup
+  ///
+  /// In en, this message translates to:
+  /// **'Creating initial backup...'**
+  String get creatingInitialBackup;
+
+  /// Success message when signed in and backed up
+  ///
+  /// In en, this message translates to:
+  /// **'Successfully signed in and backed up to Google Drive'**
+  String get successfullySignedInAndBackedUp;
+
+  /// Snackbar message when signed in and backed up
+  ///
+  /// In en, this message translates to:
+  /// **'Successfully signed in and backed up to Google Drive!'**
+  String get successfullySignedInAndBackedUpMessage;
+
+  /// Success message when signed in
+  ///
+  /// In en, this message translates to:
+  /// **'Successfully signed in to Google Drive'**
+  String get successfullySignedInToGoogleDrive;
+
+  /// Snackbar message when signed in
+  ///
+  /// In en, this message translates to:
+  /// **'Successfully signed in to Google Drive!'**
+  String get successfullySignedInToGoogleDriveMessage;
+
+  /// Error message when sign in is cancelled or failed
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in cancelled or failed. Check console for details.'**
+  String get signInCancelledOrFailed;
+
+  /// Error message when browser launch fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to launch browser'**
+  String get failedToLaunchBrowser;
+
+  /// Status message when sign in is cancelled
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in cancelled'**
+  String get signInCancelled;
+
+  /// Error message when authorization code exchange fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to exchange authorization code'**
+  String get failedToExchangeAuthorizationCode;
+
+  /// No description provided for @errorSigningIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Error signing in: {error}'**
+  String errorSigningIn(String error);
+
+  /// Generic unknown error message
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown error'**
+  String get unknownError;
+
+  /// Error title for Google Sign-In errors
+  ///
+  /// In en, this message translates to:
+  /// **'Google Sign-In Error'**
+  String get googleSignInError;
+
+  /// Error message for OAuth configuration issues
+  ///
+  /// In en, this message translates to:
+  /// **'Developer console is not set up correctly. Please check your OAuth configuration in Google Cloud Console.'**
+  String get developerConsoleNotSetUp;
+
+  /// Error title for platform errors
+  ///
+  /// In en, this message translates to:
+  /// **'Platform Error'**
+  String get platformError;
+
+  /// Status message when signed out
+  ///
+  /// In en, this message translates to:
+  /// **'Signed out from Google Drive'**
+  String get signedOutFromGoogleDrive;
+
+  /// No description provided for @errorSigningOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Error signing out: {error}'**
+  String errorSigningOut(String error);
+
+  /// Status message when syncing
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing...'**
+  String get syncing;
+
+  /// Error message when no profile is selected
+  ///
+  /// In en, this message translates to:
+  /// **'Error: No profile selected'**
+  String get errorNoProfileSelected;
+
+  /// No description provided for @syncCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync completed! Projects: +{projectsAdded} ~{projectsUpdated}, Releases: +{releasesAdded} ~{releasesUpdated}'**
+  String syncCompleted(
+    int projectsAdded,
+    int projectsUpdated,
+    int releasesAdded,
+    int releasesUpdated,
+  );
+
+  /// No description provided for @errorSyncing.
+  ///
+  /// In en, this message translates to:
+  /// **'Error syncing: {error}'**
+  String errorSyncing(String error);
+
+  /// Status message when uploading backup
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading backup...'**
+  String get uploadingBackup;
+
+  /// Status message when backup is uploaded
+  ///
+  /// In en, this message translates to:
+  /// **'Backup uploaded successfully!'**
+  String get backupUploadedSuccessfully;
+
+  /// Snackbar message when backup is uploaded
+  ///
+  /// In en, this message translates to:
+  /// **'Backup uploaded successfully to Google Drive!'**
+  String get backupUploadedSuccessfullyMessage;
+
+  /// No description provided for @errorUploadingBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Error uploading backup: {error}'**
+  String errorUploadingBackup(String error);
+
+  /// Status message when downloading backup
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading backup...'**
+  String get downloadingBackup;
+
+  /// Message when no backup file is found
+  ///
+  /// In en, this message translates to:
+  /// **'No backup file found in Google Drive. Create a backup first by syncing your data.'**
+  String get noBackupFileFound;
+
+  /// Status message when no backup file is found
+  ///
+  /// In en, this message translates to:
+  /// **'No backup file found. Create a backup first.'**
+  String get noBackupFileFoundStatus;
+
+  /// Status message when download is cancelled
+  ///
+  /// In en, this message translates to:
+  /// **'Download cancelled'**
+  String get downloadCancelled;
+
+  /// No description provided for @backupDownloaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup downloaded! Projects: +{projectsAdded} ~{projectsUpdated}, Releases: +{releasesAdded} ~{releasesUpdated}'**
+  String backupDownloaded(
+    int projectsAdded,
+    int projectsUpdated,
+    int releasesAdded,
+    int releasesUpdated,
+  );
+
+  /// No description provided for @errorDownloadingBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Error downloading backup: {error}'**
+  String errorDownloadingBackup(String error);
+
+  /// No description provided for @signedInAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in as: {email}'**
+  String signedInAs(String email);
+
+  /// No description provided for @lastSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Last sync: {date}'**
+  String lastSync(String date);
 }
 
 class _AppLocalizationsDelegate

@@ -19,6 +19,7 @@ import '../models/music_project.dart';
 import '../providers/providers.dart';
 import '../repository/project_repository.dart';
 import '../utils/app_paths.dart';
+import '../utils/mobile_utils.dart';
 import '../generated/l10n/app_localizations.dart';
 import 'project_detail_page.dart';
 import 'widgets/todo_list_widget.dart';
@@ -592,12 +593,21 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
         }
       }
 
+      final isMobile = MobileUtils.isMobile();
       return Scaffold(
-        appBar: null,
+        appBar: isMobile
+            ? AppBar(
+                title: Text(release.title),
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              )
+            : null,
         body: Column(
           children: [
-            // Window title bar
-            if (!kDebugMode)
+            // Window title bar (desktop only)
+            if (!isMobile && !kDebugMode)
               GestureDetector(
                 onPanStart: (_) => windowManager.startDragging(),
                 onDoubleTap: () async {
@@ -631,17 +641,35 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
                 ),
               ),
             Expanded(
-              child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-                    // Left side: Artwork and details
-                    Expanded(
-                      flex: 1,
-                      child: SingleChildScrollView(
-                        child: Column(
-                          children: [
+              child: SingleChildScrollView(
+                padding: MobileUtils.getResponsivePadding(context),
+                child: isMobile
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Artwork and details (mobile: single column)
+                          _buildArtworkSection(context, release),
+                          const SizedBox(height: 16),
+                          _buildDetailsSection(context, release),
+                          const SizedBox(height: 24),
+                          // Tracks Section
+                          _buildTracksSection(context, release, releaseProjects),
+                          // Files Section - only on desktop
+                          if (!isMobile) ...[
+                            const SizedBox(height: 24),
+                            _buildFilesSection(context, release),
+                          ],
+                        ],
+                      )
+                    : Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Left side: Artwork and details
+                          Expanded(
+                            flex: 1,
+                            child: SingleChildScrollView(
+                              child: Column(
+                                children: [
                             GestureDetector(
                               onTap: _pickImage,
                               child: Card(
@@ -811,338 +839,353 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 16),
-                    // Right side: Tracklist and Files
-                    Expanded(
-                      flex: 2,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Tracks Section
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(AppLocalizations.of(context)!.tracksCount(releaseProjects.length), style: Theme.of(context).textTheme.headlineSmall),
-                              ElevatedButton.icon(
-                        icon: const Icon(Icons.add),
-                        label: Text(AppLocalizations.of(context)!.addTracks),
-                        onPressed: () async {
-                          // Use allProjects from stream to include preserved projects
-                          final allProjectsAsync = ref.read(allProjectsStreamProvider);
-                          final allProjects = allProjectsAsync.value ?? [];
-                          final availableProjects = allProjects.where((p) => !release.trackIds.contains(p.id)).toList();
-                          
-                          if (availableProjects.isEmpty) {
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(AppLocalizations.of(context)!.allProjectsAlreadyInRelease)),
-                              );
-                            }
-                            return;
-                          }
-
-                          final selectedIds = await showDialog<List<String>>(
-                            context: context,
-                            builder: (context) => _TrackSelectionDialog(projects: availableProjects),
-                          );
-
-                          if (selectedIds != null && selectedIds.isNotEmpty) {
-                            final repo = await ref.read(repositoryProvider.future);
-                            final updatedTrackIds = {...release.trackIds, ...selectedIds}.toList();
-                            final updatedRelease = release.copyWith(trackIds: updatedTrackIds);
-                            await repo.updateRelease(updatedRelease);
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(AppLocalizations.of(context)!.addedTracksToRelease(selectedIds.length, selectedIds.length == 1 ? '' : 's'))),
-                              );
-                            }
-                          }
-                        },
-                      ),
-                            ],
-                          ),
-                          const Divider(),
+                          const SizedBox(width: 16),
+                          // Right side: Tracklist and Files
                           Expanded(
-                            flex: 1,
-                            child: ReorderableListView.builder(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      buildDefaultDragHandles: false,
-                      itemCount: releaseProjects.length,
-                      onReorder: (oldIndex, newIndex) {
-                        // Adjust newIndex when moving down
-                        if (newIndex > oldIndex) newIndex -= 1;
-                        final updatedTrackIds = List<String>.from(release.trackIds);
-                        final moved = updatedTrackIds.removeAt(oldIndex);
-                        updatedTrackIds.insert(newIndex, moved);
-
-                        // Optimistic local update
-                        setState(() {
-                          // Nothing else needed; releaseProjects is derived from trackIds
-                        });
-
-                        // Persist
-                        () async {
-                          final repo = await ref.read(repositoryProvider.future);
-                          await repo.updateRelease(release.copyWith(trackIds: updatedTrackIds));
-                        }();
-                      },
-                      itemBuilder: (context, index) {
-                        final project = releaseProjects[index];
-                        final folderPath = FileSystemEntity.isDirectorySync(project.filePath)
-                            ? project.filePath
-                            : path.dirname(project.filePath);
-
-                        return Card(
-                          key: ValueKey(project.id),
-                          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          color: Theme.of(context).cardColor,
-                          child: GestureDetector(
-                            onDoubleTap: () async {
-                              await Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => ProjectDetailPage(projectId: project.id),
-                                ),
-                              );
-                            },
-                            child: ListTile(
-                              leading: ReorderableDragStartListener(
-                                index: index,
-                                child: Icon(Icons.drag_indicator, color: Theme.of(context).textTheme.bodyMedium?.color),
-                              ),
-                              title: Text(project.displayName),
-                            subtitle: Wrap(
-                              spacing: 8,
-                              crossAxisAlignment: WrapCrossAlignment.center,
+                            flex: 2,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                if (project.dawType != null && project.dawType!.isNotEmpty) ...[
-                                  Text(
-                                    project.dawVersion != null && project.dawVersion!.isNotEmpty
-                                        ? '${project.dawType!} ${project.dawVersion!}'
-                                        : project.dawType!,
-                                  ),
-                                  Text('•', style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color)),
-                                ],
-                                if (project.bpm != null) ...[
-                                  Text('${project.bpm!.toStringAsFixed(0)} ${AppLocalizations.of(context)!.bpm}'),
-                                  Text('•', style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color)),
-                                ],
-                                if (project.musicalKey != null && project.musicalKey!.isNotEmpty) ...[
-                                  Text(project.musicalKey!),
-                                  Text('•', style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color)),
-                                ],
-                                Text(
-                                  _translateStatus(context, project.status),
-                                  style: TextStyle(
-                                    color: _getStatusColor(project.status),
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
+                                // Tracks Section
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(AppLocalizations.of(context)!.tracksCount(releaseProjects.length), style: Theme.of(context).textTheme.headlineSmall),
+                                    ElevatedButton.icon(
+                              icon: const Icon(Icons.add),
+                              label: Text(AppLocalizations.of(context)!.addTracks),
+                              onPressed: () async {
+                                // Use allProjects from stream to include preserved projects
+                                final allProjectsAsync = ref.read(allProjectsStreamProvider);
+                                final allProjects = allProjectsAsync.value ?? [];
+                                final availableProjects = allProjects.where((p) => !release.trackIds.contains(p.id)).toList();
+                                
+                                if (availableProjects.isEmpty) {
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text(AppLocalizations.of(context)!.allProjectsAlreadyInRelease)),
+                                    );
+                                  }
+                                  return;
+                                }
+
+                                final selectedIds = await showDialog<List<String>>(
+                                  context: context,
+                                  builder: (context) => _TrackSelectionDialog(projects: availableProjects),
+                                );
+
+                                if (selectedIds != null && selectedIds.isNotEmpty) {
+                                  final repo = await ref.read(repositoryProvider.future);
+                                  final updatedTrackIds = {...release.trackIds, ...selectedIds}.toList();
+                                  final updatedRelease = release.copyWith(trackIds: updatedTrackIds);
+                                  await repo.updateRelease(updatedRelease);
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text(AppLocalizations.of(context)!.addedTracksToRelease(selectedIds.length, selectedIds.length == 1 ? '' : 's'))),
+                                    );
+                                  }
+                                }
+                              },
                             ),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                // Launch button
-                                IconButton(
-                                  icon: const Icon(Icons.open_in_new),
-                                  tooltip: AppLocalizations.of(context)!.tooltipLaunchInDaw,
-                                  onPressed: () async {
-                                    final exists = File(project.filePath).existsSync() || 
-                                                  Directory(project.filePath).existsSync();
-                                    if (!exists) {
-                                      if (context.mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text(AppLocalizations.of(context)!.fileMissing)),
-                                        );
-                                      }
-                                      return;
-                                    }
-                                    try {
-                                      if (Platform.isMacOS) {
-                                        await Process.start('open', [project.filePath]);
-                                      } else if (Platform.isWindows) {
-                                        await Process.start('cmd', ['/c', 'start', '', project.filePath]);
-                                      } else {
-                                        await Process.start(project.filePath, []);
-                                      }
-                                      if (context.mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text(AppLocalizations.of(context)!.launchingProject(project.displayName))),
-                                        );
-                                      }
-                                    } catch (e) {
-                                      if (context.mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text(AppLocalizations.of(context)!.failedToLaunch(e.toString()))),
-                                        );
-                                      }
-                                    }
-                                  },
+                                  ],
                                 ),
-                                // Separator
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                                  child: Text(
-                                    '|',
-                                    style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5), fontSize: 18),
-                                  ),
-                                ),
-                                // View button
-                                IconButton(
-                                  icon: const Icon(Icons.assignment),
-                                  tooltip: AppLocalizations.of(context)!.tooltipViewDetails,
-                                  onPressed: () async {
+                                const Divider(),
+                                Expanded(
+                                  flex: 1,
+                                  child: ReorderableListView.builder(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            buildDefaultDragHandles: false,
+                            itemCount: releaseProjects.length,
+                            onReorder: (oldIndex, newIndex) {
+                              // Adjust newIndex when moving down
+                              if (newIndex > oldIndex) newIndex -= 1;
+                              final updatedTrackIds = List<String>.from(release.trackIds);
+                              final moved = updatedTrackIds.removeAt(oldIndex);
+                              updatedTrackIds.insert(newIndex, moved);
+
+                              // Optimistic local update
+                              setState(() {
+                                // Nothing else needed; releaseProjects is derived from trackIds
+                              });
+
+                              // Persist
+                              () async {
+                                final repo = await ref.read(repositoryProvider.future);
+                                await repo.updateRelease(release.copyWith(trackIds: updatedTrackIds));
+                              }();
+                            },
+                            itemBuilder: (context, index) {
+                              final project = releaseProjects[index];
+                              final folderPath = FileSystemEntity.isDirectorySync(project.filePath)
+                                  ? project.filePath
+                                  : path.dirname(project.filePath);
+
+                              return Card(
+                                key: ValueKey(project.id),
+                                margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                color: Theme.of(context).cardColor,
+                                child: GestureDetector(
+                                  onDoubleTap: () async {
                                     await Navigator.of(context).push(
                                       MaterialPageRoute(
                                         builder: (_) => ProjectDetailPage(projectId: project.id),
                                       ),
                                     );
                                   },
-                                ),
-                                // Open Folder button
-                                IconButton(
-                                  icon: const Icon(Icons.folder_open),
-                                  tooltip: AppLocalizations.of(context)!.openFolder,
-                                  onPressed: () async {
-                                    final exists = Directory(folderPath).existsSync();
-                                    if (!exists) {
-                                      if (context.mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text(AppLocalizations.of(context)!.fileMissing)),
-                                        );
-                                      }
-                                      return;
-                                    }
-                                    
-                                    try {
-                                      if (Platform.isMacOS) {
-                                        await Process.start('open', [folderPath]);
-                                      } else if (Platform.isWindows) {
-                                        await Process.start('explorer', [folderPath]);
-                                      } else if (Platform.isLinux) {
-                                        await Process.start('xdg-open', [folderPath]);
-                                      }
-                                      if (context.mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text(AppLocalizations.of(context)!.openingFolder(project.displayName))),
-                                        );
-                                      }
-                                    } catch (e) {
-                                      if (context.mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text(AppLocalizations.of(context)!.failedToOpenFolder(e.toString()))),
-                                        );
-                                      }
-                                    }
-                                  },
-                                ),
-                                // Separator
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                                  child: Text(
-                                    '|',
-                                    style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5), fontSize: 18),
+                                  child: ListTile(
+                                    leading: ReorderableDragStartListener(
+                                      index: index,
+                                      child: Icon(Icons.drag_indicator, color: Theme.of(context).textTheme.bodyMedium?.color),
+                                    ),
+                                    title: Text(project.displayName),
+                                  subtitle: Wrap(
+                                    spacing: 8,
+                                    crossAxisAlignment: WrapCrossAlignment.center,
+                                    children: [
+                                      if (project.dawType != null && project.dawType!.isNotEmpty) ...[
+                                        Text(
+                                          project.dawVersion != null && project.dawVersion!.isNotEmpty
+                                              ? '${project.dawType!} ${project.dawVersion!}'
+                                              : project.dawType!,
+                                        ),
+                                        Text('•', style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color)),
+                                      ],
+                                      if (project.bpm != null) ...[
+                                        Text('${project.bpm!.toStringAsFixed(0)} ${AppLocalizations.of(context)!.bpm}'),
+                                        Text('•', style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color)),
+                                      ],
+                                      if (project.musicalKey != null && project.musicalKey!.isNotEmpty) ...[
+                                        Text(project.musicalKey!),
+                                        Text('•', style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color)),
+                                      ],
+                                      Text(
+                                        _translateStatus(context, project.status),
+                                        style: TextStyle(
+                                          color: _getStatusColor(project.status),
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      // Launch button - only on desktop
+                                      if (!MobileUtils.isMobile())
+                                        IconButton(
+                                          icon: const Icon(Icons.open_in_new),
+                                          tooltip: AppLocalizations.of(context)!.tooltipLaunchInDaw,
+                                          onPressed: () async {
+                                            final exists = File(project.filePath).existsSync() || 
+                                                          Directory(project.filePath).existsSync();
+                                            if (!exists) {
+                                              if (context.mounted) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(content: Text(AppLocalizations.of(context)!.fileMissing)),
+                                                );
+                                              }
+                                              return;
+                                            }
+                                            try {
+                                              if (Platform.isMacOS) {
+                                                await Process.start('open', [project.filePath]);
+                                              } else if (Platform.isWindows) {
+                                                await Process.start('cmd', ['/c', 'start', '', project.filePath]);
+                                              } else {
+                                                await Process.start(project.filePath, []);
+                                              }
+                                              if (context.mounted) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(content: Text(AppLocalizations.of(context)!.launchingProject(project.displayName))),
+                                                );
+                                              }
+                                            } catch (e) {
+                                              if (context.mounted) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(content: Text(AppLocalizations.of(context)!.failedToLaunch(e.toString()))),
+                                                );
+                                              }
+                                            }
+                                          },
+                                        ),
+                                      // Separator - only if Launch button is shown
+                                      if (!MobileUtils.isMobile())
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                          child: Text(
+                                            '|',
+                                            style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5), fontSize: 18),
+                                          ),
+                                        ),
+                                      // View button
+                                      IconButton(
+                                        icon: const Icon(Icons.assignment),
+                                        tooltip: AppLocalizations.of(context)!.tooltipViewDetails,
+                                        onPressed: () async {
+                                          await Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (_) => ProjectDetailPage(projectId: project.id),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      // Open Folder button - only on desktop
+                                      if (!MobileUtils.isMobile())
+                                        IconButton(
+                                          icon: const Icon(Icons.folder_open),
+                                          tooltip: AppLocalizations.of(context)!.openFolder,
+                                          onPressed: () async {
+                                            final exists = Directory(folderPath).existsSync();
+                                            if (!exists) {
+                                              if (context.mounted) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(content: Text(AppLocalizations.of(context)!.fileMissing)),
+                                                );
+                                              }
+                                              return;
+                                            }
+                                            
+                                            try {
+                                              if (Platform.isMacOS) {
+                                                await Process.start('open', [folderPath]);
+                                              } else if (Platform.isWindows) {
+                                                await Process.start('explorer', [folderPath]);
+                                              } else if (Platform.isLinux) {
+                                                await Process.start('xdg-open', [folderPath]);
+                                              }
+                                              if (context.mounted) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(content: Text(AppLocalizations.of(context)!.openingFolder(project.displayName))),
+                                                );
+                                              }
+                                            } catch (e) {
+                                              if (context.mounted) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(content: Text(AppLocalizations.of(context)!.failedToOpenFolder(e.toString()))),
+                                                );
+                                              }
+                                            }
+                                          },
+                                        ),
+                                      // Separator - only if Open Folder button is shown
+                                      if (!MobileUtils.isMobile())
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                          child: Text(
+                                            '|',
+                                            style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5), fontSize: 18),
+                                          ),
+                                        ),
+                                      // Remove button
+                                      IconButton(
+                                        icon: const Icon(Icons.remove_circle_outline),
+                                        color: Colors.red.shade300,
+                                        tooltip: AppLocalizations.of(context)!.tooltipRemoveFromRelease,
+                                        onPressed: () async {
+                                          final confirm = await showDialog<bool>(
+                                            context: context,
+                                            builder: (ctx) => AlertDialog(
+                                              backgroundColor: Theme.of(context).cardColor,
+                                              title: Text(AppLocalizations.of(context)!.tooltipRemoveFromRelease),
+                                              content: Text(AppLocalizations.of(context)!.removeTrackFromReleaseMessage(project.displayName)),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () => Navigator.pop(ctx, false),
+                                                  child: Text(AppLocalizations.of(context)!.cancel),
+                                                ),
+                                                ElevatedButton(
+                                                  onPressed: () => Navigator.pop(ctx, true),
+                                                  style: ElevatedButton.styleFrom(
+                                                    backgroundColor: Colors.red.shade300,
+                                                  ),
+                                                  child: Text(AppLocalizations.of(context)!.remove),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                          if (confirm == true && mounted) {
+                                            final repo = await ref.read(repositoryProvider.future);
+                                            final updatedTrackIds = release.trackIds.where((id) => id != project.id).toList();
+                                            final updatedRelease = release.copyWith(trackIds: updatedTrackIds);
+                                            await repo.updateRelease(updatedRelease);
+                                          }
+                                        },
+                                      ),
+                                    ],
+                                  ),
                                   ),
                                 ),
-                                // Remove button
-                                IconButton(
-                                  icon: const Icon(Icons.remove_circle_outline),
-                                  color: Colors.red.shade300,
-                                  tooltip: AppLocalizations.of(context)!.tooltipRemoveFromRelease,
-                                  onPressed: () async {
-                                    final confirm = await showDialog<bool>(
-                                      context: context,
-                                      builder: (ctx) => AlertDialog(
-                                        backgroundColor: Theme.of(context).cardColor,
-                                        title: Text(AppLocalizations.of(context)!.tooltipRemoveFromRelease),
-                                        content: Text(AppLocalizations.of(context)!.removeTrackFromReleaseMessage(project.displayName)),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () => Navigator.pop(ctx, false),
-                                            child: Text(AppLocalizations.of(context)!.cancel),
+                              );
+                            },
+                          ),
+                                ),
+                                // Files Section - only on desktop
+                                if (!isMobile) ...[
+                                  const Divider(height: 2),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(AppLocalizations.of(context)!.releaseFilesCount(release.files.length), style: Theme.of(context).textTheme.headlineSmall),
+                                      Row(
+                                        children: [
+                                          ElevatedButton.icon(
+                                            icon: const Icon(Icons.file_upload),
+                                            label: Text(AppLocalizations.of(context)!.addFiles),
+                                            onPressed: () => _addFiles(context, release),
                                           ),
-                                          ElevatedButton(
-                                            onPressed: () => Navigator.pop(ctx, true),
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: Colors.red.shade300,
+                                          const SizedBox(width: 8),
+                                          if (release.files.isNotEmpty)
+                                            ElevatedButton.icon(
+                                              icon: const Icon(Icons.download),
+                                              label: Text(AppLocalizations.of(context)!.saveReleaseFilesZip),
+                                              onPressed: () => _downloadAsZip(context, release),
                                             ),
-                                            child: Text(AppLocalizations.of(context)!.remove),
-                                          ),
                                         ],
                                       ),
-                                    );
-                                    if (confirm == true && mounted) {
-                                      final repo = await ref.read(repositoryProvider.future);
-                                      final updatedTrackIds = release.trackIds.where((id) => id != project.id).toList();
-                                      final updatedRelease = release.copyWith(trackIds: updatedTrackIds);
-                                      await repo.updateRelease(updatedRelease);
-                                    }
-                                  },
-                                ),
+                                    ],
+                                  ),
+                                  const Divider(),
+                                  Expanded(
+                                    flex: 1,
+                                    child: release.files.isEmpty
+                                        ? Center(
+                                            child: Text(
+                                              AppLocalizations.of(context)!.noFilesAddedYet,
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color),
+                                            ),
+                                          )
+                                        : _FilesSection(
+                                            files: release.files,
+                                            release: release,
+                                          ),
+                                  ),
+                                ],
                               ],
                             ),
-                            ),
                           ),
-                        );
-                      },
-                    ),
-                  ),
-                  const Divider(height: 2),
-                  // Files Section
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(AppLocalizations.of(context)!.releaseFilesCount(release.files.length), style: Theme.of(context).textTheme.headlineSmall),
-                      Row(
-                        children: [
-                          ElevatedButton.icon(
-                            icon: const Icon(Icons.file_upload),
-                            label: Text(AppLocalizations.of(context)!.addFiles),
-                            onPressed: () => _addFiles(context, release),
-                          ),
-                          const SizedBox(width: 8),
-                          if (release.files.isNotEmpty)
-                            ElevatedButton.icon(
-                              icon: const Icon(Icons.download),
-                              label: Text(AppLocalizations.of(context)!.saveReleaseFilesZip),
-                              onPressed: () => _downloadAsZip(context, release),
-                            ),
                         ],
                       ),
-                    ],
+                    ),
                   ),
-                  const Divider(),
-                  Expanded(
-                    flex: 1,
-                    child: release.files.isEmpty
-                        ? Center(
-                            child: Text(
-                              AppLocalizations.of(context)!.noFilesAddedYet,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color),
-                            ),
-                          )
-                        : _FilesSection(
-                            files: release.files,
-                            release: release,
-                          ),
-                  ),
-                ],
-              ),
-            ),
-            ],
-          ),
-              ),
-            ),
           ],
         ),
       );
     } catch (e) {
+      final isMobile = MobileUtils.isMobile();
       return Scaffold(
-        appBar: null,
+        appBar: isMobile
+            ? AppBar(
+                title: Text(AppLocalizations.of(context)!.releaseNotFound),
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              )
+            : null,
         body: Column(
           children: [
-            if (!kDebugMode)
+            if (!isMobile && !kDebugMode)
               GestureDetector(
                 onPanStart: (_) => windowManager.startDragging(),
                 onDoubleTap: () async {
@@ -1180,6 +1223,740 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
         ),
       );
     }
+  }
+
+  Widget _buildArtworkSection(BuildContext context, Release release) {
+    return GestureDetector(
+      onTap: _pickImage,
+      child: Card(
+        child: Builder(
+          builder: (context) {
+            final imagePath = release.artworkImagePath ?? _artworkImagePath;
+            if (imagePath != null && File(imagePath).existsSync()) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: AspectRatio(
+                    aspectRatio: 1.0,
+                    child: Image.file(
+                      File(imagePath),
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.broken_image, size: 50, color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5)),
+                              const SizedBox(height: 8),
+                              Text(
+                                AppLocalizations.of(context)!.imageNotFound,
+                                style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color, fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              );
+            }
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(50.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.add_a_photo, size: 50, color: Theme.of(context).textTheme.bodySmall?.color),
+                    const SizedBox(height: 12),
+                    Text(
+                      AppLocalizations.of(context)!.clickToBrowseArtwork,
+                      style: TextStyle(
+                        color: Theme.of(context).textTheme.bodySmall?.color,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailsSection(BuildContext context, Release release) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _titleController,
+                    decoration: InputDecoration(labelText: AppLocalizations.of(context)!.releaseTitle),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.save),
+                  tooltip: AppLocalizations.of(context)!.save,
+                  onPressed: () async {
+                    final releases = ref.read(releasesProvider);
+                    final release = releases.asData?.value?.firstWhere(
+                      (r) => r.id == widget.releaseId,
+                      orElse: () => throw StateError('Release not found'),
+                    );
+                    if (release != null) {
+                      final repo = await ref.read(repositoryProvider.future);
+                      final updatedRelease = release.copyWith(
+                        title: _titleController.text,
+                        description: _descriptionController.text,
+                        artworkImagePath: _artworkImagePath,
+                      );
+                      await repo.updateRelease(updatedRelease);
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(AppLocalizations.of(context)!.releaseSaved)),
+                        );
+                      }
+                    }
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _descriptionController,
+              decoration: InputDecoration(labelText: AppLocalizations.of(context)!.description),
+              maxLines: 5,
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              title: Text(AppLocalizations.of(context)!.releaseDate),
+              subtitle: Text(
+                _releaseDate != null
+                    ? DateFormat.yMMMd().format(_releaseDate!)
+                    : AppLocalizations.of(context)!.noDateSet,
+                style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
+              ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_releaseDate != null)
+                    IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        setState(() {
+                          _releaseDate = null;
+                        });
+                        _saveReleaseDate(release, null);
+                      },
+                      tooltip: AppLocalizations.of(context)!.tooltipClearDate,
+                    ),
+                  IconButton(
+                    icon: const Icon(Icons.calendar_today),
+                    onPressed: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: _releaseDate ?? DateTime.now(),
+                        firstDate: DateTime(1900),
+                        lastDate: DateTime(2100),
+                      );
+                      if (picked != null) {
+                        setState(() {
+                          _releaseDate = DateTime(picked.year, picked.month, picked.day);
+                        });
+                        _saveReleaseDate(release, DateTime(picked.year, picked.month, picked.day));
+                      }
+                    },
+                    tooltip: AppLocalizations.of(context)!.tooltipPickDate,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            TodoListWidget(
+              todos: release.todos,
+              onTodosChanged: (updatedTodos) async {
+                final repo = await ref.read(repositoryProvider.future);
+                final updatedRelease = release.copyWith(todos: updatedTodos);
+                await repo.updateRelease(updatedRelease);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTracksSection(BuildContext context, Release release, List<MusicProject> releaseProjects) {
+    final isMobile = MobileUtils.isMobile();
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Tracks Section Header
+            isMobile
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        AppLocalizations.of(context)!.tracksCount(releaseProjects.length),
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          icon: const Icon(Icons.add),
+                          label: Text(AppLocalizations.of(context)!.addTracks),
+                          onPressed: () async {
+                            final allProjectsAsync = ref.read(allProjectsStreamProvider);
+                            final allProjects = allProjectsAsync.value ?? [];
+                            final availableProjects = allProjects.where((p) => !release.trackIds.contains(p.id)).toList();
+                            
+                            if (availableProjects.isEmpty) {
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(AppLocalizations.of(context)!.allProjectsAlreadyInRelease)),
+                                );
+                              }
+                              return;
+                            }
+
+                            final selectedIds = await showDialog<List<String>>(
+                              context: context,
+                              builder: (context) => _TrackSelectionDialog(projects: availableProjects),
+                            );
+
+                            if (selectedIds != null && selectedIds.isNotEmpty) {
+                              final repo = await ref.read(repositoryProvider.future);
+                              final updatedTrackIds = {...release.trackIds, ...selectedIds}.toList();
+                              final updatedRelease = release.copyWith(trackIds: updatedTrackIds);
+                              await repo.updateRelease(updatedRelease);
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(AppLocalizations.of(context)!.addedTracksToRelease(selectedIds.length, selectedIds.length == 1 ? '' : 's'))),
+                                );
+                              }
+                            }
+                          },
+                        ),
+                      ),
+                    ],
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        AppLocalizations.of(context)!.tracksCount(releaseProjects.length),
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.add),
+                        label: Text(AppLocalizations.of(context)!.addTracks),
+                        onPressed: () async {
+                          final allProjectsAsync = ref.read(allProjectsStreamProvider);
+                          final allProjects = allProjectsAsync.value ?? [];
+                          final availableProjects = allProjects.where((p) => !release.trackIds.contains(p.id)).toList();
+                          
+                          if (availableProjects.isEmpty) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(AppLocalizations.of(context)!.allProjectsAlreadyInRelease)),
+                              );
+                            }
+                            return;
+                          }
+
+                          final selectedIds = await showDialog<List<String>>(
+                            context: context,
+                            builder: (context) => _TrackSelectionDialog(projects: availableProjects),
+                          );
+
+                          if (selectedIds != null && selectedIds.isNotEmpty) {
+                            final repo = await ref.read(repositoryProvider.future);
+                            final updatedTrackIds = {...release.trackIds, ...selectedIds}.toList();
+                            final updatedRelease = release.copyWith(trackIds: updatedTrackIds);
+                            await repo.updateRelease(updatedRelease);
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(AppLocalizations.of(context)!.addedTracksToRelease(selectedIds.length, selectedIds.length == 1 ? '' : 's'))),
+                              );
+                            }
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+            const Divider(),
+            // Tracks List
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: isMobile ? 400 : 600,
+              ),
+              child: releaseProjects.isEmpty
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(32.0),
+                        child: Text(
+                          AppLocalizations.of(context)!.noTracksFound,
+                          style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color),
+                        ),
+                      ),
+                    )
+                  : ReorderableListView.builder(
+                      shrinkWrap: true,
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      buildDefaultDragHandles: false,
+                      itemCount: releaseProjects.length,
+                      onReorder: (oldIndex, newIndex) {
+                        if (newIndex > oldIndex) newIndex -= 1;
+                        final updatedTrackIds = List<String>.from(release.trackIds);
+                        final moved = updatedTrackIds.removeAt(oldIndex);
+                        updatedTrackIds.insert(newIndex, moved);
+                        setState(() {});
+                        () async {
+                          final repo = await ref.read(repositoryProvider.future);
+                          await repo.updateRelease(release.copyWith(trackIds: updatedTrackIds));
+                        }();
+                      },
+                      itemBuilder: (context, index) {
+                        final project = releaseProjects[index];
+                        final folderPath = FileSystemEntity.isDirectorySync(project.filePath)
+                            ? project.filePath
+                            : path.dirname(project.filePath);
+
+                        return Card(
+                          key: ValueKey(project.id),
+                          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          color: Theme.of(context).cardColor,
+                          child: GestureDetector(
+                            onDoubleTap: () async {
+                              await Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => ProjectDetailPage(projectId: project.id),
+                                ),
+                              );
+                            },
+                            child: isMobile
+                                ? _buildMobileTrackTile(context, project, release, folderPath, index)
+                                : ListTile(
+                                    leading: ReorderableDragStartListener(
+                                      index: index,
+                                      child: Icon(Icons.drag_indicator, color: Theme.of(context).textTheme.bodyMedium?.color),
+                                    ),
+                                    title: Text(project.displayName),
+                                    subtitle: Wrap(
+                                      spacing: 8,
+                                      crossAxisAlignment: WrapCrossAlignment.center,
+                                      children: [
+                                        if (project.dawType != null && project.dawType!.isNotEmpty) ...[
+                                          Text(
+                                            project.dawVersion != null && project.dawVersion!.isNotEmpty
+                                                ? '${project.dawType!} ${project.dawVersion!}'
+                                                : project.dawType!,
+                                          ),
+                                          Text('•', style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color)),
+                                        ],
+                                        if (project.bpm != null) ...[
+                                          Text('${project.bpm!.toStringAsFixed(0)} ${AppLocalizations.of(context)!.bpm}'),
+                                          Text('•', style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color)),
+                                        ],
+                                        if (project.musicalKey != null && project.musicalKey!.isNotEmpty) ...[
+                                          Text(project.musicalKey!),
+                                          Text('•', style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color)),
+                                        ],
+                                        Text(
+                                          _translateStatus(context, project.status),
+                                          style: TextStyle(
+                                            color: _getStatusColor(project.status),
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    trailing: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        // Launch button - only on desktop
+                                        if (!isMobile)
+                                          IconButton(
+                                            icon: const Icon(Icons.open_in_new),
+                                            tooltip: AppLocalizations.of(context)!.tooltipLaunchInDaw,
+                                            onPressed: () async {
+                                              final exists = File(project.filePath).existsSync() || 
+                                                            Directory(project.filePath).existsSync();
+                                              if (!exists) {
+                                                if (context.mounted) {
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(content: Text(AppLocalizations.of(context)!.fileMissing)),
+                                                  );
+                                                }
+                                                return;
+                                              }
+                                              try {
+                                                if (Platform.isMacOS) {
+                                                  await Process.start('open', [project.filePath]);
+                                                } else if (Platform.isWindows) {
+                                                  await Process.start('cmd', ['/c', 'start', '', project.filePath]);
+                                                } else {
+                                                  await Process.start(project.filePath, []);
+                                                }
+                                                if (context.mounted) {
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(content: Text(AppLocalizations.of(context)!.launchingProject(project.displayName))),
+                                                  );
+                                                }
+                                              } catch (e) {
+                                                if (context.mounted) {
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(content: Text(AppLocalizations.of(context)!.failedToLaunch(e.toString()))),
+                                                  );
+                                                }
+                                              }
+                                            },
+                                          ),
+                                        // Separator - only if Launch button is shown
+                                        if (!isMobile)
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                            child: Text(
+                                              '|',
+                                              style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5), fontSize: 18),
+                                            ),
+                                          ),
+                                        IconButton(
+                                          icon: const Icon(Icons.assignment),
+                                          tooltip: AppLocalizations.of(context)!.tooltipViewDetails,
+                                          onPressed: () async {
+                                            await Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                builder: (_) => ProjectDetailPage(projectId: project.id),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                        // Open Folder button - only on desktop
+                                        if (!isMobile)
+                                          IconButton(
+                                            icon: const Icon(Icons.folder_open),
+                                            tooltip: AppLocalizations.of(context)!.openFolder,
+                                            onPressed: () async {
+                                              final exists = Directory(folderPath).existsSync();
+                                              if (!exists) {
+                                                if (context.mounted) {
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(content: Text(AppLocalizations.of(context)!.fileMissing)),
+                                                  );
+                                                }
+                                                return;
+                                              }
+                                              
+                                              try {
+                                                if (Platform.isMacOS) {
+                                                  await Process.start('open', [folderPath]);
+                                                } else if (Platform.isWindows) {
+                                                  await Process.start('explorer', [folderPath]);
+                                                } else if (Platform.isLinux) {
+                                                  await Process.start('xdg-open', [folderPath]);
+                                                }
+                                                if (context.mounted) {
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(content: Text(AppLocalizations.of(context)!.openingFolder(project.displayName))),
+                                                  );
+                                                }
+                                              } catch (e) {
+                                                if (context.mounted) {
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(content: Text(AppLocalizations.of(context)!.failedToOpenFolder(e.toString()))),
+                                                  );
+                                                }
+                                              }
+                                            },
+                                          ),
+                                        // Separator - only if Open Folder button is shown
+                                        if (!isMobile)
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                            child: Text(
+                                              '|',
+                                              style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5), fontSize: 18),
+                                            ),
+                                          ),
+                                        IconButton(
+                                          icon: const Icon(Icons.remove_circle_outline),
+                                          color: Colors.red.shade300,
+                                          tooltip: AppLocalizations.of(context)!.tooltipRemoveFromRelease,
+                                          onPressed: () async {
+                                            final confirm = await showDialog<bool>(
+                                              context: context,
+                                              builder: (ctx) => AlertDialog(
+                                                backgroundColor: Theme.of(context).cardColor,
+                                                title: Text(AppLocalizations.of(context)!.tooltipRemoveFromRelease),
+                                                content: Text(AppLocalizations.of(context)!.removeTrackFromReleaseMessage(project.displayName)),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () => Navigator.pop(ctx, false),
+                                                    child: Text(AppLocalizations.of(context)!.cancel),
+                                                  ),
+                                                  ElevatedButton(
+                                                    onPressed: () => Navigator.pop(ctx, true),
+                                                    style: ElevatedButton.styleFrom(
+                                                      backgroundColor: Colors.red.shade300,
+                                                    ),
+                                                    child: Text(AppLocalizations.of(context)!.remove),
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                            if (confirm == true && mounted) {
+                                              final repo = await ref.read(repositoryProvider.future);
+                                              final updatedTrackIds = release.trackIds.where((id) => id != project.id).toList();
+                                              final updatedRelease = release.copyWith(trackIds: updatedTrackIds);
+                                              await repo.updateRelease(updatedRelease);
+                                            }
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileTrackTile(BuildContext context, MusicProject project, Release release, String folderPath, int index) {
+    // This function is only used for mobile, so we don't show Launch and Open Folder buttons
+    return Padding(
+      padding: const EdgeInsets.all(12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              ReorderableDragStartListener(
+                index: index,
+                child: Icon(Icons.drag_indicator, color: Theme.of(context).textTheme.bodyMedium?.color),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      project.displayName,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    Wrap(
+                      spacing: 8,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        if (project.dawType != null && project.dawType!.isNotEmpty)
+                          Text(
+                            project.dawVersion != null && project.dawVersion!.isNotEmpty
+                                ? '${project.dawType!} ${project.dawVersion!}'
+                                : project.dawType!,
+                            style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
+                          ),
+                        if (project.bpm != null)
+                          Text(
+                            '${project.bpm!.toStringAsFixed(0)} ${AppLocalizations.of(context)!.bpm}',
+                            style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
+                          ),
+                        if (project.musicalKey != null && project.musicalKey!.isNotEmpty)
+                          Text(
+                            project.musicalKey!,
+                            style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
+                          ),
+                        Text(
+                          _translateStatus(context, project.status),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: _getStatusColor(project.status),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              // View Details button (available on all platforms)
+              OutlinedButton.icon(
+                icon: const Icon(Icons.assignment, size: 18),
+                label: Text(AppLocalizations.of(context)!.tooltipViewDetails),
+                onPressed: () async {
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => ProjectDetailPage(projectId: project.id),
+                    ),
+                  );
+                },
+              ),
+              OutlinedButton.icon(
+                icon: Icon(Icons.remove_circle_outline, size: 18, color: Colors.red.shade300),
+                label: Text(
+                  AppLocalizations.of(context)!.tooltipRemoveFromRelease,
+                  style: TextStyle(color: Colors.red.shade300),
+                ),
+                onPressed: () async {
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      backgroundColor: Theme.of(context).cardColor,
+                      title: Text(AppLocalizations.of(context)!.tooltipRemoveFromRelease),
+                      content: Text(AppLocalizations.of(context)!.removeTrackFromReleaseMessage(project.displayName)),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: Text(AppLocalizations.of(context)!.cancel),
+                        ),
+                        ElevatedButton(
+                          onPressed: () => Navigator.pop(ctx, true),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red.shade300,
+                          ),
+                          child: Text(AppLocalizations.of(context)!.remove),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirm == true && mounted) {
+                    final repo = await ref.read(repositoryProvider.future);
+                    final updatedTrackIds = release.trackIds.where((id) => id != project.id).toList();
+                    final updatedRelease = release.copyWith(trackIds: updatedTrackIds);
+                    await repo.updateRelease(updatedRelease);
+                  }
+                },
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.red.shade300,
+                  side: BorderSide(color: Colors.red.shade300),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilesSection(BuildContext context, Release release) {
+    final isMobile = MobileUtils.isMobile();
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Files Section Header
+            isMobile
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        AppLocalizations.of(context)!.releaseFilesCount(release.files.length),
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              icon: const Icon(Icons.file_upload),
+                              label: Text(AppLocalizations.of(context)!.addFiles),
+                              onPressed: () => _addFiles(context, release),
+                            ),
+                          ),
+                          if (release.files.isNotEmpty)
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                icon: const Icon(Icons.download),
+                                label: Text(AppLocalizations.of(context)!.saveReleaseFilesZip),
+                                onPressed: () => _downloadAsZip(context, release),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        AppLocalizations.of(context)!.releaseFilesCount(release.files.length),
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      Row(
+                        children: [
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.file_upload),
+                            label: Text(AppLocalizations.of(context)!.addFiles),
+                            onPressed: () => _addFiles(context, release),
+                          ),
+                          const SizedBox(width: 8),
+                          if (release.files.isNotEmpty)
+                            ElevatedButton.icon(
+                              icon: const Icon(Icons.download),
+                              label: Text(AppLocalizations.of(context)!.saveReleaseFilesZip),
+                              onPressed: () => _downloadAsZip(context, release),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+            const Divider(),
+            // Files List
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: isMobile ? 400 : 600,
+              ),
+              child: release.files.isEmpty
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(32.0),
+                        child: Text(
+                          AppLocalizations.of(context)!.noFilesAddedYet,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color),
+                        ),
+                      ),
+                    )
+                  : _FilesSection(
+                      files: release.files,
+                      release: release,
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

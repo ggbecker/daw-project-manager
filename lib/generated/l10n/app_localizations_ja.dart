@@ -463,7 +463,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get selectTracks => 'トラックを選択';
 
   @override
-  String get continueButton => '続ける';
+  String get continueButton => '続行';
 
   @override
   String get noReleasesYet => 'まだリリースがありません';
@@ -907,4 +907,285 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get dropAudioFileHere => 'オーディオファイルをここにドロップ';
+
+  @override
+  String projectAge(String age) {
+    return 'プロジェクト経過時間: $age';
+  }
+
+  @override
+  String createdDate(String date) {
+    return '$dateに作成';
+  }
+
+  @override
+  String completedIn(String duration) {
+    return '完成までの期間: $duration';
+  }
+
+  @override
+  String finishedDate(String date) {
+    return '$dateに完成';
+  }
+
+  @override
+  String get dateToday => '今日';
+
+  @override
+  String get dateYesterday => '昨日';
+
+  @override
+  String dateDaysAgo(int count) {
+    return '$count日前';
+  }
+
+  @override
+  String dateWeeksAgo(int count, String plural) {
+    return '$count週間前';
+  }
+
+  @override
+  String dateMonthsAgo(int count, String plural) {
+    return '$countヶ月前';
+  }
+
+  @override
+  String dateYearsAgo(int count, String plural) {
+    return '$count年前';
+  }
+
+  @override
+  String ageYearsMonths(
+    int years,
+    String yearPlural,
+    int months,
+    String monthPlural,
+  ) {
+    return '$years年$monthsヶ月';
+  }
+
+  @override
+  String ageYears(int years, String plural) {
+    return '$years年';
+  }
+
+  @override
+  String ageMonthsDays(
+    int months,
+    String monthPlural,
+    int days,
+    String dayPlural,
+  ) {
+    return '$monthsヶ月$days日';
+  }
+
+  @override
+  String ageMonths(int months, String plural) {
+    return '$monthsヶ月';
+  }
+
+  @override
+  String ageDays(int days, String plural) {
+    return '$days日';
+  }
+
+  @override
+  String ageHours(int hours, String plural) {
+    return '$hours時間';
+  }
+
+  @override
+  String get ageJustNow => 'たった今';
+
+  @override
+  String get ageLessThanHour => '1時間未満';
+
+  @override
+  String get viewProfile => 'プロフィールを表示';
+
+  @override
+  String get googleDriveSync => 'Google Drive同期';
+
+  @override
+  String get googleDriveSyncDescription =>
+      'Google Driveとデータを同期して、デバイス間でバックアップと復元を行います。';
+
+  @override
+  String get manageGoogleDriveSync => 'Google Drive同期を管理';
+
+  @override
+  String get signInToGoogleDrive => 'Google Driveにサインイン';
+
+  @override
+  String get syncNow => '今すぐ同期';
+
+  @override
+  String get uploadBackup => 'バックアップをアップロード';
+
+  @override
+  String get downloadBackup => 'バックアップをダウンロード';
+
+  @override
+  String get signOut => 'サインアウト';
+
+  @override
+  String get downloadPreviewSongs => 'プレビュー曲をダウンロード';
+
+  @override
+  String get downloadPreviewSongsExplanation =>
+      'チェックを外すと、プレビュー曲はスキップされます（時間とストレージを節約）。必要に応じて後でダウンロードできます。';
+
+  @override
+  String get replaceLocalData => 'ローカルデータを置き換え';
+
+  @override
+  String get downloadBackupConfirmation =>
+      'これにより、ローカルデータがGoogle Driveのバックアップに置き換えられます。\n\n続行してもよろしいですか？';
+
+  @override
+  String get enterAuthorizationCode => '認証コードを入力';
+
+  @override
+  String get authorizationCode => '認証コード';
+
+  @override
+  String get pasteCodeFromBrowser => 'ブラウザからコードを貼り付け';
+
+  @override
+  String get sessionActive => 'セッション有効';
+
+  @override
+  String get signedIn => 'サインイン済み';
+
+  @override
+  String get creatingInitialBackup => '初期バックアップを作成中...';
+
+  @override
+  String get successfullySignedInAndBackedUp =>
+      'Google Driveに正常にサインインし、バックアップしました';
+
+  @override
+  String get successfullySignedInAndBackedUpMessage =>
+      'Google Driveに正常にサインインし、バックアップしました！';
+
+  @override
+  String get successfullySignedInToGoogleDrive => 'Google Driveに正常にサインインしました';
+
+  @override
+  String get successfullySignedInToGoogleDriveMessage =>
+      'Google Driveに正常にサインインしました！';
+
+  @override
+  String get signInCancelledOrFailed =>
+      'サインインがキャンセルされたか失敗しました。詳細はコンソールを確認してください。';
+
+  @override
+  String get failedToLaunchBrowser => 'ブラウザの起動に失敗しました';
+
+  @override
+  String get signInCancelled => 'サインインがキャンセルされました';
+
+  @override
+  String get failedToExchangeAuthorizationCode => '認証コードの交換に失敗しました';
+
+  @override
+  String errorSigningIn(String error) {
+    return 'サインインエラー: $error';
+  }
+
+  @override
+  String get unknownError => '不明なエラー';
+
+  @override
+  String get googleSignInError => 'Googleサインインエラー';
+
+  @override
+  String get developerConsoleNotSetUp =>
+      '開発者コンソールが正しく設定されていません。Google Cloud ConsoleでOAuth設定を確認してください。';
+
+  @override
+  String get platformError => 'プラットフォームエラー';
+
+  @override
+  String get signedOutFromGoogleDrive => 'Google Driveからサインアウトしました';
+
+  @override
+  String errorSigningOut(String error) {
+    return 'サインアウトエラー: $error';
+  }
+
+  @override
+  String get syncing => '同期中...';
+
+  @override
+  String get errorNoProfileSelected => 'エラー: プロフィールが選択されていません';
+
+  @override
+  String syncCompleted(
+    int projectsAdded,
+    int projectsUpdated,
+    int releasesAdded,
+    int releasesUpdated,
+  ) {
+    return '同期完了！プロジェクト: +$projectsAdded ~$projectsUpdated、リリース: +$releasesAdded ~$releasesUpdated';
+  }
+
+  @override
+  String errorSyncing(String error) {
+    return '同期エラー: $error';
+  }
+
+  @override
+  String get uploadingBackup => 'バックアップをアップロード中...';
+
+  @override
+  String get backupUploadedSuccessfully => 'バックアップが正常にアップロードされました！';
+
+  @override
+  String get backupUploadedSuccessfullyMessage =>
+      'Google Driveにバックアップが正常にアップロードされました！';
+
+  @override
+  String errorUploadingBackup(String error) {
+    return 'バックアップのアップロードエラー: $error';
+  }
+
+  @override
+  String get downloadingBackup => 'バックアップをダウンロード中...';
+
+  @override
+  String get noBackupFileFound =>
+      'Google Driveにバックアップファイルが見つかりません。データを同期して最初にバックアップを作成してください。';
+
+  @override
+  String get noBackupFileFoundStatus =>
+      'バックアップファイルが見つかりません。最初にバックアップを作成してください。';
+
+  @override
+  String get downloadCancelled => 'ダウンロードがキャンセルされました';
+
+  @override
+  String backupDownloaded(
+    int projectsAdded,
+    int projectsUpdated,
+    int releasesAdded,
+    int releasesUpdated,
+  ) {
+    return 'バックアップをダウンロードしました！プロジェクト: +$projectsAdded ~$projectsUpdated、リリース: +$releasesAdded ~$releasesUpdated';
+  }
+
+  @override
+  String errorDownloadingBackup(String error) {
+    return 'バックアップのダウンロードエラー: $error';
+  }
+
+  @override
+  String signedInAs(String email) {
+    return 'サインイン: $email';
+  }
+
+  @override
+  String lastSync(String date) {
+    return '最終同期: $date';
+  }
 }
