@@ -2,8 +2,7 @@ name: Android Release Build
 
 # Permissions needed for uploading artifacts
 permissions:
-  contents: read
-  artifacts: write
+  contents: write
 
 # Triggers
 on:
