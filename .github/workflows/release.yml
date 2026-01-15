@@ -45,7 +45,7 @@ jobs:
       # Inject OAuth Credentials from GitHub Secrets
       - name: Inject OAuth Credentials
         run: |
-          if [[ "${{ runner.os }}" == "Windows" ]]; then
+          if [[ "${{ runner.os }}" == "windows-latest" ]]; then
             powershell -ExecutionPolicy Bypass -File scripts/inject_secret.ps1 `
               -DesktopClientId "${{ secrets.DESKTOP_CLIENT_ID }}" `
               -DesktopClientSecret "${{ secrets.DESKTOP_CLIENT_SECRET }}" `
@@ -145,7 +145,7 @@ jobs:
       # Inject OAuth Credentials from GitHub Secrets
       - name: Inject OAuth Credentials
         run: |
-          if [[ "${{ runner.os }}" == "Windows" ]]; then
+          if [[ "${{ runner.os }}" == "windows-latest" ]]; then
             powershell -ExecutionPolicy Bypass -File scripts/inject_secret.ps1 `
               -DesktopClientId "${{ secrets.DESKTOP_CLIENT_ID }}" `
               -DesktopClientSecret "${{ secrets.DESKTOP_CLIENT_SECRET }}" `
