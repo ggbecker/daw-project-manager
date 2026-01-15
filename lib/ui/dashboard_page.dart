@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui' show Canvas, Paint, PaintingStyle, Rect;
 
 import 'package:pluto_grid/pluto_grid.dart';
 import 'package:file_picker/file_picker.dart';
@@ -2845,6 +2846,61 @@ class _TogglePlayPauseIntent extends Intent {
   const _TogglePlayPauseIntent();
 }
 
+// Waveform painter for audio visualization
+class _WaveformPainter extends CustomPainter {
+  final List<double> waveform;
+  final double progress;
+  final int progressIndex;
+  final Color color;
+  final Color backgroundColor;
+
+  _WaveformPainter({
+    required this.waveform,
+    required this.progress,
+    required this.progressIndex,
+    required this.color,
+    required this.backgroundColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    final backgroundPaint = Paint()
+      ..color = backgroundColor.withOpacity(0.3)
+      ..style = PaintingStyle.fill;
+
+    final barWidth = size.width / waveform.length;
+    final centerY = size.height / 2;
+
+    for (int i = 0; i < waveform.length; i++) {
+      final barHeight = waveform[i] * size.height * 0.8;
+      final x = i * barWidth;
+      final isPlayed = i < progressIndex;
+
+      // Draw bar
+      final barPaint = isPlayed ? paint : backgroundPaint;
+      canvas.drawRect(
+        Rect.fromLTWH(
+          x + barWidth * 0.1,
+          centerY - barHeight / 2,
+          barWidth * 0.8,
+          barHeight,
+        ),
+        barPaint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_WaveformPainter oldDelegate) {
+    return oldDelegate.progress != progress ||
+        oldDelegate.waveform != waveform;
+  }
+}
+
 class _PreviewSongDialog extends StatefulWidget {
   final MusicProject project;
   final VoidCallback onClose;
@@ -2963,6 +3019,241 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
     return '$minutes:$seconds';
   }
 
+  // Generate simple waveform data (simulated - in a real app you'd extract from audio)
+  List<double> _generateWaveformData() {
+    // Generate a simple waveform pattern for visualization
+    // In a real implementation, you'd extract this from the audio file
+    final List<double> waveform = [];
+    final random = DateTime.now().millisecondsSinceEpoch;
+    for (int i = 0; i < 200; i++) {
+      // Create a pattern that simulates audio waveform
+      final base = (i % 20) / 20.0;
+      final variation = (random + i) % 100 / 100.0;
+      waveform.add(0.1 + (base * 0.4) + (variation * 0.3));
+    }
+    return waveform;
+  }
+
+  Widget _buildWaveformWidget(BuildContext context) {
+    final waveform = _generateWaveformData();
+    final progress = _duration.inMilliseconds > 0
+        ? _position.inMilliseconds / _duration.inMilliseconds
+        : 0.0;
+    final progressIndex = (waveform.length * progress).round();
+
+    return Container(
+      height: 80,
+      margin: const EdgeInsets.symmetric(vertical: 16),
+      child: CustomPaint(
+        painter: _WaveformPainter(
+          waveform: waveform,
+          progress: progress,
+          progressIndex: progressIndex,
+          color: Theme.of(context).colorScheme.primary,
+          backgroundColor: Theme.of(context).colorScheme.surface,
+        ),
+        child: Container(),
+      ),
+    );
+  }
+
+  Widget _buildAndroidPlayerLayout(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // File name
+        Text(
+          widget.project.previewSongFileName ?? 
+          (widget.project.previewSongPath != null 
+            ? path.basename(widget.project.previewSongPath!)
+            : ''),
+          style: TextStyle(
+            color: Theme.of(context).textTheme.bodyMedium?.color,
+            fontSize: 14,
+          ),
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 16),
+        // Playback controls (top row)
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
+              onPressed: _togglePlayPause,
+              iconSize: 48,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            IconButton(
+              icon: const Icon(Icons.stop),
+              onPressed: _isPlaying || _position > Duration.zero ? _stop : null,
+              iconSize: 32,
+            ),
+            const SizedBox(width: 16),
+            // Volume control
+            Icon(
+              _volume == 0 ? Icons.volume_off : (_volume < 0.5 ? Icons.volume_down : Icons.volume_up),
+              size: 24,
+              color: Theme.of(context).textTheme.bodySmall?.color,
+            ),
+            SizedBox(
+              width: 100,
+              child: Slider(
+                value: _volume,
+                min: 0.0,
+                max: 1.0,
+                onChanged: (value) async {
+                  setState(() {
+                    _volume = value;
+                  });
+                  await _audioPlayer.setVolume(value);
+                },
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        // Waveform visualization
+        _buildWaveformWidget(context),
+        const SizedBox(height: 16),
+        // Large seek bar (bottom, separated from controls)
+        Column(
+          children: [
+            Slider(
+              value: _duration.inMilliseconds > 0
+                  ? _position.inMilliseconds.toDouble()
+                  : 0.0,
+              max: _duration.inMilliseconds > 0
+                  ? _duration.inMilliseconds.toDouble()
+                  : 100.0,
+              onChanged: (value) async {
+                final position = Duration(milliseconds: value.toInt());
+                await _audioPlayer.seek(position);
+              },
+              // Make the slider larger and more touch-friendly
+              thumbColor: Theme.of(context).colorScheme.primary,
+              activeColor: Theme.of(context).colorScheme.primary,
+              inactiveColor: Theme.of(context).colorScheme.surface,
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    _formatDuration(_position),
+                    style: TextStyle(
+                      color: Theme.of(context).textTheme.bodyMedium?.color,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Text(
+                    _formatDuration(_duration),
+                    style: TextStyle(
+                      color: Theme.of(context).textTheme.bodyMedium?.color,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDesktopPlayerLayout(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          widget.project.previewSongFileName ?? 
+          (widget.project.previewSongPath != null 
+            ? path.basename(widget.project.previewSongPath!)
+            : ''),
+          style: TextStyle(
+            color: Theme.of(context).textTheme.bodyMedium?.color,
+            fontSize: 14,
+          ),
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 16),
+        // Audio player controls
+        Row(
+          children: [
+            IconButton(
+              icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
+              onPressed: _togglePlayPause,
+              iconSize: 32,
+            ),
+            IconButton(
+              icon: const Icon(Icons.stop),
+              onPressed: _isPlaying || _position > Duration.zero ? _stop : null,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                children: [
+                  Slider(
+                    value: _duration.inMilliseconds > 0
+                        ? _position.inMilliseconds.toDouble()
+                        : 0.0,
+                    max: _duration.inMilliseconds > 0
+                        ? _duration.inMilliseconds.toDouble()
+                        : 100.0,
+                    onChanged: (value) async {
+                      final position = Duration(milliseconds: value.toInt());
+                      await _audioPlayer.seek(position);
+                    },
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _formatDuration(_position),
+                        style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color, fontSize: 12),
+                      ),
+                      Text(
+                        _formatDuration(_duration),
+                        style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            // Volume control
+            const SizedBox(width: 8),
+            Icon(
+              _volume == 0 ? Icons.volume_off : (_volume < 0.5 ? Icons.volume_down : Icons.volume_up),
+              size: 20,
+              color: Theme.of(context).textTheme.bodySmall?.color,
+            ),
+            SizedBox(
+              width: 80,
+              child: Slider(
+                value: _volume,
+                min: 0.0,
+                max: 1.0,
+                onChanged: (value) async {
+                  setState(() {
+                    _volume = value;
+                  });
+                  await _audioPlayer.setVolume(value);
+                },
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   Future<void> _sharePreviewSong() async {
     if (widget.project.previewSongPath == null || widget.project.previewSongPath!.isEmpty) {
       if (mounted) {
@@ -3077,93 +3368,10 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
               ],
             ),
             content: SizedBox(
-              width: 400,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    // Use previewSongFileName if available (original filename), otherwise use basename
-                    widget.project.previewSongFileName ?? 
-                    (widget.project.previewSongPath != null 
-                      ? path.basename(widget.project.previewSongPath!)
-                      : ''),
-                    style: TextStyle(
-                      color: Theme.of(context).textTheme.bodyMedium?.color,
-                      fontSize: 14,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 16),
-                  // Audio player controls
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
-                        onPressed: _togglePlayPause,
-                        iconSize: 32,
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.stop),
-                        onPressed: _isPlaying || _position > Duration.zero ? _stop : null,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
-                          children: [
-                            Slider(
-                              value: _duration.inMilliseconds > 0
-                                  ? _position.inMilliseconds.toDouble()
-                                  : 0.0,
-                              max: _duration.inMilliseconds > 0
-                                  ? _duration.inMilliseconds.toDouble()
-                                  : 100.0,
-                              onChanged: (value) async {
-                                final position = Duration(milliseconds: value.toInt());
-                                await _audioPlayer.seek(position);
-                              },
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  _formatDuration(_position),
-                                  style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color, fontSize: 12),
-                                ),
-                                Text(
-                                  _formatDuration(_duration),
-                                  style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color, fontSize: 12),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Volume control
-                      const SizedBox(width: 8),
-                      Icon(
-                        _volume == 0 ? Icons.volume_off : (_volume < 0.5 ? Icons.volume_down : Icons.volume_up),
-                        size: 20,
-                        color: Theme.of(context).textTheme.bodySmall?.color,
-                      ),
-                      SizedBox(
-                        width: 80,
-                        child: Slider(
-                          value: _volume,
-                          min: 0.0,
-                          max: 1.0,
-                          onChanged: (value) async {
-                            setState(() {
-                              _volume = value;
-                            });
-                            await _audioPlayer.setVolume(value);
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+              width: Platform.isAndroid ? double.infinity : 400,
+              child: Platform.isAndroid
+                  ? _buildAndroidPlayerLayout(context)
+                  : _buildDesktopPlayerLayout(context),
             ),
           ),
         ),

@@ -793,6 +793,7 @@
     }
   },
   "removePreviewSong": "Удалить превью трека",
+  "removePreviewSongConfirm": "Вы уверены, что хотите удалить превью трека? Это действие нельзя отменить.",
   "noPreviewSongSelected": "Превью трека не выбрано",
   "changePreviewSong": "Изменить Превью Трека",
   "selectPreviewSong": "Выбрать Превью Трека",
@@ -865,5 +866,25 @@
   "backupDownloaded": "Резервная копия скачана! Проекты: +{projectsAdded} ~{projectsUpdated}, Релизы: +{releasesAdded} ~{releasesUpdated}",
   "errorDownloadingBackup": "Ошибка скачивания резервной копии: {error}",
   "signedInAs": "Вход выполнен как: {email}",
-  "lastSync": "Последняя синхронизация: {date}"
+  "lastSync": "Последняя синхронизация: {date}",
+  "settings": "Настройки",
+  "language": "Язык",
+  "theme": "Тема",
+  "support": "Поддержать",
+  "couldNotOpenBrowser": "Не удалось открыть браузер. Пожалуйста, посетите: {url}",
+  "@couldNotOpenBrowser": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "errorOpeningBrowser": "Ошибка при открытии браузера: {error}",
+  "@errorOpeningBrowser": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  }
 }

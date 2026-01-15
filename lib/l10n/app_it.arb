@@ -793,6 +793,7 @@
     }
   },
   "removePreviewSong": "Rimuovi brano di anteprima",
+  "removePreviewSongConfirm": "Sei sicuro di voler rimuovere il brano di anteprima? Questa azione non può essere annullata.",
   "noPreviewSongSelected": "Nessun brano di anteprima selezionato",
   "changePreviewSong": "Cambia Brano di Anteprima",
   "selectPreviewSong": "Seleziona Brano di Anteprima",
@@ -865,5 +866,25 @@
   "backupDownloaded": "Backup scaricato! Progetti: +{projectsAdded} ~{projectsUpdated}, Pubblicazioni: +{releasesAdded} ~{releasesUpdated}",
   "errorDownloadingBackup": "Errore durante il download del backup: {error}",
   "signedInAs": "Connesso come: {email}",
-  "lastSync": "Ultima sincronizzazione: {date}"
+  "lastSync": "Ultima sincronizzazione: {date}",
+  "settings": "Impostazioni",
+  "language": "Lingua",
+  "theme": "Tema",
+  "support": "Supporta",
+  "couldNotOpenBrowser": "Impossibile aprire il browser. Si prega di visitare: {url}",
+  "@couldNotOpenBrowser": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "errorOpeningBrowser": "Errore durante l'apertura del browser: {error}",
+  "@errorOpeningBrowser": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  }
 }

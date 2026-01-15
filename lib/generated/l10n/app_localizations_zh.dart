@@ -893,6 +893,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get removePreviewSong => '删除预览歌曲';
 
   @override
+  String get removePreviewSongConfirm => '您确定要删除预览歌曲吗？此操作无法撤销。';
+
+  @override
   String get noPreviewSongSelected => '未选择预览歌曲';
 
   @override
@@ -1176,5 +1179,27 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String lastSync(String date) {
     return '最后同步: $date';
+  }
+
+  @override
+  String get settings => '设置';
+
+  @override
+  String get language => '语言';
+
+  @override
+  String get theme => '主题';
+
+  @override
+  String get support => '支持';
+
+  @override
+  String couldNotOpenBrowser(String url) {
+    return '无法打开浏览器。请访问: $url';
+  }
+
+  @override
+  String errorOpeningBrowser(String error) {
+    return '打开浏览器时出错: $error';
   }
 }

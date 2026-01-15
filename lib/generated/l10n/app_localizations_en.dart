@@ -905,6 +905,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get removePreviewSong => 'Remove preview song';
 
   @override
+  String get removePreviewSongConfirm =>
+      'Are you sure you want to remove the preview song? This action cannot be undone.';
+
+  @override
   String get noPreviewSongSelected => 'No preview song selected';
 
   @override
@@ -1197,5 +1201,27 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String lastSync(String date) {
     return 'Last sync: $date';
+  }
+
+  @override
+  String get settings => 'Settings';
+
+  @override
+  String get language => 'Language';
+
+  @override
+  String get theme => 'Theme';
+
+  @override
+  String get support => 'Support';
+
+  @override
+  String couldNotOpenBrowser(String url) {
+    return 'Could not open browser. Please visit: $url';
+  }
+
+  @override
+  String errorOpeningBrowser(String error) {
+    return 'Error opening browser: $error';
   }
 }

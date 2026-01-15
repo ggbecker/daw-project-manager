@@ -907,6 +907,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get removePreviewSong => 'Удалить превью трека';
 
   @override
+  String get removePreviewSongConfirm =>
+      'Вы уверены, что хотите удалить превью трека? Это действие нельзя отменить.';
+
+  @override
   String get noPreviewSongSelected => 'Превью трека не выбрано';
 
   @override
@@ -1199,5 +1203,27 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String lastSync(String date) {
     return 'Последняя синхронизация: $date';
+  }
+
+  @override
+  String get settings => 'Настройки';
+
+  @override
+  String get language => 'Язык';
+
+  @override
+  String get theme => 'Тема';
+
+  @override
+  String get support => 'Поддержать';
+
+  @override
+  String couldNotOpenBrowser(String url) {
+    return 'Не удалось открыть браузер. Пожалуйста, посетите: $url';
+  }
+
+  @override
+  String errorOpeningBrowser(String error) {
+    return 'Ошибка при открытии браузера: $error';
   }
 }

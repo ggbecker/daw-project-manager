@@ -1589,6 +1589,12 @@ abstract class AppLocalizations {
   /// **'Remove preview song'**
   String get removePreviewSong;
 
+  /// No description provided for @removePreviewSongConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to remove the preview song? This action cannot be undone.'**
+  String get removePreviewSongConfirm;
+
   /// No description provided for @noPreviewSongSelected.
   ///
   /// In en, this message translates to:
@@ -2040,6 +2046,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Last sync: {date}'**
   String lastSync(String date);
+
+  /// No description provided for @settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settings;
+
+  /// No description provided for @language.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get language;
+
+  /// No description provided for @theme.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get theme;
+
+  /// No description provided for @support.
+  ///
+  /// In en, this message translates to:
+  /// **'Support'**
+  String get support;
+
+  /// No description provided for @couldNotOpenBrowser.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open browser. Please visit: {url}'**
+  String couldNotOpenBrowser(String url);
+
+  /// No description provided for @errorOpeningBrowser.
+  ///
+  /// In en, this message translates to:
+  /// **'Error opening browser: {error}'**
+  String errorOpeningBrowser(String error);
 }
 
 class _AppLocalizationsDelegate

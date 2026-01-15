@@ -911,6 +911,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get removePreviewSong => 'Supprimer la chanson d\'aperçu';
 
   @override
+  String get removePreviewSongConfirm =>
+      'Êtes-vous sûr de vouloir supprimer la chanson d\'aperçu ? Cette action ne peut pas être annulée.';
+
+  @override
   String get noPreviewSongSelected => 'Aucune chanson d\'aperçu sélectionnée';
 
   @override
@@ -1203,5 +1207,27 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String lastSync(String date) {
     return 'Dernière synchronisation: $date';
+  }
+
+  @override
+  String get settings => 'Paramètres';
+
+  @override
+  String get language => 'Langue';
+
+  @override
+  String get theme => 'Thème';
+
+  @override
+  String get support => 'Soutenir';
+
+  @override
+  String couldNotOpenBrowser(String url) {
+    return 'Impossible d\'ouvrir le navigateur. Veuillez visiter: $url';
+  }
+
+  @override
+  String errorOpeningBrowser(String error) {
+    return 'Erreur lors de l\'ouverture du navigateur: $error';
   }
 }

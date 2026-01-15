@@ -793,6 +793,7 @@
     }
   },
   "removePreviewSong": "Remove preview song",
+  "removePreviewSongConfirm": "Are you sure you want to remove the preview song? This action cannot be undone.",
   "noPreviewSongSelected": "No preview song selected",
   "changePreviewSong": "Change Preview Song",
   "selectPreviewSong": "Select Preview Song",
@@ -1206,6 +1207,26 @@
   "@lastSync": {
     "placeholders": {
       "date": {
+        "type": "String"
+      }
+    }
+  },
+  "settings": "Settings",
+  "language": "Language",
+  "theme": "Theme",
+  "support": "Support",
+  "couldNotOpenBrowser": "Could not open browser. Please visit: {url}",
+  "@couldNotOpenBrowser": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "errorOpeningBrowser": "Error opening browser: {error}",
+  "@errorOpeningBrowser": {
+    "placeholders": {
+      "error": {
         "type": "String"
       }
     }

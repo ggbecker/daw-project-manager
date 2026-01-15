@@ -883,7 +883,7 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Settings',
+                              AppLocalizations.of(context)!.settings,
                               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 16),
@@ -894,7 +894,7 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
-                                    'Language',
+                                    AppLocalizations.of(context)!.language,
                                     style: const TextStyle(fontSize: 16),
                                   ),
                                 ),
@@ -909,7 +909,7 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
-                                    'Theme',
+                                    AppLocalizations.of(context)!.theme,
                                     style: const TextStyle(fontSize: 16),
                                   ),
                                 ),
@@ -924,13 +924,13 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
-                                    'Support',
+                                    AppLocalizations.of(context)!.support,
                                     style: const TextStyle(fontSize: 16),
                                   ),
                                 ),
                                 TextButton.icon(
                                   icon: const Icon(Icons.card_giftcard, size: 18),
-                                  label: const Text('Support'),
+                                  label: Text(AppLocalizations.of(context)!.support),
                                   onPressed: () async {
                                     try {
                                       final uri = Uri.parse('https://www.paypal.com/donate/?hosted_button_id=QHVVZ3LAF39BL');
@@ -944,9 +944,9 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
                                       
                                       if (!launched && mounted) {
                                         ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(
-                                            content: Text('Could not open browser. Please visit: https://www.paypal.com/donate/?hosted_button_id=QHVVZ3LAF39BL'),
-                                            duration: Duration(seconds: 5),
+                                          SnackBar(
+                                            content: Text(AppLocalizations.of(context)!.couldNotOpenBrowser('https://www.paypal.com/donate/?hosted_button_id=QHVVZ3LAF39BL')),
+                                            duration: const Duration(seconds: 5),
                                           ),
                                         );
                                       }
@@ -954,7 +954,7 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
                                       if (mounted) {
                                         ScaffoldMessenger.of(context).showSnackBar(
                                           SnackBar(
-                                            content: Text('Error opening browser: $e'),
+                                            content: Text(AppLocalizations.of(context)!.errorOpeningBrowser(e.toString())),
                                             duration: const Duration(seconds: 3),
                                           ),
                                         );

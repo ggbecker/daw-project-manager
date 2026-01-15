@@ -793,6 +793,7 @@
     }
   },
   "removePreviewSong": "Eliminar canción de vista previa",
+  "removePreviewSongConfirm": "¿Está seguro de que desea eliminar la canción de vista previa? Esta acción no se puede deshacer.",
   "noPreviewSongSelected": "No se ha seleccionado ninguna canción de vista previa",
   "changePreviewSong": "Cambiar Canción de Vista Previa",
   "selectPreviewSong": "Seleccionar Canción de Vista Previa",
@@ -865,5 +866,25 @@
   "backupDownloaded": "¡Copia de seguridad descargada! Proyectos: +{projectsAdded} ~{projectsUpdated}, Lanzamientos: +{releasesAdded} ~{releasesUpdated}",
   "errorDownloadingBackup": "Error al descargar copia de seguridad: {error}",
   "signedInAs": "Conectado como: {email}",
-  "lastSync": "Última sincronización: {date}"
+  "lastSync": "Última sincronización: {date}",
+  "settings": "Configuración",
+  "language": "Idioma",
+  "theme": "Tema",
+  "support": "Apoyar",
+  "couldNotOpenBrowser": "No se pudo abrir el navegador. Por favor, visite: {url}",
+  "@couldNotOpenBrowser": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "errorOpeningBrowser": "Error al abrir el navegador: {error}",
+  "@errorOpeningBrowser": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  }
 }

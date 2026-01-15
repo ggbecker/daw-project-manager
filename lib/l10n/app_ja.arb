@@ -793,6 +793,7 @@
     }
   },
   "removePreviewSong": "プレビュー曲を削除",
+  "removePreviewSongConfirm": "プレビュー曲を削除してもよろしいですか？この操作は元に戻せません。",
   "noPreviewSongSelected": "プレビュー曲が選択されていません",
   "changePreviewSong": "プレビュー曲を変更",
   "selectPreviewSong": "プレビュー曲を選択",
@@ -865,5 +866,25 @@
   "backupDownloaded": "バックアップをダウンロードしました！プロジェクト: +{projectsAdded} ~{projectsUpdated}、リリース: +{releasesAdded} ~{releasesUpdated}",
   "errorDownloadingBackup": "バックアップのダウンロードエラー: {error}",
   "signedInAs": "サインイン: {email}",
-  "lastSync": "最終同期: {date}"
+  "lastSync": "最終同期: {date}",
+  "settings": "設定",
+  "language": "言語",
+  "theme": "テーマ",
+  "support": "サポート",
+  "couldNotOpenBrowser": "ブラウザを開けませんでした。次のURLにアクセスしてください: {url}",
+  "@couldNotOpenBrowser": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "errorOpeningBrowser": "ブラウザを開く際にエラーが発生しました: {error}",
+  "@errorOpeningBrowser": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  }
 }

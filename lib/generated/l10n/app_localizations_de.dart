@@ -912,6 +912,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get removePreviewSong => 'Vorschau-Song entfernen';
 
   @override
+  String get removePreviewSongConfirm =>
+      'Sind Sie sicher, dass Sie den Vorschau-Song entfernen möchten? Diese Aktion kann nicht rückgängig gemacht werden.';
+
+  @override
   String get noPreviewSongSelected => 'Kein Vorschau-Song ausgewählt';
 
   @override
@@ -1204,5 +1208,27 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String lastSync(String date) {
     return 'Letzte Synchronisierung: $date';
+  }
+
+  @override
+  String get settings => 'Einstellungen';
+
+  @override
+  String get language => 'Sprache';
+
+  @override
+  String get theme => 'Design';
+
+  @override
+  String get support => 'Unterstützen';
+
+  @override
+  String couldNotOpenBrowser(String url) {
+    return 'Browser konnte nicht geöffnet werden. Bitte besuchen Sie: $url';
+  }
+
+  @override
+  String errorOpeningBrowser(String error) {
+    return 'Fehler beim Öffnen des Browsers: $error';
   }
 }

@@ -793,6 +793,7 @@
     }
   },
   "removePreviewSong": "删除预览歌曲",
+  "removePreviewSongConfirm": "您确定要删除预览歌曲吗？此操作无法撤销。",
   "noPreviewSongSelected": "未选择预览歌曲",
   "changePreviewSong": "更改预览歌曲",
   "selectPreviewSong": "选择预览歌曲",
@@ -865,5 +866,25 @@
   "backupDownloaded": "备份已下载！项目: +{projectsAdded} ~{projectsUpdated}，发布: +{releasesAdded} ~{releasesUpdated}",
   "errorDownloadingBackup": "下载备份错误: {error}",
   "signedInAs": "登录为: {email}",
-  "lastSync": "最后同步: {date}"
+  "lastSync": "最后同步: {date}",
+  "settings": "设置",
+  "language": "语言",
+  "theme": "主题",
+  "support": "支持",
+  "couldNotOpenBrowser": "无法打开浏览器。请访问: {url}",
+  "@couldNotOpenBrowser": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "errorOpeningBrowser": "打开浏览器时出错: {error}",
+  "@errorOpeningBrowser": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  }
 }

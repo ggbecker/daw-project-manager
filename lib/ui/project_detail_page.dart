@@ -1521,14 +1521,42 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                             icon: const Icon(Icons.delete),
                             color: Colors.red.shade300,
                             onPressed: () async {
-                              // Stop audio if playing
-                              await _audioPlayer.stop();
-                              setState(() {
-                                _isPlaying = false;
-                                _position = Duration.zero;
-                                _duration = Duration.zero;
-                              });
-                              await widget.onSongRemoved();
+                              // Show confirmation dialog
+                              final confirmed = await showDialog<bool>(
+                                context: context,
+                                builder: (dialogContext) => AlertDialog(
+                                  title: Text(
+                                    AppLocalizations.of(context)!.removePreviewSong,
+                                  ),
+                                  content: Text(
+                                    AppLocalizations.of(context)!.removePreviewSongConfirm,
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.of(dialogContext).pop(false),
+                                      child: Text(AppLocalizations.of(context)!.cancel),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => Navigator.of(dialogContext).pop(true),
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: Colors.red,
+                                      ),
+                                      child: Text(AppLocalizations.of(context)!.remove),
+                                    ),
+                                  ],
+                                ),
+                              );
+
+                              if (confirmed == true) {
+                                // Stop audio if playing
+                                await _audioPlayer.stop();
+                                setState(() {
+                                  _isPlaying = false;
+                                  _position = Duration.zero;
+                                  _duration = Duration.zero;
+                                });
+                                await widget.onSongRemoved();
+                              }
                             },
                             tooltip: AppLocalizations.of(
                               context,

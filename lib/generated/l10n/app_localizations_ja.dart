@@ -897,6 +897,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get removePreviewSong => 'プレビュー曲を削除';
 
   @override
+  String get removePreviewSongConfirm => 'プレビュー曲を削除してもよろしいですか？この操作は元に戻せません。';
+
+  @override
   String get noPreviewSongSelected => 'プレビュー曲が選択されていません';
 
   @override
@@ -1187,5 +1190,27 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String lastSync(String date) {
     return '最終同期: $date';
+  }
+
+  @override
+  String get settings => '設定';
+
+  @override
+  String get language => '言語';
+
+  @override
+  String get theme => 'テーマ';
+
+  @override
+  String get support => 'サポート';
+
+  @override
+  String couldNotOpenBrowser(String url) {
+    return 'ブラウザを開けませんでした。次のURLにアクセスしてください: $url';
+  }
+
+  @override
+  String errorOpeningBrowser(String error) {
+    return 'ブラウザを開く際にエラーが発生しました: $error';
   }
 }
