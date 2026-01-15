@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">DAW Project Manager</string>
     <!-- Google Sign-In Client ID for Debug Builds -->
     <!-- This is the Web Client ID for debug builds -->
     <!-- For release builds, see: android/app/src/release/res/values/strings.xml -->
