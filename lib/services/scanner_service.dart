@@ -17,6 +17,11 @@ class ScannerService {
     '.pts', // Pro Tools (session)
     '.rpp', // Reaper
     '.song', // Studio One
+    '.tracktionedit', // Tracktion Waveform (edit file)
+    '.tracktion', // Tracktion Waveform (project file)
+    '.cwp', // Cakewalk Project
+    '.wrk', // Cakewalk Sonar (legacy)
+    '.bun', // Cakewalk Bundle
   };
 
   bool _isInBackupFolder(String path) {

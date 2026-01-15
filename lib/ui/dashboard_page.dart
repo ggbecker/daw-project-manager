@@ -2085,6 +2085,12 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       'bitwig studio': 'bitwig-studio.png',
       'nuendo': 'nuendo.png',
       'maschine': 'maschine.png',
+      'tracktion waveform': 'tracktion-waveform.png',
+      'tracktion': 'tracktion-waveform.png',
+      'waveform': 'tracktion-waveform.png',
+      'cakewalk': 'cakewalk.png',
+      'cakewalk sonar': 'cakewalk.png',
+      'sonar': 'cakewalk.png',
     };
     
     // Try exact match first

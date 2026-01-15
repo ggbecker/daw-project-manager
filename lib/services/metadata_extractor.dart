@@ -122,6 +122,13 @@ class MetadataExtractor {
         return 'Reaper';
       case '.song':
         return 'Studio One';
+      case '.tracktionedit':
+      case '.tracktion':
+        return 'Tracktion Waveform';
+      case '.cwp':
+      case '.wrk':
+      case '.bun':
+        return 'Cakewalk';
       default:
         return null;
     }
