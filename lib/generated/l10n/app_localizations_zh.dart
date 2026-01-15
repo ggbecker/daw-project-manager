@@ -903,4 +903,278 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get dropAudioFileHere => '将音频文件拖放到此处';
+
+  @override
+  String projectAge(String age) {
+    return '项目年龄: $age';
+  }
+
+  @override
+  String createdDate(String date) {
+    return '创建于 $date';
+  }
+
+  @override
+  String completedIn(String duration) {
+    return '完成耗时: $duration';
+  }
+
+  @override
+  String finishedDate(String date) {
+    return '完成于 $date';
+  }
+
+  @override
+  String get dateToday => '今天';
+
+  @override
+  String get dateYesterday => '昨天';
+
+  @override
+  String dateDaysAgo(int count) {
+    return '$count天前';
+  }
+
+  @override
+  String dateWeeksAgo(int count, String plural) {
+    return '$count周前';
+  }
+
+  @override
+  String dateMonthsAgo(int count, String plural) {
+    return '$count个月前';
+  }
+
+  @override
+  String dateYearsAgo(int count, String plural) {
+    return '$count年前';
+  }
+
+  @override
+  String ageYearsMonths(
+    int years,
+    String yearPlural,
+    int months,
+    String monthPlural,
+  ) {
+    return '$years年$months个月';
+  }
+
+  @override
+  String ageYears(int years, String plural) {
+    return '$years年';
+  }
+
+  @override
+  String ageMonthsDays(
+    int months,
+    String monthPlural,
+    int days,
+    String dayPlural,
+  ) {
+    return '$months个月$days天';
+  }
+
+  @override
+  String ageMonths(int months, String plural) {
+    return '$months个月';
+  }
+
+  @override
+  String ageDays(int days, String plural) {
+    return '$days天';
+  }
+
+  @override
+  String ageHours(int hours, String plural) {
+    return '$hours小时';
+  }
+
+  @override
+  String get ageJustNow => '刚刚';
+
+  @override
+  String get ageLessThanHour => '不到一小时';
+
+  @override
+  String get viewProfile => '查看个人资料';
+
+  @override
+  String get googleDriveSync => 'Google Drive 同步';
+
+  @override
+  String get googleDriveSyncDescription =>
+      '将您的数据与 Google Drive 同步，以便在设备之间备份和恢复。';
+
+  @override
+  String get manageGoogleDriveSync => '管理 Google Drive 同步';
+
+  @override
+  String get signInToGoogleDrive => '登录 Google Drive';
+
+  @override
+  String get syncNow => '立即同步';
+
+  @override
+  String get uploadBackup => '上传备份';
+
+  @override
+  String get downloadBackup => '下载备份';
+
+  @override
+  String get signOut => '退出';
+
+  @override
+  String get downloadPreviewSongs => '下载预览歌曲';
+
+  @override
+  String get downloadPreviewSongsExplanation =>
+      '如果未选中，将跳过预览歌曲（节省时间和存储空间）。如果需要，您可以稍后下载它们。';
+
+  @override
+  String get replaceLocalData => '替换本地数据';
+
+  @override
+  String get downloadBackupConfirmation =>
+      '这将用 Google Drive 的备份替换您的本地数据。\n\n您确定要继续吗？';
+
+  @override
+  String get enterAuthorizationCode => '输入授权代码';
+
+  @override
+  String get authorizationCode => '授权代码';
+
+  @override
+  String get pasteCodeFromBrowser => '从浏览器粘贴代码';
+
+  @override
+  String get sessionActive => '会话活跃';
+
+  @override
+  String get signedIn => '已登录';
+
+  @override
+  String get creatingInitialBackup => '正在创建初始备份...';
+
+  @override
+  String get successfullySignedInAndBackedUp => '成功登录并备份到 Google Drive';
+
+  @override
+  String get successfullySignedInAndBackedUpMessage => '成功登录并备份到 Google Drive！';
+
+  @override
+  String get successfullySignedInToGoogleDrive => '成功登录到 Google Drive';
+
+  @override
+  String get successfullySignedInToGoogleDriveMessage => '成功登录到 Google Drive！';
+
+  @override
+  String get signInCancelledOrFailed => '登录已取消或失败。请查看控制台了解详细信息。';
+
+  @override
+  String get failedToLaunchBrowser => '无法启动浏览器';
+
+  @override
+  String get signInCancelled => '登录已取消';
+
+  @override
+  String get failedToExchangeAuthorizationCode => '无法交换授权代码';
+
+  @override
+  String errorSigningIn(String error) {
+    return '登录错误: $error';
+  }
+
+  @override
+  String get unknownError => '未知错误';
+
+  @override
+  String get googleSignInError => 'Google 登录错误';
+
+  @override
+  String get developerConsoleNotSetUp =>
+      '开发者控制台未正确设置。请在 Google Cloud Console 中检查您的 OAuth 配置。';
+
+  @override
+  String get platformError => '平台错误';
+
+  @override
+  String get signedOutFromGoogleDrive => '已退出 Google Drive';
+
+  @override
+  String errorSigningOut(String error) {
+    return '退出错误: $error';
+  }
+
+  @override
+  String get syncing => '同步中...';
+
+  @override
+  String get errorNoProfileSelected => '错误: 未选择个人资料';
+
+  @override
+  String syncCompleted(
+    int projectsAdded,
+    int projectsUpdated,
+    int releasesAdded,
+    int releasesUpdated,
+  ) {
+    return '同步完成！项目: +$projectsAdded ~$projectsUpdated，发布: +$releasesAdded ~$releasesUpdated';
+  }
+
+  @override
+  String errorSyncing(String error) {
+    return '同步错误: $error';
+  }
+
+  @override
+  String get uploadingBackup => '正在上传备份...';
+
+  @override
+  String get backupUploadedSuccessfully => '备份上传成功！';
+
+  @override
+  String get backupUploadedSuccessfullyMessage => '备份已成功上传到 Google Drive！';
+
+  @override
+  String errorUploadingBackup(String error) {
+    return '上传备份错误: $error';
+  }
+
+  @override
+  String get downloadingBackup => '正在下载备份...';
+
+  @override
+  String get noBackupFileFound => '在 Google Drive 中未找到备份文件。请先通过同步数据创建备份。';
+
+  @override
+  String get noBackupFileFoundStatus => '未找到备份文件。请先创建备份。';
+
+  @override
+  String get downloadCancelled => '下载已取消';
+
+  @override
+  String backupDownloaded(
+    int projectsAdded,
+    int projectsUpdated,
+    int releasesAdded,
+    int releasesUpdated,
+  ) {
+    return '备份已下载！项目: +$projectsAdded ~$projectsUpdated，发布: +$releasesAdded ~$releasesUpdated';
+  }
+
+  @override
+  String errorDownloadingBackup(String error) {
+    return '下载备份错误: $error';
+  }
+
+  @override
+  String signedInAs(String email) {
+    return '登录为: $email';
+  }
+
+  @override
+  String lastSync(String date) {
+    return '最后同步: $date';
+  }
 }

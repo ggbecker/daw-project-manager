@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import '../../models/todo_item.dart';
 import '../../generated/l10n/app_localizations.dart';
@@ -21,6 +22,42 @@ class _TodoListWidgetState extends State<TodoListWidget> {
   final _textController = TextEditingController();
   final _uuid = const Uuid();
   bool _doneSectionExpanded = false; // Track if "Done" section is expanded
+  late List<TodoItem> _currentTodos; // Track current todos to detect changes
+
+  @override
+  void initState() {
+    super.initState();
+    _currentTodos = widget.todos;
+  }
+
+  @override
+  void didUpdateWidget(TodoListWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Update local state when todos prop changes (e.g., after sync)
+    // Always update if the lists are different (by reference or content)
+    if (widget.todos != _currentTodos) {
+      final hasChanges = widget.todos.length != _currentTodos.length ||
+          !_todosEqual(widget.todos, _currentTodos);
+      
+      if (hasChanges) {
+        setState(() {
+          _currentTodos = List.from(widget.todos); // Create a new list to ensure reference change
+        });
+      }
+    }
+  }
+
+  bool _todosEqual(List<TodoItem> a, List<TodoItem> b) {
+    if (a.length != b.length) return false;
+    for (int i = 0; i < a.length; i++) {
+      if (a[i].id != b[i].id || 
+          a[i].text != b[i].text || 
+          a[i].completed != b[i].completed) {
+        return false;
+      }
+    }
+    return true;
+  }
 
   @override
   void dispose() {
@@ -39,12 +76,12 @@ class _TodoListWidgetState extends State<TodoListWidget> {
       createdAt: DateTime.now(),
     );
 
-    widget.onTodosChanged([...widget.todos, newTodo]);
+    widget.onTodosChanged([..._currentTodos, newTodo]);
     _textController.clear();
   }
 
   void _toggleTodo(String id) {
-    final updatedTodos = widget.todos.map((todo) {
+    final updatedTodos = _currentTodos.map((todo) {
       if (todo.id == id) {
         // When marking as completed, update createdAt to current time so it appears at top of done list
         // When uncompleting, keep the original createdAt
@@ -66,7 +103,7 @@ class _TodoListWidgetState extends State<TodoListWidget> {
   }
 
   void _deleteTodo(String id) {
-    final updatedTodos = widget.todos.where((todo) => todo.id != id).toList();
+    final updatedTodos = _currentTodos.where((todo) => todo.id != id).toList();
     widget.onTodosChanged(updatedTodos);
   }
 
@@ -87,7 +124,7 @@ class _TodoListWidgetState extends State<TodoListWidget> {
           autofocus: true,
           onSubmitted: (value) {
             if (value.trim().isNotEmpty) {
-              final updatedTodos = widget.todos.map((t) {
+              final updatedTodos = _currentTodos.map((t) {
                 if (t.id == todo.id) {
                   return t.copyWith(text: value.trim());
                 }
@@ -107,7 +144,7 @@ class _TodoListWidgetState extends State<TodoListWidget> {
             onPressed: () {
               final text = editController.text.trim();
               if (text.isNotEmpty) {
-                final updatedTodos = widget.todos.map((t) {
+                final updatedTodos = _currentTodos.map((t) {
                   if (t.id == todo.id) {
                     return t.copyWith(text: text);
                   }
@@ -171,14 +208,15 @@ class _TodoListWidgetState extends State<TodoListWidget> {
             // Separate active and done todos
             Builder(
               builder: (context) {
-                final activeTodos = widget.todos.where((t) => !t.completed).toList();
+                // Use _currentTodos instead of widget.todos to ensure we show the latest data
+                final activeTodos = _currentTodos.where((t) => !t.completed).toList();
                 // Sort done todos by createdAt descending (most recently completed first)
-                final doneTodos = widget.todos
+                final doneTodos = _currentTodos
                     .where((t) => t.completed)
                     .toList()
                   ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
                 
-                if (widget.todos.isEmpty) {
+                if (_currentTodos.isEmpty) {
                   return Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Center(

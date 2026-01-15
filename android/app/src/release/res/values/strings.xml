@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Google Sign-In Client ID for Release Builds -->
+    <!-- This is the Web Client ID for release builds -->
+    <string name="default_web_client_id">675666653458-ri9lnh9i393t17km9o18qbsbibh0pd3c.apps.googleusercontent.com</string>
+</resources>
+
+

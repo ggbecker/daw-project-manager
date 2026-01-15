@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:uuid/uuid.dart';
 import '../models/profile.dart';
@@ -21,9 +22,8 @@ class ProfileRepository {
   });
 
   static Future<ProfileRepository> init() async {
-    // Initialize Hive with LocalAppData directory
-    final appDataPath = await getLocalAppDataPath();
-    Hive.init(appDataPath);
+    // Initialize Hive with LocalAppData directory (only once)
+    await ensureHiveInitialized();
     
     if (!Hive.isAdapterRegistered(5)) {
       Hive.registerAdapter(ProfileAdapter());
@@ -44,9 +44,16 @@ class ProfileRepository {
   }
 
   /// Migrates existing data to a default profile if no profiles exist
+  /// On mobile, does not create a default profile - waits for backup download
   Future<void> _migrateToDefaultProfile() async {
     if (profilesBox.isEmpty) {
-      // Create default profile
+      // On mobile, don't create a default profile - wait for backup download
+      if (Platform.isAndroid || Platform.isIOS) {
+        if (kDebugMode) print('Mobile platform: No default profile created. Waiting for backup download.');
+        return;
+      }
+      
+      // On desktop, create default profile
       final defaultProfile = Profile(
         id: _uuid.v4(),
         name: 'Default',

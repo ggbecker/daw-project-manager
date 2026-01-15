@@ -917,4 +917,287 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get dropAudioFileHere => 'Перетащите аудиофайл сюда';
+
+  @override
+  String projectAge(String age) {
+    return 'Возраст проекта: $age';
+  }
+
+  @override
+  String createdDate(String date) {
+    return 'создан $date';
+  }
+
+  @override
+  String completedIn(String duration) {
+    return 'Завершён за: $duration';
+  }
+
+  @override
+  String finishedDate(String date) {
+    return 'завершён $date';
+  }
+
+  @override
+  String get dateToday => 'сегодня';
+
+  @override
+  String get dateYesterday => 'вчера';
+
+  @override
+  String dateDaysAgo(int count) {
+    return '$count дн. назад';
+  }
+
+  @override
+  String dateWeeksAgo(int count, String plural) {
+    return '$count нед. назад';
+  }
+
+  @override
+  String dateMonthsAgo(int count, String plural) {
+    return '$count мес. назад';
+  }
+
+  @override
+  String dateYearsAgo(int count, String plural) {
+    return '$count г. назад';
+  }
+
+  @override
+  String ageYearsMonths(
+    int years,
+    String yearPlural,
+    int months,
+    String monthPlural,
+  ) {
+    return '$years г., $months мес.';
+  }
+
+  @override
+  String ageYears(int years, String plural) {
+    return '$years г.';
+  }
+
+  @override
+  String ageMonthsDays(
+    int months,
+    String monthPlural,
+    int days,
+    String dayPlural,
+  ) {
+    return '$months мес., $days дн.';
+  }
+
+  @override
+  String ageMonths(int months, String plural) {
+    return '$months мес.';
+  }
+
+  @override
+  String ageDays(int days, String plural) {
+    return '$days дн.';
+  }
+
+  @override
+  String ageHours(int hours, String plural) {
+    return '$hours ч.';
+  }
+
+  @override
+  String get ageJustNow => 'Только что';
+
+  @override
+  String get ageLessThanHour => 'Менее часа';
+
+  @override
+  String get viewProfile => 'Просмотр профиля';
+
+  @override
+  String get googleDriveSync => 'Синхронизация Google Drive';
+
+  @override
+  String get googleDriveSyncDescription =>
+      'Синхронизируйте свои данные с Google Drive для резервного копирования и восстановления между устройствами.';
+
+  @override
+  String get manageGoogleDriveSync => 'Управление синхронизацией Google Drive';
+
+  @override
+  String get signInToGoogleDrive => 'Войти в Google Drive';
+
+  @override
+  String get syncNow => 'Синхронизировать сейчас';
+
+  @override
+  String get uploadBackup => 'Загрузить резервную копию';
+
+  @override
+  String get downloadBackup => 'Скачать резервную копию';
+
+  @override
+  String get signOut => 'Выйти';
+
+  @override
+  String get downloadPreviewSongs => 'Скачать превью-песни';
+
+  @override
+  String get downloadPreviewSongsExplanation =>
+      'Если не отмечено, превью-песни будут пропущены (экономит время и место). Вы можете скачать их позже при необходимости.';
+
+  @override
+  String get replaceLocalData => 'Заменить локальные данные';
+
+  @override
+  String get downloadBackupConfirmation =>
+      'Это заменит ваши локальные данные резервной копией из Google Drive.\n\nВы уверены, что хотите продолжить?';
+
+  @override
+  String get enterAuthorizationCode => 'Ввести код авторизации';
+
+  @override
+  String get authorizationCode => 'Код авторизации';
+
+  @override
+  String get pasteCodeFromBrowser => 'Вставьте код из браузера';
+
+  @override
+  String get sessionActive => 'Сессия активна';
+
+  @override
+  String get signedIn => 'Вход выполнен';
+
+  @override
+  String get creatingInitialBackup => 'Создание начальной резервной копии...';
+
+  @override
+  String get successfullySignedInAndBackedUp =>
+      'Успешный вход и резервное копирование в Google Drive';
+
+  @override
+  String get successfullySignedInAndBackedUpMessage =>
+      'Успешный вход и резервное копирование в Google Drive!';
+
+  @override
+  String get successfullySignedInToGoogleDrive =>
+      'Успешный вход в Google Drive';
+
+  @override
+  String get successfullySignedInToGoogleDriveMessage =>
+      'Успешный вход в Google Drive!';
+
+  @override
+  String get signInCancelledOrFailed =>
+      'Вход отменен или не удался. Проверьте консоль для деталей.';
+
+  @override
+  String get failedToLaunchBrowser => 'Не удалось запустить браузер';
+
+  @override
+  String get signInCancelled => 'Вход отменен';
+
+  @override
+  String get failedToExchangeAuthorizationCode =>
+      'Не удалось обменять код авторизации';
+
+  @override
+  String errorSigningIn(String error) {
+    return 'Ошибка входа: $error';
+  }
+
+  @override
+  String get unknownError => 'Неизвестная ошибка';
+
+  @override
+  String get googleSignInError => 'Ошибка входа Google';
+
+  @override
+  String get developerConsoleNotSetUp =>
+      'Консоль разработчика настроена неправильно. Пожалуйста, проверьте конфигурацию OAuth в Google Cloud Console.';
+
+  @override
+  String get platformError => 'Ошибка платформы';
+
+  @override
+  String get signedOutFromGoogleDrive => 'Выход из Google Drive';
+
+  @override
+  String errorSigningOut(String error) {
+    return 'Ошибка выхода: $error';
+  }
+
+  @override
+  String get syncing => 'Синхронизация...';
+
+  @override
+  String get errorNoProfileSelected => 'Ошибка: Профиль не выбран';
+
+  @override
+  String syncCompleted(
+    int projectsAdded,
+    int projectsUpdated,
+    int releasesAdded,
+    int releasesUpdated,
+  ) {
+    return 'Синхронизация завершена! Проекты: +$projectsAdded ~$projectsUpdated, Релизы: +$releasesAdded ~$releasesUpdated';
+  }
+
+  @override
+  String errorSyncing(String error) {
+    return 'Ошибка синхронизации: $error';
+  }
+
+  @override
+  String get uploadingBackup => 'Загрузка резервной копии...';
+
+  @override
+  String get backupUploadedSuccessfully => 'Резервная копия успешно загружена!';
+
+  @override
+  String get backupUploadedSuccessfullyMessage =>
+      'Резервная копия успешно загружена в Google Drive!';
+
+  @override
+  String errorUploadingBackup(String error) {
+    return 'Ошибка загрузки резервной копии: $error';
+  }
+
+  @override
+  String get downloadingBackup => 'Скачивание резервной копии...';
+
+  @override
+  String get noBackupFileFound =>
+      'Файл резервной копии не найден в Google Drive. Сначала создайте резервную копию, синхронизировав данные.';
+
+  @override
+  String get noBackupFileFoundStatus =>
+      'Файл резервной копии не найден. Сначала создайте резервную копию.';
+
+  @override
+  String get downloadCancelled => 'Скачивание отменено';
+
+  @override
+  String backupDownloaded(
+    int projectsAdded,
+    int projectsUpdated,
+    int releasesAdded,
+    int releasesUpdated,
+  ) {
+    return 'Резервная копия скачана! Проекты: +$projectsAdded ~$projectsUpdated, Релизы: +$releasesAdded ~$releasesUpdated';
+  }
+
+  @override
+  String errorDownloadingBackup(String error) {
+    return 'Ошибка скачивания резервной копии: $error';
+  }
+
+  @override
+  String signedInAs(String email) {
+    return 'Вход выполнен как: $email';
+  }
+
+  @override
+  String lastSync(String date) {
+    return 'Последняя синхронизация: $date';
+  }
 }

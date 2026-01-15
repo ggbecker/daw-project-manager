@@ -11,12 +11,16 @@ import 'package:file_picker/file_picker.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:intl/intl.dart';
 import 'package:desktop_drop/desktop_drop.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../models/music_project.dart';
 import '../models/todo_item.dart';
 import '../providers/providers.dart';
 import '../repository/project_repository.dart';
+import '../utils/mobile_utils.dart';
 import '../generated/l10n/app_localizations.dart';
+import '../services/google_drive_sync_service.dart';
 import 'dashboard_page.dart';
 import 'widgets/todo_list_widget.dart';
 
@@ -34,6 +38,14 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
   late TextEditingController _bpmCtrl;
   late TextEditingController _keyCtrl;
   late TextEditingController _notesCtrl; // NOVO CONTROLLER
+  late FocusNode _nameFocusNode;
+  late FocusNode _bpmFocusNode;
+  late FocusNode _keyFocusNode;
+  late FocusNode _notesFocusNode;
+  String? _lastSavedName;
+  String? _lastSavedBpm;
+  String? _lastSavedKey;
+  String? _lastSavedNotes;
   String? _selectedPhase;
   bool _hasInitializedPhase = false; // Track if we've initialized the phase
   bool _extractingMetadata = false; // Track metadata extraction state
@@ -160,6 +172,10 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
     _bpmCtrl = TextEditingController();
     _keyCtrl = TextEditingController();
     _notesCtrl = TextEditingController(); // INICIALIZA
+    _nameFocusNode = FocusNode();
+    _bpmFocusNode = FocusNode();
+    _keyFocusNode = FocusNode();
+    _notesFocusNode = FocusNode();
     // Initialize with default phase - will be set in build method
   }
 
@@ -169,6 +185,10 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
     _bpmCtrl.dispose();
     _keyCtrl.dispose();
     _notesCtrl.dispose(); // DISPOSE
+    _nameFocusNode.dispose();
+    _bpmFocusNode.dispose();
+    _keyFocusNode.dispose();
+    _notesFocusNode.dispose();
     super.dispose();
   }
 
@@ -215,13 +235,22 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
   Widget build(BuildContext context) {
     final repoAsync = ref.watch(repositoryProvider);
     final allProjectsAsync = ref.watch(allProjectsStreamProvider);
+    final isMobile = MobileUtils.isMobile();
 
     return Scaffold(
-      appBar: null,
+      appBar: isMobile
+          ? AppBar(
+              title: Text(AppLocalizations.of(context)!.projectDetails),
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => Navigator.pop(context),
+              ),
+            )
+          : null,
       body: Column(
         children: [
-          // Window title bar
-          if (!kDebugMode)
+          // Window title bar (release mode) - desktop only
+          if (!isMobile && !kDebugMode)
             GestureDetector(
               onPanStart: (_) => windowManager.startDragging(),
               onDoubleTap: () async {
@@ -261,6 +290,31 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                 ),
               ),
             ),
+          // Debug mode back button (Windows desktop only)
+          if (!isMobile && kDebugMode && Platform.isWindows)
+            Container(
+              color: Theme.of(context).cardColor,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () => Navigator.pop(context),
+                    tooltip: AppLocalizations.of(context)!.back,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 4),
+                    child: Text(
+                      AppLocalizations.of(context)!.projectDetails,
+                      style: TextStyle(
+                        color: Theme.of(context).textTheme.titleMedium?.color,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           Expanded(
             child: repoAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -270,11 +324,17 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
               data: (repo) {
                 // Use projects from stream to get latest data, fallback to repo if stream not ready
                 // The stream should automatically update when Hive emits changes
-                // Use whenData to properly observe the stream
                 return allProjectsAsync.when(
                   data: (allProjects) {
                     final project = allProjects.firstWhere(
                       (p) => p.id == widget.projectId,
+                      orElse: () {
+                        // Fallback to repo if not found in stream
+                        final allProjectsFromRepo = repo.getAllProjects();
+                        return allProjectsFromRepo.firstWhere(
+                          (p) => p.id == widget.projectId,
+                        );
+                      },
                     );
                     return _buildProjectContent(repo, project, allProjectsAsync);
                   },
@@ -322,29 +382,70 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
         // Use the current project instead of the passed one
         final updatedProject = currentProject;
         
-        // Debug: Log when project preview song changes
-        if (kDebugMode && updatedProject.previewSongPath != project.previewSongPath) {
-          print('Project preview song changed in stream:');
-          print('  Old: ${project.previewSongPath}');
-          print('  New: ${updatedProject.previewSongPath}');
-        }
 
         // Sincroniza controllers com os dados do projeto
+        // Só atualiza se o campo não estiver com foco E se o texto não foi modificado pelo usuário
         WidgetsBinding.instance.addPostFrameCallback((_) {
           final currentName =
               updatedProject.customDisplayName ?? updatedProject.fileName;
-                  if (_nameCtrl.text != currentName) {
-                    _nameCtrl.text = currentName;
-                  }
-          if (_bpmCtrl.text != (updatedProject.bpm?.toString() ?? '')) {
-            _bpmCtrl.text = updatedProject.bpm?.toString() ?? '';
+          final currentBpm = updatedProject.bpm?.toString() ?? '';
+          final currentKey = updatedProject.musicalKey ?? '';
+          final currentNotes = updatedProject.notes ?? '';
+          
+          // Só atualiza se o campo não estiver com foco E se o texto atual for igual ao último valor salvo
+          // Isso preserva o texto digitado pelo usuário mesmo quando o foco muda
+          if (!_nameFocusNode.hasFocus) {
+            if (_lastSavedName == null || _nameCtrl.text == _lastSavedName) {
+              if (_nameCtrl.text != currentName) {
+                _nameCtrl.text = currentName;
+                _lastSavedName = currentName;
+              }
+            } else {
+              // Se o texto foi modificado pelo usuário, atualiza o valor salvo apenas se ainda não foi inicializado
+              if (_lastSavedName == null) {
+                _lastSavedName = currentName;
+              }
+            }
           }
-          if (_keyCtrl.text != (updatedProject.musicalKey ?? '')) {
-            _keyCtrl.text = updatedProject.musicalKey ?? '';
+          
+          if (!_bpmFocusNode.hasFocus) {
+            if (_lastSavedBpm == null || _bpmCtrl.text == _lastSavedBpm) {
+              if (_bpmCtrl.text != currentBpm) {
+                _bpmCtrl.text = currentBpm;
+                _lastSavedBpm = currentBpm;
+              }
+            } else {
+              if (_lastSavedBpm == null) {
+                _lastSavedBpm = currentBpm;
+              }
+            }
           }
-          // NOVO: Sincroniza Notas
-          if (_notesCtrl.text != (updatedProject.notes ?? '')) {
-            _notesCtrl.text = updatedProject.notes ?? '';
+          
+          if (!_keyFocusNode.hasFocus) {
+            if (_lastSavedKey == null || _keyCtrl.text == _lastSavedKey) {
+              if (_keyCtrl.text != currentKey) {
+                _keyCtrl.text = currentKey;
+                _lastSavedKey = currentKey;
+              }
+            } else {
+              if (_lastSavedKey == null) {
+                _lastSavedKey = currentKey;
+              }
+            }
+          }
+          
+          // NOVO: Sincroniza Notas - só atualiza se não estiver com foco E se o texto não foi modificado
+          if (!_notesFocusNode.hasFocus) {
+            if (_lastSavedNotes == null || _notesCtrl.text == _lastSavedNotes) {
+              if (_notesCtrl.text != currentNotes) {
+                _notesCtrl.text = currentNotes;
+                _lastSavedNotes = currentNotes;
+              }
+            } else {
+              if (_lastSavedNotes == null) {
+                _lastSavedNotes = currentNotes;
+              }
+            }
           }
           // Sincroniza fase do projeto (only on first load)
           if (!_hasInitializedPhase) {
@@ -362,10 +463,11 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                   }
                 });
 
+        final isMobile = MobileUtils.isMobile();
         return Stack(
           children: [
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: MobileUtils.getResponsivePadding(context),
               child: Form(
                 key: _formKey,
                 child: ListView(
@@ -378,15 +480,18 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                               ),
                             ),
                     const SizedBox(height: 8),
-                    Text(
-                      updatedProject.filePath,
-                              style: TextStyle(
-                                color: Theme.of(
-                                  context,
-                                ).textTheme.bodyMedium?.color,
+                    // Only show full path on desktop, not on mobile
+                    if (!isMobile)
+                      Text(
+                        updatedProject.filePath,
+                                style: TextStyle(
+                                  color: Theme.of(
+                                    context,
+                                  ).textTheme.bodyMedium?.color,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 16),
+                    if (!isMobile) const SizedBox(height: 16),
+                    if (isMobile) const SizedBox(height: 8),
                     Text(
                       AppLocalizations.of(context)!.lastModified(
 updatedProject.lastModifiedAt.toString(),
@@ -455,6 +560,7 @@ updatedProject.lastModifiedAt.toString(),
                             // Campo para editar o nome de exibição customizado
                             TextFormField(
                               controller: _nameCtrl,
+                              focusNode: _nameFocusNode,
                               decoration: InputDecoration(
                                 labelText: AppLocalizations.of(
                                   context,
@@ -462,109 +568,137 @@ updatedProject.lastModifiedAt.toString(),
                               ),
                             ),
                             const SizedBox(height: 12),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: TextFormField(
-                                    controller: _bpmCtrl,
-                                    decoration: InputDecoration(
-                                      labelText: AppLocalizations.of(
-                                        context,
-                                      )!.bpm,
-                                    ),
-                                    keyboardType: TextInputType.number,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: TextFormField(
-                                    controller: _keyCtrl,
-                                    decoration: InputDecoration(
-                                      labelText: AppLocalizations.of(
-                                        context,
-                                      )!.key,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                ElevatedButton.icon(
-                                  onPressed: _extractingMetadata
-                                      ? null
-                                      : () async {
-                                          setState(
-                                            () => _extractingMetadata = true,
-                                          );
-                                          try {
-                                            await repo
-                                                .extractFullMetadataForProject(
-                                                  updatedProject.id,
-                                                );
-                                            // Refresh the project data
-                                            ref.invalidate(
-                                              allProjectsStreamProvider,
-                                            );
-                                            if (mounted) {
-                                              ScaffoldMessenger.of(
-                                                context,
-                                              ).showSnackBar(
-                                                SnackBar(
-                                                  content: Text(
-                                                    AppLocalizations.of(
-                                                      context,
-                                                    )!.metadataExtractedSuccessfully,
-                                                  ),
-                                                ),
-                                              );
-                                            }
-                                          } catch (e) {
-                                            if (mounted) {
-                                              ScaffoldMessenger.of(
-                                                context,
-                                              ).showSnackBar(
-                                                SnackBar(
-                                                  content: Text(
-                                                    AppLocalizations.of(
-                                                      context,
-                                                    )!.failedToExtractMetadata(
-                                                      e.toString(),
-                                                    ),
-                                                  ),
-                                                ),
-                                              );
-                                            }
-                                          } finally {
-                                            if (mounted) {
-                                              setState(
-                                                () =>
-                                                    _extractingMetadata = false,
-                                              );
-                                            }
-                                          }
-                                        },
-                                  icon: _extractingMetadata
-                                      ? const SizedBox(
-                                          width: 16,
-                                          height: 16,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                          ),
-                                        )
-                                      : const Icon(Icons.search, size: 18),
-                                  label: Text(
-                                    _extractingMetadata
-                                        ? AppLocalizations.of(
+                            // Use Column on mobile, Row on desktop
+                            isMobile
+                                ? Column(
+                                    children: [
+                                      TextFormField(
+                                        controller: _bpmCtrl,
+                                        focusNode: _bpmFocusNode,
+                                        decoration: InputDecoration(
+                                          labelText: AppLocalizations.of(
                                             context,
-                                          )!.extracting
-                                        : AppLocalizations.of(context)!.extract,
+                                          )!.bpm,
+                                        ),
+                                        keyboardType: TextInputType.number,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      TextFormField(
+                                        controller: _keyCtrl,
+                                        focusNode: _keyFocusNode,
+                                        decoration: InputDecoration(
+                                          labelText: AppLocalizations.of(
+                                            context,
+                                          )!.key,
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                : Row(
+                                    children: [
+                                      Expanded(
+                                        child: TextFormField(
+                                          controller: _bpmCtrl,
+                                          focusNode: _bpmFocusNode,
+                                          decoration: InputDecoration(
+                                            labelText: AppLocalizations.of(
+                                              context,
+                                            )!.bpm,
+                                          ),
+                                          keyboardType: TextInputType.number,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: TextFormField(
+                                          controller: _keyCtrl,
+                                          focusNode: _keyFocusNode,
+                                          decoration: InputDecoration(
+                                            labelText: AppLocalizations.of(
+                                              context,
+                                            )!.key,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      ElevatedButton.icon(
+                                        onPressed: _extractingMetadata
+                                            ? null
+                                            : () async {
+                                                setState(
+                                                  () => _extractingMetadata = true,
+                                                );
+                                                try {
+                                                  await repo
+                                                      .extractFullMetadataForProject(
+                                                        updatedProject.id,
+                                                      );
+                                                  // Refresh the project data
+                                                  ref.invalidate(
+                                                    allProjectsStreamProvider,
+                                                  );
+                                                  if (mounted) {
+                                                    ScaffoldMessenger.of(
+                                                      context,
+                                                    ).showSnackBar(
+                                                      SnackBar(
+                                                        content: Text(
+                                                          AppLocalizations.of(
+                                                            context,
+                                                          )!.metadataExtractedSuccessfully,
+                                                        ),
+                                                      ),
+                                                    );
+                                                  }
+                                                } catch (e) {
+                                                  if (mounted) {
+                                                    ScaffoldMessenger.of(
+                                                      context,
+                                                    ).showSnackBar(
+                                                      SnackBar(
+                                                        content: Text(
+                                                          AppLocalizations.of(
+                                                            context,
+                                                          )!.failedToExtractMetadata(
+                                                            e.toString(),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    );
+                                                  }
+                                                } finally {
+                                                  if (mounted) {
+                                                    setState(
+                                                      () =>
+                                                          _extractingMetadata = false,
+                                                    );
+                                                  }
+                                                }
+                                              },
+                                        icon: _extractingMetadata
+                                            ? const SizedBox(
+                                                width: 16,
+                                                height: 16,
+                                                child: CircularProgressIndicator(
+                                                  strokeWidth: 2,
+                                                ),
+                                              )
+                                            : const Icon(Icons.search, size: 18),
+                                        label: Text(
+                                          _extractingMetadata
+                                              ? AppLocalizations.of(
+                                                  context,
+                                                )!.extracting
+                                              : AppLocalizations.of(context)!.extract,
+                                        ),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Theme.of(
+                                            context,
+                                          ).colorScheme.primary,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Theme.of(
-                                      context,
-                                    ).colorScheme.primary,
-                                  ),
-                                ),
-                              ],
-                            ),
                             const SizedBox(height: 12),
 
                             // Project Phase Dropdown
@@ -594,6 +728,7 @@ updatedProject.lastModifiedAt.toString(),
                             // NOVO: CAMPO DE NOTAS
                             TextFormField(
                               controller: _notesCtrl,
+                              focusNode: _notesFocusNode,
                               decoration: InputDecoration(
                                 labelText: AppLocalizations.of(context)!.notes,
                                 alignLabelWithHint: true,
@@ -682,8 +817,21 @@ updatedProject.lastModifiedAt.toString(),
                                 }
                               },
                               onSongChanged: (filePath) async {
+                                // Calculate hash for the new preview song file
+                                String? previewSongHash;
+                                try {
+                                  final syncService = ref.read(googleDriveSyncServiceProvider);
+                                  previewSongHash = await syncService.calculateFileHash(filePath);
+                                } catch (e) {
+                                  if (kDebugMode) {
+                                    print('Error calculating hash for preview song: $e');
+                                  }
+                                }
+                                
                                 final updated = project.copyWith(
                                   previewSongPath: filePath,
+                                  previewSongHash: previewSongHash,
+                                  previewSongFileName: p.basename(filePath),
                                 );
                                 await repo.updateProject(updated);
                                 if (mounted) {
@@ -706,7 +854,9 @@ updatedProject.lastModifiedAt.toString(),
 
                             const SizedBox(height: 24),
                             // TODO List
+                            // Use key to force widget rebuild when todos change
                             TodoListWidget(
+                              key: ValueKey('${updatedProject.id}_${updatedProject.todos.length}_${updatedProject.todos.map((t) => t.id).join(",")}'),
                               todos: updatedProject.todos,
                               onTodosChanged: (updatedTodos) async {
                                 final updated = updatedProject.copyWith(
@@ -721,120 +871,195 @@ updatedProject.lastModifiedAt.toString(),
                             ),
 
                             const SizedBox(height: 24),
-                            Row(
-                              children: [
-                                // BOTÃO: SAVE (LÓGICA ATUALIZADA)
-                                ElevatedButton.icon(
-                                  onPressed: () async {
-                                    // O campo name atualiza customDisplayName. Se o texto for vazio ou igual ao nome do arquivo original, ele deve ser null.
-                                    final nameText = _nameCtrl.text.trim();
-                                    final newCustomDisplayName =
-                                        (nameText.isEmpty ||
-                                            nameText == updatedProject.fileName)
-                                        ? null
-                                        : nameText;
+                            // Use Wrap on mobile, Row on desktop
+                            isMobile
+                                ? Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: [
+                                      SizedBox(
+                                        width: double.infinity,
+                                        child: ElevatedButton.icon(
+                                          onPressed: () async {
+                                            // O campo name atualiza customDisplayName. Se o texto for vazio ou igual ao nome do arquivo original, ele deve ser null.
+                                            final nameText = _nameCtrl.text.trim();
+                                            final newCustomDisplayName =
+                                                (nameText.isEmpty ||
+                                                    nameText == updatedProject.fileName)
+                                                ? null
+                                                : nameText;
 
-                                    final notesText = _notesCtrl.text.trim();
-                                    final newNotes = notesText.isEmpty
-                                        ? null
-                                        : notesText;
+                                            final notesText = _notesCtrl.text.trim();
+                                            final newNotes = notesText.isEmpty
+                                                ? null
+                                                : notesText;
 
-                                    // Determine new status and check if it changed
-                                    final newStatus = _selectedPhase != null
-                                        ? _translateStatusToEnglish(_selectedPhase!)
-                                        : 'Idea';
-                                    final statusChanged = project.status != newStatus;
+                                            // Determine new status and check if it changed
+                                            final newStatus = _selectedPhase != null
+                                                ? _translateStatusToEnglish(_selectedPhase!)
+                                                : 'Idea';
+                                            final statusChanged = project.status != newStatus;
 
-                                    final updated = project.copyWith(
-                                      customDisplayName: newCustomDisplayName,
-                                      bpm: _bpmCtrl.text.trim().isEmpty
-                                          ? null
-                                          : double.tryParse(
-                                              _bpmCtrl.text.trim(),
-                                            ),
-                                      musicalKey: _keyCtrl.text.trim().isEmpty
-                                          ? null
-                                          : _keyCtrl.text.trim(),
-                                      notes: newNotes, // NOVO: Salva Notas
-                                      status: newStatus, // Save project phase
-                                      statusChangedAt: statusChanged ? DateTime.now() : null,
-                                    );
+                                            final updated = project.copyWith(
+                                              customDisplayName: newCustomDisplayName,
+                                              bpm: _bpmCtrl.text.trim().isEmpty
+                                                  ? null
+                                                  : double.tryParse(
+                                                      _bpmCtrl.text.trim(),
+                                                    ),
+                                              musicalKey: _keyCtrl.text.trim().isEmpty
+                                                  ? null
+                                                  : _keyCtrl.text.trim(),
+                                              notes: newNotes, // NOVO: Salva Notas
+                                              status: newStatus, // Save project phase
+                                              statusChangedAt: statusChanged ? DateTime.now() : null,
+                                            );
 
-                                    await repo.updateProject(updated);
-                                    if (mounted) {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            AppLocalizations.of(context)!.saved,
+                                            await repo.updateProject(updated);
+                                            // Atualiza os valores salvos para preservar o texto na próxima reconstrução
+                                            _lastSavedName = newCustomDisplayName ?? updatedProject.fileName;
+                                            _lastSavedBpm = _bpmCtrl.text.trim();
+                                            _lastSavedKey = _keyCtrl.text.trim();
+                                            _lastSavedNotes = newNotes ?? '';
+                                            if (mounted) {
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
+                                                SnackBar(
+                                                  content: Text(
+                                                    AppLocalizations.of(context)!.saved,
+                                                  ),
+                                                ),
+                                              );
+                                            }
+                                          },
+                                          icon: const Icon(Icons.save),
+                                          label: Text(
+                                            AppLocalizations.of(context)!.save,
                                           ),
                                         ),
-                                      );
-                                    }
-                                  },
-                                  icon: const Icon(Icons.save),
-                                  label: Text(
-                                    AppLocalizations.of(context)!.save,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
+                                      ),
+                                    ],
+                                  )
+                                : Row(
+                                    children: [
+                                      // BOTÃO: SAVE (LÓGICA ATUALIZADA)
+                                      ElevatedButton.icon(
+                                        onPressed: () async {
+                                          // O campo name atualiza customDisplayName. Se o texto for vazio ou igual ao nome do arquivo original, ele deve ser null.
+                                          final nameText = _nameCtrl.text.trim();
+                                          final newCustomDisplayName =
+                                              (nameText.isEmpty ||
+                                                  nameText == updatedProject.fileName)
+                                              ? null
+                                              : nameText;
 
-                                // NOVO: BOTÃO OPEN FOLDER
-                                ElevatedButton.icon(
-                                  onPressed: () =>
-                                      _openProjectFolder(updatedProject.filePath),
-                                  icon: const Icon(Icons.folder_open),
-                                  label: Text(
-                                    AppLocalizations.of(context)!.openFolder,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
+                                          final notesText = _notesCtrl.text.trim();
+                                          final newNotes = notesText.isEmpty
+                                              ? null
+                                              : notesText;
 
-                                // BOTÃO OPEN IN DAW (Existente)
-                                ElevatedButton.icon(
-                                  onPressed: () async {
-                                    try {
-                                      if (Platform.isMacOS) {
-                                        await Process.start('open', [
-                                          updatedProject.filePath,
-                                        ]);
-                                      } else if (Platform.isWindows) {
-                                        await Process.start('cmd', [
-                                          '/c',
-                                          'start',
-                                          '',
-                                          updatedProject.filePath,
-                                        ]);
-                                      } else {
-                                        await Process.start(
-                                          updatedProject.filePath,
-                                          [],
-                                        );
-                                      }
-                                    } catch (_) {
-                                      if (mounted) {
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              AppLocalizations.of(
+                                          // Determine new status and check if it changed
+                                          final newStatus = _selectedPhase != null
+                                              ? _translateStatusToEnglish(_selectedPhase!)
+                                              : 'Idea';
+                                          final statusChanged = project.status != newStatus;
+
+                                          final updated = project.copyWith(
+                                            customDisplayName: newCustomDisplayName,
+                                            bpm: _bpmCtrl.text.trim().isEmpty
+                                                ? null
+                                                : double.tryParse(
+                                                    _bpmCtrl.text.trim(),
+                                                  ),
+                                            musicalKey: _keyCtrl.text.trim().isEmpty
+                                                ? null
+                                                : _keyCtrl.text.trim(),
+                                            notes: newNotes, // NOVO: Salva Notas
+                                            status: newStatus, // Save project phase
+                                            statusChangedAt: statusChanged ? DateTime.now() : null,
+                                          );
+
+                                          await repo.updateProject(updated);
+                                          // Atualiza os valores salvos para preservar o texto na próxima reconstrução
+                                          _lastSavedName = newCustomDisplayName ?? updatedProject.fileName;
+                                          _lastSavedBpm = _bpmCtrl.text.trim();
+                                          _lastSavedKey = _keyCtrl.text.trim();
+                                          _lastSavedNotes = newNotes ?? '';
+                                          if (mounted) {
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  AppLocalizations.of(context)!.saved,
+                                                ),
+                                              ),
+                                            );
+                                          }
+                                        },
+                                        icon: const Icon(Icons.save),
+                                        label: Text(
+                                          AppLocalizations.of(context)!.save,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+
+                                      // NOVO: BOTÃO OPEN FOLDER
+                                      ElevatedButton.icon(
+                                        onPressed: () =>
+                                            _openProjectFolder(updatedProject.filePath),
+                                        icon: const Icon(Icons.folder_open),
+                                        label: Text(
+                                          AppLocalizations.of(context)!.openFolder,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+
+                                      // BOTÃO OPEN IN DAW (Existente)
+                                      ElevatedButton.icon(
+                                        onPressed: () async {
+                                          try {
+                                            if (Platform.isMacOS) {
+                                              await Process.start('open', [
+                                                updatedProject.filePath,
+                                              ]);
+                                            } else if (Platform.isWindows) {
+                                              await Process.start('cmd', [
+                                                '/c',
+                                                'start',
+                                                '',
+                                                updatedProject.filePath,
+                                              ]);
+                                            } else {
+                                              await Process.start(
+                                                updatedProject.filePath,
+                                                [],
+                                              );
+                                            }
+                                          } catch (_) {
+                                            if (mounted) {
+                                              ScaffoldMessenger.of(
                                                 context,
-                                              )!.failedToLaunchDaw,
-                                            ),
-                                          ),
-                                        );
-                                      }
-                                    }
-                                  },
-                                  icon: const Icon(Icons.open_in_new),
-                                  label: Text(
-                                    AppLocalizations.of(context)!.openInDaw,
+                                              ).showSnackBar(
+                                                SnackBar(
+                                                  content: Text(
+                                                    AppLocalizations.of(
+                                                      context,
+                                                    )!.failedToLaunchDaw,
+                                                  ),
+                                                ),
+                                              );
+                                            }
+                                          }
+                                        },
+                                        icon: const Icon(Icons.open_in_new),
+                                        label: Text(
+                                          AppLocalizations.of(context)!.openInDaw,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                              ],
-                            ),
                   ],
                 ),
               ),
@@ -874,7 +1099,7 @@ updatedProject.lastModifiedAt.toString(),
   }
 }
 
-class _PreviewSongPlayer extends StatefulWidget {
+class _PreviewSongPlayer extends ConsumerStatefulWidget {
   final MusicProject project;
   final Future<void> Function() onSongRemoved;
   final Future<void> Function(String) onSongChanged;
@@ -887,14 +1112,14 @@ class _PreviewSongPlayer extends StatefulWidget {
   });
 
   @override
-  State<_PreviewSongPlayer> createState() => _PreviewSongPlayerState();
+  ConsumerState<_PreviewSongPlayer> createState() => _PreviewSongPlayerState();
 }
 
 class _TogglePlayPauseIntent extends Intent {
   const _TogglePlayPauseIntent();
 }
 
-class _PreviewSongPlayerState extends State<_PreviewSongPlayer> {
+class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
   final AudioPlayer _audioPlayer = AudioPlayer();
   final FocusNode _focusNode = FocusNode();
   bool _isPlaying = false;
@@ -908,6 +1133,9 @@ class _PreviewSongPlayerState extends State<_PreviewSongPlayer> {
     super.initState();
     _audioPlayer.onPlayerStateChanged.listen((state) {
       if (mounted) {
+        if (kDebugMode) {
+          print('Audio player state changed: $state');
+        }
         setState(() {
           _isPlaying = state == PlayerState.playing;
         });
@@ -915,6 +1143,9 @@ class _PreviewSongPlayerState extends State<_PreviewSongPlayer> {
     });
     _audioPlayer.onDurationChanged.listen((duration) {
       if (mounted) {
+        if (kDebugMode) {
+          print('Audio duration changed: $duration');
+        }
         setState(() {
           _duration = duration;
         });
@@ -924,6 +1155,31 @@ class _PreviewSongPlayerState extends State<_PreviewSongPlayer> {
       if (mounted) {
         setState(() {
           _position = position;
+        });
+      }
+    });
+    // Listen for player logs (if available)
+    try {
+      _audioPlayer.onLog.listen((message) {
+        if (kDebugMode) {
+          print('Audio player log: $message');
+        }
+      });
+    } catch (e) {
+      // onLog might not be available in all versions
+      if (kDebugMode) {
+        print('onLog not available: $e');
+      }
+    }
+    // Listen for completion
+    _audioPlayer.onPlayerComplete.listen((_) {
+      if (mounted) {
+        if (kDebugMode) {
+          print('Audio playback completed');
+        }
+        setState(() {
+          _isPlaying = false;
+          _position = Duration.zero;
         });
       }
     });
@@ -966,30 +1222,48 @@ class _PreviewSongPlayerState extends State<_PreviewSongPlayer> {
       return;
     }
 
-    final file = File(widget.project.previewSongPath!);
-    if (!await file.exists()) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)!.previewSongFileNotFound,
-            ),
-          ),
-        );
-      }
-      return;
-    }
-
     try {
       if (_isPlaying) {
         await _audioPlayer.pause();
       } else {
-        if (_position == Duration.zero || _position >= _duration) {
-          await _audioPlayer.play(
-            DeviceFileSource(widget.project.previewSongPath!),
-          );
+        // Check if it's a Drive file reference (format: "drive://fileId")
+        // Preview songs should already be downloaded during backup merge
+        // If it's still a Drive reference, it means download failed or file doesn't exist
+        if (widget.project.previewSongPath!.startsWith('drive://')) {
+          // If we still have a Drive reference, the file wasn't downloaded
+          // This shouldn't happen if backup was downloaded correctly, but handle gracefully
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Preview song not available. Please download backup again.',
+                ),
+              ),
+            );
+          }
+          return;
         } else {
-          await _audioPlayer.resume();
+          // Local file - check if it exists
+          final file = File(widget.project.previewSongPath!);
+          if (!await file.exists()) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    AppLocalizations.of(context)!.previewSongFileNotFound,
+                  ),
+                ),
+              );
+            }
+            return;
+          }
+          
+          // Use device file source for local files
+          if (_position == Duration.zero || _position >= _duration) {
+            await _audioPlayer.play(DeviceFileSource(widget.project.previewSongPath!));
+          } else {
+            await _audioPlayer.resume();
+          }
         }
       }
     } catch (e) {
@@ -1010,6 +1284,76 @@ class _PreviewSongPlayerState extends State<_PreviewSongPlayer> {
     setState(() {
       _position = Duration.zero;
     });
+  }
+
+  Future<void> _sharePreviewSong() async {
+    if (widget.project.previewSongPath == null || widget.project.previewSongPath!.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Preview song file not found')),
+        );
+      }
+      return;
+    }
+
+    // Skip if it's a Drive file reference (not downloaded)
+    if (widget.project.previewSongPath!.startsWith('drive://')) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Preview song not available. Please download backup first.')),
+        );
+      }
+      return;
+    }
+
+    try {
+      final sourceFile = File(widget.project.previewSongPath!);
+      if (!await sourceFile.exists()) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Preview song file not found')),
+          );
+        }
+        return;
+      }
+
+      // Get the original filename or use a default
+      String originalFileName = widget.project.previewSongFileName ?? 
+          p.basename(widget.project.previewSongPath!);
+      
+      // Ensure the filename has an extension
+      if (!originalFileName.contains('.')) {
+        final ext = p.extension(widget.project.previewSongPath!);
+        originalFileName = '$originalFileName$ext';
+      }
+
+      // On Android, copy to cache directory with original name for sharing
+      if (Platform.isAndroid) {
+        final cacheDir = await getTemporaryDirectory();
+        final shareFile = File(p.join(cacheDir.path, originalFileName));
+        
+        // Copy file to cache with original name
+        await sourceFile.copy(shareFile.path);
+        
+        // Share the file
+        await Share.shareXFiles(
+          [XFile(shareFile.path)],
+          text: 'Preview song: ${widget.project.displayName}',
+        );
+      } else {
+        // On other platforms, share the file directly
+        await Share.shareXFiles(
+          [XFile(sourceFile.path)],
+          text: 'Preview song: ${widget.project.displayName}',
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to share preview song: ${e.toString()}')),
+        );
+      }
+    }
   }
 
   String _formatDuration(Duration duration) {
@@ -1160,7 +1504,11 @@ class _PreviewSongPlayerState extends State<_PreviewSongPlayer> {
                         children: [
                           Expanded(
                             child: Text(
-                              p.basename(widget.project.previewSongPath!),
+                              // Use previewSongFileName if available (original filename), otherwise use basename
+                              widget.project.previewSongFileName ?? 
+                              (widget.project.previewSongPath != null 
+                                ? p.basename(widget.project.previewSongPath!)
+                                : ''),
                               style: TextStyle(
                                 color: Theme.of(
                                   context,
@@ -1321,41 +1669,52 @@ class _PreviewSongPlayerState extends State<_PreviewSongPlayer> {
                     ],
                   ),
                 const SizedBox(height: 8),
-                ElevatedButton.icon(
-                  onPressed: () async {
-                    // Get the project's directory to start the file picker there
-                    final projectDir = p.dirname(widget.project.filePath);
-
-                    // Open file picker - attempt to start in project directory
-                    // Note: file_picker package doesn't support initialDirectory parameter directly
-                    // On Windows, the file picker may open in the project directory if it's accessible
-                    // The user can navigate to the project folder if needed
-                    final result = await FilePicker.platform.pickFiles(
-                      type: FileType.custom,
-                      allowedExtensions: [
-                        'mp3',
-                        'wav',
-                        'm4a',
-                        'aac',
-                        'ogg',
-                        'flac',
-                      ],
-                      dialogTitle: AppLocalizations.of(
-                        context,
-                      )!.selectPreviewSong,
-                    );
-                    if (result != null && result.files.single.path != null) {
-                      widget.onSongChanged(result.files.single.path!);
-                    }
-                  },
-                  icon: const Icon(Icons.audio_file),
-                  label: Text(
-                    widget.project.previewSongPath != null &&
+                // On mobile, show Share button instead of Change Preview Song
+                // On desktop, show Change Preview Song button
+                Platform.isAndroid || Platform.isIOS
+                    ? (widget.project.previewSongPath != null &&
                             widget.project.previewSongPath!.isNotEmpty
-                        ? AppLocalizations.of(context)!.changePreviewSong
-                        : AppLocalizations.of(context)!.selectPreviewSong,
-                  ),
-                ),
+                        ? ElevatedButton.icon(
+                            onPressed: _sharePreviewSong,
+                            icon: const Icon(Icons.share),
+                            label: const Text('Share'),
+                          )
+                        : const SizedBox.shrink())
+                    : ElevatedButton.icon(
+                        onPressed: () async {
+                          // Get the project's directory to start the file picker there
+                          final projectDir = p.dirname(widget.project.filePath);
+
+                          // Open file picker - attempt to start in project directory
+                          // Note: file_picker package doesn't support initialDirectory parameter directly
+                          // On Windows, the file picker may open in the project directory if it's accessible
+                          // The user can navigate to the project folder if needed
+                          final result = await FilePicker.platform.pickFiles(
+                            type: FileType.custom,
+                            allowedExtensions: [
+                              'mp3',
+                              'wav',
+                              'm4a',
+                              'aac',
+                              'ogg',
+                              'flac',
+                            ],
+                            dialogTitle: AppLocalizations.of(
+                              context,
+                            )!.selectPreviewSong,
+                          );
+                          if (result != null && result.files.single.path != null) {
+                            widget.onSongChanged(result.files.single.path!);
+                          }
+                        },
+                        icon: const Icon(Icons.audio_file),
+                        label: Text(
+                          widget.project.previewSongPath != null &&
+                                  widget.project.previewSongPath!.isNotEmpty
+                              ? AppLocalizations.of(context)!.changePreviewSong
+                              : AppLocalizations.of(context)!.selectPreviewSong,
+                        ),
+                      ),
               ],
             ),
           ),

@@ -951,6 +951,264 @@
     }
   },
   "ageJustNow": "Just now",
-  "ageLessThanHour": "Less than an hour"
+  "ageLessThanHour": "Less than an hour",
+  "viewProfile": "View Profile",
+  "@viewProfile": {
+    "description": "Button to view profile details"
+  },
+  "googleDriveSync": "Google Drive Sync",
+  "@googleDriveSync": {
+    "description": "Title for Google Drive sync section"
+  },
+  "googleDriveSyncDescription": "Sync your data with Google Drive to backup and restore across devices.",
+  "@googleDriveSyncDescription": {
+    "description": "Description text for Google Drive sync feature"
+  },
+  "manageGoogleDriveSync": "Manage Google Drive Sync",
+  "@manageGoogleDriveSync": {
+    "description": "Button to open Google Drive sync management page"
+  },
+  "signInToGoogleDrive": "Sign in to Google Drive",
+  "@signInToGoogleDrive": {
+    "description": "Button to sign in to Google Drive"
+  },
+  "syncNow": "Sync Now",
+  "@syncNow": {
+    "description": "Button to sync data with Google Drive"
+  },
+  "uploadBackup": "Upload Backup",
+  "@uploadBackup": {
+    "description": "Button to upload backup to Google Drive"
+  },
+  "downloadBackup": "Download Backup",
+  "@downloadBackup": {
+    "description": "Button to download backup from Google Drive"
+  },
+  "signOut": "Sign Out",
+  "@signOut": {
+    "description": "Button to sign out from Google Drive"
+  },
+  "downloadPreviewSongs": "Download preview songs",
+  "@downloadPreviewSongs": {
+    "description": "Checkbox label for downloading preview songs"
+  },
+  "downloadPreviewSongsExplanation": "If unchecked, preview songs will be skipped (saves time and storage). You can download them later if needed.",
+  "@downloadPreviewSongsExplanation": {
+    "description": "Explanation text for preview songs download option"
+  },
+  "replaceLocalData": "Replace Local Data",
+  "@replaceLocalData": {
+    "description": "Button to confirm replacing local data with backup"
+  },
+  "downloadBackupConfirmation": "This will replace your local data with the backup from Google Drive.\n\nAre you sure you want to continue?",
+  "@downloadBackupConfirmation": {
+    "description": "Confirmation message for downloading backup"
+  },
+  "enterAuthorizationCode": "Enter Authorization Code",
+  "@enterAuthorizationCode": {
+    "description": "Dialog title for entering authorization code"
+  },
+  "authorizationCode": "Authorization Code",
+  "@authorizationCode": {
+    "description": "Label for authorization code input field"
+  },
+  "pasteCodeFromBrowser": "Paste the code from the browser",
+  "@pasteCodeFromBrowser": {
+    "description": "Hint text for authorization code input field"
+  },
+  "continueButton": "Continue",
+  "@continueButton": {
+    "description": "Button to continue with authorization code"
+  },
+  "sessionActive": "Session active",
+  "@sessionActive": {
+    "description": "Status message when Google Drive session is active"
+  },
+  "signedIn": "Signed in",
+  "@signedIn": {
+    "description": "Status message when signed in to Google Drive"
+  },
+  "creatingInitialBackup": "Creating initial backup...",
+  "@creatingInitialBackup": {
+    "description": "Status message when creating initial backup"
+  },
+  "successfullySignedInAndBackedUp": "Successfully signed in and backed up to Google Drive",
+  "@successfullySignedInAndBackedUp": {
+    "description": "Success message when signed in and backed up"
+  },
+  "successfullySignedInAndBackedUpMessage": "Successfully signed in and backed up to Google Drive!",
+  "@successfullySignedInAndBackedUpMessage": {
+    "description": "Snackbar message when signed in and backed up"
+  },
+  "successfullySignedInToGoogleDrive": "Successfully signed in to Google Drive",
+  "@successfullySignedInToGoogleDrive": {
+    "description": "Success message when signed in"
+  },
+  "successfullySignedInToGoogleDriveMessage": "Successfully signed in to Google Drive!",
+  "@successfullySignedInToGoogleDriveMessage": {
+    "description": "Snackbar message when signed in"
+  },
+  "signInCancelledOrFailed": "Sign in cancelled or failed. Check console for details.",
+  "@signInCancelledOrFailed": {
+    "description": "Error message when sign in is cancelled or failed"
+  },
+  "failedToLaunchBrowser": "Failed to launch browser",
+  "@failedToLaunchBrowser": {
+    "description": "Error message when browser launch fails"
+  },
+  "signInCancelled": "Sign in cancelled",
+  "@signInCancelled": {
+    "description": "Status message when sign in is cancelled"
+  },
+  "failedToExchangeAuthorizationCode": "Failed to exchange authorization code",
+  "@failedToExchangeAuthorizationCode": {
+    "description": "Error message when authorization code exchange fails"
+  },
+  "errorSigningIn": "Error signing in: {error}",
+  "@errorSigningIn": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "unknownError": "Unknown error",
+  "@unknownError": {
+    "description": "Generic unknown error message"
+  },
+  "googleSignInError": "Google Sign-In Error",
+  "@googleSignInError": {
+    "description": "Error title for Google Sign-In errors"
+  },
+  "developerConsoleNotSetUp": "Developer console is not set up correctly. Please check your OAuth configuration in Google Cloud Console.",
+  "@developerConsoleNotSetUp": {
+    "description": "Error message for OAuth configuration issues"
+  },
+  "platformError": "Platform Error",
+  "@platformError": {
+    "description": "Error title for platform errors"
+  },
+  "signedOutFromGoogleDrive": "Signed out from Google Drive",
+  "@signedOutFromGoogleDrive": {
+    "description": "Status message when signed out"
+  },
+  "errorSigningOut": "Error signing out: {error}",
+  "@errorSigningOut": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "syncing": "Syncing...",
+  "@syncing": {
+    "description": "Status message when syncing"
+  },
+  "errorNoProfileSelected": "Error: No profile selected",
+  "@errorNoProfileSelected": {
+    "description": "Error message when no profile is selected"
+  },
+  "syncCompleted": "Sync completed! Projects: +{projectsAdded} ~{projectsUpdated}, Releases: +{releasesAdded} ~{releasesUpdated}",
+  "@syncCompleted": {
+    "placeholders": {
+      "projectsAdded": {
+        "type": "int"
+      },
+      "projectsUpdated": {
+        "type": "int"
+      },
+      "releasesAdded": {
+        "type": "int"
+      },
+      "releasesUpdated": {
+        "type": "int"
+      }
+    }
+  },
+  "errorSyncing": "Error syncing: {error}",
+  "@errorSyncing": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "uploadingBackup": "Uploading backup...",
+  "@uploadingBackup": {
+    "description": "Status message when uploading backup"
+  },
+  "backupUploadedSuccessfully": "Backup uploaded successfully!",
+  "@backupUploadedSuccessfully": {
+    "description": "Status message when backup is uploaded"
+  },
+  "backupUploadedSuccessfullyMessage": "Backup uploaded successfully to Google Drive!",
+  "@backupUploadedSuccessfullyMessage": {
+    "description": "Snackbar message when backup is uploaded"
+  },
+  "errorUploadingBackup": "Error uploading backup: {error}",
+  "@errorUploadingBackup": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadingBackup": "Downloading backup...",
+  "@downloadingBackup": {
+    "description": "Status message when downloading backup"
+  },
+  "noBackupFileFound": "No backup file found in Google Drive. Create a backup first by syncing your data.",
+  "@noBackupFileFound": {
+    "description": "Message when no backup file is found"
+  },
+  "noBackupFileFoundStatus": "No backup file found. Create a backup first.",
+  "@noBackupFileFoundStatus": {
+    "description": "Status message when no backup file is found"
+  },
+  "downloadCancelled": "Download cancelled",
+  "@downloadCancelled": {
+    "description": "Status message when download is cancelled"
+  },
+  "backupDownloaded": "Backup downloaded! Projects: +{projectsAdded} ~{projectsUpdated}, Releases: +{releasesAdded} ~{releasesUpdated}",
+  "@backupDownloaded": {
+    "placeholders": {
+      "projectsAdded": {
+        "type": "int"
+      },
+      "projectsUpdated": {
+        "type": "int"
+      },
+      "releasesAdded": {
+        "type": "int"
+      },
+      "releasesUpdated": {
+        "type": "int"
+      }
+    }
+  },
+  "errorDownloadingBackup": "Error downloading backup: {error}",
+  "@errorDownloadingBackup": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "signedInAs": "Signed in as: {email}",
+  "@signedInAs": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "lastSync": "Last sync: {date}",
+  "@lastSync": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  }
 }
 

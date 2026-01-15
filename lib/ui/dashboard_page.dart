@@ -5,14 +5,17 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
 import 'package:flutter/services.dart'; 
-import 'package:window_manager/window_manager.dart'; 
+import 'package:window_manager/window_manager.dart' if (dart.library.html) 'package:window_manager/window_manager_stub.dart'; 
 import 'package:path/path.dart' as path; // 🚨 NOVO IMPORT
 import 'package:url_launcher/url_launcher.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../services/scanner_service.dart';
+import '../utils/mobile_utils.dart';
 import 'project_detail_page.dart';
 import 'releases_tab_page.dart';
 import 'release_detail_page.dart';
@@ -29,21 +32,28 @@ import 'package:uuid/uuid.dart';
 
 const String kAppVersion = '1.6.1';
 
-// WIDGET CORRIGIDO: Botões de controle da janela usando window_manager
+// WIDGET CORRIGIDO: Botões de controle da janela usando window_manager (desktop only)
 class WindowButtons extends StatelessWidget {
   const WindowButtons({super.key});
 
   // Função auxiliar assíncrona para alternar entre maximizar e restaurar
   void _toggleMaximize() async {
-    if (await windowManager.isMaximized()) {
-      windowManager.restore();
-    } else {
-      windowManager.maximize();
+    if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
+      if (await windowManager.isMaximized()) {
+        windowManager.restore();
+      } else {
+        windowManager.maximize();
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Only show on desktop platforms
+    if (kIsWeb || (!Platform.isWindows && !Platform.isMacOS && !Platform.isLinux)) {
+      return const SizedBox.shrink();
+    }
+
     return Row(
       children: [
         // Minimize
@@ -419,8 +429,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
       final hiddenMode = ref.read(showHiddenProjectsProvider);
       final isShowingOnlyHidden = hiddenMode == 2;
       
+      // Unhide all selected projects
       for (final projectId in selectedProjectIds) {
         final project = allProjects.firstWhere((p) => p.id == projectId);
+        // Always set hidden to false, regardless of current state
         final updated = project.copyWith(hidden: false);
         await repo.updateProject(updated);
       }
@@ -523,36 +535,45 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
     final scanRoots = ref.watch(scanRootsProvider);
     
     // Filter out preserved projects (in releases but not in any active scan root)
-    final releases = releasesAsync.value ?? [];
-    final protectedProjectIds = <String>{};
-    for (final release in releases) {
-      protectedProjectIds.addAll(release.trackIds);
-    }
-    
-    // Get all active scan root paths (normalized for comparison)
-    final activeRootPaths = scanRoots.map((root) {
-      final normalized = path.normalize(root.path);
-      // Ensure root path ends with separator for proper prefix matching
-      return normalized.endsWith(path.separator) ? normalized : normalized + path.separator;
-    }).toList();
-    
-    // Filter out preserved projects before counting
-    final filteredProjects = allProjects.where((project) {
-      // If project is not in any release, always include it
-      if (!protectedProjectIds.contains(project.id)) {
-        return true;
+    // On Android, we're only syncing metadata, so show ALL projects (both in releases and not)
+    // On desktop, filter preserved projects that aren't in active scan roots
+    final List<MusicProject> filteredProjects;
+    if (Platform.isAndroid) {
+      // Android: show all projects (metadata-only mode, no file system checks)
+      filteredProjects = allProjects;
+    } else {
+      // Desktop: filter preserved projects that aren't in active scan roots
+      final releases = releasesAsync.value ?? [];
+      final protectedProjectIds = <String>{};
+      for (final release in releases) {
+        protectedProjectIds.addAll(release.trackIds);
       }
       
-      // If project is in a release, check if it's in any active scan root
-      final projectPath = path.normalize(project.filePath);
-      final isInActiveRoot = activeRootPaths.any((rootPath) {
-        // Check if project path starts with the root path
-        return projectPath.startsWith(rootPath);
-      });
+      // Get all active scan root paths (normalized for comparison)
+      final activeRootPaths = scanRoots.map((root) {
+        final normalized = path.normalize(root.path);
+        // Ensure root path ends with separator for proper prefix matching
+        return normalized.endsWith(path.separator) ? normalized : normalized + path.separator;
+      }).toList();
       
-      // Only include if it's in an active root (preserved projects not in active roots are excluded)
-      return isInActiveRoot;
-    }).toList();
+      // Filter out preserved projects before counting
+      filteredProjects = allProjects.where((project) {
+        // If project is not in any release, always include it
+        if (!protectedProjectIds.contains(project.id)) {
+          return true;
+        }
+        
+        // If project is in a release, check if it's in any active scan root
+        final projectPath = path.normalize(project.filePath);
+        final isInActiveRoot = activeRootPaths.any((rootPath) {
+          // Check if project path starts with the root path
+          return projectPath.startsWith(rootPath);
+        });
+        
+        // Only include if it's in an active root (preserved projects not in active roots are excluded)
+        return isInActiveRoot;
+      }).toList();
+    }
     
     // Count visible and hidden from filtered projects only
     final visibleCount = filteredProjects.where((p) => !p.hidden).length;
@@ -592,12 +613,95 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
             child: Stack(
             children: [
               Scaffold(
-                appBar: null, 
+                appBar: MobileUtils.isMobile()
+                    ? AppBar(
+                        title: const Text('DAW Project Manager'),
+                        actions: [
+                          // Search icon
+                          IconButton(
+                            icon: const Icon(Icons.search),
+                            onPressed: () {
+                              _focusSearchAndSelectAll();
+                            },
+                            tooltip: AppLocalizations.of(context)!.searchProjects,
+                          ),
+                          // Profile button
+                          Consumer(
+                            builder: (context, ref, child) {
+                              final currentProfileAsync = ref.watch(currentProfileProvider);
+                              return currentProfileAsync.when(
+                                loading: () => IconButton(
+                                  icon: const Icon(Icons.person),
+                                  onPressed: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => const ProfileManagerPage(),
+                                      ),
+                                    );
+                                  },
+                                  tooltip: AppLocalizations.of(context)!.profileManager,
+                                ),
+                                error: (_, __) => IconButton(
+                                  icon: const Icon(Icons.person),
+                                  onPressed: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => const ProfileManagerPage(),
+                                      ),
+                                    );
+                                  },
+                                  tooltip: AppLocalizations.of(context)!.profileManager,
+                                ),
+                                data: (currentProfile) {
+                                  Widget profileIcon;
+                                  if (currentProfile?.photoPath != null && 
+                                      File(currentProfile!.photoPath!).existsSync()) {
+                                    profileIcon = ClipRRect(
+                                      borderRadius: BorderRadius.circular(16),
+                                      child: Image.file(
+                                        File(currentProfile.photoPath!),
+                                        width: 32,
+                                        height: 32,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return const Icon(Icons.person);
+                                        },
+                                      ),
+                                    );
+                                  } else {
+                                    profileIcon = const Icon(Icons.person);
+                                  }
+
+                                  return IconButton(
+                                    icon: profileIcon,
+                                    onPressed: () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) => const ProfileManagerPage(),
+                                        ),
+                                      );
+                                    },
+                                    tooltip: currentProfile?.name ?? AppLocalizations.of(context)!.profileManager,
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        ],
+                        bottom: TabBar(
+                          controller: _tabController,
+                          tabs: [
+                            Tab(text: AppLocalizations.of(context)!.projects),
+                            Tab(text: AppLocalizations.of(context)!.releasesTab),
+                          ],
+                        ),
+                      )
+                    : null,
                 body: Column(
           children: [
             // ----------------------------------------------------
-            // LÓGICA DE WINDOW BAR: APENHAS MOSTRA A BARRA PERSONALIZADA SE NÃO ESTIVER EM DEBUG
-            if (!kDebugMode) 
+            // LÓGICA DE WINDOW BAR: APENHAS MOSTRA A BARRA PERSONALIZADA SE NÃO ESTIVER EM DEBUG E FOR DESKTOP
+            if (!kDebugMode && !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux))
               GestureDetector(
                 onPanStart: (_) => windowManager.startDragging(),
                 // LÓGICA para alternar maximizar/restaurar no double tap
@@ -666,11 +770,179 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
             // ----------------------------------------------------
             
             // CONTEÚDO DA BARRA DE AÇÕES E PESQUISA
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
+            Builder(
+              builder: (context) {
+                final isMobile = MobileUtils.isMobile();
+                return Padding(
+                  padding: MobileUtils.getResponsivePadding(context),
+                  child: isMobile
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Search bar on top for mobile
+                            TextField(
+                              focusNode: _searchFocusNode,
+                              controller: _searchController,
+                              decoration: InputDecoration(
+                                hintText: _tabController.index == 0
+                                    ? AppLocalizations.of(context)!.searchProjects
+                                    : AppLocalizations.of(context)!.searchReleases,
+                                isDense: true,
+                                border: const OutlineInputBorder(),
+                                prefixIcon: const Icon(Icons.search),
+                                suffixIcon: () {
+                                  final currentSearch = _tabController.index == 0
+                                      ? ref.read(projectsSearchProvider)
+                                      : ref.read(releasesSearchProvider);
+                                  return currentSearch.isNotEmpty
+                                      ? IconButton(
+                                          icon: const Icon(Icons.close),
+                                          onPressed: () {
+                                            _searchController.clear();
+                                            if (_tabController.index == 0) {
+                                              ref.read(projectsSearchProvider.notifier).clear();
+                                            } else {
+                                              ref.read(releasesSearchProvider.notifier).clear();
+                                            }
+                                          },
+                                        )
+                                      : null;
+                                }(),
+                              ),
+                              onChanged: (text) {
+                                if (_tabController.index == 0) {
+                                  ref.read(projectsSearchProvider.notifier).setSearchText(text);
+                                } else {
+                                  ref.read(releasesSearchProvider.notifier).setSearchText(text);
+                                }
+                              },
+                            ),
+                            const SizedBox(height: 12),
+                            // Filters and info row
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: repoAsync.when(
+                                    loading: () => const SizedBox.shrink(),
+                                    error: (_, __) => const SizedBox.shrink(),
+                                    data: (repo) {
+                                      String projectText;
+                                      final l10n = AppLocalizations.of(context)!;
+                                      // On mobile, don't show roots count (Android doesn't use scan roots)
+                                      if (hiddenMode == 2) {
+                                        projectText = '${l10n.projectsCount(hiddenCount)} ${l10n.hiddenOnly}';
+                                      } else {
+                                        projectText = l10n.projectsCount(visibleCount);
+                                        if (hiddenCount > 0 && hiddenMode == 0) {
+                                          projectText += ' ${l10n.hiddenCount(hiddenCount)}';
+                                        }
+                                      }
+                                      return Text(
+                                        projectText,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: hiddenMode == 2 ? Colors.orange.shade300 : null,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            // Filter row
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Checkbox(
+                                      value: hiddenMode == 1,
+                                      onChanged: (value) {
+                                        if (value == true) {
+                                          hiddenNotifier.setShowAll(true);
+                                        } else {
+                                          hiddenNotifier.setShowAll(false);
+                                        }
+                                      },
+                                    ),
+                                    Text(
+                                      AppLocalizations.of(context)!.showHidden,
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                  ],
+                                ),
+                                if (hiddenCount > 0)
+                                  TextButton.icon(
+                                    icon: Icon(
+                                      hiddenMode == 2 ? Icons.visibility : Icons.visibility_off_outlined,
+                                      size: 16,
+                                    ),
+                                    label: Text(
+                                      hiddenMode == 2 ? AppLocalizations.of(context)!.showAll : AppLocalizations.of(context)!.showOnlyHidden,
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                    style: TextButton.styleFrom(
+                                      backgroundColor: hiddenMode == 2 ? Colors.orange.shade700 : null,
+                                      foregroundColor: hiddenMode == 2 ? Colors.white : Theme.of(context).textTheme.bodyMedium?.color,
+                                    ),
+                                    onPressed: () {
+                                      if (hiddenMode == 2) {
+                                        hiddenNotifier.setShowOnlyHidden(false);
+                                      } else {
+                                        hiddenNotifier.setShowOnlyHidden(true);
+                                      }
+                                    },
+                                  ),
+                                DropdownButton<String>(
+                                  value: phaseFilter,
+                                  hint: Text(
+                                    AppLocalizations.of(context)!.filterByPhase,
+                                    style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
+                                  ),
+                                  underline: const SizedBox.shrink(),
+                                  style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color),
+                                  icon: Icon(Icons.filter_list, size: 16, color: Theme.of(context).textTheme.bodyMedium?.color),
+                                  items: [
+                                    DropdownMenuItem<String>(
+                                      value: null,
+                                      child: Text(AppLocalizations.of(context)!.allPhases),
+                                    ),
+                                    DropdownMenuItem<String>(
+                                      value: 'Idea',
+                                      child: Text(AppLocalizations.of(context)!.projectPhaseIdea),
+                                    ),
+                                    DropdownMenuItem<String>(
+                                      value: 'Arranging',
+                                      child: Text(AppLocalizations.of(context)!.projectPhaseArranging),
+                                    ),
+                                    DropdownMenuItem<String>(
+                                      value: 'Mixing',
+                                      child: Text(AppLocalizations.of(context)!.projectPhaseMixing),
+                                    ),
+                                    DropdownMenuItem<String>(
+                                      value: 'Mastering',
+                                      child: Text(AppLocalizations.of(context)!.projectPhaseMastering),
+                                    ),
+                                    DropdownMenuItem<String>(
+                                      value: 'Finished',
+                                      child: Text(AppLocalizations.of(context)!.projectPhaseFinished),
+                                    ),
+                                  ],
+                                  onChanged: (String? value) {
+                                    ref.read(phaseFilterProvider.notifier).setPhase(value);
+                                  },
+                                ),
+                              ],
+                            ),
+                          ],
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
                   // Ações de Root e Scan
                   Flexible(
                     flex: 2,
@@ -863,14 +1135,13 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Theme.of(context).colorScheme.primary,
                               ),
+                              ),
                             ),
                           ),
-                        ),
                       ],
                     ),
                   ),
-
-                  // Área de Pesquisa e Filtro
+                  // Área de Pesquisa e Filtro (desktop only)
                   Flexible(
                     flex: 3,
                     child: Row(
@@ -1042,8 +1313,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                           },
                         ),
                         const SizedBox(width: 8),
-                        Builder(
-                          builder: (context) {
+                        Consumer(
+                          builder: (context, ref, child) {
                             return Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -1094,94 +1365,120 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                   ),
                 ],
               ),
-            ),
+            );
+            },
+          ),
             
-            if (roots.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      for (final r in roots)
-                        Chip(
-                          label: Text(r.path),
-                          deleteIcon: const Icon(Icons.close),
-                          onDeleted: () async {
-                            final confirm = await showDialog<bool>(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                title: Text(AppLocalizations.of(context)!.deleteRootPath),
-                                content: Text(AppLocalizations.of(context)!.deleteRootPathMessage(r.path)),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(ctx, false),
-                                    child: Text(AppLocalizations.of(context)!.cancel),
+            // Scan roots section - desktop only (Android doesn't support folder scanning)
+            Consumer(
+              builder: (context, ref, child) {
+                final roots = ref.watch(scanRootsProvider);
+                if (roots.isNotEmpty && !MobileUtils.isMobile()) {
+                  return Padding(
+                    padding: MobileUtils.getResponsivePadding(context),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          for (final r in roots)
+                            Chip(
+                              label: Text(r.path),
+                              deleteIcon: const Icon(Icons.close),
+                              onDeleted: () async {
+                                final confirm = await showDialog<bool>(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                    title: Text(AppLocalizations.of(context)!.deleteRootPath),
+                                    content: Text(AppLocalizations.of(context)!.deleteRootPathMessage(r.path)),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(ctx, false),
+                                        child: Text(AppLocalizations.of(context)!.cancel),
+                                      ),
+                                      ElevatedButton(
+                                        onPressed: () => Navigator.pop(ctx, true),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.red,
+                                        ),
+                                        child: Text(AppLocalizations.of(context)!.delete),
+                                      ),
+                                    ],
                                   ),
-                                  ElevatedButton(
-                                    onPressed: () => Navigator.pop(ctx, true),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.red,
-                                    ),
-                                    child: Text(AppLocalizations.of(context)!.delete),
-                                  ),
-                                ],
-                              ),
-                            );
-                            if (confirm == true) {
-                              final repo = await ref.read(repositoryProvider.future);
-                              await repo.removeRoot(r.id);
-                              // Invalidate repository to ensure fresh data
-                              ref.invalidate(repositoryProvider);
-                              // Wait for repository to reload before scanning
-                              await ref.read(repositoryProvider.future);
-                              // Trigger a scan to update the UI and remove projects
-                              await _scanAll();
-                            }
-                          },
-                          backgroundColor: Theme.of(context).cardColor,
-                          labelStyle: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
-                        ),
-                    ],
-                  ),
+                                );
+                                if (confirm == true) {
+                                  final repo = await ref.read(repositoryProvider.future);
+                                  await repo.removeRoot(r.id);
+                                  ref.invalidate(repositoryProvider);
+                                  await ref.read(repositoryProvider.future);
+                                  await _scanAll();
+                                }
+                              },
+                              backgroundColor: Theme.of(context).cardColor,
+                              labelStyle: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
+                            ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+            // Tab Bar (desktop only - mobile uses AppBar bottom)
+            if (!MobileUtils.isMobile())
+              Builder(
+                builder: (context) => TabBar(
+                  controller: _tabController,
+                  tabs: [
+                    Tab(icon: Icon(Icons.library_music), text: AppLocalizations.of(context)!.projectsTab),
+                    Tab(icon: Icon(Icons.album), text: AppLocalizations.of(context)!.releasesTab),
+                  ],
+                  labelColor: Theme.of(context).textTheme.titleMedium?.color,
+                  unselectedLabelColor: Theme.of(context).textTheme.bodySmall?.color,
+                  indicatorColor: Theme.of(context).colorScheme.primary,
                 ),
               ),
-            // Tab Bar
-            TabBar(
-              controller: _tabController,
-              tabs: [
-                Tab(icon: Icon(Icons.library_music), text: AppLocalizations.of(context)!.projectsTab),
-                Tab(icon: Icon(Icons.album), text: AppLocalizations.of(context)!.releasesTab),
-              ],
-              labelColor: Theme.of(context).textTheme.titleMedium?.color,
-              unselectedLabelColor: Theme.of(context).textTheme.bodySmall?.color,
-              indicatorColor: Theme.of(context).colorScheme.primary,
-            ),
             // Tab Bar View
             Expanded(
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  _PlutoProjectsTableWithSelection(
-                    projects: projects,
-                    dateFormat: dateFormat,
-                    onCreateRelease: (selectedProjects) {
-                      _createReleaseFromSelectedProjects(context, ref, selectedProjects);
-                    },
-                    onHideProjects: (selectedProjectIds) async {
-                      await _hideProjects(context, ref, selectedProjectIds);
-                    },
-                    onUnhideProjects: (selectedProjectIds) async {
-                      await _unhideProjects(context, ref, selectedProjectIds);
-                    },
-                    showHidden: hiddenMode == 1 || hiddenMode == 2,
-                    onExtractingMetadataChanged: (extracting) {
-                      setState(() => _extractingMetadata = extracting);
-                    },
-                    isAnyOperation: isAnyOperation,
-                  ),
+                  // Use mobile-friendly list view on Android, table on desktop
+                  Platform.isAndroid
+                      ? _MobileProjectsList(
+                          projects: projects,
+                          dateFormat: dateFormat,
+                          onCreateRelease: (selectedProjects) {
+                            _createReleaseFromSelectedProjects(context, ref, selectedProjects);
+                          },
+                          onHideProjects: (selectedProjectIds) async {
+                            await _hideProjects(context, ref, selectedProjectIds);
+                          },
+                          onUnhideProjects: (selectedProjectIds) async {
+                            await _unhideProjects(context, ref, selectedProjectIds);
+                          },
+                          showHidden: hiddenMode == 1 || hiddenMode == 2,
+                        )
+                      : _PlutoProjectsTableWithSelection(
+                          projects: projects,
+                          dateFormat: dateFormat,
+                          onCreateRelease: (selectedProjects) {
+                            _createReleaseFromSelectedProjects(context, ref, selectedProjects);
+                          },
+                          onHideProjects: (selectedProjectIds) async {
+                            await _hideProjects(context, ref, selectedProjectIds);
+                          },
+                          onUnhideProjects: (selectedProjectIds) async {
+                            await _unhideProjects(context, ref, selectedProjectIds);
+                          },
+                          showHidden: hiddenMode == 1 || hiddenMode == 2,
+                          onExtractingMetadataChanged: (extracting) {
+                            setState(() => _extractingMetadata = extracting);
+                          },
+                          isAnyOperation: isAnyOperation,
+                        ),
                   const ReleasesTabPage(),
                 ],
               ),
@@ -1492,31 +1789,75 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
                       child: Text(AppLocalizations.of(context)!.clearSelection),
                     ),
                     const SizedBox(width: 8),
-                    // Show Hide button when not showing hidden projects, or Unhide when showing hidden
-                    if (widget.showHidden)
-                      ElevatedButton.icon(
-                        icon: const Icon(Icons.visibility),
-                        label: Text(AppLocalizations.of(context)!.unhide),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green.shade700,
-                        ),
-                        onPressed: () {
-                          widget.onUnhideProjects(_selectedProjectIds.toList());
-                          _clearSelection();
-                        },
-                      )
-                    else
-                      ElevatedButton.icon(
-                        icon: const Icon(Icons.visibility_off),
-                        label: Text(AppLocalizations.of(context)!.hide),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange.shade700,
-                        ),
-                        onPressed: () {
-                          widget.onHideProjects(_selectedProjectIds.toList());
-                          _clearSelection();
-                        },
-                      ),
+                    // Check if selected projects are hidden or visible
+                    Consumer(
+                      builder: (context, ref, child) {
+                        // Get current selection from provider
+                        final selectedIds = ref.watch(selectedProjectsProvider);
+                        // Check the state of selected projects
+                        final selectedProjects = widget.projects.where((p) => selectedIds.contains(p.id)).toList();
+                        final allHidden = selectedProjects.isNotEmpty && selectedProjects.every((p) => p.hidden);
+                        final allVisible = selectedProjects.isNotEmpty && selectedProjects.every((p) => !p.hidden);
+                        
+                        // Show Unhide button if all selected are hidden, Hide button if all are visible
+                        // If mixed, show both or the appropriate one
+                        if (allHidden) {
+                          return ElevatedButton.icon(
+                            icon: const Icon(Icons.visibility),
+                            label: Text(AppLocalizations.of(context)!.unhide),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green.shade700,
+                            ),
+                            onPressed: () {
+                              widget.onUnhideProjects(selectedIds.toList());
+                              _clearSelection();
+                            },
+                          );
+                        } else if (allVisible) {
+                          return ElevatedButton.icon(
+                            icon: const Icon(Icons.visibility_off),
+                            label: Text(AppLocalizations.of(context)!.hide),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orange.shade700,
+                            ),
+                            onPressed: () {
+                              widget.onHideProjects(selectedIds.toList());
+                              _clearSelection();
+                            },
+                          );
+                        } else {
+                          // Mixed selection - show both buttons
+                          return Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              ElevatedButton.icon(
+                                icon: const Icon(Icons.visibility),
+                                label: Text(AppLocalizations.of(context)!.unhide),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green.shade700,
+                                ),
+                                onPressed: () {
+                                  widget.onUnhideProjects(selectedIds.toList());
+                                  _clearSelection();
+                                },
+                              ),
+                              const SizedBox(width: 8),
+                              ElevatedButton.icon(
+                                icon: const Icon(Icons.visibility_off),
+                                label: Text(AppLocalizations.of(context)!.hide),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.orange.shade700,
+                                ),
+                                onPressed: () {
+                                  widget.onHideProjects(selectedIds.toList());
+                                  _clearSelection();
+                                },
+                              ),
+                            ],
+                          );
+                        }
+                      },
+                    ),
                     const SizedBox(width: 8),
                     ElevatedButton.icon(
                       icon: const Icon(Icons.search),
@@ -2622,6 +2963,76 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
     return '$minutes:$seconds';
   }
 
+  Future<void> _sharePreviewSong() async {
+    if (widget.project.previewSongPath == null || widget.project.previewSongPath!.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Preview song file not found')),
+        );
+      }
+      return;
+    }
+
+    // Skip if it's a Drive file reference (not downloaded)
+    if (widget.project.previewSongPath!.startsWith('drive://')) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Preview song not available. Please download backup first.')),
+        );
+      }
+      return;
+    }
+
+    try {
+      final sourceFile = File(widget.project.previewSongPath!);
+      if (!await sourceFile.exists()) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Preview song file not found')),
+          );
+        }
+        return;
+      }
+
+      // Get the original filename or use a default
+      String originalFileName = widget.project.previewSongFileName ?? 
+          path.basename(widget.project.previewSongPath!);
+      
+      // Ensure the filename has an extension
+      if (!originalFileName.contains('.')) {
+        final ext = path.extension(widget.project.previewSongPath!);
+        originalFileName = '$originalFileName$ext';
+      }
+
+      // On Android, copy to cache directory with original name for sharing
+      if (Platform.isAndroid) {
+        final cacheDir = await getTemporaryDirectory();
+        final shareFile = File(path.join(cacheDir.path, originalFileName));
+        
+        // Copy file to cache with original name
+        await sourceFile.copy(shareFile.path);
+        
+        // Share the file
+        await Share.shareXFiles(
+          [XFile(shareFile.path)],
+          text: 'Preview song: ${widget.project.displayName}',
+        );
+      } else {
+        // On other platforms, share the file directly
+        await Share.shareXFiles(
+          [XFile(sourceFile.path)],
+          text: 'Preview song: ${widget.project.displayName}',
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to share preview song: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Shortcuts(
@@ -2652,6 +3063,13 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                if (Platform.isAndroid && widget.project.previewSongPath != null && 
+                    !widget.project.previewSongPath!.startsWith('drive://'))
+                  IconButton(
+                    icon: const Icon(Icons.share),
+                    tooltip: 'Share preview song',
+                    onPressed: _sharePreviewSong,
+                  ),
                 IconButton(
                   icon: const Icon(Icons.close),
                   onPressed: () => Navigator.pop(context),
@@ -2665,7 +3083,11 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    path.basename(widget.project.previewSongPath ?? ''),
+                    // Use previewSongFileName if available (original filename), otherwise use basename
+                    widget.project.previewSongFileName ?? 
+                    (widget.project.previewSongPath != null 
+                      ? path.basename(widget.project.previewSongPath!)
+                      : ''),
                     style: TextStyle(
                       color: Theme.of(context).textTheme.bodyMedium?.color,
                       fontSize: 14,
@@ -2746,6 +3168,256 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
           ),
         ),
       ),
+    );
+  }
+}
+
+// Mobile-friendly projects list widget for Android
+class _MobileProjectsList extends ConsumerStatefulWidget {
+  final List<MusicProject> projects;
+  final DateFormat dateFormat;
+  final Function(List<MusicProject>) onCreateRelease;
+  final Function(List<String>) onHideProjects;
+  final Function(List<String>) onUnhideProjects;
+  final bool showHidden;
+
+  const _MobileProjectsList({
+    required this.projects,
+    required this.dateFormat,
+    required this.onCreateRelease,
+    required this.onHideProjects,
+    required this.onUnhideProjects,
+    required this.showHidden,
+  });
+
+  @override
+  ConsumerState<_MobileProjectsList> createState() => _MobileProjectsListState();
+}
+
+class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
+  final Set<String> _selectedProjectIds = {};
+
+  void _toggleProjectSelection(String projectId) {
+    setState(() {
+      if (_selectedProjectIds.contains(projectId)) {
+        _selectedProjectIds.remove(projectId);
+      } else {
+        _selectedProjectIds.add(projectId);
+      }
+    });
+  }
+
+  void _clearSelection() {
+    setState(() {
+      _selectedProjectIds.clear();
+    });
+  }
+
+  String _getStatusDisplayName(String status, BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    switch (status) {
+      case 'Idea':
+        return l10n.projectPhaseIdea;
+      case 'Arranging':
+        return l10n.projectPhaseArranging;
+      case 'Mixing':
+        return l10n.projectPhaseMixing;
+      case 'Mastering':
+        return l10n.projectPhaseMastering;
+      case 'Finished':
+        return l10n.projectPhaseFinished;
+      default:
+        return status;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
+    if (widget.projects.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.music_note, size: 64, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text(
+              l10n.noProjectsAvailable,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              l10n.selectProjectsFolder,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Colors.grey[500],
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            itemCount: widget.projects.length,
+            itemBuilder: (context, index) {
+              final project = widget.projects[index];
+              final isSelected = _selectedProjectIds.contains(project.id);
+              
+              return Card(
+                margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: ListTile(
+                  leading: Checkbox(
+                    value: isSelected,
+                    onChanged: (_) => _toggleProjectSelection(project.id),
+                  ),
+                  title: Text(
+                    project.displayName,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 4),
+                      Text('${l10n.phase}: ${_getStatusDisplayName(project.status, context)}'),
+                      if (project.dawType != null)
+                        Text('DAW: ${project.dawType}${project.dawVersion != null ? ' ${project.dawVersion}' : ''}'),
+                      if (project.bpm != null)
+                        Text('BPM: ${project.bpm}'),
+                      if (project.musicalKey != null)
+                        Text('Key: ${project.musicalKey}'),
+                    ],
+                  ),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.arrow_forward_ios),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ProjectDetailPage(projectId: project.id),
+                        ),
+                      );
+                    },
+                  ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ProjectDetailPage(projectId: project.id),
+                      ),
+                    );
+                  },
+                  onLongPress: () {
+                    _toggleProjectSelection(project.id);
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+        // Selection action bar
+        if (_selectedProjectIds.isNotEmpty)
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, -2),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Text(l10n.projectsSelected(_selectedProjectIds.length, _selectedProjectIds.length == 1 ? '' : 's')),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.album),
+                    label: Text(l10n.createRelease),
+                    onPressed: () {
+                      final selectedProjects = widget.projects
+                          .where((p) => _selectedProjectIds.contains(p.id))
+                          .toList();
+                      widget.onCreateRelease(selectedProjects);
+                      _clearSelection();
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Check if selected projects are hidden or visible
+                Builder(
+                  key: ValueKey('${_selectedProjectIds.length}_${widget.projects.where((p) => _selectedProjectIds.contains(p.id)).map((p) => '${p.id}_${p.hidden}').join(',')}'),
+                  builder: (context) {
+                    // Check the state of selected projects
+                    final selectedProjects = widget.projects.where((p) => _selectedProjectIds.contains(p.id)).toList();
+                    final allHidden = selectedProjects.isNotEmpty && selectedProjects.every((p) => p.hidden);
+                    final allVisible = selectedProjects.isNotEmpty && selectedProjects.every((p) => !p.hidden);
+                    
+                    // Show Unhide button if all selected are hidden, Hide button if all are visible
+                    // If mixed, show both
+                    if (allHidden) {
+                      return IconButton(
+                        icon: const Icon(Icons.visibility),
+                        tooltip: l10n.unhide,
+                        onPressed: () {
+                          widget.onUnhideProjects(_selectedProjectIds.toList());
+                          _clearSelection();
+                        },
+                      );
+                    } else if (allVisible) {
+                      return IconButton(
+                        icon: const Icon(Icons.visibility_off),
+                        tooltip: l10n.hide,
+                        onPressed: () {
+                          widget.onHideProjects(_selectedProjectIds.toList());
+                          _clearSelection();
+                        },
+                      );
+                    } else {
+                      // Mixed selection - show both buttons
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.visibility),
+                            tooltip: l10n.unhide,
+                            onPressed: () {
+                              widget.onUnhideProjects(_selectedProjectIds.toList());
+                              _clearSelection();
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.visibility_off),
+                            tooltip: l10n.hide,
+                            onPressed: () {
+                              widget.onHideProjects(_selectedProjectIds.toList());
+                              _clearSelection();
+                            },
+                          ),
+                        ],
+                      );
+                    }
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  tooltip: l10n.clearSelection,
+                  onPressed: _clearSelection,
+                ),
+              ],
+            ),
+          ),
+      ],
     );
   }
 }

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'generated/l10n/app_localizations.dart';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:window_manager/window_manager.dart';
 
 // NOVO: Importar providers e serviços para a lógica de auto-scan
@@ -48,26 +50,30 @@ Future<void> _runInitialScan(ProjectRepository repo, ProviderContainer container
 
 
 void main() async {
-  // 1. Inicialização do Flutter e Window Manager
+  // 1. Inicialização do Flutter
   WidgetsFlutterBinding.ensureInitialized();
-  await windowManager.ensureInitialized();
-
-  // 2. Configurações da Janela
-  const initialSize = Size(1800, 1040); // Fits comfortably on 1080p screens
-  const minimumSize = Size(800, 600); // Allow resizing to a smaller minimum size
-  WindowOptions windowOptions = WindowOptions(
-    size: initialSize,
-    minimumSize: minimumSize,
-    center: true,
-    title: "DAW Project Manager",
-    titleBarStyle: kDebugMode ? TitleBarStyle.normal : TitleBarStyle.hidden,
-  );
   
-  // 3. Criação e exibição da janela
-  await windowManager.waitUntilReadyToShow(windowOptions, () async {
-    await windowManager.show();
-    await windowManager.focus();
-  });
+  // 2. Window Manager only for desktop platforms
+  if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
+    await windowManager.ensureInitialized();
+
+    // Configurações da Janela
+    const initialSize = Size(1800, 1040); // Fits comfortably on 1080p screens
+    const minimumSize = Size(800, 600); // Allow resizing to a smaller minimum size
+    WindowOptions windowOptions = WindowOptions(
+      size: initialSize,
+      minimumSize: minimumSize,
+      center: true,
+      title: "DAW Project Manager",
+      titleBarStyle: kDebugMode ? TitleBarStyle.normal : TitleBarStyle.hidden,
+    );
+    
+    // Criação e exibição da janela
+    await windowManager.waitUntilReadyToShow(windowOptions, () async {
+      await windowManager.show();
+      await windowManager.focus();
+    });
+  }
   
   // NOVO: 4. Configuração do Riverpod e Auto-Scan
   final container = ProviderContainer();
@@ -108,7 +114,6 @@ class MyApp extends ConsumerWidget {
     final currentLocale = ref.watch(localeProvider);
     
     return MaterialApp(
-      key: ValueKey('locale_${currentLocale.languageCode}'), // Force rebuild on locale change
       title: 'DAW Project Manager',
       theme: themeData,
       // Localization support

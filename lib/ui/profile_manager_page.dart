@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as path;
@@ -13,11 +13,15 @@ import '../repository/profile_repository.dart';
 import '../repository/project_repository.dart';
 import '../services/scanner_service.dart';
 import '../utils/app_paths.dart';
+import '../utils/mobile_utils.dart';
 import '../generated/l10n/app_localizations.dart';
 import 'dashboard_page.dart';
 import 'profile_view_page.dart';
-import 'widgets/language_switcher.dart';
 import '../services/backup_service.dart';
+import 'google_drive_sync_page.dart';
+import 'widgets/theme_switcher.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'widgets/language_switcher.dart';
 
 class ProfileManagerPage extends ConsumerStatefulWidget {
   const ProfileManagerPage({super.key});
@@ -27,6 +31,12 @@ class ProfileManagerPage extends ConsumerStatefulWidget {
 }
 
 class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
+  @override
+  void initState() {
+    super.initState();
+  }
+
+
   @override
   void dispose() {
     super.dispose();
@@ -109,11 +119,23 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
         Navigator.of(context).pop();
       }
       
-      // Invalidate repository provider to reload with new profile (using saved container)
+      // Invalidate all related providers to reload with new profile (using saved container)
       container.invalidate(repositoryProvider);
+      container.invalidate(allProjectsStreamProvider);
+      container.invalidate(releasesProvider);
+      container.invalidate(scanRootsProvider);
+      container.invalidate(currentProfileProvider);
+      
+      // Wait a bit for providers to invalidate
+      await Future.delayed(const Duration(milliseconds: 100));
       
       // Wait for repository to reload with new profile (using saved container)
       final repo = await container.read(repositoryProvider.future);
+      
+      if (kDebugMode) {
+        print('Profile switched to: $profileId');
+        print('Repository reloaded with ${repo.projectsBox.length} projects, ${repo.releasesBox.length} releases');
+      }
       
       // Trigger scan for the new profile's root folders (same as dashboard scan)
       await _scanProfileRoots(repo);
@@ -419,7 +441,7 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
             children: [
               const Icon(Icons.visibility, size: 20),
               const SizedBox(width: 8),
-              Text('View Profile'),
+              Text(AppLocalizations.of(context)!.viewProfile),
             ],
           ),
         ),
@@ -703,13 +725,22 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
   Widget build(BuildContext context) {
     final profilesAsync = ref.watch(allProfilesProvider);
     final currentProfileAsync = ref.watch(currentProfileProvider);
+    final isMobile = MobileUtils.isMobile();
 
     return Scaffold(
-      appBar: null,
+      appBar: isMobile
+          ? AppBar(
+              title: Text(AppLocalizations.of(context)!.profileManager),
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            )
+          : null,
       body: Column(
         children: [
-          // Window title bar
-          if (!kDebugMode)
+          // Window title bar (desktop only)
+          if (!isMobile && !kDebugMode && !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux))
             GestureDetector(
               onPanStart: (_) => windowManager.startDragging(),
               onDoubleTap: () async {
@@ -720,219 +751,491 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
                 }
               },
               child: Container(
-                color: Theme.of(context).cardColor,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  border: Border(
+                    bottom: BorderSide(
+                      color: Theme.of(context).dividerColor,
+                      width: 1,
+                    ),
+                  ),
+                ),
                 height: 40,
                 child: Row(
                   children: [
                     IconButton(
-                      icon: Icon(Icons.arrow_back, color: Theme.of(context).textTheme.bodyMedium?.color, size: 20),
-                      onPressed: () => Navigator.pop(context),
+                      icon: Icon(
+                        Icons.arrow_back,
+                        color: Theme.of(context).textTheme.bodyMedium?.color,
+                        size: 20,
+                      ),
+                      onPressed: () => Navigator.of(context).pop(),
                       tooltip: AppLocalizations.of(context)!.back,
                     ),
                     Padding(
                       padding: const EdgeInsets.only(left: 4),
                       child: Text(
                         AppLocalizations.of(context)!.profileManager,
-                        style: TextStyle(color: Theme.of(context).textTheme.titleMedium?.color, fontSize: 16),
+                        style: TextStyle(
+                          color: Theme.of(context).textTheme.titleMedium?.color,
+                          fontSize: 16,
+                        ),
                       ),
                     ),
                     const Spacer(),
-                    const LanguageSwitcher(),
-                    const SizedBox(width: 8),
-                    const WindowButtons(),
+                    if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux))
+                      const WindowButtons(),
                   ],
                 ),
               ),
             ),
+          // Debug mode back button (Windows desktop only)
+          if (!isMobile && kDebugMode && Platform.isWindows)
+            Container(
+              color: Theme.of(context).cardColor,
+              height: 40,
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.arrow_back, color: Theme.of(context).textTheme.bodyMedium?.color, size: 20),
+                    onPressed: () => Navigator.of(context).pop(),
+                    tooltip: AppLocalizations.of(context)!.back,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 4),
+                    child: Text(
+                      AppLocalizations.of(context)!.profileManager,
+                      style: TextStyle(
+                        color: Theme.of(context).textTheme.titleMedium?.color,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
+            child: SingleChildScrollView(
+              padding: MobileUtils.getResponsivePadding(context),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-            // Backup/Restore section
-            Card(
-              color: Theme.of(context).cardColor,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                  // Backup/Restore section - Desktop only (Android uses Google Drive only)
+                  if (!Platform.isAndroid) ...[
+                    Card(
+                    color: Theme.of(context).cardColor,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            AppLocalizations.of(context)!.backupAndRestore,
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 16),
+                          // Use Wrap on mobile, Row on desktop
+                          isMobile
+                              ? Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: [
+                                    ElevatedButton.icon(
+                                      icon: const Icon(Icons.upload_file),
+                                      label: Text(AppLocalizations.of(context)!.exportBackup),
+                                      onPressed: () => _exportBackup(),
+                                    ),
+                                    ElevatedButton.icon(
+                                      icon: const Icon(Icons.download),
+                                      label: Text(AppLocalizations.of(context)!.importBackup),
+                                      onPressed: () => _showImportDialog(),
+                                    ),
+                                  ],
+                                )
+                              : Row(
+                                  children: [
+                                    ElevatedButton.icon(
+                                      icon: const Icon(Icons.upload_file),
+                                      label: Text(AppLocalizations.of(context)!.exportBackup),
+                                      onPressed: () => _exportBackup(),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    ElevatedButton.icon(
+                                      icon: const Icon(Icons.download),
+                                      label: Text(AppLocalizations.of(context)!.importBackup),
+                                      onPressed: () => _showImportDialog(),
+                                    ),
+                                  ],
+                                ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  ],
+                  // Settings section (Language, Theme, Support) - Android only
+                  if (Platform.isAndroid) ...[
+                    const SizedBox(height: 24),
+                    Card(
+                      color: Theme.of(context).cardColor,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Settings',
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 16),
+                            // Language selector
+                            Row(
+                              children: [
+                                const Icon(Icons.language, size: 24),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    'Language',
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                ),
+                                const LanguageSwitcher(),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            // Theme selector
+                            Row(
+                              children: [
+                                const Icon(Icons.palette, size: 24),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    'Theme',
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                ),
+                                const ThemeSwitcher(),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            // Support button
+                            Row(
+                              children: [
+                                const Icon(Icons.card_giftcard, size: 24),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    'Support',
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                ),
+                                TextButton.icon(
+                                  icon: const Icon(Icons.card_giftcard, size: 18),
+                                  label: const Text('Support'),
+                                  onPressed: () async {
+                                    try {
+                                      final uri = Uri.parse('https://www.paypal.com/donate/?hosted_button_id=QHVVZ3LAF39BL');
+                                      
+                                      // Try to launch URL directly - canLaunchUrl can be unreliable on mobile
+                                      // Use externalApplication mode to open in browser
+                                      final launched = await launchUrl(
+                                        uri,
+                                        mode: LaunchMode.externalApplication,
+                                      );
+                                      
+                                      if (!launched && mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text('Could not open browser. Please visit: https://www.paypal.com/donate/?hosted_button_id=QHVVZ3LAF39BL'),
+                                            duration: Duration(seconds: 5),
+                                          ),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('Error opening browser: $e'),
+                                            duration: const Duration(seconds: 3),
+                                          ),
+                                        );
+                                      }
+                                      if (kDebugMode) print('Error launching support URL: $e');
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 24),
+                  // Google Drive Sync section - Link to dedicated page
+                  Card(
+                    color: Theme.of(context).cardColor,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.cloud, size: 24),
+                              const SizedBox(width: 8),
+                              Text(
+                                AppLocalizations.of(context)!.googleDriveSync,
+                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            AppLocalizations.of(context)!.googleDriveSyncDescription,
+                            style: TextStyle(fontSize: 14, color: Theme.of(context).textTheme.bodySmall?.color),
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.settings),
+                            label: Text(AppLocalizations.of(context)!.manageGoogleDriveSync),
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => const GoogleDriveSyncPage(),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  // Profiles list
+                  if (profilesAsync.hasValue)
+                    Text(
+                      AppLocalizations.of(context)!.profiles,
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  const SizedBox(height: 16),
+                  if (profilesAsync.hasValue)
+                    profilesAsync.value!.isEmpty
+                        ? Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(32.0),
+                              child: Text(
+                                AppLocalizations.of(context)!.noProfilesFound,
+                                style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color),
+                              ),
+                            ),
+                          )
+                        : ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: profilesAsync.value!.length,
+                            itemBuilder: (context, index) {
+                              final profile = profilesAsync.value![index];
+                              final isCurrentProfile = currentProfileAsync.hasValue &&
+                                  currentProfileAsync.value?.id == profile.id;
+                              return GestureDetector(
+                                onDoubleTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => ProfileViewPage(profileId: profile.id),
+                                    ),
+                                  );
+                                },
+                                child: Card(
+                                  color: isCurrentProfile
+                                      ? Theme.of(context).colorScheme.primaryContainer
+                                      : Theme.of(context).cardColor,
+                                  margin: const EdgeInsets.only(bottom: 8),
+                                  child: isMobile
+                                      ? _buildMobileProfileTile(context, profile, isCurrentProfile)
+                                      : ListTile(
+                                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                          minVerticalPadding: 0,
+                                          dense: false,
+                                          isThreeLine: false,
+                                          leading: profile.photoPath != null && File(profile.photoPath!).existsSync()
+                                              ? ClipRRect(
+                                                  borderRadius: BorderRadius.circular(4),
+                                                  child: Image.file(
+                                                    File(profile.photoPath!),
+                                                    width: 48,
+                                                    height: 48,
+                                                    fit: BoxFit.cover,
+                                                    errorBuilder: (context, error, stackTrace) {
+                                                      return const SizedBox(
+                                                        width: 48,
+                                                        height: 48,
+                                                        child: Icon(Icons.person),
+                                                      );
+                                                    },
+                                                  ),
+                                                )
+                                              : const SizedBox(
+                                                  width: 48,
+                                                  height: 48,
+                                                  child: Icon(Icons.person),
+                                                ),
+                                          title: Text(profile.name),
+                                          titleAlignment: ListTileTitleAlignment.center,
+                                          subtitle: isCurrentProfile
+                                              ? Text(
+                                                  AppLocalizations.of(context)!.active,
+                                                  style: TextStyle(
+                                                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 12,
+                                                  ),
+                                                )
+                                              : const SizedBox(height: 0),
+                                          trailing: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              if (!isCurrentProfile)
+                                                TextButton(
+                                                  onPressed: () => _switchProfile(profile.id),
+                                                  style: TextButton.styleFrom(
+                                                    foregroundColor: Theme.of(context).colorScheme.primary,
+                                                  ),
+                                                  child: Text(AppLocalizations.of(context)!.switchProfile),
+                                                ),
+                                              IconButton(
+                                                icon: const Icon(Icons.visibility),
+                                                color: Theme.of(context).textTheme.bodyMedium?.color,
+                                                tooltip: AppLocalizations.of(context)!.viewProfile,
+                                                onPressed: () {
+                                                  Navigator.of(context).push(
+                                                    MaterialPageRoute(
+                                                      builder: (_) => ProfileViewPage(profileId: profile.id),
+                                                    ),
+                                                  );
+                                                },
+                                              ),
+                                              IconButton(
+                                                icon: const Icon(Icons.edit),
+                                                tooltip: AppLocalizations.of(context)!.editProfile,
+                                                onPressed: () => _editProfile(profile),
+                                              ),
+                                              IconButton(
+                                                icon: Icon(Icons.delete, color: Colors.red.shade300),
+                                                tooltip: AppLocalizations.of(context)!.deleteProfile,
+                                                onPressed: () => _deleteProfile(profile),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                ),
+                              );
+                            },
+                          ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileProfileTile(BuildContext context, Profile profile, bool isCurrentProfile) {
+    return Padding(
+      padding: const EdgeInsets.all(12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              profile.photoPath != null && File(profile.photoPath!).existsSync()
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: Image.file(
+                        File(profile.photoPath!),
+                        width: 48,
+                        height: 48,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const SizedBox(
+                            width: 48,
+                            height: 48,
+                            child: Icon(Icons.person),
+                          );
+                        },
+                      ),
+                    )
+                  : const SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: Icon(Icons.person),
+                    ),
+              const SizedBox(width: 12),
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      AppLocalizations.of(context)!.backupAndRestore,
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      profile.name,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        ElevatedButton.icon(
-                          icon: const Icon(Icons.upload_file),
-                          label: Text(AppLocalizations.of(context)!.exportBackup),
-                          onPressed: () => _exportBackup(),
+                    if (isCurrentProfile)
+                      Text(
+                        AppLocalizations.of(context)!.active,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onPrimaryContainer,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
                         ),
-                        const SizedBox(width: 16),
-                        ElevatedButton.icon(
-                          icon: const Icon(Icons.download),
-                          label: Text(AppLocalizations.of(context)!.importBackup),
-                          onPressed: () => _showImportDialog(),
-                        ),
-                      ],
-                    ),
+                      ),
                   ],
                 ),
               ),
-            ),
-            const SizedBox(height: 24),
-            // Profiles list
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  AppLocalizations.of(context)!.profiles,
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              if (!isCurrentProfile)
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.swap_horiz, size: 18),
+                  label: Text(AppLocalizations.of(context)!.switchProfile),
+                  onPressed: () => _switchProfile(profile.id),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.add),
-                  tooltip: AppLocalizations.of(context)!.createNewProfile,
-                  onPressed: _showCreateProfileDialog,
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: profilesAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, stack) => Center(
-                  child: Text(AppLocalizations.of(context)!.errorLoadingProfiles(error.toString())),
-                ),
-                data: (profiles) {
-                  if (profiles.isEmpty) {
-                    return Center(
-                      child: Text(AppLocalizations.of(context)!.noProfilesFound),
-                    );
-                  }
-
-                  return currentProfileAsync.when(
-                    loading: () => const Center(child: CircularProgressIndicator()),
-                    error: (_, __) => const SizedBox(),
-                    data: (currentProfile) {
-                      return ListView.builder(
-                        itemCount: profiles.length,
-                        itemBuilder: (context, index) {
-                          final profile = profiles[index];
-                          final isCurrent = currentProfile?.id == profile.id;
-
-                          return GestureDetector(
-                            onDoubleTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => ProfileViewPage(profileId: profile.id),
-                                ),
-                              );
-                            },
-                            onSecondaryTapDown: (TapDownDetails details) {
-                              _showProfileContextMenu(context, profile, details.globalPosition, isCurrent, profiles.length);
-                            },
-                            child: Card(
-                              color: isCurrent 
-                                  ? Theme.of(context).colorScheme.primary.withOpacity(0.2)
-                                  : Theme.of(context).cardColor,
-                              margin: const EdgeInsets.only(bottom: 8),
-                              child: ListTile(
-                                leading: profile.photoPath != null && File(profile.photoPath!).existsSync()
-                                    ? ClipRRect(
-                                        borderRadius: BorderRadius.circular(4),
-                                        child: Image.file(
-                                          File(profile.photoPath!),
-                                          width: 48,
-                                          height: 48,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (context, error, stackTrace) {
-                                            return const SizedBox(
-                                              width: 48,
-                                              height: 48,
-                                              child: Icon(Icons.person),
-                                            );
-                                          },
-                                        ),
-                                      )
-                                    : const SizedBox(
-                                        width: 48,
-                                        height: 48,
-                                        child: Icon(Icons.person),
-                                      ),
-                                title: Row(
-                                  children: [
-                                    Text(
-                                      profile.name,
-                                      style: TextStyle(
-                                        fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
-                                      ),
-                                    ),
-                                    if (isCurrent) ...[
-                                      const SizedBox(width: 8),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: Theme.of(context).colorScheme.primary,
-                                          borderRadius: BorderRadius.circular(4),
-                                        ),
-                                        child: Text(
-                                          AppLocalizations.of(context)!.active,
-                                          style: TextStyle(fontSize: 12),
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                                trailing: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.visibility),
-                                      color: Theme.of(context).textTheme.bodyMedium?.color,
-                                      onPressed: () {
-                                        Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                            builder: (_) => ProfileViewPage(profileId: profile.id),
-                                          ),
-                                        );
-                                      },
-                                      tooltip: 'View Profile',
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.edit_outlined),
-                                      color: Theme.of(context).textTheme.bodyMedium?.color,
-                                      onPressed: () => _editProfile(profile),
-                                      tooltip: AppLocalizations.of(context)!.tooltipEditProfileName,
-                                    ),
-                                    if (!isCurrent)
-                                      TextButton(
-                                        onPressed: () => _switchProfile(profile.id),
-                                        child: Text(AppLocalizations.of(context)!.switchProfile),
-                                      ),
-                                    if (profiles.length > 1)
-                                      IconButton(
-                                        icon: const Icon(Icons.delete_outline),
-                                        color: Colors.red.shade300,
-                                        onPressed: () => _deleteProfile(profile),
-                                        tooltip: AppLocalizations.of(context)!.delete,
-                                      ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      );
-                    },
+              OutlinedButton.icon(
+                icon: const Icon(Icons.visibility, size: 18),
+                label: Text(AppLocalizations.of(context)!.viewProfile),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => ProfileViewPage(profileId: profile.id),
+                    ),
                   );
                 },
               ),
-            ),
-                ],
+              OutlinedButton.icon(
+                icon: const Icon(Icons.edit, size: 18),
+                label: Text(AppLocalizations.of(context)!.editProfile),
+                onPressed: () => _editProfile(profile),
               ),
-            ),
+              OutlinedButton.icon(
+                icon: Icon(Icons.delete, size: 18, color: Colors.red.shade300),
+                label: Text(
+                  AppLocalizations.of(context)!.deleteProfile,
+                  style: TextStyle(color: Colors.red.shade300),
+                ),
+                onPressed: () => _deleteProfile(profile),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.red.shade300,
+                  side: BorderSide(color: Colors.red.shade300),
+                ),
+              ),
+            ],
           ),
         ],
       ),

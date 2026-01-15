@@ -17,6 +17,7 @@ import '../models/profile.dart';
 import '../repository/project_repository.dart';
 import '../repository/profile_repository.dart';
 import '../services/scanner_service.dart';
+import '../services/google_drive_sync_service.dart';
 
 // Profile Repository Provider
 final profileRepositoryProvider = FutureProvider<ProfileRepository>((ref) async {
@@ -192,8 +193,15 @@ final showHiddenProjectsProvider = NotifierProvider<ShowHiddenProjectsNotifier, 
 
 // NOVO PROVIDER CORRIGIDO: Stream que emite a lista bruta de projetos
 // Ele usa o novo método watchAllProjects() do repositório (que você precisa garantir que existe)
+// This provider automatically invalidates when repositoryProvider changes (profile switch)
 final allProjectsStreamProvider = StreamProvider<List<MusicProject>>((ref) async* {
+  // Watch repositoryProvider to automatically restart stream when profile changes
   final repo = await ref.watch(repositoryProvider.future);
+  
+  if (kDebugMode) {
+    print('allProjectsStreamProvider: Starting stream for profile ${repo.profileId}');
+  }
+  
   // OBSERVAÇÃO: Este método (repo.watchAllProjects()) deve existir e retornar Stream<List<MusicProject>>
   yield* repo.watchAllProjects();
 });
@@ -216,36 +224,47 @@ final projectsProvider = Provider<List<MusicProject>>((ref) {
     var projects = allProjects;
 
     // --- Filter out preserved projects (in releases but not in any active scan root) ---
-    final releases = releasesAsync.value ?? [];
-    final protectedProjectIds = <String>{};
-    for (final release in releases) {
-      protectedProjectIds.addAll(release.trackIds);
-    }
-    
-    // Get all active scan root paths (normalized for comparison)
-    final activeRootPaths = scanRoots.map((root) {
-      final normalized = p.normalize(root.path);
-      // Ensure root path ends with separator for proper prefix matching
-      return normalized.endsWith(p.separator) ? normalized : normalized + p.separator;
-    }).toList();
-    
-    // Filter out preserved projects: those in releases but not in any active root
-    projects = projects.where((project) {
-      // If project is not in any release, always show it
-      if (!protectedProjectIds.contains(project.id)) {
-        return true;
+    // On Android, we're only syncing metadata, so show ALL projects (both in releases and not)
+    // On desktop, filter preserved projects that aren't in active scan roots
+    if (!Platform.isAndroid) {
+      // Desktop: filter preserved projects that aren't in active scan roots
+      final releases = releasesAsync.value ?? [];
+      final protectedProjectIds = <String>{};
+      for (final release in releases) {
+        protectedProjectIds.addAll(release.trackIds);
       }
       
-      // If project is in a release, check if it's in any active scan root
-      final projectPath = p.normalize(project.filePath);
-      final isInActiveRoot = activeRootPaths.any((rootPath) {
-        // Check if project path starts with the root path
-        return projectPath.startsWith(rootPath);
-      });
+      // Get all active scan root paths (normalized for comparison)
+      final activeRootPaths = scanRoots.map((root) {
+        final normalized = p.normalize(root.path);
+        // Ensure root path ends with separator for proper prefix matching
+        return normalized.endsWith(p.separator) ? normalized : normalized + p.separator;
+      }).toList();
       
-      // Only show if it's in an active root (preserved projects not in active roots are hidden)
-      return isInActiveRoot;
-    }).toList();
+      // Filter out preserved projects: those in releases but not in any active root
+      projects = projects.where((project) {
+        // If project is not in any release, always show it
+        if (!protectedProjectIds.contains(project.id)) {
+          return true;
+        }
+        
+        // If project is in a release, check if it's in any active scan root
+        final projectPath = p.normalize(project.filePath);
+        final isInActiveRoot = activeRootPaths.any((rootPath) {
+          // Check if project path starts with the root path
+          return projectPath.startsWith(rootPath);
+        });
+        
+        // Only show if it's in an active root (preserved projects not in active roots are hidden)
+        return isInActiveRoot;
+      }).toList();
+    } else {
+      // Android: show all projects (metadata-only mode, no file system checks)
+      // Don't filter based on scan roots since files don't exist locally
+      if (kDebugMode) {
+        print('projectsProvider (Android): Showing all ${projects.length} projects (metadata-only mode)');
+      }
+    }
 
     // --- Filter hidden projects ---
     final hiddenMode = ref.watch(showHiddenProjectsProvider);
@@ -365,8 +384,7 @@ class LocaleNotifier extends Notifier<Locale> {
 
   Future<void> _loadLocale() async {
     try {
-      final appDataPath = await getLocalAppDataPath();
-      Hive.init(appDataPath);
+      await ensureHiveInitialized();
       final settingsBox = await Hive.openBox<String>('settings');
       final savedLocale = settingsBox.get('locale');
       if (savedLocale != null && savedLocale.isNotEmpty) {
@@ -387,8 +405,7 @@ class LocaleNotifier extends Notifier<Locale> {
       print('Locale changed to: ${locale.languageCode}');
     }
     try {
-      final appDataPath = await getLocalAppDataPath();
-      Hive.init(appDataPath);
+      await ensureHiveInitialized();
       final settingsBox = await Hive.openBox<String>('settings');
       await settingsBox.put('locale', '${locale.languageCode}_${locale.countryCode ?? ''}');
     } catch (e) {
@@ -458,3 +475,8 @@ class PhaseFilterNotifier extends Notifier<String?> {
     state = null;
   }
 }
+
+// Provider for GoogleDriveSyncService (singleton instance)
+final googleDriveSyncServiceProvider = Provider<GoogleDriveSyncService>((ref) {
+  return GoogleDriveSyncService();
+});
