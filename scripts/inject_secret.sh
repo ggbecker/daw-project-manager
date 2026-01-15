@@ -45,22 +45,23 @@ fi
 CONTENT=$(cat "$TEMPLATE_FILE")
 
 # Replace placeholders (all values are obfuscated with base64)
+# Using awk for safer string replacement that handles special characters
 if [ -n "$DESKTOP_CLIENT_ID" ]; then
     # Obfuscate desktop client ID (base64 encode)
-    OBFUSCATED_DESKTOP_ID=$(echo -n "$DESKTOP_CLIENT_ID" | base64)
-    CONTENT=$(echo "$CONTENT" | sed "s|{{DESKTOP_CLIENT_ID}}|$OBFUSCATED_DESKTOP_ID|g")
+    OBFUSCATED_DESKTOP_ID=$(echo -n "$DESKTOP_CLIENT_ID" | base64 | tr -d '\n')
+    CONTENT=$(echo "$CONTENT" | awk -v old="{{DESKTOP_CLIENT_ID}}" -v new="$OBFUSCATED_DESKTOP_ID" '{gsub(old, new); print}')
 fi
 
 if [ -n "$DESKTOP_CLIENT_SECRET" ]; then
     # Obfuscate desktop client secret (base64 encode)
-    OBFUSCATED_SECRET=$(echo -n "$DESKTOP_CLIENT_SECRET" | base64)
-    CONTENT=$(echo "$CONTENT" | sed "s|{{DESKTOP_CLIENT_SECRET}}|$OBFUSCATED_SECRET|g")
+    OBFUSCATED_SECRET=$(echo -n "$DESKTOP_CLIENT_SECRET" | base64 | tr -d '\n')
+    CONTENT=$(echo "$CONTENT" | awk -v old="{{DESKTOP_CLIENT_SECRET}}" -v new="$OBFUSCATED_SECRET" '{gsub(old, new); print}')
 fi
 
 if [ -n "$ANDROID_WEB_CLIENT_ID" ]; then
     # Obfuscate android web client ID (base64 encode)
-    OBFUSCATED_ANDROID_ID=$(echo -n "$ANDROID_WEB_CLIENT_ID" | base64)
-    CONTENT=$(echo "$CONTENT" | sed "s|{{ANDROID_WEB_CLIENT_ID}}|$OBFUSCATED_ANDROID_ID|g")
+    OBFUSCATED_ANDROID_ID=$(echo -n "$ANDROID_WEB_CLIENT_ID" | base64 | tr -d '\n')
+    CONTENT=$(echo "$CONTENT" | awk -v old="{{ANDROID_WEB_CLIENT_ID}}" -v new="$OBFUSCATED_ANDROID_ID" '{gsub(old, new); print}')
 fi
 
 # Write output
