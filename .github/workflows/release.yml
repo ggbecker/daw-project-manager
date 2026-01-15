@@ -406,10 +406,10 @@ jobs:
           path: ${{ steps.set_asset_paths.outputs.asset_path }}
           retention-days: 7
 
-  # Android Release Build Job
+  # Android Build Job (for both PRs and Releases)
   build-android:
-    name: Build Android App Bundle
-    if: startsWith(github.ref, 'refs/tags/v')
+    name: Build Android (${{ github.event_name == 'pull_request' && 'PR Test' || 'Release' }})
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     
     steps:
@@ -446,7 +446,8 @@ jobs:
           DESKTOP_CLIENT_SECRET: ${{ secrets.DESKTOP_CLIENT_SECRET }}
           ANDROID_WEB_CLIENT_ID: ${{ secrets.ANDROID_WEB_CLIENT_ID }}
 
-      - name: Setup Android Keystore
+      - name: Setup Android Keystore (Release only)
+        if: startsWith(github.ref, 'refs/tags/v')
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/app/release.keystore
           mkdir -p android
@@ -462,7 +463,8 @@ jobs:
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
-      - name: Determine version from tag
+      - name: Determine version from tag (Release only)
+        if: startsWith(github.ref, 'refs/tags/v')
         id: version
         run: |
           # Extract version from tag (e.g., v1.7.0 -> 1.7.0)
@@ -472,7 +474,8 @@ jobs:
           VERSION_CODE=$(echo ${TAG_NAME} | tr -d '.' | cut -c1-9)
           echo "version_code=${VERSION_CODE}" >> $GITHUB_OUTPUT
 
-      - name: Update version in pubspec.yaml
+      - name: Update version in pubspec.yaml (Release only)
+        if: startsWith(github.ref, 'refs/tags/v')
         run: |
           VERSION_NAME="${{ steps.version.outputs.version_name }}"
           VERSION_CODE="${{ steps.version.outputs.version_code }}"
@@ -488,19 +491,31 @@ jobs:
       - name: Generate Hive Adapters
         run: dart run build_runner build --delete-conflicting-outputs
 
-      - name: Build Android App Bundle (AAB)
+      - name: Build Android App Bundle (AAB) - Release
+        if: startsWith(github.ref, 'refs/tags/v')
         run: |
           flutter build appbundle --release
         env:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
-      - name: Build APK (for testing)
+      - name: Build Android APK - PR Test (unsigned)
+        if: github.event_name == 'pull_request'
+        run: |
+          flutter build apk --debug
+        continue-on-error: true
+
+      - name: Build Android APK - Release (for testing)
+        if: startsWith(github.ref, 'refs/tags/v')
         run: |
           flutter build apk --release --split-per-abi
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         continue-on-error: true
 
       - name: Find Existing Release URL
+        if: startsWith(github.ref, 'refs/tags/v')
         id: find_release
         uses: actions/github-script@v6
         env:
@@ -520,7 +535,7 @@ jobs:
             }
 
       - name: Upload AAB to Release
-        if: steps.find_release.outputs.upload_url != ''
+        if: startsWith(github.ref, 'refs/tags/v') && steps.find_release.outputs.upload_url != ''
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -530,7 +545,18 @@ jobs:
           asset_name: DAW_Project_Manager_Android_${{ github.ref_name }}.aab
           asset_content_type: application/vnd.android.package-archive
 
-      - name: Upload APK artifacts (for testing)
+      - name: Upload APK artifacts (PR)
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk-pr-test
+          path: build/app/outputs/flutter-apk/*.apk
+          retention-days: 7
+          if-no-files-found: ignore
+        continue-on-error: true
+
+      - name: Upload APK artifacts (Release - for testing)
+        if: startsWith(github.ref, 'refs/tags/v')
         uses: actions/upload-artifact@v4
         with:
           name: android-apks
@@ -540,6 +566,7 @@ jobs:
         continue-on-error: true
 
       - name: Create Release Summary
+        if: startsWith(github.ref, 'refs/tags/v')
         run: |
           echo "## Android Release Build" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -557,3 +584,17 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Note on Play App Signing" >> $GITHUB_STEP_SUMMARY
           echo "This AAB is signed with your **upload key**. Google Play will re-sign it with the app signing key (managed by Google via Play App Signing) before distribution to users." >> $GITHUB_STEP_SUMMARY
+
+      - name: Create PR Test Summary
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "## Android PR Build Test" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Android build completed successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Build Details" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build Type:** Debug (unsigned, for testing only)" >> $GITHUB_STEP_SUMMARY
+          echo "- **APK:** Available as artifact (for testing)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Note" >> $GITHUB_STEP_SUMMARY
+          echo "This is an unsigned debug build for PR validation. Release builds with signing are only created for tagged releases." >> $GITHUB_STEP_SUMMARY
