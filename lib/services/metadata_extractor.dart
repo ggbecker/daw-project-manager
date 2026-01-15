@@ -124,11 +124,11 @@ class MetadataExtractor {
         return 'Studio One';
       case '.tracktionedit':
       case '.tracktion':
-        return 'Tracktion Waveform';
+        return 'Waveform';
       case '.cwp':
       case '.wrk':
       case '.bun':
-        return 'Cakewalk';
+        return 'Sonnar';
       default:
         return null;
     }
