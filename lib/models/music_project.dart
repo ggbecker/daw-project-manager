@@ -72,7 +72,7 @@ class MusicProject {
   final String? previewSongFileName; // Original filename of the preview song (for display purposes)
 
   @HiveField(22)
-  final String? previewSongHash; // MD5 hash of the preview song file (for change detection)
+  final String? uploadedPreviewSongHash; // MD5 hash of the preview song file that was successfully uploaded to Drive (for change detection)
 
   const MusicProject({
     required this.id,
@@ -97,7 +97,7 @@ class MusicProject {
     this.fileCreatedAt,
     this.statusChangedAt,
     this.previewSongFileName,
-    this.previewSongHash,
+    this.uploadedPreviewSongHash,
   });
 
   String get displayName => (customDisplayName != null && customDisplayName!.trim().isNotEmpty)
@@ -200,8 +200,8 @@ class MusicProject {
     DateTime? statusChangedAt,
     String? previewSongFileName,
     bool clearPreviewSongFileName = false,
-    String? previewSongHash,
-    bool clearPreviewSongHash = false,
+    String? uploadedPreviewSongHash,
+    bool clearUploadedPreviewSongHash = false,
   }) {
     return MusicProject(
       id: id ?? this.id,
@@ -226,7 +226,7 @@ class MusicProject {
       fileCreatedAt: fileCreatedAt ?? this.fileCreatedAt,
       statusChangedAt: statusChangedAt ?? this.statusChangedAt,
       previewSongFileName: clearPreviewSongFileName ? null : (previewSongFileName ?? this.previewSongFileName),
-      previewSongHash: clearPreviewSongHash ? null : (previewSongHash ?? this.previewSongHash),
+      uploadedPreviewSongHash: clearUploadedPreviewSongHash ? null : (uploadedPreviewSongHash ?? this.uploadedPreviewSongHash),
     );
   }
 }
@@ -268,7 +268,7 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
       fileCreatedAt: fields.containsKey(19) ? fields[19] as DateTime? : null,
       statusChangedAt: fields.containsKey(20) ? fields[20] as DateTime? : null,
       previewSongFileName: fields.containsKey(21) ? fields[21] as String? : null,
-      previewSongHash: fields.containsKey(22) ? fields[22] as String? : null,
+      uploadedPreviewSongHash: fields.containsKey(22) ? fields[22] as String? : null,
     );
   }
 
@@ -321,6 +321,6 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
       ..writeByte(21)
       ..write(obj.previewSongFileName)
       ..writeByte(22)
-      ..write(obj.previewSongHash);
+      ..write(obj.uploadedPreviewSongHash);
   }
 }
