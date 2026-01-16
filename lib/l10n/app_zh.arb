@@ -824,6 +824,7 @@
   "syncNow": "立即同步",
   "uploadBackup": "上传备份",
   "downloadBackup": "下载备份",
+  "newerBackupAvailable": "云端有新备份可用",
   "signOut": "退出",
   "downloadPreviewSongs": "下载预览歌曲",
   "downloadPreviewSongsExplanation": "如果未选中，将跳过预览歌曲（节省时间和存储空间）。如果需要，您可以稍后下载它们。",

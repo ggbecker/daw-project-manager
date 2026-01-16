@@ -31,6 +31,7 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
 
   bool _isSignedIn = false;
   bool _isCheckingSession = false;
+  bool _hasNewerBackupAvailable = false;
 
   @override
   void initState() {
@@ -156,8 +157,32 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
           _lastSyncTime = lastSync;
         });
       }
+      
+      // Check if newer backup is available (only if signed in and on mobile)
+      if (_isSignedIn && (Platform.isAndroid || Platform.isIOS)) {
+        await _checkForNewerBackup();
+      }
     } catch (e) {
       if (kDebugMode) print('Error loading sync status: $e');
+    }
+  }
+
+  /// Check if a newer backup is available on Drive
+  Future<void> _checkForNewerBackup() async {
+    try {
+      final hasNewer = await _syncService.isNewerBackupAvailable();
+      if (mounted) {
+        setState(() {
+          _hasNewerBackupAvailable = hasNewer;
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error checking for newer backup: $e');
+      if (mounted) {
+        setState(() {
+          _hasNewerBackupAvailable = false;
+        });
+      }
     }
   }
 
@@ -605,7 +630,13 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
           result.releasesUpdated,
         );
         _lastSyncTime = DateTime.now();
+        _hasNewerBackupAvailable = false; // Reset after successful download
       });
+      
+      // Re-check for newer backup after download (in case another backup was uploaded)
+      if (Platform.isAndroid || Platform.isIOS) {
+        await _checkForNewerBackup();
+      }
 
       // CRITICAL: Don't invalidate repositoryProvider - it will lose the box reference!
       // The repository already has the correct box reference, we just need to restart the stream
@@ -802,6 +833,33 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
                                   DateFormat.yMMMd().add_jm().format(_lastSyncTime!),
                                 ),
                                 style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                              ),
+                            ),
+                          // Show notification if newer backup is available (Android/iOS only)
+                          if ((Platform.isAndroid || Platform.isIOS) && _hasNewerBackupAvailable)
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 8.0),
+                              padding: const EdgeInsets.all(12.0),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.shade50,
+                                border: Border.all(color: Colors.orange.shade300, width: 1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.cloud_download, color: Colors.orange.shade700, size: 20),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      AppLocalizations.of(context)!.newerBackupAvailable,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.orange.shade900,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                         ],

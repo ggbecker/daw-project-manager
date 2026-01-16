@@ -824,6 +824,7 @@
   "syncNow": "Sincronizar Agora",
   "uploadBackup": "Enviar Backup",
   "downloadBackup": "Baixar Backup",
+  "newerBackupAvailable": "Novo backup disponível na nuvem",
   "signOut": "Sair",
   "downloadPreviewSongs": "Baixar músicas de prévia",
   "downloadPreviewSongsExplanation": "Se desmarcado, as músicas de prévia serão ignoradas (economiza tempo e armazenamento). Você pode baixá-las depois se necessário.",

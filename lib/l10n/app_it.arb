@@ -824,6 +824,7 @@
   "syncNow": "Sincronizza Ora",
   "uploadBackup": "Carica Backup",
   "downloadBackup": "Scarica Backup",
+  "newerBackupAvailable": "Nuovo backup disponibile nel cloud",
   "signOut": "Esci",
   "downloadPreviewSongs": "Scarica canzoni di anteprima",
   "downloadPreviewSongsExplanation": "Se deselezionato, le canzoni di anteprima verranno saltate (risparmia tempo e spazio). Puoi scaricarle in seguito se necessario.",

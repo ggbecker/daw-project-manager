@@ -1785,6 +1785,12 @@ abstract class AppLocalizations {
   /// **'Download Backup'**
   String get downloadBackup;
 
+  /// No description provided for @newerBackupAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'New backup available on cloud'**
+  String get newerBackupAvailable;
+
   /// Button to sign out from Google Drive
   ///
   /// In en, this message translates to:

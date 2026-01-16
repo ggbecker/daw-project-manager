@@ -1041,6 +1041,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get downloadBackup => 'Scarica Backup';
 
   @override
+  String get newerBackupAvailable => 'Nuovo backup disponibile nel cloud';
+
+  @override
   String get signOut => 'Esci';
 
   @override

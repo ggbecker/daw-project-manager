@@ -824,6 +824,7 @@
   "syncNow": "Jetzt synchronisieren",
   "uploadBackup": "Backup hochladen",
   "downloadBackup": "Backup herunterladen",
+  "newerBackupAvailable": "Neues Backup in der Cloud verfügbar",
   "signOut": "Abmelden",
   "downloadPreviewSongs": "Vorschau-Songs herunterladen",
   "downloadPreviewSongsExplanation": "Wenn deaktiviert, werden Vorschau-Songs übersprungen (spart Zeit und Speicherplatz). Sie können sie später bei Bedarf herunterladen.",

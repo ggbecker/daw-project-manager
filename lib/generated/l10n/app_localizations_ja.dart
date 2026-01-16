@@ -1029,6 +1029,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get downloadBackup => 'バックアップをダウンロード';
 
   @override
+  String get newerBackupAvailable => 'クラウドに新しいバックアップが利用可能';
+
+  @override
   String get signOut => 'サインアウト';
 
   @override

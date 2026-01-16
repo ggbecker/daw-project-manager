@@ -982,6 +982,7 @@
     "description": "Button to upload backup to Google Drive"
   },
   "downloadBackup": "Download Backup",
+  "newerBackupAvailable": "New backup available on cloud",
   "@downloadBackup": {
     "description": "Button to download backup from Google Drive"
   },

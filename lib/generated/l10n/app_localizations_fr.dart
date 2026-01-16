@@ -1044,6 +1044,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get downloadBackup => 'Télécharger la Sauvegarde';
 
   @override
+  String get newerBackupAvailable =>
+      'Nouvelle sauvegarde disponible dans le cloud';
+
+  @override
   String get signOut => 'Se Déconnecter';
 
   @override

@@ -1038,6 +1038,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadBackup => 'Download Backup';
 
   @override
+  String get newerBackupAvailable => 'New backup available on cloud';
+
+  @override
   String get signOut => 'Sign Out';
 
   @override

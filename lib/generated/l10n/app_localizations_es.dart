@@ -1044,6 +1044,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get downloadBackup => 'Descargar Copia de Seguridad';
 
   @override
+  String get newerBackupAvailable =>
+      'Nueva copia de seguridad disponible en la nube';
+
+  @override
   String get signOut => 'Cerrar Sesión';
 
   @override

@@ -1040,6 +1040,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get downloadBackup => 'Скачать резервную копию';
 
   @override
+  String get newerBackupAvailable => 'Доступна новая резервная копия в облаке';
+
+  @override
   String get signOut => 'Выйти';
 
   @override

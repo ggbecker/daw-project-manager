@@ -1025,6 +1025,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get downloadBackup => '下载备份';
 
   @override
+  String get newerBackupAvailable => '云端有新备份可用';
+
+  @override
   String get signOut => '退出';
 
   @override
