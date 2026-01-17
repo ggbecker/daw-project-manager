@@ -8,6 +8,9 @@ import 'package:uuid/uuid.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:intl/intl.dart';
 import '../models/profile.dart';
+import '../models/music_project.dart';
+import '../models/release.dart';
+import '../models/todo_item.dart';
 import '../providers/providers.dart';
 import '../repository/profile_repository.dart';
 import '../repository/project_repository.dart';
@@ -721,6 +724,265 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
     }
   }
 
+  /// Generate testing database with sample projects and releases
+  Future<void> _generateTestingDatabase() async {
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(AppLocalizations.of(context)!.generateTestingDatabase),
+        content: Text(AppLocalizations.of(context)!.generateTestingDatabaseMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(AppLocalizations.of(context)!.create),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      final profileRepo = await ref.read(profileRepositoryProvider.future);
+      final currentProfileId = profileRepo.getCurrentProfileId();
+      
+      if (currentProfileId == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context)!.noProfileSelected)),
+          );
+        }
+        return;
+      }
+
+      final projectRepo = await ref.read(repositoryProvider.future);
+      final uuid = const Uuid();
+      final now = DateTime.now();
+
+      // Sample project data
+      // Valid status values: 'Idea', 'Arranging', 'Mixing', 'Mastering', 'Finished'
+      final sampleProjects = [
+        {
+          'name': 'Midnight Dreams',
+          'daw': 'Ableton Live',
+          'extension': '.als',
+          'status': 'Arranging',
+          'bpm': 128.0,
+          'key': 'Am',
+          'notes': 'Deep house track with atmospheric pads. Working on the breakdown section.',
+          'todos': [
+            'Add vocal samples',
+            'Mixdown',
+            'Master track',
+          ],
+          'hidden': false,
+        },
+        {
+          'name': 'Summer Vibes',
+          'daw': 'FL Studio',
+          'extension': '.flp',
+          'status': 'Idea',
+          'bpm': 120.0,
+          'key': 'C major',
+          'notes': 'Upbeat tropical house track. Need to add more percussion elements.',
+          'todos': [
+            'Create melody variations',
+            'Add bassline',
+          ],
+          'hidden': false,
+        },
+        {
+          'name': 'Dark Energy',
+          'daw': 'Logic Pro',
+          'extension': '.logicx',
+          'status': 'Finished',
+          'bpm': 140.0,
+          'key': 'Dm',
+          'notes': 'Aggressive techno track. Final mix completed.',
+          'todos': [
+            'Upload to SoundCloud',
+          ],
+          'hidden': false,
+        },
+        {
+          'name': 'Ambient Space',
+          'daw': 'Ableton Live',
+          'extension': '.als',
+          'status': 'Mixing',
+          'bpm': 90.0,
+          'key': 'F#m',
+          'notes': 'Experimental ambient piece with field recordings.',
+          'todos': [
+            'Record more samples',
+            'Add reverb automation',
+          ],
+          'hidden': false,
+        },
+        {
+          'name': 'Old Project',
+          'daw': 'Cubase',
+          'extension': '.cpr',
+          'status': 'Idea',
+          'bpm': 110.0,
+          'key': 'G major',
+          'notes': 'This is a hidden project for testing.',
+          'todos': [],
+          'hidden': true,
+        },
+        {
+          'name': 'Bass Heavy',
+          'daw': 'FL Studio',
+          'extension': '.flp',
+          'status': 'Arranging',
+          'bpm': 150.0,
+          'key': 'Bb minor',
+          'notes': 'Dubstep track with heavy bass drops.',
+          'todos': [
+            'Design bass sounds',
+            'Create build-up',
+            'Mix low end',
+          ],
+          'hidden': false,
+        },
+        {
+          'name': 'Chill Out',
+          'daw': 'Ableton Live',
+          'extension': '.als',
+          'status': 'Idea',
+          'bpm': 85.0,
+          'key': 'E major',
+          'notes': 'Relaxing downtempo track.',
+          'todos': [
+            'Add piano melody',
+          ],
+          'hidden': false,
+        },
+        {
+          'name': 'Energy Boost',
+          'daw': 'Logic Pro',
+          'extension': '.logicx',
+          'status': 'Mastering',
+          'bpm': 132.0,
+          'key': 'A major',
+          'notes': 'Uplifting progressive house track.',
+          'todos': [
+            'Arrange full track',
+            'Add vocals',
+          ],
+          'hidden': false,
+        },
+      ];
+
+      // Create sample projects
+      final createdProjectIds = <String>[];
+      for (int i = 0; i < sampleProjects.length; i++) {
+        final data = sampleProjects[i];
+        final projectId = uuid.v4();
+        createdProjectIds.add(projectId);
+        
+        final createdAt = now.subtract(Duration(days: 30 - (i * 3)));
+        final updatedAt = now.subtract(Duration(days: i));
+        
+        final todos = (data['todos'] as List).map((text) => TodoItem(
+          id: uuid.v4(),
+          text: text.toString(),
+          completed: false,
+          createdAt: updatedAt,
+        )).toList();
+
+        final project = MusicProject(
+          id: projectId,
+          filePath: '/test/projects/${data['name']}${data['extension']}',
+          fileName: '${data['name']}${data['extension']}',
+          fileSizeBytes: 5000000 + (i * 1000000), // Varying file sizes
+          lastModifiedAt: updatedAt,
+          fileExtension: data['extension'] as String,
+          createdAt: createdAt,
+          updatedAt: updatedAt,
+          customDisplayName: data['name'] as String,
+          status: data['status'] as String,
+          bpm: data['bpm'] as double,
+          musicalKey: data['key'] as String,
+          notes: data['notes'] as String,
+          dawType: data['daw'] as String,
+          dawVersion: '11',
+          todos: todos,
+          hidden: data['hidden'] as bool,
+          fileCreatedAt: createdAt,
+        );
+
+        await projectRepo.projectsBox.put(projectId, project);
+      }
+
+      // Create a sample release with some projects
+      if (createdProjectIds.length >= 3) {
+        final releaseId = uuid.v4();
+        final release = Release(
+          id: releaseId,
+          title: 'Test EP - Summer Collection',
+          releaseDate: now.add(const Duration(days: 30)),
+          description: 'A collection of summer-themed tracks for testing purposes.',
+          trackIds: [
+            createdProjectIds[0], // Midnight Dreams
+            createdProjectIds[1], // Summer Vibes
+            createdProjectIds[5], // Bass Heavy
+          ],
+          todos: [
+            TodoItem(
+              id: uuid.v4(),
+              text: 'Design cover art',
+              completed: false,
+              createdAt: now,
+            ),
+            TodoItem(
+              id: uuid.v4(),
+              text: 'Master all tracks',
+              completed: false,
+              createdAt: now,
+            ),
+            TodoItem(
+              id: uuid.v4(),
+              text: 'Upload to streaming platforms',
+              completed: false,
+              createdAt: now,
+            ),
+          ],
+        );
+
+        await projectRepo.releasesBox.put(releaseId, release);
+      }
+
+      // Invalidate providers to refresh UI
+      ref.invalidate(allProjectsStreamProvider);
+      ref.invalidate(releasesProvider);
+      ref.invalidate(scanRootsProvider);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.testingDatabaseGenerated),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.failedToGenerateTestingDatabase(e.toString())),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      if (kDebugMode) print('Error generating testing database: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final profilesAsync = ref.watch(allProfilesProvider);
@@ -962,6 +1224,25 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
                                       if (kDebugMode) print('Error launching support URL: $e');
                                     }
                                   },
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            // Generate Testing Database button
+                            Row(
+                              children: [
+                                const Icon(Icons.science, size: 24),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    AppLocalizations.of(context)!.generateTestingDatabase,
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                ),
+                                ElevatedButton.icon(
+                                  icon: const Icon(Icons.science, size: 18),
+                                  label: Text(AppLocalizations.of(context)!.generateTestingDatabase),
+                                  onPressed: () => _generateTestingDatabase(),
                                 ),
                               ],
                             ),

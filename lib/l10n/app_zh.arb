@@ -887,5 +887,16 @@
         "type": "String"
       }
     }
+  },
+  "generateTestingDatabase": "生成测试数据库",
+  "generateTestingDatabaseMessage": "这将用示例项目和发布填充数据库以进行测试。继续吗？",
+  "testingDatabaseGenerated": "测试数据库生成成功！",
+  "failedToGenerateTestingDatabase": "生成测试数据库失败: {error}",
+  "@failedToGenerateTestingDatabase": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   }
 }

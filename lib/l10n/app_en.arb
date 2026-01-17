@@ -1231,6 +1231,17 @@
         "type": "String"
       }
     }
+  },
+  "generateTestingDatabase": "Generate Testing Database",
+  "generateTestingDatabaseMessage": "This will populate the database with sample projects and releases for testing. Continue?",
+  "testingDatabaseGenerated": "Testing database generated successfully!",
+  "failedToGenerateTestingDatabase": "Failed to generate testing database: {error}",
+  "@failedToGenerateTestingDatabase": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   }
 }
 

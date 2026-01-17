@@ -1216,4 +1216,19 @@ class AppLocalizationsJa extends AppLocalizations {
   String errorOpeningBrowser(String error) {
     return 'ブラウザを開く際にエラーが発生しました: $error';
   }
+
+  @override
+  String get generateTestingDatabase => 'テストデータベースを生成';
+
+  @override
+  String get generateTestingDatabaseMessage =>
+      'これにより、テスト用のサンプルプロジェクトとリリースでデータベースが入力されます。続行しますか？';
+
+  @override
+  String get testingDatabaseGenerated => 'テストデータベースが正常に生成されました！';
+
+  @override
+  String failedToGenerateTestingDatabase(String error) {
+    return 'テストデータベースの生成に失敗しました: $error';
+  }
 }

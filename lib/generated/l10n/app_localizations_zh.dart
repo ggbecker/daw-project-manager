@@ -1205,4 +1205,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String errorOpeningBrowser(String error) {
     return '打开浏览器时出错: $error';
   }
+
+  @override
+  String get generateTestingDatabase => '生成测试数据库';
+
+  @override
+  String get generateTestingDatabaseMessage => '这将用示例项目和发布填充数据库以进行测试。继续吗？';
+
+  @override
+  String get testingDatabaseGenerated => '测试数据库生成成功！';
+
+  @override
+  String failedToGenerateTestingDatabase(String error) {
+    return '生成测试数据库失败: $error';
+  }
 }

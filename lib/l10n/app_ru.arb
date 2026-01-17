@@ -887,5 +887,16 @@
         "type": "String"
       }
     }
+  },
+  "generateTestingDatabase": "Создать тестовую базу данных",
+  "generateTestingDatabaseMessage": "Это заполнит базу данных примерами проектов и релизов для тестирования. Продолжить?",
+  "testingDatabaseGenerated": "Тестовая база данных успешно создана!",
+  "failedToGenerateTestingDatabase": "Ошибка при создании тестовой базы данных: {error}",
+  "@failedToGenerateTestingDatabase": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   }
 }

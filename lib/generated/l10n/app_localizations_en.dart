@@ -1227,4 +1227,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String errorOpeningBrowser(String error) {
     return 'Error opening browser: $error';
   }
+
+  @override
+  String get generateTestingDatabase => 'Generate Testing Database';
+
+  @override
+  String get generateTestingDatabaseMessage =>
+      'This will populate the database with sample projects and releases for testing. Continue?';
+
+  @override
+  String get testingDatabaseGenerated =>
+      'Testing database generated successfully!';
+
+  @override
+  String failedToGenerateTestingDatabase(String error) {
+    return 'Failed to generate testing database: $error';
+  }
 }

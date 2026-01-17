@@ -887,5 +887,16 @@
         "type": "String"
       }
     }
+  },
+  "generateTestingDatabase": "Genera Database di Test",
+  "generateTestingDatabaseMessage": "Questo popolerà il database con progetti e pubblicazioni di esempio per i test. Continuare?",
+  "testingDatabaseGenerated": "Database di test generato con successo!",
+  "failedToGenerateTestingDatabase": "Errore nella generazione del database di test: {error}",
+  "@failedToGenerateTestingDatabase": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   }
 }
