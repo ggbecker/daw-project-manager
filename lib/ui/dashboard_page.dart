@@ -2852,60 +2852,6 @@ class _TogglePlayPauseIntent extends Intent {
   const _TogglePlayPauseIntent();
 }
 
-// Waveform painter for audio visualization
-class _WaveformPainter extends CustomPainter {
-  final List<double> waveform;
-  final double progress;
-  final int progressIndex;
-  final Color color;
-  final Color backgroundColor;
-
-  _WaveformPainter({
-    required this.waveform,
-    required this.progress,
-    required this.progressIndex,
-    required this.color,
-    required this.backgroundColor,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-
-    final backgroundPaint = Paint()
-      ..color = backgroundColor.withOpacity(0.3)
-      ..style = PaintingStyle.fill;
-
-    final barWidth = size.width / waveform.length;
-    final centerY = size.height / 2;
-
-    for (int i = 0; i < waveform.length; i++) {
-      final barHeight = waveform[i] * size.height * 0.8;
-      final x = i * barWidth;
-      final isPlayed = i < progressIndex;
-
-      // Draw bar
-      final barPaint = isPlayed ? paint : backgroundPaint;
-      canvas.drawRect(
-        Rect.fromLTWH(
-          x + barWidth * 0.1,
-          centerY - barHeight / 2,
-          barWidth * 0.8,
-          barHeight,
-        ),
-        barPaint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(_WaveformPainter oldDelegate) {
-    return oldDelegate.progress != progress ||
-        oldDelegate.waveform != waveform;
-  }
-}
 
 class _PreviewSongDialog extends StatefulWidget {
   final MusicProject project;
@@ -3025,43 +2971,6 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
     return '$minutes:$seconds';
   }
 
-  // Generate simple waveform data (simulated - in a real app you'd extract from audio)
-  List<double> _generateWaveformData() {
-    // Generate a simple waveform pattern for visualization
-    // In a real implementation, you'd extract this from the audio file
-    final List<double> waveform = [];
-    final random = DateTime.now().millisecondsSinceEpoch;
-    for (int i = 0; i < 200; i++) {
-      // Create a pattern that simulates audio waveform
-      final base = (i % 20) / 20.0;
-      final variation = (random + i) % 100 / 100.0;
-      waveform.add(0.1 + (base * 0.4) + (variation * 0.3));
-    }
-    return waveform;
-  }
-
-  Widget _buildWaveformWidget(BuildContext context) {
-    final waveform = _generateWaveformData();
-    final progress = _duration.inMilliseconds > 0
-        ? _position.inMilliseconds / _duration.inMilliseconds
-        : 0.0;
-    final progressIndex = (waveform.length * progress).round();
-
-    return Container(
-      height: 80,
-      margin: const EdgeInsets.symmetric(vertical: 16),
-      child: CustomPaint(
-        painter: _WaveformPainter(
-          waveform: waveform,
-          progress: progress,
-          progressIndex: progressIndex,
-          color: Theme.of(context).colorScheme.primary,
-          backgroundColor: Theme.of(context).colorScheme.surface,
-        ),
-        child: Container(),
-      ),
-    );
-  }
 
   Widget _buildAndroidPlayerLayout(BuildContext context) {
     return Column(
@@ -3488,6 +3397,23 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
     }
   }
 
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'Idea':
+        return Colors.blue.shade300;
+      case 'Arranging':
+        return Colors.orange.shade300;
+      case 'Mixing':
+        return Colors.purple.shade300;
+      case 'Mastering':
+        return Colors.pink.shade300;
+      case 'Finished':
+        return Colors.green.shade300;
+      default:
+        return Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -3548,7 +3474,13 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                       Row(
                         children: [
                           Expanded(
-                            child: Text('${l10n.phase}: ${_getStatusDisplayName(project.status, context)}'),
+                            child: Text(
+                              '${l10n.phase}: ${_getStatusDisplayName(project.status, context)}',
+                              style: TextStyle(
+                                color: _getStatusColor(project.status),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                           ),
                           if (project.dawType != null) ...[
                             const SizedBox(width: 16),
