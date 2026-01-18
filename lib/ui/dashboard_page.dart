@@ -3119,9 +3119,6 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
             ),
           ],
         ),
-        const SizedBox(height: 8),
-        // Waveform visualization
-        _buildWaveformWidget(context),
         const SizedBox(height: 16),
         // Large seek bar (bottom, separated from controls)
         Column(
@@ -3444,6 +3441,35 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
     });
   }
 
+  Future<void> _playPreviewSong(MusicProject project) async {
+    if (project.previewSongPath == null || project.previewSongPath!.isEmpty) {
+      return;
+    }
+    
+    final file = File(project.previewSongPath!);
+    if (!await file.exists()) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Preview song file not found')),
+        );
+      }
+      return;
+    }
+    
+    // Show popup dialog with audio player
+    if (mounted) {
+      await showDialog(
+        context: context,
+        builder: (dialogContext) => _PreviewSongDialog(
+          project: project,
+          onClose: () {
+            // Callback when dialog closes - can be used for cleanup if needed
+          },
+        ),
+      );
+    }
+  }
+
   String _getStatusDisplayName(String status, BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     switch (status) {
@@ -3518,28 +3544,48 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 4),
-                      Text('${l10n.phase}: ${_getStatusDisplayName(project.status, context)}'),
-                      if (project.dawType != null)
-                        Text('DAW: ${project.dawType}${project.dawVersion != null ? ' ${project.dawVersion}' : ''}'),
-                      if (project.bpm != null)
-                        Text('BPM: ${project.bpm}'),
-                      if (project.musicalKey != null)
-                        Text('Key: ${project.musicalKey}'),
+                      // Phase and DAW on the same line
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text('${l10n.phase}: ${_getStatusDisplayName(project.status, context)}'),
+                          ),
+                          if (project.dawType != null) ...[
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Text('DAW: ${project.dawType}${project.dawVersion != null ? ' ${project.dawVersion}' : ''}'),
+                            ),
+                          ],
+                        ],
+                      ),
+                      // BPM and Key on the same line
+                      if (project.bpm != null || project.musicalKey != null)
+                        Row(
+                          children: [
+                            if (project.bpm != null)
+                              Expanded(
+                                child: Text('BPM: ${project.bpm}'),
+                              ),
+                            if (project.bpm != null && project.musicalKey != null)
+                              const SizedBox(width: 16),
+                            if (project.musicalKey != null)
+                              Expanded(
+                                child: Text('Key: ${project.musicalKey}'),
+                              ),
+                          ],
+                        ),
                     ],
                   ),
                   trailing: _isSelectionMode
                       ? null
-                      : IconButton(
-                          icon: const Icon(Icons.arrow_forward_ios),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => ProjectDetailPage(projectId: project.id),
-                              ),
-                            );
-                          },
-                        ),
+                      : project.previewSongPath != null && project.previewSongPath!.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.play_arrow),
+                              tooltip: 'Play Preview',
+                              onPressed: () => _playPreviewSong(project),
+                              color: Colors.green,
+                            )
+                          : null,
                   onTap: () {
                     if (_isSelectionMode) {
                       // In selection mode, tap toggles selection
