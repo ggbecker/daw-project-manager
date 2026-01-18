@@ -3410,13 +3410,22 @@ class _MobileProjectsList extends ConsumerStatefulWidget {
 
 class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
   final Set<String> _selectedProjectIds = {};
+  bool _isSelectionMode = false;
 
   void _toggleProjectSelection(String projectId) {
     setState(() {
       if (_selectedProjectIds.contains(projectId)) {
         _selectedProjectIds.remove(projectId);
+        // Exit selection mode if no items are selected
+        if (_selectedProjectIds.isEmpty) {
+          _isSelectionMode = false;
+        }
       } else {
         _selectedProjectIds.add(projectId);
+        // Enter selection mode when first item is selected
+        if (!_isSelectionMode) {
+          _isSelectionMode = true;
+        }
       }
     });
   }
@@ -3424,6 +3433,14 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
   void _clearSelection() {
     setState(() {
       _selectedProjectIds.clear();
+      _isSelectionMode = false;
+    });
+  }
+
+  void _enterSelectionMode(String projectId) {
+    setState(() {
+      _isSelectionMode = true;
+      _selectedProjectIds.add(projectId);
     });
   }
 
@@ -3487,10 +3504,12 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 child: ListTile(
-                  leading: Checkbox(
-                    value: isSelected,
-                    onChanged: (_) => _toggleProjectSelection(project.id),
-                  ),
+                  leading: _isSelectionMode
+                      ? Checkbox(
+                          value: isSelected,
+                          onChanged: (_) => _toggleProjectSelection(project.id),
+                        )
+                      : null,
                   title: Text(
                     project.displayName,
                     style: const TextStyle(fontWeight: FontWeight.bold),
@@ -3508,27 +3527,40 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                         Text('Key: ${project.musicalKey}'),
                     ],
                   ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.arrow_forward_ios),
-                    onPressed: () {
+                  trailing: _isSelectionMode
+                      ? null
+                      : IconButton(
+                          icon: const Icon(Icons.arrow_forward_ios),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ProjectDetailPage(projectId: project.id),
+                              ),
+                            );
+                          },
+                        ),
+                  onTap: () {
+                    if (_isSelectionMode) {
+                      // In selection mode, tap toggles selection
+                      _toggleProjectSelection(project.id);
+                    } else {
+                      // Normal mode, navigate to project detail
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => ProjectDetailPage(projectId: project.id),
                         ),
                       );
-                    },
-                  ),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ProjectDetailPage(projectId: project.id),
-                      ),
-                    );
+                    }
                   },
                   onLongPress: () {
-                    _toggleProjectSelection(project.id);
+                    // Long press enters selection mode and selects the item
+                    if (!_isSelectionMode) {
+                      _enterSelectionMode(project.id);
+                    } else {
+                      _toggleProjectSelection(project.id);
+                    }
                   },
                 ),
               );
