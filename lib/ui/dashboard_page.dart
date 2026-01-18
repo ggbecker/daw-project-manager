@@ -31,7 +31,7 @@ import '../providers/providers.dart';
 import '../repository/project_repository.dart';
 import 'package:uuid/uuid.dart';
 
-const String kAppVersion = '1.7.0';
+const String kAppVersion = '1.7.1';
 
 // WIDGET CORRIGIDO: Botões de controle da janela usando window_manager (desktop only)
 class WindowButtons extends StatelessWidget {
@@ -2852,60 +2852,6 @@ class _TogglePlayPauseIntent extends Intent {
   const _TogglePlayPauseIntent();
 }
 
-// Waveform painter for audio visualization
-class _WaveformPainter extends CustomPainter {
-  final List<double> waveform;
-  final double progress;
-  final int progressIndex;
-  final Color color;
-  final Color backgroundColor;
-
-  _WaveformPainter({
-    required this.waveform,
-    required this.progress,
-    required this.progressIndex,
-    required this.color,
-    required this.backgroundColor,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-
-    final backgroundPaint = Paint()
-      ..color = backgroundColor.withOpacity(0.3)
-      ..style = PaintingStyle.fill;
-
-    final barWidth = size.width / waveform.length;
-    final centerY = size.height / 2;
-
-    for (int i = 0; i < waveform.length; i++) {
-      final barHeight = waveform[i] * size.height * 0.8;
-      final x = i * barWidth;
-      final isPlayed = i < progressIndex;
-
-      // Draw bar
-      final barPaint = isPlayed ? paint : backgroundPaint;
-      canvas.drawRect(
-        Rect.fromLTWH(
-          x + barWidth * 0.1,
-          centerY - barHeight / 2,
-          barWidth * 0.8,
-          barHeight,
-        ),
-        barPaint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(_WaveformPainter oldDelegate) {
-    return oldDelegate.progress != progress ||
-        oldDelegate.waveform != waveform;
-  }
-}
 
 class _PreviewSongDialog extends StatefulWidget {
   final MusicProject project;
@@ -3025,43 +2971,6 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
     return '$minutes:$seconds';
   }
 
-  // Generate simple waveform data (simulated - in a real app you'd extract from audio)
-  List<double> _generateWaveformData() {
-    // Generate a simple waveform pattern for visualization
-    // In a real implementation, you'd extract this from the audio file
-    final List<double> waveform = [];
-    final random = DateTime.now().millisecondsSinceEpoch;
-    for (int i = 0; i < 200; i++) {
-      // Create a pattern that simulates audio waveform
-      final base = (i % 20) / 20.0;
-      final variation = (random + i) % 100 / 100.0;
-      waveform.add(0.1 + (base * 0.4) + (variation * 0.3));
-    }
-    return waveform;
-  }
-
-  Widget _buildWaveformWidget(BuildContext context) {
-    final waveform = _generateWaveformData();
-    final progress = _duration.inMilliseconds > 0
-        ? _position.inMilliseconds / _duration.inMilliseconds
-        : 0.0;
-    final progressIndex = (waveform.length * progress).round();
-
-    return Container(
-      height: 80,
-      margin: const EdgeInsets.symmetric(vertical: 16),
-      child: CustomPaint(
-        painter: _WaveformPainter(
-          waveform: waveform,
-          progress: progress,
-          progressIndex: progressIndex,
-          color: Theme.of(context).colorScheme.primary,
-          backgroundColor: Theme.of(context).colorScheme.surface,
-        ),
-        child: Container(),
-      ),
-    );
-  }
 
   Widget _buildAndroidPlayerLayout(BuildContext context) {
     return Column(
@@ -3119,9 +3028,6 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
             ),
           ],
         ),
-        const SizedBox(height: 8),
-        // Waveform visualization
-        _buildWaveformWidget(context),
         const SizedBox(height: 16),
         // Large seek bar (bottom, separated from controls)
         Column(
@@ -3410,13 +3316,22 @@ class _MobileProjectsList extends ConsumerStatefulWidget {
 
 class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
   final Set<String> _selectedProjectIds = {};
+  bool _isSelectionMode = false;
 
   void _toggleProjectSelection(String projectId) {
     setState(() {
       if (_selectedProjectIds.contains(projectId)) {
         _selectedProjectIds.remove(projectId);
+        // Exit selection mode if no items are selected
+        if (_selectedProjectIds.isEmpty) {
+          _isSelectionMode = false;
+        }
       } else {
         _selectedProjectIds.add(projectId);
+        // Enter selection mode when first item is selected
+        if (!_isSelectionMode) {
+          _isSelectionMode = true;
+        }
       }
     });
   }
@@ -3424,7 +3339,44 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
   void _clearSelection() {
     setState(() {
       _selectedProjectIds.clear();
+      _isSelectionMode = false;
     });
+  }
+
+  void _enterSelectionMode(String projectId) {
+    setState(() {
+      _isSelectionMode = true;
+      _selectedProjectIds.add(projectId);
+    });
+  }
+
+  Future<void> _playPreviewSong(MusicProject project) async {
+    if (project.previewSongPath == null || project.previewSongPath!.isEmpty) {
+      return;
+    }
+    
+    final file = File(project.previewSongPath!);
+    if (!await file.exists()) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Preview song file not found')),
+        );
+      }
+      return;
+    }
+    
+    // Show popup dialog with audio player
+    if (mounted) {
+      await showDialog(
+        context: context,
+        builder: (dialogContext) => _PreviewSongDialog(
+          project: project,
+          onClose: () {
+            // Callback when dialog closes - can be used for cleanup if needed
+          },
+        ),
+      );
+    }
   }
 
   String _getStatusDisplayName(String status, BuildContext context) {
@@ -3442,6 +3394,23 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
         return l10n.projectPhaseFinished;
       default:
         return status;
+    }
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'Idea':
+        return Colors.blue.shade300;
+      case 'Arranging':
+        return Colors.orange.shade300;
+      case 'Mixing':
+        return Colors.purple.shade300;
+      case 'Mastering':
+        return Colors.pink.shade300;
+      case 'Finished':
+        return Colors.green.shade300;
+      default:
+        return Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
     }
   }
 
@@ -3487,10 +3456,12 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 child: ListTile(
-                  leading: Checkbox(
-                    value: isSelected,
-                    onChanged: (_) => _toggleProjectSelection(project.id),
-                  ),
+                  leading: _isSelectionMode
+                      ? Checkbox(
+                          value: isSelected,
+                          onChanged: (_) => _toggleProjectSelection(project.id),
+                        )
+                      : null,
                   title: Text(
                     project.displayName,
                     style: const TextStyle(fontWeight: FontWeight.bold),
@@ -3499,36 +3470,75 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 4),
-                      Text('${l10n.phase}: ${_getStatusDisplayName(project.status, context)}'),
-                      if (project.dawType != null)
-                        Text('DAW: ${project.dawType}${project.dawVersion != null ? ' ${project.dawVersion}' : ''}'),
-                      if (project.bpm != null)
-                        Text('BPM: ${project.bpm}'),
-                      if (project.musicalKey != null)
-                        Text('Key: ${project.musicalKey}'),
+                      // Phase and DAW on the same line
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              '${l10n.phase}: ${_getStatusDisplayName(project.status, context)}',
+                              style: TextStyle(
+                                color: _getStatusColor(project.status),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          if (project.dawType != null) ...[
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Text('DAW: ${project.dawType}${project.dawVersion != null ? ' ${project.dawVersion}' : ''}'),
+                            ),
+                          ],
+                        ],
+                      ),
+                      // BPM and Key on the same line
+                      if (project.bpm != null || project.musicalKey != null)
+                        Row(
+                          children: [
+                            if (project.bpm != null)
+                              Expanded(
+                                child: Text('BPM: ${project.bpm}'),
+                              ),
+                            if (project.bpm != null && project.musicalKey != null)
+                              const SizedBox(width: 16),
+                            if (project.musicalKey != null)
+                              Expanded(
+                                child: Text('Key: ${project.musicalKey}'),
+                              ),
+                          ],
+                        ),
                     ],
                   ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.arrow_forward_ios),
-                    onPressed: () {
+                  trailing: _isSelectionMode
+                      ? null
+                      : project.previewSongPath != null && project.previewSongPath!.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.play_arrow),
+                              tooltip: 'Play Preview',
+                              onPressed: () => _playPreviewSong(project),
+                              color: Colors.green,
+                            )
+                          : null,
+                  onTap: () {
+                    if (_isSelectionMode) {
+                      // In selection mode, tap toggles selection
+                      _toggleProjectSelection(project.id);
+                    } else {
+                      // Normal mode, navigate to project detail
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => ProjectDetailPage(projectId: project.id),
                         ),
                       );
-                    },
-                  ),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ProjectDetailPage(projectId: project.id),
-                      ),
-                    );
+                    }
                   },
                   onLongPress: () {
-                    _toggleProjectSelection(project.id);
+                    // Long press enters selection mode and selects the item
+                    if (!_isSelectionMode) {
+                      _enterSelectionMode(project.id);
+                    } else {
+                      _toggleProjectSelection(project.id);
+                    }
                   },
                 ),
               );

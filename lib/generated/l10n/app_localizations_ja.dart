@@ -1029,6 +1029,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get downloadBackup => 'バックアップをダウンロード';
 
   @override
+  String get newerBackupAvailable => 'クラウドに新しいバックアップが利用可能';
+
+  @override
   String get signOut => 'サインアウト';
 
   @override
@@ -1212,5 +1215,20 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String errorOpeningBrowser(String error) {
     return 'ブラウザを開く際にエラーが発生しました: $error';
+  }
+
+  @override
+  String get generateTestingDatabase => 'テストデータベースを生成';
+
+  @override
+  String get generateTestingDatabaseMessage =>
+      'これにより、テスト用のサンプルプロジェクトとリリースでデータベースが入力されます。続行しますか？';
+
+  @override
+  String get testingDatabaseGenerated => 'テストデータベースが正常に生成されました！';
+
+  @override
+  String failedToGenerateTestingDatabase(String error) {
+    return 'テストデータベースの生成に失敗しました: $error';
   }
 }

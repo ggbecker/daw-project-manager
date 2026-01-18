@@ -817,20 +817,17 @@ updatedProject.lastModifiedAt.toString(),
                                 }
                               },
                               onSongChanged: (filePath) async {
-                                // Calculate hash for the new preview song file
-                                String? previewSongHash;
-                                try {
-                                  final syncService = ref.read(googleDriveSyncServiceProvider);
-                                  previewSongHash = await syncService.calculateFileHash(filePath);
-                                } catch (e) {
-                                  if (kDebugMode) {
-                                    print('Error calculating hash for preview song: $e');
-                                  }
-                                }
+                                // When changing the preview song, we should NOT update the uploadedPreviewSongHash here.
+                                // The uploadedPreviewSongHash should only be updated after a successful upload to Drive.
+                                // By keeping the old hash intact, the upload process will calculate
+                                // the new file's hash and compare it with the old uploadedPreviewSongHash in the database.
+                                // If they differ, it will upload the new file and update the uploadedPreviewSongHash.
+                                // The uploadedPreviewSongHash will be updated in uploadDatabase() after successful upload.
                                 
                                 final updated = project.copyWith(
                                   previewSongPath: filePath,
-                                  previewSongHash: previewSongHash,
+                                  // Keep old uploadedPreviewSongHash - don't update it here
+                                  // It will be updated after successful upload to Drive
                                   previewSongFileName: p.basename(filePath),
                                 );
                                 await repo.updateProject(updated);

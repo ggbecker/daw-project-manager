@@ -824,6 +824,7 @@
   "syncNow": "今すぐ同期",
   "uploadBackup": "バックアップをアップロード",
   "downloadBackup": "バックアップをダウンロード",
+  "newerBackupAvailable": "クラウドに新しいバックアップが利用可能",
   "signOut": "サインアウト",
   "downloadPreviewSongs": "プレビュー曲をダウンロード",
   "downloadPreviewSongsExplanation": "チェックを外すと、プレビュー曲はスキップされます（時間とストレージを節約）。必要に応じて後でダウンロードできます。",
@@ -881,6 +882,17 @@
   },
   "errorOpeningBrowser": "ブラウザを開く際にエラーが発生しました: {error}",
   "@errorOpeningBrowser": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "generateTestingDatabase": "テストデータベースを生成",
+  "generateTestingDatabaseMessage": "これにより、テスト用のサンプルプロジェクトとリリースでデータベースが入力されます。続行しますか？",
+  "testingDatabaseGenerated": "テストデータベースが正常に生成されました！",
+  "failedToGenerateTestingDatabase": "テストデータベースの生成に失敗しました: {error}",
+  "@failedToGenerateTestingDatabase": {
     "placeholders": {
       "error": {
         "type": "String"

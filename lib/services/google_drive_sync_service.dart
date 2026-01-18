@@ -23,7 +23,7 @@ import '../models/scan_root.dart';
 import '../models/todo_item.dart';
 import '../repository/profile_repository.dart';
 import '../repository/project_repository.dart';
-import '../utils/app_paths.dart';
+import '../utils/app_paths.dart' show ensureHiveInitialized, getPreviewSongsPath;
 import '../config/secrets.dart' show desktopClientSecret, desktopClientId, androidWebClientId;
 
 /// Service for synchronizing database data with Google Drive
@@ -32,6 +32,7 @@ class GoogleDriveSyncService {
   static const String _databaseFileName = 'database_backup.json';
   static const String _metadataFileName = 'sync_metadata.json';
   static const String _credentialsBoxName = 'google_drive_credentials';
+  static const String _backupTimestampBoxName = 'backup_timestamps';
   
   bool _isInitialized = false;
   bool _isAuthenticated = false; // has granted permissions?
@@ -40,6 +41,7 @@ class GoogleDriveSyncService {
   String? _appDataFolderId;
   auth_io.AutoRefreshingAuthClient? _desktopAuthClient; // For desktop OAuth
   Box<String>? _credentialsBox; // For storing desktop credentials
+  Box<String>? _backupTimestampBox; // For storing last backup download timestamp
   StreamSubscription? _authEventsSubscription; // Listen to authentication events
   static bool _sessionInitialized = false; // Track if lightweight auth was attempted this session
   
@@ -301,6 +303,125 @@ class GoogleDriveSyncService {
       }
     } catch (e) {
       if (kDebugMode) print('Error initializing encrypted storage: $e');
+    }
+  }
+
+  /// Initialize backup timestamp storage (local, unencrypted)
+  Future<void> _initializeBackupTimestampStorage() async {
+    try {
+      await ensureHiveInitialized();
+      if (!Hive.isBoxOpen(_backupTimestampBoxName)) {
+        _backupTimestampBox = await Hive.openBox<String>(_backupTimestampBoxName);
+      } else {
+        _backupTimestampBox = Hive.box<String>(_backupTimestampBoxName);
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error initializing backup timestamp storage: $e');
+    }
+  }
+
+  /// Save last backup download timestamp
+  Future<void> saveLastBackupDownloadTimestamp(DateTime timestamp) async {
+    try {
+      await _initializeBackupTimestampStorage();
+      if (_backupTimestampBox != null) {
+        await _backupTimestampBox!.put('lastDownload', timestamp.toIso8601String());
+        if (kDebugMode) print('Saved last backup download timestamp: ${timestamp.toIso8601String()}');
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error saving last backup download timestamp: $e');
+    }
+  }
+
+  /// Get last backup download timestamp
+  Future<DateTime?> getLastBackupDownloadTimestamp() async {
+    try {
+      await _initializeBackupTimestampStorage();
+      if (_backupTimestampBox != null) {
+        final timestampString = _backupTimestampBox!.get('lastDownload');
+        if (timestampString != null) {
+          return DateTime.parse(timestampString);
+        }
+      }
+      return null;
+    } catch (e) {
+      if (kDebugMode) print('Error getting last backup download timestamp: $e');
+      return null;
+    }
+  }
+
+  /// Get remote backup timestamp from Drive
+  Future<DateTime?> getRemoteBackupTimestamp() async {
+    try {
+      if (_driveApi == null || _appDataFolderId == null) {
+        return null;
+      }
+
+      final response = await _driveApi!.files.list(
+        q: "name='$_databaseFileName' and parents in '$_appDataFolderId' and trashed=false",
+        spaces: 'drive',
+      );
+
+      if (response.files == null || response.files!.isEmpty) {
+        return null; // No backup file found
+      }
+
+      // Get file metadata to check modified time
+      // Use modifiedTime from the file in the list response (already available)
+      final fileInList = response.files!.first;
+      if (fileInList.modifiedTime != null) {
+        // modifiedTime is already a DateTime, not a String
+        return fileInList.modifiedTime;
+      }
+
+      // If modifiedTime not in list response, try to get it explicitly
+      try {
+        final fileId = fileInList.id!;
+        final fileResult = await _driveApi!.files.get(fileId, $fields: 'modifiedTime');
+        if (fileResult is drive.File && fileResult.modifiedTime != null) {
+          // modifiedTime is already a DateTime, not a String
+          return fileResult.modifiedTime;
+        }
+      } catch (_) {
+        // If getting file fails, continue to fallback
+      }
+
+      // Fallback: try to download and parse the backup JSON to get timestamp
+      try {
+        final backupData = await downloadDatabase();
+        if (backupData['timestamp'] != null) {
+          return DateTime.parse(backupData['timestamp'] as String);
+        }
+      } catch (_) {
+        // If download fails, return null
+      }
+
+      return null;
+    } catch (e) {
+      if (kDebugMode) print('Error getting remote backup timestamp: $e');
+      return null;
+    }
+  }
+
+  /// Check if a newer backup is available on Drive
+  /// Returns true if remote backup is newer than last downloaded backup
+  Future<bool> isNewerBackupAvailable() async {
+    try {
+      final lastDownload = await getLastBackupDownloadTimestamp();
+      final remoteTimestamp = await getRemoteBackupTimestamp();
+
+      if (remoteTimestamp == null) {
+        return false; // No backup available on Drive
+      }
+
+      if (lastDownload == null) {
+        return true; // Never downloaded, so remote is "newer"
+      }
+
+      return remoteTimestamp.isAfter(lastDownload);
+    } catch (e) {
+      if (kDebugMode) print('Error checking if newer backup is available: $e');
+      return false;
     }
   }
 
@@ -1130,7 +1251,7 @@ class GoogleDriveSyncService {
   Future<String?> downloadPreviewSongFile({
     required String driveFileId,
     required String projectId,
-    String? expectedHash, // Hash from project.previewSongHash
+    String? expectedHash, // Hash from project.uploadedPreviewSongHash
     String? fileExtension, // File extension from previewSongFileName or default to .mp3
   }) async {
     if (_driveApi == null) {
@@ -1386,8 +1507,8 @@ class GoogleDriveSyncService {
                     final currentLocalHash = await _calculateFileHash(latestProject.previewSongPath!);
                     
                     // Compare with hash stored in local database (retrieved from Hive)
-                    // Only use existingHashes from backup if project.previewSongHash is null
-                    final storedHash = latestProject.previewSongHash;
+                    // Only use existingHashes from backup if project.uploadedPreviewSongHash is null
+                    final storedHash = latestProject.uploadedPreviewSongHash;
                     
                     // If hash matches, skip upload (file hasn't changed)
                     if (storedHash != null && storedHash == currentLocalHash) {
@@ -1437,7 +1558,7 @@ class GoogleDriveSyncService {
                       // Retrieve fresh project from Hive to ensure we're updating the latest version
                       final currentProject = profileProjectsBox.get(latestProject.id);
                       if (currentProject != null) {
-                        final updatedProject = currentProject.copyWith(previewSongHash: newHash);
+                        final updatedProject = currentProject.copyWith(uploadedPreviewSongHash: newHash);
                         await profileProjectsBox.put(latestProject.id, updatedProject);
                         await profileProjectsBox.flush(); // Ensure hash is persisted immediately
                         if (kDebugMode) {
@@ -1460,8 +1581,8 @@ class GoogleDriveSyncService {
                   }
                 } else {
                   // It's a Drive reference - use hash from project if available
-                  if (project.previewSongHash != null) {
-                    previewSongHashes[project.id] = project.previewSongHash!;
+                  if (project.uploadedPreviewSongHash != null) {
+                    previewSongHashes[project.id] = project.uploadedPreviewSongHash!;
                   }
                 }
               }
@@ -1677,7 +1798,21 @@ class GoogleDriveSyncService {
       }
 
       final jsonString = utf8.decode(bytes);
-      return jsonDecode(jsonString) as Map<String, dynamic>;
+      final backupData = jsonDecode(jsonString) as Map<String, dynamic>;
+      
+      // Save timestamp of this download
+      // Use timestamp from backup JSON if available, otherwise use current time
+      DateTime downloadTimestamp = DateTime.now();
+      if (backupData['timestamp'] != null) {
+        try {
+          downloadTimestamp = DateTime.parse(backupData['timestamp'] as String);
+        } catch (_) {
+          // If parsing fails, use current time
+        }
+      }
+      await saveLastBackupDownloadTimestamp(downloadTimestamp);
+      
+      return backupData;
     } catch (e) {
       if (kDebugMode) {
         if (e.toString().contains('Database file not found')) {
@@ -2131,7 +2266,7 @@ class GoogleDriveSyncService {
                       projectToSave = remoteProject.copyWith(
                         previewSongPath: localFilePath,
                         previewSongFileName: originalFileName,
-                        previewSongHash: expectedHash,
+                        uploadedPreviewSongHash: expectedHash,
                       );
                       if (kDebugMode) {
                         print('    Downloaded preview song for new project: ${remoteProject.displayName} (ID: $driveFileId)');
@@ -2142,7 +2277,7 @@ class GoogleDriveSyncService {
                       projectToSave = remoteProject.copyWith(
                         previewSongPath: driveReference,
                         previewSongFileName: originalFileName,
-                        previewSongHash: expectedHash,
+                        uploadedPreviewSongHash: expectedHash,
                       );
                       if (kDebugMode) {
                         print('    Download failed, stored Drive reference for: ${remoteProject.displayName} (ID: $driveFileId)');
@@ -2178,7 +2313,7 @@ class GoogleDriveSyncService {
                   // Update preview song reference if available
                   String? previewSongPath = localProject.previewSongPath;
                   String? previewSongFileName;
-                  String? previewSongHash;
+                  String? uploadedPreviewSongHash;
                   if (previewSongFiles != null && previewSongFiles.containsKey(remoteProject.id)) {
                     try {
                       final driveFileId = previewSongFiles[remoteProject.id] as String;
@@ -2187,7 +2322,7 @@ class GoogleDriveSyncService {
                         previewSongFileName = previewSongFileNames[remoteProject.id] as String;
                       }
                       if (previewSongHashes != null && previewSongHashes.containsKey(remoteProject.id)) {
-                        previewSongHash = previewSongHashes[remoteProject.id] as String;
+                        uploadedPreviewSongHash = previewSongHashes[remoteProject.id] as String;
                       }
                       
                       if (downloadPreviewSongs) {
@@ -2203,10 +2338,10 @@ class GoogleDriveSyncService {
                           if (await localFile.exists()) {
                             localFilePath = previewSongPath;
                             // File exists locally - verify hash if we have expected hash
-                            if (previewSongHash != null) {
+                            if (uploadedPreviewSongHash != null) {
                               try {
                                 final localHash = await _calculateFileHash(previewSongPath);
-                                if (localHash == previewSongHash) {
+                                if (localHash == uploadedPreviewSongHash) {
                                   // Hash matches - no download needed
                                   if (kDebugMode) {
                                     print('    Preview song already exists locally with matching hash for: ${remoteProject.displayName}');
@@ -2215,7 +2350,7 @@ class GoogleDriveSyncService {
                                 } else {
                                   // Hash mismatch - need to re-download
                                   if (kDebugMode) {
-                                    print('    Preview song hash mismatch (local: $localHash, expected: $previewSongHash) for: ${remoteProject.displayName}, will re-download');
+                                    print('    Preview song hash mismatch (local: $localHash, expected: $uploadedPreviewSongHash) for: ${remoteProject.displayName}, will re-download');
                                   }
                                   needsDownload = true;
                                 }
@@ -2227,10 +2362,10 @@ class GoogleDriveSyncService {
                               }
                             } else {
                               // No expected hash - check if local hash matches project hash
-                              if (localProject.previewSongHash != null) {
+                              if (localProject.uploadedPreviewSongHash != null) {
                                 try {
                                   final localHash = await _calculateFileHash(previewSongPath);
-                                  if (localHash == localProject.previewSongHash) {
+                                  if (localHash == localProject.uploadedPreviewSongHash) {
                                     // Local hash matches project hash - no download needed
                                     if (kDebugMode) {
                                       print('    Preview song already exists locally with matching hash for: ${remoteProject.displayName}');
@@ -2255,7 +2390,7 @@ class GoogleDriveSyncService {
                         } else if (previewSongPath == null || _isDriveFileReference(previewSongPath)) {
                           // No local path or Drive reference - need to download
                           needsDownload = true;
-                        } else if (previewSongHash != null && localProject.previewSongHash != previewSongHash) {
+                        } else if (uploadedPreviewSongHash != null && localProject.uploadedPreviewSongHash != uploadedPreviewSongHash) {
                           // Hash changed - need to download
                           needsDownload = true;
                         }
@@ -2269,7 +2404,7 @@ class GoogleDriveSyncService {
                           final downloadedFilePath = await downloadPreviewSongFile(
                             driveFileId: driveFileId,
                             projectId: remoteProject.id,
-                            expectedHash: previewSongHash,
+                            expectedHash: uploadedPreviewSongHash,
                             fileExtension: fileExtension,
                           );
                           
@@ -2328,7 +2463,7 @@ class GoogleDriveSyncService {
                     hidden: remoteProject.hidden,
                     previewSongPath: previewSongPath,
                     previewSongFileName: previewSongFileName ?? remoteProject.previewSongFileName,
-                    previewSongHash: previewSongHash ?? remoteProject.previewSongHash,
+                    uploadedPreviewSongHash: uploadedPreviewSongHash ?? remoteProject.uploadedPreviewSongHash,
                     // Force update timestamp to ensure Hive detects the change
                     updatedAt: DateTime.now(),
                     // Keep file system fields from local (file-based)
@@ -2374,7 +2509,7 @@ class GoogleDriveSyncService {
                   // This is important for mobile apps that might not have the preview song file yet
                   String? previewSongPath = localProject.previewSongPath;
                   String? previewSongFileName = localProject.previewSongFileName;
-                  String? previewSongHash = localProject.previewSongHash;
+                  String? uploadedPreviewSongHash = localProject.uploadedPreviewSongHash;
                   
                   // Check if preview song exists in backup
                   if (previewSongFiles != null && previewSongFiles.containsKey(remoteProject.id)) {
@@ -2426,10 +2561,10 @@ class GoogleDriveSyncService {
                               }
                             } else {
                               // No expected hash - check if local hash matches project hash
-                              if (localProject.previewSongHash != null) {
+                              if (localProject.uploadedPreviewSongHash != null) {
                                 try {
                                   final localHash = await _calculateFileHash(previewSongPath);
-                                  if (localHash == localProject.previewSongHash) {
+                                  if (localHash == localProject.uploadedPreviewSongHash) {
                                     // Local hash matches project hash - no download needed
                                     if (kDebugMode) {
                                       print('    Preview song already exists locally with matching hash for: ${localProject.displayName}');
@@ -2454,7 +2589,7 @@ class GoogleDriveSyncService {
                         } else if (previewSongPath == null || _isDriveFileReference(previewSongPath)) {
                           // No local path or Drive reference - need to download
                           needsDownload = true;
-                        } else if (expectedHash != null && previewSongHash != expectedHash) {
+                        } else if (expectedHash != null && uploadedPreviewSongHash != expectedHash) {
                           // Hash changed - need to download
                           needsDownload = true;
                         }
@@ -2475,13 +2610,13 @@ class GoogleDriveSyncService {
                           if (localFilePath != null) {
                             previewSongPath = localFilePath;
                             previewSongFileName = originalFileName;
-                            previewSongHash = expectedHash;
+                            uploadedPreviewSongHash = expectedHash;
                             
                             // Update project with downloaded file path
                             final updatedProject = localProject.copyWith(
                               previewSongPath: previewSongPath,
                               previewSongFileName: previewSongFileName,
-                              previewSongHash: previewSongHash,
+                              uploadedPreviewSongHash: uploadedPreviewSongHash,
                               updatedAt: DateTime.now(),
                             );
                             await profileProjectsBox.put(updatedProject.id, updatedProject);
@@ -2494,12 +2629,12 @@ class GoogleDriveSyncService {
                             // Download failed, store Drive reference as fallback
                             previewSongPath = _createDriveFileReference(driveFileId);
                             previewSongFileName = originalFileName;
-                            previewSongHash = expectedHash;
+                            uploadedPreviewSongHash = expectedHash;
                             
                             final updatedProject = localProject.copyWith(
                               previewSongPath: previewSongPath,
                               previewSongFileName: previewSongFileName,
-                              previewSongHash: previewSongHash,
+                              uploadedPreviewSongHash: uploadedPreviewSongHash,
                               updatedAt: DateTime.now(),
                             );
                             await profileProjectsBox.put(updatedProject.id, updatedProject);
@@ -2511,10 +2646,10 @@ class GoogleDriveSyncService {
                           }
                         } else {
                           // File already downloaded and hash matches, just update filename/hash if needed
-                          if (originalFileName != previewSongFileName || expectedHash != previewSongHash) {
+                          if (originalFileName != previewSongFileName || expectedHash != uploadedPreviewSongHash) {
                             final updatedProject = localProject.copyWith(
                               previewSongFileName: originalFileName ?? previewSongFileName,
-                              previewSongHash: expectedHash ?? previewSongHash,
+                              uploadedPreviewSongHash: expectedHash ?? uploadedPreviewSongHash,
                               updatedAt: DateTime.now(),
                             );
                             await profileProjectsBox.put(updatedProject.id, updatedProject);
@@ -2529,14 +2664,14 @@ class GoogleDriveSyncService {
                         // Skip download, store Drive reference
                         previewSongPath = _createDriveFileReference(driveFileId);
                         previewSongFileName = originalFileName;
-                        previewSongHash = expectedHash;
+                        uploadedPreviewSongHash = expectedHash;
                         
                         // Only update if it's different from current path or filename
-                        if (previewSongPath != localProject.previewSongPath || originalFileName != previewSongFileName || expectedHash != previewSongHash) {
+                        if (previewSongPath != localProject.previewSongPath || originalFileName != previewSongFileName || expectedHash != uploadedPreviewSongHash) {
                           final updatedProject = localProject.copyWith(
                             previewSongPath: previewSongPath,
                             previewSongFileName: previewSongFileName,
-                            previewSongHash: previewSongHash,
+                            uploadedPreviewSongHash: uploadedPreviewSongHash,
                             updatedAt: DateTime.now(),
                           );
                           await profileProjectsBox.put(updatedProject.id, updatedProject);
@@ -2821,7 +2956,7 @@ class GoogleDriveSyncService {
       'hidden': project.hidden,
       'previewSongPath': project.previewSongPath,
       'previewSongFileName': project.previewSongFileName,
-      'previewSongHash': project.previewSongHash,
+      'previewSongHash': project.uploadedPreviewSongHash, // Keep 'previewSongHash' key in JSON for backward compatibility
       'fileCreatedAt': project.fileCreatedAt?.toIso8601String(),
       'statusChangedAt': project.statusChangedAt?.toIso8601String(),
     };
@@ -2854,7 +2989,7 @@ class GoogleDriveSyncService {
       hidden: data['hidden'] as bool? ?? false,
       previewSongPath: data['previewSongPath'] as String?,
       previewSongFileName: data['previewSongFileName'] as String?,
-      previewSongHash: data['previewSongHash'] as String?,
+      uploadedPreviewSongHash: data['previewSongHash'] as String?, // Keep 'previewSongHash' key in JSON for backward compatibility
       fileCreatedAt: data['fileCreatedAt'] != null
           ? DateTime.parse(data['fileCreatedAt'] as String)
           : null,

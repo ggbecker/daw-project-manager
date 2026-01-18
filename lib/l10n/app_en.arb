@@ -982,6 +982,7 @@
     "description": "Button to upload backup to Google Drive"
   },
   "downloadBackup": "Download Backup",
+  "newerBackupAvailable": "New backup available on cloud",
   "@downloadBackup": {
     "description": "Button to download backup from Google Drive"
   },
@@ -1225,6 +1226,17 @@
   },
   "errorOpeningBrowser": "Error opening browser: {error}",
   "@errorOpeningBrowser": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "generateTestingDatabase": "Generate Testing Database",
+  "generateTestingDatabaseMessage": "This will populate the database with sample projects and releases for testing. Continue?",
+  "testingDatabaseGenerated": "Testing database generated successfully!",
+  "failedToGenerateTestingDatabase": "Failed to generate testing database: {error}",
+  "@failedToGenerateTestingDatabase": {
     "placeholders": {
       "error": {
         "type": "String"

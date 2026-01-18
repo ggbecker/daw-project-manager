@@ -1785,6 +1785,12 @@ abstract class AppLocalizations {
   /// **'Download Backup'**
   String get downloadBackup;
 
+  /// No description provided for @newerBackupAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'New backup available on cloud'**
+  String get newerBackupAvailable;
+
   /// Button to sign out from Google Drive
   ///
   /// In en, this message translates to:
@@ -2082,6 +2088,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Error opening browser: {error}'**
   String errorOpeningBrowser(String error);
+
+  /// No description provided for @generateTestingDatabase.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate Testing Database'**
+  String get generateTestingDatabase;
+
+  /// No description provided for @generateTestingDatabaseMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This will populate the database with sample projects and releases for testing. Continue?'**
+  String get generateTestingDatabaseMessage;
+
+  /// No description provided for @testingDatabaseGenerated.
+  ///
+  /// In en, this message translates to:
+  /// **'Testing database generated successfully!'**
+  String get testingDatabaseGenerated;
+
+  /// No description provided for @failedToGenerateTestingDatabase.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to generate testing database: {error}'**
+  String failedToGenerateTestingDatabase(String error);
 }
 
 class _AppLocalizationsDelegate

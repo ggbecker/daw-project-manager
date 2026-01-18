@@ -1040,6 +1040,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get downloadBackup => 'Скачать резервную копию';
 
   @override
+  String get newerBackupAvailable => 'Доступна новая резервная копия в облаке';
+
+  @override
   String get signOut => 'Выйти';
 
   @override
@@ -1225,5 +1228,21 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String errorOpeningBrowser(String error) {
     return 'Ошибка при открытии браузера: $error';
+  }
+
+  @override
+  String get generateTestingDatabase => 'Создать тестовую базу данных';
+
+  @override
+  String get generateTestingDatabaseMessage =>
+      'Это заполнит базу данных примерами проектов и релизов для тестирования. Продолжить?';
+
+  @override
+  String get testingDatabaseGenerated =>
+      'Тестовая база данных успешно создана!';
+
+  @override
+  String failedToGenerateTestingDatabase(String error) {
+    return 'Ошибка при создании тестовой базы данных: $error';
   }
 }

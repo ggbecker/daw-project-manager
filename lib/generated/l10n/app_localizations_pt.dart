@@ -1041,6 +1041,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get downloadBackup => 'Baixar Backup';
 
   @override
+  String get newerBackupAvailable => 'Novo backup disponível na nuvem';
+
+  @override
   String get signOut => 'Sair';
 
   @override
@@ -1226,5 +1229,21 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String errorOpeningBrowser(String error) {
     return 'Erro ao abrir o navegador: $error';
+  }
+
+  @override
+  String get generateTestingDatabase => 'Gerar Base de Dados de Teste';
+
+  @override
+  String get generateTestingDatabaseMessage =>
+      'Isso irá popular a base de dados com projetos e releases de exemplo para testes. Continuar?';
+
+  @override
+  String get testingDatabaseGenerated =>
+      'Base de dados de teste gerada com sucesso!';
+
+  @override
+  String failedToGenerateTestingDatabase(String error) {
+    return 'Falha ao gerar base de dados de teste: $error';
   }
 }

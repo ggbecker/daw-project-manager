@@ -824,6 +824,7 @@
   "syncNow": "Sincronizar Ahora",
   "uploadBackup": "Subir Copia de Seguridad",
   "downloadBackup": "Descargar Copia de Seguridad",
+  "newerBackupAvailable": "Nueva copia de seguridad disponible en la nube",
   "signOut": "Cerrar Sesión",
   "downloadPreviewSongs": "Descargar canciones de vista previa",
   "downloadPreviewSongsExplanation": "Si está desmarcado, se omitirán las canciones de vista previa (ahorra tiempo y almacenamiento). Puedes descargarlas más tarde si es necesario.",
@@ -881,6 +882,17 @@
   },
   "errorOpeningBrowser": "Error al abrir el navegador: {error}",
   "@errorOpeningBrowser": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "generateTestingDatabase": "Generar Base de Datos de Prueba",
+  "generateTestingDatabaseMessage": "Esto poblará la base de datos con proyectos y lanzamientos de ejemplo para pruebas. ¿Continuar?",
+  "testingDatabaseGenerated": "¡Base de datos de prueba generada con éxito!",
+  "failedToGenerateTestingDatabase": "Error al generar base de datos de prueba: {error}",
+  "@failedToGenerateTestingDatabase": {
     "placeholders": {
       "error": {
         "type": "String"

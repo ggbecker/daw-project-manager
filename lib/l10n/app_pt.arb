@@ -824,6 +824,7 @@
   "syncNow": "Sincronizar Agora",
   "uploadBackup": "Enviar Backup",
   "downloadBackup": "Baixar Backup",
+  "newerBackupAvailable": "Novo backup disponível na nuvem",
   "signOut": "Sair",
   "downloadPreviewSongs": "Baixar músicas de prévia",
   "downloadPreviewSongsExplanation": "Se desmarcado, as músicas de prévia serão ignoradas (economiza tempo e armazenamento). Você pode baixá-las depois se necessário.",
@@ -881,6 +882,17 @@
   },
   "errorOpeningBrowser": "Erro ao abrir o navegador: {error}",
   "@errorOpeningBrowser": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "generateTestingDatabase": "Gerar Base de Dados de Teste",
+  "generateTestingDatabaseMessage": "Isso irá popular a base de dados com projetos e releases de exemplo para testes. Continuar?",
+  "testingDatabaseGenerated": "Base de dados de teste gerada com sucesso!",
+  "failedToGenerateTestingDatabase": "Falha ao gerar base de dados de teste: {error}",
+  "@failedToGenerateTestingDatabase": {
     "placeholders": {
       "error": {
         "type": "String"
