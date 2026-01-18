@@ -3,7 +3,7 @@
 [Setup]
 ; --- Informações do Aplicativo ---
 AppName=DAW Project Manager
-AppVersion=1.7.2
+AppVersion=1.7.3
 AppPublisher=DAW Project Manager Co.
 AppPublisherURL=https://www.github.com/bandpassrecords/daw-project-manager
 AppSupportURL=https://www.github.com/bandpassrecords/daw-project-manager

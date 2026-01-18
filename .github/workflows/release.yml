@@ -467,10 +467,10 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         id: version
         run: |
-          # Extract version from tag (e.g., v1.7.1 -> 1.7.1)
+          # Extract version from tag (e.g., v1.7.3 -> 1.7.3)
           TAG_NAME=${GITHUB_REF#refs/tags/v}
           echo "version_name=${TAG_NAME}" >> $GITHUB_OUTPUT
-          # Extract version code from tag (e.g., 1.7.1 -> 170)
+          # Extract version code from tag (e.g., 1.7.3 -> 170)
           VERSION_CODE=$(echo ${TAG_NAME} | tr -d '.' | cut -c1-9)
           echo "version_code=${VERSION_CODE}" >> $GITHUB_OUTPUT
 
