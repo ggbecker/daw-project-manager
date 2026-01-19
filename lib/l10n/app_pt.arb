@@ -37,6 +37,47 @@
   "clearLibraryMessage": "Isso removerá todos os projetos salvos e pastas de origem. Continuar?",
   "clear": "Limpar",
   "roots": "Pastas de Projetos",
+  "pathsSettingsDangerZoneTitle": "Biblioteca",
+  "pathsSettingsDangerZoneSubtitle": "Limpe todos os projetos e pastas de projetos do perfil atual.",
+  "projectFoldersSectionTitle": "Pastas de projetos",
+  "projectFoldersSectionSubtitle": "Pastas que serão escaneadas para encontrar projetos de DAW.",
+  "projectFoldersEmptyTitle": "Nenhuma pasta de projetos ainda",
+  "projectFoldersEmptySubtitle": "Adicione pelo menos uma pasta para começar a escanear projetos.",
+  "notScannedYet": "Ainda não escaneado",
+  "lastScan": "Último scan: {date}",
+  "@lastScan": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "excludedFoldersSectionTitle": "Pastas excluídas",
+  "excludedFoldersSectionSubtitle": "Estas pastas serão ignoradas durante o scan, mesmo que estejam dentro de uma pasta de projetos.",
+  "addExcludedFolder": "Adicionar excluída",
+  "selectExcludedFolder": "Selecione uma pasta para excluir",
+  "excludedFoldersEmptyTitle": "Nenhuma pasta excluída",
+  "excludedFoldersEmptySubtitle": "Opcional: adicione pastas que você nunca quer escanear.",
+  "removeExcludedFolderTitle": "Remover pasta excluída?",
+  "removeExcludedFolderMessage": "Esta pasta não será mais excluída:\n\n{path}",
+  "@removeExcludedFolderMessage": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "removeExcludedFolderMessageNoPath": "Esta pasta não será mais excluída.",
+  "desktopOnlyPathsSettings": "Esta página está disponível apenas no app desktop.",
+  "removeProjectFolderTitle": "Remover pasta de projetos?",
+  "removeProjectFolderMessage": "Tem certeza de que deseja remover \"{path}\"? Isso também removerá todos os projetos desta pasta que não estão em lançamentos.",
+  "@removeProjectFolderMessage": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "projects": "Projetos",
   "hidden": "ocultos",
   "profileManager": "Gerenciador de Perfis",
@@ -158,7 +199,7 @@
   "showHidden": "Mostrar Ocultos",
   "showAll": "Mostrar Todos",
   "showOnlyHidden": "Mostrar Apenas Ocultos",
-  "deleteRootPath": "Excluir Caminho Raiz",
+  "deleteRootPath": "Remover pasta de projetos",
   "deleteRootPathMessage": "Tem certeza de que deseja remover \"{path}\"? Isso também removerá todos os projetos desta pasta que não estão em lançamentos.",
   "@deleteRootPathMessage": {
     "placeholders": {

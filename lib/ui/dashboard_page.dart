@@ -21,6 +21,7 @@ import 'project_detail_page.dart';
 import 'releases_tab_page.dart';
 import 'release_detail_page.dart';
 import 'profile_manager_page.dart';
+import 'project_folders_settings_page.dart';
 import 'widgets/language_switcher.dart';
 import 'widgets/theme_switcher.dart';
 import '../generated/l10n/app_localizations.dart';
@@ -350,9 +351,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
       final scanner = ScannerService();
       int foundCount = 0;
       await repo.clearMissingFiles();
+      final ignoredPaths = repo.getIgnoredPaths().map((p) => p.path).toList(growable: false);
       final scanTime = DateTime.now();
       for (final root in repo.getRoots()) {
-        await for (final entity in scanner.scanDirectory(root.path)) {
+        await for (final entity in scanner.scanDirectory(root.path, ignoredPaths: ignoredPaths)) {
           await repo.upsertFromFileSystemEntity(entity, fullMetadata: fullMetadata);
           foundCount++;
         }
@@ -1041,41 +1043,24 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                           },
                         ),
                         const SizedBox(width: 8),
-                        Flexible(
-                          child: ElevatedButton.icon(
-                            onPressed: isAnyOperation
-                                ? null
-                                : () async {
-                                      final path = await FilePicker.platform.getDirectoryPath(dialogTitle: AppLocalizations.of(context)!.selectProjectsFolder);
-                                      if (path != null) {
-                                        try {
-                                          final repo = await ref.read(repositoryProvider.future);
-                                          await repo.addRoot(path);
-                                          // Invalidate roots providers to refresh UI immediately
-                                          ref.invalidate(rootsWatchProvider);
-                                          ref.invalidate(scanRootsProvider);
-                                          // _scanAll() manages its own _scanning state
-                                          await _scanAll();
-                                        } catch (e) {
-                                          if (mounted) {
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(content: Text(AppLocalizations.of(context)!.errorAddingFolder(e.toString()))),
-                                            );
-                                          }
-                                        }
-                                      }
+                        if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) ...[
+                          Flexible(
+                            child: OutlinedButton.icon(
+                              onPressed: isAnyOperation
+                                  ? null
+                                  : () async {
+                                      await Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) => const ProjectFoldersSettingsPage(),
+                                        ),
+                                      );
                                     },
-                            icon: isAnyOperation
-                                ? const SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
-                                    )
-                                : const Icon(Icons.create_new_folder_outlined),
-                            label: Text(AppLocalizations.of(context)!.addFolder),
+                              icon: const Icon(Icons.tune),
+                              label: Text(AppLocalizations.of(context)!.roots),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
+                          const SizedBox(width: 12),
+                        ],
                         Flexible(
                           child: ElevatedButton.icon(
                             onPressed: isAnyOperation
@@ -1206,10 +1191,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                               final l10n = AppLocalizations.of(context)!;
                               if (hiddenMode == 2) {
                                 // Showing only hidden
-                                projectText = '${l10n.rootsCount(repo.getRoots().length)}   ${l10n.projectsCount(hiddenCount)} ${l10n.hiddenOnly}';
+                                projectText = '${l10n.projectsCount(hiddenCount)} ${l10n.hiddenOnly}';
                               } else {
                                 // Showing visible or all
-                                projectText = '${l10n.rootsCount(repo.getRoots().length)}   ${l10n.projectsCount(visibleCount)}';
+                                projectText = l10n.projectsCount(visibleCount);
                                 if (hiddenCount > 0 && hiddenMode == 0) {
                                   projectText += ' ${l10n.hiddenCount(hiddenCount)}';
                                 }
@@ -1316,53 +1301,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                           },
                         ),
                         const SizedBox(width: 8),
-                        Consumer(
-                          builder: (context, ref, child) {
-                            return Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  tooltip: AppLocalizations.of(context)!.clearLibraryTooltip,
-                                  icon: const Icon(Icons.delete_forever),
-                                  onPressed: () async {
-                                    final confirm = await showDialog<bool>(
-                                      context: context,
-                                      builder: (ctx) => AlertDialog(
-                                        backgroundColor: Theme.of(context).cardColor,
-                                        title: Text(AppLocalizations.of(context)!.clearLibrary),
-                                        content: Text(AppLocalizations.of(context)!.clearLibraryMessage),
-                                        actions: [
-                                          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(AppLocalizations.of(context)!.cancel)),
-                                          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: Text(AppLocalizations.of(context)!.clear)),
-                                        ],
-                                      ),
-                                    );
-                                    if (confirm == true) {
-                                      final repo = await ref.read(repositoryProvider.future);
-                                      await repo.clearAllData();
-                                      // Invalidate repository and related providers to refresh UI
-                                      ref.invalidate(repositoryProvider);
-                                      ref.invalidate(rootsWatchProvider);
-                                      ref.invalidate(scanRootsProvider);
-                                      ref.invalidate(allProjectsStreamProvider);
-                                      // Wait for repository to reload
-                                      await ref.read(repositoryProvider.future);
-                                      if (mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.libraryCleared)));
-                                      }
-                                    }
-                                  },
-                                ),
-                                const SizedBox(width: 4),
-                                // Versão também na barra de ações (à direita do ícone de lixeira)
-                                Text(
-                                  'v$appVersion',
-                                  style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color, fontSize: 12),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
+                        const SizedBox.shrink(),
                       ],
                     ),
                   ),
@@ -1372,63 +1311,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
             },
           ),
             
-            // Scan roots section - desktop only (Android doesn't support folder scanning)
-            Consumer(
-              builder: (context, ref, child) {
-                final roots = ref.watch(scanRootsProvider);
-                if (roots.isNotEmpty && !MobileUtils.isMobile()) {
-                  return Padding(
-                    padding: MobileUtils.getResponsivePadding(context),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          for (final r in roots)
-                            Chip(
-                              label: Text(r.path),
-                              deleteIcon: const Icon(Icons.close),
-                              onDeleted: () async {
-                                final confirm = await showDialog<bool>(
-                                  context: context,
-                                  builder: (ctx) => AlertDialog(
-                                    title: Text(AppLocalizations.of(context)!.deleteRootPath),
-                                    content: Text(AppLocalizations.of(context)!.deleteRootPathMessage(r.path)),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(ctx, false),
-                                        child: Text(AppLocalizations.of(context)!.cancel),
-                                      ),
-                                      ElevatedButton(
-                                        onPressed: () => Navigator.pop(ctx, true),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.red,
-                                        ),
-                                        child: Text(AppLocalizations.of(context)!.delete),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                                if (confirm == true) {
-                                  final repo = await ref.read(repositoryProvider.future);
-                                  await repo.removeRoot(r.id);
-                                  ref.invalidate(repositoryProvider);
-                                  await ref.read(repositoryProvider.future);
-                                  await _scanAll();
-                                }
-                              },
-                              backgroundColor: Theme.of(context).cardColor,
-                              labelStyle: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
-                            ),
-                        ],
-                      ),
-                    ),
-                  );
-                }
-                return const SizedBox.shrink();
-              },
-            ),
+            // Project folders are managed in the dedicated desktop-only settings page.
             // Tab Bar (desktop only - mobile uses AppBar bottom)
             if (!MobileUtils.isMobile())
               Builder(

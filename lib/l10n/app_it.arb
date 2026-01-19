@@ -37,6 +37,47 @@
   "clearLibraryMessage": "Questo rimuoverà tutti i progetti salvati e le cartelle sorgente. Continuare?",
   "clear": "Svuota",
   "roots": "Cartelle Progetti",
+  "pathsSettingsDangerZoneTitle": "Libreria",
+  "pathsSettingsDangerZoneSubtitle": "Svuota tutti i progetti e le cartelle di progetti del profilo corrente.",
+  "projectFoldersSectionTitle": "Cartelle di progetti",
+  "projectFoldersSectionSubtitle": "Cartelle che verranno scansionate per trovare progetti DAW.",
+  "projectFoldersEmptyTitle": "Nessuna cartella di progetti",
+  "projectFoldersEmptySubtitle": "Aggiungi almeno una cartella per iniziare a scansionare i progetti.",
+  "notScannedYet": "Non ancora scansionato",
+  "lastScan": "Ultima scansione: {date}",
+  "@lastScan": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "excludedFoldersSectionTitle": "Cartelle escluse",
+  "excludedFoldersSectionSubtitle": "Queste cartelle verranno saltate durante la scansione, anche se sono dentro una cartella di progetti.",
+  "addExcludedFolder": "Aggiungi esclusa",
+  "selectExcludedFolder": "Seleziona una cartella da escludere",
+  "excludedFoldersEmptyTitle": "Nessuna cartella esclusa",
+  "excludedFoldersEmptySubtitle": "Opzionale: aggiungi cartelle che non vuoi mai scansionare.",
+  "removeExcludedFolderTitle": "Rimuovere la cartella esclusa?",
+  "removeExcludedFolderMessage": "Questa cartella non sarà più esclusa:\n\n{path}",
+  "@removeExcludedFolderMessage": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "removeExcludedFolderMessageNoPath": "Questa cartella non sarà più esclusa.",
+  "desktopOnlyPathsSettings": "Questa pagina è disponibile solo nell’app desktop.",
+  "removeProjectFolderTitle": "Rimuovere la cartella di progetti?",
+  "removeProjectFolderMessage": "Sei sicuro di voler rimuovere \"{path}\"? Questo rimuoverà anche tutti i progetti in questa cartella che non sono nelle pubblicazioni.",
+  "@removeProjectFolderMessage": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "projects": "Progetti",
   "hidden": "nascosti",
   "profileManager": "Gestore Profili",
@@ -158,7 +199,7 @@
   "showHidden": "Mostra Nascosti",
   "showAll": "Mostra Tutti",
   "showOnlyHidden": "Mostra Solo Nascosti",
-  "deleteRootPath": "Elimina Percorso Radice",
+  "deleteRootPath": "Rimuovi cartella di progetti",
   "deleteRootPathMessage": "Sei sicuro di voler rimuovere \"{path}\"? Questo rimuoverà anche tutti i progetti da questa cartella che non sono nelle pubblicazioni.",
   "@deleteRootPathMessage": {
     "placeholders": {

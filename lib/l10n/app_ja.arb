@@ -37,6 +37,47 @@
   "clearLibraryMessage": "これにより、保存されたすべてのプロジェクトとソースフォルダが削除されます。続行しますか？",
   "clear": "クリア",
   "roots": "プロジェクトフォルダ",
+  "pathsSettingsDangerZoneTitle": "ライブラリ",
+  "pathsSettingsDangerZoneSubtitle": "現在のプロファイルのすべてのプロジェクトとプロジェクトフォルダーをクリアします。",
+  "projectFoldersSectionTitle": "プロジェクトフォルダー",
+  "projectFoldersSectionSubtitle": "DAWプロジェクトを探すためにスキャンされるフォルダーです。",
+  "projectFoldersEmptyTitle": "プロジェクトフォルダーがありません",
+  "projectFoldersEmptySubtitle": "少なくとも1つのフォルダーを追加して、プロジェクトのスキャンを開始してください。",
+  "notScannedYet": "未スキャン",
+  "lastScan": "最終スキャン: {date}",
+  "@lastScan": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "excludedFoldersSectionTitle": "除外フォルダー",
+  "excludedFoldersSectionSubtitle": "これらのフォルダーは、プロジェクトフォルダー内にあってもスキャン時にスキップされます。",
+  "addExcludedFolder": "除外を追加",
+  "selectExcludedFolder": "除外するフォルダーを選択",
+  "excludedFoldersEmptyTitle": "除外フォルダーはありません",
+  "excludedFoldersEmptySubtitle": "任意: スキャンしたくないフォルダーを追加できます。",
+  "removeExcludedFolderTitle": "除外フォルダーを削除しますか？",
+  "removeExcludedFolderMessage": "このフォルダーは除外されなくなります:\n\n{path}",
+  "@removeExcludedFolderMessage": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "removeExcludedFolderMessageNoPath": "このフォルダーは除外されなくなります。",
+  "desktopOnlyPathsSettings": "このページはデスクトップアプリでのみ利用できます。",
+  "removeProjectFolderTitle": "プロジェクトフォルダーを削除しますか？",
+  "removeProjectFolderMessage": "「{path}」を削除してもよろしいですか？これにより、リリースに含まれていないこのフォルダー内のプロジェクトも削除されます。",
+  "@removeProjectFolderMessage": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "projects": "プロジェクト",
   "hidden": "非表示",
   "profileManager": "プロファイルマネージャー",
@@ -158,7 +199,7 @@
   "showHidden": "非表示を表示",
   "showAll": "すべて表示",
   "showOnlyHidden": "非表示のみ表示",
-  "deleteRootPath": "ルートパスを削除",
+  "deleteRootPath": "プロジェクトフォルダーを削除",
   "deleteRootPathMessage": "「{path}」を削除してもよろしいですか？これにより、リリースに含まれていないこのフォルダ内のすべてのプロジェクトも削除されます。",
   "@deleteRootPathMessage": {
     "placeholders": {

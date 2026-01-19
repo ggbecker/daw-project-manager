@@ -93,6 +93,79 @@ class AppLocalizationsEn extends AppLocalizations {
   String get roots => 'Project Folders';
 
   @override
+  String get pathsSettingsDangerZoneTitle => 'Library';
+
+  @override
+  String get pathsSettingsDangerZoneSubtitle =>
+      'Clear all projects and project folders for the current profile.';
+
+  @override
+  String get projectFoldersSectionTitle => 'Project folders';
+
+  @override
+  String get projectFoldersSectionSubtitle =>
+      'Folders that will be scanned for DAW projects.';
+
+  @override
+  String get projectFoldersEmptyTitle => 'No project folders yet';
+
+  @override
+  String get projectFoldersEmptySubtitle =>
+      'Add at least one folder to start scanning for projects.';
+
+  @override
+  String get notScannedYet => 'Not scanned yet';
+
+  @override
+  String lastScan(String date) {
+    return 'Last scan: $date';
+  }
+
+  @override
+  String get excludedFoldersSectionTitle => 'Excluded folders';
+
+  @override
+  String get excludedFoldersSectionSubtitle =>
+      'These folders will be skipped during scanning, even if they are inside a project folder.';
+
+  @override
+  String get addExcludedFolder => 'Add excluded';
+
+  @override
+  String get selectExcludedFolder => 'Select a folder to exclude';
+
+  @override
+  String get excludedFoldersEmptyTitle => 'No excluded folders';
+
+  @override
+  String get excludedFoldersEmptySubtitle =>
+      'Optional: add folders you never want to scan.';
+
+  @override
+  String get removeExcludedFolderTitle => 'Remove excluded folder?';
+
+  @override
+  String removeExcludedFolderMessage(String path) {
+    return 'This folder will no longer be excluded:\n\n$path';
+  }
+
+  @override
+  String get removeExcludedFolderMessageNoPath =>
+      'This folder will no longer be excluded.';
+
+  @override
+  String get desktopOnlyPathsSettings =>
+      'This page is available only on the desktop app.';
+
+  @override
+  String get removeProjectFolderTitle => 'Remove project folder?';
+
+  @override
+  String removeProjectFolderMessage(String path) {
+    return 'Are you sure you want to remove \"$path\"? This will also remove all projects from this folder that are not in releases.';
+  }
+
+  @override
   String get projects => 'Projects';
 
   @override
@@ -301,7 +374,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get showOnlyHidden => 'Show Only Hidden';
 
   @override
-  String get deleteRootPath => 'Delete Root Path';
+  String get deleteRootPath => 'Remove project folder';
 
   @override
   String deleteRootPathMessage(String path) {

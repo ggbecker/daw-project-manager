@@ -93,6 +93,80 @@ class AppLocalizationsFr extends AppLocalizations {
   String get roots => 'Dossiers de Projets';
 
   @override
+  String get pathsSettingsDangerZoneTitle => 'Bibliothèque';
+
+  @override
+  String get pathsSettingsDangerZoneSubtitle =>
+      'Effacez tous les projets et dossiers de projets du profil actuel.';
+
+  @override
+  String get projectFoldersSectionTitle => 'Dossiers de projets';
+
+  @override
+  String get projectFoldersSectionSubtitle =>
+      'Dossiers qui seront scannés pour trouver des projets DAW.';
+
+  @override
+  String get projectFoldersEmptyTitle =>
+      'Aucun dossier de projets pour le moment';
+
+  @override
+  String get projectFoldersEmptySubtitle =>
+      'Ajoutez au moins un dossier pour commencer à scanner les projets.';
+
+  @override
+  String get notScannedYet => 'Pas encore scanné';
+
+  @override
+  String lastScan(String date) {
+    return 'Dernier scan : $date';
+  }
+
+  @override
+  String get excludedFoldersSectionTitle => 'Dossiers exclus';
+
+  @override
+  String get excludedFoldersSectionSubtitle =>
+      'Ces dossiers seront ignorés pendant le scan, même s\'ils se trouvent dans un dossier de projets.';
+
+  @override
+  String get addExcludedFolder => 'Ajouter exclu';
+
+  @override
+  String get selectExcludedFolder => 'Sélectionnez un dossier à exclure';
+
+  @override
+  String get excludedFoldersEmptyTitle => 'Aucun dossier exclu';
+
+  @override
+  String get excludedFoldersEmptySubtitle =>
+      'Optionnel : ajoutez des dossiers que vous ne voulez jamais scanner.';
+
+  @override
+  String get removeExcludedFolderTitle => 'Supprimer le dossier exclu ?';
+
+  @override
+  String removeExcludedFolderMessage(String path) {
+    return 'Ce dossier ne sera plus exclu :\n\n$path';
+  }
+
+  @override
+  String get removeExcludedFolderMessageNoPath =>
+      'Ce dossier ne sera plus exclu.';
+
+  @override
+  String get desktopOnlyPathsSettings =>
+      'Cette page est disponible uniquement dans l’application de bureau.';
+
+  @override
+  String get removeProjectFolderTitle => 'Supprimer le dossier de projets ?';
+
+  @override
+  String removeProjectFolderMessage(String path) {
+    return 'Êtes-vous sûr de vouloir supprimer \"$path\" ? Cela supprimera aussi tous les projets de ce dossier qui ne sont pas dans des sorties.';
+  }
+
+  @override
   String get projects => 'Projets';
 
   @override
@@ -302,7 +376,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get showOnlyHidden => 'Afficher Seulement les Masqués';
 
   @override
-  String get deleteRootPath => 'Supprimer le Chemin Racine';
+  String get deleteRootPath => 'Supprimer le dossier de projets';
 
   @override
   String deleteRootPathMessage(String path) {

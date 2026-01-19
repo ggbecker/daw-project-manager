@@ -274,6 +274,126 @@ abstract class AppLocalizations {
   /// **'Project Folders'**
   String get roots;
 
+  /// No description provided for @pathsSettingsDangerZoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Library'**
+  String get pathsSettingsDangerZoneTitle;
+
+  /// No description provided for @pathsSettingsDangerZoneSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all projects and project folders for the current profile.'**
+  String get pathsSettingsDangerZoneSubtitle;
+
+  /// No description provided for @projectFoldersSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Project folders'**
+  String get projectFoldersSectionTitle;
+
+  /// No description provided for @projectFoldersSectionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Folders that will be scanned for DAW projects.'**
+  String get projectFoldersSectionSubtitle;
+
+  /// No description provided for @projectFoldersEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No project folders yet'**
+  String get projectFoldersEmptyTitle;
+
+  /// No description provided for @projectFoldersEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least one folder to start scanning for projects.'**
+  String get projectFoldersEmptySubtitle;
+
+  /// No description provided for @notScannedYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not scanned yet'**
+  String get notScannedYet;
+
+  /// No description provided for @lastScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Last scan: {date}'**
+  String lastScan(String date);
+
+  /// No description provided for @excludedFoldersSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Excluded folders'**
+  String get excludedFoldersSectionTitle;
+
+  /// No description provided for @excludedFoldersSectionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'These folders will be skipped during scanning, even if they are inside a project folder.'**
+  String get excludedFoldersSectionSubtitle;
+
+  /// No description provided for @addExcludedFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Add excluded'**
+  String get addExcludedFolder;
+
+  /// No description provided for @selectExcludedFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a folder to exclude'**
+  String get selectExcludedFolder;
+
+  /// No description provided for @excludedFoldersEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No excluded folders'**
+  String get excludedFoldersEmptyTitle;
+
+  /// No description provided for @excludedFoldersEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional: add folders you never want to scan.'**
+  String get excludedFoldersEmptySubtitle;
+
+  /// No description provided for @removeExcludedFolderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove excluded folder?'**
+  String get removeExcludedFolderTitle;
+
+  /// No description provided for @removeExcludedFolderMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This folder will no longer be excluded:\n\n{path}'**
+  String removeExcludedFolderMessage(String path);
+
+  /// No description provided for @removeExcludedFolderMessageNoPath.
+  ///
+  /// In en, this message translates to:
+  /// **'This folder will no longer be excluded.'**
+  String get removeExcludedFolderMessageNoPath;
+
+  /// No description provided for @desktopOnlyPathsSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'This page is available only on the desktop app.'**
+  String get desktopOnlyPathsSettings;
+
+  /// No description provided for @removeProjectFolderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove project folder?'**
+  String get removeProjectFolderTitle;
+
+  /// No description provided for @removeProjectFolderMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to remove \"{path}\"? This will also remove all projects from this folder that are not in releases.'**
+  String removeProjectFolderMessage(String path);
+
   /// No description provided for @projects.
   ///
   /// In en, this message translates to:
@@ -655,7 +775,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteRootPath.
   ///
   /// In en, this message translates to:
-  /// **'Delete Root Path'**
+  /// **'Remove project folder'**
   String get deleteRootPath;
 
   /// No description provided for @deleteRootPathMessage.

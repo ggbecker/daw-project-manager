@@ -37,6 +37,47 @@
   "clearLibraryMessage": "Это удалит все сохраненные проекты и исходные папки. Продолжить?",
   "clear": "Очистить",
   "roots": "Папки Проектов",
+  "pathsSettingsDangerZoneTitle": "Библиотека",
+  "pathsSettingsDangerZoneSubtitle": "Очистить все проекты и папки проектов текущего профиля.",
+  "projectFoldersSectionTitle": "Папки проектов",
+  "projectFoldersSectionSubtitle": "Папки, которые будут сканироваться для поиска проектов DAW.",
+  "projectFoldersEmptyTitle": "Папки проектов отсутствуют",
+  "projectFoldersEmptySubtitle": "Добавьте хотя бы одну папку, чтобы начать сканирование проектов.",
+  "notScannedYet": "Ещё не сканировано",
+  "lastScan": "Последнее сканирование: {date}",
+  "@lastScan": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "excludedFoldersSectionTitle": "Исключённые папки",
+  "excludedFoldersSectionSubtitle": "Эти папки будут пропускаться при сканировании, даже если они находятся внутри папки проектов.",
+  "addExcludedFolder": "Добавить исключение",
+  "selectExcludedFolder": "Выберите папку для исключения",
+  "excludedFoldersEmptyTitle": "Исключённых папок нет",
+  "excludedFoldersEmptySubtitle": "Необязательно: добавьте папки, которые вы никогда не хотите сканировать.",
+  "removeExcludedFolderTitle": "Удалить исключённую папку?",
+  "removeExcludedFolderMessage": "Эта папка больше не будет исключаться:\n\n{path}",
+  "@removeExcludedFolderMessage": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "removeExcludedFolderMessageNoPath": "Эта папка больше не будет исключаться.",
+  "desktopOnlyPathsSettings": "Эта страница доступна только в настольном приложении.",
+  "removeProjectFolderTitle": "Удалить папку проектов?",
+  "removeProjectFolderMessage": "Вы уверены, что хотите удалить \"{path}\"? Это также удалит все проекты из этой папки, которые не находятся в релизах.",
+  "@removeProjectFolderMessage": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "projects": "Проекты",
   "hidden": "скрытые",
   "profileManager": "Менеджер профилей",
@@ -158,7 +199,7 @@
   "showHidden": "Показать Скрытые",
   "showAll": "Показать Все",
   "showOnlyHidden": "Показать Только Скрытые",
-  "deleteRootPath": "Удалить Корневой Путь",
+  "deleteRootPath": "Удалить папку проектов",
   "deleteRootPathMessage": "Вы уверены, что хотите удалить \"{path}\"? Это также удалит все проекты из этой папки, которые не находятся в релизах.",
   "@deleteRootPathMessage": {
     "placeholders": {

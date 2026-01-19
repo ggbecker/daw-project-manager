@@ -93,6 +93,75 @@ class AppLocalizationsJa extends AppLocalizations {
   String get roots => 'プロジェクトフォルダ';
 
   @override
+  String get pathsSettingsDangerZoneTitle => 'ライブラリ';
+
+  @override
+  String get pathsSettingsDangerZoneSubtitle =>
+      '現在のプロファイルのすべてのプロジェクトとプロジェクトフォルダーをクリアします。';
+
+  @override
+  String get projectFoldersSectionTitle => 'プロジェクトフォルダー';
+
+  @override
+  String get projectFoldersSectionSubtitle => 'DAWプロジェクトを探すためにスキャンされるフォルダーです。';
+
+  @override
+  String get projectFoldersEmptyTitle => 'プロジェクトフォルダーがありません';
+
+  @override
+  String get projectFoldersEmptySubtitle =>
+      '少なくとも1つのフォルダーを追加して、プロジェクトのスキャンを開始してください。';
+
+  @override
+  String get notScannedYet => '未スキャン';
+
+  @override
+  String lastScan(String date) {
+    return '最終スキャン: $date';
+  }
+
+  @override
+  String get excludedFoldersSectionTitle => '除外フォルダー';
+
+  @override
+  String get excludedFoldersSectionSubtitle =>
+      'これらのフォルダーは、プロジェクトフォルダー内にあってもスキャン時にスキップされます。';
+
+  @override
+  String get addExcludedFolder => '除外を追加';
+
+  @override
+  String get selectExcludedFolder => '除外するフォルダーを選択';
+
+  @override
+  String get excludedFoldersEmptyTitle => '除外フォルダーはありません';
+
+  @override
+  String get excludedFoldersEmptySubtitle => '任意: スキャンしたくないフォルダーを追加できます。';
+
+  @override
+  String get removeExcludedFolderTitle => '除外フォルダーを削除しますか？';
+
+  @override
+  String removeExcludedFolderMessage(String path) {
+    return 'このフォルダーは除外されなくなります:\n\n$path';
+  }
+
+  @override
+  String get removeExcludedFolderMessageNoPath => 'このフォルダーは除外されなくなります。';
+
+  @override
+  String get desktopOnlyPathsSettings => 'このページはデスクトップアプリでのみ利用できます。';
+
+  @override
+  String get removeProjectFolderTitle => 'プロジェクトフォルダーを削除しますか？';
+
+  @override
+  String removeProjectFolderMessage(String path) {
+    return '「$path」を削除してもよろしいですか？これにより、リリースに含まれていないこのフォルダー内のプロジェクトも削除されます。';
+  }
+
+  @override
   String get projects => 'プロジェクト';
 
   @override
@@ -300,7 +369,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get showOnlyHidden => '非表示のみ表示';
 
   @override
-  String get deleteRootPath => 'ルートパスを削除';
+  String get deleteRootPath => 'プロジェクトフォルダーを削除';
 
   @override
   String deleteRootPathMessage(String path) {

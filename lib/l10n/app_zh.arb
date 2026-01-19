@@ -37,6 +37,47 @@
   "clearLibraryMessage": "这将删除所有保存的项目和源文件夹。继续吗？",
   "clear": "清空",
   "roots": "项目文件夹",
+  "pathsSettingsDangerZoneTitle": "库",
+  "pathsSettingsDangerZoneSubtitle": "清除当前配置文件中的所有项目和项目文件夹。",
+  "projectFoldersSectionTitle": "项目文件夹",
+  "projectFoldersSectionSubtitle": "将扫描这些文件夹以查找 DAW 项目。",
+  "projectFoldersEmptyTitle": "还没有项目文件夹",
+  "projectFoldersEmptySubtitle": "请至少添加一个文件夹以开始扫描项目。",
+  "notScannedYet": "尚未扫描",
+  "lastScan": "上次扫描: {date}",
+  "@lastScan": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "excludedFoldersSectionTitle": "排除的文件夹",
+  "excludedFoldersSectionSubtitle": "扫描时将跳过这些文件夹，即使它们位于项目文件夹内。",
+  "addExcludedFolder": "添加排除",
+  "selectExcludedFolder": "选择要排除的文件夹",
+  "excludedFoldersEmptyTitle": "没有排除的文件夹",
+  "excludedFoldersEmptySubtitle": "可选：添加你永远不想扫描的文件夹。",
+  "removeExcludedFolderTitle": "移除排除的文件夹？",
+  "removeExcludedFolderMessage": "该文件夹将不再被排除：\n\n{path}",
+  "@removeExcludedFolderMessage": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "removeExcludedFolderMessageNoPath": "该文件夹将不再被排除。",
+  "desktopOnlyPathsSettings": "此页面仅在桌面应用中可用。",
+  "removeProjectFolderTitle": "移除项目文件夹？",
+  "removeProjectFolderMessage": "确定要移除「{path}」吗？这也会移除该文件夹中未包含在发布中的所有项目。",
+  "@removeProjectFolderMessage": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "projects": "项目",
   "hidden": "隐藏",
   "profileManager": "配置文件管理器",
@@ -158,7 +199,7 @@
   "showHidden": "显示隐藏",
   "showAll": "显示全部",
   "showOnlyHidden": "仅显示隐藏",
-  "deleteRootPath": "删除根路径",
+  "deleteRootPath": "移除项目文件夹",
   "deleteRootPathMessage": "您确定要删除「{path}」吗？这也会删除此文件夹中不在发布中的所有项目。",
   "@deleteRootPathMessage": {
     "placeholders": {

@@ -37,6 +37,47 @@
   "clearLibraryMessage": "This will remove all saved projects and source folders. Continue?",
   "clear": "Clear",
   "roots": "Project Folders",
+  "pathsSettingsDangerZoneTitle": "Library",
+  "pathsSettingsDangerZoneSubtitle": "Clear all projects and project folders for the current profile.",
+  "projectFoldersSectionTitle": "Project folders",
+  "projectFoldersSectionSubtitle": "Folders that will be scanned for DAW projects.",
+  "projectFoldersEmptyTitle": "No project folders yet",
+  "projectFoldersEmptySubtitle": "Add at least one folder to start scanning for projects.",
+  "notScannedYet": "Not scanned yet",
+  "lastScan": "Last scan: {date}",
+  "@lastScan": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "excludedFoldersSectionTitle": "Excluded folders",
+  "excludedFoldersSectionSubtitle": "These folders will be skipped during scanning, even if they are inside a project folder.",
+  "addExcludedFolder": "Add excluded",
+  "selectExcludedFolder": "Select a folder to exclude",
+  "excludedFoldersEmptyTitle": "No excluded folders",
+  "excludedFoldersEmptySubtitle": "Optional: add folders you never want to scan.",
+  "removeExcludedFolderTitle": "Remove excluded folder?",
+  "removeExcludedFolderMessage": "This folder will no longer be excluded:\n\n{path}",
+  "@removeExcludedFolderMessage": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "removeExcludedFolderMessageNoPath": "This folder will no longer be excluded.",
+  "desktopOnlyPathsSettings": "This page is available only on the desktop app.",
+  "removeProjectFolderTitle": "Remove project folder?",
+  "removeProjectFolderMessage": "Are you sure you want to remove \"{path}\"? This will also remove all projects from this folder that are not in releases.",
+  "@removeProjectFolderMessage": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "projects": "Projects",
   "hidden": "hidden",
   "profileManager": "Profile Manager",
@@ -158,7 +199,7 @@
   "showHidden": "Show Hidden",
   "showAll": "Show All",
   "showOnlyHidden": "Show Only Hidden",
-  "deleteRootPath": "Delete Root Path",
+  "deleteRootPath": "Remove project folder",
   "deleteRootPathMessage": "Are you sure you want to remove \"{path}\"? This will also remove all projects from this folder that are not in releases.",
   "@deleteRootPathMessage": {
     "placeholders": {

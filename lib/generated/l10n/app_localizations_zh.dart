@@ -92,6 +92,72 @@ class AppLocalizationsZh extends AppLocalizations {
   String get roots => '项目文件夹';
 
   @override
+  String get pathsSettingsDangerZoneTitle => '库';
+
+  @override
+  String get pathsSettingsDangerZoneSubtitle => '清除当前配置文件中的所有项目和项目文件夹。';
+
+  @override
+  String get projectFoldersSectionTitle => '项目文件夹';
+
+  @override
+  String get projectFoldersSectionSubtitle => '将扫描这些文件夹以查找 DAW 项目。';
+
+  @override
+  String get projectFoldersEmptyTitle => '还没有项目文件夹';
+
+  @override
+  String get projectFoldersEmptySubtitle => '请至少添加一个文件夹以开始扫描项目。';
+
+  @override
+  String get notScannedYet => '尚未扫描';
+
+  @override
+  String lastScan(String date) {
+    return '上次扫描: $date';
+  }
+
+  @override
+  String get excludedFoldersSectionTitle => '排除的文件夹';
+
+  @override
+  String get excludedFoldersSectionSubtitle => '扫描时将跳过这些文件夹，即使它们位于项目文件夹内。';
+
+  @override
+  String get addExcludedFolder => '添加排除';
+
+  @override
+  String get selectExcludedFolder => '选择要排除的文件夹';
+
+  @override
+  String get excludedFoldersEmptyTitle => '没有排除的文件夹';
+
+  @override
+  String get excludedFoldersEmptySubtitle => '可选：添加你永远不想扫描的文件夹。';
+
+  @override
+  String get removeExcludedFolderTitle => '移除排除的文件夹？';
+
+  @override
+  String removeExcludedFolderMessage(String path) {
+    return '该文件夹将不再被排除：\n\n$path';
+  }
+
+  @override
+  String get removeExcludedFolderMessageNoPath => '该文件夹将不再被排除。';
+
+  @override
+  String get desktopOnlyPathsSettings => '此页面仅在桌面应用中可用。';
+
+  @override
+  String get removeProjectFolderTitle => '移除项目文件夹？';
+
+  @override
+  String removeProjectFolderMessage(String path) {
+    return '确定要移除「$path」吗？这也会移除该文件夹中未包含在发布中的所有项目。';
+  }
+
+  @override
   String get projects => '项目';
 
   @override
@@ -299,7 +365,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get showOnlyHidden => '仅显示隐藏';
 
   @override
-  String get deleteRootPath => '删除根路径';
+  String get deleteRootPath => '移除项目文件夹';
 
   @override
   String deleteRootPathMessage(String path) {
