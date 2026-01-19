@@ -21,6 +21,7 @@ import 'project_detail_page.dart';
 import 'releases_tab_page.dart';
 import 'release_detail_page.dart';
 import 'profile_manager_page.dart';
+import '../config/app_build_info.dart';
 import 'widgets/language_switcher.dart';
 import 'widgets/theme_switcher.dart';
 import '../generated/l10n/app_localizations.dart';
@@ -30,8 +31,6 @@ import '../models/release.dart';
 import '../providers/providers.dart';
 import '../repository/project_repository.dart';
 import 'package:uuid/uuid.dart';
-
-const String kAppVersion = '1.7.3';
 
 // WIDGET CORRIGIDO: Botões de controle da janela usando window_manager (desktop only)
 class WindowButtons extends StatelessWidget {
@@ -730,7 +729,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                       Padding(
                         padding: const EdgeInsets.only(left: 12),
                         child: Text(
-                          'DAW Project Manager v$kAppVersion',
+                          'DAW Project Manager v$appVersion',
                           style: TextStyle(
                             color: Theme.of(context).textTheme.titleMedium?.color,
                             fontSize: 16,
@@ -1354,7 +1353,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                 const SizedBox(width: 4),
                                 // Versão também na barra de ações (à direita do ícone de lixeira)
                                 Text(
-                                  'v$kAppVersion',
+                                  'v$appVersion',
                                   style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color, fontSize: 12),
                                 ),
                               ],
