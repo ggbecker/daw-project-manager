@@ -335,7 +335,7 @@ jobs:
           VERSION_NAME="${{ steps.build_version.outputs.version_name }}"
           VERSION_CODE="${{ steps.build_version.outputs.version_code }}"
           WINDOWS_BUILD_ARGS="--build-name=${VERSION_NAME} --build-number=${VERSION_CODE} --dart-define=APP_VERSION=${VERSION_NAME}"
-          dart run msix:create --build-windows --version "${VERSION_NAME}.0" --windows-build-args "${WINDOWS_BUILD_ARGS}"
+          dart run msix:create --version "${VERSION_NAME}.0" --windows-build-args "${WINDOWS_BUILD_ARGS}"
           
       # 5. Instala e Compila o Instalador (Apenas para Windows)
       - name: Install Inno Setup

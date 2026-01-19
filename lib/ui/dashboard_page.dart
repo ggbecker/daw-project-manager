@@ -21,7 +21,6 @@ import 'project_detail_page.dart';
 import 'releases_tab_page.dart';
 import 'release_detail_page.dart';
 import 'profile_manager_page.dart';
-import '../config/app_build_info.dart';
 import 'widgets/language_switcher.dart';
 import 'widgets/theme_switcher.dart';
 import '../generated/l10n/app_localizations.dart';
@@ -31,6 +30,10 @@ import '../models/release.dart';
 import '../providers/providers.dart';
 import '../repository/project_repository.dart';
 import 'package:uuid/uuid.dart';
+
+/// App version embedded at build-time (CI passes `--dart-define=APP_VERSION=x.y.z`).
+/// For PR/local builds, we fall back to a dummy version.
+const String appVersion = String.fromEnvironment('APP_VERSION', defaultValue: '0.0.0');
 
 // WIDGET CORRIGIDO: Botões de controle da janela usando window_manager (desktop only)
 class WindowButtons extends StatelessWidget {
