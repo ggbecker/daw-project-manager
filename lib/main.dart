@@ -23,9 +23,10 @@ Future<void> _runInitialScan(ProjectRepository repo, ProviderContainer container
     
     // 2. Cria o scanner e processa as raízes de scan
     final scanner = ScannerService();
+    final ignoredPaths = repo.getIgnoredPaths().map((p) => p.path).toList(growable: false);
     final scanTime = DateTime.now();
     for (final root in repo.getRoots()) {
-      await for (final entity in scanner.scanDirectory(root.path)) {
+      await for (final entity in scanner.scanDirectory(root.path, ignoredPaths: ignoredPaths)) {
         await repo.upsertFromFileSystemEntity(entity);
       }
       // Update lastScanAt timestamp for this root

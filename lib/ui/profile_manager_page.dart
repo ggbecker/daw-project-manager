@@ -160,6 +160,7 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
   Future<void> _scanProfileRoots(ProjectRepository repo) async {
     final scanner = ScannerService();
     int foundCount = 0;
+    final ignoredPaths = repo.getIgnoredPaths().map((p) => p.path).toList(growable: false);
     
     // Clear missing files for the current profile
     await repo.clearMissingFiles();
@@ -168,7 +169,7 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
     // Use lightweight scan (fast, no full metadata extraction)
     final scanTime = DateTime.now();
     for (final root in repo.getRoots()) {
-      await for (final entity in scanner.scanDirectory(root.path)) {
+      await for (final entity in scanner.scanDirectory(root.path, ignoredPaths: ignoredPaths)) {
         await repo.upsertFromFileSystemEntity(entity, fullMetadata: false);
         foundCount++;
       }

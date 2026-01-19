@@ -187,9 +187,28 @@ jobs:
           fi
         shell: bash
 
+      - name: Determine build version (tag/PR)
+        id: build_version
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            VERSION_NAME="${GITHUB_REF#refs/tags/v}"
+            VERSION_CODE="$(echo "${VERSION_NAME}" | tr -d '.' | cut -c1-9)"
+          else
+            VERSION_NAME="0.0.0"
+            VERSION_CODE="${GITHUB_RUN_NUMBER}"
+          fi
+          echo "version_name=${VERSION_NAME}" >> "$GITHUB_OUTPUT"
+          echo "version_code=${VERSION_CODE}" >> "$GITHUB_OUTPUT"
+
       # 3. Build
       - name: Build ${{ matrix.os_name }} Executable
-        run: ${{ matrix.command }}
+        shell: bash
+        run: |
+          VERSION_NAME="${{ steps.build_version.outputs.version_name }}"
+          VERSION_CODE="${{ steps.build_version.outputs.version_code }}"
+          EXTRA_ARGS="--build-name=${VERSION_NAME} --build-number=${VERSION_CODE} --dart-define=APP_VERSION=${VERSION_NAME}"
+          ${{ matrix.command }} ${EXTRA_ARGS}
       
       # 4a. Code Sign macOS App Bundle (for DMG and ZIP) - MUST BE BEFORE ZIP/DMG CREATION
       # Note: If secrets are not set, signing will be skipped (useful for testing)
@@ -311,9 +330,12 @@ jobs:
       # 5a. Cria o pacote MSIX (Apenas para Windows MSIX)
       - name: Create MSIX Package
         if: matrix.is_msix == true
+        shell: bash
         run: |
-          flutter pub add --dev msix
-          flutter pub run msix:create
+          VERSION_NAME="${{ steps.build_version.outputs.version_name }}"
+          VERSION_CODE="${{ steps.build_version.outputs.version_code }}"
+          WINDOWS_BUILD_ARGS="--build-name=${VERSION_NAME} --build-number=${VERSION_CODE} --dart-define=APP_VERSION=${VERSION_NAME}"
+          dart run msix:create --version "${VERSION_NAME}.0" --windows-build-args "${WINDOWS_BUILD_ARGS}"
           
       # 5. Instala e Compila o Instalador (Apenas para Windows)
       - name: Install Inno Setup
@@ -322,6 +344,8 @@ jobs:
 
       - name: Compile Windows Installer (ISCC)
         if: matrix.is_installer == true
+        env:
+          APP_VERSION: ${{ steps.build_version.outputs.version_name }}
         run: iscc installer.iss
 
       # 5.4. Rename Windows Installer to use sanitized ref name
@@ -463,27 +487,19 @@ jobs:
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
-      - name: Determine version from tag (Release only)
-        if: startsWith(github.ref, 'refs/tags/v')
+      - name: Determine build version (tag/PR)
         id: version
         run: |
-          # Extract version from tag (e.g., v1.7.1 -> 1.7.1)
-          TAG_NAME=${GITHUB_REF#refs/tags/v}
-          echo "version_name=${TAG_NAME}" >> $GITHUB_OUTPUT
-          # Extract version code from tag (e.g., 1.7.1 -> 170)
-          VERSION_CODE=$(echo ${TAG_NAME} | tr -d '.' | cut -c1-9)
-          echo "version_code=${VERSION_CODE}" >> $GITHUB_OUTPUT
-
-      - name: Update version in pubspec.yaml (Release only)
-        if: startsWith(github.ref, 'refs/tags/v')
-        run: |
-          VERSION_NAME="${{ steps.version.outputs.version_name }}"
-          VERSION_CODE="${{ steps.version.outputs.version_code }}"
-          
-          # Update version in pubspec.yaml
-          sed -i "s/^version: .*/version: $VERSION_NAME+$VERSION_CODE/" pubspec.yaml
-          
-          echo "Updated pubspec.yaml to version: $VERSION_NAME+$VERSION_CODE"
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            TAG_NAME="${GITHUB_REF#refs/tags/v}"
+            VERSION_NAME="${TAG_NAME}"
+            VERSION_CODE="$(echo "${TAG_NAME}" | tr -d '.' | cut -c1-9)"
+          else
+            VERSION_NAME="0.0.0"
+            VERSION_CODE="${GITHUB_RUN_NUMBER}"
+          fi
+          echo "version_name=${VERSION_NAME}" >> "$GITHUB_OUTPUT"
+          echo "version_code=${VERSION_CODE}" >> "$GITHUB_OUTPUT"
 
       - name: Generate Localizations
         run: flutter gen-l10n
@@ -494,7 +510,7 @@ jobs:
       - name: Build Android App Bundle (AAB) - Release
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
-          flutter build appbundle --release
+          flutter build appbundle --release --build-name "${{ steps.version.outputs.version_name }}" --build-number "${{ steps.version.outputs.version_code }}" --dart-define=APP_VERSION="${{ steps.version.outputs.version_name }}"
         env:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
@@ -502,13 +518,13 @@ jobs:
       - name: Build Android APK - PR Test (unsigned)
         if: github.event_name == 'pull_request'
         run: |
-          flutter build apk --debug
+          flutter build apk --debug --build-name "${{ steps.version.outputs.version_name }}" --build-number "${{ steps.version.outputs.version_code }}" --dart-define=APP_VERSION="${{ steps.version.outputs.version_name }}"
         continue-on-error: true
 
       - name: Build Android APK - Release (for testing)
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
-          flutter build apk --release --split-per-abi
+          flutter build apk --release --split-per-abi --build-name "${{ steps.version.outputs.version_name }}" --build-number "${{ steps.version.outputs.version_code }}" --dart-define=APP_VERSION="${{ steps.version.outputs.version_name }}"
         env:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}

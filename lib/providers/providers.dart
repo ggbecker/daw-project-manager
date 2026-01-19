@@ -12,11 +12,11 @@ import '../utils/app_paths.dart';
 
 import '../models/music_project.dart';
 import '../models/scan_root.dart';
+import '../models/ignored_path.dart';
 import '../models/release.dart';
 import '../models/profile.dart';
 import '../repository/project_repository.dart';
 import '../repository/profile_repository.dart';
-import '../services/scanner_service.dart';
 import '../services/google_drive_sync_service.dart';
 
 // Profile Repository Provider
@@ -70,6 +70,21 @@ final scanRootsProvider = Provider<List<ScanRoot>>((ref) {
   return repoAsync.maybeWhen(
     data: (repo) => repo.getRoots(),
     orElse: () => const <ScanRoot>[],
+  );
+});
+
+final ignoredPathsWatchProvider = StreamProvider<void>((ref) async* {
+  final repo = await ref.watch(repositoryProvider.future);
+  yield* repo.watchIgnoredPaths().map((_) => null);
+});
+
+final ignoredPathsProvider = Provider<List<IgnoredPath>>((ref) {
+  // Rebuild when ignored paths box changes
+  ref.watch(ignoredPathsWatchProvider);
+  final repoAsync = ref.watch(repositoryProvider);
+  return repoAsync.maybeWhen(
+    data: (repo) => repo.getIgnoredPaths(),
+    orElse: () => const <IgnoredPath>[],
   );
 });
 

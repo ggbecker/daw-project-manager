@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 
 import '../models/music_project.dart';
 import '../models/scan_root.dart';
+import '../models/ignored_path.dart';
 import '../models/release.dart';
 import '../models/release_file.dart';
 import '../models/todo_item.dart';
@@ -17,6 +18,7 @@ class ProjectRepository {
   final String profileId;
   final Box<MusicProject> projectsBox;
   final Box<ScanRoot> rootsBox;
+  final Box<IgnoredPath> ignoredPathsBox;
   final Box<Release> releasesBox;
   final _uuid = const Uuid();
 
@@ -24,6 +26,7 @@ class ProjectRepository {
     required this.profileId,
     required this.projectsBox,
     required this.rootsBox,
+    required this.ignoredPathsBox,
     required this.releasesBox,
   });
 
@@ -36,6 +39,9 @@ class ProjectRepository {
     }
     if (!Hive.isAdapterRegistered(2)) {
       Hive.registerAdapter(ScanRootAdapter());
+    }
+    if (!Hive.isAdapterRegistered(7)) {
+      Hive.registerAdapter(IgnoredPathAdapter());
     }
     if (!Hive.isAdapterRegistered(3)) {
       Hive.registerAdapter(ReleaseAdapter());
@@ -58,6 +64,7 @@ Hive.registerAdapter(TodoItemAdapter());
     // Use profile-specific box names
     final projects = await Hive.openBox<MusicProject>('${profileId}_projects');
     final roots = await Hive.openBox<ScanRoot>('${profileId}_roots');
+    final ignoredPaths = await Hive.openBox<IgnoredPath>('${profileId}_ignored_paths');
     final releases = await Hive.openBox<Release>('${profileId}_releases');
     
     if (kDebugMode) {
@@ -69,6 +76,7 @@ Hive.registerAdapter(TodoItemAdapter());
       profileId: profileId,
       projectsBox: projects,
       rootsBox: roots,
+      ignoredPathsBox: ignoredPaths,
       releasesBox: releases,
     );
   }
@@ -81,12 +89,14 @@ Hive.registerAdapter(TodoItemAdapter());
     // Use profile-specific box names
     final projects = await Hive.openBox<MusicProject>('${profileId}_projects');
     final roots = await Hive.openBox<ScanRoot>('${profileId}_roots');
+    final ignoredPaths = await Hive.openBox<IgnoredPath>('${profileId}_ignored_paths');
     final releases = await Hive.openBox<Release>('${profileId}_releases');
     
     return ProjectRepository(
       profileId: profileId,
       projectsBox: projects,
       rootsBox: roots,
+      ignoredPathsBox: ignoredPaths,
       releasesBox: releases,
     );
   }
@@ -156,6 +166,56 @@ Hive.registerAdapter(TodoItemAdapter());
   }
 
   List<ScanRoot> getRoots() => rootsBox.values.toList(growable: false);
+
+  // Ignored paths (directories under roots that should not be scanned)
+  Future<void> addIgnoredPath(String path) async {
+    final id = _uuid.v4();
+    final ignored = IgnoredPath(id: id, path: path, addedAt: DateTime.now());
+    await ignoredPathsBox.put(id, ignored);
+
+    // Also delete any already-indexed projects within this path (unless in releases).
+    await _deleteProjectsUnderPathPrefix(path);
+  }
+
+  Future<void> removeIgnoredPath(String id) async {
+    await ignoredPathsBox.delete(id);
+  }
+
+  List<IgnoredPath> getIgnoredPaths() => ignoredPathsBox.values.toList(growable: false);
+
+  Stream<BoxEvent> watchIgnoredPaths() => ignoredPathsBox.watch();
+
+  Future<void> _deleteProjectsUnderPathPrefix(String basePath) async {
+    // Get all project IDs that are referenced in releases (to preserve them)
+    final releases = getAllReleases();
+    final protectedProjectIds = <String>{};
+    for (final release in releases) {
+      protectedProjectIds.addAll(release.trackIds);
+    }
+
+    final rootPath = p.normalize(basePath);
+    final rootPathNormalized =
+        rootPath.endsWith(p.separator) ? rootPath : rootPath + p.separator;
+
+    final projectsToDelete = <String>[];
+    for (final project in projectsBox.values) {
+      try {
+        final projectPath = p.normalize(project.filePath);
+        if (projectPath.startsWith(rootPathNormalized) ||
+            projectPath.startsWith(rootPath + p.separator)) {
+          if (!protectedProjectIds.contains(project.id)) {
+            projectsToDelete.add(project.id);
+          }
+        }
+      } catch (_) {
+        // Skip on path errors (safer to not delete).
+      }
+    }
+
+    if (projectsToDelete.isNotEmpty) {
+      await projectsBox.deleteAll(projectsToDelete);
+    }
+  }
 
   // Projects
   MusicProject? getByPath(String path) {
@@ -331,6 +391,9 @@ Hive.registerAdapter(TodoItemAdapter());
     
     // Always clear roots
     await rootsBox.clear();
+
+    // Clear ignored paths
+    await ignoredPathsBox.clear();
   }
 
   Future<void> clearMissingFiles() async {

@@ -93,6 +93,79 @@ class AppLocalizationsPt extends AppLocalizations {
   String get roots => 'Pastas de Projetos';
 
   @override
+  String get pathsSettingsDangerZoneTitle => 'Biblioteca';
+
+  @override
+  String get pathsSettingsDangerZoneSubtitle =>
+      'Limpe todos os projetos e pastas de projetos do perfil atual.';
+
+  @override
+  String get projectFoldersSectionTitle => 'Pastas de projetos';
+
+  @override
+  String get projectFoldersSectionSubtitle =>
+      'Pastas que serão escaneadas para encontrar projetos de DAW.';
+
+  @override
+  String get projectFoldersEmptyTitle => 'Nenhuma pasta de projetos ainda';
+
+  @override
+  String get projectFoldersEmptySubtitle =>
+      'Adicione pelo menos uma pasta para começar a escanear projetos.';
+
+  @override
+  String get notScannedYet => 'Ainda não escaneado';
+
+  @override
+  String lastScan(String date) {
+    return 'Último scan: $date';
+  }
+
+  @override
+  String get excludedFoldersSectionTitle => 'Pastas excluídas';
+
+  @override
+  String get excludedFoldersSectionSubtitle =>
+      'Estas pastas serão ignoradas durante o scan, mesmo que estejam dentro de uma pasta de projetos.';
+
+  @override
+  String get addExcludedFolder => 'Adicionar excluída';
+
+  @override
+  String get selectExcludedFolder => 'Selecione uma pasta para excluir';
+
+  @override
+  String get excludedFoldersEmptyTitle => 'Nenhuma pasta excluída';
+
+  @override
+  String get excludedFoldersEmptySubtitle =>
+      'Opcional: adicione pastas que você nunca quer escanear.';
+
+  @override
+  String get removeExcludedFolderTitle => 'Remover pasta excluída?';
+
+  @override
+  String removeExcludedFolderMessage(String path) {
+    return 'Esta pasta não será mais excluída:\n\n$path';
+  }
+
+  @override
+  String get removeExcludedFolderMessageNoPath =>
+      'Esta pasta não será mais excluída.';
+
+  @override
+  String get desktopOnlyPathsSettings =>
+      'Esta página está disponível apenas no app desktop.';
+
+  @override
+  String get removeProjectFolderTitle => 'Remover pasta de projetos?';
+
+  @override
+  String removeProjectFolderMessage(String path) {
+    return 'Tem certeza de que deseja remover \"$path\"? Isso também removerá todos os projetos desta pasta que não estão em lançamentos.';
+  }
+
+  @override
   String get projects => 'Projetos';
 
   @override
@@ -301,7 +374,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get showOnlyHidden => 'Mostrar Apenas Ocultos';
 
   @override
-  String get deleteRootPath => 'Excluir Caminho Raiz';
+  String get deleteRootPath => 'Remover pasta de projetos';
 
   @override
   String deleteRootPathMessage(String path) {

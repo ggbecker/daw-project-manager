@@ -93,6 +93,79 @@ class AppLocalizationsRu extends AppLocalizations {
   String get roots => 'Папки Проектов';
 
   @override
+  String get pathsSettingsDangerZoneTitle => 'Библиотека';
+
+  @override
+  String get pathsSettingsDangerZoneSubtitle =>
+      'Очистить все проекты и папки проектов текущего профиля.';
+
+  @override
+  String get projectFoldersSectionTitle => 'Папки проектов';
+
+  @override
+  String get projectFoldersSectionSubtitle =>
+      'Папки, которые будут сканироваться для поиска проектов DAW.';
+
+  @override
+  String get projectFoldersEmptyTitle => 'Папки проектов отсутствуют';
+
+  @override
+  String get projectFoldersEmptySubtitle =>
+      'Добавьте хотя бы одну папку, чтобы начать сканирование проектов.';
+
+  @override
+  String get notScannedYet => 'Ещё не сканировано';
+
+  @override
+  String lastScan(String date) {
+    return 'Последнее сканирование: $date';
+  }
+
+  @override
+  String get excludedFoldersSectionTitle => 'Исключённые папки';
+
+  @override
+  String get excludedFoldersSectionSubtitle =>
+      'Эти папки будут пропускаться при сканировании, даже если они находятся внутри папки проектов.';
+
+  @override
+  String get addExcludedFolder => 'Добавить исключение';
+
+  @override
+  String get selectExcludedFolder => 'Выберите папку для исключения';
+
+  @override
+  String get excludedFoldersEmptyTitle => 'Исключённых папок нет';
+
+  @override
+  String get excludedFoldersEmptySubtitle =>
+      'Необязательно: добавьте папки, которые вы никогда не хотите сканировать.';
+
+  @override
+  String get removeExcludedFolderTitle => 'Удалить исключённую папку?';
+
+  @override
+  String removeExcludedFolderMessage(String path) {
+    return 'Эта папка больше не будет исключаться:\n\n$path';
+  }
+
+  @override
+  String get removeExcludedFolderMessageNoPath =>
+      'Эта папка больше не будет исключаться.';
+
+  @override
+  String get desktopOnlyPathsSettings =>
+      'Эта страница доступна только в настольном приложении.';
+
+  @override
+  String get removeProjectFolderTitle => 'Удалить папку проектов?';
+
+  @override
+  String removeProjectFolderMessage(String path) {
+    return 'Вы уверены, что хотите удалить \"$path\"? Это также удалит все проекты из этой папки, которые не находятся в релизах.';
+  }
+
+  @override
   String get projects => 'Проекты';
 
   @override
@@ -301,7 +374,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get showOnlyHidden => 'Показать Только Скрытые';
 
   @override
-  String get deleteRootPath => 'Удалить Корневой Путь';
+  String get deleteRootPath => 'Удалить папку проектов';
 
   @override
   String deleteRootPathMessage(String path) {

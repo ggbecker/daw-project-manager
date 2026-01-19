@@ -93,6 +93,79 @@ class AppLocalizationsEs extends AppLocalizations {
   String get roots => 'Carpetas de Proyectos';
 
   @override
+  String get pathsSettingsDangerZoneTitle => 'Biblioteca';
+
+  @override
+  String get pathsSettingsDangerZoneSubtitle =>
+      'Borra todos los proyectos y carpetas de proyectos del perfil actual.';
+
+  @override
+  String get projectFoldersSectionTitle => 'Carpetas de proyectos';
+
+  @override
+  String get projectFoldersSectionSubtitle =>
+      'Carpetas que se escanearán para encontrar proyectos de DAW.';
+
+  @override
+  String get projectFoldersEmptyTitle => 'Aún no hay carpetas de proyectos';
+
+  @override
+  String get projectFoldersEmptySubtitle =>
+      'Agrega al menos una carpeta para comenzar a escanear proyectos.';
+
+  @override
+  String get notScannedYet => 'Aún no escaneado';
+
+  @override
+  String lastScan(String date) {
+    return 'Último escaneo: $date';
+  }
+
+  @override
+  String get excludedFoldersSectionTitle => 'Carpetas excluidas';
+
+  @override
+  String get excludedFoldersSectionSubtitle =>
+      'Estas carpetas se omitirán durante el escaneo, incluso si están dentro de una carpeta de proyectos.';
+
+  @override
+  String get addExcludedFolder => 'Agregar excluida';
+
+  @override
+  String get selectExcludedFolder => 'Selecciona una carpeta para excluir';
+
+  @override
+  String get excludedFoldersEmptyTitle => 'No hay carpetas excluidas';
+
+  @override
+  String get excludedFoldersEmptySubtitle =>
+      'Opcional: agrega carpetas que nunca quieras escanear.';
+
+  @override
+  String get removeExcludedFolderTitle => '¿Quitar carpeta excluida?';
+
+  @override
+  String removeExcludedFolderMessage(String path) {
+    return 'Esta carpeta ya no será excluida:\n\n$path';
+  }
+
+  @override
+  String get removeExcludedFolderMessageNoPath =>
+      'Esta carpeta ya no será excluida.';
+
+  @override
+  String get desktopOnlyPathsSettings =>
+      'Esta página está disponible solo en la app de escritorio.';
+
+  @override
+  String get removeProjectFolderTitle => '¿Quitar carpeta de proyectos?';
+
+  @override
+  String removeProjectFolderMessage(String path) {
+    return '¿Estás seguro de que quieres quitar \"$path\"? Esto también eliminará todos los proyectos de esta carpeta que no estén en lanzamientos.';
+  }
+
+  @override
   String get projects => 'Proyectos';
 
   @override
@@ -302,7 +375,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get showOnlyHidden => 'Mostrar Solo Ocultos';
 
   @override
-  String get deleteRootPath => 'Eliminar Ruta Raíz';
+  String get deleteRootPath => 'Quitar carpeta de proyectos';
 
   @override
   String deleteRootPathMessage(String path) {

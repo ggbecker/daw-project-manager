@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
-import 'package:path/path.dart' as path;
 import '../models/music_project.dart';
 import '../models/scan_root.dart';
+import '../models/ignored_path.dart';
 import '../models/release.dart';
 import '../models/release_file.dart';
 import '../models/profile.dart';
@@ -23,6 +23,7 @@ class BackupService {
       // Get all data
       final projects = projectRepo.getAllProjects();
       final roots = projectRepo.getRoots();
+      final ignoredPaths = projectRepo.getIgnoredPaths();
       final releases = projectRepo.getAllReleases();
       final profile = profileRepo.getProfileById(profileId);
 
@@ -34,6 +35,7 @@ class BackupService {
         'profile': profile != null ? _profileToJson(profile) : null,
         'projects': projects.map((p) => _projectToJson(p)).toList(),
         'roots': roots.map((r) => _rootToJson(r)).toList(),
+        'ignoredPaths': ignoredPaths.map((p) => _ignoredPathToJson(p)).toList(),
         'releases': releases.map((r) => _releaseToJson(r, projects)).toList(),
       };
 
@@ -95,6 +97,7 @@ class BackupService {
 
       final importedProjects = <MusicProject>[];
       final importedRoots = <ScanRoot>[];
+      final importedIgnoredPaths = <IgnoredPath>[];
       final importedReleases = <Release>[];
 
       // Import projects
@@ -120,6 +123,19 @@ class BackupService {
             importedRoots.add(root);
           } catch (e) {
             // Skip invalid roots
+            continue;
+          }
+        }
+      }
+
+      // Import ignored paths (optional, backward compatible)
+      if (backupData['ignoredPaths'] != null) {
+        final ignoredList = backupData['ignoredPaths'] as List;
+        for (var ignoredJson in ignoredList) {
+          try {
+            final ignoredPath = _ignoredPathFromJson(ignoredJson as Map<String, dynamic>);
+            importedIgnoredPaths.add(ignoredPath);
+          } catch (e) {
             continue;
           }
         }
@@ -189,6 +205,19 @@ class BackupService {
           await targetRepo.addRoot(root.path);
         }
       }
+
+      for (final ignoredPath in importedIgnoredPaths) {
+        // Only add if not already present in merge mode
+        if (importMode == ImportMode.merge) {
+          final existingIgnored = targetRepo.getIgnoredPaths();
+          if (!existingIgnored.any((p) => p.path == ignoredPath.path)) {
+            await targetRepo.addIgnoredPath(ignoredPath.path);
+          }
+        } else {
+          await targetRepo.addIgnoredPath(ignoredPath.path);
+        }
+      }
+
       for (final release in importedReleases) {
         await targetRepo.updateRelease(release);
       }
@@ -197,6 +226,7 @@ class BackupService {
         cancelled: false,
         projectsCount: importedProjects.length,
         rootsCount: importedRoots.length,
+        ignoredPathsCount: importedIgnoredPaths.length,
         releasesCount: importedReleases.length,
         newProfileId: createdProfileId,
       );
@@ -261,12 +291,28 @@ class BackupService {
     };
   }
 
+  static Map<String, dynamic> _ignoredPathToJson(IgnoredPath p) {
+    return {
+      'id': p.id,
+      'path': p.path,
+      'addedAt': p.addedAt.toIso8601String(),
+    };
+  }
+
   static ScanRoot _rootFromJson(Map<String, dynamic> json) {
     return ScanRoot(
       id: json['id'] as String,
       path: json['path'] as String,
       addedAt: DateTime.parse(json['addedAt'] as String),
       lastScanAt: json['lastScanAt'] != null ? DateTime.parse(json['lastScanAt'] as String) : null,
+    );
+  }
+
+  static IgnoredPath _ignoredPathFromJson(Map<String, dynamic> json) {
+    return IgnoredPath(
+      id: json['id'] as String? ?? '',
+      path: json['path'] as String,
+      addedAt: json['addedAt'] != null ? DateTime.parse(json['addedAt'] as String) : DateTime.now(),
     );
   }
 
@@ -359,6 +405,7 @@ class ImportResult {
   final bool cancelled;
   final int projectsCount;
   final int rootsCount;
+  final int ignoredPathsCount;
   final int releasesCount;
   final String? newProfileId;
 
@@ -366,6 +413,7 @@ class ImportResult {
     this.cancelled = false,
     this.projectsCount = 0,
     this.rootsCount = 0,
+    this.ignoredPathsCount = 0,
     this.releasesCount = 0,
     this.newProfileId,
   });

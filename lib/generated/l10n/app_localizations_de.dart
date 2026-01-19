@@ -93,6 +93,79 @@ class AppLocalizationsDe extends AppLocalizations {
   String get roots => 'Projektordner';
 
   @override
+  String get pathsSettingsDangerZoneTitle => 'Bibliothek';
+
+  @override
+  String get pathsSettingsDangerZoneSubtitle =>
+      'Alle Projekte und Projektordner des aktuellen Profils löschen.';
+
+  @override
+  String get projectFoldersSectionTitle => 'Projektordner';
+
+  @override
+  String get projectFoldersSectionSubtitle =>
+      'Ordner, die nach DAW-Projekten durchsucht werden.';
+
+  @override
+  String get projectFoldersEmptyTitle => 'Noch keine Projektordner';
+
+  @override
+  String get projectFoldersEmptySubtitle =>
+      'Fügen Sie mindestens einen Ordner hinzu, um mit dem Scannen zu beginnen.';
+
+  @override
+  String get notScannedYet => 'Noch nicht gescannt';
+
+  @override
+  String lastScan(String date) {
+    return 'Letzter Scan: $date';
+  }
+
+  @override
+  String get excludedFoldersSectionTitle => 'Ausgeschlossene Ordner';
+
+  @override
+  String get excludedFoldersSectionSubtitle =>
+      'Diese Ordner werden beim Scannen übersprungen, auch wenn sie in einem Projektordner liegen.';
+
+  @override
+  String get addExcludedFolder => 'Ausgeschlossen hinzufügen';
+
+  @override
+  String get selectExcludedFolder => 'Ordner zum Ausschließen auswählen';
+
+  @override
+  String get excludedFoldersEmptyTitle => 'Keine ausgeschlossenen Ordner';
+
+  @override
+  String get excludedFoldersEmptySubtitle =>
+      'Optional: Ordner hinzufügen, die nie gescannt werden sollen.';
+
+  @override
+  String get removeExcludedFolderTitle => 'Ausgeschlossenen Ordner entfernen?';
+
+  @override
+  String removeExcludedFolderMessage(String path) {
+    return 'Dieser Ordner wird nicht mehr ausgeschlossen:\n\n$path';
+  }
+
+  @override
+  String get removeExcludedFolderMessageNoPath =>
+      'Dieser Ordner wird nicht mehr ausgeschlossen.';
+
+  @override
+  String get desktopOnlyPathsSettings =>
+      'Diese Seite ist nur in der Desktop-App verfügbar.';
+
+  @override
+  String get removeProjectFolderTitle => 'Projektordner entfernen?';
+
+  @override
+  String removeProjectFolderMessage(String path) {
+    return 'Möchten Sie \"$path\" wirklich entfernen? Dadurch werden auch alle Projekte aus diesem Ordner entfernt, die nicht in Veröffentlichungen sind.';
+  }
+
+  @override
   String get projects => 'Projekte';
 
   @override
@@ -303,7 +376,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get showOnlyHidden => 'Nur Versteckte Anzeigen';
 
   @override
-  String get deleteRootPath => 'Stammpfad Löschen';
+  String get deleteRootPath => 'Projektordner entfernen';
 
   @override
   String deleteRootPathMessage(String path) {

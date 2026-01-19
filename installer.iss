@@ -1,9 +1,16 @@
 ; Script do Inno Setup para DAW Project Manager
 
+; Version is injected by CI via environment variable APP_VERSION.
+; Fallback keeps local builds working.
+#define APP_VERSION GetEnv('APP_VERSION')
+#if APP_VERSION == ""
+  #define APP_VERSION "0.0.0"
+#endif
+
 [Setup]
 ; --- Informações do Aplicativo ---
 AppName=DAW Project Manager
-AppVersion=1.7.2
+AppVersion={#APP_VERSION}
 AppPublisher=DAW Project Manager Co.
 AppPublisherURL=https://www.github.com/bandpassrecords/daw-project-manager
 AppSupportURL=https://www.github.com/bandpassrecords/daw-project-manager

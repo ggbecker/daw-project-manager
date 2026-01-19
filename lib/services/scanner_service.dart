@@ -29,25 +29,58 @@ class ScannerService {
     return segments.any((s) => s.toLowerCase() == 'backup');
   }
 
-  Stream<FileSystemEntity> scanDirectory(String rootPath) async* {
-    final directory = Directory(rootPath);
-    if (!await directory.exists()) return;
+  Stream<FileSystemEntity> scanDirectory(
+    String rootPath, {
+    List<String> ignoredPaths = const [],
+  }) async* {
+    final rootDir = Directory(rootPath);
+    if (!await rootDir.exists()) return;
 
-    await for (final entity in directory.list(recursive: true, followLinks: false)) {
-      if (entity is File) {
-        final ext = p.extension(entity.path).toLowerCase();
-        if (!supportedExtensions.contains(ext)) continue;
+    // Normalize ignore paths for fast prefix matching.
+    final ignoredBases = ignoredPaths.map((p0) => p.normalize(p0)).toList();
+    bool isIgnoredPath(String candidatePath) {
+      final cand = p.normalize(candidatePath);
+      for (final base in ignoredBases) {
+        if (cand == base) return true;
+        final prefix = base.endsWith(p.separator) ? base : base + p.separator;
+        if (cand.startsWith(prefix)) return true;
+      }
+      return false;
+    }
 
-        // Ignore Ableton backup projects (typically under a Backup folder)
-        if ((ext == '.als' || ext == '.alp') && _isInBackupFolder(entity.path)) {
+    // Manual traversal so we can skip ignored directories efficiently.
+    final stack = <Directory>[rootDir];
+    while (stack.isNotEmpty) {
+      final dir = stack.removeLast();
+      if (isIgnoredPath(dir.path)) {
+        continue;
+      }
+
+      final stream = dir.list(recursive: false, followLinks: false);
+      await for (final entity in stream) {
+        if (isIgnoredPath(entity.path)) {
           continue;
         }
 
-        yield entity;
-      } else if (entity is Directory) {
-        // Logic Pro projects present as .logicx bundles (directories)
-        if (entity.path.toLowerCase().endsWith('.logicx')) {
+        if (entity is File) {
+          final ext = p.extension(entity.path).toLowerCase();
+          if (!supportedExtensions.contains(ext)) continue;
+
+          // Ignore Ableton backup projects (typically under a Backup folder)
+          if ((ext == '.als' || ext == '.alp') && _isInBackupFolder(entity.path)) {
+            continue;
+          }
+
           yield entity;
+        } else if (entity is Directory) {
+          // Logic Pro projects present as .logicx bundles (directories)
+          if (entity.path.toLowerCase().endsWith('.logicx')) {
+            yield entity;
+            continue;
+          }
+
+          // Continue traversal
+          stack.add(entity);
         }
       }
     }

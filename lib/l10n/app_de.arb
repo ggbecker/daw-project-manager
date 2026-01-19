@@ -37,6 +37,47 @@
   "clearLibraryMessage": "Dies entfernt alle gespeicherten Projekte und Quellordner. Fortfahren?",
   "clear": "Leeren",
   "roots": "Projektordner",
+  "pathsSettingsDangerZoneTitle": "Bibliothek",
+  "pathsSettingsDangerZoneSubtitle": "Alle Projekte und Projektordner des aktuellen Profils löschen.",
+  "projectFoldersSectionTitle": "Projektordner",
+  "projectFoldersSectionSubtitle": "Ordner, die nach DAW-Projekten durchsucht werden.",
+  "projectFoldersEmptyTitle": "Noch keine Projektordner",
+  "projectFoldersEmptySubtitle": "Fügen Sie mindestens einen Ordner hinzu, um mit dem Scannen zu beginnen.",
+  "notScannedYet": "Noch nicht gescannt",
+  "lastScan": "Letzter Scan: {date}",
+  "@lastScan": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "excludedFoldersSectionTitle": "Ausgeschlossene Ordner",
+  "excludedFoldersSectionSubtitle": "Diese Ordner werden beim Scannen übersprungen, auch wenn sie in einem Projektordner liegen.",
+  "addExcludedFolder": "Ausgeschlossen hinzufügen",
+  "selectExcludedFolder": "Ordner zum Ausschließen auswählen",
+  "excludedFoldersEmptyTitle": "Keine ausgeschlossenen Ordner",
+  "excludedFoldersEmptySubtitle": "Optional: Ordner hinzufügen, die nie gescannt werden sollen.",
+  "removeExcludedFolderTitle": "Ausgeschlossenen Ordner entfernen?",
+  "removeExcludedFolderMessage": "Dieser Ordner wird nicht mehr ausgeschlossen:\n\n{path}",
+  "@removeExcludedFolderMessage": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "removeExcludedFolderMessageNoPath": "Dieser Ordner wird nicht mehr ausgeschlossen.",
+  "desktopOnlyPathsSettings": "Diese Seite ist nur in der Desktop-App verfügbar.",
+  "removeProjectFolderTitle": "Projektordner entfernen?",
+  "removeProjectFolderMessage": "Möchten Sie \"{path}\" wirklich entfernen? Dadurch werden auch alle Projekte aus diesem Ordner entfernt, die nicht in Veröffentlichungen sind.",
+  "@removeProjectFolderMessage": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "projects": "Projekte",
   "hidden": "versteckt",
   "profileManager": "Profilverwaltung",
@@ -158,7 +199,7 @@
   "showHidden": "Versteckte Anzeigen",
   "showAll": "Alle Anzeigen",
   "showOnlyHidden": "Nur Versteckte Anzeigen",
-  "deleteRootPath": "Stammpfad Löschen",
+  "deleteRootPath": "Projektordner entfernen",
   "deleteRootPathMessage": "Möchten Sie \"{path}\" wirklich entfernen? Dies entfernt auch alle Projekte aus diesem Ordner, die nicht in Veröffentlichungen sind.",
   "@deleteRootPathMessage": {
     "placeholders": {

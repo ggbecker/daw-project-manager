@@ -37,6 +37,47 @@
   "clearLibraryMessage": "Cela supprimera tous les projets enregistrés et dossiers sources. Continuer?",
   "clear": "Vider",
   "roots": "Dossiers de Projets",
+  "pathsSettingsDangerZoneTitle": "Bibliothèque",
+  "pathsSettingsDangerZoneSubtitle": "Effacez tous les projets et dossiers de projets du profil actuel.",
+  "projectFoldersSectionTitle": "Dossiers de projets",
+  "projectFoldersSectionSubtitle": "Dossiers qui seront scannés pour trouver des projets DAW.",
+  "projectFoldersEmptyTitle": "Aucun dossier de projets pour le moment",
+  "projectFoldersEmptySubtitle": "Ajoutez au moins un dossier pour commencer à scanner les projets.",
+  "notScannedYet": "Pas encore scanné",
+  "lastScan": "Dernier scan : {date}",
+  "@lastScan": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "excludedFoldersSectionTitle": "Dossiers exclus",
+  "excludedFoldersSectionSubtitle": "Ces dossiers seront ignorés pendant le scan, même s'ils se trouvent dans un dossier de projets.",
+  "addExcludedFolder": "Ajouter exclu",
+  "selectExcludedFolder": "Sélectionnez un dossier à exclure",
+  "excludedFoldersEmptyTitle": "Aucun dossier exclu",
+  "excludedFoldersEmptySubtitle": "Optionnel : ajoutez des dossiers que vous ne voulez jamais scanner.",
+  "removeExcludedFolderTitle": "Supprimer le dossier exclu ?",
+  "removeExcludedFolderMessage": "Ce dossier ne sera plus exclu :\n\n{path}",
+  "@removeExcludedFolderMessage": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "removeExcludedFolderMessageNoPath": "Ce dossier ne sera plus exclu.",
+  "desktopOnlyPathsSettings": "Cette page est disponible uniquement dans l’application de bureau.",
+  "removeProjectFolderTitle": "Supprimer le dossier de projets ?",
+  "removeProjectFolderMessage": "Êtes-vous sûr de vouloir supprimer \"{path}\" ? Cela supprimera aussi tous les projets de ce dossier qui ne sont pas dans des sorties.",
+  "@removeProjectFolderMessage": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "projects": "Projets",
   "hidden": "masqués",
   "profileManager": "Gestionnaire de Profils",
@@ -158,7 +199,7 @@
   "showHidden": "Afficher les Masqués",
   "showAll": "Afficher Tout",
   "showOnlyHidden": "Afficher Seulement les Masqués",
-  "deleteRootPath": "Supprimer le Chemin Racine",
+  "deleteRootPath": "Supprimer le dossier de projets",
   "deleteRootPathMessage": "Êtes-vous sûr de vouloir supprimer \"{path}\"? Cela supprimera également tous les projets de ce dossier qui ne sont pas dans les sorties.",
   "@deleteRootPathMessage": {
     "placeholders": {

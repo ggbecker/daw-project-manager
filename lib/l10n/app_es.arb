@@ -37,6 +37,47 @@
   "clearLibraryMessage": "Esto eliminará todos los proyectos guardados y carpetas de origen. ¿Continuar?",
   "clear": "Limpiar",
   "roots": "Carpetas de Proyectos",
+  "pathsSettingsDangerZoneTitle": "Biblioteca",
+  "pathsSettingsDangerZoneSubtitle": "Borra todos los proyectos y carpetas de proyectos del perfil actual.",
+  "projectFoldersSectionTitle": "Carpetas de proyectos",
+  "projectFoldersSectionSubtitle": "Carpetas que se escanearán para encontrar proyectos de DAW.",
+  "projectFoldersEmptyTitle": "Aún no hay carpetas de proyectos",
+  "projectFoldersEmptySubtitle": "Agrega al menos una carpeta para comenzar a escanear proyectos.",
+  "notScannedYet": "Aún no escaneado",
+  "lastScan": "Último escaneo: {date}",
+  "@lastScan": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "excludedFoldersSectionTitle": "Carpetas excluidas",
+  "excludedFoldersSectionSubtitle": "Estas carpetas se omitirán durante el escaneo, incluso si están dentro de una carpeta de proyectos.",
+  "addExcludedFolder": "Agregar excluida",
+  "selectExcludedFolder": "Selecciona una carpeta para excluir",
+  "excludedFoldersEmptyTitle": "No hay carpetas excluidas",
+  "excludedFoldersEmptySubtitle": "Opcional: agrega carpetas que nunca quieras escanear.",
+  "removeExcludedFolderTitle": "¿Quitar carpeta excluida?",
+  "removeExcludedFolderMessage": "Esta carpeta ya no será excluida:\n\n{path}",
+  "@removeExcludedFolderMessage": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "removeExcludedFolderMessageNoPath": "Esta carpeta ya no será excluida.",
+  "desktopOnlyPathsSettings": "Esta página está disponible solo en la app de escritorio.",
+  "removeProjectFolderTitle": "¿Quitar carpeta de proyectos?",
+  "removeProjectFolderMessage": "¿Estás seguro de que quieres quitar \"{path}\"? Esto también eliminará todos los proyectos de esta carpeta que no estén en lanzamientos.",
+  "@removeProjectFolderMessage": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "projects": "Proyectos",
   "hidden": "ocultos",
   "profileManager": "Administrador de Perfiles",
@@ -158,7 +199,7 @@
   "showHidden": "Mostrar Ocultos",
   "showAll": "Mostrar Todos",
   "showOnlyHidden": "Mostrar Solo Ocultos",
-  "deleteRootPath": "Eliminar Ruta Raíz",
+  "deleteRootPath": "Quitar carpeta de proyectos",
   "deleteRootPathMessage": "¿Está seguro de que desea eliminar \"{path}\"? Esto también eliminará todos los proyectos de esta carpeta que no están en lanzamientos.",
   "@deleteRootPathMessage": {
     "placeholders": {
