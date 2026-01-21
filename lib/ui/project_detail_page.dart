@@ -13,6 +13,7 @@ import 'package:intl/intl.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:archive/archive_io.dart';
 
 import '../models/music_project.dart';
 import '../models/todo_item.dart';
@@ -1285,6 +1286,117 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
 
   Future<void> _sharePreviewSong() async {
     if (widget.project.previewSongPath == null || widget.project.previewSongPath!.isEmpty) {
+      if (kDebugMode) {
+        debugPrint('[preview_share] No previewSongPath set for project=${widget.project.id}');
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Preview song file not found')),
+        );
+      }
+      return;
+    }
+
+    // Skip if it's a Drive file reference (not downloaded)
+    if (widget.project.previewSongPath!.startsWith('drive://')) {
+      if (kDebugMode) {
+        debugPrint('[preview_share] Path is Drive reference (not downloaded): ${widget.project.previewSongPath}');
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Preview song not available. Please download backup first.')),
+        );
+      }
+      return;
+    }
+
+    try {
+      final sourceFile = File(widget.project.previewSongPath!);
+      if (kDebugMode) {
+        debugPrint('[preview_share] sourceFile=${sourceFile.path}');
+      }
+      if (!await sourceFile.exists()) {
+        if (kDebugMode) {
+          debugPrint('[preview_share] sourceFile does not exist');
+        }
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Preview song file not found')),
+          );
+        }
+        return;
+      }
+
+      // WhatsApp enforces a ~64MB limit for audio messages, but typically allows larger files as "documents".
+      // Keep default share here (audio). A separate "Share ZIP" button is also available.
+      final fileSizeBytes = await sourceFile.length();
+      if (kDebugMode) {
+        debugPrint('[preview_share] sizeBytes=$fileSizeBytes');
+      }
+
+      // Get the original filename or use a default
+      String originalFileName = widget.project.previewSongFileName ?? 
+          p.basename(widget.project.previewSongPath!);
+      
+      // Ensure the filename has an extension
+      if (!originalFileName.contains('.')) {
+        final ext = p.extension(widget.project.previewSongPath!);
+        originalFileName = '$originalFileName$ext';
+      }
+
+      // On Android, copy to cache directory with original name for sharing
+      if (Platform.isAndroid) {
+        final cacheDir = await getTemporaryDirectory();
+        final shareFile = File(p.join(cacheDir.path, originalFileName));
+        if (kDebugMode) {
+          debugPrint('[preview_share] cacheDir=${cacheDir.path} shareFile=${shareFile.path}');
+        }
+        
+        // Copy file to cache with original name
+        await sourceFile.copy(shareFile.path);
+        if (kDebugMode) {
+          debugPrint('[preview_share] copied to cache OK, invoking share sheet...');
+        }
+
+        // Share the file (default behavior)
+        final result = await Share.shareXFiles(
+          [XFile(shareFile.path, name: originalFileName)],
+          text: 'Preview song: ${widget.project.displayName}',
+        );
+        if (kDebugMode) {
+          debugPrint('[preview_share] Share.shareXFiles returned (user completed/dismissed share sheet)');
+          debugPrint('[preview_share] ShareResult: status=${result.status} raw=${result.raw}');
+        }
+      } else {
+        // On other platforms, share the file directly
+        if (kDebugMode) {
+          debugPrint('[preview_share] non-Android direct share, invoking share sheet...');
+        }
+        final result = await Share.shareXFiles(
+          [XFile(sourceFile.path)],
+          text: 'Preview song: ${widget.project.displayName}',
+        );
+        if (kDebugMode) {
+          debugPrint('[preview_share] ShareResult: status=${result.status} raw=${result.raw}');
+        }
+      }
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('[preview_share] ERROR: $e');
+        debugPrint('$st');
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to share preview song: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  Future<void> _sharePreviewSongAsZip() async {
+    if (!Platform.isAndroid) return;
+
+    if (widget.project.previewSongPath == null || widget.project.previewSongPath!.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Preview song file not found')),
@@ -1315,41 +1427,119 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
       }
 
       // Get the original filename or use a default
-      String originalFileName = widget.project.previewSongFileName ?? 
+      String originalFileName = widget.project.previewSongFileName ??
           p.basename(widget.project.previewSongPath!);
-      
-      // Ensure the filename has an extension
       if (!originalFileName.contains('.')) {
         final ext = p.extension(widget.project.previewSongPath!);
         originalFileName = '$originalFileName$ext';
       }
 
-      // On Android, copy to cache directory with original name for sharing
-      if (Platform.isAndroid) {
-        final cacheDir = await getTemporaryDirectory();
-        final shareFile = File(p.join(cacheDir.path, originalFileName));
-        
-        // Copy file to cache with original name
-        await sourceFile.copy(shareFile.path);
-        
-        // Share the file
-        await Share.shareXFiles(
-          [XFile(shareFile.path)],
-          text: 'Preview song: ${widget.project.displayName}',
-        );
-      } else {
-        // On other platforms, share the file directly
-        await Share.shareXFiles(
-          [XFile(sourceFile.path)],
-          text: 'Preview song: ${widget.project.displayName}',
-        );
+      // Copy to cache and zip it
+      final cacheDir = await getTemporaryDirectory();
+      final shareFile = File(p.join(cacheDir.path, originalFileName));
+      await sourceFile.copy(shareFile.path);
+
+      final zipBase = p.basenameWithoutExtension(originalFileName);
+      var zipPath = p.join(cacheDir.path, '$zipBase.zip');
+      var zipFile = File(zipPath);
+      if (await zipFile.exists()) {
+        zipPath = p.join(cacheDir.path, '${zipBase}_${DateTime.now().millisecondsSinceEpoch}.zip');
+        zipFile = File(zipPath);
       }
-    } catch (e) {
+
+      if (kDebugMode) {
+        debugPrint('[preview_share_zip] sourceFile=${sourceFile.path}');
+        debugPrint('[preview_share_zip] copiedTo=${shareFile.path}');
+        debugPrint('[preview_share_zip] creating zip: ${zipFile.path}');
+      }
+
+      final encoder = ZipFileEncoder();
+      encoder.create(zipFile.path);
+      await encoder.addFile(shareFile);
+      encoder.close();
+
+      final zipSizeBytes = await zipFile.length();
+      if (kDebugMode) {
+        debugPrint('[preview_share_zip] zipSizeBytes=$zipSizeBytes');
+        debugPrint('[preview_share_zip] invoking share sheet...');
+      }
+
+      final result = await Share.shareXFiles(
+        [XFile(zipFile.path, name: p.basename(zipFile.path), mimeType: 'application/zip')],
+        text: 'Preview song (ZIP): ${widget.project.displayName}',
+      );
+      if (kDebugMode) {
+        debugPrint('[preview_share_zip] Share.shareXFiles returned (user completed/dismissed share sheet)');
+        debugPrint('[preview_share_zip] ShareResult: status=${result.status} raw=${result.raw}');
+      }
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('[preview_share_zip] ERROR: $e');
+        debugPrint('$st');
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to share preview song: ${e.toString()}')),
+          SnackBar(content: Text('Failed to share preview song as ZIP: ${e.toString()}')),
         );
       }
+    }
+  }
+
+  /// Android debug-only: pick a local preview song so you can listen on-device.
+  /// This does NOT upload anything to Drive.
+  Future<void> _pickPreviewSongAndroidDebug() async {
+    if (!kDebugMode || !Platform.isAndroid) return;
+
+    final l10n = AppLocalizations.of(context)!;
+
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: const ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'],
+      dialogTitle: l10n.selectPreviewSong,
+    );
+
+    if (result == null || result.files.isEmpty || result.files.single.path == null) {
+      return;
+    }
+
+    final source = File(result.files.single.path!);
+    if (!await source.exists()) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.previewSongFileNotFound)),
+        );
+      }
+      return;
+    }
+
+    // Copy into app temp so we always have file access for playback.
+    final tempDir = await getTemporaryDirectory();
+    final destDir = Directory(p.join(tempDir.path, 'preview_songs', widget.project.id));
+    if (!await destDir.exists()) {
+      await destDir.create(recursive: true);
+    }
+
+    final originalName =
+        result.files.single.name.isNotEmpty ? result.files.single.name : p.basename(source.path);
+    final destPath = p.join(destDir.path, originalName);
+    await source.copy(destPath);
+
+    final repo = await ref.read(repositoryProvider.future);
+    final updated = widget.project.copyWith(
+      previewSongPath: destPath,
+      previewSongFileName: originalName,
+      clearUploadedPreviewSongHash: true,
+      updatedAt: DateTime.now(),
+    );
+    await repo.updateProject(updated);
+
+    // Refresh UI
+    ref.invalidate(allProjectsStreamProvider);
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.previewSongAdded)),
+      );
     }
   }
 
@@ -1697,14 +1887,53 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                 // On mobile, show Share button instead of Change Preview Song
                 // On desktop, show Change Preview Song button
                 Platform.isAndroid || Platform.isIOS
-                    ? (widget.project.previewSongPath != null &&
-                            widget.project.previewSongPath!.isNotEmpty
-                        ? ElevatedButton.icon(
-                            onPressed: _sharePreviewSong,
-                            icon: const Icon(Icons.share),
-                            label: const Text('Share'),
-                          )
-                        : const SizedBox.shrink())
+                    ? Builder(
+                        builder: (context) {
+                          final buttons = <Widget>[];
+
+                          // Debug Android: allow selecting/changing preview song (listen-only).
+                          if (kDebugMode && Platform.isAndroid) {
+                            buttons.add(
+                              ElevatedButton.icon(
+                                onPressed: _pickPreviewSongAndroidDebug,
+                                icon: const Icon(Icons.audio_file),
+                                label: Text(
+                                  widget.project.previewSongPath != null &&
+                                          widget.project.previewSongPath!.isNotEmpty
+                                      ? AppLocalizations.of(context)!.changePreviewSong
+                                      : AppLocalizations.of(context)!.selectPreviewSong,
+                                ),
+                              ),
+                            );
+                          }
+
+                          // Share (if a local preview song exists)
+                          if (widget.project.previewSongPath != null &&
+                              widget.project.previewSongPath!.isNotEmpty &&
+                              !widget.project.previewSongPath!.startsWith('drive://')) {
+                            buttons.add(
+                              ElevatedButton.icon(
+                                onPressed: _sharePreviewSong,
+                                icon: const Icon(Icons.share),
+                                label: const Text('Share'),
+                              ),
+                            );
+
+                            if (Platform.isAndroid) {
+                              buttons.add(
+                                ElevatedButton.icon(
+                                  onPressed: _sharePreviewSongAsZip,
+                                  icon: const Icon(Icons.archive),
+                                  label: const Text('Share ZIP'),
+                                ),
+                              );
+                            }
+                          }
+
+                          if (buttons.isEmpty) return const SizedBox.shrink();
+                          return Wrap(spacing: 8, runSpacing: 8, children: buttons);
+                        },
+                      )
                     : ElevatedButton.icon(
                         onPressed: () async {
                           // Get the project's directory to start the file picker there
