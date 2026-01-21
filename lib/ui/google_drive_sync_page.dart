@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
 import 'package:flutter/services.dart' show PlatformException;
@@ -14,6 +15,7 @@ import '../repository/profile_repository.dart';
 import '../repository/project_repository.dart';
 import '../utils/mobile_utils.dart';
 import '../generated/l10n/app_localizations.dart';
+import '../models/upload_progress.dart';
 import 'dashboard_page.dart';
 
 class GoogleDriveSyncPage extends ConsumerStatefulWidget {
@@ -248,8 +250,21 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
         });
 
         try {
-          // Get authorization URL
-          final authUrl = await _syncService.getDesktopAuthorizationUrl();
+          // Get authorization URL with redirect URI, port, PKCE, and state
+          final authInfo = await _syncService.getDesktopAuthorizationUrl();
+          final authUrl = authInfo.authUrl;
+          final redirectUri = authInfo.redirectUri;
+          final port = authInfo.port;
+          final codeVerifier = authInfo.codeVerifier;
+          final state = authInfo.state;
+
+          // Start local HTTP server to capture authorization code
+          // This runs in parallel with opening the browser
+          // State validation is performed by the server
+          final codeFuture = _syncService.waitForAuthorizationCode(
+            port: port,
+            expectedState: state,
+          );
 
           // Launch browser for authorization
           final launched = await launchUrl(
@@ -265,14 +280,39 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
             return;
           }
 
-          // Show dialog to enter authorization code
-          final code = await showDialog<String>(
-            context: context,
-            barrierDismissible: false,
-            builder: (context) => _AuthorizationCodeDialog(),
-          );
+          // Show dialog indicating we're waiting for authorization
+          if (mounted) {
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (context) => AlertDialog(
+                title: const Text('Waiting for Authorization'),
+                content: const Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text('Please complete the authorization in your browser.'),
+                    SizedBox(height: 8),
+                    Text(
+                      'This window will close automatically when authorization is complete.',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
 
-          if (code == null || code.isEmpty) {
+          // Wait for authorization code from local server
+          final code = await codeFuture;
+
+          // Close waiting dialog
+          if (mounted) {
+            Navigator.of(context).pop();
+          }
+
+          if (code.isEmpty) {
             setState(() {
               _syncStatus = AppLocalizations.of(context)!.signInCancelled;
               _isSyncing = false;
@@ -280,8 +320,12 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
             return;
           }
 
-          // Exchange code for tokens
-          final authClient = await _syncService.signInDesktopWithCode(code);
+          // Exchange code for tokens (must use same redirect URI and code verifier as authorization request)
+          final authClient = await _syncService.signInDesktopWithCode(
+            code,
+            redirectUri,
+            codeVerifier,
+          );
 
           if (authClient == null) {
             setState(() {
@@ -474,26 +518,69 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
 
   /// Upload backup to Google Drive (manual)
   Future<void> _uploadBackupToDrive() async {
-    try {
-      setState(() {
-        _isSyncing = true;
-        _syncStatus = AppLocalizations.of(context)!.uploadingBackup;
-      });
-
-      final profileRepo = await ref.read(profileRepositoryProvider.future);
-      final currentProfileId = profileRepo.getCurrentProfileId();
-      
-      if (currentProfileId == null) {
-        setState(() {
-          _syncStatus = AppLocalizations.of(context)!.errorNoProfileSelected;
-        });
-        return;
+    final profileRepo = await ref.read(profileRepositoryProvider.future);
+    final currentProfileId = profileRepo.getCurrentProfileId();
+    
+    if (currentProfileId == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.errorNoProfileSelected),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
+      return;
+    }
 
-      final projectRepo = await ref.read(repositoryProvider.future);
+    final projectRepo = await ref.read(repositoryProvider.future);
+    
+    // Create stream controller for progress updates
+    final progressController = StreamController<UploadProgress>.broadcast();
+    
+    if (!mounted) return;
+    
+    setState(() {
+      _isSyncing = true;
+      _syncStatus = AppLocalizations.of(context)!.uploadingBackup;
+    });
+    
+    // Show progress dialog immediately (schedule to show before upload starts)
+    Future.microtask(() {
+      if (mounted) {
+        showDialog<void>(
+          context: context,
+          barrierDismissible: false,
+          builder: (dialogContext) => _UploadProgressDialog(
+            progressStream: progressController.stream,
+          ),
+        );
+      }
+    });
+    
+    // Give dialog time to appear before starting upload
+    await Future.delayed(const Duration(milliseconds: 100));
+    
+    // Start upload in background
+    try {
       await _syncService.uploadDatabase(
         projectRepo: projectRepo,
         profileRepo: profileRepo,
+        onProgress: (progress) {
+          if (!progressController.isClosed) {
+            progressController.add(progress);
+          }
+          if (progress.isComplete) {
+            Future.delayed(const Duration(milliseconds: 1500), () {
+              if (!progressController.isClosed) {
+                progressController.close();
+              }
+              if (mounted) {
+                Navigator.of(context, rootNavigator: true).pop();
+              }
+            });
+          }
+        },
       );
 
       setState(() {
@@ -510,6 +597,14 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
         );
       }
     } catch (e) {
+      progressController.add(UploadProgress(
+        currentItem: 'Error: ${e.toString()}',
+        currentIndex: 0,
+        totalItems: 1,
+        type: UploadType.database,
+        error: e.toString(),
+      ));
+      
       setState(() {
         _syncStatus = AppLocalizations.of(context)!.errorUploadingBackup(e.toString());
       });
@@ -522,6 +617,12 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
           ),
         );
       }
+      
+      await Future.delayed(const Duration(seconds: 2));
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+      progressController.close();
     } finally {
       setState(() {
         _isSyncing = false;
@@ -994,6 +1095,130 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Dialog showing upload progress
+class _UploadProgressDialog extends StatefulWidget {
+  final Stream<UploadProgress> progressStream;
+  
+  const _UploadProgressDialog({
+    required this.progressStream,
+  });
+
+  @override
+  State<_UploadProgressDialog> createState() => _UploadProgressDialogState();
+}
+
+class _UploadProgressDialogState extends State<_UploadProgressDialog> {
+  UploadProgress? _progress;
+  StreamSubscription<UploadProgress>? _subscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _subscription = widget.progressStream.listen((progress) {
+      if (mounted) {
+        setState(() {
+          _progress = progress;
+        });
+        
+        if (progress.isComplete) {
+          Future.delayed(const Duration(milliseconds: 1500), () {
+            if (mounted) {
+              Navigator.of(context).pop();
+            }
+          });
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = _progress;
+    if (progress == null) {
+      return AlertDialog(
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Preparing upload...'),
+          ],
+        ),
+      );
+    }
+
+    String typeLabel;
+    switch (progress.type) {
+      case UploadType.previewSong:
+        typeLabel = 'Preview songs';
+        break;
+      case UploadType.project:
+        typeLabel = 'Projects';
+        break;
+      case UploadType.release:
+        typeLabel = 'Releases';
+        break;
+      case UploadType.database:
+        typeLabel = 'Database';
+        break;
+    }
+
+    return PopScope(
+      canPop: progress.isComplete,
+      child: AlertDialog(
+        title: Text(progress.isComplete ? 'Upload Complete' : 'Uploading Backup'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (progress.type == UploadType.previewSong && progress.totalItems > 0) ...[
+              Text('$typeLabel: ${progress.progressText}'),
+              const SizedBox(height: 8),
+              LinearProgressIndicator(value: progress.progress),
+              const SizedBox(height: 16),
+            ],
+            Text(
+              progress.currentItem,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: progress.error != null ? Colors.red : null,
+              ),
+            ),
+            if (progress.error != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                progress.error!,
+                style: const TextStyle(color: Colors.red, fontSize: 12),
+              ),
+            ],
+            if (progress.isComplete) ...[
+              const SizedBox(height: 16),
+              const Icon(Icons.check_circle, color: Colors.green, size: 48),
+            ] else ...[
+              const SizedBox(height: 16),
+              const Center(child: CircularProgressIndicator()),
+            ],
+          ],
+        ),
+        actions: progress.isComplete
+            ? [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Close'),
+                ),
+              ]
+            : null,
       ),
     );
   }
