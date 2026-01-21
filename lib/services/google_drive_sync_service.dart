@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'dart:async';
 import 'dart:async' show StreamSubscription;
+import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show PlatformException;
@@ -21,6 +22,7 @@ import '../models/release.dart';
 import '../models/release_file.dart';
 import '../models/scan_root.dart';
 import '../models/todo_item.dart';
+import '../models/upload_progress.dart';
 import '../repository/profile_repository.dart';
 import '../repository/project_repository.dart';
 import '../utils/app_paths.dart' show ensureHiveInitialized, getPreviewSongsPath;
@@ -596,14 +598,96 @@ class GoogleDriveSyncService {
     }
   }
 
-  /// Sign in on desktop using OAuth2 flow (manual code entry)
-  /// Opens browser and returns the authorization URL
-  /// Following the pattern recommended for desktop apps using googleapis_auth
-  Future<Uri> getDesktopAuthorizationUrl() async {
-    // Use 'urn:ietf:wg:oauth:2.0:oob' for desktop apps - Google will show the code on the page
-    final redirectUri = Uri.parse('urn:ietf:wg:oauth:2.0:oob');
+  /// Generate PKCE code verifier and challenge
+  /// Following Google's recommended PKCE protocol for enhanced security
+  /// Reference: https://developers.google.com/identity/protocols/oauth2/native-app#step1-code-verifier
+  ({String codeVerifier, String codeChallenge}) _generatePKCE() {
+    // Generate a high-entropy random code verifier (43-128 characters)
+    // Using unreserved characters: [A-Z] / [a-z] / [0-9] / "-" / "." / "_" / "~"
+    final random = Random.secure();
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+    final codeVerifier = List.generate(128, (_) => chars[random.nextInt(chars.length)]).join();
     
-    // Build authorization URL following OAuth 2.0 spec
+    // Create code challenge using S256 (SHA256 + Base64URL encoding)
+    final bytes = utf8.encode(codeVerifier);
+    final hash = sha256.convert(bytes);
+    // Base64URL encoding (no padding, URL-safe)
+    final codeChallenge = base64UrlEncode(hash.bytes).replaceAll('=', '');
+    
+    return (codeVerifier: codeVerifier, codeChallenge: codeChallenge);
+  }
+  
+  /// Generate a random state token for CSRF protection
+  String _generateStateToken() {
+    final random = Random.secure();
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    return List.generate(32, (_) => chars[random.nextInt(chars.length)]).join();
+  }
+
+  /// Sign in on desktop using OAuth2 flow with loopback IP redirect
+  /// Uses http://127.0.0.1 with an available port to capture authorization code automatically
+  /// Implements PKCE and state parameter as recommended by Google
+  /// Reference: https://developers.google.com/identity/protocols/oauth2/native-app#redirect-uri_loopback
+  /// 
+  /// IMPORTANT: For Google Cloud Console configuration:
+  /// - Register http://127.0.0.1:8080 as an authorized redirect URI
+  /// - Google allows dynamic ports for loopback redirects, but you must register at least one specific URI
+  /// - If port 8080 is unavailable, the app will try 8081-8090, then a random port
+  Future<({Uri authUrl, Uri redirectUri, int port, String codeVerifier, String state})> getDesktopAuthorizationUrl() async {
+    // Try to use port 8080 first (must be registered in Google Cloud Console)
+    // If unavailable, try 8081-8090, then fall back to random port
+    // Google allows dynamic ports for loopback redirects per RFC 8252
+    int port = 8080;
+    HttpServer? testServer;
+    
+    // Preferred: use port 8080 (should be registered in Google Cloud Console)
+    try {
+      testServer = await HttpServer.bind(InternetAddress.loopbackIPv4, 8080).timeout(
+        const Duration(seconds: 1),
+        onTimeout: () => throw TimeoutException('Port 8080 is in use'),
+      );
+      port = 8080;
+      await testServer.close(force: true);
+    } catch (e) {
+      // Port 8080 unavailable, try 8081-8090
+      for (int i = 8081; i <= 8090; i++) {
+        try {
+          testServer = await HttpServer.bind(InternetAddress.loopbackIPv4, i).timeout(
+            const Duration(milliseconds: 500),
+            onTimeout: () => throw TimeoutException('Port $i is in use'),
+          );
+          port = i;
+          await testServer.close(force: true);
+          break;
+        } catch (e) {
+          // Port in use, try next
+          continue;
+        }
+      }
+      
+      // If all ports 8080-8090 are busy, use a random port
+      // Note: This may require registering the specific port in Google Cloud Console
+      if (testServer == null) {
+        testServer = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        port = testServer.port;
+        await testServer.close(force: true);
+        if (kDebugMode) {
+          print('WARNING: Using random port $port. Make sure http://127.0.0.1:$port is registered in Google Cloud Console');
+        }
+      }
+    }
+    
+    // Use loopback IP address (127.0.0.1) as recommended by Google
+    // Note: localhost may cause firewall issues, so 127.0.0.1 is preferred
+    final redirectUri = Uri.parse('http://127.0.0.1:$port');
+    
+    // Generate PKCE code verifier and challenge (recommended for security)
+    final pkce = _generatePKCE();
+    
+    // Generate state token for CSRF protection (recommended)
+    final state = _generateStateToken();
+    
+    // Build authorization URL following OAuth 2.0 spec with PKCE and state
     final authUrl = Uri.parse('https://accounts.google.com/o/oauth2/v2/auth').replace(
       queryParameters: {
         'client_id': _desktopClientId,
@@ -612,43 +696,209 @@ class GoogleDriveSyncService {
         'scope': _scopes.join(' '),
         'access_type': 'offline', // Request refresh token
         'prompt': 'consent', // Force consent screen to ensure refresh token
+        'code_challenge': pkce.codeChallenge, // PKCE: recommended for security
+        'code_challenge_method': 'S256', // PKCE: SHA256 method (recommended)
+        'state': state, // CSRF protection: recommended
       },
     );
     
     if (kDebugMode) {
-      print('Desktop OAuth2 Authorization URL generated');
+      print('Desktop OAuth2 Authorization URL generated (loopback IP method with PKCE)');
       print('Redirect URI: $redirectUri');
+      print('Port: $port');
       print('Scopes: $_scopes');
+      print('PKCE: Enabled (S256)');
+      print('State: $state');
+      print('');
+      print('IMPORTANT: Google Cloud Console Configuration:');
+      print('  - Register http://127.0.0.1:8080 as an authorized redirect URI');
+      print('  - Google allows dynamic ports for loopback redirects (per RFC 8252)');
+      print('  - If using a different port, register that specific URI');
+      print('Reference: https://developers.google.com/identity/protocols/oauth2/native-app#redirect-uri_loopback');
     }
     
-    return authUrl;
+    return (
+      authUrl: authUrl,
+      redirectUri: redirectUri,
+      port: port,
+      codeVerifier: pkce.codeVerifier,
+      state: state,
+    );
+  }
+  
+  /// Start a local HTTP server to capture the authorization code
+  /// Uses the loopback IP address (127.0.0.1) as recommended by Google
+  /// Validates state parameter for CSRF protection
+  /// Returns the authorization code when received
+  Future<String> waitForAuthorizationCode({
+    required int port,
+    required String expectedState,
+    Duration timeout = const Duration(minutes: 5),
+  }) async {
+    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, port);
+    
+    try {
+      if (kDebugMode) {
+        print('Local HTTP server started on http://127.0.0.1:$port (loopback IP)');
+        print('Waiting for authorization code...');
+      }
+      
+      final completer = Completer<String>();
+      Timer? timeoutTimer;
+      
+      // Set timeout
+      timeoutTimer = Timer(timeout, () {
+        if (!completer.isCompleted) {
+          completer.completeError(Exception('Authorization timeout: No code received within ${timeout.inMinutes} minutes'));
+        }
+      });
+      
+      server.listen((request) async {
+        try {
+          final uri = request.uri;
+          
+          if (kDebugMode) {
+            print('Received request: ${uri.path}');
+            print('Query parameters: ${uri.queryParameters}');
+          }
+          
+          // Check if this is the OAuth callback
+          if (uri.path == '/' || uri.path == '/oauth2callback') {
+            final code = uri.queryParameters['code'];
+            final error = uri.queryParameters['error'];
+            final receivedState = uri.queryParameters['state'];
+            
+            // Validate state parameter for CSRF protection
+            if (receivedState != expectedState) {
+              if (kDebugMode) {
+                print('State mismatch: expected=$expectedState, received=$receivedState');
+              }
+              request.response
+                ..statusCode = 400
+                ..headers.contentType = ContentType.html
+                ..write('''
+                  <html>
+                    <head><title>Authorization Failed</title></head>
+                    <body>
+                      <h1>Authorization Failed</h1>
+                      <p>Security validation failed. Please try again.</p>
+                      <p>You can close this window.</p>
+                    </body>
+                  </html>
+                ''')
+                ..close();
+              
+              if (!completer.isCompleted) {
+                completer.completeError(Exception('State parameter mismatch - possible CSRF attack'));
+              }
+              return;
+            }
+            
+            if (error != null) {
+              // Send error response to browser
+              request.response
+                ..statusCode = 400
+                ..headers.contentType = ContentType.html
+                ..write('''
+                  <html>
+                    <head><title>Authorization Failed</title></head>
+                    <body>
+                      <h1>Authorization Failed</h1>
+                      <p>Error: $error</p>
+                      <p>You can close this window.</p>
+                    </body>
+                  </html>
+                ''')
+                ..close();
+              
+              if (!completer.isCompleted) {
+                completer.completeError(Exception('Authorization error: $error'));
+              }
+              return;
+            }
+            
+            if (code != null && code.isNotEmpty) {
+              // Send success response to browser
+              // Following Google's recommendation: display HTML page instructing user to close browser
+              request.response
+                ..statusCode = 200
+                ..headers.contentType = ContentType.html
+                ..write('''
+                  <html>
+                    <head><title>Authorization Successful</title></head>
+                    <body>
+                      <h1>Authorization Successful!</h1>
+                      <p>You can close this window and return to the application.</p>
+                    </body>
+                  </html>
+                ''')
+                ..close();
+              
+              if (!completer.isCompleted) {
+                timeoutTimer?.cancel();
+                completer.complete(code);
+              }
+              return;
+            }
+          }
+          
+          // Default response for other paths
+          request.response
+            ..statusCode = 404
+            ..headers.contentType = ContentType.html
+            ..write('Not Found')
+            ..close();
+        } catch (e) {
+          if (kDebugMode) print('Error handling request: $e');
+          request.response
+            ..statusCode = 500
+            ..write('Internal Server Error')
+            ..close();
+        }
+      });
+      
+      final code = await completer.future;
+      return code;
+    } finally {
+      await server.close();
+      if (kDebugMode) {
+        print('Local HTTP server closed');
+      }
+    }
   }
 
   /// Complete desktop sign-in with authorization code
   /// Uses googleapis_auth to create an authenticated client following best practices
+  /// Implements PKCE code verifier as recommended by Google
   /// This follows the pattern recommended for desktop apps using googleapis and googleapis_auth
-  Future<auth_io.AutoRefreshingAuthClient?> signInDesktopWithCode(String code) async {
+  Future<auth_io.AutoRefreshingAuthClient?> signInDesktopWithCode(
+    String code,
+    Uri redirectUri,
+    String codeVerifier,
+  ) async {
     try {
-      final redirectUri = Uri.parse('urn:ietf:wg:oauth:2.0:oob');
+      // Use the same redirect URI that was used in the authorization request
+      // This must match exactly what was registered in Google Cloud Console
       final clientId = auth_io.ClientId(
         _desktopClientId, 
         _desktopClientSecret.isEmpty ? null : _desktopClientSecret,
       );
       
       if (kDebugMode) {
-        print('Exchanging authorization code for access token...');
+        print('Exchanging authorization code for access token (with PKCE)...');
         print('Using googleapis_auth to create authenticated client');
         print('Code: ${code.substring(0, 20)}...');
       }
       
       // Exchange authorization code for access token
-      // Following OAuth 2.0 specification for desktop apps
+      // Following OAuth 2.0 specification for desktop apps with PKCE
       final tokenEndpoint = Uri.parse('https://oauth2.googleapis.com/token');
       final bodyParams = <String, String>{
         'code': code.trim(),
         'client_id': _desktopClientId,
         'redirect_uri': redirectUri.toString(),
         'grant_type': 'authorization_code',
+        'code_verifier': codeVerifier, // PKCE: required when code_challenge was used
       };
       if (_desktopClientSecret.isNotEmpty) {
         bodyParams['client_secret'] = _desktopClientSecret;
@@ -1141,6 +1391,9 @@ class GoogleDriveSyncService {
     required String projectId,
     required String localFilePath,
     String? existingHash, // Hash from previous backup (if available)
+    void Function(UploadProgress)? onProgress,
+    int? currentIndex,
+    int? totalItems,
   }) async {
     if (_driveApi == null) {
       throw Exception('Not signed in to Google Drive');
@@ -1192,6 +1445,17 @@ class GoogleDriveSyncService {
         }
       }
       
+      // Report progress: starting upload
+      if (onProgress != null && currentIndex != null && totalItems != null) {
+        final fileName = path.basename(localFilePath);
+        onProgress(UploadProgress(
+          currentItem: fileName,
+          currentIndex: currentIndex,
+          totalItems: totalItems,
+          type: UploadType.previewSong,
+        ));
+      }
+      
       // Ensure preview songs folder exists
       final previewSongsFolderId = await _ensurePreviewSongsFolder();
       
@@ -1232,6 +1496,16 @@ class GoogleDriveSyncService {
         final createdFile = await _driveApi!.files.create(driveFile, uploadMedia: media);
         fileId = createdFile.id!;
         if (kDebugMode) print('Uploaded preview song: $driveFileName (ID: $fileId)');
+      }
+      
+      // Report progress: upload completed
+      if (onProgress != null && currentIndex != null && totalItems != null) {
+        onProgress(UploadProgress(
+          currentItem: fileName,
+          currentIndex: currentIndex,
+          totalItems: totalItems,
+          type: UploadType.previewSong,
+        ));
       }
       
       return {
@@ -1405,6 +1679,7 @@ class GoogleDriveSyncService {
     required ProjectRepository projectRepo,
     required ProfileRepository profileRepo,
     String? profileId, // Optional - kept for compatibility but not used in filename
+    void Function(UploadProgress)? onProgress,
   }) async {
     if (_driveApi == null || _appDataFolderId == null) {
       throw Exception('Not signed in to Google Drive');
@@ -1453,6 +1728,16 @@ class GoogleDriveSyncService {
         }
       }
       
+      // Report initial progress: starting
+      if (onProgress != null) {
+        onProgress(UploadProgress(
+          currentItem: 'Analyzing files...',
+          currentIndex: 0,
+          totalItems: 1,
+          type: UploadType.database,
+        ));
+      }
+      
       if (kDebugMode) {
         print('Collecting data from ${allProfiles.length} profiles...');
       }
@@ -1463,6 +1748,74 @@ class GoogleDriveSyncService {
         }
         throw Exception('No profiles found - cannot create backup');
       }
+      
+      // Report progress: counting preview songs
+      if (onProgress != null) {
+        onProgress(UploadProgress(
+          currentItem: 'Counting preview songs to upload...',
+          currentIndex: 0,
+          totalItems: 1,
+          type: UploadType.previewSong,
+        ));
+      }
+      
+      // First pass: count preview songs that need to be uploaded (for progress tracking)
+      int previewSongsToUpload = 0;
+      
+      if (!Platform.isAndroid && !Platform.isIOS) {
+        int checkedCount = 0;
+        for (final profile in allProfiles) {
+          try {
+            final profileProjectsBox = await Hive.openBox<MusicProject>('${profile.id}_projects');
+            final projectsWithPreview = profileProjectsBox.values
+                .where((p) => p.previewSongPath != null && 
+                             p.previewSongPath!.isNotEmpty && 
+                             !p.previewSongPath!.startsWith('drive://'))
+                .toList();
+            
+            for (final project in projectsWithPreview) {
+              checkedCount++;
+              final latestProject = profileProjectsBox.get(project.id);
+              if (latestProject != null) {
+                // Report progress during counting (for large files, hash calculation can take time)
+                if (onProgress != null) {
+                  onProgress(UploadProgress(
+                    currentItem: 'Checking: ${path.basename(latestProject.previewSongPath!)}',
+                    currentIndex: checkedCount,
+                    totalItems: projectsWithPreview.length,
+                    type: UploadType.previewSong,
+                  ));
+                }
+                final currentLocalHash = await _calculateFileHash(latestProject.previewSongPath!);
+                final storedHash = latestProject.uploadedPreviewSongHash;
+                if (storedHash == null || storedHash != currentLocalHash) {
+                  previewSongsToUpload++;
+                }
+              }
+            }
+          } catch (e) {
+            if (kDebugMode) {
+              print('Error counting preview songs for profile ${profile.id}: $e');
+            }
+          }
+        }
+      }
+      
+      if (kDebugMode) {
+        print('Found $previewSongsToUpload preview songs to upload');
+      }
+      
+      // Report initial progress
+      if (onProgress != null && previewSongsToUpload > 0) {
+        onProgress(UploadProgress(
+          currentItem: 'Preparing upload...',
+          currentIndex: 0,
+          totalItems: previewSongsToUpload,
+          type: UploadType.previewSong,
+        ));
+      }
+      
+      int previewSongIndex = 0;
       
       for (final profile in allProfiles) {
         try {
@@ -1540,10 +1893,14 @@ class GoogleDriveSyncService {
                     // Retrieve hash from Hive database (ensure we have the latest version)
                     // Use stored hash from project first, then fallback to existingHashes from backup
                     final existingHash = storedHash ?? existingHashes[latestProject.id];
+                    previewSongIndex++;
                     final result = await _uploadPreviewSongFile(
                       projectId: latestProject.id,
                       localFilePath: latestProject.previewSongPath!,
                       existingHash: existingHash,
+                      onProgress: onProgress,
+                      currentIndex: previewSongIndex,
+                      totalItems: previewSongsToUpload,
                     );
                     if (result != null) {
                       previewSongFileMap[latestProject.id] = result['fileId']!;
@@ -1643,6 +2000,16 @@ class GoogleDriveSyncService {
       final jsonData = jsonEncode(data);
       final bytes = utf8.encode(jsonData);
 
+      // Report progress: uploading database
+      if (onProgress != null) {
+        onProgress(UploadProgress(
+          currentItem: 'Uploading database backup...',
+          currentIndex: 1,
+          totalItems: 1,
+          type: UploadType.database,
+        ));
+      }
+
       // Use a single filename for the entire application backup
       // No profileId in filename - this is the complete app backup
       final fileName = _databaseFileName;
@@ -1689,6 +2056,17 @@ class GoogleDriveSyncService {
         );
         await _driveApi!.files.create(file, uploadMedia: media);
         if (kDebugMode) print('✓ Created new backup file');
+      }
+
+      // Report progress: complete
+      if (onProgress != null) {
+        onProgress(UploadProgress(
+          currentItem: 'Upload complete',
+          currentIndex: 1,
+          totalItems: 1,
+          type: UploadType.database,
+          isComplete: true,
+        ));
       }
 
       // Update sync metadata (global, not per-profile)
