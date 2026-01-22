@@ -549,7 +549,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
                   ),
                 ),
               ),
-            Expanded(child: Center(child: Text(AppLocalizations.of(context)!.errorLoadingProjects(allProjectsAsync.error.toString())))),
+            Expanded(child: Center(child: Text('${AppLocalizations.of(context)!.errorLoadingProjects}: ${allProjectsAsync.error}'))),
           ],
         ),
       );

@@ -15,6 +15,7 @@ import '../models/scan_root.dart';
 import '../models/ignored_path.dart';
 import '../models/release.dart';
 import '../models/profile.dart';
+import '../models/playlist.dart';
 import '../repository/project_repository.dart';
 import '../repository/profile_repository.dart';
 import '../services/google_drive_sync_service.dart';
@@ -494,4 +495,10 @@ class PhaseFilterNotifier extends Notifier<String?> {
 // Provider for GoogleDriveSyncService (singleton instance)
 final googleDriveSyncServiceProvider = Provider<GoogleDriveSyncService>((ref) {
   return GoogleDriveSyncService();
+});
+
+// Playlists Provider
+final playlistsProvider = StreamProvider<List<Playlist>>((ref) async* {
+  final repo = await ref.watch(repositoryProvider.future);
+  yield* repo.watchAllPlaylists();
 });

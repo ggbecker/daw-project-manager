@@ -10,6 +10,7 @@ import '../models/ignored_path.dart';
 import '../models/release.dart';
 import '../models/release_file.dart';
 import '../models/todo_item.dart';
+import '../models/playlist.dart';
 import '../services/metadata_extractor.dart';
 import '../utils/app_paths.dart';
 import 'profile_repository.dart';
@@ -20,6 +21,7 @@ class ProjectRepository {
   final Box<ScanRoot> rootsBox;
   final Box<IgnoredPath> ignoredPathsBox;
   final Box<Release> releasesBox;
+  final Box<Playlist> playlistsBox;
   final _uuid = const Uuid();
 
   ProjectRepository({
@@ -28,6 +30,7 @@ class ProjectRepository {
     required this.rootsBox,
     required this.ignoredPathsBox,
     required this.releasesBox,
+    required this.playlistsBox,
   });
 
   static Future<ProjectRepository> init(ProfileRepository profileRepo) async {
@@ -50,7 +53,10 @@ class ProjectRepository {
       Hive.registerAdapter(ReleaseFileAdapter());
     }
     if (!Hive.isAdapterRegistered(6)) {
-Hive.registerAdapter(TodoItemAdapter());
+      Hive.registerAdapter(TodoItemAdapter());
+    }
+    if (!Hive.isAdapterRegistered(8)) {
+      Hive.registerAdapter(PlaylistAdapter());
     }
 
     // Get current profile
@@ -66,6 +72,7 @@ Hive.registerAdapter(TodoItemAdapter());
     final roots = await Hive.openBox<ScanRoot>('${profileId}_roots');
     final ignoredPaths = await Hive.openBox<IgnoredPath>('${profileId}_ignored_paths');
     final releases = await Hive.openBox<Release>('${profileId}_releases');
+    final playlists = await Hive.openBox<Playlist>('${profileId}_playlists');
     
     if (kDebugMode) {
       print('ProjectRepository.init: Opened boxes for profile $profileId');
@@ -78,6 +85,7 @@ Hive.registerAdapter(TodoItemAdapter());
       rootsBox: roots,
       ignoredPathsBox: ignoredPaths,
       releasesBox: releases,
+      playlistsBox: playlists,
     );
   }
   
@@ -91,6 +99,7 @@ Hive.registerAdapter(TodoItemAdapter());
     final roots = await Hive.openBox<ScanRoot>('${profileId}_roots');
     final ignoredPaths = await Hive.openBox<IgnoredPath>('${profileId}_ignored_paths');
     final releases = await Hive.openBox<Release>('${profileId}_releases');
+    final playlists = await Hive.openBox<Playlist>('${profileId}_playlists');
     
     return ProjectRepository(
       profileId: profileId,
@@ -98,6 +107,7 @@ Hive.registerAdapter(TodoItemAdapter());
       rootsBox: roots,
       ignoredPathsBox: ignoredPaths,
       releasesBox: releases,
+      playlistsBox: playlists,
     );
   }
 
@@ -446,4 +456,48 @@ Hive.registerAdapter(TodoItemAdapter());
   }
 
   Stream<BoxEvent> watchReleases() => releasesBox.watch();
+
+  // Playlists
+  Future<Playlist> createPlaylist(String name, {List<String>? projectIds, List<String>? audioFilePaths}) async {
+    final id = _uuid.v4();
+    final now = DateTime.now();
+    final playlist = Playlist(
+      id: id,
+      name: name,
+      projectIds: projectIds ?? [],
+      audioFilePaths: audioFilePaths ?? [],
+      createdAt: now,
+      updatedAt: now,
+    );
+    await playlistsBox.put(id, playlist);
+    return playlist;
+  }
+
+  Future<void> updatePlaylist(Playlist playlist) async {
+    final updated = playlist.copyWith(updatedAt: DateTime.now());
+    await playlistsBox.put(playlist.id, updated);
+  }
+
+  Future<void> deletePlaylist(String id) async {
+    await playlistsBox.delete(id);
+  }
+
+  List<Playlist> getAllPlaylists() => playlistsBox.values.toList(growable: false);
+
+  Playlist? getPlaylistById(String id) {
+    try {
+      return playlistsBox.get(id);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Stream<List<Playlist>> watchAllPlaylists() async* {
+    // Emit initial value immediately
+    yield playlistsBox.values.toList();
+    // Then watch for changes
+    yield* playlistsBox.watch().map((_) => playlistsBox.values.toList());
+  }
+
+  ValueListenable<Box<Playlist>> playlistsListenable() => playlistsBox.listenable();
 }

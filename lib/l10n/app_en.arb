@@ -1283,6 +1283,124 @@
         "type": "String"
       }
     }
+  },
+  "playlists": "Playlists",
+  "@playlists": {
+    "description": "Playlists tab title"
+  },
+  "playlistsDesktopOnly": "Playlists are only available on Android.",
+  "@playlistsDesktopOnly": {
+    "description": "Message shown on desktop when trying to access playlists"
+  },
+  "noPlaylistsYet": "No playlists yet",
+  "@noPlaylistsYet": {
+    "description": "Message when there are no playlists"
+  },
+  "createFirstPlaylist": "Tap the + button to create your first playlist",
+  "@createFirstPlaylist": {
+    "description": "Hint text for creating first playlist"
+  },
+  "playlistSongCount": "{count} songs",
+  "@playlistSongCount": {
+    "description": "Number of songs in playlist",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "createPlaylist": "Create Playlist",
+  "@createPlaylist": {
+    "description": "Dialog title for creating a playlist"
+  },
+  "playlistName": "Playlist Name",
+  "@playlistName": {
+    "description": "Label for playlist name field"
+  },
+  "playlistNameHint": "My Playlist",
+  "@playlistNameHint": {
+    "description": "Placeholder for playlist name input"
+  },
+  "playlistNameRequired": "Playlist name is required",
+  "@playlistNameRequired": {
+    "description": "Error message when playlist name is empty"
+  },
+  "editPlaylist": "Edit Playlist",
+  "@editPlaylist": {
+    "description": "Dialog title for editing a playlist"
+  },
+  "selectPreviewSongs": "Select Preview Songs",
+  "@selectPreviewSongs": {
+    "description": "Label for selecting preview songs in playlist"
+  },
+  "deletePlaylist": "Delete Playlist",
+  "@deletePlaylist": {
+    "description": "Dialog title for deleting a playlist"
+  },
+  "deletePlaylistConfirm": "Are you sure you want to delete \"{name}\"?",
+  "@deletePlaylistConfirm": {
+    "description": "Confirmation message for deleting a playlist",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistDeleted": "Playlist deleted",
+  "@playlistDeleted": {
+    "description": "Success message after deleting a playlist"
+  },
+  "playlistProgress": "{current} of {total}",
+  "@playlistProgress": {
+    "description": "Current position in playlist",
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "noPreviewSongsInPlaylist": "No preview songs available in this playlist",
+  "@noPreviewSongsInPlaylist": {
+    "description": "Message when playlist has no valid preview songs"
+  },
+  "errorLoadingPlaylists": "Error loading playlists",
+  "@errorLoadingPlaylists": {
+    "description": "Error message when playlists fail to load"
+  },
+  "errorLoadingProjects": "Error loading projects",
+  "@errorLoadingProjects": {
+    "description": "Error message when projects fail to load"
+  },
+  "playlistItems": "Playlist Items",
+  "@playlistItems": {
+    "description": "Label for playlist items section"
+  },
+  "addSongs": "Add Songs",
+  "@addSongs": {
+    "description": "Button to add songs to playlist"
+  },
+  "addAudioFiles": "Add Audio Files",
+  "@addAudioFiles": {
+    "description": "Button to add audio files directly"
+  },
+  "selectAudioFiles": "Select Audio Files",
+  "@selectAudioFiles": {
+    "description": "Dialog title for selecting audio files"
+  },
+  "selectFromProjects": "Select from Projects",
+  "@selectFromProjects": {
+    "description": "Label for selecting from existing projects"
+  },
+  "add": "Add",
+  "@add": {
+    "description": "Button to add selected items"
+  },
+  "fromProject": "From Project",
+  "@fromProject": {
+    "description": "Label indicating item is from a project"
   }
 }
 

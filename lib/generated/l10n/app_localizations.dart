@@ -1124,11 +1124,11 @@ abstract class AppLocalizations {
   /// **'Error loading release: {error}'**
   String errorLoadingRelease(String error);
 
-  /// No description provided for @errorLoadingProjects.
+  /// Error message when projects fail to load
   ///
   /// In en, this message translates to:
-  /// **'Error loading projects: {error}'**
-  String errorLoadingProjects(String error);
+  /// **'Error loading projects'**
+  String get errorLoadingProjects;
 
   /// No description provided for @releaseSaved.
   ///
@@ -2232,6 +2232,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to generate testing database: {error}'**
   String failedToGenerateTestingDatabase(String error);
+
+  /// Playlists tab title
+  ///
+  /// In en, this message translates to:
+  /// **'Playlists'**
+  String get playlists;
+
+  /// Message shown on desktop when trying to access playlists
+  ///
+  /// In en, this message translates to:
+  /// **'Playlists are only available on Android.'**
+  String get playlistsDesktopOnly;
+
+  /// Message when there are no playlists
+  ///
+  /// In en, this message translates to:
+  /// **'No playlists yet'**
+  String get noPlaylistsYet;
+
+  /// Hint text for creating first playlist
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the + button to create your first playlist'**
+  String get createFirstPlaylist;
+
+  /// Number of songs in playlist
+  ///
+  /// In en, this message translates to:
+  /// **'{count} songs'**
+  String playlistSongCount(int count);
+
+  /// Dialog title for creating a playlist
+  ///
+  /// In en, this message translates to:
+  /// **'Create Playlist'**
+  String get createPlaylist;
+
+  /// Label for playlist name field
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist Name'**
+  String get playlistName;
+
+  /// Placeholder for playlist name input
+  ///
+  /// In en, this message translates to:
+  /// **'My Playlist'**
+  String get playlistNameHint;
+
+  /// Error message when playlist name is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist name is required'**
+  String get playlistNameRequired;
+
+  /// Dialog title for editing a playlist
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Playlist'**
+  String get editPlaylist;
+
+  /// Label for selecting preview songs in playlist
+  ///
+  /// In en, this message translates to:
+  /// **'Select Preview Songs'**
+  String get selectPreviewSongs;
+
+  /// Dialog title for deleting a playlist
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Playlist'**
+  String get deletePlaylist;
+
+  /// Confirmation message for deleting a playlist
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete \"{name}\"?'**
+  String deletePlaylistConfirm(String name);
+
+  /// Success message after deleting a playlist
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist deleted'**
+  String get playlistDeleted;
+
+  /// Current position in playlist
+  ///
+  /// In en, this message translates to:
+  /// **'{current} of {total}'**
+  String playlistProgress(int current, int total);
+
+  /// Message when playlist has no valid preview songs
+  ///
+  /// In en, this message translates to:
+  /// **'No preview songs available in this playlist'**
+  String get noPreviewSongsInPlaylist;
+
+  /// Error message when playlists fail to load
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading playlists'**
+  String get errorLoadingPlaylists;
+
+  /// Label for playlist items section
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist Items'**
+  String get playlistItems;
+
+  /// Button to add songs to playlist
+  ///
+  /// In en, this message translates to:
+  /// **'Add Songs'**
+  String get addSongs;
+
+  /// Button to add audio files directly
+  ///
+  /// In en, this message translates to:
+  /// **'Add Audio Files'**
+  String get addAudioFiles;
+
+  /// Dialog title for selecting audio files
+  ///
+  /// In en, this message translates to:
+  /// **'Select Audio Files'**
+  String get selectAudioFiles;
+
+  /// Label for selecting from existing projects
+  ///
+  /// In en, this message translates to:
+  /// **'Select from Projects'**
+  String get selectFromProjects;
+
+  /// Button to add selected items
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get add;
+
+  /// Label indicating item is from a project
+  ///
+  /// In en, this message translates to:
+  /// **'From Project'**
+  String get fromProject;
 }
 
 class _AppLocalizationsDelegate

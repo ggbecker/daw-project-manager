@@ -23,6 +23,7 @@ import 'releases_tab_page.dart';
 import 'release_detail_page.dart';
 import 'profile_manager_page.dart';
 import 'project_folders_settings_page.dart';
+import 'playlists_page.dart';
 import 'widgets/language_switcher.dart';
 import 'widgets/theme_switcher.dart';
 import '../generated/l10n/app_localizations.dart';
@@ -145,7 +146,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    // Android has 3 tabs (Projects, Releases, Playlists), desktop has 2
+    final tabCount = Platform.isAndroid ? 3 : 2;
+    _tabController = TabController(length: tabCount, vsync: this);
     _searchController = TextEditingController();
     
     // Add listener to TabController to rebuild when tab changes (for search placeholder update)
@@ -699,6 +702,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                           tabs: [
                             Tab(text: AppLocalizations.of(context)!.projects),
                             Tab(text: AppLocalizations.of(context)!.releasesTab),
+                            if (Platform.isAndroid)
+                              Tab(text: AppLocalizations.of(context)!.playlists),
                           ],
                         ),
                       )
@@ -1321,6 +1326,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                   tabs: [
                     Tab(icon: Icon(Icons.library_music), text: AppLocalizations.of(context)!.projectsTab),
                     Tab(icon: Icon(Icons.album), text: AppLocalizations.of(context)!.releasesTab),
+                    if (Platform.isAndroid)
+                      Tab(icon: Icon(Icons.playlist_play), text: AppLocalizations.of(context)!.playlists),
                   ],
                   labelColor: Theme.of(context).textTheme.titleMedium?.color,
                   unselectedLabelColor: Theme.of(context).textTheme.bodySmall?.color,
@@ -1367,6 +1374,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                           isAnyOperation: isAnyOperation,
                         ),
                   const ReleasesTabPage(),
+                  if (Platform.isAndroid) const PlaylistsPage(),
                 ],
               ),
             ),

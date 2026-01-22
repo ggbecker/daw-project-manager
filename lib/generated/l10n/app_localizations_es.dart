@@ -628,9 +628,7 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String errorLoadingProjects(String error) {
-    return 'Error al cargar proyectos: $error';
-  }
+  String get errorLoadingProjects => 'Error al cargar proyectos: null';
 
   @override
   String get releaseSaved => 'Lanzamiento guardado.';
@@ -1325,4 +1323,84 @@ class AppLocalizationsEs extends AppLocalizations {
   String failedToGenerateTestingDatabase(String error) {
     return 'Error al generar base de datos de prueba: $error';
   }
+
+  @override
+  String get playlists => 'Playlists';
+
+  @override
+  String get playlistsDesktopOnly => 'Playlists are only available on Android.';
+
+  @override
+  String get noPlaylistsYet => 'No playlists yet';
+
+  @override
+  String get createFirstPlaylist =>
+      'Tap the + button to create your first playlist';
+
+  @override
+  String playlistSongCount(int count) {
+    return '$count songs';
+  }
+
+  @override
+  String get createPlaylist => 'Create Playlist';
+
+  @override
+  String get playlistName => 'Playlist Name';
+
+  @override
+  String get playlistNameHint => 'My Playlist';
+
+  @override
+  String get playlistNameRequired => 'Playlist name is required';
+
+  @override
+  String get editPlaylist => 'Edit Playlist';
+
+  @override
+  String get selectPreviewSongs => 'Select Preview Songs';
+
+  @override
+  String get deletePlaylist => 'Delete Playlist';
+
+  @override
+  String deletePlaylistConfirm(String name) {
+    return 'Are you sure you want to delete \"$name\"?';
+  }
+
+  @override
+  String get playlistDeleted => 'Playlist deleted';
+
+  @override
+  String playlistProgress(int current, int total) {
+    return '$current of $total';
+  }
+
+  @override
+  String get noPreviewSongsInPlaylist =>
+      'No preview songs available in this playlist';
+
+  @override
+  String get errorLoadingPlaylists => 'Error loading playlists';
+
+  @override
+  String get playlistItems => 'Playlist Items';
+
+  @override
+  String get addSongs => 'Add Songs';
+
+  @override
+  String get addAudioFiles => 'Add Audio Files';
+
+  @override
+  String get selectAudioFiles => 'Select Audio Files';
+
+  @override
+  String get selectFromProjects => 'Select from Projects';
+
+  @override
+  String get add => 'Add';
+
+  @override
+  String get fromProject => 'From Project';
 }

@@ -939,5 +939,54 @@
         "type": "String"
       }
     }
-  }
+  },
+  "playlists": "Playlists",
+  "playlistsDesktopOnly": "Playlists estão disponíveis apenas no Android.",
+  "noPlaylistsYet": "Nenhuma playlist ainda",
+  "createFirstPlaylist": "Toque no botão + para criar sua primeira playlist",
+  "playlistSongCount": "{count} músicas",
+  "@playlistSongCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "createPlaylist": "Criar Playlist",
+  "playlistName": "Nome da Playlist",
+  "playlistNameHint": "Minha Playlist",
+  "playlistNameRequired": "O nome da playlist é obrigatório",
+  "editPlaylist": "Editar Playlist",
+  "selectPreviewSongs": "Selecionar Músicas Preview",
+  "deletePlaylist": "Excluir Playlist",
+  "deletePlaylistConfirm": "Tem certeza que deseja excluir \"{name}\"?",
+  "@deletePlaylistConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistDeleted": "Playlist excluída",
+  "playlistProgress": "{current} de {total}",
+  "@playlistProgress": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "noPreviewSongsInPlaylist": "Nenhuma música preview disponível nesta playlist",
+  "errorLoadingPlaylists": "Erro ao carregar playlists",
+  "errorLoadingProjects": "Erro ao carregar projetos",
+  "playlistItems": "Itens da Playlist",
+  "addSongs": "Adicionar Músicas",
+  "addAudioFiles": "Adicionar Arquivos de Áudio",
+  "selectAudioFiles": "Selecionar Arquivos de Áudio",
+  "selectFromProjects": "Selecionar dos Projetos",
+  "add": "Adicionar",
+  "fromProject": "Do Projeto"
 }
