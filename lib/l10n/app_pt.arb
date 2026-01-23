@@ -194,6 +194,7 @@
   "selectAllProjects": "Selecionar todos os projetos",
   "switchingProfiles": "Alternando perfis...",
   "scanningProjects": "Escaneando projetos...",
+  "search": "Buscar",
   "projectsTab": "Projetos",
   "releasesTab": "Lançamentos",
   "showHidden": "Mostrar Ocultos",
@@ -968,6 +969,10 @@
     }
   },
   "playlistDeleted": "Playlist excluída",
+  "playlistUpdated": "Playlist atualizada",
+  "changeSong": "Trocar Música",
+  "changeSongConfirm": "Uma música está tocando. Deseja trocar para esta música?",
+  "changeSongButton": "Trocar",
   "playlistProgress": "{current} de {total}",
   "@playlistProgress": {
     "placeholders": {
@@ -1003,6 +1008,10 @@
   "deletePlaylist": "Excluir Playlist",
   "deletePlaylistConfirm": "Tem certeza que deseja excluir \"{name}\"?",
   "playlistDeleted": "Playlist excluída",
+  "playlistUpdated": "Playlist atualizada",
+  "changeSong": "Trocar Música",
+  "changeSongConfirm": "Uma música está tocando. Deseja trocar para esta música?",
+  "changeSongButton": "Trocar",
   "playlistProgress": "{current} de {total}",
   "noPreviewSongsInPlaylist": "Nenhuma prévia disponível nesta playlist",
   "errorLoadingPlaylists": "Erro ao carregar playlists",

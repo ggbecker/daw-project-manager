@@ -359,6 +359,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get scanningProjects => 'Сканирование проектов...';
 
   @override
+  String get search => 'Поиск';
+
+  @override
   String get projectsTab => 'Проекты';
 
   @override
@@ -1362,6 +1365,19 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get playlistDeleted => 'Плейлист удален';
+
+  @override
+  String get playlistUpdated => 'Плейлист обновлен';
+
+  @override
+  String get changeSong => 'Сменить Песню';
+
+  @override
+  String get changeSongConfirm =>
+      'Песня сейчас воспроизводится. Хотите переключиться на эту песню?';
+
+  @override
+  String get changeSongButton => 'Сменить';
 
   @override
   String playlistProgress(int current, int total) {

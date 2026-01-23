@@ -360,6 +360,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get scanningProjects => 'Escaneando proyectos...';
 
   @override
+  String get search => 'Buscar';
+
+  @override
   String get projectsTab => 'Proyectos';
 
   @override
@@ -1371,6 +1374,19 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get playlistDeleted => 'Lista eliminada';
+
+  @override
+  String get playlistUpdated => 'Lista actualizada';
+
+  @override
+  String get changeSong => 'Cambiar Canción';
+
+  @override
+  String get changeSongConfirm =>
+      'Hay una canción reproduciéndose. ¿Desea cambiar a esta canción?';
+
+  @override
+  String get changeSongButton => 'Cambiar';
 
   @override
   String playlistProgress(int current, int total) {

@@ -841,41 +841,42 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                               },
                             ),
                             const SizedBox(height: 12),
-                            // Filters and info row
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: repoAsync.when(
-                                    loading: () => const SizedBox.shrink(),
-                                    error: (_, __) => const SizedBox.shrink(),
-                                    data: (repo) {
-                                      String projectText;
-                                      final l10n = AppLocalizations.of(context)!;
-                                      // On mobile, don't show roots count (Android doesn't use scan roots)
-                                      if (hiddenMode == 2) {
-                                        projectText = '${l10n.projectsCount(hiddenCount)} ${l10n.hiddenOnly}';
-                                      } else {
-                                        projectText = l10n.projectsCount(visibleCount);
-                                        if (hiddenCount > 0 && hiddenMode == 0) {
-                                          projectText += ' ${l10n.hiddenCount(hiddenCount)}';
+                            // Filters and info row (only show on Projects tab)
+                            if (_tabController.index == 0) ...[
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: repoAsync.when(
+                                      loading: () => const SizedBox.shrink(),
+                                      error: (_, __) => const SizedBox.shrink(),
+                                      data: (repo) {
+                                        String projectText;
+                                        final l10n = AppLocalizations.of(context)!;
+                                        // On mobile, don't show roots count (Android doesn't use scan roots)
+                                        if (hiddenMode == 2) {
+                                          projectText = '${l10n.projectsCount(hiddenCount)} ${l10n.hiddenOnly}';
+                                        } else {
+                                          projectText = l10n.projectsCount(visibleCount);
+                                          if (hiddenCount > 0 && hiddenMode == 0) {
+                                            projectText += ' ${l10n.hiddenCount(hiddenCount)}';
+                                          }
                                         }
-                                      }
-                                      return Text(
-                                        projectText,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: hiddenMode == 2 ? Colors.orange.shade300 : null,
-                                        ),
-                                      );
-                                    },
+                                        return Text(
+                                          projectText,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: hiddenMode == 2 ? Colors.orange.shade300 : null,
+                                          ),
+                                        );
+                                      },
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            // Filter row
-                            Wrap(
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              // Filter row
+                              Wrap(
                               spacing: 8,
                               runSpacing: 8,
                               children: [
@@ -1054,6 +1055,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                           ),
                       ],
                     ),
+                            ],
                           ],
                         )
                       : Row(
@@ -1292,37 +1294,39 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                         ),
                         const SizedBox(width: 8),
                         const Spacer(),
-                        // Exibe o contador de projetos
-                        Flexible(
-                          child: repoAsync.when(
-                            loading: () => const SizedBox.shrink(),
-                            error: (_, __) => const SizedBox.shrink(),
-                            data: (repo) {
-                              String projectText;
-                              final l10n = AppLocalizations.of(context)!;
-                              if (hiddenMode == 2) {
-                                // Showing only hidden
-                                projectText = '${l10n.projectsCount(hiddenCount)} ${l10n.hiddenOnly}';
-                              } else {
-                                // Showing visible or all
-                                projectText = l10n.projectsCount(visibleCount);
-                                if (hiddenCount > 0 && hiddenMode == 0) {
-                                  projectText += ' ${l10n.hiddenCount(hiddenCount)}';
+                        // Filters (only show on Projects tab)
+                        if (_tabController.index == 0) ...[
+                          // Exibe o contador de projetos
+                          Flexible(
+                            child: repoAsync.when(
+                              loading: () => const SizedBox.shrink(),
+                              error: (_, __) => const SizedBox.shrink(),
+                              data: (repo) {
+                                String projectText;
+                                final l10n = AppLocalizations.of(context)!;
+                                if (hiddenMode == 2) {
+                                  // Showing only hidden
+                                  projectText = '${l10n.projectsCount(hiddenCount)} ${l10n.hiddenOnly}';
+                                } else {
+                                  // Showing visible or all
+                                  projectText = l10n.projectsCount(visibleCount);
+                                  if (hiddenCount > 0 && hiddenMode == 0) {
+                                    projectText += ' ${l10n.hiddenCount(hiddenCount)}';
+                                  }
                                 }
-                              }
-                              return Text(
-                                projectText,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: hiddenMode == 2 ? Colors.orange.shade300 : null,
-                                ),
-                              );
-                            },
+                                return Text(
+                                  projectText,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: hiddenMode == 2 ? Colors.orange.shade300 : null,
+                                  ),
+                                );
+                              },
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        // Show Hidden Projects checkbox
+                          const SizedBox(width: 8),
+                          // Show Hidden Projects checkbox
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -1449,8 +1453,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                             ref.read(phaseFilterProvider.notifier).setPhase(value);
                           },
                         ),
-                        const SizedBox(width: 8),
-                        const SizedBox.shrink(),
+                          const SizedBox(width: 8),
+                          const SizedBox.shrink(),
+                        ],
                       ],
                     ),
                   ),

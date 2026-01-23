@@ -742,6 +742,12 @@ abstract class AppLocalizations {
   /// **'Scanning projects...'**
   String get scanningProjects;
 
+  /// No description provided for @search.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get search;
+
   /// No description provided for @projectsTab.
   ///
   /// In en, this message translates to:
@@ -2316,6 +2322,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Playlist deleted'**
   String get playlistDeleted;
+
+  /// No description provided for @playlistUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist updated'**
+  String get playlistUpdated;
+
+  /// No description provided for @changeSong.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Song'**
+  String get changeSong;
+
+  /// No description provided for @changeSongConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'A song is currently playing. Do you want to switch to this song?'**
+  String get changeSongConfirm;
+
+  /// No description provided for @changeSongButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get changeSongButton;
 
   /// Current position in playlist
   ///

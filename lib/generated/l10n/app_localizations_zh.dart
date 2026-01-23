@@ -350,6 +350,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get scanningProjects => '扫描项目中...';
 
   @override
+  String get search => '搜索';
+
+  @override
   String get projectsTab => '项目';
 
   @override
@@ -1329,6 +1332,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get playlistDeleted => '播放列表已删除';
+
+  @override
+  String get playlistUpdated => '播放列表已更新';
+
+  @override
+  String get changeSong => '更换歌曲';
+
+  @override
+  String get changeSongConfirm => '当前正在播放歌曲。是否要切换到这首歌曲？';
+
+  @override
+  String get changeSongButton => '更换';
 
   @override
   String playlistProgress(int current, int total) {

@@ -194,6 +194,7 @@
   "selectAllProjects": "Select all projects",
   "switchingProfiles": "Switching Profiles...",
   "scanningProjects": "Scanning projects...",
+  "search": "Search",
   "projectsTab": "Projects",
   "releasesTab": "Releases",
   "showHidden": "Show Hidden",
@@ -1350,6 +1351,10 @@
   "@playlistDeleted": {
     "description": "Success message after deleting a playlist"
   },
+  "playlistUpdated": "Playlist updated",
+  "changeSong": "Change Song",
+  "changeSongConfirm": "A song is currently playing. Do you want to switch to this song?",
+  "changeSongButton": "Change",
   "playlistProgress": "{current} of {total}",
   "@playlistProgress": {
     "description": "Current position in playlist",

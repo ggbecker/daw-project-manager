@@ -37,9 +37,6 @@ class _PlaylistsPageState extends ConsumerState<PlaylistsPage> {
     final projectsAsync = ref.watch(allProjectsStreamProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.playlists),
-      ),
       body: playlistsAsync.when(
         data: (playlists) => projectsAsync.when(
           data: (allProjects) => _buildPlaylistsList(context, playlists, allProjects),
@@ -123,58 +120,47 @@ class _PlaylistsPageState extends ConsumerState<PlaylistsPage> {
             subtitle: Text(
               AppLocalizations.of(context)!.playlistSongCount(playlistProjects.length),
             ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (playlistProjects.isNotEmpty)
-                  IconButton(
-                    icon: const Icon(Icons.play_arrow),
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => PlaylistPlayerPage(playlist: playlist),
-                        ),
-                      );
-                    },
+            trailing: PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'edit') {
+                  _showEditPlaylistDialog(context, ref, playlist, allProjects);
+                } else if (value == 'delete') {
+                  _showDeletePlaylistDialog(context, ref, playlist);
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'edit',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.edit),
+                      const SizedBox(width: 8),
+                      Text(AppLocalizations.of(context)!.edit),
+                    ],
                   ),
-                PopupMenuButton<String>(
-                  onSelected: (value) {
-                    if (value == 'edit') {
-                      _showEditPlaylistDialog(context, ref, playlist, allProjects);
-                    } else if (value == 'delete') {
-                      _showDeletePlaylistDialog(context, ref, playlist);
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                      value: 'edit',
-                      child: Row(
-                        children: [
-                          const Icon(Icons.edit),
-                          const SizedBox(width: 8),
-                          Text(AppLocalizations.of(context)!.edit),
-                        ],
+                ),
+                PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.delete, color: Colors.red),
+                      const SizedBox(width: 8),
+                      Text(
+                        AppLocalizations.of(context)!.delete,
+                        style: const TextStyle(color: Colors.red),
                       ),
-                    ),
-                    PopupMenuItem(
-                      value: 'delete',
-                      child: Row(
-                        children: [
-                          const Icon(Icons.delete, color: Colors.red),
-                          const SizedBox(width: 8),
-                          Text(
-                            AppLocalizations.of(context)!.delete,
-                            style: const TextStyle(color: Colors.red),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
             onTap: () {
-              _showEditPlaylistDialog(context, ref, playlist, allProjects);
+              // Open playlist player
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => PlaylistPlayerPage(playlist: playlist),
+                ),
+              );
             },
           ),
         );
@@ -414,83 +400,118 @@ class _PlaylistsPageState extends ConsumerState<PlaylistsPage> {
     StateSetter setDialogState,
   ) async {
     final selectedProjectIds = <String>{};
+    final searchController = TextEditingController();
+    String searchQuery = '';
     
     // Get already added project IDs
     final existingProjectIds = orderedProjectIds.toSet();
 
     // Filter available projects (those with preview songs and not already in playlist)
-    final availableProjects = allProjects
-        .where((project) =>
-            project.previewSongPath != null &&
-            project.previewSongPath!.isNotEmpty &&
-            !project.previewSongPath!.startsWith('drive://') &&
-            !existingProjectIds.contains(project.id))
-        .toList();
+    List<MusicProject> getFilteredProjects() {
+      return allProjects
+          .where((project) =>
+              project.previewSongPath != null &&
+              project.previewSongPath!.isNotEmpty &&
+              !project.previewSongPath!.startsWith('drive://') &&
+              !existingProjectIds.contains(project.id) &&
+              (searchQuery.isEmpty ||
+                  project.displayName.toLowerCase().contains(searchQuery.toLowerCase())))
+          .toList();
+    }
 
     await showDialog(
       context: context,
       builder: (addDialogContext) => StatefulBuilder(
-        builder: (context, setAddDialogState) => AlertDialog(
-          title: Text(AppLocalizations.of(context)!.addSongs),
-          content: ConstrainedBox(
-            constraints: const BoxConstraints(maxHeight: 400),
-            child: SizedBox(
-              width: double.maxFinite,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    AppLocalizations.of(context)!.selectFromProjects,
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                  const SizedBox(height: 8),
-                  Flexible(
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: availableProjects.length,
-                      itemBuilder: (context, index) {
-                        final project = availableProjects[index];
-                        final isSelected = selectedProjectIds.contains(project.id);
-                        return CheckboxListTile(
-                          title: Text(project.displayName),
-                          subtitle: project.previewSongFileName != null
-                              ? Text(project.previewSongFileName!)
-                              : null,
-                          value: isSelected,
-                          onChanged: (value) {
-                            setAddDialogState(() {
-                              if (value == true) {
-                                selectedProjectIds.add(project.id);
-                              } else {
-                                selectedProjectIds.remove(project.id);
-                              }
-                            });
-                          },
-                        );
+        builder: (context, setAddDialogState) {
+          final availableProjects = getFilteredProjects();
+          
+          return AlertDialog(
+            title: Text(AppLocalizations.of(context)!.addSongs),
+            content: ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 400),
+              child: SizedBox(
+                width: double.maxFinite,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Search field
+                    TextField(
+                      controller: searchController,
+                      decoration: InputDecoration(
+                        labelText: AppLocalizations.of(context)!.search,
+                        prefixIcon: const Icon(Icons.search),
+                        suffixIcon: searchQuery.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear),
+                                onPressed: () {
+                                  setAddDialogState(() {
+                                    searchController.clear();
+                                    searchQuery = '';
+                                  });
+                                },
+                              )
+                            : null,
+                      ),
+                      onChanged: (value) {
+                        setAddDialogState(() {
+                          searchQuery = value;
+                        });
                       },
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 8),
+                    Text(
+                      AppLocalizations.of(context)!.selectFromProjects,
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    Flexible(
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: availableProjects.length,
+                        itemBuilder: (context, index) {
+                          final project = availableProjects[index];
+                          final isSelected = selectedProjectIds.contains(project.id);
+                          return CheckboxListTile(
+                            title: Text(project.displayName),
+                            subtitle: project.previewSongFileName != null
+                                ? Text(project.previewSongFileName!)
+                                : null,
+                            value: isSelected,
+                            onChanged: (value) {
+                              setAddDialogState(() {
+                                if (value == true) {
+                                  selectedProjectIds.add(project.id);
+                                } else {
+                                  selectedProjectIds.remove(project.id);
+                                }
+                              });
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(addDialogContext),
-              child: Text(AppLocalizations.of(context)!.cancel),
-            ),
-            FilledButton(
-              onPressed: () {
-                setDialogState(() {
-                  // Add selected projects to the end of the list
-                  orderedProjectIds.addAll(selectedProjectIds);
-                });
-                Navigator.pop(addDialogContext);
-              },
-              child: Text(AppLocalizations.of(context)!.add),
-            ),
-          ],
-        ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(addDialogContext),
+                child: Text(AppLocalizations.of(context)!.cancel),
+              ),
+              FilledButton(
+                onPressed: () {
+                  setDialogState(() {
+                    // Add selected projects to the end of the list
+                    orderedProjectIds.addAll(selectedProjectIds);
+                  });
+                  Navigator.pop(addDialogContext);
+                },
+                child: Text(AppLocalizations.of(context)!.add),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -604,9 +625,7 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
           _playlistItems = items;
           _isLoading = false;
         });
-        if (_playlistItems.isNotEmpty) {
-          _playCurrentSong();
-        }
+        // Do NOT autoplay - user must click a song
       }
     });
   }
@@ -794,6 +813,86 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit),
+            tooltip: AppLocalizations.of(context)!.edit,
+            onPressed: () async {
+              final projectsAsync = ref.read(allProjectsStreamProvider);
+              final allProjectsValue = projectsAsync.value;
+              
+              if (allProjectsValue == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(AppLocalizations.of(context)!.errorLoadingProjects),
+                  ),
+                );
+                return;
+              }
+              
+              if (mounted) {
+                // Stop playback before editing
+                if (_isPlaying) {
+                  await _audioPlayer.pause();
+                }
+                
+                // Navigate to main playlist page's edit dialog
+                await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => _EditPlaylistRoute(
+                      playlist: widget.playlist,
+                      allProjects: allProjectsValue,
+                    ),
+                  ),
+                );
+                
+                // Reload playlist items after editing
+                _loadPlaylistItems();
+              }
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete),
+            tooltip: AppLocalizations.of(context)!.delete,
+            onPressed: () async {
+              final confirmed = await showDialog<bool>(
+                context: context,
+                builder: (dialogContext) => AlertDialog(
+                  title: Text(AppLocalizations.of(context)!.deletePlaylist),
+                  content: Text(
+                    AppLocalizations.of(context)!.deletePlaylistConfirm(widget.playlist.name),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(dialogContext, false),
+                      child: Text(AppLocalizations.of(context)!.cancel),
+                    ),
+                    FilledButton(
+                      onPressed: () => Navigator.pop(dialogContext, true),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Colors.red,
+                      ),
+                      child: Text(AppLocalizations.of(context)!.delete),
+                    ),
+                  ],
+                ),
+              );
+
+              if (confirmed == true) {
+                final repo = await ref.read(repositoryProvider.future);
+                await repo.deletePlaylist(widget.playlist.id);
+                if (mounted) {
+                  Navigator.of(context).pop(); // Go back to playlists page
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(AppLocalizations.of(context)!.playlistDeleted),
+                    ),
+                  );
+                }
+              }
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -903,7 +1002,31 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
                   subtitle: item.fileName != null ? Text(item.fileName!) : null,
                   trailing: const Icon(Icons.library_music),
                   selected: isCurrent,
-                  onTap: () {
+                  onTap: () async {
+                    // If something is playing, ask for confirmation
+                    if (_isPlaying && index != _currentIndex) {
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (dialogContext) => AlertDialog(
+                          title: Text(AppLocalizations.of(context)!.changeSong),
+                          content: Text(AppLocalizations.of(context)!.changeSongConfirm),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(dialogContext, false),
+                              child: Text(AppLocalizations.of(context)!.cancel),
+                            ),
+                            FilledButton(
+                              onPressed: () => Navigator.pop(dialogContext, true),
+                              child: Text(AppLocalizations.of(context)!.changeSongButton),
+                            ),
+                          ],
+                        ),
+                      );
+                      
+                      if (confirmed != true) return;
+                    }
+                    
+                    // Play the selected song
                     setState(() {
                       _currentIndex = index;
                       _position = Duration.zero;
@@ -916,6 +1039,297 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Helper route to edit playlist from player page
+class _EditPlaylistRoute extends ConsumerWidget {
+  final Playlist playlist;
+  final List<MusicProject> allProjects;
+
+  const _EditPlaylistRoute({
+    required this.playlist,
+    required this.allProjects,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(AppLocalizations.of(context)!.editPlaylist),
+      ),
+      body: _EditPlaylistForm(
+        playlist: playlist,
+        allProjects: allProjects,
+      ),
+    );
+  }
+}
+
+/// Edit playlist form widget
+class _EditPlaylistForm extends ConsumerStatefulWidget {
+  final Playlist playlist;
+  final List<MusicProject> allProjects;
+
+  const _EditPlaylistForm({
+    required this.playlist,
+    required this.allProjects,
+  });
+
+  @override
+  ConsumerState<_EditPlaylistForm> createState() => _EditPlaylistFormState();
+}
+
+class _EditPlaylistFormState extends ConsumerState<_EditPlaylistForm> {
+  late TextEditingController _nameController;
+  late List<String> _orderedProjectIds;
+  String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.playlist.name);
+    _orderedProjectIds = List<String>.from(widget.playlist.projectIds);
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _showAddItemsDialog() async {
+    final selectedProjectIds = <String>{};
+    final searchController = TextEditingController();
+    String searchQuery = '';
+    
+    // Get already added project IDs
+    final existingProjectIds = _orderedProjectIds.toSet();
+
+    // Filter available projects
+    List<MusicProject> getFilteredProjects() {
+      return widget.allProjects
+          .where((project) =>
+              project.previewSongPath != null &&
+              project.previewSongPath!.isNotEmpty &&
+              !project.previewSongPath!.startsWith('drive://') &&
+              !existingProjectIds.contains(project.id) &&
+              (searchQuery.isEmpty ||
+                  project.displayName.toLowerCase().contains(searchQuery.toLowerCase())))
+          .toList();
+    }
+
+    await showDialog(
+      context: context,
+      builder: (addDialogContext) => StatefulBuilder(
+        builder: (context, setAddDialogState) {
+          final availableProjects = getFilteredProjects();
+          
+          return AlertDialog(
+            title: Text(AppLocalizations.of(context)!.addSongs),
+            content: ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 400),
+              child: SizedBox(
+                width: double.maxFinite,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Search field
+                    TextField(
+                      controller: searchController,
+                      decoration: InputDecoration(
+                        labelText: AppLocalizations.of(context)!.search,
+                        prefixIcon: const Icon(Icons.search),
+                        suffixIcon: searchQuery.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear),
+                                onPressed: () {
+                                  setAddDialogState(() {
+                                    searchController.clear();
+                                    searchQuery = '';
+                                  });
+                                },
+                              )
+                            : null,
+                      ),
+                      onChanged: (value) {
+                        setAddDialogState(() {
+                          searchQuery = value;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      AppLocalizations.of(context)!.selectFromProjects,
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    Flexible(
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: availableProjects.length,
+                        itemBuilder: (context, index) {
+                          final project = availableProjects[index];
+                          final isSelected = selectedProjectIds.contains(project.id);
+                          return CheckboxListTile(
+                            title: Text(project.displayName),
+                            subtitle: project.previewSongFileName != null
+                                ? Text(project.previewSongFileName!)
+                                : null,
+                            value: isSelected,
+                            onChanged: (value) {
+                              setAddDialogState(() {
+                                if (value == true) {
+                                  selectedProjectIds.add(project.id);
+                                } else {
+                                  selectedProjectIds.remove(project.id);
+                                }
+                              });
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(addDialogContext),
+                child: Text(AppLocalizations.of(context)!.cancel),
+              ),
+              FilledButton(
+                onPressed: () {
+                  setState(() {
+                    _orderedProjectIds.addAll(selectedProjectIds);
+                  });
+                  Navigator.pop(addDialogContext);
+                },
+                child: Text(AppLocalizations.of(context)!.add),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: TextField(
+            controller: _nameController,
+            decoration: InputDecoration(
+              labelText: AppLocalizations.of(context)!.playlistName,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  AppLocalizations.of(context)!.playlistItems,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+              ),
+              FilledButton.icon(
+                onPressed: _showAddItemsDialog,
+                icon: const Icon(Icons.add),
+                label: Text(AppLocalizations.of(context)!.addSongs),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Expanded(
+          child: ReorderableListView.builder(
+            itemCount: _orderedProjectIds.length,
+            onReorder: (oldIndex, newIndex) {
+              setState(() {
+                if (newIndex > oldIndex) {
+                  newIndex -= 1;
+                }
+                final projectId = _orderedProjectIds.removeAt(oldIndex);
+                _orderedProjectIds.insert(newIndex, projectId);
+              });
+            },
+            itemBuilder: (context, index) {
+              final projectId = _orderedProjectIds[index];
+              final project = widget.allProjects.firstWhere(
+                (p) => p.id == projectId,
+                orElse: () => widget.allProjects.first,
+              );
+              
+              return ListTile(
+                key: ValueKey(projectId),
+                leading: const Icon(Icons.library_music),
+                title: Text(project.displayName),
+                subtitle: project.previewSongFileName != null
+                    ? Text(project.previewSongFileName!)
+                    : null,
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete),
+                  onPressed: () {
+                    setState(() {
+                      _orderedProjectIds.removeAt(index);
+                    });
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(AppLocalizations.of(context)!.cancel),
+              ),
+              const SizedBox(width: 8),
+              FilledButton(
+                onPressed: () async {
+                  final name = _nameController.text.trim();
+                  if (name.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(AppLocalizations.of(context)!.playlistNameRequired),
+                      ),
+                    );
+                    return;
+                  }
+
+                  final repo = await ref.read(repositoryProvider.future);
+                  final updated = widget.playlist.copyWith(
+                    name: name,
+                    projectIds: _orderedProjectIds,
+                    audioFilePaths: const [],
+                  );
+                  await repo.updatePlaylist(updated);
+                  if (mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(AppLocalizations.of(context)!.playlistUpdated),
+                      ),
+                    );
+                  }
+                },
+                child: Text(AppLocalizations.of(context)!.save),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
