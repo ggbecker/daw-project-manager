@@ -74,6 +74,9 @@ class MusicProject {
   @HiveField(22)
   final String? uploadedPreviewSongHash; // MD5 hash of the preview song file that was successfully uploaded to Drive (for change detection)
 
+  @HiveField(23)
+  final DateTime? deadline; // Project deadline date
+
   const MusicProject({
     required this.id,
     required this.filePath,
@@ -98,6 +101,7 @@ class MusicProject {
     this.statusChangedAt,
     this.previewSongFileName,
     this.uploadedPreviewSongHash,
+    this.deadline,
   });
 
   String get displayName => (customDisplayName != null && customDisplayName!.trim().isNotEmpty)
@@ -134,6 +138,119 @@ class MusicProject {
       return '${age.inHours} hour${age.inHours > 1 ? 's' : ''}';
     } else {
       return 'Just now';
+    }
+  }
+
+  /// Returns the number of days remaining until the deadline
+  /// Returns null if no deadline is set
+  /// Positive: days remaining, Negative: days overdue, Zero: due today
+  int? get daysUntilDeadline {
+    if (deadline == null) return null;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final deadlineDay = DateTime(deadline!.year, deadline!.month, deadline!.day);
+    return deadlineDay.difference(today).inDays;
+  }
+
+  /// Converts musical key to Camelot Wheel notation
+  /// Returns null if musicalKey is null or not recognized
+  String? get camelotCode {
+    if (musicalKey == null || musicalKey!.isEmpty) return null;
+    
+    final key = musicalKey!.toLowerCase().trim();
+    
+    // Map of musical keys to Camelot codes
+    final Map<String, String> camelotMap = {
+      // Major keys (B side)
+      'c major': '8B', 'c': '8B', 'cmaj': '8B',
+      'g major': '9B', 'g': '9B', 'gmaj': '9B',
+      'd major': '10B', 'd': '10B', 'dmaj': '10B',
+      'a major': '11B', 'a': '11B', 'amaj': '11B',
+      'e major': '12B', 'e': '12B', 'emaj': '12B',
+      'b major': '1B', 'b': '1B', 'bmaj': '1B',
+      'f# major': '2B', 'f#': '2B', 'f#maj': '2B', 'gb major': '2B', 'gb': '2B',
+      'c# major': '3B', 'c#': '3B', 'c#maj': '3B', 'db major': '3B', 'db': '3B',
+      'ab major': '4B', 'ab': '4B', 'abmaj': '4B', 'g# major': '4B', 'g#': '4B',
+      'eb major': '5B', 'eb': '5B', 'ebmaj': '5B', 'd# major': '5B', 'd#': '5B',
+      'bb major': '6B', 'bb': '6B', 'bbmaj': '6B', 'a# major': '6B', 'a#': '6B',
+      'f major': '7B', 'f': '7B', 'fmaj': '7B',
+      
+      // Minor keys (A side)
+      'a minor': '8A', 'am': '8A', 'amin': '8A',
+      'e minor': '9A', 'em': '9A', 'emin': '9A',
+      'b minor': '10A', 'bm': '10A', 'bmin': '10A',
+      'f# minor': '11A', 'f#m': '11A', 'f#min': '11A', 'gb minor': '11A', 'gbm': '11A',
+      'c# minor': '12A', 'c#m': '12A', 'c#min': '12A', 'db minor': '12A', 'dbm': '12A',
+      'g# minor': '1A', 'g#m': '1A', 'g#min': '1A', 'ab minor': '1A', 'abm': '1A',
+      'd# minor': '2A', 'd#m': '2A', 'd#min': '2A', 'eb minor': '2A', 'ebm': '2A',
+      'a# minor': '3A', 'a#m': '3A', 'a#min': '3A', 'bb minor': '3A', 'bbm': '3A',
+      'f minor': '4A', 'fm': '4A', 'fmin': '4A',
+      'c minor': '5A', 'cm': '5A', 'cmin': '5A',
+      'g minor': '6A', 'gm': '6A', 'gmin': '6A',
+      'd minor': '7A', 'dm': '7A', 'dmin': '7A',
+    };
+    
+    return camelotMap[key];
+  }
+
+  /// Returns compatible Camelot codes for harmonic mixing
+  /// Returns null if musicalKey is null or not recognized
+  List<String>? get compatibleCamelotCodes {
+    final current = camelotCode;
+    if (current == null) return null;
+    
+    // Extract number and letter from Camelot code (e.g., "8B" -> 8, "B")
+    final number = int.tryParse(current.substring(0, current.length - 1));
+    final letter = current[current.length - 1];
+    
+    if (number == null) return null;
+    
+    // Calculate compatible codes:
+    // 1. Same number (relative major/minor)
+    // 2. +1 or -1 (adjacent on wheel)
+    // 3. +7 or -7 (energy boost/drop)
+    final compatible = <String>[];
+    
+    // Same number, opposite letter (relative major/minor)
+    compatible.add('$number${letter == 'A' ? 'B' : 'A'}');
+    
+    // Adjacent codes (+1, -1)
+    final next = number == 12 ? 1 : number + 1;
+    final prev = number == 1 ? 12 : number - 1;
+    compatible.add('$next$letter');
+    compatible.add('$prev$letter');
+    
+    // Energy boost/drop (+7, -7)
+    final boost = number + 7 > 12 ? number + 7 - 12 : number + 7;
+    final drop = number - 7 < 1 ? number - 7 + 12 : number - 7;
+    compatible.add('$boost$letter');
+    compatible.add('$drop$letter');
+    
+    return compatible;
+  }
+
+  /// Returns a human-readable deadline status string
+  String? get deadlineStatus {
+    final days = daysUntilDeadline;
+    if (days == null) return null;
+
+    if (days < 0) {
+      final overdueDays = days.abs();
+      if (overdueDays == 1) return '1 day overdue';
+      return '$overdueDays days overdue';
+    } else if (days == 0) {
+      return 'Due today';
+    } else if (days == 1) {
+      return '1 day left';
+    } else if (days <= 7) {
+      return '$days days left';
+    } else if (days <= 30) {
+      final weeks = days ~/ 7;
+      return '$weeks week${weeks > 1 ? 's' : ''} left';
+    } else {
+      final months = days ~/ 30;
+      if (months == 1) return '1 month left';
+      return '$months months left';
     }
   }
 
@@ -202,6 +319,8 @@ class MusicProject {
     bool clearPreviewSongFileName = false,
     String? uploadedPreviewSongHash,
     bool clearUploadedPreviewSongHash = false,
+    DateTime? deadline,
+    bool clearDeadline = false,
   }) {
     return MusicProject(
       id: id ?? this.id,
@@ -227,6 +346,7 @@ class MusicProject {
       statusChangedAt: statusChangedAt ?? this.statusChangedAt,
       previewSongFileName: clearPreviewSongFileName ? null : (previewSongFileName ?? this.previewSongFileName),
       uploadedPreviewSongHash: clearUploadedPreviewSongHash ? null : (uploadedPreviewSongHash ?? this.uploadedPreviewSongHash),
+      deadline: clearDeadline ? null : (deadline ?? this.deadline),
     );
   }
 }
@@ -269,13 +389,14 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
       statusChangedAt: fields.containsKey(20) ? fields[20] as DateTime? : null,
       previewSongFileName: fields.containsKey(21) ? fields[21] as String? : null,
       uploadedPreviewSongHash: fields.containsKey(22) ? fields[22] as String? : null,
+      deadline: fields.containsKey(23) ? fields[23] as DateTime? : null,
     );
   }
 
   @override
   void write(BinaryWriter writer, MusicProject obj) {
     writer
-      ..writeByte(23) // Now 23 fields (0-22)
+      ..writeByte(24) // Now 24 fields (0-23)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -321,6 +442,8 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
       ..writeByte(21)
       ..write(obj.previewSongFileName)
       ..writeByte(22)
-      ..write(obj.uploadedPreviewSongHash);
+      ..write(obj.uploadedPreviewSongHash)
+      ..writeByte(23)
+      ..write(obj.deadline);
   }
 }

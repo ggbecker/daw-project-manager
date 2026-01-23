@@ -1401,6 +1401,81 @@
   "fromProject": "From Project",
   "@fromProject": {
     "description": "Label indicating item is from a project"
+  },
+  "projectDeadline": "Project Deadline",
+  "@projectDeadline": {
+    "description": "Label for project deadline field"
+  },
+  "noDeadlineSet": "No deadline set",
+  "@noDeadlineSet": {
+    "description": "Message when no deadline is set for a project"
+  },
+  "camelotCode": "Camelot Code",
+  "@camelotCode": {
+    "description": "Label for Camelot Wheel notation"
+  },
+  "deadline": "Deadline",
+  "@deadline": {
+    "description": "Label for deadline column"
+  },
+  "dueToday": "Due today",
+  "@dueToday": {
+    "description": "Status text when deadline is today"
+  },
+  "daysLate": "{days}d late",
+  "@daysLate": {
+    "description": "Status text when deadline is overdue",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "daysLeft": "{days}d left",
+  "@daysLeft": {
+    "description": "Status text for days remaining until deadline",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "hideFinished": "Hide Finished",
+  "@hideFinished": {
+    "description": "Checkbox label to hide finished projects"
+  },
+  "showOnlyDeadlines": "Show Only With Deadline",
+  "filterByDeadline": "Filter by Deadline",
+  "@filterByDeadline": {
+    "description": "Dropdown hint for deadline filter"
+  },
+  "allDeadlines": "All Deadlines",
+  "@allDeadlines": {
+    "description": "Show all projects regardless of deadline"
+  },
+  "hasDeadline": "Has Deadline",
+  "@hasDeadline": {
+    "description": "Show only projects with deadlines"
+  },
+  "overdue": "Overdue",
+  "@overdue": {
+    "description": "Show only overdue projects"
+  },
+  "dueSoon": "Due Soon (7d)",
+  "@dueSoon": {
+    "description": "Show projects due within 7 days"
+  },
+  "today": "Today",
+  "@today": {
+    "description": "Short text for today"
+  },
+  "noPreviewSong": "No preview song",
+  "@noPreviewSong": {
+    "description": "Tooltip when project has no preview song"
+  },
+  "playPreview": "Play Preview",
+  "@playPreview": {
+    "description": "Tooltip for play preview button"
   }
 }
 

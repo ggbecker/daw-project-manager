@@ -1394,4 +1394,59 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fromProject => 'From Project';
+
+  @override
+  String get projectDeadline => 'Project Deadline';
+
+  @override
+  String get noDeadlineSet => 'No deadline set';
+
+  @override
+  String get camelotCode => 'Camelot Code';
+
+  @override
+  String get deadline => 'Deadline';
+
+  @override
+  String get dueToday => 'Due today';
+
+  @override
+  String daysLate(int days) {
+    return '${days}d late';
+  }
+
+  @override
+  String daysLeft(int days) {
+    return '${days}d left';
+  }
+
+  @override
+  String get hideFinished => 'Hide Finished';
+
+  @override
+  String get showOnlyDeadlines => 'Show Only With Deadline';
+
+  @override
+  String get filterByDeadline => 'Filter by Deadline';
+
+  @override
+  String get allDeadlines => 'All Deadlines';
+
+  @override
+  String get hasDeadline => 'Has Deadline';
+
+  @override
+  String get overdue => 'Overdue';
+
+  @override
+  String get dueSoon => 'Due Soon (7d)';
+
+  @override
+  String get today => 'Today';
+
+  @override
+  String get noPreviewSong => 'No preview song';
+
+  @override
+  String get playPreview => 'Play Preview';
 }

@@ -2376,6 +2376,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'From Project'**
   String get fromProject;
+
+  /// Label for project deadline field
+  ///
+  /// In en, this message translates to:
+  /// **'Project Deadline'**
+  String get projectDeadline;
+
+  /// Message when no deadline is set for a project
+  ///
+  /// In en, this message translates to:
+  /// **'No deadline set'**
+  String get noDeadlineSet;
+
+  /// Label for Camelot Wheel notation
+  ///
+  /// In en, this message translates to:
+  /// **'Camelot Code'**
+  String get camelotCode;
+
+  /// Label for deadline column
+  ///
+  /// In en, this message translates to:
+  /// **'Deadline'**
+  String get deadline;
+
+  /// Status text when deadline is today
+  ///
+  /// In en, this message translates to:
+  /// **'Due today'**
+  String get dueToday;
+
+  /// Status text when deadline is overdue
+  ///
+  /// In en, this message translates to:
+  /// **'{days}d late'**
+  String daysLate(int days);
+
+  /// Status text for days remaining until deadline
+  ///
+  /// In en, this message translates to:
+  /// **'{days}d left'**
+  String daysLeft(int days);
+
+  /// Checkbox label to hide finished projects
+  ///
+  /// In en, this message translates to:
+  /// **'Hide Finished'**
+  String get hideFinished;
+
+  /// No description provided for @showOnlyDeadlines.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Only With Deadline'**
+  String get showOnlyDeadlines;
+
+  /// Dropdown hint for deadline filter
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by Deadline'**
+  String get filterByDeadline;
+
+  /// Show all projects regardless of deadline
+  ///
+  /// In en, this message translates to:
+  /// **'All Deadlines'**
+  String get allDeadlines;
+
+  /// Show only projects with deadlines
+  ///
+  /// In en, this message translates to:
+  /// **'Has Deadline'**
+  String get hasDeadline;
+
+  /// Show only overdue projects
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue'**
+  String get overdue;
+
+  /// Show projects due within 7 days
+  ///
+  /// In en, this message translates to:
+  /// **'Due Soon (7d)'**
+  String get dueSoon;
+
+  /// Short text for today
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get today;
+
+  /// Tooltip when project has no preview song
+  ///
+  /// In en, this message translates to:
+  /// **'No preview song'**
+  String get noPreviewSong;
+
+  /// Tooltip for play preview button
+  ///
+  /// In en, this message translates to:
+  /// **'Play Preview'**
+  String get playPreview;
 }
 
 class _AppLocalizationsDelegate

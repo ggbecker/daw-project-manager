@@ -1325,79 +1325,135 @@ class AppLocalizationsDe extends AppLocalizations {
   String get playlists => 'Playlists';
 
   @override
-  String get playlistsDesktopOnly => 'Playlists are only available on Android.';
+  String get playlistsDesktopOnly =>
+      'Playlists sind nur auf Android verfügbar.';
 
   @override
-  String get noPlaylistsYet => 'No playlists yet';
+  String get noPlaylistsYet => 'Noch keine Playlists';
 
   @override
   String get createFirstPlaylist =>
-      'Tap the + button to create your first playlist';
+      'Tippe auf + um deine erste Playlist zu erstellen';
 
   @override
   String playlistSongCount(int count) {
-    return '$count songs';
+    return '$count Lieder';
   }
 
   @override
-  String get createPlaylist => 'Create Playlist';
+  String get createPlaylist => 'Playlist erstellen';
 
   @override
-  String get playlistName => 'Playlist Name';
+  String get playlistName => 'Playlist-Name';
 
   @override
-  String get playlistNameHint => 'My Playlist';
+  String get playlistNameHint => 'Meine Playlist';
 
   @override
-  String get playlistNameRequired => 'Playlist name is required';
+  String get playlistNameRequired => 'Playlist-Name ist erforderlich';
 
   @override
-  String get editPlaylist => 'Edit Playlist';
+  String get editPlaylist => 'Playlist bearbeiten';
 
   @override
-  String get selectPreviewSongs => 'Select Preview Songs';
+  String get selectPreviewSongs => 'Vorschaulieder auswählen';
 
   @override
-  String get deletePlaylist => 'Delete Playlist';
+  String get deletePlaylist => 'Playlist löschen';
 
   @override
   String deletePlaylistConfirm(String name) {
-    return 'Are you sure you want to delete \"$name\"?';
+    return 'Möchtest du wirklich \"$name\" löschen?';
   }
 
   @override
-  String get playlistDeleted => 'Playlist deleted';
+  String get playlistDeleted => 'Playlist gelöscht';
 
   @override
   String playlistProgress(int current, int total) {
-    return '$current of $total';
+    return '$current von $total';
   }
 
   @override
   String get noPreviewSongsInPlaylist =>
-      'No preview songs available in this playlist';
+      'Keine Vorschaulieder in dieser Playlist verfügbar';
 
   @override
-  String get errorLoadingPlaylists => 'Error loading playlists';
+  String get errorLoadingPlaylists => 'Fehler beim Laden der Playlists';
 
   @override
-  String get playlistItems => 'Playlist Items';
+  String get playlistItems => 'Playlist-Elemente';
 
   @override
-  String get addSongs => 'Add Songs';
+  String get addSongs => 'Lieder hinzufügen';
 
   @override
-  String get addAudioFiles => 'Add Audio Files';
+  String get addAudioFiles => 'Audiodateien hinzufügen';
 
   @override
-  String get selectAudioFiles => 'Select Audio Files';
+  String get selectAudioFiles => 'Audiodateien auswählen';
 
   @override
-  String get selectFromProjects => 'Select from Projects';
+  String get selectFromProjects => 'Aus Projekten auswählen';
 
   @override
-  String get add => 'Add';
+  String get add => 'Hinzufügen';
 
   @override
-  String get fromProject => 'From Project';
+  String get fromProject => 'Vom Projekt';
+
+  @override
+  String get projectDeadline => 'Projektfrist';
+
+  @override
+  String get noDeadlineSet => 'Keine Frist gesetzt';
+
+  @override
+  String get camelotCode => 'Camelot-Code';
+
+  @override
+  String get deadline => 'Frist';
+
+  @override
+  String get dueToday => 'Heute fällig';
+
+  @override
+  String daysLate(int days) {
+    return '${days}T verspätet';
+  }
+
+  @override
+  String daysLeft(int days) {
+    return '${days}T übrig';
+  }
+
+  @override
+  String get hideFinished => 'Fertige ausblenden';
+
+  @override
+  String get showOnlyDeadlines => 'Nur mit Frist anzeigen';
+
+  @override
+  String get filterByDeadline => 'Nach Frist filtern';
+
+  @override
+  String get allDeadlines => 'Alle Fristen';
+
+  @override
+  String get hasDeadline => 'Mit Frist';
+
+  @override
+  String get overdue => 'Überfällig';
+
+  @override
+  String get dueSoon => 'Bald fällig (7T)';
+
+  @override
+  String get today => 'Heute';
+
+  @override
+  String get noPreviewSong => 'Keine Vorschau';
+
+  @override
+  String get playPreview => 'Vorschau abspielen';
 }

@@ -177,22 +177,55 @@ final releasesSearchProvider = NotifierProvider<ReleasesSearchNotifier, String>(
 class ShowHiddenProjectsNotifier extends Notifier<int> {
   @override
   int build() {
+    // Load saved state asynchronously after build
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      _loadShowHiddenState();
+    });
     return 0; // Default to showing only visible projects
   }
   
-  void setShowAll(bool show) {
-    if (show) {
-      state = 1; // Show all (visible + hidden)
-    } else {
-      state = 0; // Show only visible
+  Future<void> _loadShowHiddenState() async {
+    try {
+      await ensureHiveInitialized();
+      final settingsBox = await Hive.openBox<String>('settings');
+      final savedState = settingsBox.get('showHiddenProjects');
+      if (savedState != null) {
+        final intState = int.tryParse(savedState);
+        if (intState != null && (intState >= 0 && intState <= 2)) {
+          state = intState;
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Failed to load show hidden state: $e');
+      }
     }
   }
   
-  void setShowOnlyHidden(bool show) {
-    if (show) {
-      state = 2; // Show only hidden
-    } else {
-      state = 0; // Show only visible
+  Future<void> setShowAll(bool show) async {
+    final newState = show ? 1 : 0;
+    state = newState;
+    await _saveState(newState);
+  }
+  
+  Future<void> setShowOnlyHidden(bool show) async {
+    final newState = show ? 2 : 0;
+    state = newState;
+    await _saveState(newState);
+  }
+  
+  Future<void> _saveState(int newState) async {
+    try {
+      await ensureHiveInitialized();
+      final settingsBox = await Hive.openBox<String>('settings');
+      await settingsBox.put('showHiddenProjects', newState.toString());
+      if (kDebugMode) {
+        print('Show hidden projects state saved: $newState');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Failed to save show hidden state: $e');
+      }
     }
   }
   
@@ -299,6 +332,53 @@ final projectsProvider = Provider<List<MusicProject>>((ref) {
       projects = projects.where((p) => p.status == phaseFilter).toList();
     }
     
+    // --- Filter by deadline ---
+    final deadlineFilter = ref.watch(deadlineFilterProvider);
+    if (deadlineFilter != DeadlineFilter.all) {
+      switch (deadlineFilter) {
+        case DeadlineFilter.hasDeadline:
+          projects = projects.where((p) => p.deadline != null).toList();
+          break;
+        case DeadlineFilter.overdue:
+          projects = projects.where((p) {
+            if (p.deadline == null) return false;
+            final daysUntil = p.daysUntilDeadline ?? 0;
+            return daysUntil < 0;
+          }).toList();
+          break;
+        case DeadlineFilter.dueSoon:
+          projects = projects.where((p) {
+            if (p.deadline == null) return false;
+            final daysUntil = p.daysUntilDeadline ?? 0;
+            return daysUntil >= 0 && daysUntil <= 7;
+          }).toList();
+          break;
+        case DeadlineFilter.dueToday:
+          projects = projects.where((p) {
+            if (p.deadline == null) return false;
+            final daysUntil = p.daysUntilDeadline ?? 0;
+            return daysUntil == 0;
+          }).toList();
+          break;
+        case DeadlineFilter.all:
+          break;
+      }
+    }
+    
+    // --- Filter finished projects ---
+    final finishedMode = ref.watch(showFinishedProjectsProvider);
+    if (finishedMode == 1) {
+      // Hide finished projects
+      projects = projects.where((p) => p.status != 'Finished').toList();
+    }
+    
+    // --- Show only projects with deadline ---
+    final showOnlyWithDeadline = ref.watch(showOnlyWithDeadlineProvider);
+    if (showOnlyWithDeadline) {
+      // Filter to show only projects with deadline
+      projects = projects.where((p) => p.deadline != null).toList();
+    }
+    
     // --- Aplicação dos Filtros ---
     // Use projects search provider instead of queryParams
     final projectsSearch = ref.watch(projectsSearchProvider);
@@ -308,10 +388,42 @@ final projectsProvider = Provider<List<MusicProject>>((ref) {
     }
     
     // --- Ordenação ---
-    // A ordenação é feita pela data de modificação
-    projects.sort((a, b) => a.lastModifiedAt.compareTo(b.lastModifiedAt));
-    if (params.sortDesc) {
-      projects = projects.reversed.toList();
+    // When "show only with deadline" is active, sort by deadline (nearest first)
+    if (showOnlyWithDeadline) {
+      projects.sort((a, b) {
+        final aDaysUntil = a.daysUntilDeadline;
+        final bDaysUntil = b.daysUntilDeadline;
+        
+        // Both should have deadline at this point, but safety check
+        if (aDaysUntil == null && bDaysUntil == null) return 0;
+        if (aDaysUntil == null) return 1;
+        if (bDaysUntil == null) return -1;
+        
+        // Sort by urgency: overdue first, then due soon, then further out
+        // Negative values (overdue) come before positive values (upcoming)
+        return aDaysUntil.compareTo(bDaysUntil);
+      });
+    } else if (deadlineFilter != DeadlineFilter.all) {
+      // When deadline filter is active (not 'all'), sort by deadline urgency
+      projects.sort((a, b) {
+        final aDaysUntil = a.daysUntilDeadline;
+        final bDaysUntil = b.daysUntilDeadline;
+        
+        // Projects without deadline go to the end
+        if (aDaysUntil == null && bDaysUntil == null) return 0;
+        if (aDaysUntil == null) return 1;
+        if (bDaysUntil == null) return -1;
+        
+        // Sort by urgency: overdue first, then due soon, then further out
+        // Negative values (overdue) come before positive values (upcoming)
+        return aDaysUntil.compareTo(bDaysUntil);
+      });
+    } else {
+      // Default sorting by last modified
+      projects.sort((a, b) => a.lastModifiedAt.compareTo(b.lastModifiedAt));
+      if (params.sortDesc) {
+        projects = projects.reversed.toList();
+      }
     }
     
     return projects;
@@ -489,6 +601,140 @@ class PhaseFilterNotifier extends Notifier<String?> {
   
   void clear() {
     state = null;
+  }
+}
+
+// Deadline Filter Enum
+enum DeadlineFilter {
+  all,           // Show all projects
+  hasDeadline,   // Only projects with deadlines (sorted by urgency)
+  overdue,       // Only overdue projects
+  dueSoon,       // Due within 7 days
+  dueToday,      // Due today
+}
+
+// Deadline Filter Provider - filters projects by deadline status
+final deadlineFilterProvider = NotifierProvider<DeadlineFilterNotifier, DeadlineFilter>(() {
+  return DeadlineFilterNotifier();
+});
+
+class DeadlineFilterNotifier extends Notifier<DeadlineFilter> {
+  @override
+  DeadlineFilter build() {
+    return DeadlineFilter.all; // Default: show all
+  }
+  
+  void setFilter(DeadlineFilter filter) {
+    state = filter;
+  }
+  
+  void clear() {
+    state = DeadlineFilter.all;
+  }
+}
+
+// Show Finished Projects Provider - hide/show finished projects
+// 0 = show finished (default)
+// 1 = hide finished
+final showFinishedProjectsProvider = NotifierProvider<ShowFinishedProjectsNotifier, int>(() {
+  return ShowFinishedProjectsNotifier();
+});
+
+class ShowFinishedProjectsNotifier extends Notifier<int> {
+  @override
+  int build() {
+    // Load saved state asynchronously after build
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      _loadHideFinishedState();
+    });
+    return 0; // Default: show finished projects
+  }
+  
+  Future<void> _loadHideFinishedState() async {
+    try {
+      await ensureHiveInitialized();
+      final settingsBox = await Hive.openBox<String>('settings');
+      final savedState = settingsBox.get('hideFinishedProjects');
+      if (savedState != null) {
+        state = savedState == '1' ? 1 : 0;
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Failed to load hide finished state: $e');
+      }
+    }
+  }
+  
+  Future<void> setHideFinished(bool hide) async {
+    final newState = hide ? 1 : 0;
+    state = newState;
+    
+    // Save to Hive
+    try {
+      await ensureHiveInitialized();
+      final settingsBox = await Hive.openBox<String>('settings');
+      await settingsBox.put('hideFinishedProjects', newState.toString());
+      if (kDebugMode) {
+        print('Hide finished projects state saved: $newState');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Failed to save hide finished state: $e');
+      }
+    }
+  }
+  
+  bool get isHidingFinished => state == 1;
+}
+
+// Show Only Projects with Deadline Provider
+// false = show all projects (default)
+// true = show only projects with deadline, sorted by deadline
+final showOnlyWithDeadlineProvider = NotifierProvider<ShowOnlyWithDeadlineNotifier, bool>(() {
+  return ShowOnlyWithDeadlineNotifier();
+});
+
+class ShowOnlyWithDeadlineNotifier extends Notifier<bool> {
+  @override
+  bool build() {
+    // Load saved state asynchronously after build
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      _loadShowOnlyWithDeadlineState();
+    });
+    return false; // Default: show all projects
+  }
+  
+  Future<void> _loadShowOnlyWithDeadlineState() async {
+    try {
+      await ensureHiveInitialized();
+      final settingsBox = await Hive.openBox<String>('settings');
+      final savedState = settingsBox.get('showOnlyWithDeadline');
+      if (savedState != null) {
+        state = savedState == 'true';
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Failed to load show only with deadline state: $e');
+      }
+    }
+  }
+  
+  Future<void> setShowOnlyWithDeadline(bool show) async {
+    state = show;
+    
+    // Save to Hive
+    try {
+      await ensureHiveInitialized();
+      final settingsBox = await Hive.openBox<String>('settings');
+      await settingsBox.put('showOnlyWithDeadline', show.toString());
+      if (kDebugMode) {
+        print('Show only with deadline state saved: $show');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Failed to save show only with deadline state: $e');
+      }
+    }
   }
 }
 

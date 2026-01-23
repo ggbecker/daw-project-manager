@@ -1285,82 +1285,135 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get playlists => 'Playlists';
+  String get playlists => '播放列表';
 
   @override
-  String get playlistsDesktopOnly => 'Playlists are only available on Android.';
+  String get playlistsDesktopOnly => '播放列表仅在Android上可用。';
 
   @override
-  String get noPlaylistsYet => 'No playlists yet';
+  String get noPlaylistsYet => '还没有播放列表';
 
   @override
-  String get createFirstPlaylist =>
-      'Tap the + button to create your first playlist';
+  String get createFirstPlaylist => '点击+按钮创建您的第一个播放列表';
 
   @override
   String playlistSongCount(int count) {
-    return '$count songs';
+    return '$count首歌曲';
   }
 
   @override
-  String get createPlaylist => 'Create Playlist';
+  String get createPlaylist => '创建播放列表';
 
   @override
-  String get playlistName => 'Playlist Name';
+  String get playlistName => '播放列表名称';
 
   @override
-  String get playlistNameHint => 'My Playlist';
+  String get playlistNameHint => '我的播放列表';
 
   @override
-  String get playlistNameRequired => 'Playlist name is required';
+  String get playlistNameRequired => '需要播放列表名称';
 
   @override
-  String get editPlaylist => 'Edit Playlist';
+  String get editPlaylist => '编辑播放列表';
 
   @override
-  String get selectPreviewSongs => 'Select Preview Songs';
+  String get selectPreviewSongs => '选择预览歌曲';
 
   @override
-  String get deletePlaylist => 'Delete Playlist';
+  String get deletePlaylist => '删除播放列表';
 
   @override
   String deletePlaylistConfirm(String name) {
-    return 'Are you sure you want to delete \"$name\"?';
+    return '确定要删除「$name」吗？';
   }
 
   @override
-  String get playlistDeleted => 'Playlist deleted';
+  String get playlistDeleted => '播放列表已删除';
 
   @override
   String playlistProgress(int current, int total) {
-    return '$current of $total';
+    return '$current / $total';
   }
 
   @override
-  String get noPreviewSongsInPlaylist =>
-      'No preview songs available in this playlist';
+  String get noPreviewSongsInPlaylist => '此播放列表中没有预览歌曲';
 
   @override
-  String get errorLoadingPlaylists => 'Error loading playlists';
+  String get errorLoadingPlaylists => '加载播放列表错误';
 
   @override
-  String get playlistItems => 'Playlist Items';
+  String get playlistItems => '播放列表项目';
 
   @override
-  String get addSongs => 'Add Songs';
+  String get addSongs => '添加歌曲';
 
   @override
-  String get addAudioFiles => 'Add Audio Files';
+  String get addAudioFiles => '添加音频文件';
 
   @override
-  String get selectAudioFiles => 'Select Audio Files';
+  String get selectAudioFiles => '选择音频文件';
 
   @override
-  String get selectFromProjects => 'Select from Projects';
+  String get selectFromProjects => '从项目中选择';
 
   @override
-  String get add => 'Add';
+  String get add => '添加';
 
   @override
-  String get fromProject => 'From Project';
+  String get fromProject => '来自项目';
+
+  @override
+  String get projectDeadline => '项目截止日期';
+
+  @override
+  String get noDeadlineSet => '未设置截止日期';
+
+  @override
+  String get camelotCode => 'Camelot代码';
+
+  @override
+  String get deadline => '截止日期';
+
+  @override
+  String get dueToday => '今天到期';
+
+  @override
+  String daysLate(int days) {
+    return '$days天延期';
+  }
+
+  @override
+  String daysLeft(int days) {
+    return '剩余$days天';
+  }
+
+  @override
+  String get hideFinished => '隐藏已完成';
+
+  @override
+  String get showOnlyDeadlines => '仅显示有截止日期';
+
+  @override
+  String get filterByDeadline => '按截止日期筛选';
+
+  @override
+  String get allDeadlines => '所有截止日期';
+
+  @override
+  String get hasDeadline => '有截止日期';
+
+  @override
+  String get overdue => '逾期';
+
+  @override
+  String get dueSoon => '即将到期 (7天)';
+
+  @override
+  String get today => '今天';
+
+  @override
+  String get noPreviewSong => '无预览';
+
+  @override
+  String get playPreview => '播放预览';
 }

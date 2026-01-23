@@ -2959,6 +2959,7 @@ class GoogleDriveSyncService {
       'previewSongHash': project.uploadedPreviewSongHash, // Keep 'previewSongHash' key in JSON for backward compatibility
       'fileCreatedAt': project.fileCreatedAt?.toIso8601String(),
       'statusChangedAt': project.statusChangedAt?.toIso8601String(),
+      'deadline': project.deadline?.toIso8601String(),
     };
   }
 
@@ -2995,6 +2996,9 @@ class GoogleDriveSyncService {
           : null,
       statusChangedAt: data['statusChangedAt'] != null
           ? DateTime.parse(data['statusChangedAt'] as String)
+          : null,
+      deadline: data['deadline'] != null
+          ? DateTime.parse(data['deadline'] as String)
           : null,
     );
   }

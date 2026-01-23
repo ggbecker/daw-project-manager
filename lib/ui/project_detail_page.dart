@@ -592,7 +592,38 @@ updatedProject.lastModifiedAt.toString(),
                                             context,
                                           )!.key,
                                         ),
+                                        onChanged: (value) {
+                                          // Force rebuild to update Camelot code display
+                                          setState(() {});
+                                        },
                                       ),
+                                      // Camelot code field (only shown when key is set)
+                                      if (updatedProject.camelotCode != null) ...[
+                                        const SizedBox(height: 12),
+                                        TextFormField(
+                                          enabled: false,
+                                          initialValue: updatedProject.camelotCode,
+                                          decoration: InputDecoration(
+                                            labelText: AppLocalizations.of(context)!.camelotCode,
+                                            filled: true,
+                                            fillColor: Colors.blue.withOpacity(0.05),
+                                            border: const OutlineInputBorder(),
+                                            disabledBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                color: Colors.blue.withOpacity(0.3),
+                                              ),
+                                            ),
+                                            prefixIcon: const Icon(
+                                              Icons.music_note,
+                                              color: Colors.blue,
+                                            ),
+                                          ),
+                                          style: const TextStyle(
+                                            color: Colors.blue,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
                                     ],
                                   )
                                 : Row(
@@ -619,8 +650,41 @@ updatedProject.lastModifiedAt.toString(),
                                               context,
                                             )!.key,
                                           ),
+                                          onChanged: (value) {
+                                            // Force rebuild to update Camelot code display
+                                            setState(() {});
+                                          },
                                         ),
                                       ),
+                                      // Camelot code field on desktop (next to key field)
+                                      if (updatedProject.camelotCode != null) ...[
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: TextFormField(
+                                            enabled: false,
+                                            initialValue: updatedProject.camelotCode,
+                                            decoration: InputDecoration(
+                                              labelText: AppLocalizations.of(context)!.camelotCode,
+                                              filled: true,
+                                              fillColor: Colors.blue.withOpacity(0.05),
+                                              border: const OutlineInputBorder(),
+                                              disabledBorder: OutlineInputBorder(
+                                                borderSide: BorderSide(
+                                                  color: Colors.blue.withOpacity(0.3),
+                                                ),
+                                              ),
+                                              prefixIcon: const Icon(
+                                                Icons.music_note,
+                                                color: Colors.blue,
+                                              ),
+                                            ),
+                                            style: const TextStyle(
+                                              color: Colors.blue,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                       const SizedBox(width: 8),
                                       ElevatedButton.icon(
                                         onPressed: _extractingMetadata
@@ -737,6 +801,61 @@ updatedProject.lastModifiedAt.toString(),
                               ),
                               maxLines: 5,
                               keyboardType: TextInputType.multiline,
+                            ),
+
+                            const SizedBox(height: 12),
+
+                            // Deadline field
+                            InkWell(
+                              onTap: () async {
+                                final DateTime? picked = await showDatePicker(
+                                  context: context,
+                                  initialDate: updatedProject.deadline ?? DateTime.now().add(const Duration(days: 30)),
+                                  firstDate: DateTime.now(),
+                                  lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
+                                );
+                                if (picked != null) {
+                                  final updated = updatedProject.copyWith(deadline: picked);
+                                  await repo.updateProject(updated);
+                                  if (mounted) {
+                                    ref.invalidate(allProjectsStreamProvider);
+                                  }
+                                }
+                              },
+                              child: InputDecorator(
+                                decoration: InputDecoration(
+                                  labelText: AppLocalizations.of(context)!.projectDeadline,
+                                  border: const OutlineInputBorder(),
+                                  suffixIcon: updatedProject.deadline != null
+                                      ? IconButton(
+                                          icon: const Icon(Icons.clear),
+                                          onPressed: () async {
+                                            final updated = updatedProject.copyWith(clearDeadline: true);
+                                            await repo.updateProject(updated);
+                                            if (mounted) {
+                                              ref.invalidate(allProjectsStreamProvider);
+                                            }
+                                          },
+                                        )
+                                      : const Icon(Icons.calendar_today),
+                                ),
+                                child: Text(
+                                  updatedProject.deadline != null
+                                      ? DateFormat('MMM dd, yyyy').format(updatedProject.deadline!)
+                                      : AppLocalizations.of(context)!.noDeadlineSet,
+                                  style: TextStyle(
+                                    color: updatedProject.deadline != null
+                                        ? (updatedProject.daysUntilDeadline! < 0
+                                            ? Colors.red
+                                            : updatedProject.daysUntilDeadline! == 0
+                                                ? Colors.red
+                                                : updatedProject.daysUntilDeadline! <= 7
+                                                    ? Colors.orange
+                                                    : Theme.of(context).textTheme.bodyLarge?.color)
+                                        : Theme.of(context).textTheme.bodyMedium?.color,
+                                  ),
+                                ),
+                              ),
                             ),
 
                             const SizedBox(height: 24),

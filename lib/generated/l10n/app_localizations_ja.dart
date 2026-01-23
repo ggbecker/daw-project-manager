@@ -1300,82 +1300,135 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get playlists => 'Playlists';
+  String get playlists => 'プレイリスト';
 
   @override
-  String get playlistsDesktopOnly => 'Playlists are only available on Android.';
+  String get playlistsDesktopOnly => 'プレイリストはAndroidでのみ利用可能です。';
 
   @override
-  String get noPlaylistsYet => 'No playlists yet';
+  String get noPlaylistsYet => 'まだプレイリストがありません';
 
   @override
-  String get createFirstPlaylist =>
-      'Tap the + button to create your first playlist';
+  String get createFirstPlaylist => '+ボタンをタップして最初のプレイリストを作成';
 
   @override
   String playlistSongCount(int count) {
-    return '$count songs';
+    return '$count曲';
   }
 
   @override
-  String get createPlaylist => 'Create Playlist';
+  String get createPlaylist => 'プレイリスト作成';
 
   @override
-  String get playlistName => 'Playlist Name';
+  String get playlistName => 'プレイリスト名';
 
   @override
-  String get playlistNameHint => 'My Playlist';
+  String get playlistNameHint => 'マイプレイリスト';
 
   @override
-  String get playlistNameRequired => 'Playlist name is required';
+  String get playlistNameRequired => 'プレイリスト名が必要です';
 
   @override
-  String get editPlaylist => 'Edit Playlist';
+  String get editPlaylist => 'プレイリスト編集';
 
   @override
-  String get selectPreviewSongs => 'Select Preview Songs';
+  String get selectPreviewSongs => 'プレビュー曲を選択';
 
   @override
-  String get deletePlaylist => 'Delete Playlist';
+  String get deletePlaylist => 'プレイリスト削除';
 
   @override
   String deletePlaylistConfirm(String name) {
-    return 'Are you sure you want to delete \"$name\"?';
+    return '本当に「$name」を削除しますか？';
   }
 
   @override
-  String get playlistDeleted => 'Playlist deleted';
+  String get playlistDeleted => 'プレイリストを削除しました';
 
   @override
   String playlistProgress(int current, int total) {
-    return '$current of $total';
+    return '$current / $total';
   }
 
   @override
-  String get noPreviewSongsInPlaylist =>
-      'No preview songs available in this playlist';
+  String get noPreviewSongsInPlaylist => 'このプレイリストに利用可能なプレビュー曲がありません';
 
   @override
-  String get errorLoadingPlaylists => 'Error loading playlists';
+  String get errorLoadingPlaylists => 'プレイリスト読み込みエラー';
 
   @override
-  String get playlistItems => 'Playlist Items';
+  String get playlistItems => 'プレイリスト項目';
 
   @override
-  String get addSongs => 'Add Songs';
+  String get addSongs => '曲を追加';
 
   @override
-  String get addAudioFiles => 'Add Audio Files';
+  String get addAudioFiles => 'オーディオファイルを追加';
 
   @override
-  String get selectAudioFiles => 'Select Audio Files';
+  String get selectAudioFiles => 'オーディオファイルを選択';
 
   @override
-  String get selectFromProjects => 'Select from Projects';
+  String get selectFromProjects => 'プロジェクトから選択';
 
   @override
-  String get add => 'Add';
+  String get add => '追加';
 
   @override
-  String get fromProject => 'From Project';
+  String get fromProject => 'プロジェクトから';
+
+  @override
+  String get projectDeadline => 'プロジェクトの期限';
+
+  @override
+  String get noDeadlineSet => '期限未設定';
+
+  @override
+  String get camelotCode => 'キャメロットコード';
+
+  @override
+  String get deadline => '期限';
+
+  @override
+  String get dueToday => '今日期限';
+
+  @override
+  String daysLate(int days) {
+    return '$days日遅延';
+  }
+
+  @override
+  String daysLeft(int days) {
+    return '残り$days日';
+  }
+
+  @override
+  String get hideFinished => '完了を非表示';
+
+  @override
+  String get showOnlyDeadlines => '期限付きのみを表示';
+
+  @override
+  String get filterByDeadline => '期限でフィルタ';
+
+  @override
+  String get allDeadlines => 'すべての期限';
+
+  @override
+  String get hasDeadline => '期限あり';
+
+  @override
+  String get overdue => '期限超過';
+
+  @override
+  String get dueSoon => 'もうすぐ期限 (7日)';
+
+  @override
+  String get today => '今日';
+
+  @override
+  String get noPreviewSong => 'プレビューなし';
+
+  @override
+  String get playPreview => 'プレビュー再生';
 }

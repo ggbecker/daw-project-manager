@@ -1326,7 +1326,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'Playlists estão disponíveis apenas no Android.';
 
   @override
-  String get noPlaylistsYet => 'Nenhuma playlist ainda';
+  String get noPlaylistsYet => 'Ainda não há playlists';
 
   @override
   String get createFirstPlaylist =>
@@ -1347,13 +1347,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get playlistNameHint => 'Minha Playlist';
 
   @override
-  String get playlistNameRequired => 'O nome da playlist é obrigatório';
+  String get playlistNameRequired => 'Nome da playlist é obrigatório';
 
   @override
   String get editPlaylist => 'Editar Playlist';
 
   @override
-  String get selectPreviewSongs => 'Selecionar Músicas Preview';
+  String get selectPreviewSongs => 'Selecionar Prévias';
 
   @override
   String get deletePlaylist => 'Excluir Playlist';
@@ -1373,7 +1373,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get noPreviewSongsInPlaylist =>
-      'Nenhuma música preview disponível nesta playlist';
+      'Nenhuma prévia disponível nesta playlist';
 
   @override
   String get errorLoadingPlaylists => 'Erro ao carregar playlists';
@@ -1398,4 +1398,59 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get fromProject => 'Do Projeto';
+
+  @override
+  String get projectDeadline => 'Prazo do Projeto';
+
+  @override
+  String get noDeadlineSet => 'Sem prazo definido';
+
+  @override
+  String get camelotCode => 'Código Camelot';
+
+  @override
+  String get deadline => 'Prazo';
+
+  @override
+  String get dueToday => 'Vence hoje';
+
+  @override
+  String daysLate(int days) {
+    return '${days}d atrasado';
+  }
+
+  @override
+  String daysLeft(int days) {
+    return '${days}d restantes';
+  }
+
+  @override
+  String get hideFinished => 'Ocultar Finalizados';
+
+  @override
+  String get showOnlyDeadlines => 'Mostrar apenas com prazo';
+
+  @override
+  String get filterByDeadline => 'Filtrar por Prazo';
+
+  @override
+  String get allDeadlines => 'Todos os Prazos';
+
+  @override
+  String get hasDeadline => 'Com Prazo';
+
+  @override
+  String get overdue => 'Atrasado';
+
+  @override
+  String get dueSoon => 'Vence em Breve (7d)';
+
+  @override
+  String get today => 'Hoje';
+
+  @override
+  String get noPreviewSong => 'Sem prévia';
+
+  @override
+  String get playPreview => 'Reproduzir Prévia';
 }

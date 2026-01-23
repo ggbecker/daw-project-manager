@@ -315,8 +315,11 @@ class ProjectRepository {
       dawType: dawType,                                // <--- SEMPRE ATUALIZA DO ARQUIVO
       dawVersion: dawVersion,                          // <--- USA EXISTENTE OU EXTRAÍDO (preserva se já existe)
       previewSongPath: existing?.previewSongPath,     // <--- PRESERVA PREVIEW SONG
+      previewSongFileName: existing?.previewSongFileName, // <--- PRESERVA PREVIEW SONG FILENAME
+      uploadedPreviewSongHash: existing?.uploadedPreviewSongHash, // <--- PRESERVA PREVIEW SONG HASH
       fileCreatedAt: fileCreatedAt,                   // <--- FILE CREATION DATE (never override once set)
       statusChangedAt: existing?.statusChangedAt,     // <--- PRESERVA STATUS CHANGE DATE
+      deadline: existing?.deadline,                   // <--- PRESERVA DEADLINE
     );
 
     await projectsBox.put(projectToSave.id, projectToSave);

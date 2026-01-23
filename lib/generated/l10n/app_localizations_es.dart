@@ -1325,82 +1325,138 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get playlists => 'Playlists';
+  String get playlists => 'Listas de Reproducción';
 
   @override
-  String get playlistsDesktopOnly => 'Playlists are only available on Android.';
+  String get playlistsDesktopOnly =>
+      'Las listas de reproducción solo están disponibles en Android.';
 
   @override
-  String get noPlaylistsYet => 'No playlists yet';
+  String get noPlaylistsYet => 'Aún no hay listas';
 
   @override
   String get createFirstPlaylist =>
-      'Tap the + button to create your first playlist';
+      'Toca el botón + para crear tu primera lista';
 
   @override
   String playlistSongCount(int count) {
-    return '$count songs';
+    return '$count canciones';
   }
 
   @override
-  String get createPlaylist => 'Create Playlist';
+  String get createPlaylist => 'Crear Lista';
 
   @override
-  String get playlistName => 'Playlist Name';
+  String get playlistName => 'Nombre de la Lista';
 
   @override
-  String get playlistNameHint => 'My Playlist';
+  String get playlistNameHint => 'Mi Lista';
 
   @override
-  String get playlistNameRequired => 'Playlist name is required';
+  String get playlistNameRequired => 'Se requiere nombre de lista';
 
   @override
-  String get editPlaylist => 'Edit Playlist';
+  String get editPlaylist => 'Editar Lista';
 
   @override
-  String get selectPreviewSongs => 'Select Preview Songs';
+  String get selectPreviewSongs => 'Seleccionar Vistas Previas';
 
   @override
-  String get deletePlaylist => 'Delete Playlist';
+  String get deletePlaylist => 'Eliminar Lista';
 
   @override
   String deletePlaylistConfirm(String name) {
-    return 'Are you sure you want to delete \"$name\"?';
+    return '¿Estás seguro de eliminar \"$name\"?';
   }
 
   @override
-  String get playlistDeleted => 'Playlist deleted';
+  String get playlistDeleted => 'Lista eliminada';
 
   @override
   String playlistProgress(int current, int total) {
-    return '$current of $total';
+    return '$current de $total';
   }
 
   @override
   String get noPreviewSongsInPlaylist =>
-      'No preview songs available in this playlist';
+      'No hay canciones de vista previa en esta lista';
 
   @override
-  String get errorLoadingPlaylists => 'Error loading playlists';
+  String get errorLoadingPlaylists => 'Error al cargar listas';
 
   @override
-  String get playlistItems => 'Playlist Items';
+  String get playlistItems => 'Elementos de la Lista';
 
   @override
-  String get addSongs => 'Add Songs';
+  String get addSongs => 'Añadir Canciones';
 
   @override
-  String get addAudioFiles => 'Add Audio Files';
+  String get addAudioFiles => 'Añadir Archivos de Audio';
 
   @override
-  String get selectAudioFiles => 'Select Audio Files';
+  String get selectAudioFiles => 'Seleccionar Archivos de Audio';
 
   @override
-  String get selectFromProjects => 'Select from Projects';
+  String get selectFromProjects => 'Seleccionar de Proyectos';
 
   @override
-  String get add => 'Add';
+  String get add => 'Añadir';
 
   @override
-  String get fromProject => 'From Project';
+  String get fromProject => 'Del Proyecto';
+
+  @override
+  String get projectDeadline => 'Fecha Límite del Proyecto';
+
+  @override
+  String get noDeadlineSet => 'Sin fecha límite';
+
+  @override
+  String get camelotCode => 'Código Camelot';
+
+  @override
+  String get deadline => 'Fecha Límite';
+
+  @override
+  String get dueToday => 'Vence hoy';
+
+  @override
+  String daysLate(int days) {
+    return '${days}d atrasado';
+  }
+
+  @override
+  String daysLeft(int days) {
+    return '${days}d restantes';
+  }
+
+  @override
+  String get hideFinished => 'Ocultar Finalizados';
+
+  @override
+  String get showOnlyDeadlines => 'Mostrar solo con fecha límite';
+
+  @override
+  String get filterByDeadline => 'Filtrar por Fecha Límite';
+
+  @override
+  String get allDeadlines => 'Todas las Fechas';
+
+  @override
+  String get hasDeadline => 'Con Fecha Límite';
+
+  @override
+  String get overdue => 'Atrasado';
+
+  @override
+  String get dueSoon => 'Próximo a Vencer (7d)';
+
+  @override
+  String get today => 'Hoy';
+
+  @override
+  String get noPreviewSong => 'Sin vista previa';
+
+  @override
+  String get playPreview => 'Reproducir Vista Previa';
 }

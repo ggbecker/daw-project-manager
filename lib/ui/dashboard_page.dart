@@ -441,9 +441,18 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
       // Unhide all selected projects
       for (final projectId in selectedProjectIds) {
         final project = allProjects.firstWhere((p) => p.id == projectId);
+        if (kDebugMode) {
+          print('DEBUG [Unhide]: Project ${project.displayName} - hidden before: ${project.hidden}');
+        }
         // Always set hidden to false, regardless of current state
         final updated = project.copyWith(hidden: false);
         await repo.updateProject(updated);
+        
+        // Verify the update was saved
+        if (kDebugMode) {
+          final verifyProject = repo.getAllProjects().firstWhere((p) => p.id == projectId);
+          print('DEBUG [Unhide]: Project ${verifyProject.displayName} - hidden after: ${verifyProject.hidden}');
+        }
       }
       
       // Invalidate to refresh the list
@@ -525,7 +534,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
     final projects = ref.watch(projectsProvider);
     final hiddenMode = ref.watch(showHiddenProjectsProvider);
     final hiddenNotifier = ref.read(showHiddenProjectsProvider.notifier);
+    final finishedMode = ref.watch(showFinishedProjectsProvider);
+    final finishedNotifier = ref.read(showFinishedProjectsProvider.notifier);
     final phaseFilter = ref.watch(phaseFilterProvider);
+    final deadlineFilter = ref.watch(deadlineFilterProvider);
     final initialScanning = ref.watch(initialScanStateProvider);
     final isProfileSwitching = ref.watch(profileSwitchingProvider);
     final isScanning = _scanning || initialScanning;
@@ -886,6 +898,42 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                     ),
                                   ],
                                 ),
+                                // Hide Finished Projects checkbox (Mobile)
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Checkbox(
+                                      value: finishedMode == 1,
+                                      onChanged: (value) {
+                                        if (value == true) {
+                                          finishedNotifier.setHideFinished(true);
+                                        } else {
+                                          finishedNotifier.setHideFinished(false);
+                                        }
+                                      },
+                                    ),
+                                    Text(
+                                      AppLocalizations.of(context)!.hideFinished,
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                  ],
+                                ),
+                                // Show Only With Deadline checkbox (Mobile)
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Checkbox(
+                                      value: ref.watch(showOnlyWithDeadlineProvider),
+                                      onChanged: (value) {
+                                        ref.read(showOnlyWithDeadlineProvider.notifier).setShowOnlyWithDeadline(value == true);
+                                      },
+                                    ),
+                                    Text(
+                                      AppLocalizations.of(context)!.showOnlyDeadlines,
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                  ],
+                                ),
                                 if (hiddenCount > 0)
                                   TextButton.icon(
                                     icon: Icon(
@@ -943,12 +991,69 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                       child: Text(AppLocalizations.of(context)!.projectPhaseFinished),
                                     ),
                                   ],
-                                  onChanged: (String? value) {
-                                    ref.read(phaseFilterProvider.notifier).setPhase(value);
-                                  },
-                                ),
-                              ],
+                          onChanged: (String? value) {
+                            ref.read(phaseFilterProvider.notifier).setPhase(value);
+                          },
+                        ),
+                        // Deadline Filter dropdown (Desktop only)
+                        if (!Platform.isAndroid)
+                          DropdownButton<DeadlineFilter>(
+                            value: deadlineFilter,
+                            hint: Text(
+                              AppLocalizations.of(context)!.filterByDeadline,
+                              style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
                             ),
+                            underline: const SizedBox.shrink(),
+                            style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color),
+                            icon: Icon(Icons.schedule, size: 16, color: Theme.of(context).textTheme.bodyMedium?.color),
+                            items: [
+                              DropdownMenuItem<DeadlineFilter>(
+                                value: DeadlineFilter.all,
+                                child: Text(AppLocalizations.of(context)!.allDeadlines),
+                              ),
+                              DropdownMenuItem<DeadlineFilter>(
+                                value: DeadlineFilter.hasDeadline,
+                                child: Text(AppLocalizations.of(context)!.hasDeadline),
+                              ),
+                              DropdownMenuItem<DeadlineFilter>(
+                                value: DeadlineFilter.overdue,
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.warning, color: Colors.red, size: 16),
+                                    const SizedBox(width: 4),
+                                    Text(AppLocalizations.of(context)!.overdue),
+                                  ],
+                                ),
+                              ),
+                              DropdownMenuItem<DeadlineFilter>(
+                                value: DeadlineFilter.dueSoon,
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.schedule, color: Colors.orange, size: 16),
+                                    const SizedBox(width: 4),
+                                    Text(AppLocalizations.of(context)!.dueSoon),
+                                  ],
+                                ),
+                              ),
+                              DropdownMenuItem<DeadlineFilter>(
+                                value: DeadlineFilter.dueToday,
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.today, color: Colors.red, size: 16),
+                                    const SizedBox(width: 4),
+                                    Text(AppLocalizations.of(context)!.dueToday),
+                                  ],
+                                ),
+                              ),
+                            ],
+                            onChanged: (DeadlineFilter? value) {
+                              if (value != null) {
+                                ref.read(deadlineFilterProvider.notifier).setFilter(value);
+                              }
+                            },
+                          ),
+                      ],
+                    ),
                           ],
                         )
                       : Row(
@@ -1265,6 +1370,44 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                               }
                             },
                           ),
+                        const SizedBox(width: 8),
+                        // Hide Finished Projects checkbox
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Checkbox(
+                              value: finishedMode == 1,
+                              onChanged: (value) {
+                                if (value == true) {
+                                  finishedNotifier.setHideFinished(true);
+                                } else {
+                                  finishedNotifier.setHideFinished(false);
+                                }
+                              },
+                            ),
+                            Text(
+                              AppLocalizations.of(context)!.hideFinished,
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(width: 8),
+                        // Show Only With Deadline checkbox (Desktop)
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Checkbox(
+                              value: ref.watch(showOnlyWithDeadlineProvider),
+                              onChanged: (value) {
+                                ref.read(showOnlyWithDeadlineProvider.notifier).setShowOnlyWithDeadline(value == true);
+                              },
+                            ),
+                            Text(
+                              AppLocalizations.of(context)!.showOnlyDeadlines,
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                          ],
+                        ),
                         const SizedBox(width: 8),
                         // Phase Filter dropdown
                         DropdownButton<String>(
@@ -2198,6 +2341,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           'bpm': PlutoCell(value: p.bpm?.toString() ?? ''),
           'key': PlutoCell(value: p.musicalKey ?? ''),
           'lastModified': PlutoCell(value: widget.dateFormat.format(p.lastModifiedAt)),
+          'deadline': PlutoCell(value: p.deadlineStatus ?? ''),
           'launch': PlutoCell(value: ''),
           'data': PlutoCell(value: p),
         },
@@ -2396,20 +2540,73 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         title: AppLocalizations.of(context)!.key.split(' ').first, // Get just "Key" from "Key (e.g., C#m, F major)"
         field: 'key',
         type: PlutoColumnType.text(),
-        width: 120,
-        minWidth: 100,
+        width: 160,
+        minWidth: 140,
         enableEditingMode: true,
         renderer: (rendererContext) {
           final project = rendererContext.row.cells['data']?.value as MusicProject?;
-          final textWidget = Text(rendererContext.cell.value.toString());
+          if (project == null) {
+            return Text(rendererContext.cell.value.toString());
+          }
           
-          if (project == null) return textWidget;
+          final key = project.musicalKey;
+          final camelot = project.camelotCode;
+          
+          if (key == null || key.isEmpty) {
+            return const SizedBox.shrink();
+          }
           
           return GestureDetector(
             onSecondaryTapDown: (TapDownDetails details) {
               _showContextMenu(context, project, details.globalPosition);
             },
-            child: textWidget,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Musical key on the left
+                Flexible(
+                  child: Text(
+                    key,
+                    style: TextStyle(
+                      color: Theme.of(context).textTheme.bodyMedium?.color,
+                      fontSize: 12,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                // Visual separator and Camelot code on the right
+                if (camelot != null) ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    child: Container(
+                      width: 1,
+                      height: 14,
+                      color: Colors.grey.withOpacity(0.3),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(3),
+                      border: Border.all(
+                        color: Colors.blue.withOpacity(0.4),
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      camelot,
+                      style: const TextStyle(
+                        color: Colors.blue,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
           );
         },
       ),
@@ -2475,6 +2672,82 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         },
       ),
       PlutoColumn(
+        title: AppLocalizations.of(context)!.deadline,
+        field: 'deadline',
+        type: PlutoColumnType.text(),
+        enableEditingMode: false,
+        width: 140,
+        minWidth: 120,
+        renderer: (rendererContext) {
+          final project = rendererContext.row.cells['data']?.value as MusicProject?;
+          if (project == null || project.deadline == null || project.status == 'Finished') {
+            return const SizedBox.shrink();
+          }
+
+          final daysUntil = project.daysUntilDeadline ?? 0;
+
+          Color iconColor;
+          IconData iconData;
+          String text;
+
+          if (daysUntil < 0) {
+            iconColor = Colors.red;
+            iconData = Icons.warning;
+            text = AppLocalizations.of(context)!.daysLate(daysUntil.abs());
+          } else if (daysUntil == 0) {
+            iconColor = Colors.red;
+            iconData = Icons.today;
+            text = AppLocalizations.of(context)!.dueToday;
+          } else if (daysUntil <= 7) {
+            iconColor = Colors.orange;
+            iconData = Icons.schedule;
+            text = AppLocalizations.of(context)!.daysLeft(daysUntil);
+          } else {
+            iconColor = Colors.blue;
+            iconData = Icons.calendar_today;
+            text = '${daysUntil}d left';
+          }
+
+          final deadlineWidget = Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: iconColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(
+                color: iconColor.withOpacity(0.3),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  iconData,
+                  size: 12,
+                  color: iconColor,
+                ),
+                const SizedBox(width: 3),
+                Text(
+                  text,
+                  style: TextStyle(
+                    color: iconColor,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          );
+
+          return GestureDetector(
+            onSecondaryTapDown: (TapDownDetails details) {
+              _showContextMenu(context, project, details.globalPosition);
+            },
+            child: deadlineWidget,
+          );
+        },
+      ),
+      PlutoColumn(
         title: AppLocalizations.of(context)!.actions,
         field: 'launch',
         type: PlutoColumnType.text(),
@@ -2497,23 +2770,27 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Play Preview Song button (only if preview song exists)
-              if (project.previewSongPath != null && project.previewSongPath!.isNotEmpty)
-                IconButton(
-                  icon: const Icon(Icons.play_arrow),
-                  tooltip: 'Play Preview',
-                  onPressed: () => _playPreviewSong(project),
-                  color: Colors.green,
+              // Play Preview Song button (always show, but disabled if no preview)
+              IconButton(
+                icon: const Icon(Icons.play_arrow),
+                tooltip: project.previewSongPath != null && project.previewSongPath!.isNotEmpty
+                    ? AppLocalizations.of(context)!.playPreview
+                    : AppLocalizations.of(context)!.noPreviewSong,
+                onPressed: project.previewSongPath != null && project.previewSongPath!.isNotEmpty
+                    ? () => _playPreviewSong(project)
+                    : null,
+                color: project.previewSongPath != null && project.previewSongPath!.isNotEmpty
+                    ? Colors.green
+                    : Colors.grey,
+              ),
+              // Separator (always show)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Text(
+                  '|',
+                  style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5), fontSize: 18),
                 ),
-              // Separator (only if preview button is shown)
-              if (project.previewSongPath != null && project.previewSongPath!.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: Text(
-                    '|',
-                    style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5), fontSize: 18),
-                  ),
-                ),
+              ),
               // Launch button
               IconButton(
                 icon: const Icon(Icons.open_in_new),
@@ -3539,6 +3816,84 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                               ),
                           ],
                         ),
+                      // Deadline display on mobile
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Modified: ${DateFormat('MMM dd, yyyy').format(project.lastModifiedAt)}',
+                              style: TextStyle(
+                                color: Theme.of(context).textTheme.bodySmall?.color,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ),
+                          if (project.deadline != null && project.status != 'Finished')
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: project.daysUntilDeadline! < 0
+                                    ? Colors.red.withOpacity(0.1)
+                                    : project.daysUntilDeadline! == 0
+                                        ? Colors.red.withOpacity(0.1)
+                                        : project.daysUntilDeadline! <= 7
+                                            ? Colors.orange.withOpacity(0.1)
+                                            : Colors.blue.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(
+                                  color: project.daysUntilDeadline! < 0
+                                      ? Colors.red.withOpacity(0.3)
+                                      : project.daysUntilDeadline! == 0
+                                          ? Colors.red.withOpacity(0.3)
+                                          : project.daysUntilDeadline! <= 7
+                                              ? Colors.orange.withOpacity(0.3)
+                                              : Colors.blue.withOpacity(0.3),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    project.daysUntilDeadline! < 0
+                                        ? Icons.warning
+                                        : project.daysUntilDeadline! == 0
+                                            ? Icons.today
+                                            : Icons.schedule,
+                                    size: 12,
+                                    color: project.daysUntilDeadline! < 0
+                                        ? Colors.red
+                                        : project.daysUntilDeadline! == 0
+                                            ? Colors.red
+                                            : project.daysUntilDeadline! <= 7
+                                                ? Colors.orange
+                                                : Colors.blue,
+                                  ),
+                                  const SizedBox(width: 3),
+                                  Text(
+                                    project.daysUntilDeadline! < 0
+                                        ? AppLocalizations.of(context)!.daysLate(project.daysUntilDeadline!.abs())
+                                        : project.daysUntilDeadline! == 0
+                                            ? AppLocalizations.of(context)!.today
+                                            : AppLocalizations.of(context)!.daysLeft(project.daysUntilDeadline!),
+                                    style: TextStyle(
+                                      color: project.daysUntilDeadline! < 0
+                                          ? Colors.red
+                                          : project.daysUntilDeadline! == 0
+                                              ? Colors.red
+                                              : project.daysUntilDeadline! <= 7
+                                                  ? Colors.orange
+                                                  : Colors.blue,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
                     ],
                   ),
                   trailing: _isSelectionMode
@@ -3546,7 +3901,7 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                       : project.previewSongPath != null && project.previewSongPath!.isNotEmpty
                           ? IconButton(
                               icon: const Icon(Icons.play_arrow),
-                              tooltip: 'Play Preview',
+                              tooltip: AppLocalizations.of(context)!.playPreview,
                               onPressed: () => _playPreviewSong(project),
                               color: Colors.green,
                             )

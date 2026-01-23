@@ -1318,82 +1318,135 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get playlists => 'Playlists';
+  String get playlists => 'Плейлисты';
 
   @override
-  String get playlistsDesktopOnly => 'Playlists are only available on Android.';
+  String get playlistsDesktopOnly => 'Плейлисты доступны только на Android.';
 
   @override
-  String get noPlaylistsYet => 'No playlists yet';
+  String get noPlaylistsYet => 'Плейлистов пока нет';
 
   @override
-  String get createFirstPlaylist =>
-      'Tap the + button to create your first playlist';
+  String get createFirstPlaylist => 'Нажмите + чтобы создать первый плейлист';
 
   @override
   String playlistSongCount(int count) {
-    return '$count songs';
+    return '$count треков';
   }
 
   @override
-  String get createPlaylist => 'Create Playlist';
+  String get createPlaylist => 'Создать Плейлист';
 
   @override
-  String get playlistName => 'Playlist Name';
+  String get playlistName => 'Название Плейлиста';
 
   @override
-  String get playlistNameHint => 'My Playlist';
+  String get playlistNameHint => 'Мой Плейлист';
 
   @override
-  String get playlistNameRequired => 'Playlist name is required';
+  String get playlistNameRequired => 'Название плейлиста обязательно';
 
   @override
-  String get editPlaylist => 'Edit Playlist';
+  String get editPlaylist => 'Редактировать Плейлист';
 
   @override
-  String get selectPreviewSongs => 'Select Preview Songs';
+  String get selectPreviewSongs => 'Выбрать Превью';
 
   @override
-  String get deletePlaylist => 'Delete Playlist';
+  String get deletePlaylist => 'Удалить Плейлист';
 
   @override
   String deletePlaylistConfirm(String name) {
-    return 'Are you sure you want to delete \"$name\"?';
+    return 'Вы уверены, что хотите удалить \"$name\"?';
   }
 
   @override
-  String get playlistDeleted => 'Playlist deleted';
+  String get playlistDeleted => 'Плейлист удален';
 
   @override
   String playlistProgress(int current, int total) {
-    return '$current of $total';
+    return '$current из $total';
   }
 
   @override
-  String get noPreviewSongsInPlaylist =>
-      'No preview songs available in this playlist';
+  String get noPreviewSongsInPlaylist => 'В этом плейлисте нет превью';
 
   @override
-  String get errorLoadingPlaylists => 'Error loading playlists';
+  String get errorLoadingPlaylists => 'Ошибка загрузки плейлистов';
 
   @override
-  String get playlistItems => 'Playlist Items';
+  String get playlistItems => 'Элементы Плейлиста';
 
   @override
-  String get addSongs => 'Add Songs';
+  String get addSongs => 'Добавить Треки';
 
   @override
-  String get addAudioFiles => 'Add Audio Files';
+  String get addAudioFiles => 'Добавить Аудиофайлы';
 
   @override
-  String get selectAudioFiles => 'Select Audio Files';
+  String get selectAudioFiles => 'Выбрать Аудиофайлы';
 
   @override
-  String get selectFromProjects => 'Select from Projects';
+  String get selectFromProjects => 'Выбрать из Проектов';
 
   @override
-  String get add => 'Add';
+  String get add => 'Добавить';
 
   @override
-  String get fromProject => 'From Project';
+  String get fromProject => 'Из Проекта';
+
+  @override
+  String get projectDeadline => 'Срок Проекта';
+
+  @override
+  String get noDeadlineSet => 'Срок не установлен';
+
+  @override
+  String get camelotCode => 'Код Камелот';
+
+  @override
+  String get deadline => 'Срок';
+
+  @override
+  String get dueToday => 'Истекает сегодня';
+
+  @override
+  String daysLate(int days) {
+    return '$daysд просрочено';
+  }
+
+  @override
+  String daysLeft(int days) {
+    return '$daysд осталось';
+  }
+
+  @override
+  String get hideFinished => 'Скрыть Завершенные';
+
+  @override
+  String get showOnlyDeadlines => 'Показать только с дедлайном';
+
+  @override
+  String get filterByDeadline => 'Фильтр по Сроку';
+
+  @override
+  String get allDeadlines => 'Все Сроки';
+
+  @override
+  String get hasDeadline => 'Со Сроком';
+
+  @override
+  String get overdue => 'Просрочено';
+
+  @override
+  String get dueSoon => 'Скоро Истекает (7д)';
+
+  @override
+  String get today => 'Сегодня';
+
+  @override
+  String get noPreviewSong => 'Нет превью';
+
+  @override
+  String get playPreview => 'Воспроизвести Превью';
 }
