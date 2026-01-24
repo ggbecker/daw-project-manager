@@ -154,6 +154,7 @@ class MusicProject {
 
   /// Converts musical key to Camelot Wheel notation
   /// Returns null if musicalKey is null or not recognized
+  /// Handles enharmonic notations like "G#/Ab Major"
   String? get camelotCode {
     if (musicalKey == null || musicalKey!.isEmpty) return null;
     
@@ -190,7 +191,40 @@ class MusicProject {
       'd minor': '7A', 'dm': '7A', 'dmin': '7A',
     };
     
-    return camelotMap[key];
+    // Try direct mapping first
+    String? result = camelotMap[key];
+    if (result != null) return result;
+    
+    // Handle enharmonic notation (e.g., "G#/Ab Major" or "C#/Db Minor")
+    if (key.contains('/')) {
+      // Split by space to separate note from scale
+      // "g#/ab major" -> ["g#/ab", "major"]
+      final parts = key.split(' ');
+      if (parts.isEmpty) return null;
+      
+      // Get the enharmonic notes part (before the space)
+      final notePart = parts[0]; // "g#/ab"
+      // Get the scale/mode part (after the space, if it exists)
+      final scalePart = parts.length > 1 ? ' ${parts.sublist(1).join(' ')}' : '';
+      
+      // Split enharmonic notes
+      // "g#/ab" -> ["g#", "ab"]
+      final enharmonicNotes = notePart.split('/');
+      
+      // Try first enharmonic variant (e.g., "g# major")
+      if (enharmonicNotes.isNotEmpty) {
+        result = camelotMap[enharmonicNotes[0] + scalePart];
+        if (result != null) return result;
+      }
+      
+      // Try second enharmonic variant (e.g., "ab major")
+      if (enharmonicNotes.length > 1) {
+        result = camelotMap[enharmonicNotes[1] + scalePart];
+        if (result != null) return result;
+      }
+    }
+    
+    return null;
   }
 
   /// Returns compatible Camelot codes for harmonic mixing

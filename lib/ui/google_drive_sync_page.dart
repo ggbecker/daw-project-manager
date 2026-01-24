@@ -8,7 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
-import '../services/google_drive_sync_service.dart';
+import '../services/google_drive_sync_service.dart' show GoogleDriveSyncService, UploadCancelledException;
 import '../models/backup_progress.dart';
 import '../providers/providers.dart';
 import '../repository/profile_repository.dart';
@@ -528,8 +528,26 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
           ),
         );
       }
+    } on UploadCancelledException catch (_) {
+      // User cancelled - close dialog and show info message (no error)
+      if (!MobileUtils.isMobile() && mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+      
+      setState(() {
+        _syncStatus = 'Upload cancelled';
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Backup upload cancelled by user'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
     } catch (e) {
-      // Close progress dialog if it's open
+      // Other errors - close dialog and show error
       if (!MobileUtils.isMobile() && mounted) {
         Navigator.of(context, rootNavigator: true).pop();
       }
@@ -1133,7 +1151,7 @@ class _AuthorizationCodeDialogState extends State<_AuthorizationCodeDialog> {
 }
 
 /// Dialog for showing backup upload progress
-class _BackupProgressDialog extends StatelessWidget {
+class _BackupProgressDialog extends StatefulWidget {
   final Stream<BackupProgress> progressStream;
   final GoogleDriveSyncService syncService;
 
@@ -1141,6 +1159,13 @@ class _BackupProgressDialog extends StatelessWidget {
     required this.progressStream,
     required this.syncService,
   });
+
+  @override
+  State<_BackupProgressDialog> createState() => _BackupProgressDialogState();
+}
+
+class _BackupProgressDialogState extends State<_BackupProgressDialog> {
+  bool _isCancelling = false;
 
   String _getStageText(BackupProgressStage stage, BuildContext context) {
     switch (stage) {
@@ -1163,11 +1188,11 @@ class _BackupProgressDialog extends StatelessWidget {
         children: [
           const Icon(Icons.cloud_upload, size: 24),
           const SizedBox(width: 8),
-          const Text('Uploading Backup'),
+          Text(_isCancelling ? 'Cancelling...' : 'Uploading Backup'),
         ],
       ),
       content: StreamBuilder<BackupProgress>(
-        stream: progressStream,
+        stream: widget.progressStream,
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const SizedBox(
@@ -1189,17 +1214,18 @@ class _BackupProgressDialog extends StatelessWidget {
               children: [
                 // Stage indicator
                 Text(
-                  _getStageText(progress.stage, context),
-                  style: const TextStyle(
+                  _isCancelling ? 'Cancelling upload...' : _getStageText(progress.stage, context),
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
+                    color: _isCancelling ? Colors.orange : null,
                   ),
                 ),
                 const SizedBox(height: 16),
                 
                 // Current item
                 Text(
-                  progress.currentItem,
+                  _isCancelling ? 'Please wait while we stop the upload...' : progress.currentItem,
                   style: TextStyle(
                     fontSize: 14,
                     color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.8),
@@ -1242,17 +1268,22 @@ class _BackupProgressDialog extends StatelessWidget {
       ),
       actions: [
         StreamBuilder<BackupProgress>(
-          stream: progressStream,
+          stream: widget.progressStream,
           builder: (context, snapshot) {
-            // Only show cancel button if not completed
-            if (!snapshot.hasData || snapshot.data!.stage == BackupProgressStage.completed) {
+            // Only show cancel button if not completed or cancelling
+            if (!snapshot.hasData || 
+                snapshot.data!.stage == BackupProgressStage.completed ||
+                _isCancelling) {
               return const SizedBox.shrink();
             }
             
             return TextButton(
               onPressed: () {
-                syncService.cancelUpload();
-                Navigator.of(context).pop();
+                setState(() {
+                  _isCancelling = true;
+                });
+                widget.syncService.cancelUpload();
+                // Don't close dialog here - let the exception handling close it
               },
               child: const Text('Cancel'),
             );

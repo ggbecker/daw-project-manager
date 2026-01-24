@@ -28,6 +28,15 @@ import '../repository/project_repository.dart';
 import '../utils/app_paths.dart' show ensureHiveInitialized, getPreviewSongsPath;
 import '../config/secrets.dart' show desktopClientSecret, desktopClientId, androidWebClientId;
 
+/// Exception thrown when user cancels an upload operation
+class UploadCancelledException implements Exception {
+  final String message;
+  UploadCancelledException([this.message = 'Upload cancelled by user']);
+  
+  @override
+  String toString() => message;
+}
+
 /// Service for synchronizing database data with Google Drive
 class GoogleDriveSyncService {
   static const String _appDataFolderName = 'DAW Project Manager';
@@ -1498,7 +1507,7 @@ class GoogleDriveSyncService {
       for (final profile in allProfiles) {
         // Check for cancellation
         if (_isCancelled) {
-          throw Exception('Upload cancelled by user');
+          throw UploadCancelledException();
         }
         
         profileIndex++;
@@ -1653,7 +1662,7 @@ class GoogleDriveSyncService {
       for (final uploadInfo in previewSongsToUpload) {
         // Check for cancellation
         if (_isCancelled) {
-          throw Exception('Upload cancelled by user');
+          throw UploadCancelledException();
         }
         
         uploadedCount++;
@@ -1741,6 +1750,11 @@ class GoogleDriveSyncService {
         'previewSongFileNames': previewSongFileNames,
       };
 
+      // Check for cancellation before database upload
+      if (_isCancelled) {
+        throw UploadCancelledException();
+      }
+      
       // Emit progress: uploading database
       _progressController.add(BackupProgress(
         stage: BackupProgressStage.uploadingDatabase,
