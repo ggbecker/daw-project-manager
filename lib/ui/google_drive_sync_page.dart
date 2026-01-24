@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import '../services/google_drive_sync_service.dart';
+import '../models/backup_progress.dart';
 import '../providers/providers.dart';
 import '../repository/profile_repository.dart';
 import '../repository/project_repository.dart';
@@ -491,10 +492,28 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
       }
 
       final projectRepo = await ref.read(repositoryProvider.future);
+      
+      // Show progress dialog on desktop
+      if (!MobileUtils.isMobile()) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => _BackupProgressDialog(
+            progressStream: _syncService.progressStream,
+            syncService: _syncService,
+          ),
+        );
+      }
+      
       await _syncService.uploadDatabase(
         projectRepo: projectRepo,
         profileRepo: profileRepo,
       );
+
+      // Close progress dialog if it's open
+      if (!MobileUtils.isMobile() && mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
 
       setState(() {
         _syncStatus = AppLocalizations.of(context)!.backupUploadedSuccessfully;
@@ -510,6 +529,11 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
         );
       }
     } catch (e) {
+      // Close progress dialog if it's open
+      if (!MobileUtils.isMobile() && mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+      
       setState(() {
         _syncStatus = AppLocalizations.of(context)!.errorUploadingBackup(e.toString());
       });
@@ -1102,6 +1126,147 @@ class _AuthorizationCodeDialogState extends State<_AuthorizationCodeDialog> {
         ElevatedButton(
           onPressed: () => Navigator.pop(context, _codeController.text),
           child: Text(AppLocalizations.of(context)!.continueButton),
+        ),
+      ],
+    );
+  }
+}
+
+/// Dialog for showing backup upload progress
+class _BackupProgressDialog extends StatelessWidget {
+  final Stream<BackupProgress> progressStream;
+  final GoogleDriveSyncService syncService;
+
+  const _BackupProgressDialog({
+    required this.progressStream,
+    required this.syncService,
+  });
+
+  String _getStageText(BackupProgressStage stage, BuildContext context) {
+    switch (stage) {
+      case BackupProgressStage.collectingData:
+        return 'Collecting data...';
+      case BackupProgressStage.uploadingPreviewSongs:
+        return 'Uploading preview songs...';
+      case BackupProgressStage.uploadingDatabase:
+        return 'Uploading database...';
+      case BackupProgressStage.completed:
+        return 'Completed!';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: Theme.of(context).cardColor,
+      title: Row(
+        children: [
+          const Icon(Icons.cloud_upload, size: 24),
+          const SizedBox(width: 8),
+          const Text('Uploading Backup'),
+        ],
+      ),
+      content: StreamBuilder<BackupProgress>(
+        stream: progressStream,
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const SizedBox(
+              height: 150,
+              child: Center(
+                child: CircularProgressIndicator(),
+              ),
+            );
+          }
+
+          final progress = snapshot.data!;
+          final percentage = (progress.progress * 100).toStringAsFixed(0);
+
+          return SizedBox(
+            width: 400,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Stage indicator
+                Text(
+                  _getStageText(progress.stage, context),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                
+                // Current item
+                Text(
+                  progress.currentItem,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.8),
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 8),
+                
+                // Progress indicator
+                if (progress.stage == BackupProgressStage.uploadingPreviewSongs && progress.currentIndex > 0)
+                  Text(
+                    progress.totalItems > 0
+                        ? '${progress.currentIndex} / ${progress.totalItems}'
+                        : 'Uploaded: ${progress.currentIndex}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).textTheme.bodySmall?.color,
+                    ),
+                  )
+                else if (progress.totalItems > 0)
+                  Text(
+                    '${progress.currentIndex} / ${progress.totalItems}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).textTheme.bodySmall?.color,
+                    ),
+                  ),
+                const SizedBox(height: 8),
+                
+                // Progress bar
+                LinearProgressIndicator(
+                  value: progress.progress,
+                  minHeight: 8,
+                ),
+                const SizedBox(height: 8),
+                
+                // Percentage
+                Text(
+                  '$percentage%',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+      actions: [
+        StreamBuilder<BackupProgress>(
+          stream: progressStream,
+          builder: (context, snapshot) {
+            // Only show cancel button if not completed
+            if (!snapshot.hasData || snapshot.data!.stage == BackupProgressStage.completed) {
+              return const SizedBox.shrink();
+            }
+            
+            return TextButton(
+              onPressed: () {
+                syncService.cancelUpload();
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            );
+          },
         ),
       ],
     );

@@ -22,6 +22,7 @@ import '../models/release_file.dart';
 import '../models/scan_root.dart';
 import '../models/todo_item.dart';
 import '../models/todo_template.dart';
+import '../models/backup_progress.dart';
 import '../repository/profile_repository.dart';
 import '../repository/project_repository.dart';
 import '../utils/app_paths.dart' show ensureHiveInitialized, getPreviewSongsPath;
@@ -45,6 +46,18 @@ class GoogleDriveSyncService {
   Box<String>? _backupTimestampBox; // For storing last backup download timestamp
   StreamSubscription? _authEventsSubscription; // Listen to authentication events
   static bool _sessionInitialized = false; // Track if lightweight auth was attempted this session
+  
+  // Stream controller for backup progress
+  final _progressController = StreamController<BackupProgress>.broadcast();
+  Stream<BackupProgress> get progressStream => _progressController.stream;
+  
+  // Cancellation flag for backup uploads
+  bool _isCancelled = false;
+  
+  // Cancel current upload operation
+  void cancelUpload() {
+    _isCancelled = true;
+  }
   
   // Public getters for user state (following official example)
   GoogleSignInAccount? get currentUser => _currentUser;
@@ -263,6 +276,7 @@ class GoogleDriveSyncService {
   void dispose() {
     _authEventsSubscription?.cancel();
     _authEventsSubscription = null;
+    _progressController.close();
   }
 
   /// Initialize credentials storage (call this before using the service)
@@ -1411,6 +1425,9 @@ class GoogleDriveSyncService {
       throw Exception('Not signed in to Google Drive');
     }
 
+    // Reset cancellation flag at the start
+    _isCancelled = false;
+
     try {
       // Serialize ALL data from the entire application
       // Collect data from ALL profiles, not just the current one
@@ -1458,6 +1475,15 @@ class GoogleDriveSyncService {
         print('Collecting data from ${allProfiles.length} profiles...');
       }
       
+      // Emit progress: collecting data
+      _progressController.add(BackupProgress(
+        stage: BackupProgressStage.collectingData,
+        currentItem: 'Collecting data from profiles...',
+        currentIndex: 0,
+        totalItems: allProfiles.length,
+        progress: 0.0,
+      ));
+      
       if (allProfiles.isEmpty) {
         if (kDebugMode) {
           print('WARNING: No profiles found! Cannot create backup.');
@@ -1465,7 +1491,26 @@ class GoogleDriveSyncService {
         throw Exception('No profiles found - cannot create backup');
       }
       
+      // Track actual preview song uploads (not estimates)
+      int previewSongsUploaded = 0;
+      
+      int profileIndex = 0;
       for (final profile in allProfiles) {
+        // Check for cancellation
+        if (_isCancelled) {
+          throw Exception('Upload cancelled by user');
+        }
+        
+        profileIndex++;
+        
+        // Emit progress for this profile
+        _progressController.add(BackupProgress(
+          stage: BackupProgressStage.collectingData,
+          currentItem: 'Collecting data from profile: ${profile.name}',
+          currentIndex: profileIndex,
+          totalItems: allProfiles.length,
+          progress: profileIndex / allProfiles.length * 0.2, // 20% of total for collecting
+        ));
         try {
           if (kDebugMode) {
             print('  Processing profile: ${profile.name} (${profile.id})');
@@ -1541,6 +1586,25 @@ class GoogleDriveSyncService {
                     // Retrieve hash from Hive database (ensure we have the latest version)
                     // Use stored hash from project first, then fallback to existingHashes from backup
                     final existingHash = storedHash ?? existingHashes[latestProject.id];
+                    
+                    // Increment upload counter
+                    previewSongsUploaded++;
+                    
+                    // Emit progress for preview song upload
+                    // Note: We show the count but not total (since we don't know how many will need upload until we check each one)
+                    _progressController.add(BackupProgress(
+                      stage: BackupProgressStage.uploadingPreviewSongs,
+                      currentItem: 'Uploading preview: ${path.basename(latestProject.previewSongPath!)}',
+                      currentIndex: previewSongsUploaded,
+                      totalItems: 0, // Unknown until we process all
+                      progress: 0.2 + (previewSongsUploaded * 0.05).clamp(0.0, 0.6), // Incremental progress
+                    ));
+                    
+                    // Check for cancellation before upload
+                    if (_isCancelled) {
+                      throw Exception('Upload cancelled by user');
+                    }
+                    
                     final result = await _uploadPreviewSongFile(
                       projectId: latestProject.id,
                       localFilePath: latestProject.previewSongPath!,
@@ -1656,6 +1720,15 @@ class GoogleDriveSyncService {
         'previewSongFileNames': previewSongFileNames,
       };
 
+      // Emit progress: uploading database
+      _progressController.add(BackupProgress(
+        stage: BackupProgressStage.uploadingDatabase,
+        currentItem: 'Uploading database backup...',
+        currentIndex: 1,
+        totalItems: 1,
+        progress: 0.85, // 85%
+      ));
+      
       final jsonData = jsonEncode(data);
       final bytes = utf8.encode(jsonData);
 
@@ -1710,6 +1783,15 @@ class GoogleDriveSyncService {
 
       // Update sync metadata (global, not per-profile)
       await _updateSyncMetadata(DateTime.now());
+      
+      // Emit progress: completed
+      _progressController.add(BackupProgress(
+        stage: BackupProgressStage.completed,
+        currentItem: 'Backup completed successfully!',
+        currentIndex: 1,
+        totalItems: 1,
+        progress: 1.0, // 100%
+      ));
     } catch (e) {
       if (kDebugMode) print('Error uploading database: $e');
       rethrow;
