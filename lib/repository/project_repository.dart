@@ -10,6 +10,7 @@ import '../models/ignored_path.dart';
 import '../models/release.dart';
 import '../models/release_file.dart';
 import '../models/todo_item.dart';
+import '../models/todo_template.dart';
 import '../models/playlist.dart';
 import '../services/metadata_extractor.dart';
 import '../utils/app_paths.dart';
@@ -57,6 +58,9 @@ class ProjectRepository {
     }
     if (!Hive.isAdapterRegistered(8)) {
       Hive.registerAdapter(PlaylistAdapter());
+    }
+    if (!Hive.isAdapterRegistered(9)) {
+      Hive.registerAdapter(TodoTemplateAdapter());
     }
 
     // Get current profile

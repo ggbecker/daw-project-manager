@@ -743,6 +743,97 @@ class AppLocalizationsJa extends AppLocalizations {
   String get todoList => 'タスクリスト';
 
   @override
+  String get todoTemplates => 'TODOテンプレート';
+
+  @override
+  String get createTemplate => 'テンプレート作成';
+
+  @override
+  String get editTemplate => 'テンプレート編集';
+
+  @override
+  String get deleteTemplate => 'テンプレート削除';
+
+  @override
+  String deleteTemplateConfirm(String name) {
+    return 'テンプレート「$name」を削除してもよろしいですか？';
+  }
+
+  @override
+  String get templateName => 'テンプレート名';
+
+  @override
+  String get templateNameHint => '例：ミキシングチェックリスト';
+
+  @override
+  String get templateItems => 'テンプレート項目';
+
+  @override
+  String get templateItemsHint => '1行に1項目';
+
+  @override
+  String get templateNameAndItemsRequired => 'テンプレート名と項目が必要です';
+
+  @override
+  String get templateItemsRequired => '少なくとも1つの項目が必要です';
+
+  @override
+  String get templateCreated => 'テンプレートを作成しました';
+
+  @override
+  String get templateUpdated => 'テンプレートを更新しました';
+
+  @override
+  String get templateDeleted => 'テンプレートを削除しました';
+
+  @override
+  String get noTemplatesYet => 'まだテンプレートがありません';
+
+  @override
+  String get createFirstTemplate => '最初のTODOテンプレートを作成';
+
+  @override
+  String templateItemCount(int count) {
+    return '$count個の項目';
+  }
+
+  @override
+  String get selectTemplate => 'テンプレート選択';
+
+  @override
+  String get importFromTemplate => 'テンプレートからインポート';
+
+  @override
+  String get manageTemplates => 'テンプレート管理';
+
+  @override
+  String get noTemplatesAvailable => 'テンプレートがありません。最初に作成してください。';
+
+  @override
+  String templateImported(String name, int count) {
+    return 'テンプレート「$name」をインポート（$count項目）';
+  }
+
+  @override
+  String get errorLoadingTemplates => 'テンプレート読み込みエラー';
+
+  @override
+  String get importTodos => 'ファイルからタスクをインポート';
+
+  @override
+  String get noTodosInFile => 'ファイルにタスクが見つかりません';
+
+  @override
+  String todosImported(int count) {
+    return '$count個のタスクをインポートしました';
+  }
+
+  @override
+  String errorImportingTodos(String error) {
+    return 'インポートエラー: $error';
+  }
+
+  @override
   String get addToRelease => 'リリースに追加';
 
   @override
@@ -1421,7 +1512,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get hideFinished => '完了を非表示';
 
   @override
-  String get showOnlyDeadlines => '期限付きのみを表示';
+  String get showOnlyDeadlines => '期限を表示';
 
   @override
   String get filterByDeadline => '期限でフィルタ';

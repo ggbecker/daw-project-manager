@@ -1340,6 +1340,168 @@ abstract class AppLocalizations {
   /// **'TODO List'**
   String get todoList;
 
+  /// No description provided for @todoTemplates.
+  ///
+  /// In en, this message translates to:
+  /// **'TODO Templates'**
+  String get todoTemplates;
+
+  /// No description provided for @createTemplate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Template'**
+  String get createTemplate;
+
+  /// No description provided for @editTemplate.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Template'**
+  String get editTemplate;
+
+  /// No description provided for @deleteTemplate.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Template'**
+  String get deleteTemplate;
+
+  /// No description provided for @deleteTemplateConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete template \"{name}\"?'**
+  String deleteTemplateConfirm(String name);
+
+  /// No description provided for @templateName.
+  ///
+  /// In en, this message translates to:
+  /// **'Template Name'**
+  String get templateName;
+
+  /// No description provided for @templateNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g., Mixing Checklist'**
+  String get templateNameHint;
+
+  /// No description provided for @templateItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Template Items'**
+  String get templateItems;
+
+  /// No description provided for @templateItemsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'One item per line'**
+  String get templateItemsHint;
+
+  /// No description provided for @templateNameAndItemsRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Template name and items are required'**
+  String get templateNameAndItemsRequired;
+
+  /// No description provided for @templateItemsRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'At least one item is required'**
+  String get templateItemsRequired;
+
+  /// No description provided for @templateCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Template created'**
+  String get templateCreated;
+
+  /// No description provided for @templateUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Template updated'**
+  String get templateUpdated;
+
+  /// No description provided for @templateDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Template deleted'**
+  String get templateDeleted;
+
+  /// No description provided for @noTemplatesYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No templates yet'**
+  String get noTemplatesYet;
+
+  /// No description provided for @createFirstTemplate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first TODO template'**
+  String get createFirstTemplate;
+
+  /// No description provided for @templateItemCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} item(s)'**
+  String templateItemCount(int count);
+
+  /// No description provided for @selectTemplate.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Template'**
+  String get selectTemplate;
+
+  /// No description provided for @importFromTemplate.
+  ///
+  /// In en, this message translates to:
+  /// **'Import from Template'**
+  String get importFromTemplate;
+
+  /// No description provided for @manageTemplates.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Templates'**
+  String get manageTemplates;
+
+  /// No description provided for @noTemplatesAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No templates available. Create one first.'**
+  String get noTemplatesAvailable;
+
+  /// No description provided for @templateImported.
+  ///
+  /// In en, this message translates to:
+  /// **'Template \"{name}\" imported ({count} items)'**
+  String templateImported(String name, int count);
+
+  /// No description provided for @errorLoadingTemplates.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading templates'**
+  String get errorLoadingTemplates;
+
+  /// No description provided for @importTodos.
+  ///
+  /// In en, this message translates to:
+  /// **'Import Todos from File'**
+  String get importTodos;
+
+  /// No description provided for @noTodosInFile.
+  ///
+  /// In en, this message translates to:
+  /// **'No todos found in file'**
+  String get noTodosInFile;
+
+  /// No description provided for @todosImported.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} todo(s) imported successfully'**
+  String todosImported(int count);
+
+  /// No description provided for @errorImportingTodos.
+  ///
+  /// In en, this message translates to:
+  /// **'Error importing todos: {error}'**
+  String errorImportingTodos(String error);
+
   /// No description provided for @addToRelease.
   ///
   /// In en, this message translates to:
@@ -2458,7 +2620,7 @@ abstract class AppLocalizations {
   /// No description provided for @showOnlyDeadlines.
   ///
   /// In en, this message translates to:
-  /// **'Show Only With Deadline'**
+  /// **'Show Deadline'**
   String get showOnlyDeadlines;
 
   /// Dropdown hint for deadline filter

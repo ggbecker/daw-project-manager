@@ -21,6 +21,7 @@ import '../models/release.dart';
 import '../models/release_file.dart';
 import '../models/scan_root.dart';
 import '../models/todo_item.dart';
+import '../models/todo_template.dart';
 import '../repository/profile_repository.dart';
 import '../repository/project_repository.dart';
 import '../utils/app_paths.dart' show ensureHiveInitialized, getPreviewSongsPath;
@@ -1621,13 +1622,28 @@ class GoogleDriveSyncService {
         }
       }
       
+      // Collect TODO templates (global, not per-profile)
+      final List<TodoTemplate> allTemplates = [];
+      try {
+        final templatesBox = await Hive.openBox<TodoTemplate>('todoTemplates');
+        allTemplates.addAll(templatesBox.values);
+        if (kDebugMode) {
+          print('Collected ${allTemplates.length} TODO templates');
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error collecting TODO templates: $e');
+        }
+      }
+      
       final data = {
         'timestamp': DateTime.now().toIso8601String(),
-        'version': '1.3', // Incremented version to include preview song hashes
+        'version': '1.4', // Incremented version to include TODO templates
         'profiles': allProfiles.map((p) => _serializeProfile(p)).toList(),
         'projects': allProjects.map((p) => _serializeProject(p)).toList(),
         'releases': allReleases.map((r) => _serializeRelease(r)).toList(),
         'roots': allRoots.map((r) => _serializeRoot(r)).toList(),
+        'templates': allTemplates.map((t) => _serializeTemplate(t)).toList(),
         // NEW: Profile mappings to restore correct associations
         'projectToProfile': projectToProfileMap,
         'releaseToProfile': releaseToProfileMap,
@@ -1656,6 +1672,7 @@ class GoogleDriveSyncService {
         print('Profiles included: ${(data['profiles'] as List).length}');
         print('Projects included: ${(data['projects'] as List).length}');
         print('Releases included: ${(data['releases'] as List).length}');
+        print('Templates included: ${(data['templates'] as List).length}');
       }
       final response = await _driveApi!.files.list(
         q: "name='$fileName' and parents in '$_appDataFolderId' and trashed=false",
@@ -3074,6 +3091,26 @@ class GoogleDriveSyncService {
       lastScanAt: data['lastScanAt'] != null
           ? DateTime.parse(data['lastScanAt'] as String)
           : null,
+    );
+  }
+
+  Map<String, dynamic> _serializeTemplate(TodoTemplate template) {
+    return {
+      'id': template.id,
+      'name': template.name,
+      'items': template.items,
+      'createdAt': template.createdAt.toIso8601String(),
+      'updatedAt': template.updatedAt.toIso8601String(),
+    };
+  }
+
+  TodoTemplate _deserializeTemplate(Map<String, dynamic> data) {
+    return TodoTemplate(
+      id: data['id'] as String,
+      name: data['name'] as String,
+      items: (data['items'] as List<dynamic>).cast<String>(),
+      createdAt: DateTime.parse(data['createdAt'] as String),
+      updatedAt: DateTime.parse(data['updatedAt'] as String),
     );
   }
 }

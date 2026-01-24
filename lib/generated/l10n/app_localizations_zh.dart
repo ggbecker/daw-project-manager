@@ -739,6 +739,97 @@ class AppLocalizationsZh extends AppLocalizations {
   String get todoList => '待办事项列表';
 
   @override
+  String get todoTemplates => 'TODO模板';
+
+  @override
+  String get createTemplate => '创建模板';
+
+  @override
+  String get editTemplate => '编辑模板';
+
+  @override
+  String get deleteTemplate => '删除模板';
+
+  @override
+  String deleteTemplateConfirm(String name) {
+    return '确定要删除模板「$name」吗？';
+  }
+
+  @override
+  String get templateName => '模板名称';
+
+  @override
+  String get templateNameHint => '例如：混音清单';
+
+  @override
+  String get templateItems => '模板项目';
+
+  @override
+  String get templateItemsHint => '每行一个项目';
+
+  @override
+  String get templateNameAndItemsRequired => '模板名称和项目是必需的';
+
+  @override
+  String get templateItemsRequired => '至少需要一个项目';
+
+  @override
+  String get templateCreated => '模板已创建';
+
+  @override
+  String get templateUpdated => '模板已更新';
+
+  @override
+  String get templateDeleted => '模板已删除';
+
+  @override
+  String get noTemplatesYet => '还没有模板';
+
+  @override
+  String get createFirstTemplate => '创建您的第一个TODO模板';
+
+  @override
+  String templateItemCount(int count) {
+    return '$count个项目';
+  }
+
+  @override
+  String get selectTemplate => '选择模板';
+
+  @override
+  String get importFromTemplate => '从模板导入';
+
+  @override
+  String get manageTemplates => '管理模板';
+
+  @override
+  String get noTemplatesAvailable => '没有可用的模板。请先创建一个。';
+
+  @override
+  String templateImported(String name, int count) {
+    return '模板「$name」已导入（$count个项目）';
+  }
+
+  @override
+  String get errorLoadingTemplates => '加载模板错误';
+
+  @override
+  String get importTodos => '从文件导入待办事项';
+
+  @override
+  String get noTodosInFile => '文件中未找到待办事项';
+
+  @override
+  String todosImported(int count) {
+    return '成功导入了$count个待办事项';
+  }
+
+  @override
+  String errorImportingTodos(String error) {
+    return '导入错误: $error';
+  }
+
+  @override
   String get addToRelease => '添加到发布';
 
   @override
@@ -1406,7 +1497,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get hideFinished => '隐藏已完成';
 
   @override
-  String get showOnlyDeadlines => '仅显示有截止日期';
+  String get showOnlyDeadlines => '显示截止日期';
 
   @override
   String get filterByDeadline => '按截止日期筛选';

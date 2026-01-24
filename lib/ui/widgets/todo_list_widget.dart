@@ -1,10 +1,16 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../models/todo_item.dart';
+import '../../models/todo_template.dart';
+import '../../providers/providers.dart';
 import '../../generated/l10n/app_localizations.dart';
+import '../todo_templates_page.dart';
 
-class TodoListWidget extends StatefulWidget {
+class TodoListWidget extends ConsumerStatefulWidget {
   final List<TodoItem> todos;
   final Function(List<TodoItem>) onTodosChanged;
 
@@ -15,10 +21,10 @@ class TodoListWidget extends StatefulWidget {
   });
 
   @override
-  State<TodoListWidget> createState() => _TodoListWidgetState();
+  ConsumerState<TodoListWidget> createState() => _TodoListWidgetState();
 }
 
-class _TodoListWidgetState extends State<TodoListWidget> {
+class _TodoListWidgetState extends ConsumerState<TodoListWidget> {
   final _textController = TextEditingController();
   final _uuid = const Uuid();
   bool _doneSectionExpanded = false; // Track if "Done" section is expanded
@@ -78,6 +84,152 @@ class _TodoListWidgetState extends State<TodoListWidget> {
 
     widget.onTodosChanged([..._currentTodos, newTodo]);
     _textController.clear();
+  }
+
+  Future<void> _importFromTemplate() async {
+    final templatesAsync = ref.read(todoTemplatesProvider);
+    final templates = templatesAsync.value ?? [];
+
+    if (templates.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.noTemplatesAvailable),
+            action: SnackBarAction(
+              label: AppLocalizations.of(context)!.create,
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const TodoTemplatesPage(),
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      }
+      return;
+    }
+
+    final selected = await showDialog<TodoTemplate>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: Theme.of(context).cardColor,
+        title: Text(AppLocalizations.of(context)!.selectTemplate),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: templates.length,
+            itemBuilder: (context, index) {
+              final template = templates[index];
+              return ListTile(
+                leading: const Icon(Icons.note),
+                title: Text(template.name),
+                subtitle: Text(
+                  AppLocalizations.of(context)!.templateItemCount(template.items.length),
+                ),
+                onTap: () => Navigator.pop(dialogContext, template),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+        ],
+      ),
+    );
+
+    if (selected != null) {
+      // Create todos from template
+      final newTodos = selected.items.map((item) => TodoItem(
+        id: _uuid.v4(),
+        text: item,
+        completed: false,
+        createdAt: DateTime.now(),
+      )).toList();
+
+      // Add to existing todos
+      widget.onTodosChanged([..._currentTodos, ...newTodos]);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.templateImported(selected.name, newTodos.length),
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _importTodosFromFile() async {
+    try {
+      // Pick a text file
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['txt'],
+        dialogTitle: AppLocalizations.of(context)!.importTodos,
+      );
+
+      if (result != null && result.files.single.path != null) {
+        final file = File(result.files.single.path!);
+        final contents = await file.readAsString();
+        
+        // Split by lines and create todos
+        final lines = contents.split('\n')
+            .map((line) => line.trim())
+            .where((line) => line.isNotEmpty)
+            .toList();
+
+        if (lines.isEmpty) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(AppLocalizations.of(context)!.noTodosInFile),
+              ),
+            );
+          }
+          return;
+        }
+
+        // Create new todos from lines
+        final newTodos = lines.map((line) => TodoItem(
+          id: _uuid.v4(),
+          text: line,
+          completed: false,
+          createdAt: DateTime.now(),
+        )).toList();
+
+        // Add to existing todos
+        widget.onTodosChanged([..._currentTodos, ...newTodos]);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                AppLocalizations.of(context)!.todosImported(newTodos.length),
+              ),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.errorImportingTodos(e.toString()),
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _toggleTodo(String id) {
@@ -178,6 +330,31 @@ class _TodoListWidgetState extends State<TodoListWidget> {
                 Text(
                   AppLocalizations.of(context)!.todoList,
                   style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.file_download),
+                  iconSize: 20,
+                  tooltip: AppLocalizations.of(context)!.importFromTemplate,
+                  onPressed: _importFromTemplate,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.upload_file),
+                  iconSize: 20,
+                  tooltip: AppLocalizations.of(context)!.importTodos,
+                  onPressed: _importTodosFromFile,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.note_add),
+                  iconSize: 20,
+                  tooltip: AppLocalizations.of(context)!.manageTemplates,
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const TodoTemplatesPage(),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),

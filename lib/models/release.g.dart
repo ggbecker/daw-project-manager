@@ -24,9 +24,7 @@ class ReleaseAdapter extends TypeAdapter<Release> {
       description: fields[4] as String?,
       trackIds: (fields[5] as List).cast<String>(),
       files: (fields[6] as List).cast<ReleaseFile>(),
-      todos: fields.containsKey(7) && fields[7] != null 
-          ? (fields[7] as List).cast<TodoItem>()
-          : const [],
+      todos: (fields[7] as List).cast<TodoItem>(),
     );
   }
 

@@ -755,6 +755,99 @@ class AppLocalizationsDe extends AppLocalizations {
   String get todoList => 'Aufgabenliste';
 
   @override
+  String get todoTemplates => 'TODO-Vorlagen';
+
+  @override
+  String get createTemplate => 'Vorlage Erstellen';
+
+  @override
+  String get editTemplate => 'Vorlage Bearbeiten';
+
+  @override
+  String get deleteTemplate => 'Vorlage Löschen';
+
+  @override
+  String deleteTemplateConfirm(String name) {
+    return 'Möchten Sie die Vorlage \"$name\" wirklich löschen?';
+  }
+
+  @override
+  String get templateName => 'Vorlagenname';
+
+  @override
+  String get templateNameHint => 'z.B. Mixing-Checkliste';
+
+  @override
+  String get templateItems => 'Vorlagenelemente';
+
+  @override
+  String get templateItemsHint => 'Ein Element pro Zeile';
+
+  @override
+  String get templateNameAndItemsRequired =>
+      'Vorlagenname und Elemente sind erforderlich';
+
+  @override
+  String get templateItemsRequired => 'Mindestens ein Element ist erforderlich';
+
+  @override
+  String get templateCreated => 'Vorlage erstellt';
+
+  @override
+  String get templateUpdated => 'Vorlage aktualisiert';
+
+  @override
+  String get templateDeleted => 'Vorlage gelöscht';
+
+  @override
+  String get noTemplatesYet => 'Noch keine Vorlagen';
+
+  @override
+  String get createFirstTemplate => 'Erstellen Sie Ihre erste TODO-Vorlage';
+
+  @override
+  String templateItemCount(int count) {
+    return '$count Element(e)';
+  }
+
+  @override
+  String get selectTemplate => 'Vorlage Auswählen';
+
+  @override
+  String get importFromTemplate => 'Aus Vorlage Importieren';
+
+  @override
+  String get manageTemplates => 'Vorlagen Verwalten';
+
+  @override
+  String get noTemplatesAvailable =>
+      'Keine Vorlagen verfügbar. Erstellen Sie zuerst eine.';
+
+  @override
+  String templateImported(String name, int count) {
+    return 'Vorlage \"$name\" importiert ($count Elemente)';
+  }
+
+  @override
+  String get errorLoadingTemplates => 'Fehler beim Laden der Vorlagen';
+
+  @override
+  String get importTodos => 'Aufgaben aus Datei importieren';
+
+  @override
+  String get noTodosInFile => 'Keine Aufgaben in Datei gefunden';
+
+  @override
+  String todosImported(int count) {
+    return '$count Aufgabe(n) erfolgreich importiert';
+  }
+
+  @override
+  String errorImportingTodos(String error) {
+    return 'Fehler beim Importieren: $error';
+  }
+
+  @override
   String get addToRelease => 'Zur Veröffentlichung Hinzufügen';
 
   @override
@@ -1447,7 +1540,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get hideFinished => 'Fertige ausblenden';
 
   @override
-  String get showOnlyDeadlines => 'Nur mit Frist anzeigen';
+  String get showOnlyDeadlines => 'Frist anzeigen';
 
   @override
   String get filterByDeadline => 'Nach Frist filtern';

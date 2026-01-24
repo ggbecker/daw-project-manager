@@ -753,6 +753,99 @@ class AppLocalizationsEn extends AppLocalizations {
   String get todoList => 'TODO List';
 
   @override
+  String get todoTemplates => 'TODO Templates';
+
+  @override
+  String get createTemplate => 'Create Template';
+
+  @override
+  String get editTemplate => 'Edit Template';
+
+  @override
+  String get deleteTemplate => 'Delete Template';
+
+  @override
+  String deleteTemplateConfirm(String name) {
+    return 'Are you sure you want to delete template \"$name\"?';
+  }
+
+  @override
+  String get templateName => 'Template Name';
+
+  @override
+  String get templateNameHint => 'e.g., Mixing Checklist';
+
+  @override
+  String get templateItems => 'Template Items';
+
+  @override
+  String get templateItemsHint => 'One item per line';
+
+  @override
+  String get templateNameAndItemsRequired =>
+      'Template name and items are required';
+
+  @override
+  String get templateItemsRequired => 'At least one item is required';
+
+  @override
+  String get templateCreated => 'Template created';
+
+  @override
+  String get templateUpdated => 'Template updated';
+
+  @override
+  String get templateDeleted => 'Template deleted';
+
+  @override
+  String get noTemplatesYet => 'No templates yet';
+
+  @override
+  String get createFirstTemplate => 'Create your first TODO template';
+
+  @override
+  String templateItemCount(int count) {
+    return '$count item(s)';
+  }
+
+  @override
+  String get selectTemplate => 'Select Template';
+
+  @override
+  String get importFromTemplate => 'Import from Template';
+
+  @override
+  String get manageTemplates => 'Manage Templates';
+
+  @override
+  String get noTemplatesAvailable =>
+      'No templates available. Create one first.';
+
+  @override
+  String templateImported(String name, int count) {
+    return 'Template \"$name\" imported ($count items)';
+  }
+
+  @override
+  String get errorLoadingTemplates => 'Error loading templates';
+
+  @override
+  String get importTodos => 'Import Todos from File';
+
+  @override
+  String get noTodosInFile => 'No todos found in file';
+
+  @override
+  String todosImported(int count) {
+    return '$count todo(s) imported successfully';
+  }
+
+  @override
+  String errorImportingTodos(String error) {
+    return 'Error importing todos: $error';
+  }
+
+  @override
   String get addToRelease => 'Add to Release';
 
   @override
@@ -1440,7 +1533,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hideFinished => 'Hide Finished';
 
   @override
-  String get showOnlyDeadlines => 'Show Only With Deadline';
+  String get showOnlyDeadlines => 'Show Deadline';
 
   @override
   String get filterByDeadline => 'Filter by Deadline';

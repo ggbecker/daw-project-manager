@@ -566,10 +566,11 @@ class MetadataExtractor {
   
   /// Maps Cubase root key index to note name
   /// Index 0-11 represents chromatic scale from C
+  /// Uses enharmonic notation (sharp/flat) for black keys
   static String? _getCubaseRootNote(int index) {
     const rootNotes = [
-      'C', 'C#', 'D', 'D#', 'E', 'F', 
-      'F#', 'G', 'G#', 'A', 'A#', 'B'
+      'C', 'C#/Db', 'D', 'D#/Eb', 'E', 'F', 
+      'F#/Gb', 'G', 'G#/Ab', 'A', 'A#/Bb', 'B'
     ];
     if (index >= 0 && index < rootNotes.length) {
       return rootNotes[index];

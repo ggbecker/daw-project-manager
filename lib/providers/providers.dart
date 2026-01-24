@@ -16,6 +16,7 @@ import '../models/ignored_path.dart';
 import '../models/release.dart';
 import '../models/profile.dart';
 import '../models/playlist.dart';
+import '../models/todo_template.dart';
 import '../repository/project_repository.dart';
 import '../repository/profile_repository.dart';
 import '../services/google_drive_sync_service.dart';
@@ -747,4 +748,46 @@ final googleDriveSyncServiceProvider = Provider<GoogleDriveSyncService>((ref) {
 final playlistsProvider = StreamProvider<List<Playlist>>((ref) async* {
   final repo = await ref.watch(repositoryProvider.future);
   yield* repo.watchAllPlaylists();
+});
+
+// Todo Templates Provider
+final todoTemplatesProvider = StreamProvider<List<TodoTemplate>>((ref) async* {
+  await ensureHiveInitialized();
+  final box = await Hive.openBox<TodoTemplate>('todoTemplates');
+  
+  // Emit initial value
+  yield box.values.toList()..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+  
+  // Watch for changes
+  await for (final _ in box.watch()) {
+    yield box.values.toList()..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+  }
+});
+
+// Todo Templates Notifier
+class TodoTemplatesNotifier extends Notifier<void> {
+  @override
+  void build() {}
+  
+  Future<void> addTemplate(TodoTemplate template) async {
+    await ensureHiveInitialized();
+    final box = await Hive.openBox<TodoTemplate>('todoTemplates');
+    await box.put(template.id, template);
+  }
+  
+  Future<void> updateTemplate(TodoTemplate template) async {
+    await ensureHiveInitialized();
+    final box = await Hive.openBox<TodoTemplate>('todoTemplates');
+    await box.put(template.id, template);
+  }
+  
+  Future<void> deleteTemplate(String id) async {
+    await ensureHiveInitialized();
+    final box = await Hive.openBox<TodoTemplate>('todoTemplates');
+    await box.delete(id);
+  }
+}
+
+final todoTemplatesNotifierProvider = NotifierProvider<TodoTemplatesNotifier, void>(() {
+  return TodoTemplatesNotifier();
 });

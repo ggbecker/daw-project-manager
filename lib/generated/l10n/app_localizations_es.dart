@@ -754,6 +754,99 @@ class AppLocalizationsEs extends AppLocalizations {
   String get todoList => 'Lista de Tareas';
 
   @override
+  String get todoTemplates => 'Plantillas de TODO';
+
+  @override
+  String get createTemplate => 'Crear Plantilla';
+
+  @override
+  String get editTemplate => 'Editar Plantilla';
+
+  @override
+  String get deleteTemplate => 'Eliminar Plantilla';
+
+  @override
+  String deleteTemplateConfirm(String name) {
+    return '¿Estás seguro de eliminar la plantilla \"$name\"?';
+  }
+
+  @override
+  String get templateName => 'Nombre de la Plantilla';
+
+  @override
+  String get templateNameHint => 'ej. Lista de Mezcla';
+
+  @override
+  String get templateItems => 'Elementos de la Plantilla';
+
+  @override
+  String get templateItemsHint => 'Un elemento por línea';
+
+  @override
+  String get templateNameAndItemsRequired =>
+      'El nombre y los elementos son obligatorios';
+
+  @override
+  String get templateItemsRequired => 'Se requiere al menos un elemento';
+
+  @override
+  String get templateCreated => 'Plantilla creada';
+
+  @override
+  String get templateUpdated => 'Plantilla actualizada';
+
+  @override
+  String get templateDeleted => 'Plantilla eliminada';
+
+  @override
+  String get noTemplatesYet => 'Aún no hay plantillas';
+
+  @override
+  String get createFirstTemplate => 'Crea tu primera plantilla TODO';
+
+  @override
+  String templateItemCount(int count) {
+    return '$count elemento(s)';
+  }
+
+  @override
+  String get selectTemplate => 'Seleccionar Plantilla';
+
+  @override
+  String get importFromTemplate => 'Importar desde Plantilla';
+
+  @override
+  String get manageTemplates => 'Gestionar Plantillas';
+
+  @override
+  String get noTemplatesAvailable =>
+      'No hay plantillas disponibles. Crea una primero.';
+
+  @override
+  String templateImported(String name, int count) {
+    return 'Plantilla \"$name\" importada ($count elementos)';
+  }
+
+  @override
+  String get errorLoadingTemplates => 'Error al cargar plantillas';
+
+  @override
+  String get importTodos => 'Importar Tareas desde Archivo';
+
+  @override
+  String get noTodosInFile => 'No se encontraron tareas en el archivo';
+
+  @override
+  String todosImported(int count) {
+    return '$count tarea(s) importada(s) exitosamente';
+  }
+
+  @override
+  String errorImportingTodos(String error) {
+    return 'Error al importar tareas: $error';
+  }
+
+  @override
   String get addToRelease => 'Agregar al Lanzamiento';
 
   @override
@@ -1450,7 +1543,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get hideFinished => 'Ocultar Finalizados';
 
   @override
-  String get showOnlyDeadlines => 'Mostrar solo con fecha límite';
+  String get showOnlyDeadlines => 'Mostrar plazo';
 
   @override
   String get filterByDeadline => 'Filtrar por Fecha Límite';

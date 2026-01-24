@@ -754,6 +754,98 @@ class AppLocalizationsIt extends AppLocalizations {
   String get todoList => 'Lista Attività';
 
   @override
+  String get todoTemplates => 'Modelli TODO';
+
+  @override
+  String get createTemplate => 'Crea Modello';
+
+  @override
+  String get editTemplate => 'Modifica Modello';
+
+  @override
+  String get deleteTemplate => 'Elimina Modello';
+
+  @override
+  String deleteTemplateConfirm(String name) {
+    return 'Sei sicuro di voler eliminare il modello \"$name\"?';
+  }
+
+  @override
+  String get templateName => 'Nome Modello';
+
+  @override
+  String get templateNameHint => 'es. Lista di Mixaggio';
+
+  @override
+  String get templateItems => 'Elementi del Modello';
+
+  @override
+  String get templateItemsHint => 'Un elemento per riga';
+
+  @override
+  String get templateNameAndItemsRequired => 'Nome e elementi sono obbligatori';
+
+  @override
+  String get templateItemsRequired => 'È richiesto almeno un elemento';
+
+  @override
+  String get templateCreated => 'Modello creato';
+
+  @override
+  String get templateUpdated => 'Modello aggiornato';
+
+  @override
+  String get templateDeleted => 'Modello eliminato';
+
+  @override
+  String get noTemplatesYet => 'Nessun modello ancora';
+
+  @override
+  String get createFirstTemplate => 'Crea il tuo primo modello TODO';
+
+  @override
+  String templateItemCount(int count) {
+    return '$count elemento/i';
+  }
+
+  @override
+  String get selectTemplate => 'Seleziona Modello';
+
+  @override
+  String get importFromTemplate => 'Importa da Modello';
+
+  @override
+  String get manageTemplates => 'Gestisci Modelli';
+
+  @override
+  String get noTemplatesAvailable =>
+      'Nessun modello disponibile. Creane uno prima.';
+
+  @override
+  String templateImported(String name, int count) {
+    return 'Modello \"$name\" importato ($count elementi)';
+  }
+
+  @override
+  String get errorLoadingTemplates => 'Errore caricamento modelli';
+
+  @override
+  String get importTodos => 'Importa Attività da File';
+
+  @override
+  String get noTodosInFile => 'Nessuna attività trovata nel file';
+
+  @override
+  String todosImported(int count) {
+    return '$count attività importata/e con successo';
+  }
+
+  @override
+  String errorImportingTodos(String error) {
+    return 'Errore nell\'importazione: $error';
+  }
+
+  @override
   String get addToRelease => 'Aggiungi alla Pubblicazione';
 
   @override
@@ -1444,7 +1536,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get hideFinished => 'Nascondi Finiti';
 
   @override
-  String get showOnlyDeadlines => 'Mostra solo con scadenza';
+  String get showOnlyDeadlines => 'Mostra scadenza';
 
   @override
   String get filterByDeadline => 'Filtra per Scadenza';

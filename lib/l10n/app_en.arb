@@ -644,6 +644,71 @@
   "addNewTodo": "Add new todo",
   "enterTodoItem": "Enter todo item",
   "todoList": "TODO List",
+  "todoTemplates": "TODO Templates",
+  "createTemplate": "Create Template",
+  "editTemplate": "Edit Template",
+  "deleteTemplate": "Delete Template",
+  "deleteTemplateConfirm": "Are you sure you want to delete template \"{name}\"?",
+  "@deleteTemplateConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "templateName": "Template Name",
+  "templateNameHint": "e.g., Mixing Checklist",
+  "templateItems": "Template Items",
+  "templateItemsHint": "One item per line",
+  "templateNameAndItemsRequired": "Template name and items are required",
+  "templateItemsRequired": "At least one item is required",
+  "templateCreated": "Template created",
+  "templateUpdated": "Template updated",
+  "templateDeleted": "Template deleted",
+  "noTemplatesYet": "No templates yet",
+  "createFirstTemplate": "Create your first TODO template",
+  "templateItemCount": "{count} item(s)",
+  "@templateItemCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "selectTemplate": "Select Template",
+  "importFromTemplate": "Import from Template",
+  "manageTemplates": "Manage Templates",
+  "noTemplatesAvailable": "No templates available. Create one first.",
+  "templateImported": "Template \"{name}\" imported ({count} items)",
+  "@templateImported": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "errorLoadingTemplates": "Error loading templates",
+  "importTodos": "Import Todos from File",
+  "noTodosInFile": "No todos found in file",
+  "todosImported": "{count} todo(s) imported successfully",
+  "@todosImported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "errorImportingTodos": "Error importing todos: {error}",
+  "@errorImportingTodos": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "addToRelease": "Add to Release",
   "createNew": "Create New",
   "addToExisting": "Add to Existing",
@@ -1449,7 +1514,7 @@
   "@hideFinished": {
     "description": "Checkbox label to hide finished projects"
   },
-  "showOnlyDeadlines": "Show Only With Deadline",
+  "showOnlyDeadlines": "Show Deadline",
   "filterByDeadline": "Filter by Deadline",
   "@filterByDeadline": {
     "description": "Dropdown hint for deadline filter"

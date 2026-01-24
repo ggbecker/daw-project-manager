@@ -752,6 +752,98 @@ class AppLocalizationsRu extends AppLocalizations {
   String get todoList => 'Список Задач';
 
   @override
+  String get todoTemplates => 'Шаблоны TODO';
+
+  @override
+  String get createTemplate => 'Создать Шаблон';
+
+  @override
+  String get editTemplate => 'Редактировать Шаблон';
+
+  @override
+  String get deleteTemplate => 'Удалить Шаблон';
+
+  @override
+  String deleteTemplateConfirm(String name) {
+    return 'Вы уверены, что хотите удалить шаблон \"$name\"?';
+  }
+
+  @override
+  String get templateName => 'Название Шаблона';
+
+  @override
+  String get templateNameHint => 'напр. Чеклист Микширования';
+
+  @override
+  String get templateItems => 'Элементы Шаблона';
+
+  @override
+  String get templateItemsHint => 'Один элемент на строку';
+
+  @override
+  String get templateNameAndItemsRequired => 'Название и элементы обязательны';
+
+  @override
+  String get templateItemsRequired => 'Требуется хотя бы один элемент';
+
+  @override
+  String get templateCreated => 'Шаблон создан';
+
+  @override
+  String get templateUpdated => 'Шаблон обновлен';
+
+  @override
+  String get templateDeleted => 'Шаблон удален';
+
+  @override
+  String get noTemplatesYet => 'Пока нет шаблонов';
+
+  @override
+  String get createFirstTemplate => 'Создайте свой первый шаблон TODO';
+
+  @override
+  String templateItemCount(int count) {
+    return '$count элемент(ов)';
+  }
+
+  @override
+  String get selectTemplate => 'Выбрать Шаблон';
+
+  @override
+  String get importFromTemplate => 'Импортировать из Шаблона';
+
+  @override
+  String get manageTemplates => 'Управление Шаблонами';
+
+  @override
+  String get noTemplatesAvailable =>
+      'Нет доступных шаблонов. Создайте сначала.';
+
+  @override
+  String templateImported(String name, int count) {
+    return 'Шаблон \"$name\" импортирован ($count элементов)';
+  }
+
+  @override
+  String get errorLoadingTemplates => 'Ошибка загрузки шаблонов';
+
+  @override
+  String get importTodos => 'Импортировать Задачи из Файла';
+
+  @override
+  String get noTodosInFile => 'Задачи не найдены в файле';
+
+  @override
+  String todosImported(int count) {
+    return '$count задач(и) импортировано успешно';
+  }
+
+  @override
+  String errorImportingTodos(String error) {
+    return 'Ошибка импорта: $error';
+  }
+
+  @override
   String get addToRelease => 'Добавить в Релиз';
 
   @override
@@ -1440,7 +1532,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get hideFinished => 'Скрыть Завершенные';
 
   @override
-  String get showOnlyDeadlines => 'Показать только с дедлайном';
+  String get showOnlyDeadlines => 'Показать дедлайн';
 
   @override
   String get filterByDeadline => 'Фильтр по Сроку';

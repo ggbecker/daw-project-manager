@@ -757,6 +757,99 @@ class AppLocalizationsFr extends AppLocalizations {
   String get todoList => 'Liste de Tâches';
 
   @override
+  String get todoTemplates => 'Modèles de TODO';
+
+  @override
+  String get createTemplate => 'Créer un Modèle';
+
+  @override
+  String get editTemplate => 'Modifier le Modèle';
+
+  @override
+  String get deleteTemplate => 'Supprimer le Modèle';
+
+  @override
+  String deleteTemplateConfirm(String name) {
+    return 'Êtes-vous sûr de vouloir supprimer le modèle \"$name\" ?';
+  }
+
+  @override
+  String get templateName => 'Nom du Modèle';
+
+  @override
+  String get templateNameHint => 'ex. Liste de Mixage';
+
+  @override
+  String get templateItems => 'Éléments du Modèle';
+
+  @override
+  String get templateItemsHint => 'Un élément par ligne';
+
+  @override
+  String get templateNameAndItemsRequired =>
+      'Le nom et les éléments sont requis';
+
+  @override
+  String get templateItemsRequired => 'Au moins un élément est requis';
+
+  @override
+  String get templateCreated => 'Modèle créé';
+
+  @override
+  String get templateUpdated => 'Modèle mis à jour';
+
+  @override
+  String get templateDeleted => 'Modèle supprimé';
+
+  @override
+  String get noTemplatesYet => 'Pas encore de modèles';
+
+  @override
+  String get createFirstTemplate => 'Créez votre premier modèle TODO';
+
+  @override
+  String templateItemCount(int count) {
+    return '$count élément(s)';
+  }
+
+  @override
+  String get selectTemplate => 'Sélectionner un Modèle';
+
+  @override
+  String get importFromTemplate => 'Importer depuis un Modèle';
+
+  @override
+  String get manageTemplates => 'Gérer les Modèles';
+
+  @override
+  String get noTemplatesAvailable =>
+      'Aucun modèle disponible. Créez-en un d\'abord.';
+
+  @override
+  String templateImported(String name, int count) {
+    return 'Modèle \"$name\" importé ($count éléments)';
+  }
+
+  @override
+  String get errorLoadingTemplates => 'Erreur de chargement des modèles';
+
+  @override
+  String get importTodos => 'Importer des Tâches depuis un Fichier';
+
+  @override
+  String get noTodosInFile => 'Aucune tâche trouvée dans le fichier';
+
+  @override
+  String todosImported(int count) {
+    return '$count tâche(s) importée(s) avec succès';
+  }
+
+  @override
+  String errorImportingTodos(String error) {
+    return 'Erreur lors de l\'importation: $error';
+  }
+
+  @override
   String get addToRelease => 'Ajouter à la Sortie';
 
   @override
@@ -1450,7 +1543,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get hideFinished => 'Masquer Terminés';
 
   @override
-  String get showOnlyDeadlines => 'Afficher uniquement avec échéance';
+  String get showOnlyDeadlines => 'Afficher échéance';
 
   @override
   String get filterByDeadline => 'Filtrer par Date Limite';

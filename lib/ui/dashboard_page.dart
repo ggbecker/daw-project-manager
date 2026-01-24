@@ -880,25 +880,27 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                               spacing: 8,
                               runSpacing: 8,
                               children: [
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Checkbox(
-                                      value: hiddenMode == 1,
-                                      onChanged: (value) {
-                                        if (value == true) {
-                                          hiddenNotifier.setShowAll(true);
-                                        } else {
-                                          hiddenNotifier.setShowAll(false);
-                                        }
-                                      },
-                                    ),
-                                    Text(
-                                      AppLocalizations.of(context)!.showHidden,
-                                      style: const TextStyle(fontSize: 12),
-                                    ),
-                                  ],
-                                ),
+                                // Show Hidden Projects checkbox (Mobile) - only show if there are hidden projects
+                                if (hiddenCount > 0)
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Checkbox(
+                                        value: hiddenMode == 1,
+                                        onChanged: (value) {
+                                          if (value == true) {
+                                            hiddenNotifier.setShowAll(true);
+                                          } else {
+                                            hiddenNotifier.setShowAll(false);
+                                          }
+                                        },
+                                      ),
+                                      Text(
+                                        AppLocalizations.of(context)!.showHidden,
+                                        style: const TextStyle(fontSize: 12),
+                                      ),
+                                    ],
+                                  ),
                                 // Hide Finished Projects checkbox (Mobile)
                                 Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -919,7 +921,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                     ),
                                   ],
                                 ),
-                                // Show Only With Deadline checkbox (Mobile)
+                                // Show Deadline checkbox (Mobile)
                                 Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
@@ -1326,28 +1328,30 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                             ),
                           ),
                           const SizedBox(width: 8),
-                          // Show Hidden Projects checkbox
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Checkbox(
-                              value: hiddenMode == 1, // Show all mode
-                              onChanged: (value) {
-                                if (value == true) {
-                                  hiddenNotifier.setShowAll(true);
-                                } else {
-                                  // If unchecking, go back to show only visible (mode 0)
-                                  hiddenNotifier.setShowAll(false);
-                                }
-                              },
-                            ),
-                            Text(
-                              AppLocalizations.of(context)!.showHidden,
-                              style: const TextStyle(fontSize: 12),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(width: 8),
+                          // Show Hidden Projects checkbox - only show if there are hidden projects
+                        if (hiddenCount > 0)
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Checkbox(
+                                value: hiddenMode == 1, // Show all mode
+                                onChanged: (value) {
+                                  if (value == true) {
+                                    hiddenNotifier.setShowAll(true);
+                                  } else {
+                                    // If unchecking, go back to show only visible (mode 0)
+                                    hiddenNotifier.setShowAll(false);
+                                  }
+                                },
+                              ),
+                              Text(
+                                AppLocalizations.of(context)!.showHidden,
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        if (hiddenCount > 0)
+                          const SizedBox(width: 8),
                         // Show Only Hidden button
                         if (hiddenCount > 0)
                           TextButton.icon(
@@ -1396,7 +1400,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                           ],
                         ),
                         const SizedBox(width: 8),
-                        // Show Only With Deadline checkbox (Desktop)
+                        // Show Deadline checkbox (Desktop)
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
