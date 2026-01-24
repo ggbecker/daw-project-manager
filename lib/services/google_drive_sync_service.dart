@@ -3014,6 +3014,69 @@ class GoogleDriveSyncService {
       print('  Releases: +$releasesAdded ~$releasesUpdated');
     }
 
+    // Remove default empty profile if we restored other non-default profiles (all platforms)
+    try {
+      final allProfiles = profileRepo.getAllProfiles();
+      
+      // Find the default profile (first one created, usually named "Default Profile" or similar)
+      Profile? defaultProfile;
+      for (final profile in allProfiles) {
+        // Check if this is the default profile by checking if it's the oldest one
+        if (defaultProfile == null || profile.createdAt.isBefore(defaultProfile.createdAt)) {
+          defaultProfile = profile;
+        }
+      }
+      
+      if (defaultProfile != null && allProfiles.length > 1) {
+        // Check if default profile is empty
+        final defaultProjectsBox = await Hive.openBox<MusicProject>('${defaultProfile.id}_projects');
+        final defaultReleasesBox = await Hive.openBox<Release>('${defaultProfile.id}_releases');
+        
+        final isDefaultEmpty = defaultProjectsBox.isEmpty && defaultReleasesBox.isEmpty;
+        
+        if (isDefaultEmpty) {
+          // Find the first non-default profile from the restored backup
+          Profile? firstRestoredProfile;
+          for (final profile in allProfiles) {
+            if (profile.id != defaultProfile.id) {
+              firstRestoredProfile = profile;
+              break;
+            }
+          }
+          
+          if (firstRestoredProfile != null) {
+            if (kDebugMode) {
+              print('Removing empty default profile "${defaultProfile.name}" and switching to "${firstRestoredProfile.name}"');
+            }
+            
+            // Delete the default profile and its empty boxes
+            await profileRepo.profilesBox.delete(defaultProfile.id);
+            await defaultProjectsBox.close();
+            await defaultReleasesBox.close();
+            await Hive.deleteBoxFromDisk('${defaultProfile.id}_projects');
+            await Hive.deleteBoxFromDisk('${defaultProfile.id}_releases');
+            
+            // Also delete other related boxes
+            try {
+              await Hive.deleteBoxFromDisk('${defaultProfile.id}_roots');
+            } catch (_) {}
+            
+            // Set the first restored profile as current
+            await profileRepo.setCurrentProfileId(firstRestoredProfile.id);
+            
+            if (kDebugMode) {
+              print('Successfully switched to restored profile: ${firstRestoredProfile.name}');
+            }
+          }
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error removing default empty profile: $e');
+      }
+      // Don't throw - this is a convenience feature, not critical
+    }
+
     return SyncResult(
       projectsAdded: projectsAdded,
       projectsUpdated: projectsUpdated,
