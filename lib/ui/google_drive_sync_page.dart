@@ -1210,17 +1210,7 @@ class _BackupProgressDialog extends StatelessWidget {
                 const SizedBox(height: 8),
                 
                 // Progress indicator
-                if (progress.stage == BackupProgressStage.uploadingPreviewSongs && progress.currentIndex > 0)
-                  Text(
-                    progress.totalItems > 0
-                        ? '${progress.currentIndex} / ${progress.totalItems}'
-                        : 'Uploaded: ${progress.currentIndex}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).textTheme.bodySmall?.color,
-                    ),
-                  )
-                else if (progress.totalItems > 0)
+                if (progress.totalItems > 0)
                   Text(
                     '${progress.currentIndex} / ${progress.totalItems}',
                     style: TextStyle(

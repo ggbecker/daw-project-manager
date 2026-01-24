@@ -1491,8 +1491,8 @@ class GoogleDriveSyncService {
         throw Exception('No profiles found - cannot create backup');
       }
       
-      // Track actual preview song uploads (not estimates)
-      int previewSongsUploaded = 0;
+      // Structure to hold preview songs that need upload
+      final previewSongsToUpload = <Map<String, dynamic>>[];
       
       int profileIndex = 0;
       for (final profile in allProfiles) {
@@ -1533,7 +1533,7 @@ class GoogleDriveSyncService {
             // Track that this project belongs to this profile
             projectToProfileMap[project.id] = profile.id;
             
-            // Upload preview song if it exists (only on desktop - mobile doesn't add preview songs)
+            // Check preview song status (only on desktop - mobile doesn't add preview songs)
             // On mobile, we only download preview songs, never upload them
             if (!Platform.isAndroid && !Platform.isIOS) {
               if (project.previewSongPath != null && project.previewSongPath!.isNotEmpty) {
@@ -1582,66 +1582,24 @@ class GoogleDriveSyncService {
                       continue; // Skip to next project
                     }
                     
-                    // Hash changed or doesn't exist - upload
+                    // Hash changed or doesn't exist - add to upload queue
                     // Retrieve hash from Hive database (ensure we have the latest version)
                     // Use stored hash from project first, then fallback to existingHashes from backup
                     final existingHash = storedHash ?? existingHashes[latestProject.id];
                     
-                    // Increment upload counter
-                    previewSongsUploaded++;
+                    // Add to queue for later upload
+                    previewSongsToUpload.add({
+                      'project': latestProject,
+                      'projectBox': profileProjectsBox,
+                      'existingHash': existingHash,
+                    });
                     
-                    // Emit progress for preview song upload
-                    // Note: We show the count but not total (since we don't know how many will need upload until we check each one)
-                    _progressController.add(BackupProgress(
-                      stage: BackupProgressStage.uploadingPreviewSongs,
-                      currentItem: 'Uploading preview: ${path.basename(latestProject.previewSongPath!)}',
-                      currentIndex: previewSongsUploaded,
-                      totalItems: 0, // Unknown until we process all
-                      progress: 0.2 + (previewSongsUploaded * 0.05).clamp(0.0, 0.6), // Incremental progress
-                    ));
-                    
-                    // Check for cancellation before upload
-                    if (_isCancelled) {
-                      throw Exception('Upload cancelled by user');
-                    }
-                    
-                    final result = await _uploadPreviewSongFile(
-                      projectId: latestProject.id,
-                      localFilePath: latestProject.previewSongPath!,
-                      existingHash: existingHash,
-                    );
-                    if (result != null) {
-                      previewSongFileMap[latestProject.id] = result['fileId']!;
-                      final newHash = result['hash']!; // This is the hash of the uploaded file
-                      previewSongHashes[latestProject.id] = newHash;
-                      if (result.containsKey('fileName')) {
-                        previewSongFileNames[latestProject.id] = result['fileName']!;
-                      }
-                      
-                      // ALWAYS update project with new hash after successful upload
-                      // This ensures the local database hash matches what was uploaded
-                      // Retrieve fresh project from Hive to ensure we're updating the latest version
-                      final currentProject = profileProjectsBox.get(latestProject.id);
-                      if (currentProject != null) {
-                        final updatedProject = currentProject.copyWith(uploadedPreviewSongHash: newHash);
-                        await profileProjectsBox.put(latestProject.id, updatedProject);
-                        await profileProjectsBox.flush(); // Ensure hash is persisted immediately
-                        if (kDebugMode) {
-                          print('  Updated project ${latestProject.id} with preview song hash after upload: $newHash');
-                        }
-                      } else {
-                        if (kDebugMode) {
-                          print('  Warning: Project ${latestProject.id} not found in Hive when trying to update hash');
-                        }
-                      }
-                      
-                      if (kDebugMode) {
-                        print('  Preview song for project ${latestProject.id}: ${result['fileId']} (hash: $newHash, filename: ${result['fileName'] ?? 'N/A'})');
-                      }
+                    if (kDebugMode) {
+                      print('  Preview song needs upload for project ${latestProject.id}');
                     }
                   } catch (e) {
                     if (kDebugMode) {
-                      print('  Error uploading preview song for project ${project.id}: $e');
+                      print('  Error checking preview song for project ${project.id}: $e');
                     }
                   }
                 } else {
@@ -1682,6 +1640,69 @@ class GoogleDriveSyncService {
         } catch (e) {
           if (kDebugMode) {
             print('Error collecting data for profile ${profile.id}: $e');
+          }
+        }
+      }
+      
+      // Now upload all preview songs that need uploading
+      if (kDebugMode) {
+        print('Found ${previewSongsToUpload.length} preview songs that need upload');
+      }
+      
+      int uploadedCount = 0;
+      for (final uploadInfo in previewSongsToUpload) {
+        // Check for cancellation
+        if (_isCancelled) {
+          throw Exception('Upload cancelled by user');
+        }
+        
+        uploadedCount++;
+        final project = uploadInfo['project'] as MusicProject;
+        final projectBox = uploadInfo['projectBox'] as Box<MusicProject>;
+        final existingHash = uploadInfo['existingHash'] as String?;
+        
+        // Emit progress
+        _progressController.add(BackupProgress(
+          stage: BackupProgressStage.uploadingPreviewSongs,
+          currentItem: 'Uploading preview: ${path.basename(project.previewSongPath!)}',
+          currentIndex: uploadedCount,
+          totalItems: previewSongsToUpload.length,
+          progress: 0.2 + (uploadedCount / previewSongsToUpload.length * 0.6), // 20-80% range
+        ));
+        
+        try {
+          final result = await _uploadPreviewSongFile(
+            projectId: project.id,
+            localFilePath: project.previewSongPath!,
+            existingHash: existingHash,
+          );
+          
+          if (result != null) {
+            previewSongFileMap[project.id] = result['fileId']!;
+            final newHash = result['hash']!;
+            previewSongHashes[project.id] = newHash;
+            if (result.containsKey('fileName')) {
+              previewSongFileNames[project.id] = result['fileName']!;
+            }
+            
+            // Update project with new hash after successful upload
+            final currentProject = projectBox.get(project.id);
+            if (currentProject != null) {
+              final updatedProject = currentProject.copyWith(uploadedPreviewSongHash: newHash);
+              await projectBox.put(project.id, updatedProject);
+              await projectBox.flush();
+              if (kDebugMode) {
+                print('  Updated project ${project.id} with preview song hash: $newHash');
+              }
+            }
+            
+            if (kDebugMode) {
+              print('  Uploaded preview song for project ${project.id}: ${result['fileId']} (hash: $newHash)');
+            }
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('  Error uploading preview song for project ${project.id}: $e');
           }
         }
       }
