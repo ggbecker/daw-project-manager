@@ -204,7 +204,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get searchReleases => 'リリースを検索...';
 
   @override
+  String get searchPlaylists => 'プレイリストを検索...';
+
+  @override
   String get noReleasesFound => 'リリースが見つかりません';
+
+  @override
+  String get noPlaylistsFound => 'プレイリストが見つかりません';
+
+  @override
+  String get tryDifferentSearch => '別の検索用語を試してください';
 
   @override
   String get deepScanTooltip =>
@@ -1100,22 +1109,42 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String dateDaysAgo(int count) {
-    return '$count日前';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count日前',
+    );
+    return '$_temp0';
   }
 
   @override
-  String dateWeeksAgo(int count, String plural) {
-    return '$count週間前';
+  String dateWeeksAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count週間前',
+    );
+    return '$_temp0';
   }
 
   @override
-  String dateMonthsAgo(int count, String plural) {
-    return '$countヶ月前';
+  String dateMonthsAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countヶ月前',
+    );
+    return '$_temp0';
   }
 
   @override
-  String dateYearsAgo(int count, String plural) {
-    return '$count年前';
+  String dateYearsAgo(int count, Object plural) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count年前',
+    );
+    return '$_temp0';
   }
 
   @override

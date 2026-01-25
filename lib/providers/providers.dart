@@ -171,6 +171,25 @@ final releasesSearchProvider = NotifierProvider<ReleasesSearchNotifier, String>(
   return ReleasesSearchNotifier();
 });
 
+class PlaylistsSearchNotifier extends Notifier<String> {
+  @override
+  String build() {
+    return '';
+  }
+
+  void setSearchText(String text) {
+    state = text;
+  }
+
+  void clear() {
+    state = '';
+  }
+}
+
+final playlistsSearchProvider = NotifierProvider<PlaylistsSearchNotifier, String>(() {
+  return PlaylistsSearchNotifier();
+});
+
 // Show hidden projects state provider
 // 0 = show only visible (default)
 // 1 = show all (visible + hidden)

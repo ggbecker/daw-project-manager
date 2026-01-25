@@ -639,14 +639,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                     ? AppBar(
                         title: const Text('DAW Project Manager'),
                         actions: [
-                          // Search icon
-                          IconButton(
-                            icon: const Icon(Icons.search),
-                            onPressed: () {
-                              _focusSearchAndSelectAll();
-                            },
-                            tooltip: AppLocalizations.of(context)!.searchProjects,
-                          ),
                           // Profile button
                           Consumer(
                             builder: (context, ref, child) {
@@ -810,14 +802,18 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                               decoration: InputDecoration(
                                 hintText: _tabController.index == 0
                                     ? AppLocalizations.of(context)!.searchProjects
-                                    : AppLocalizations.of(context)!.searchReleases,
+                                    : _tabController.index == 1
+                                        ? AppLocalizations.of(context)!.searchReleases
+                                        : AppLocalizations.of(context)!.searchPlaylists,
                                 isDense: true,
                                 border: const OutlineInputBorder(),
                                 prefixIcon: const Icon(Icons.search),
                                 suffixIcon: () {
                                   final currentSearch = _tabController.index == 0
                                       ? ref.read(projectsSearchProvider)
-                                      : ref.read(releasesSearchProvider);
+                                      : _tabController.index == 1
+                                          ? ref.read(releasesSearchProvider)
+                                          : ref.read(playlistsSearchProvider);
                                   return currentSearch.isNotEmpty
                                       ? IconButton(
                                           icon: const Icon(Icons.close),
@@ -825,8 +821,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                             _searchController.clear();
                                             if (_tabController.index == 0) {
                                               ref.read(projectsSearchProvider.notifier).clear();
-                                            } else {
+                                            } else if (_tabController.index == 1) {
                                               ref.read(releasesSearchProvider.notifier).clear();
+                                            } else {
+                                              ref.read(playlistsSearchProvider.notifier).clear();
                                             }
                                           },
                                         )
@@ -836,8 +834,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                               onChanged: (text) {
                                 if (_tabController.index == 0) {
                                   ref.read(projectsSearchProvider.notifier).setSearchText(text);
-                                } else {
+                                } else if (_tabController.index == 1) {
                                   ref.read(releasesSearchProvider.notifier).setSearchText(text);
+                                } else {
+                                  ref.read(playlistsSearchProvider.notifier).setSearchText(text);
                                 }
                               },
                             ),

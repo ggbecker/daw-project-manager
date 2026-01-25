@@ -51,6 +51,7 @@ dependencies:
   path_provider: ^2.1.1
   archive: ^4.0.7
   audioplayers: ^6.0.0
+  audio_service: ^0.18.18
   desktop_drop: ^0.7.0
   google_sign_in: ^7.2.0
   google_sign_in_platform_interface: ^3.1.0

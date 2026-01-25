@@ -208,7 +208,17 @@ class AppLocalizationsEs extends AppLocalizations {
   String get searchReleases => 'Buscar lanzamientos...';
 
   @override
+  String get searchPlaylists => 'Buscar listas de reproducción...';
+
+  @override
   String get noReleasesFound => 'No se encontraron lanzamientos';
+
+  @override
+  String get noPlaylistsFound => 'No se encontraron listas de reproducción';
+
+  @override
+  String get tryDifferentSearch =>
+      'Intenta con un término de búsqueda diferente';
 
   @override
   String get deepScanTooltip =>
@@ -1120,22 +1130,46 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String dateDaysAgo(int count) {
-    return 'hace $count días';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'hace $count días',
+      one: 'hace 1 día',
+    );
+    return '$_temp0';
   }
 
   @override
-  String dateWeeksAgo(int count, String plural) {
-    return 'hace $count semana$plural';
+  String dateWeeksAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'hace $count semanas',
+      one: 'hace 1 semana',
+    );
+    return '$_temp0';
   }
 
   @override
-  String dateMonthsAgo(int count, String plural) {
-    return 'hace $count meses';
+  String dateMonthsAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'hace $count meses',
+      one: 'hace 1 mes',
+    );
+    return '$_temp0';
   }
 
   @override
-  String dateYearsAgo(int count, String plural) {
-    return 'hace $count año$plural';
+  String dateYearsAgo(int count, Object plural) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'hace $count años',
+      one: 'hace 1 año',
+    );
+    return '$_temp0';
   }
 
   @override

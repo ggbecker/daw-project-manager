@@ -478,11 +478,29 @@ abstract class AppLocalizations {
   /// **'Search releases...'**
   String get searchReleases;
 
+  /// No description provided for @searchPlaylists.
+  ///
+  /// In en, this message translates to:
+  /// **'Search playlists...'**
+  String get searchPlaylists;
+
   /// No description provided for @noReleasesFound.
   ///
   /// In en, this message translates to:
   /// **'No releases found'**
   String get noReleasesFound;
+
+  /// No description provided for @noPlaylistsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No playlists found'**
+  String get noPlaylistsFound;
+
+  /// No description provided for @tryDifferentSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Try a different search term'**
+  String get tryDifferentSearch;
 
   /// No description provided for @deepScanTooltip.
   ///
@@ -1946,26 +1964,26 @@ abstract class AppLocalizations {
   /// No description provided for @dateDaysAgo.
   ///
   /// In en, this message translates to:
-  /// **'{count} days ago'**
+  /// **'{count, plural, =1{1 day ago} other{{count} days ago}}'**
   String dateDaysAgo(int count);
 
   /// No description provided for @dateWeeksAgo.
   ///
   /// In en, this message translates to:
-  /// **'{count} week{plural} ago'**
-  String dateWeeksAgo(int count, String plural);
+  /// **'{count, plural, =1{1 week ago} other{{count} weeks ago}}'**
+  String dateWeeksAgo(int count);
 
   /// No description provided for @dateMonthsAgo.
   ///
   /// In en, this message translates to:
-  /// **'{count} month{plural} ago'**
-  String dateMonthsAgo(int count, String plural);
+  /// **'{count, plural, =1{1 month ago} other{{count} months ago}}'**
+  String dateMonthsAgo(int count);
 
   /// No description provided for @dateYearsAgo.
   ///
   /// In en, this message translates to:
-  /// **'{count} year{plural} ago'**
-  String dateYearsAgo(int count, String plural);
+  /// **'{count, plural, =1{1 year ago} other{{count} years ago}}'**
+  String dateYearsAgo(int count, Object plural);
 
   /// No description provided for @ageYearsMonths.
   ///

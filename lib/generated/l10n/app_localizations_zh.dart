@@ -200,7 +200,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get searchReleases => '搜索发布...';
 
   @override
+  String get searchPlaylists => '搜索播放列表...';
+
+  @override
   String get noReleasesFound => '未找到发布';
+
+  @override
+  String get noPlaylistsFound => '未找到播放列表';
+
+  @override
+  String get tryDifferentSearch => '尝试不同的搜索词';
 
   @override
   String get deepScanTooltip =>
@@ -1093,22 +1102,42 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String dateDaysAgo(int count) {
-    return '$count天前';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count天前',
+    );
+    return '$_temp0';
   }
 
   @override
-  String dateWeeksAgo(int count, String plural) {
-    return '$count周前';
+  String dateWeeksAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count周前',
+    );
+    return '$_temp0';
   }
 
   @override
-  String dateMonthsAgo(int count, String plural) {
-    return '$count个月前';
+  String dateMonthsAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count个月前',
+    );
+    return '$_temp0';
   }
 
   @override
-  String dateYearsAgo(int count, String plural) {
-    return '$count年前';
+  String dateYearsAgo(int count, Object plural) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count年前',
+    );
+    return '$_temp0';
   }
 
   @override

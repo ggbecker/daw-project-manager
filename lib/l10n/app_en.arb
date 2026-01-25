@@ -92,7 +92,10 @@
   "addFolder": "Add Folder",
   "searchProjects": "Search projects...",
   "searchReleases": "Search releases...",
+  "searchPlaylists": "Search playlists...",
   "noReleasesFound": "No releases found",
+  "noPlaylistsFound": "No playlists found",
+  "tryDifferentSearch": "Try a different search term",
   "deepScanTooltip": "Deep Scan extracts full metadata from project files:\n• BPM (Beats Per Minute)\n• Musical Key\n• DAW Version\nThis is slower but provides complete information.",
   "deepScanConfirm": "This will scan all projects and extract full metadata (BPM, Key, DAW Version). This may take a while. Continue?",
   "metadataExtractedSuccessfully": "Metadata extracted successfully",
@@ -939,7 +942,7 @@
   },
   "dateToday": "today",
   "dateYesterday": "yesterday",
-  "dateDaysAgo": "{count} days ago",
+  "dateDaysAgo": "{count, plural, =1{1 day ago} other{{count} days ago}}",
   "@dateDaysAgo": {
     "placeholders": {
       "count": {
@@ -947,36 +950,30 @@
       }
     }
   },
-  "dateWeeksAgo": "{count} week{plural} ago",
+  "dateWeeksAgo": "{count, plural, =1{1 week ago} other{{count} weeks ago}}",
   "@dateWeeksAgo": {
     "placeholders": {
       "count": {
         "type": "int"
-      },
-      "plural": {
-        "type": "String"
       }
     }
   },
-  "dateMonthsAgo": "{count} month{plural} ago",
+  "dateMonthsAgo": "{count, plural, =1{1 month ago} other{{count} months ago}}",
   "@dateMonthsAgo": {
     "placeholders": {
       "count": {
         "type": "int"
-      },
-      "plural": {
-        "type": "String"
       }
     }
   },
-  "dateYearsAgo": "{count} year{plural} ago",
+  "dateYearsAgo": "{count, plural, =1{1 year ago} other{{count} years ago}}",
   "@dateYearsAgo": {
     "placeholders": {
       "count": {
         "type": "int"
       },
       "plural": {
-        "type": "String"
+        "type": "Object"
       }
     }
   },

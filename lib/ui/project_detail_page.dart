@@ -105,13 +105,13 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
       return l10n.dateDaysAgo(diff.inDays);
     } else if (diff.inDays < 30) {
       final weeks = diff.inDays ~/ 7;
-      return l10n.dateWeeksAgo(weeks, weeks > 1 ? 's' : '');
+      return l10n.dateWeeksAgo(weeks);
     } else if (diff.inDays < 365) {
-      final months = diff.inDays ~/ 30;
-      return l10n.dateMonthsAgo(months, months > 1 ? 's' : '');
+      final months = diff.inDays ~/ 7;
+      return l10n.dateMonthsAgo(months);
     } else {
       final years = diff.inDays ~/ 365;
-      return l10n.dateYearsAgo(years, years > 1 ? 's' : '');
+      return l10n.dateYearsAgo(years, '');
     }
   }
 
@@ -1611,54 +1611,83 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
 
     final l10n = AppLocalizations.of(context)!;
 
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: const ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'],
-      dialogTitle: l10n.selectPreviewSong,
-    );
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: const ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'],
+        dialogTitle: l10n.selectPreviewSong,
+      );
 
-    if (result == null || result.files.isEmpty || result.files.single.path == null) {
-      return;
-    }
+      if (result == null || result.files.isEmpty || result.files.single.path == null) {
+        return;
+      }
 
-    final source = File(result.files.single.path!);
-    if (!await source.exists()) {
+      final source = File(result.files.single.path!);
+      if (!await source.exists()) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.previewSongFileNotFound)),
+          );
+        }
+        return;
+      }
+
+      // Copy into app temp so we always have file access for playback.
+      final tempDir = await getTemporaryDirectory();
+      final destDir = Directory(p.join(tempDir.path, 'preview_songs', widget.project.id));
+      if (!await destDir.exists()) {
+        await destDir.create(recursive: true);
+      }
+
+      final originalName =
+          result.files.single.name.isNotEmpty ? result.files.single.name : p.basename(source.path);
+      final destPath = p.join(destDir.path, originalName);
+      await source.copy(destPath);
+
+      final repo = await ref.read(repositoryProvider.future);
+      final updated = widget.project.copyWith(
+        previewSongPath: destPath,
+        previewSongFileName: originalName,
+        clearUploadedPreviewSongHash: true,
+        updatedAt: DateTime.now(),
+      );
+      await repo.updateProject(updated);
+
+      // Refresh UI
+      ref.invalidate(allProjectsStreamProvider);
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.previewSongFileNotFound)),
+          SnackBar(content: Text(l10n.previewSongAdded)),
         );
       }
-      return;
-    }
-
-    // Copy into app temp so we always have file access for playback.
-    final tempDir = await getTemporaryDirectory();
-    final destDir = Directory(p.join(tempDir.path, 'preview_songs', widget.project.id));
-    if (!await destDir.exists()) {
-      await destDir.create(recursive: true);
-    }
-
-    final originalName =
-        result.files.single.name.isNotEmpty ? result.files.single.name : p.basename(source.path);
-    final destPath = p.join(destDir.path, originalName);
-    await source.copy(destPath);
-
-    final repo = await ref.read(repositoryProvider.future);
-    final updated = widget.project.copyWith(
-      previewSongPath: destPath,
-      previewSongFileName: originalName,
-      clearUploadedPreviewSongHash: true,
-      updatedAt: DateTime.now(),
-    );
-    await repo.updateProject(updated);
-
-    // Refresh UI
-    ref.invalidate(allProjectsStreamProvider);
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.previewSongAdded)),
-      );
+    } on PlatformException catch (e) {
+      // Common error in Android emulators: file picker can't access storage
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Failed to select file: ${e.message ?? "Unknown error"}\n\n'
+              'Note: This often happens in Android emulators. '
+              'Try using a real device or adding audio files to the emulator storage.',
+            ),
+            duration: const Duration(seconds: 6),
+            action: SnackBarAction(
+              label: 'OK',
+              onPressed: () {},
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
     }
   }
 
