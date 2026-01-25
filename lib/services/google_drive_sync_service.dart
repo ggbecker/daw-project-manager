@@ -2675,6 +2675,15 @@ class GoogleDriveSyncService {
     int previewSongsDownloaded = 0;
     int previewSongsUpdated = 0;
 
+    // Emit initial progress
+    _progressController.add(BackupProgress(
+      stage: BackupProgressStage.mergingData,
+      currentItem: 'Starting backup download...',
+      currentIndex: 0,
+      totalItems: 1,
+      progress: 0.0,
+    ));
+
     // First, merge profiles
     if (remoteData['profiles'] != null) {
       final remoteProfiles = (remoteData['profiles'] as List)
@@ -2688,6 +2697,13 @@ class GoogleDriveSyncService {
       // Maps profileId -> fileHash
       final profilePhotoHashes = remoteData['profilePhotoHashes'] as Map<String, dynamic>?;
       
+      // Count photos to download
+      int photosToDownload = 0;
+      if (downloadPreviewSongs && profilePhotoFiles != null) {
+        photosToDownload = profilePhotoFiles.length;
+      }
+      
+      int photoIndex = 0;
       for (final remoteProfile in remoteProfiles) {
         final localProfile = profileRepo.getProfileById(remoteProfile.id);
         
@@ -2695,6 +2711,17 @@ class GoogleDriveSyncService {
         Profile profileToSave = remoteProfile;
         if (downloadPreviewSongs && profilePhotoFiles != null && profilePhotoFiles.containsKey(remoteProfile.id)) {
           try {
+            photoIndex++;
+            
+            // Emit progress for profile photo download
+            _progressController.add(BackupProgress(
+              stage: BackupProgressStage.downloadingProfilePhotos,
+              currentItem: 'Downloading profile photo: ${remoteProfile.name}',
+              currentIndex: photoIndex,
+              totalItems: photosToDownload,
+              progress: 0.05 + (photoIndex / photosToDownload * 0.15), // 5-20%
+            ));
+            
             final driveFileId = profilePhotoFiles[remoteProfile.id] as String;
             String? expectedHash;
             if (profilePhotoHashes != null && profilePhotoHashes.containsKey(remoteProfile.id)) {
@@ -2792,6 +2819,13 @@ class GoogleDriveSyncService {
       });
     }
     
+    // Count total preview songs to download for progress tracking
+    int totalPreviewSongs = 0;
+    int downloadedPreviewSongs = 0;
+    if (downloadPreviewSongs && previewSongFiles != null) {
+      totalPreviewSongs = previewSongFiles.length;
+    }
+    
     if (kDebugMode) {
       if (projectToProfileMap != null) {
         print('Using profile mappings from backup (v1.1+)');
@@ -2799,8 +2833,8 @@ class GoogleDriveSyncService {
       } else {
         print('No profile mappings found (old backup format) - distributing to ALL profiles');
       }
-      if (previewSongFiles != null && previewSongFiles.isNotEmpty) {
-        print('Found ${previewSongFiles.length} preview songs to download');
+      if (totalPreviewSongs > 0) {
+        print('Found $totalPreviewSongs preview songs to download');
       }
     }
     
@@ -2836,6 +2870,8 @@ class GoogleDriveSyncService {
                 MusicProject projectToSave = remoteProject;
                 if (previewSongFiles != null && previewSongFiles.containsKey(remoteProject.id)) {
                   try {
+                    downloadedPreviewSongs++;
+                    
                     final driveFileId = previewSongFiles[remoteProject.id] as String;
                     // Get original filename and hash if available
                     String? originalFileName;
@@ -2846,6 +2882,15 @@ class GoogleDriveSyncService {
                     if (previewSongHashes != null && previewSongHashes.containsKey(remoteProject.id)) {
                       expectedHash = previewSongHashes[remoteProject.id] as String;
                     }
+                    
+                    // Emit progress for preview song download
+                    _progressController.add(BackupProgress(
+                      stage: BackupProgressStage.downloadingPreviewSongs,
+                      currentItem: 'Downloading preview: ${originalFileName ?? remoteProject.displayName}',
+                      currentIndex: downloadedPreviewSongs,
+                      totalItems: totalPreviewSongs,
+                      progress: 0.20 + (downloadedPreviewSongs / totalPreviewSongs * 0.70), // 20-90%
+                    ));
                     
                     // Download preview song file (all platforms)
                     String? fileExtension;
@@ -2995,6 +3040,17 @@ class GoogleDriveSyncService {
                         }
                         
                         if (needsDownload) {
+                          downloadedPreviewSongs++;
+                          
+                          // Emit progress for preview song download
+                          _progressController.add(BackupProgress(
+                            stage: BackupProgressStage.downloadingPreviewSongs,
+                            currentItem: 'Downloading preview: ${previewSongFileName ?? remoteProject.displayName}',
+                            currentIndex: downloadedPreviewSongs,
+                            totalItems: totalPreviewSongs,
+                            progress: 0.20 + (downloadedPreviewSongs / totalPreviewSongs * 0.70), // 20-90%
+                          ));
+                          
                           String? fileExtension;
                           if (previewSongFileName != null) {
                             fileExtension = path.extension(previewSongFileName);
@@ -3195,6 +3251,17 @@ class GoogleDriveSyncService {
                         }
                         
                         if (needsDownload) {
+                          downloadedPreviewSongs++;
+                          
+                          // Emit progress for preview song download
+                          _progressController.add(BackupProgress(
+                            stage: BackupProgressStage.downloadingPreviewSongs,
+                            currentItem: 'Downloading preview: ${originalFileName ?? localProject.displayName}',
+                            currentIndex: downloadedPreviewSongs,
+                            totalItems: totalPreviewSongs,
+                            progress: 0.20 + (downloadedPreviewSongs / totalPreviewSongs * 0.70), // 20-90%
+                          ));
+                          
                           String? fileExtension;
                           if (originalFileName != null) {
                             fileExtension = path.extension(originalFileName);

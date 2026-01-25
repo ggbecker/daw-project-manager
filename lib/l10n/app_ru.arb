@@ -1042,5 +1042,10 @@
   "cancelling": "Отмена...",
   "uploadingBackupTitle": "Загрузка Резервной Копии",
   "cancellingUpload": "Отмена загрузки...",
-  "pleaseWaitCancellingUpload": "Пожалуйста, подождите, пока мы остановим загрузку..."
+  "pleaseWaitCancellingUpload": "Пожалуйста, подождите, пока мы остановим загрузку...",
+  "downloadingDatabase": "Скачивание базы данных...",
+  "downloadingPreviewSongs": "Скачивание превью песен...",
+  "downloadingProfilePhotos": "Скачивание фотографий профиля...",
+  "mergingData": "Объединение данных...",
+  "downloadingBackupTitle": "Скачивание Резервной Копии"
 }

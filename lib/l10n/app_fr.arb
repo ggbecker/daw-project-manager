@@ -1042,5 +1042,10 @@
   "cancelling": "Annulation...",
   "uploadingBackupTitle": "Téléchargement de la Sauvegarde",
   "cancellingUpload": "Annulation du téléchargement...",
-  "pleaseWaitCancellingUpload": "Veuillez patienter pendant l'arrêt du téléchargement..."
+  "pleaseWaitCancellingUpload": "Veuillez patienter pendant l'arrêt du téléchargement...",
+  "downloadingDatabase": "Téléchargement de la base de données...",
+  "downloadingPreviewSongs": "Téléchargement des chansons d'aperçu...",
+  "downloadingProfilePhotos": "Téléchargement des photos de profil...",
+  "mergingData": "Fusion des données...",
+  "downloadingBackupTitle": "Téléchargement de la Sauvegarde"
 }

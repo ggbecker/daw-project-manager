@@ -1042,5 +1042,10 @@
   "cancelling": "Annullamento...",
   "uploadingBackupTitle": "Caricamento Backup",
   "cancellingUpload": "Annullamento caricamento...",
-  "pleaseWaitCancellingUpload": "Attendi mentre interrompiamo il caricamento..."
+  "pleaseWaitCancellingUpload": "Attendi mentre interrompiamo il caricamento...",
+  "downloadingDatabase": "Scaricamento database...",
+  "downloadingPreviewSongs": "Scaricamento canzoni di anteprima...",
+  "downloadingProfilePhotos": "Scaricamento foto profilo...",
+  "mergingData": "Unione dati...",
+  "downloadingBackupTitle": "Scaricamento Backup"
 }

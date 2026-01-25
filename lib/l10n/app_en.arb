@@ -1675,6 +1675,26 @@
   "pleaseWaitCancellingUpload": "Please wait while we stop the upload...",
   "@pleaseWaitCancellingUpload": {
     "description": "Message shown while stopping upload operation"
+  },
+  "downloadingDatabase": "Downloading database...",
+  "@downloadingDatabase": {
+    "description": "Status message when downloading database file"
+  },
+  "downloadingPreviewSongs": "Downloading preview songs...",
+  "@downloadingPreviewSongs": {
+    "description": "Status message when downloading preview song files"
+  },
+  "downloadingProfilePhotos": "Downloading profile photos...",
+  "@downloadingProfilePhotos": {
+    "description": "Status message when downloading profile photo files"
+  },
+  "mergingData": "Merging data...",
+  "@mergingData": {
+    "description": "Status message when merging downloaded data"
+  },
+  "downloadingBackupTitle": "Downloading Backup",
+  "@downloadingBackupTitle": {
+    "description": "Title for backup download progress dialog"
   }
 }
 

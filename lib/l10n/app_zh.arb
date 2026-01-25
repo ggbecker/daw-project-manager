@@ -1042,5 +1042,10 @@
   "cancelling": "正在取消...",
   "uploadingBackupTitle": "正在上传备份",
   "cancellingUpload": "正在取消上传...",
-  "pleaseWaitCancellingUpload": "请稍候，我们正在停止上传..."
+  "pleaseWaitCancellingUpload": "请稍候，我们正在停止上传...",
+  "downloadingDatabase": "正在下载数据库...",
+  "downloadingPreviewSongs": "正在下载预览歌曲...",
+  "downloadingProfilePhotos": "正在下载个人资料照片...",
+  "mergingData": "正在合并数据...",
+  "downloadingBackupTitle": "正在下载备份"
 }

@@ -35,5 +35,9 @@ enum BackupProgressStage {
   collectingData,
   uploadingPreviewSongs,
   uploadingDatabase,
+  downloadingDatabase,
+  downloadingPreviewSongs,
+  downloadingProfilePhotos,
+  mergingData,
   completed,
 }

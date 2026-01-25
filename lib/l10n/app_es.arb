@@ -1042,5 +1042,10 @@
   "cancelling": "Cancelando...",
   "uploadingBackupTitle": "Subiendo Copia de Seguridad",
   "cancellingUpload": "Cancelando subida...",
-  "pleaseWaitCancellingUpload": "Por favor espere mientras detenemos la subida..."
+  "pleaseWaitCancellingUpload": "Por favor espere mientras detenemos la subida...",
+  "downloadingDatabase": "Descargando base de datos...",
+  "downloadingPreviewSongs": "Descargando canciones de vista previa...",
+  "downloadingProfilePhotos": "Descargando fotos de perfil...",
+  "mergingData": "Fusionando datos...",
+  "downloadingBackupTitle": "Descargando Copia de Seguridad"
 }

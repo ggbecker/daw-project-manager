@@ -1042,5 +1042,10 @@
   "cancelling": "Wird abgebrochen...",
   "uploadingBackupTitle": "Backup wird hochgeladen",
   "cancellingUpload": "Upload wird abgebrochen...",
-  "pleaseWaitCancellingUpload": "Bitte warten Sie, während der Upload gestoppt wird..."
+  "pleaseWaitCancellingUpload": "Bitte warten Sie, während der Upload gestoppt wird...",
+  "downloadingDatabase": "Datenbank wird heruntergeladen...",
+  "downloadingPreviewSongs": "Vorschaulieder werden heruntergeladen...",
+  "downloadingProfilePhotos": "Profilfotos werden heruntergeladen...",
+  "mergingData": "Daten werden zusammengeführt...",
+  "downloadingBackupTitle": "Backup wird heruntergeladen"
 }

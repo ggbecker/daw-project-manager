@@ -1042,5 +1042,10 @@
   "cancelling": "キャンセル中...",
   "uploadingBackupTitle": "バックアップをアップロード中",
   "cancellingUpload": "アップロードをキャンセル中...",
-  "pleaseWaitCancellingUpload": "アップロードを停止していますのでお待ちください..."
+  "pleaseWaitCancellingUpload": "アップロードを停止していますのでお待ちください...",
+  "downloadingDatabase": "データベースをダウンロード中...",
+  "downloadingPreviewSongs": "プレビュー曲をダウンロード中...",
+  "downloadingProfilePhotos": "プロフィール写真をダウンロード中...",
+  "mergingData": "データを統合中...",
+  "downloadingBackupTitle": "バックアップをダウンロード中"
 }

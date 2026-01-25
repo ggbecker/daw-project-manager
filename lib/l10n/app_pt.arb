@@ -1096,5 +1096,10 @@
   "cancelling": "Cancelando...",
   "uploadingBackupTitle": "Enviando Backup",
   "cancellingUpload": "Cancelando upload...",
-  "pleaseWaitCancellingUpload": "Por favor aguarde enquanto paramos o upload..."
+  "pleaseWaitCancellingUpload": "Por favor aguarde enquanto paramos o upload...",
+  "downloadingDatabase": "Baixando banco de dados...",
+  "downloadingPreviewSongs": "Baixando músicas de prévia...",
+  "downloadingProfilePhotos": "Baixando fotos de perfil...",
+  "mergingData": "Mesclando dados...",
+  "downloadingBackupTitle": "Baixando Backup"
 }

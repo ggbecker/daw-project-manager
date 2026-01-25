@@ -613,6 +613,17 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
         }
       }
 
+      // Show progress dialog on mobile
+      if (MobileUtils.isMobile()) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => DownloadProgressDialog(
+            progressStream: _syncService.progressStream,
+          ),
+        );
+      }
+
       // Download remote data
       Map<String, dynamic> remoteData;
       try {
@@ -668,6 +679,11 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
         profileRepo: profileRepo,
         downloadPreviewSongs: downloadPreviewSongs,
       );
+
+      // Close progress dialog if it's open (mobile)
+      if (MobileUtils.isMobile() && mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
 
       // On mobile, if no profile is active, activate the first profile from backup
       if (Platform.isAndroid || Platform.isIOS) {
@@ -736,6 +752,11 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
         );
       }
     } catch (e) {
+      // Close progress dialog if it's open (mobile)
+      if (MobileUtils.isMobile() && mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+      
       setState(() {
         _syncStatus = AppLocalizations.of(context)!.errorDownloadingBackup(e.toString());
       });
@@ -1218,6 +1239,14 @@ class _BackupProgressDialogState extends State<_BackupProgressDialog> {
         return AppLocalizations.of(context)!.uploadingPreviewSongs;
       case BackupProgressStage.uploadingDatabase:
         return AppLocalizations.of(context)!.uploadingDatabase;
+      case BackupProgressStage.downloadingDatabase:
+        return AppLocalizations.of(context)!.downloadingDatabase;
+      case BackupProgressStage.downloadingPreviewSongs:
+        return AppLocalizations.of(context)!.downloadingPreviewSongs;
+      case BackupProgressStage.downloadingProfilePhotos:
+        return AppLocalizations.of(context)!.downloadingProfilePhotos;
+      case BackupProgressStage.mergingData:
+        return AppLocalizations.of(context)!.mergingData;
       case BackupProgressStage.completed:
         return AppLocalizations.of(context)!.completed;
     }
