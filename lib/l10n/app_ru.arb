@@ -953,6 +953,7 @@
   "language": "Язык",
   "theme": "Тема",
   "support": "Поддержать",
+  "supportTheProject": "Поддержать проект",
   "couldNotOpenBrowser": "Не удалось открыть браузер. Пожалуйста, посетите: {url}",
   "@couldNotOpenBrowser": {
     "placeholders": {

@@ -2444,6 +2444,12 @@ abstract class AppLocalizations {
   /// **'Support'**
   String get support;
 
+  /// No description provided for @supportTheProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Support the project'**
+  String get supportTheProject;
+
   /// No description provided for @couldNotOpenBrowser.
   ///
   /// In en, this message translates to:

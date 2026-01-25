@@ -1133,7 +1133,7 @@ class _DownloadBackupDialogState extends State<_DownloadBackupDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, {'confirm': false}),
-          child: const Text('Cancel'),
+          child: Text(AppLocalizations.of(context)!.cancel),
         ),
         ElevatedButton(
           onPressed: () => Navigator.pop(context, {
@@ -1178,7 +1178,7 @@ class _AuthorizationCodeDialogState extends State<_AuthorizationCodeDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(AppLocalizations.of(context)!.cancel),
         ),
         ElevatedButton(
           onPressed: () => Navigator.pop(context, _codeController.text),
@@ -1324,7 +1324,7 @@ class _BackupProgressDialogState extends State<_BackupProgressDialog> {
                 widget.syncService.cancelUpload();
                 // Don't close dialog here - let the exception handling close it
               },
-              child: const Text('Cancel'),
+              child: Text(AppLocalizations.of(context)!.cancel),
             );
           },
         ),

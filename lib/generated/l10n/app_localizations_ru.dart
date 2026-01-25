@@ -1461,6 +1461,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get support => 'Поддержать';
 
   @override
+  String get supportTheProject => 'Поддержать проект';
+
+  @override
   String couldNotOpenBrowser(String url) {
     return 'Не удалось открыть браузер. Пожалуйста, посетите: $url';
   }

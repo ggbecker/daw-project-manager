@@ -756,21 +756,26 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                       const Spacer(), // Espaçador para empurrar os botões para a direita
                       const SizedBox(width: 4),
                       // Donate button
-                      Tooltip(
-                        message: 'Support the project',
-                        child: TextButton.icon(
-                          icon: const Icon(Icons.card_giftcard, size: 18, color: Colors.white70),
-                          label: const Text(
-                            'Support',
-                            style: TextStyle(color: Colors.white70, fontSize: 14),
-                          ),
-                          onPressed: () async {
-                            final uri = Uri.parse('https://www.paypal.com/donate/?hosted_button_id=QHVVZ3LAF39BL');
-                            if (await canLaunchUrl(uri)) {
-                              await launchUrl(uri, mode: LaunchMode.externalApplication);
-                            } 
-                          },
-                        ),
+                      Consumer(
+                        builder: (context, ref, child) {
+                          final l10n = AppLocalizations.of(context)!;
+                          return Tooltip(
+                            message: l10n.supportTheProject,
+                            child: TextButton.icon(
+                              icon: const Icon(Icons.card_giftcard, size: 18, color: Colors.white70),
+                              label: Text(
+                                l10n.support,
+                                style: const TextStyle(color: Colors.white70, fontSize: 14),
+                              ),
+                              onPressed: () async {
+                                final uri = Uri.parse('https://www.paypal.com/donate/?hosted_button_id=QHVVZ3LAF39BL');
+                                if (await canLaunchUrl(uri)) {
+                                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                } 
+                              },
+                            ),
+                          );
+                        },
                       ),
                       const SizedBox(width: 8),
                       const ThemeSwitcher(),
@@ -2529,8 +2534,8 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         title: AppLocalizations.of(context)!.bpm,
         field: 'bpm',
         type: PlutoColumnType.text(),
-        width: 100,
-        minWidth: 80,
+        width: 80,
+        minWidth: 70,
         enableEditingMode: true,
         renderer: (rendererContext) {
           final project = rendererContext.row.cells['data']?.value as MusicProject?;
@@ -2625,8 +2630,8 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         field: 'lastModified',
         type: PlutoColumnType.text(),
         enableEditingMode: false,
-        width: 200,
-        minWidth: 160,
+        width: 160,
+        minWidth: 140,
         renderer: (rendererContext) {
           final project = rendererContext.row.cells['data']?.value as MusicProject?;
           if (project == null) {
@@ -2686,8 +2691,8 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         field: 'deadline',
         type: PlutoColumnType.text(),
         enableEditingMode: false,
-        width: 140,
-        minWidth: 120,
+        width: 120,
+        minWidth: 100,
         renderer: (rendererContext) {
           final project = rendererContext.row.cells['data']?.value as MusicProject?;
           if (project == null || project.deadline == null || project.status == 'Finished') {
@@ -2762,8 +2767,8 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         field: 'launch',
         type: PlutoColumnType.text(),
         enableEditingMode: false,
-        width: 250, // Increased width to accommodate hidden button
-        minWidth: 220,
+        width: 290, // Increased width to accommodate all action buttons
+        minWidth: 250,
         renderer: (ctx) {
           final project = ctx.row.cells['data']!.value as MusicProject;
           
@@ -2894,6 +2899,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     final initialRows = _mapProjectsToRows(widget.projects);
 
     return PlutoGrid(
+          key: ValueKey('pluto_grid_${l10n.localeName}'), // Force rebuild when locale changes
           columns: columns,
           rows: initialRows,
           onLoaded: (PlutoGridOnLoadedEvent event) {

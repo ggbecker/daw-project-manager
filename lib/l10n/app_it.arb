@@ -953,6 +953,7 @@
   "language": "Lingua",
   "theme": "Tema",
   "support": "Supporta",
+  "supportTheProject": "Sostieni il progetto",
   "couldNotOpenBrowser": "Impossibile aprire il browser. Si prega di visitare: {url}",
   "@couldNotOpenBrowser": {
     "placeholders": {

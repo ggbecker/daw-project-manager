@@ -1467,6 +1467,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get support => 'Unterstützen';
 
   @override
+  String get supportTheProject => 'Unterstütze das Projekt';
+
+  @override
   String couldNotOpenBrowser(String url) {
     return 'Browser konnte nicht geöffnet werden. Bitte besuchen Sie: $url';
   }

@@ -1424,6 +1424,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get support => '支持';
 
   @override
+  String get supportTheProject => '支持项目';
+
+  @override
   String couldNotOpenBrowser(String url) {
     return '无法打开浏览器。请访问: $url';
   }

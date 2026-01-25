@@ -953,6 +953,7 @@
   "language": "言語",
   "theme": "テーマ",
   "support": "サポート",
+  "supportTheProject": "プロジェクトをサポート",
   "couldNotOpenBrowser": "ブラウザを開けませんでした。次のURLにアクセスしてください: {url}",
   "@couldNotOpenBrowser": {
     "placeholders": {

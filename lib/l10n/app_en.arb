@@ -1383,6 +1383,7 @@
   "language": "Language",
   "theme": "Theme",
   "support": "Support",
+  "supportTheProject": "Support the project",
   "couldNotOpenBrowser": "Could not open browser. Please visit: {url}",
   "@couldNotOpenBrowser": {
     "placeholders": {
