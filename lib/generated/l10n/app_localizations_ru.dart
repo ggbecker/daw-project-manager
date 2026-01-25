@@ -208,7 +208,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get searchReleases => 'Поиск релизов...';
 
   @override
+  String get searchPlaylists => 'Поиск плейлистов...';
+
+  @override
   String get noReleasesFound => 'Релизы не найдены';
+
+  @override
+  String get noPlaylistsFound => 'Плейлисты не найдены';
+
+  @override
+  String get tryDifferentSearch => 'Попробуйте другой поисковый запрос';
 
   @override
   String get deepScanTooltip =>
@@ -1116,22 +1125,46 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String dateDaysAgo(int count) {
-    return '$count дн. назад';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count дн. назад',
+      one: '1 день назад',
+    );
+    return '$_temp0';
   }
 
   @override
-  String dateWeeksAgo(int count, String plural) {
-    return '$count нед. назад';
+  String dateWeeksAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count нед. назад',
+      one: '1 неделя назад',
+    );
+    return '$_temp0';
   }
 
   @override
-  String dateMonthsAgo(int count, String plural) {
-    return '$count мес. назад';
+  String dateMonthsAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count мес. назад',
+      one: '1 месяц назад',
+    );
+    return '$_temp0';
   }
 
   @override
-  String dateYearsAgo(int count, String plural) {
-    return '$count г. назад';
+  String dateYearsAgo(int count, Object plural) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count г. назад',
+      one: '1 год назад',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1339,6 +1372,27 @@ class AppLocalizationsRu extends AppLocalizations {
   String get downloadingBackup => 'Скачивание резервной копии...';
 
   @override
+  String get checkingForBackup => 'Проверка резервной копии...';
+
+  @override
+  String get backupUpToDate => 'Резервная копия актуальна';
+
+  @override
+  String errorCheckingBackup(String error) {
+    return 'Ошибка проверки резервной копии: $error';
+  }
+
+  @override
+  String get download => 'Скачать';
+
+  @override
+  String get remoteBackupIsNewer =>
+      'Удаленная копия новее локальных данных. Загрузка перезапишет её.';
+
+  @override
+  String get confirmUpload => 'Подтвердить загрузку';
+
+  @override
   String get noBackupFileFound =>
       'Файл резервной копии не найден в Google Drive. Сначала создайте резервную копию, синхронизировав данные.';
 
@@ -1360,6 +1414,18 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String backupDownloadedDetailed(
+    int projectsAdded,
+    int projectsUpdated,
+    int releasesAdded,
+    int releasesUpdated,
+    int previewSongsDownloaded,
+    int previewSongsUpdated,
+  ) {
+    return 'Резервная копия скачана!\n\nПроекты:\n  • $projectsAdded добавлено\n  • $projectsUpdated обновлено\n\nРелизы:\n  • $releasesAdded добавлено\n  • $releasesUpdated обновлено\n\nПревью песен:\n  • $previewSongsDownloaded скачано\n  • $previewSongsUpdated обновлено';
+  }
+
+  @override
   String errorDownloadingBackup(String error) {
     return 'Ошибка скачивания резервной копии: $error';
   }
@@ -1375,6 +1441,14 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String remoteBackupTime(String date) {
+    return 'Удаленная копия: $date';
+  }
+
+  @override
+  String get checkForBackup => 'Проверить резервную копию';
+
+  @override
   String get settings => 'Настройки';
 
   @override
@@ -1385,6 +1459,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get support => 'Поддержать';
+
+  @override
+  String get supportTheProject => 'Поддержать проект';
 
   @override
   String couldNotOpenBrowser(String url) {
@@ -1459,6 +1536,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get playlistDeleted => 'Плейлист удален';
 
   @override
+  String get errorDeletingPlaylist => 'Ошибка удаления плейлиста';
+
+  @override
   String get playlistUpdated => 'Плейлист обновлен';
 
   @override
@@ -1478,6 +1558,28 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get noPreviewSongsInPlaylist => 'В этом плейлисте нет превью';
+
+  @override
+  String get tapEditToAddSongs =>
+      'Нажмите «Изменить», чтобы добавить песни в этот плейлист';
+
+  @override
+  String get noProjectsAvailableForPlaylist =>
+      'Нет проектов с превью-песнями для добавления';
+
+  @override
+  String get noProjectsInDatabase =>
+      'Проекты не найдены в базе данных. Пожалуйста, сначала синхронизируйте ваши проекты.';
+
+  @override
+  String get firstTimeSyncTitle => 'Похоже, вы здесь впервые!';
+
+  @override
+  String get firstTimeSyncMessage =>
+      'Давайте синхронизируем ваши данные из Google Drive, чтобы начать';
+
+  @override
+  String get syncWithGoogleDrive => 'Синхронизировать с Google Drive';
 
   @override
   String get errorLoadingPlaylists => 'Ошибка загрузки плейлистов';

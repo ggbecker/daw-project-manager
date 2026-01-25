@@ -19,7 +19,7 @@ class ThemeTypeNotifier extends Notifier<AppThemeType> {
     SchedulerBinding.instance.addPostFrameCallback((_) {
       _loadTheme();
     });
-    return AppThemeType.neonDark; // Default to neon dark
+    return AppThemeType.classicDark; // Default to classic dark
   }
 
   Future<void> _loadTheme() async {
@@ -30,7 +30,7 @@ class ThemeTypeNotifier extends Notifier<AppThemeType> {
       if (savedTheme != null && savedTheme.isNotEmpty) {
         final themeType = AppThemeType.values.firstWhere(
           (e) => e.name == savedTheme,
-          orElse: () => AppThemeType.neonDark,
+          orElse: () => AppThemeType.classicDark,
         );
         state = themeType;
       }

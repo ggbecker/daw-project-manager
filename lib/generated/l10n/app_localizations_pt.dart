@@ -208,7 +208,16 @@ class AppLocalizationsPt extends AppLocalizations {
   String get searchReleases => 'Pesquisar lançamentos...';
 
   @override
+  String get searchPlaylists => 'Pesquisar playlists...';
+
+  @override
   String get noReleasesFound => 'Nenhum lançamento encontrado';
+
+  @override
+  String get noPlaylistsFound => 'Nenhuma playlist encontrada';
+
+  @override
+  String get tryDifferentSearch => 'Tente um termo de busca diferente';
 
   @override
   String get deepScanTooltip =>
@@ -1118,21 +1127,39 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String dateDaysAgo(int count) {
-    return 'há $count dias';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'há $count dias',
+      one: 'há 1 dia',
+    );
+    return '$_temp0';
   }
 
   @override
-  String dateWeeksAgo(int count, String plural) {
-    return 'há $count semana$plural';
+  String dateWeeksAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'há $count semanas',
+      one: 'há 1 semana',
+    );
+    return '$_temp0';
   }
 
   @override
-  String dateMonthsAgo(int count, String plural) {
-    return 'há $count meses';
+  String dateMonthsAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'há $count meses',
+      one: 'há 1 mês',
+    );
+    return '$_temp0';
   }
 
   @override
-  String dateYearsAgo(int count, String plural) {
+  String dateYearsAgo(int count, Object plural) {
     return 'há $count ano$plural';
   }
 
@@ -1341,6 +1368,27 @@ class AppLocalizationsPt extends AppLocalizations {
   String get downloadingBackup => 'Baixando backup...';
 
   @override
+  String get checkingForBackup => 'Verificando backup...';
+
+  @override
+  String get backupUpToDate => 'Backup está atualizado';
+
+  @override
+  String errorCheckingBackup(String error) {
+    return 'Erro ao verificar backup: $error';
+  }
+
+  @override
+  String get download => 'Baixar';
+
+  @override
+  String get remoteBackupIsNewer =>
+      'O backup remoto é mais recente que os dados locais. O upload irá sobrescrevê-lo.';
+
+  @override
+  String get confirmUpload => 'Confirmar Upload';
+
+  @override
   String get noBackupFileFound =>
       'Nenhum arquivo de backup encontrado no Google Drive. Crie um backup primeiro sincronizando seus dados.';
 
@@ -1362,6 +1410,18 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String backupDownloadedDetailed(
+    int projectsAdded,
+    int projectsUpdated,
+    int releasesAdded,
+    int releasesUpdated,
+    int previewSongsDownloaded,
+    int previewSongsUpdated,
+  ) {
+    return 'Backup baixado!\n\nProjetos:\n  • $projectsAdded adicionados\n  • $projectsUpdated atualizados\n\nLançamentos:\n  • $releasesAdded adicionados\n  • $releasesUpdated atualizados\n\nPreview Songs:\n  • $previewSongsDownloaded baixadas\n  • $previewSongsUpdated atualizadas';
+  }
+
+  @override
   String errorDownloadingBackup(String error) {
     return 'Erro ao baixar backup: $error';
   }
@@ -1377,6 +1437,14 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String remoteBackupTime(String date) {
+    return 'Backup remoto: $date';
+  }
+
+  @override
+  String get checkForBackup => 'Verificar Backup';
+
+  @override
   String get settings => 'Configurações';
 
   @override
@@ -1387,6 +1455,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get support => 'Apoiar';
+
+  @override
+  String get supportTheProject => 'Apoie o projeto';
 
   @override
   String couldNotOpenBrowser(String url) {
@@ -1463,6 +1534,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get playlistDeleted => 'Playlist excluída';
 
   @override
+  String get errorDeletingPlaylist => 'Erro ao excluir playlist';
+
+  @override
   String get playlistUpdated => 'Playlist atualizada';
 
   @override
@@ -1483,6 +1557,28 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get noPreviewSongsInPlaylist =>
       'Nenhuma prévia disponível nesta playlist';
+
+  @override
+  String get tapEditToAddSongs =>
+      'Toque em editar para adicionar músicas a esta playlist';
+
+  @override
+  String get noProjectsAvailableForPlaylist =>
+      'Nenhum projeto com músicas de preview disponíveis para adicionar';
+
+  @override
+  String get noProjectsInDatabase =>
+      'Nenhum projeto encontrado no banco de dados. Por favor, sincronize seus projetos primeiro.';
+
+  @override
+  String get firstTimeSyncTitle => 'Parece que é sua primeira vez aqui!';
+
+  @override
+  String get firstTimeSyncMessage =>
+      'Vamos sincronizar seus dados do Google Drive para começar';
+
+  @override
+  String get syncWithGoogleDrive => 'Sincronizar com Google Drive';
 
   @override
   String get errorLoadingPlaylists => 'Erro ao carregar playlists';

@@ -200,7 +200,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get searchReleases => '搜索发布...';
 
   @override
+  String get searchPlaylists => '搜索播放列表...';
+
+  @override
   String get noReleasesFound => '未找到发布';
+
+  @override
+  String get noPlaylistsFound => '未找到播放列表';
+
+  @override
+  String get tryDifferentSearch => '尝试不同的搜索词';
 
   @override
   String get deepScanTooltip =>
@@ -1093,22 +1102,42 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String dateDaysAgo(int count) {
-    return '$count天前';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count天前',
+    );
+    return '$_temp0';
   }
 
   @override
-  String dateWeeksAgo(int count, String plural) {
-    return '$count周前';
+  String dateWeeksAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count周前',
+    );
+    return '$_temp0';
   }
 
   @override
-  String dateMonthsAgo(int count, String plural) {
-    return '$count个月前';
+  String dateMonthsAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count个月前',
+    );
+    return '$_temp0';
   }
 
   @override
-  String dateYearsAgo(int count, String plural) {
-    return '$count年前';
+  String dateYearsAgo(int count, Object plural) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count年前',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1309,6 +1338,26 @@ class AppLocalizationsZh extends AppLocalizations {
   String get downloadingBackup => '正在下载备份...';
 
   @override
+  String get checkingForBackup => '正在检查备份...';
+
+  @override
+  String get backupUpToDate => '备份是最新的';
+
+  @override
+  String errorCheckingBackup(String error) {
+    return '检查备份错误: $error';
+  }
+
+  @override
+  String get download => '下载';
+
+  @override
+  String get remoteBackupIsNewer => '远程备份比本地数据更新。上传将覆盖它。';
+
+  @override
+  String get confirmUpload => '确认上传';
+
+  @override
   String get noBackupFileFound => '在 Google Drive 中未找到备份文件。请先通过同步数据创建备份。';
 
   @override
@@ -1328,6 +1377,18 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String backupDownloadedDetailed(
+    int projectsAdded,
+    int projectsUpdated,
+    int releasesAdded,
+    int releasesUpdated,
+    int previewSongsDownloaded,
+    int previewSongsUpdated,
+  ) {
+    return '备份已下载!\n\n项目:\n  • $projectsAdded 已添加\n  • $projectsUpdated 已更新\n\n发布:\n  • $releasesAdded 已添加\n  • $releasesUpdated 已更新\n\n预览歌曲:\n  • $previewSongsDownloaded 已下载\n  • $previewSongsUpdated 已更新';
+  }
+
+  @override
   String errorDownloadingBackup(String error) {
     return '下载备份错误: $error';
   }
@@ -1343,6 +1404,14 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String remoteBackupTime(String date) {
+    return '远程备份: $date';
+  }
+
+  @override
+  String get checkForBackup => '检查备份';
+
+  @override
   String get settings => '设置';
 
   @override
@@ -1353,6 +1422,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get support => '支持';
+
+  @override
+  String get supportTheProject => '支持项目';
 
   @override
   String couldNotOpenBrowser(String url) {
@@ -1425,6 +1497,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playlistDeleted => '播放列表已删除';
 
   @override
+  String get errorDeletingPlaylist => '删除播放列表错误';
+
+  @override
   String get playlistUpdated => '播放列表已更新';
 
   @override
@@ -1443,6 +1518,24 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get noPreviewSongsInPlaylist => '此播放列表中没有预览歌曲';
+
+  @override
+  String get tapEditToAddSongs => '点击编辑以向此播放列表添加歌曲';
+
+  @override
+  String get noProjectsAvailableForPlaylist => '没有可添加的预览歌曲项目';
+
+  @override
+  String get noProjectsInDatabase => '数据库中未找到项目。请先同步您的项目。';
+
+  @override
+  String get firstTimeSyncTitle => '看起来这是您第一次来这里！';
+
+  @override
+  String get firstTimeSyncMessage => '让我们从Google云端硬盘同步您的数据以开始使用';
+
+  @override
+  String get syncWithGoogleDrive => '与Google云端硬盘同步';
 
   @override
   String get errorLoadingPlaylists => '加载播放列表错误';

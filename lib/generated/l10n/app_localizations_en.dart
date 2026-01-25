@@ -208,7 +208,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchReleases => 'Search releases...';
 
   @override
+  String get searchPlaylists => 'Search playlists...';
+
+  @override
   String get noReleasesFound => 'No releases found';
+
+  @override
+  String get noPlaylistsFound => 'No playlists found';
+
+  @override
+  String get tryDifferentSearch => 'Try a different search term';
 
   @override
   String get deepScanTooltip =>
@@ -1115,22 +1124,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String dateDaysAgo(int count) {
-    return '$count days ago';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days ago',
+      one: '1 day ago',
+    );
+    return '$_temp0';
   }
 
   @override
-  String dateWeeksAgo(int count, String plural) {
-    return '$count week$plural ago';
+  String dateWeeksAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count weeks ago',
+      one: '1 week ago',
+    );
+    return '$_temp0';
   }
 
   @override
-  String dateMonthsAgo(int count, String plural) {
-    return '$count month$plural ago';
+  String dateMonthsAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count months ago',
+      one: '1 month ago',
+    );
+    return '$_temp0';
   }
 
   @override
-  String dateYearsAgo(int count, String plural) {
-    return '$count year$plural ago';
+  String dateYearsAgo(int count, Object plural) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count years ago',
+      one: '1 year ago',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1338,6 +1371,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadingBackup => 'Downloading backup...';
 
   @override
+  String get checkingForBackup => 'Checking for backup...';
+
+  @override
+  String get backupUpToDate => 'Backup is up to date';
+
+  @override
+  String errorCheckingBackup(String error) {
+    return 'Error checking backup: $error';
+  }
+
+  @override
+  String get download => 'Download';
+
+  @override
+  String get remoteBackupIsNewer =>
+      'Remote backup is newer than local data. Uploading will overwrite it.';
+
+  @override
+  String get confirmUpload => 'Confirm Upload';
+
+  @override
   String get noBackupFileFound =>
       'No backup file found in Google Drive. Create a backup first by syncing your data.';
 
@@ -1359,6 +1413,18 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String backupDownloadedDetailed(
+    int projectsAdded,
+    int projectsUpdated,
+    int releasesAdded,
+    int releasesUpdated,
+    int previewSongsDownloaded,
+    int previewSongsUpdated,
+  ) {
+    return 'Backup downloaded!\n\nProjects:\n  • $projectsAdded added\n  • $projectsUpdated updated\n\nReleases:\n  • $releasesAdded added\n  • $releasesUpdated updated\n\nPreview Songs:\n  • $previewSongsDownloaded downloaded\n  • $previewSongsUpdated updated';
+  }
+
+  @override
   String errorDownloadingBackup(String error) {
     return 'Error downloading backup: $error';
   }
@@ -1374,6 +1440,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String remoteBackupTime(String date) {
+    return 'Remote backup: $date';
+  }
+
+  @override
+  String get checkForBackup => 'Check for Backup';
+
+  @override
   String get settings => 'Settings';
 
   @override
@@ -1384,6 +1458,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get support => 'Support';
+
+  @override
+  String get supportTheProject => 'Support the project';
 
   @override
   String couldNotOpenBrowser(String url) {
@@ -1459,6 +1536,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistDeleted => 'Playlist deleted';
 
   @override
+  String get errorDeletingPlaylist => 'Error deleting playlist';
+
+  @override
   String get playlistUpdated => 'Playlist updated';
 
   @override
@@ -1479,6 +1559,27 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get noPreviewSongsInPlaylist =>
       'No preview songs available in this playlist';
+
+  @override
+  String get tapEditToAddSongs => 'Tap edit to add songs to this playlist';
+
+  @override
+  String get noProjectsAvailableForPlaylist =>
+      'No projects with preview songs available to add';
+
+  @override
+  String get noProjectsInDatabase =>
+      'No projects found in database. Please sync your projects first.';
+
+  @override
+  String get firstTimeSyncTitle => 'It seems it\'s your first time here!';
+
+  @override
+  String get firstTimeSyncMessage =>
+      'Let\'s sync your data from Google Drive to get started';
+
+  @override
+  String get syncWithGoogleDrive => 'Sync with Google Drive';
 
   @override
   String get errorLoadingPlaylists => 'Error loading playlists';

@@ -92,13 +92,16 @@ class _TodoListWidgetState extends ConsumerState<TodoListWidget> {
 
     if (templates.isEmpty) {
       if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(AppLocalizations.of(context)!.noTemplatesAvailable),
+            duration: const Duration(seconds: 4),
             action: SnackBarAction(
               label: AppLocalizations.of(context)!.create,
-              onPressed: () {
-                Navigator.of(context).push(
+              onPressed: () async {
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                await Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => const TodoTemplatesPage(),
                   ),

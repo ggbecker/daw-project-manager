@@ -428,24 +428,55 @@ class GoogleDriveSyncService {
   }
 
   /// Check if a newer backup is available on Drive
-  /// Returns true if remote backup is newer than last downloaded backup
+  /// Returns true if remote backup is newer than last sync time
   Future<bool> isNewerBackupAvailable() async {
     try {
-      final lastDownload = await getLastBackupDownloadTimestamp();
+      final lastSync = await getLastSyncTime();
       final remoteTimestamp = await getRemoteBackupTimestamp();
 
       if (remoteTimestamp == null) {
         return false; // No backup available on Drive
       }
 
-      if (lastDownload == null) {
-        return true; // Never downloaded, so remote is "newer"
+      if (lastSync == null) {
+        return true; // Never synced, so remote is "newer"
       }
 
-      return remoteTimestamp.isAfter(lastDownload);
+      // Remote is newer if it was modified after our last sync
+      // Add a small buffer (5 seconds) to avoid false positives from clock differences
+      final isNewer = remoteTimestamp.isAfter(lastSync.add(const Duration(seconds: 5)));
+      
+      if (kDebugMode) {
+        print('Backup comparison:');
+        print('  Last sync: $lastSync');
+        print('  Remote backup: $remoteTimestamp');
+        print('  Is newer: $isNewer');
+      }
+      
+      return isNewer;
     } catch (e) {
       if (kDebugMode) print('Error checking if newer backup is available: $e');
       return false;
+    }
+  }
+  
+  /// Get backup information for display
+  Future<Map<String, dynamic>> getBackupInfo() async {
+    try {
+      final remoteTimestamp = await getRemoteBackupTimestamp();
+      final lastSync = await getLastSyncTime();
+      final lastDownload = await getLastBackupDownloadTimestamp();
+      
+      return {
+        'remoteTimestamp': remoteTimestamp,
+        'lastSync': lastSync,
+        'lastDownload': lastDownload,
+        'hasRemote': remoteTimestamp != null,
+        'isNewer': remoteTimestamp != null && lastSync != null && remoteTimestamp.isAfter(lastSync.add(const Duration(seconds: 5))),
+      };
+    } catch (e) {
+      if (kDebugMode) print('Error getting backup info: $e');
+      return {};
     }
   }
 
@@ -2263,6 +2294,8 @@ class GoogleDriveSyncService {
     int projectsUpdated = 0;
     int releasesAdded = 0;
     int releasesUpdated = 0;
+    int previewSongsDownloaded = 0;
+    int previewSongsUpdated = 0;
 
     // First, merge profiles
     if (remoteData['profiles'] != null) {
@@ -2402,6 +2435,7 @@ class GoogleDriveSyncService {
                         previewSongFileName: originalFileName,
                         uploadedPreviewSongHash: expectedHash,
                       );
+                      previewSongsDownloaded++;
                       if (kDebugMode) {
                         print('    Downloaded preview song for new project: ${remoteProject.displayName} (ID: $driveFileId)');
                       }
@@ -2544,6 +2578,7 @@ class GoogleDriveSyncService {
                           
                           if (downloadedFilePath != null) {
                             previewSongPath = downloadedFilePath;
+                            previewSongsUpdated++;
                             if (kDebugMode) {
                               print('    Downloaded preview song for project: ${remoteProject.displayName} (ID: $driveFileId)');
                             }
@@ -2756,6 +2791,7 @@ class GoogleDriveSyncService {
                             await profileProjectsBox.put(updatedProject.id, updatedProject);
                             await profileProjectsBox.flush();
                             
+                            previewSongsDownloaded++;
                             if (kDebugMode) {
                               print('    Downloaded preview song for project: ${localProject.displayName} (ID: $driveFileId)');
                             }
@@ -3018,54 +3054,77 @@ class GoogleDriveSyncService {
     try {
       final allProfiles = profileRepo.getAllProfiles();
       
-      // Find the default profile (first one created, usually named "Default Profile" or similar)
-      Profile? defaultProfile;
-      for (final profile in allProfiles) {
-        // Check if this is the default profile by checking if it's the oldest one
-        if (defaultProfile == null || profile.createdAt.isBefore(defaultProfile.createdAt)) {
-          defaultProfile = profile;
+      if (allProfiles.length > 1) {
+        // Find the default profile by name pattern (case insensitive)
+        Profile? defaultProfile;
+        for (final profile in allProfiles) {
+          final nameLower = profile.name.toLowerCase();
+          if (nameLower == 'default' || nameLower == 'default profile') {
+            defaultProfile = profile;
+            break;
+          }
         }
-      }
-      
-      if (defaultProfile != null && allProfiles.length > 1) {
-        // Check if default profile is empty
-        final defaultProjectsBox = await Hive.openBox<MusicProject>('${defaultProfile.id}_projects');
-        final defaultReleasesBox = await Hive.openBox<Release>('${defaultProfile.id}_releases');
         
-        final isDefaultEmpty = defaultProjectsBox.isEmpty && defaultReleasesBox.isEmpty;
-        
-        if (isDefaultEmpty) {
-          // Find the first non-default profile from the restored backup
-          Profile? firstRestoredProfile;
+        // If no profile with "default" name found, try the oldest one as fallback
+        if (defaultProfile == null) {
           for (final profile in allProfiles) {
-            if (profile.id != defaultProfile.id) {
-              firstRestoredProfile = profile;
-              break;
+            if (defaultProfile == null || profile.createdAt.isBefore(defaultProfile.createdAt)) {
+              defaultProfile = profile;
             }
           }
+        }
+        
+        if (defaultProfile != null) {
+          // Check if default profile is empty (0 projects AND 0 releases)
+          final defaultProjectsBox = await Hive.openBox<MusicProject>('${defaultProfile.id}_projects');
+          final defaultReleasesBox = await Hive.openBox<Release>('${defaultProfile.id}_releases');
           
-          if (firstRestoredProfile != null) {
-            if (kDebugMode) {
-              print('Removing empty default profile "${defaultProfile.name}" and switching to "${firstRestoredProfile.name}"');
+          final isDefaultEmpty = defaultProjectsBox.isEmpty && defaultReleasesBox.isEmpty;
+          
+          if (kDebugMode) {
+            print('Default profile check:');
+            print('  Name: ${defaultProfile.name}');
+            print('  Projects: ${defaultProjectsBox.length}');
+            print('  Releases: ${defaultReleasesBox.length}');
+            print('  Is empty: $isDefaultEmpty');
+          }
+          
+          if (isDefaultEmpty) {
+            // Find the first non-default profile from the restored backup
+            Profile? firstRestoredProfile;
+            for (final profile in allProfiles) {
+              if (profile.id != defaultProfile.id) {
+                firstRestoredProfile = profile;
+                break;
+              }
             }
             
-            // Delete the default profile and its empty boxes
-            await profileRepo.profilesBox.delete(defaultProfile.id);
-            await defaultProjectsBox.close();
-            await defaultReleasesBox.close();
-            await Hive.deleteBoxFromDisk('${defaultProfile.id}_projects');
-            await Hive.deleteBoxFromDisk('${defaultProfile.id}_releases');
-            
-            // Also delete other related boxes
-            try {
-              await Hive.deleteBoxFromDisk('${defaultProfile.id}_roots');
-            } catch (_) {}
-            
-            // Set the first restored profile as current
-            await profileRepo.setCurrentProfileId(firstRestoredProfile.id);
-            
-            if (kDebugMode) {
-              print('Successfully switched to restored profile: ${firstRestoredProfile.name}');
+            if (firstRestoredProfile != null) {
+              if (kDebugMode) {
+                print('Removing empty default profile "${defaultProfile.name}" and switching to "${firstRestoredProfile.name}"');
+              }
+              
+              // Delete the default profile and its empty boxes
+              await profileRepo.profilesBox.delete(defaultProfile.id);
+              await defaultProjectsBox.close();
+              await defaultReleasesBox.close();
+              await Hive.deleteBoxFromDisk('${defaultProfile.id}_projects');
+              await Hive.deleteBoxFromDisk('${defaultProfile.id}_releases');
+              
+              // Also delete other related boxes
+              try {
+                await Hive.deleteBoxFromDisk('${defaultProfile.id}_roots');
+              } catch (_) {}
+              try {
+                await Hive.deleteBoxFromDisk('${defaultProfile.id}_ignoredPaths');
+              } catch (_) {}
+              
+              // Set the first restored profile as current
+              await profileRepo.setCurrentProfileId(firstRestoredProfile.id);
+              
+              if (kDebugMode) {
+                print('Successfully switched to restored profile: ${firstRestoredProfile.name}');
+              }
             }
           }
         }
@@ -3082,6 +3141,8 @@ class GoogleDriveSyncService {
       projectsUpdated: projectsUpdated,
       releasesAdded: releasesAdded,
       releasesUpdated: releasesUpdated,
+      previewSongsDownloaded: previewSongsDownloaded,
+      previewSongsUpdated: previewSongsUpdated,
     );
   }
 
@@ -3336,14 +3397,22 @@ class _AuthenticatedHttpClient extends http.BaseClient {
 class SyncResult {
   final int projectsAdded;
   final int projectsUpdated;
+  final int projectsDeleted;
   final int releasesAdded;
   final int releasesUpdated;
+  final int releasesDeleted;
+  final int previewSongsDownloaded;
+  final int previewSongsUpdated;
 
   SyncResult({
     required this.projectsAdded,
     required this.projectsUpdated,
+    this.projectsDeleted = 0,
     required this.releasesAdded,
     required this.releasesUpdated,
+    this.releasesDeleted = 0,
+    this.previewSongsDownloaded = 0,
+    this.previewSongsUpdated = 0,
   });
 }
 

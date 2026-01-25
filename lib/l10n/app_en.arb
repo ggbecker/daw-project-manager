@@ -92,7 +92,10 @@
   "addFolder": "Add Folder",
   "searchProjects": "Search projects...",
   "searchReleases": "Search releases...",
+  "searchPlaylists": "Search playlists...",
   "noReleasesFound": "No releases found",
+  "noPlaylistsFound": "No playlists found",
+  "tryDifferentSearch": "Try a different search term",
   "deepScanTooltip": "Deep Scan extracts full metadata from project files:\n• BPM (Beats Per Minute)\n• Musical Key\n• DAW Version\nThis is slower but provides complete information.",
   "deepScanConfirm": "This will scan all projects and extract full metadata (BPM, Key, DAW Version). This may take a while. Continue?",
   "metadataExtractedSuccessfully": "Metadata extracted successfully",
@@ -939,7 +942,7 @@
   },
   "dateToday": "today",
   "dateYesterday": "yesterday",
-  "dateDaysAgo": "{count} days ago",
+  "dateDaysAgo": "{count, plural, =1{1 day ago} other{{count} days ago}}",
   "@dateDaysAgo": {
     "placeholders": {
       "count": {
@@ -947,36 +950,30 @@
       }
     }
   },
-  "dateWeeksAgo": "{count} week{plural} ago",
+  "dateWeeksAgo": "{count, plural, =1{1 week ago} other{{count} weeks ago}}",
   "@dateWeeksAgo": {
     "placeholders": {
       "count": {
         "type": "int"
-      },
-      "plural": {
-        "type": "String"
       }
     }
   },
-  "dateMonthsAgo": "{count} month{plural} ago",
+  "dateMonthsAgo": "{count, plural, =1{1 month ago} other{{count} months ago}}",
   "@dateMonthsAgo": {
     "placeholders": {
       "count": {
         "type": "int"
-      },
-      "plural": {
-        "type": "String"
       }
     }
   },
-  "dateYearsAgo": "{count} year{plural} ago",
+  "dateYearsAgo": "{count, plural, =1{1 year ago} other{{count} years ago}}",
   "@dateYearsAgo": {
     "placeholders": {
       "count": {
         "type": "int"
       },
       "plural": {
-        "type": "String"
+        "type": "Object"
       }
     }
   },
@@ -1266,6 +1263,34 @@
   "@downloadingBackup": {
     "description": "Status message when downloading backup"
   },
+  "checkingForBackup": "Checking for backup...",
+  "@checkingForBackup": {
+    "description": "Status message when checking for backup"
+  },
+  "backupUpToDate": "Backup is up to date",
+  "@backupUpToDate": {
+    "description": "Message when backup is current"
+  },
+  "errorCheckingBackup": "Error checking backup: {error}",
+  "@errorCheckingBackup": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "download": "Download",
+  "@download": {
+    "description": "Download button label"
+  },
+  "remoteBackupIsNewer": "Remote backup is newer than local data. Uploading will overwrite it.",
+  "@remoteBackupIsNewer": {
+    "description": "Warning when remote backup is newer"
+  },
+  "confirmUpload": "Confirm Upload",
+  "@confirmUpload": {
+    "description": "Confirmation dialog title"
+  },
   "noBackupFileFound": "No backup file found in Google Drive. Create a backup first by syncing your data.",
   "@noBackupFileFound": {
     "description": "Message when no backup file is found"
@@ -1295,6 +1320,29 @@
       }
     }
   },
+  "backupDownloadedDetailed": "Backup downloaded!\n\nProjects:\n  • {projectsAdded} added\n  • {projectsUpdated} updated\n\nReleases:\n  • {releasesAdded} added\n  • {releasesUpdated} updated\n\nPreview Songs:\n  • {previewSongsDownloaded} downloaded\n  • {previewSongsUpdated} updated",
+  "@backupDownloadedDetailed": {
+    "placeholders": {
+      "projectsAdded": {
+        "type": "int"
+      },
+      "projectsUpdated": {
+        "type": "int"
+      },
+      "releasesAdded": {
+        "type": "int"
+      },
+      "releasesUpdated": {
+        "type": "int"
+      },
+      "previewSongsDownloaded": {
+        "type": "int"
+      },
+      "previewSongsUpdated": {
+        "type": "int"
+      }
+    }
+  },
   "errorDownloadingBackup": "Error downloading backup: {error}",
   "@errorDownloadingBackup": {
     "placeholders": {
@@ -1319,10 +1367,23 @@
       }
     }
   },
+  "remoteBackupTime": "Remote backup: {date}",
+  "@remoteBackupTime": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "checkForBackup": "Check for Backup",
+  "@checkForBackup": {
+    "description": "Button to check if newer backup is available"
+  },
   "settings": "Settings",
   "language": "Language",
   "theme": "Theme",
   "support": "Support",
+  "supportTheProject": "Support the project",
   "couldNotOpenBrowser": "Could not open browser. Please visit: {url}",
   "@couldNotOpenBrowser": {
     "placeholders": {
@@ -1416,6 +1477,10 @@
   "@playlistDeleted": {
     "description": "Success message after deleting a playlist"
   },
+  "errorDeletingPlaylist": "Error deleting playlist",
+  "@errorDeletingPlaylist": {
+    "description": "Error message when playlist deletion fails"
+  },
   "playlistUpdated": "Playlist updated",
   "changeSong": "Change Song",
   "changeSongConfirm": "A song is currently playing. Do you want to switch to this song?",
@@ -1435,6 +1500,30 @@
   "noPreviewSongsInPlaylist": "No preview songs available in this playlist",
   "@noPreviewSongsInPlaylist": {
     "description": "Message when playlist has no valid preview songs"
+  },
+  "tapEditToAddSongs": "Tap edit to add songs to this playlist",
+  "@tapEditToAddSongs": {
+    "description": "Hint message to edit empty playlist"
+  },
+  "noProjectsAvailableForPlaylist": "No projects with preview songs available to add",
+  "@noProjectsAvailableForPlaylist": {
+    "description": "Error message when trying to add songs but no projects available"
+  },
+  "noProjectsInDatabase": "No projects found in database. Please sync your projects first.",
+  "@noProjectsInDatabase": {
+    "description": "Error message when there are no projects at all in the database"
+  },
+  "firstTimeSyncTitle": "It seems it's your first time here!",
+  "@firstTimeSyncTitle": {
+    "description": "Title for first-time sync message on mobile"
+  },
+  "firstTimeSyncMessage": "Let's sync your data from Google Drive to get started",
+  "@firstTimeSyncMessage": {
+    "description": "Message explaining to sync data from Google Drive"
+  },
+  "syncWithGoogleDrive": "Sync with Google Drive",
+  "@syncWithGoogleDrive": {
+    "description": "Button text to sync with Google Drive"
   },
   "errorLoadingPlaylists": "Error loading playlists",
   "@errorLoadingPlaylists": {

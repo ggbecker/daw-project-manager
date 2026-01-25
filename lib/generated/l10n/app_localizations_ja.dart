@@ -204,7 +204,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get searchReleases => 'リリースを検索...';
 
   @override
+  String get searchPlaylists => 'プレイリストを検索...';
+
+  @override
   String get noReleasesFound => 'リリースが見つかりません';
+
+  @override
+  String get noPlaylistsFound => 'プレイリストが見つかりません';
+
+  @override
+  String get tryDifferentSearch => '別の検索用語を試してください';
 
   @override
   String get deepScanTooltip =>
@@ -1100,22 +1109,42 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String dateDaysAgo(int count) {
-    return '$count日前';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count日前',
+    );
+    return '$_temp0';
   }
 
   @override
-  String dateWeeksAgo(int count, String plural) {
-    return '$count週間前';
+  String dateWeeksAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count週間前',
+    );
+    return '$_temp0';
   }
 
   @override
-  String dateMonthsAgo(int count, String plural) {
-    return '$countヶ月前';
+  String dateMonthsAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countヶ月前',
+    );
+    return '$_temp0';
   }
 
   @override
-  String dateYearsAgo(int count, String plural) {
-    return '$count年前';
+  String dateYearsAgo(int count, Object plural) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count年前',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1321,6 +1350,27 @@ class AppLocalizationsJa extends AppLocalizations {
   String get downloadingBackup => 'バックアップをダウンロード中...';
 
   @override
+  String get checkingForBackup => 'バックアップを確認中...';
+
+  @override
+  String get backupUpToDate => 'バックアップは最新です';
+
+  @override
+  String errorCheckingBackup(String error) {
+    return 'バックアップの確認エラー: $error';
+  }
+
+  @override
+  String get download => 'ダウンロード';
+
+  @override
+  String get remoteBackupIsNewer =>
+      'リモートバックアップはローカルデータより新しいです。アップロードすると上書きされます。';
+
+  @override
+  String get confirmUpload => 'アップロードを確認';
+
+  @override
   String get noBackupFileFound =>
       'Google Driveにバックアップファイルが見つかりません。データを同期して最初にバックアップを作成してください。';
 
@@ -1342,6 +1392,18 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String backupDownloadedDetailed(
+    int projectsAdded,
+    int projectsUpdated,
+    int releasesAdded,
+    int releasesUpdated,
+    int previewSongsDownloaded,
+    int previewSongsUpdated,
+  ) {
+    return 'バックアップがダウンロードされました!\n\nプロジェクト:\n  • $projectsAdded 追加\n  • $projectsUpdated 更新\n\nリリース:\n  • $releasesAdded 追加\n  • $releasesUpdated 更新\n\nプレビュー曲:\n  • $previewSongsDownloaded ダウンロード\n  • $previewSongsUpdated 更新';
+  }
+
+  @override
   String errorDownloadingBackup(String error) {
     return 'バックアップのダウンロードエラー: $error';
   }
@@ -1357,6 +1419,14 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String remoteBackupTime(String date) {
+    return 'リモートバックアップ: $date';
+  }
+
+  @override
+  String get checkForBackup => 'バックアップを確認';
+
+  @override
   String get settings => '設定';
 
   @override
@@ -1367,6 +1437,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get support => 'サポート';
+
+  @override
+  String get supportTheProject => 'プロジェクトをサポート';
 
   @override
   String couldNotOpenBrowser(String url) {
@@ -1440,6 +1513,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get playlistDeleted => 'プレイリストを削除しました';
 
   @override
+  String get errorDeletingPlaylist => 'プレイリスト削除エラー';
+
+  @override
   String get playlistUpdated => 'プレイリストを更新しました';
 
   @override
@@ -1458,6 +1534,24 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get noPreviewSongsInPlaylist => 'このプレイリストに利用可能なプレビュー曲がありません';
+
+  @override
+  String get tapEditToAddSongs => '編集をタップして、このプレイリストに曲を追加してください';
+
+  @override
+  String get noProjectsAvailableForPlaylist => '追加できるプレビュー曲を持つプロジェクトがありません';
+
+  @override
+  String get noProjectsInDatabase => 'データベースにプロジェクトが見つかりません。まずプロジェクトを同期してください。';
+
+  @override
+  String get firstTimeSyncTitle => '初めてのご利用のようですね！';
+
+  @override
+  String get firstTimeSyncMessage => 'Google Driveからデータを同期して始めましょう';
+
+  @override
+  String get syncWithGoogleDrive => 'Google Driveと同期';
 
   @override
   String get errorLoadingPlaylists => 'プレイリスト読み込みエラー';

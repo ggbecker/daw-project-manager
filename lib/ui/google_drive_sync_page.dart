@@ -33,6 +33,7 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
   bool _isSignedIn = false;
   bool _isCheckingSession = false;
   bool _hasNewerBackupAvailable = false;
+  DateTime? _remoteBackupTime;
 
   @override
   void initState() {
@@ -171,10 +172,11 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
   /// Check if a newer backup is available on Drive
   Future<void> _checkForNewerBackup() async {
     try {
-      final hasNewer = await _syncService.isNewerBackupAvailable();
+      final backupInfo = await _syncService.getBackupInfo();
       if (mounted) {
         setState(() {
-          _hasNewerBackupAvailable = hasNewer;
+          _hasNewerBackupAvailable = backupInfo['isNewer'] == true;
+          _remoteBackupTime = backupInfo['remoteTimestamp'] as DateTime?;
         });
       }
     } catch (e) {
@@ -182,6 +184,7 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
       if (mounted) {
         setState(() {
           _hasNewerBackupAvailable = false;
+          _remoteBackupTime = null;
         });
       }
     }
@@ -401,67 +404,56 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
     }
   }
 
-  Future<void> _syncWithGoogleDrive() async {
+  /// Check for new backup (doesn't download - just checks if one is available)
+  Future<void> _checkForBackupManually() async {
     try {
       setState(() {
         _isSyncing = true;
-        _syncStatus = AppLocalizations.of(context)!.syncing;
+        _syncStatus = AppLocalizations.of(context)!.checkingForBackup;
       });
 
-      final profileRepo = await ref.read(profileRepositoryProvider.future);
-      final currentProfileId = profileRepo.getCurrentProfileId();
+      await _checkForNewerBackup();
       
-      if (currentProfileId == null) {
+      if (_hasNewerBackupAvailable) {
         setState(() {
-          _syncStatus = AppLocalizations.of(context)!.errorNoProfileSelected;
+          _syncStatus = AppLocalizations.of(context)!.newerBackupAvailable;
         });
-        return;
-      }
-
-      final projectRepo = await ref.read(repositoryProvider.future);
-      final result = await _syncService.syncDatabase(
-        projectRepo: projectRepo,
-        profileRepo: profileRepo,
-      );
-
-      setState(() {
-        _syncStatus = AppLocalizations.of(context)!.syncCompleted(
-          result.projectsAdded,
-          result.projectsUpdated,
-          result.releasesAdded,
-          result.releasesUpdated,
-        );
-        _lastSyncTime = DateTime.now();
-      });
-
-      // Invalidate providers to refresh UI
-      ref.invalidate(allProjectsStreamProvider);
-      ref.invalidate(releasesProvider);
-      ref.invalidate(scanRootsProvider);
-      ref.invalidate(currentProfileProvider);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!.syncCompleted(
-              result.projectsAdded,
-              result.projectsUpdated,
-              result.releasesAdded,
-              result.releasesUpdated,
-            )),
-            backgroundColor: Colors.green,
-          ),
-        );
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.newerBackupAvailable),
+              backgroundColor: Colors.orange,
+              action: SnackBarAction(
+                label: AppLocalizations.of(context)!.download,
+                onPressed: () => _downloadBackupFromDrive(),
+              ),
+            ),
+          );
+        }
+      } else {
+        setState(() {
+          _syncStatus = AppLocalizations.of(context)!.backupUpToDate;
+        });
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.backupUpToDate),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
       }
     } catch (e) {
       setState(() {
-        _syncStatus = AppLocalizations.of(context)!.errorSyncing(e.toString());
+        _syncStatus = AppLocalizations.of(context)!.errorCheckingBackup(e.toString());
       });
-
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)!.errorSyncing(e.toString())),
+            content: Text(AppLocalizations.of(context)!.errorCheckingBackup(e.toString())),
             backgroundColor: Colors.red,
           ),
         );
@@ -476,6 +468,34 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
   /// Upload backup to Google Drive (manual)
   Future<void> _uploadBackupToDrive() async {
     try {
+      // Check if remote backup is newer before uploading
+      final backupInfo = await _syncService.getBackupInfo();
+      if (backupInfo['isNewer'] == true) {
+        // Show confirmation dialog
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: Theme.of(context).cardColor,
+            title: Text(AppLocalizations.of(context)!.confirmUpload),
+            content: Text(AppLocalizations.of(context)!.remoteBackupIsNewer),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text(AppLocalizations.of(context)!.cancel),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: Text(AppLocalizations.of(context)!.uploadBackup),
+              ),
+            ],
+          ),
+        );
+        
+        if (confirmed != true) {
+          return; // User cancelled
+        }
+      }
+      
       setState(() {
         _isSyncing = true;
         _syncStatus = AppLocalizations.of(context)!.uploadingBackup;
@@ -665,11 +685,13 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
       }
 
       setState(() {
-        _syncStatus = AppLocalizations.of(context)!.backupDownloaded(
+        _syncStatus = AppLocalizations.of(context)!.backupDownloadedDetailed(
           result.projectsAdded,
           result.projectsUpdated,
           result.releasesAdded,
           result.releasesUpdated,
+          result.previewSongsDownloaded,
+          result.previewSongsUpdated,
         );
         _lastSyncTime = DateTime.now();
         _hasNewerBackupAvailable = false; // Reset after successful download
@@ -877,32 +899,49 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
                                 style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                               ),
                             ),
-                          // Show notification if newer backup is available (Android/iOS only)
-                          if ((Platform.isAndroid || Platform.isIOS) && _hasNewerBackupAvailable)
-                            Container(
+                          // Show remote backup time if available
+                          if (_remoteBackupTime != null)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 8.0),
+                              child: Text(
+                                AppLocalizations.of(context)!.remoteBackupTime(
+                                  DateFormat.yMMMd().add_jm().format(_remoteBackupTime!),
+                                ),
+                                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                              ),
+                            ),
+                          // Always reserve space for backup notification on mobile (prevent UI shift)
+                          if (Platform.isAndroid || Platform.isIOS)
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
                               margin: const EdgeInsets.only(bottom: 8.0),
-                              padding: const EdgeInsets.all(12.0),
-                              decoration: BoxDecoration(
-                                color: Colors.orange.shade50,
-                                border: Border.all(color: Colors.orange.shade300, width: 1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(Icons.cloud_download, color: Colors.orange.shade700, size: 20),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      AppLocalizations.of(context)!.newerBackupAvailable,
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.orange.shade900,
-                                        fontWeight: FontWeight.w500,
+                              height: _hasNewerBackupAvailable ? null : 0,
+                              child: _hasNewerBackupAvailable
+                                  ? Container(
+                                      padding: const EdgeInsets.all(12.0),
+                                      decoration: BoxDecoration(
+                                        color: Colors.orange.shade50,
+                                        border: Border.all(color: Colors.orange.shade300, width: 1),
+                                        borderRadius: BorderRadius.circular(8),
                                       ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.cloud_download, color: Colors.orange.shade700, size: 20),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              AppLocalizations.of(context)!.newerBackupAvailable,
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                color: Colors.orange.shade900,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  : const SizedBox.shrink(),
                             ),
                         ],
                         // Use Wrap on mobile, Row on desktop
@@ -924,9 +963,9 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
                                     SizedBox(
                                       width: double.infinity,
                                       child: ElevatedButton.icon(
-                                        icon: const Icon(Icons.sync, size: 18),
-                                        label: Text(AppLocalizations.of(context)!.syncNow),
-                                        onPressed: _isSyncing ? null : () => _syncWithGoogleDrive(),
+                                        icon: const Icon(Icons.refresh, size: 18),
+                                        label: Text(AppLocalizations.of(context)!.checkForBackup),
+                                        onPressed: _isSyncing ? null : () => _checkForBackupManually(),
                                       ),
                                     ),
                                     SizedBox(
@@ -981,9 +1020,9 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
                                       runSpacing: 8,
                                       children: [
                                         ElevatedButton.icon(
-                                          icon: const Icon(Icons.sync, size: 18),
-                                          label: Text(AppLocalizations.of(context)!.syncNow),
-                                          onPressed: _isSyncing ? null : () => _syncWithGoogleDrive(),
+                                          icon: const Icon(Icons.refresh, size: 18),
+                                          label: Text(AppLocalizations.of(context)!.checkForBackup),
+                                          onPressed: _isSyncing ? null : () => _checkForBackupManually(),
                                         ),
                                         ElevatedButton.icon(
                                           icon: const Icon(Icons.cloud_upload, size: 18),
@@ -1094,7 +1133,7 @@ class _DownloadBackupDialogState extends State<_DownloadBackupDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, {'confirm': false}),
-          child: const Text('Cancel'),
+          child: Text(AppLocalizations.of(context)!.cancel),
         ),
         ElevatedButton(
           onPressed: () => Navigator.pop(context, {
@@ -1139,7 +1178,7 @@ class _AuthorizationCodeDialogState extends State<_AuthorizationCodeDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(AppLocalizations.of(context)!.cancel),
         ),
         ElevatedButton(
           onPressed: () => Navigator.pop(context, _codeController.text),
@@ -1285,7 +1324,7 @@ class _BackupProgressDialogState extends State<_BackupProgressDialog> {
                 widget.syncService.cancelUpload();
                 // Don't close dialog here - let the exception handling close it
               },
-              child: const Text('Cancel'),
+              child: Text(AppLocalizations.of(context)!.cancel),
             );
           },
         ),

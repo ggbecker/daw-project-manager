@@ -24,6 +24,7 @@ import 'release_detail_page.dart';
 import 'profile_manager_page.dart';
 import 'project_folders_settings_page.dart';
 import 'playlists_page.dart';
+import 'google_drive_sync_page.dart';
 import 'widgets/language_switcher.dart';
 import 'widgets/theme_switcher.dart';
 import '../generated/l10n/app_localizations.dart';
@@ -638,14 +639,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                     ? AppBar(
                         title: const Text('DAW Project Manager'),
                         actions: [
-                          // Search icon
-                          IconButton(
-                            icon: const Icon(Icons.search),
-                            onPressed: () {
-                              _focusSearchAndSelectAll();
-                            },
-                            tooltip: AppLocalizations.of(context)!.searchProjects,
-                          ),
                           // Profile button
                           Consumer(
                             builder: (context, ref, child) {
@@ -763,21 +756,26 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                       const Spacer(), // Espaçador para empurrar os botões para a direita
                       const SizedBox(width: 4),
                       // Donate button
-                      Tooltip(
-                        message: 'Support the project',
-                        child: TextButton.icon(
-                          icon: const Icon(Icons.card_giftcard, size: 18, color: Colors.white70),
-                          label: const Text(
-                            'Support',
-                            style: TextStyle(color: Colors.white70, fontSize: 14),
-                          ),
-                          onPressed: () async {
-                            final uri = Uri.parse('https://www.paypal.com/donate/?hosted_button_id=QHVVZ3LAF39BL');
-                            if (await canLaunchUrl(uri)) {
-                              await launchUrl(uri, mode: LaunchMode.externalApplication);
-                            } 
-                          },
-                        ),
+                      Consumer(
+                        builder: (context, ref, child) {
+                          final l10n = AppLocalizations.of(context)!;
+                          return Tooltip(
+                            message: l10n.supportTheProject,
+                            child: TextButton.icon(
+                              icon: const Icon(Icons.card_giftcard, size: 18, color: Colors.white70),
+                              label: Text(
+                                l10n.support,
+                                style: const TextStyle(color: Colors.white70, fontSize: 14),
+                              ),
+                              onPressed: () async {
+                                final uri = Uri.parse('https://www.paypal.com/donate/?hosted_button_id=QHVVZ3LAF39BL');
+                                if (await canLaunchUrl(uri)) {
+                                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                } 
+                              },
+                            ),
+                          );
+                        },
                       ),
                       const SizedBox(width: 8),
                       const ThemeSwitcher(),
@@ -809,14 +807,18 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                               decoration: InputDecoration(
                                 hintText: _tabController.index == 0
                                     ? AppLocalizations.of(context)!.searchProjects
-                                    : AppLocalizations.of(context)!.searchReleases,
+                                    : _tabController.index == 1
+                                        ? AppLocalizations.of(context)!.searchReleases
+                                        : AppLocalizations.of(context)!.searchPlaylists,
                                 isDense: true,
                                 border: const OutlineInputBorder(),
                                 prefixIcon: const Icon(Icons.search),
                                 suffixIcon: () {
                                   final currentSearch = _tabController.index == 0
                                       ? ref.read(projectsSearchProvider)
-                                      : ref.read(releasesSearchProvider);
+                                      : _tabController.index == 1
+                                          ? ref.read(releasesSearchProvider)
+                                          : ref.read(playlistsSearchProvider);
                                   return currentSearch.isNotEmpty
                                       ? IconButton(
                                           icon: const Icon(Icons.close),
@@ -824,8 +826,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                             _searchController.clear();
                                             if (_tabController.index == 0) {
                                               ref.read(projectsSearchProvider.notifier).clear();
-                                            } else {
+                                            } else if (_tabController.index == 1) {
                                               ref.read(releasesSearchProvider.notifier).clear();
+                                            } else {
+                                              ref.read(playlistsSearchProvider.notifier).clear();
                                             }
                                           },
                                         )
@@ -835,8 +839,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                               onChanged: (text) {
                                 if (_tabController.index == 0) {
                                   ref.read(projectsSearchProvider.notifier).setSearchText(text);
-                                } else {
+                                } else if (_tabController.index == 1) {
                                   ref.read(releasesSearchProvider.notifier).setSearchText(text);
+                                } else {
+                                  ref.read(playlistsSearchProvider.notifier).setSearchText(text);
                                 }
                               },
                             ),
@@ -2528,8 +2534,8 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         title: AppLocalizations.of(context)!.bpm,
         field: 'bpm',
         type: PlutoColumnType.text(),
-        width: 100,
-        minWidth: 80,
+        width: 80,
+        minWidth: 70,
         enableEditingMode: true,
         renderer: (rendererContext) {
           final project = rendererContext.row.cells['data']?.value as MusicProject?;
@@ -2624,8 +2630,8 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         field: 'lastModified',
         type: PlutoColumnType.text(),
         enableEditingMode: false,
-        width: 200,
-        minWidth: 160,
+        width: 160,
+        minWidth: 140,
         renderer: (rendererContext) {
           final project = rendererContext.row.cells['data']?.value as MusicProject?;
           if (project == null) {
@@ -2685,8 +2691,8 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         field: 'deadline',
         type: PlutoColumnType.text(),
         enableEditingMode: false,
-        width: 140,
-        minWidth: 120,
+        width: 120,
+        minWidth: 100,
         renderer: (rendererContext) {
           final project = rendererContext.row.cells['data']?.value as MusicProject?;
           if (project == null || project.deadline == null || project.status == 'Finished') {
@@ -2761,8 +2767,8 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         field: 'launch',
         type: PlutoColumnType.text(),
         enableEditingMode: false,
-        width: 250, // Increased width to accommodate hidden button
-        minWidth: 220,
+        width: 290, // Increased width to accommodate all action buttons
+        minWidth: 250,
         renderer: (ctx) {
           final project = ctx.row.cells['data']!.value as MusicProject;
           
@@ -2893,6 +2899,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     final initialRows = _mapProjectsToRows(widget.projects);
 
     return PlutoGrid(
+          key: ValueKey('pluto_grid_${l10n.localeName}'), // Force rebuild when locale changes
           columns: columns,
           rows: initialRows,
           onLoaded: (PlutoGridOnLoadedEvent event) {
@@ -3739,26 +3746,50 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
     
     if (widget.projects.isEmpty) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.music_note, size: 64, color: Colors.grey[400]),
-            const SizedBox(height: 16),
-            Text(
-              l10n.noProjectsAvailable,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: Colors.grey[600],
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.cloud_sync,
+                size: 80,
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.6),
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              l10n.selectProjectsFolder,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[500],
+              const SizedBox(height: 24),
+              Text(
+                l10n.firstTimeSyncTitle,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+              const SizedBox(height: 12),
+              Text(
+                l10n.firstTimeSyncMessage,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+              FilledButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const GoogleDriveSyncPage(),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.cloud_upload),
+                label: Text(l10n.syncWithGoogleDrive),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  textStyle: const TextStyle(fontSize: 16),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }

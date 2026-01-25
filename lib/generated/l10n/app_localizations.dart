@@ -478,11 +478,29 @@ abstract class AppLocalizations {
   /// **'Search releases...'**
   String get searchReleases;
 
+  /// No description provided for @searchPlaylists.
+  ///
+  /// In en, this message translates to:
+  /// **'Search playlists...'**
+  String get searchPlaylists;
+
   /// No description provided for @noReleasesFound.
   ///
   /// In en, this message translates to:
   /// **'No releases found'**
   String get noReleasesFound;
+
+  /// No description provided for @noPlaylistsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No playlists found'**
+  String get noPlaylistsFound;
+
+  /// No description provided for @tryDifferentSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Try a different search term'**
+  String get tryDifferentSearch;
 
   /// No description provided for @deepScanTooltip.
   ///
@@ -1946,26 +1964,26 @@ abstract class AppLocalizations {
   /// No description provided for @dateDaysAgo.
   ///
   /// In en, this message translates to:
-  /// **'{count} days ago'**
+  /// **'{count, plural, =1{1 day ago} other{{count} days ago}}'**
   String dateDaysAgo(int count);
 
   /// No description provided for @dateWeeksAgo.
   ///
   /// In en, this message translates to:
-  /// **'{count} week{plural} ago'**
-  String dateWeeksAgo(int count, String plural);
+  /// **'{count, plural, =1{1 week ago} other{{count} weeks ago}}'**
+  String dateWeeksAgo(int count);
 
   /// No description provided for @dateMonthsAgo.
   ///
   /// In en, this message translates to:
-  /// **'{count} month{plural} ago'**
-  String dateMonthsAgo(int count, String plural);
+  /// **'{count, plural, =1{1 month ago} other{{count} months ago}}'**
+  String dateMonthsAgo(int count);
 
   /// No description provided for @dateYearsAgo.
   ///
   /// In en, this message translates to:
-  /// **'{count} year{plural} ago'**
-  String dateYearsAgo(int count, String plural);
+  /// **'{count, plural, =1{1 year ago} other{{count} years ago}}'**
+  String dateYearsAgo(int count, Object plural);
 
   /// No description provided for @ageYearsMonths.
   ///
@@ -2294,6 +2312,42 @@ abstract class AppLocalizations {
   /// **'Downloading backup...'**
   String get downloadingBackup;
 
+  /// Status message when checking for backup
+  ///
+  /// In en, this message translates to:
+  /// **'Checking for backup...'**
+  String get checkingForBackup;
+
+  /// Message when backup is current
+  ///
+  /// In en, this message translates to:
+  /// **'Backup is up to date'**
+  String get backupUpToDate;
+
+  /// No description provided for @errorCheckingBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Error checking backup: {error}'**
+  String errorCheckingBackup(String error);
+
+  /// Download button label
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get download;
+
+  /// Warning when remote backup is newer
+  ///
+  /// In en, this message translates to:
+  /// **'Remote backup is newer than local data. Uploading will overwrite it.'**
+  String get remoteBackupIsNewer;
+
+  /// Confirmation dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Upload'**
+  String get confirmUpload;
+
   /// Message when no backup file is found
   ///
   /// In en, this message translates to:
@@ -2323,6 +2377,19 @@ abstract class AppLocalizations {
     int releasesUpdated,
   );
 
+  /// No description provided for @backupDownloadedDetailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup downloaded!\n\nProjects:\n  • {projectsAdded} added\n  • {projectsUpdated} updated\n\nReleases:\n  • {releasesAdded} added\n  • {releasesUpdated} updated\n\nPreview Songs:\n  • {previewSongsDownloaded} downloaded\n  • {previewSongsUpdated} updated'**
+  String backupDownloadedDetailed(
+    int projectsAdded,
+    int projectsUpdated,
+    int releasesAdded,
+    int releasesUpdated,
+    int previewSongsDownloaded,
+    int previewSongsUpdated,
+  );
+
   /// No description provided for @errorDownloadingBackup.
   ///
   /// In en, this message translates to:
@@ -2340,6 +2407,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Last sync: {date}'**
   String lastSync(String date);
+
+  /// No description provided for @remoteBackupTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote backup: {date}'**
+  String remoteBackupTime(String date);
+
+  /// Button to check if newer backup is available
+  ///
+  /// In en, this message translates to:
+  /// **'Check for Backup'**
+  String get checkForBackup;
 
   /// No description provided for @settings.
   ///
@@ -2364,6 +2443,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Support'**
   String get support;
+
+  /// No description provided for @supportTheProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Support the project'**
+  String get supportTheProject;
 
   /// No description provided for @couldNotOpenBrowser.
   ///
@@ -2485,6 +2570,12 @@ abstract class AppLocalizations {
   /// **'Playlist deleted'**
   String get playlistDeleted;
 
+  /// Error message when playlist deletion fails
+  ///
+  /// In en, this message translates to:
+  /// **'Error deleting playlist'**
+  String get errorDeletingPlaylist;
+
   /// No description provided for @playlistUpdated.
   ///
   /// In en, this message translates to:
@@ -2520,6 +2611,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No preview songs available in this playlist'**
   String get noPreviewSongsInPlaylist;
+
+  /// Hint message to edit empty playlist
+  ///
+  /// In en, this message translates to:
+  /// **'Tap edit to add songs to this playlist'**
+  String get tapEditToAddSongs;
+
+  /// Error message when trying to add songs but no projects available
+  ///
+  /// In en, this message translates to:
+  /// **'No projects with preview songs available to add'**
+  String get noProjectsAvailableForPlaylist;
+
+  /// Error message when there are no projects at all in the database
+  ///
+  /// In en, this message translates to:
+  /// **'No projects found in database. Please sync your projects first.'**
+  String get noProjectsInDatabase;
+
+  /// Title for first-time sync message on mobile
+  ///
+  /// In en, this message translates to:
+  /// **'It seems it\'s your first time here!'**
+  String get firstTimeSyncTitle;
+
+  /// Message explaining to sync data from Google Drive
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s sync your data from Google Drive to get started'**
+  String get firstTimeSyncMessage;
+
+  /// Button text to sync with Google Drive
+  ///
+  /// In en, this message translates to:
+  /// **'Sync with Google Drive'**
+  String get syncWithGoogleDrive;
 
   /// Error message when playlists fail to load
   ///
