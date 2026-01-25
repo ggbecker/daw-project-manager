@@ -224,6 +224,10 @@ class _PlaylistsPageState extends ConsumerState<PlaylistsPage> {
 
               final repo = await ref.read(repositoryProvider.future);
               await repo.createPlaylist(name);
+              
+              // Invalidate provider to refresh the UI
+              ref.invalidate(playlistsProvider);
+              
               if (dialogContext.mounted) {
                 Navigator.pop(dialogContext);
                 // Open edit dialog to add songs
@@ -388,6 +392,10 @@ class _PlaylistsPageState extends ConsumerState<PlaylistsPage> {
                             audioFilePaths: const [], // No external files
                           );
                           await repo.updatePlaylist(updated);
+                          
+                          // Invalidate provider to refresh the UI
+                          ref.invalidate(playlistsProvider);
+                          
                           if (dialogContext.mounted) {
                             Navigator.pop(dialogContext);
                           }
@@ -574,6 +582,10 @@ class _PlaylistsPageState extends ConsumerState<PlaylistsPage> {
     if (confirmed == true) {
       final repo = await ref.read(repositoryProvider.future);
       await repo.deletePlaylist(playlist.id);
+      
+      // Invalidate provider to refresh the UI
+      ref.invalidate(playlistsProvider);
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -928,6 +940,10 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
                   try {
                     final repo = await ref.read(repositoryProvider.future);
                     await repo.deletePlaylist(widget.playlist.id);
+                    
+                    // Invalidate provider to refresh the UI
+                    ref.invalidate(playlistsProvider);
+                    
                     if (mounted) {
                       Navigator.of(context).pop(); // Close player page
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -1075,6 +1091,10 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
               if (confirmed == true) {
                 final repo = await ref.read(repositoryProvider.future);
                 await repo.deletePlaylist(widget.playlist.id);
+                
+                // Invalidate provider to refresh the UI
+                ref.invalidate(playlistsProvider);
+                
                 if (mounted) {
                   Navigator.of(context).pop(); // Go back to playlists page
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -1525,6 +1545,10 @@ class _EditPlaylistFormState extends ConsumerState<_EditPlaylistForm> {
                     audioFilePaths: const [],
                   );
                   await repo.updatePlaylist(updated);
+                  
+                  // Invalidate provider to refresh the UI
+                  ref.invalidate(playlistsProvider);
+                  
                   if (mounted) {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
