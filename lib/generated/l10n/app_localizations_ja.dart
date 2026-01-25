@@ -1350,6 +1350,27 @@ class AppLocalizationsJa extends AppLocalizations {
   String get downloadingBackup => 'バックアップをダウンロード中...';
 
   @override
+  String get checkingForBackup => 'バックアップを確認中...';
+
+  @override
+  String get backupUpToDate => 'バックアップは最新です';
+
+  @override
+  String errorCheckingBackup(String error) {
+    return 'バックアップの確認エラー: $error';
+  }
+
+  @override
+  String get download => 'ダウンロード';
+
+  @override
+  String get remoteBackupIsNewer =>
+      'リモートバックアップはローカルデータより新しいです。アップロードすると上書きされます。';
+
+  @override
+  String get confirmUpload => 'アップロードを確認';
+
+  @override
   String get noBackupFileFound =>
       'Google Driveにバックアップファイルが見つかりません。データを同期して最初にバックアップを作成してください。';
 
@@ -1371,6 +1392,18 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String backupDownloadedDetailed(
+    int projectsAdded,
+    int projectsUpdated,
+    int releasesAdded,
+    int releasesUpdated,
+    int previewSongsDownloaded,
+    int previewSongsUpdated,
+  ) {
+    return 'バックアップがダウンロードされました!\n\nプロジェクト:\n  • $projectsAdded 追加\n  • $projectsUpdated 更新\n\nリリース:\n  • $releasesAdded 追加\n  • $releasesUpdated 更新\n\nプレビュー曲:\n  • $previewSongsDownloaded ダウンロード\n  • $previewSongsUpdated 更新';
+  }
+
+  @override
   String errorDownloadingBackup(String error) {
     return 'バックアップのダウンロードエラー: $error';
   }
@@ -1384,6 +1417,14 @@ class AppLocalizationsJa extends AppLocalizations {
   String lastSync(String date) {
     return '最終同期: $date';
   }
+
+  @override
+  String remoteBackupTime(String date) {
+    return 'リモートバックアップ: $date';
+  }
+
+  @override
+  String get checkForBackup => 'バックアップを確認';
 
   @override
   String get settings => '設定';

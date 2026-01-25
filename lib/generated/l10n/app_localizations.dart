@@ -2312,6 +2312,42 @@ abstract class AppLocalizations {
   /// **'Downloading backup...'**
   String get downloadingBackup;
 
+  /// Status message when checking for backup
+  ///
+  /// In en, this message translates to:
+  /// **'Checking for backup...'**
+  String get checkingForBackup;
+
+  /// Message when backup is current
+  ///
+  /// In en, this message translates to:
+  /// **'Backup is up to date'**
+  String get backupUpToDate;
+
+  /// No description provided for @errorCheckingBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Error checking backup: {error}'**
+  String errorCheckingBackup(String error);
+
+  /// Download button label
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get download;
+
+  /// Warning when remote backup is newer
+  ///
+  /// In en, this message translates to:
+  /// **'Remote backup is newer than local data. Uploading will overwrite it.'**
+  String get remoteBackupIsNewer;
+
+  /// Confirmation dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Upload'**
+  String get confirmUpload;
+
   /// Message when no backup file is found
   ///
   /// In en, this message translates to:
@@ -2341,6 +2377,19 @@ abstract class AppLocalizations {
     int releasesUpdated,
   );
 
+  /// No description provided for @backupDownloadedDetailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup downloaded!\n\nProjects:\n  • {projectsAdded} added\n  • {projectsUpdated} updated\n\nReleases:\n  • {releasesAdded} added\n  • {releasesUpdated} updated\n\nPreview Songs:\n  • {previewSongsDownloaded} downloaded\n  • {previewSongsUpdated} updated'**
+  String backupDownloadedDetailed(
+    int projectsAdded,
+    int projectsUpdated,
+    int releasesAdded,
+    int releasesUpdated,
+    int previewSongsDownloaded,
+    int previewSongsUpdated,
+  );
+
   /// No description provided for @errorDownloadingBackup.
   ///
   /// In en, this message translates to:
@@ -2358,6 +2407,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Last sync: {date}'**
   String lastSync(String date);
+
+  /// No description provided for @remoteBackupTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote backup: {date}'**
+  String remoteBackupTime(String date);
+
+  /// Button to check if newer backup is available
+  ///
+  /// In en, this message translates to:
+  /// **'Check for Backup'**
+  String get checkForBackup;
 
   /// No description provided for @settings.
   ///

@@ -1381,6 +1381,27 @@ class AppLocalizationsEs extends AppLocalizations {
   String get downloadingBackup => 'Descargando copia de seguridad...';
 
   @override
+  String get checkingForBackup => 'Verificando copia de seguridad...';
+
+  @override
+  String get backupUpToDate => 'La copia de seguridad está actualizada';
+
+  @override
+  String errorCheckingBackup(String error) {
+    return 'Error al verificar copia de seguridad: $error';
+  }
+
+  @override
+  String get download => 'Descargar';
+
+  @override
+  String get remoteBackupIsNewer =>
+      'La copia de seguridad remota es más reciente que los datos locales. Cargar sobrescribirá.';
+
+  @override
+  String get confirmUpload => 'Confirmar Carga';
+
+  @override
   String get noBackupFileFound =>
       'No se encontró ningún archivo de copia de seguridad en Google Drive. Crea una copia de seguridad primero sincronizando tus datos.';
 
@@ -1402,6 +1423,18 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String backupDownloadedDetailed(
+    int projectsAdded,
+    int projectsUpdated,
+    int releasesAdded,
+    int releasesUpdated,
+    int previewSongsDownloaded,
+    int previewSongsUpdated,
+  ) {
+    return '¡Copia de seguridad descargada!\n\nProyectos:\n  • $projectsAdded agregados\n  • $projectsUpdated actualizados\n\nLanzamientos:\n  • $releasesAdded agregados\n  • $releasesUpdated actualizados\n\nPreview Songs:\n  • $previewSongsDownloaded descargadas\n  • $previewSongsUpdated actualizadas';
+  }
+
+  @override
   String errorDownloadingBackup(String error) {
     return 'Error al descargar copia de seguridad: $error';
   }
@@ -1415,6 +1448,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String lastSync(String date) {
     return 'Última sincronización: $date';
   }
+
+  @override
+  String remoteBackupTime(String date) {
+    return 'Copia de seguridad remota: $date';
+  }
+
+  @override
+  String get checkForBackup => 'Verificar Copia de Seguridad';
 
   @override
   String get settings => 'Configuración';

@@ -1263,6 +1263,34 @@
   "@downloadingBackup": {
     "description": "Status message when downloading backup"
   },
+  "checkingForBackup": "Checking for backup...",
+  "@checkingForBackup": {
+    "description": "Status message when checking for backup"
+  },
+  "backupUpToDate": "Backup is up to date",
+  "@backupUpToDate": {
+    "description": "Message when backup is current"
+  },
+  "errorCheckingBackup": "Error checking backup: {error}",
+  "@errorCheckingBackup": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "download": "Download",
+  "@download": {
+    "description": "Download button label"
+  },
+  "remoteBackupIsNewer": "Remote backup is newer than local data. Uploading will overwrite it.",
+  "@remoteBackupIsNewer": {
+    "description": "Warning when remote backup is newer"
+  },
+  "confirmUpload": "Confirm Upload",
+  "@confirmUpload": {
+    "description": "Confirmation dialog title"
+  },
   "noBackupFileFound": "No backup file found in Google Drive. Create a backup first by syncing your data.",
   "@noBackupFileFound": {
     "description": "Message when no backup file is found"
@@ -1292,6 +1320,29 @@
       }
     }
   },
+  "backupDownloadedDetailed": "Backup downloaded!\n\nProjects:\n  • {projectsAdded} added\n  • {projectsUpdated} updated\n\nReleases:\n  • {releasesAdded} added\n  • {releasesUpdated} updated\n\nPreview Songs:\n  • {previewSongsDownloaded} downloaded\n  • {previewSongsUpdated} updated",
+  "@backupDownloadedDetailed": {
+    "placeholders": {
+      "projectsAdded": {
+        "type": "int"
+      },
+      "projectsUpdated": {
+        "type": "int"
+      },
+      "releasesAdded": {
+        "type": "int"
+      },
+      "releasesUpdated": {
+        "type": "int"
+      },
+      "previewSongsDownloaded": {
+        "type": "int"
+      },
+      "previewSongsUpdated": {
+        "type": "int"
+      }
+    }
+  },
   "errorDownloadingBackup": "Error downloading backup: {error}",
   "@errorDownloadingBackup": {
     "placeholders": {
@@ -1315,6 +1366,18 @@
         "type": "String"
       }
     }
+  },
+  "remoteBackupTime": "Remote backup: {date}",
+  "@remoteBackupTime": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "checkForBackup": "Check for Backup",
+  "@checkForBackup": {
+    "description": "Button to check if newer backup is available"
   },
   "settings": "Settings",
   "language": "Language",

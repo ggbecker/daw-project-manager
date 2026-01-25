@@ -1229,24 +1229,25 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
                               ],
                             ),
                             const SizedBox(height: 16),
-                            // Generate Testing Database button
-                            Row(
-                              children: [
-                                const Icon(Icons.science, size: 24),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    AppLocalizations.of(context)!.generateTestingDatabase,
-                                    style: const TextStyle(fontSize: 16),
+                            // Generate Testing Database button (DEBUG ONLY)
+                            if (kDebugMode)
+                              Row(
+                                children: [
+                                  const Icon(Icons.science, size: 24),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      AppLocalizations.of(context)!.generateTestingDatabase,
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
                                   ),
-                                ),
-                                ElevatedButton.icon(
-                                  icon: const Icon(Icons.science, size: 18),
-                                  label: Text(AppLocalizations.of(context)!.generateTestingDatabase),
-                                  onPressed: () => _generateTestingDatabase(),
-                                ),
-                              ],
-                            ),
+                                  ElevatedButton.icon(
+                                    icon: const Icon(Icons.science, size: 18),
+                                    label: Text(AppLocalizations.of(context)!.generateTestingDatabase),
+                                    onPressed: () => _generateTestingDatabase(),
+                                  ),
+                                ],
+                              ),
                           ],
                         ),
                       ),

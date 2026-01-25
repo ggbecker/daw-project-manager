@@ -1372,6 +1372,27 @@ class AppLocalizationsRu extends AppLocalizations {
   String get downloadingBackup => 'Скачивание резервной копии...';
 
   @override
+  String get checkingForBackup => 'Проверка резервной копии...';
+
+  @override
+  String get backupUpToDate => 'Резервная копия актуальна';
+
+  @override
+  String errorCheckingBackup(String error) {
+    return 'Ошибка проверки резервной копии: $error';
+  }
+
+  @override
+  String get download => 'Скачать';
+
+  @override
+  String get remoteBackupIsNewer =>
+      'Удаленная копия новее локальных данных. Загрузка перезапишет её.';
+
+  @override
+  String get confirmUpload => 'Подтвердить загрузку';
+
+  @override
   String get noBackupFileFound =>
       'Файл резервной копии не найден в Google Drive. Сначала создайте резервную копию, синхронизировав данные.';
 
@@ -1393,6 +1414,18 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String backupDownloadedDetailed(
+    int projectsAdded,
+    int projectsUpdated,
+    int releasesAdded,
+    int releasesUpdated,
+    int previewSongsDownloaded,
+    int previewSongsUpdated,
+  ) {
+    return 'Резервная копия скачана!\n\nПроекты:\n  • $projectsAdded добавлено\n  • $projectsUpdated обновлено\n\nРелизы:\n  • $releasesAdded добавлено\n  • $releasesUpdated обновлено\n\nПревью песен:\n  • $previewSongsDownloaded скачано\n  • $previewSongsUpdated обновлено';
+  }
+
+  @override
   String errorDownloadingBackup(String error) {
     return 'Ошибка скачивания резервной копии: $error';
   }
@@ -1406,6 +1439,14 @@ class AppLocalizationsRu extends AppLocalizations {
   String lastSync(String date) {
     return 'Последняя синхронизация: $date';
   }
+
+  @override
+  String remoteBackupTime(String date) {
+    return 'Удаленная копия: $date';
+  }
+
+  @override
+  String get checkForBackup => 'Проверить резервную копию';
 
   @override
   String get settings => 'Настройки';

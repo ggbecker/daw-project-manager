@@ -1338,6 +1338,26 @@ class AppLocalizationsZh extends AppLocalizations {
   String get downloadingBackup => '正在下载备份...';
 
   @override
+  String get checkingForBackup => '正在检查备份...';
+
+  @override
+  String get backupUpToDate => '备份是最新的';
+
+  @override
+  String errorCheckingBackup(String error) {
+    return '检查备份错误: $error';
+  }
+
+  @override
+  String get download => '下载';
+
+  @override
+  String get remoteBackupIsNewer => '远程备份比本地数据更新。上传将覆盖它。';
+
+  @override
+  String get confirmUpload => '确认上传';
+
+  @override
   String get noBackupFileFound => '在 Google Drive 中未找到备份文件。请先通过同步数据创建备份。';
 
   @override
@@ -1357,6 +1377,18 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String backupDownloadedDetailed(
+    int projectsAdded,
+    int projectsUpdated,
+    int releasesAdded,
+    int releasesUpdated,
+    int previewSongsDownloaded,
+    int previewSongsUpdated,
+  ) {
+    return '备份已下载!\n\n项目:\n  • $projectsAdded 已添加\n  • $projectsUpdated 已更新\n\n发布:\n  • $releasesAdded 已添加\n  • $releasesUpdated 已更新\n\n预览歌曲:\n  • $previewSongsDownloaded 已下载\n  • $previewSongsUpdated 已更新';
+  }
+
+  @override
   String errorDownloadingBackup(String error) {
     return '下载备份错误: $error';
   }
@@ -1370,6 +1402,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String lastSync(String date) {
     return '最后同步: $date';
   }
+
+  @override
+  String remoteBackupTime(String date) {
+    return '远程备份: $date';
+  }
+
+  @override
+  String get checkForBackup => '检查备份';
 
   @override
   String get settings => '设置';

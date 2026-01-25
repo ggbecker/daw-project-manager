@@ -1378,6 +1378,27 @@ class AppLocalizationsDe extends AppLocalizations {
   String get downloadingBackup => 'Backup wird heruntergeladen...';
 
   @override
+  String get checkingForBackup => 'Backup wird überprüft...';
+
+  @override
+  String get backupUpToDate => 'Backup ist aktuell';
+
+  @override
+  String errorCheckingBackup(String error) {
+    return 'Fehler beim Überprüfen des Backups: $error';
+  }
+
+  @override
+  String get download => 'Herunterladen';
+
+  @override
+  String get remoteBackupIsNewer =>
+      'Remote-Backup ist neuer als lokale Daten. Hochladen überschreibt es.';
+
+  @override
+  String get confirmUpload => 'Upload bestätigen';
+
+  @override
   String get noBackupFileFound =>
       'Keine Backup-Datei in Google Drive gefunden. Erstellen Sie zuerst ein Backup durch Synchronisierung Ihrer Daten.';
 
@@ -1399,6 +1420,18 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String backupDownloadedDetailed(
+    int projectsAdded,
+    int projectsUpdated,
+    int releasesAdded,
+    int releasesUpdated,
+    int previewSongsDownloaded,
+    int previewSongsUpdated,
+  ) {
+    return 'Backup heruntergeladen!\n\nProjekte:\n  • $projectsAdded hinzugefügt\n  • $projectsUpdated aktualisiert\n\nVeröffentlichungen:\n  • $releasesAdded hinzugefügt\n  • $releasesUpdated aktualisiert\n\nPreview Songs:\n  • $previewSongsDownloaded heruntergeladen\n  • $previewSongsUpdated aktualisiert';
+  }
+
+  @override
   String errorDownloadingBackup(String error) {
     return 'Fehler beim Herunterladen des Backups: $error';
   }
@@ -1412,6 +1445,14 @@ class AppLocalizationsDe extends AppLocalizations {
   String lastSync(String date) {
     return 'Letzte Synchronisierung: $date';
   }
+
+  @override
+  String remoteBackupTime(String date) {
+    return 'Remote-Backup: $date';
+  }
+
+  @override
+  String get checkForBackup => 'Nach Backup suchen';
 
   @override
   String get settings => 'Einstellungen';
