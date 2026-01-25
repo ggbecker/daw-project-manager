@@ -1849,12 +1849,12 @@ class GoogleDriveSyncService {
                     // Only use existingHashes from backup if project.uploadedPreviewSongHash is null
                     final storedHash = latestProject.uploadedPreviewSongHash;
                     
-                    // If hash matches, skip upload (file hasn't changed)
+                    // If hash matches, check if file exists in Drive
                     if (storedHash != null && storedHash == currentLocalHash) {
                       if (kDebugMode) {
-                        print('  Preview song unchanged for project ${latestProject.id} (local hash matches: $currentLocalHash), skipping upload');
+                        print('  Preview song hash matches for project ${latestProject.id} (hash: $currentLocalHash), checking Drive...');
                       }
-                      // Still need to get the file ID from Drive if it exists
+                      // Check if file exists in Drive
                       final previewSongsFolderId = await _ensurePreviewSongsFolder();
                       final fileName = path.basename(latestProject.previewSongPath!);
                       final fileExtension = path.extension(fileName);
@@ -1866,13 +1866,23 @@ class GoogleDriveSyncService {
                       );
                       
                       if (response.files != null && response.files!.isNotEmpty) {
+                        // File exists in Drive and hash matches - skip upload
                         previewSongFileMap[latestProject.id] = response.files!.first.id!;
                         previewSongHashes[latestProject.id] = currentLocalHash;
                         if (latestProject.previewSongFileName != null) {
                           previewSongFileNames[latestProject.id] = latestProject.previewSongFileName!;
                         }
+                        if (kDebugMode) {
+                          print('  Preview song found in Drive, skipping upload');
+                        }
+                        continue; // Skip to next project
+                      } else {
+                        // Hash matches but file NOT in Drive - need to upload!
+                        if (kDebugMode) {
+                          print('  Preview song NOT found in Drive despite matching hash, will upload');
+                        }
+                        // Fall through to add to upload queue
                       }
-                      continue; // Skip to next project
                     }
                     
                     // Hash changed or doesn't exist - add to upload queue
@@ -1938,12 +1948,12 @@ class GoogleDriveSyncService {
                 // Compare with hash from existing backup
                 final existingHash = existingProfilePhotoHashes[profile.id];
                 
-                // If hash matches, skip upload (file hasn't changed)
+                // If hash matches, check if file exists in Drive
                 if (existingHash != null && existingHash == currentLocalHash) {
                   if (kDebugMode) {
-                    print('  Profile photo unchanged for profile ${profile.id} (hash: $currentLocalHash), skipping upload');
+                    print('  Profile photo hash matches for profile ${profile.id} (hash: $currentLocalHash), checking Drive...');
                   }
-                  // Still need to get the file ID from Drive if it exists
+                  // Check if file exists in Drive
                   final profilePhotosFolderId = await _ensureProfilePhotosFolder();
                   final fileExtension = path.extension(profile.photoPath!);
                   final driveFileName = '${profile.id}_photo$fileExtension';
@@ -1954,8 +1964,22 @@ class GoogleDriveSyncService {
                   );
                   
                   if (response.files != null && response.files!.isNotEmpty) {
+                    // File exists in Drive and hash matches - skip upload
                     profilePhotoFileMap[profile.id] = response.files!.first.id!;
                     profilePhotoHashes[profile.id] = currentLocalHash;
+                    if (kDebugMode) {
+                      print('  Profile photo found in Drive, skipping upload');
+                    }
+                  } else {
+                    // Hash matches but file NOT in Drive - need to upload!
+                    if (kDebugMode) {
+                      print('  Profile photo NOT found in Drive despite matching hash, will upload');
+                    }
+                    // Add to upload queue
+                    profilePhotosToUpload.add({
+                      'profile': profile,
+                      'existingHash': existingHash,
+                    });
                   }
                 } else {
                   // Hash changed or doesn't exist - add to upload queue
