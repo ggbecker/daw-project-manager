@@ -24,6 +24,7 @@ import 'release_detail_page.dart';
 import 'profile_manager_page.dart';
 import 'project_folders_settings_page.dart';
 import 'playlists_page.dart';
+import 'google_drive_sync_page.dart';
 import 'widgets/language_switcher.dart';
 import 'widgets/theme_switcher.dart';
 import '../generated/l10n/app_localizations.dart';
@@ -3739,26 +3740,50 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
     
     if (widget.projects.isEmpty) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.music_note, size: 64, color: Colors.grey[400]),
-            const SizedBox(height: 16),
-            Text(
-              l10n.noProjectsAvailable,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: Colors.grey[600],
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.cloud_sync,
+                size: 80,
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.6),
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              l10n.selectProjectsFolder,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[500],
+              const SizedBox(height: 24),
+              Text(
+                l10n.firstTimeSyncTitle,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+              const SizedBox(height: 12),
+              Text(
+                l10n.firstTimeSyncMessage,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+              FilledButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const GoogleDriveSyncPage(),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.cloud_upload),
+                label: Text(l10n.syncWithGoogleDrive),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  textStyle: const TextStyle(fontSize: 16),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }

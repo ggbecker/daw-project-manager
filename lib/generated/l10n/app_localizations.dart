@@ -2485,6 +2485,12 @@ abstract class AppLocalizations {
   /// **'Playlist deleted'**
   String get playlistDeleted;
 
+  /// Error message when playlist deletion fails
+  ///
+  /// In en, this message translates to:
+  /// **'Error deleting playlist'**
+  String get errorDeletingPlaylist;
+
   /// No description provided for @playlistUpdated.
   ///
   /// In en, this message translates to:
@@ -2520,6 +2526,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No preview songs available in this playlist'**
   String get noPreviewSongsInPlaylist;
+
+  /// Hint message to edit empty playlist
+  ///
+  /// In en, this message translates to:
+  /// **'Tap edit to add songs to this playlist'**
+  String get tapEditToAddSongs;
+
+  /// Error message when trying to add songs but no projects available
+  ///
+  /// In en, this message translates to:
+  /// **'No projects with preview songs available to add'**
+  String get noProjectsAvailableForPlaylist;
+
+  /// Error message when there are no projects at all in the database
+  ///
+  /// In en, this message translates to:
+  /// **'No projects found in database. Please sync your projects first.'**
+  String get noProjectsInDatabase;
+
+  /// Title for first-time sync message on mobile
+  ///
+  /// In en, this message translates to:
+  /// **'It seems it\'s your first time here!'**
+  String get firstTimeSyncTitle;
+
+  /// Message explaining to sync data from Google Drive
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s sync your data from Google Drive to get started'**
+  String get firstTimeSyncMessage;
+
+  /// Button text to sync with Google Drive
+  ///
+  /// In en, this message translates to:
+  /// **'Sync with Google Drive'**
+  String get syncWithGoogleDrive;
 
   /// Error message when playlists fail to load
   ///

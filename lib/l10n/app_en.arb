@@ -1416,6 +1416,10 @@
   "@playlistDeleted": {
     "description": "Success message after deleting a playlist"
   },
+  "errorDeletingPlaylist": "Error deleting playlist",
+  "@errorDeletingPlaylist": {
+    "description": "Error message when playlist deletion fails"
+  },
   "playlistUpdated": "Playlist updated",
   "changeSong": "Change Song",
   "changeSongConfirm": "A song is currently playing. Do you want to switch to this song?",
@@ -1435,6 +1439,30 @@
   "noPreviewSongsInPlaylist": "No preview songs available in this playlist",
   "@noPreviewSongsInPlaylist": {
     "description": "Message when playlist has no valid preview songs"
+  },
+  "tapEditToAddSongs": "Tap edit to add songs to this playlist",
+  "@tapEditToAddSongs": {
+    "description": "Hint message to edit empty playlist"
+  },
+  "noProjectsAvailableForPlaylist": "No projects with preview songs available to add",
+  "@noProjectsAvailableForPlaylist": {
+    "description": "Error message when trying to add songs but no projects available"
+  },
+  "noProjectsInDatabase": "No projects found in database. Please sync your projects first.",
+  "@noProjectsInDatabase": {
+    "description": "Error message when there are no projects at all in the database"
+  },
+  "firstTimeSyncTitle": "It seems it's your first time here!",
+  "@firstTimeSyncTitle": {
+    "description": "Title for first-time sync message on mobile"
+  },
+  "firstTimeSyncMessage": "Let's sync your data from Google Drive to get started",
+  "@firstTimeSyncMessage": {
+    "description": "Message explaining to sync data from Google Drive"
+  },
+  "syncWithGoogleDrive": "Sync with Google Drive",
+  "@syncWithGoogleDrive": {
+    "description": "Button text to sync with Google Drive"
   },
   "errorLoadingPlaylists": "Error loading playlists",
   "@errorLoadingPlaylists": {

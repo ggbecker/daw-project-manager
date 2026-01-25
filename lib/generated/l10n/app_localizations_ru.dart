@@ -1459,6 +1459,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get playlistDeleted => 'Плейлист удален';
 
   @override
+  String get errorDeletingPlaylist => 'Ошибка удаления плейлиста';
+
+  @override
   String get playlistUpdated => 'Плейлист обновлен';
 
   @override
@@ -1478,6 +1481,28 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get noPreviewSongsInPlaylist => 'В этом плейлисте нет превью';
+
+  @override
+  String get tapEditToAddSongs =>
+      'Нажмите «Изменить», чтобы добавить песни в этот плейлист';
+
+  @override
+  String get noProjectsAvailableForPlaylist =>
+      'Нет проектов с превью-песнями для добавления';
+
+  @override
+  String get noProjectsInDatabase =>
+      'Проекты не найдены в базе данных. Пожалуйста, сначала синхронизируйте ваши проекты.';
+
+  @override
+  String get firstTimeSyncTitle => 'Похоже, вы здесь впервые!';
+
+  @override
+  String get firstTimeSyncMessage =>
+      'Давайте синхронизируем ваши данные из Google Drive, чтобы начать';
+
+  @override
+  String get syncWithGoogleDrive => 'Синхронизировать с Google Drive';
 
   @override
   String get errorLoadingPlaylists => 'Ошибка загрузки плейлистов';

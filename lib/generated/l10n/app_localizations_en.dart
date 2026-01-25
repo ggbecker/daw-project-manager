@@ -1459,6 +1459,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistDeleted => 'Playlist deleted';
 
   @override
+  String get errorDeletingPlaylist => 'Error deleting playlist';
+
+  @override
   String get playlistUpdated => 'Playlist updated';
 
   @override
@@ -1479,6 +1482,27 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get noPreviewSongsInPlaylist =>
       'No preview songs available in this playlist';
+
+  @override
+  String get tapEditToAddSongs => 'Tap edit to add songs to this playlist';
+
+  @override
+  String get noProjectsAvailableForPlaylist =>
+      'No projects with preview songs available to add';
+
+  @override
+  String get noProjectsInDatabase =>
+      'No projects found in database. Please sync your projects first.';
+
+  @override
+  String get firstTimeSyncTitle => 'It seems it\'s your first time here!';
+
+  @override
+  String get firstTimeSyncMessage =>
+      'Let\'s sync your data from Google Drive to get started';
+
+  @override
+  String get syncWithGoogleDrive => 'Sync with Google Drive';
 
   @override
   String get errorLoadingPlaylists => 'Error loading playlists';

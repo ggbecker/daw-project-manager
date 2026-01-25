@@ -1469,6 +1469,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get playlistDeleted => 'Lista eliminada';
 
   @override
+  String get errorDeletingPlaylist => 'Error al eliminar la lista';
+
+  @override
   String get playlistUpdated => 'Lista actualizada';
 
   @override
@@ -1489,6 +1492,28 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get noPreviewSongsInPlaylist =>
       'No hay canciones de vista previa en esta lista';
+
+  @override
+  String get tapEditToAddSongs =>
+      'Toca editar para agregar canciones a esta lista de reproducción';
+
+  @override
+  String get noProjectsAvailableForPlaylist =>
+      'No hay proyectos con canciones de vista previa disponibles para agregar';
+
+  @override
+  String get noProjectsInDatabase =>
+      'No se encontraron proyectos en la base de datos. Por favor sincronice sus proyectos primero.';
+
+  @override
+  String get firstTimeSyncTitle => '¡Parece que es tu primera vez aquí!';
+
+  @override
+  String get firstTimeSyncMessage =>
+      'Sincronicemos tus datos desde Google Drive para comenzar';
+
+  @override
+  String get syncWithGoogleDrive => 'Sincronizar con Google Drive';
 
   @override
   String get errorLoadingPlaylists => 'Error al cargar listas';

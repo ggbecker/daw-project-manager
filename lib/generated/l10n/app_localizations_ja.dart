@@ -1440,6 +1440,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get playlistDeleted => 'プレイリストを削除しました';
 
   @override
+  String get errorDeletingPlaylist => 'プレイリスト削除エラー';
+
+  @override
   String get playlistUpdated => 'プレイリストを更新しました';
 
   @override
@@ -1458,6 +1461,24 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get noPreviewSongsInPlaylist => 'このプレイリストに利用可能なプレビュー曲がありません';
+
+  @override
+  String get tapEditToAddSongs => '編集をタップして、このプレイリストに曲を追加してください';
+
+  @override
+  String get noProjectsAvailableForPlaylist => '追加できるプレビュー曲を持つプロジェクトがありません';
+
+  @override
+  String get noProjectsInDatabase => 'データベースにプロジェクトが見つかりません。まずプロジェクトを同期してください。';
+
+  @override
+  String get firstTimeSyncTitle => '初めてのご利用のようですね！';
+
+  @override
+  String get firstTimeSyncMessage => 'Google Driveからデータを同期して始めましょう';
+
+  @override
+  String get syncWithGoogleDrive => 'Google Driveと同期';
 
   @override
   String get errorLoadingPlaylists => 'プレイリスト読み込みエラー';

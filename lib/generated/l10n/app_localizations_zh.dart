@@ -1425,6 +1425,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playlistDeleted => '播放列表已删除';
 
   @override
+  String get errorDeletingPlaylist => '删除播放列表错误';
+
+  @override
   String get playlistUpdated => '播放列表已更新';
 
   @override
@@ -1443,6 +1446,24 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get noPreviewSongsInPlaylist => '此播放列表中没有预览歌曲';
+
+  @override
+  String get tapEditToAddSongs => '点击编辑以向此播放列表添加歌曲';
+
+  @override
+  String get noProjectsAvailableForPlaylist => '没有可添加的预览歌曲项目';
+
+  @override
+  String get noProjectsInDatabase => '数据库中未找到项目。请先同步您的项目。';
+
+  @override
+  String get firstTimeSyncTitle => '看起来这是您第一次来这里！';
+
+  @override
+  String get firstTimeSyncMessage => '让我们从Google云端硬盘同步您的数据以开始使用';
+
+  @override
+  String get syncWithGoogleDrive => '与Google云端硬盘同步';
 
   @override
   String get errorLoadingPlaylists => '加载播放列表错误';

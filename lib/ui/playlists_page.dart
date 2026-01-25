@@ -419,6 +419,20 @@ class _PlaylistsPageState extends ConsumerState<PlaylistsPage> {
           .toList();
     }
 
+    // Check if there are any available projects before showing dialog
+    final availableProjectsCheck = getFilteredProjects();
+    if (availableProjectsCheck.isEmpty) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.noProjectsAvailableForPlaylist),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+      return;
+    }
+
     await showDialog(
       context: context,
       builder: (addDialogContext) => StatefulBuilder(
@@ -789,9 +803,149 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
       return Scaffold(
         appBar: AppBar(
           title: Text(widget.playlist.name),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.edit),
+              tooltip: AppLocalizations.of(context)!.edit,
+              onPressed: () async {
+                final projectsAsync = ref.read(allProjectsStreamProvider);
+                final allProjectsValue = projectsAsync.value;
+                
+                // Check if projects failed to load
+                if (allProjectsValue == null) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(AppLocalizations.of(context)!.errorLoadingProjects),
+                      ),
+                    );
+                  }
+                  return;
+                }
+                
+                // Check if there are no projects in database at all
+                if (allProjectsValue.isEmpty) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(AppLocalizations.of(context)!.noProjectsInDatabase),
+                        duration: const Duration(seconds: 3),
+                      ),
+                    );
+                  }
+                  return;
+                }
+
+                // Check if there are any projects with preview songs available
+                final projectsWithPreview = allProjectsValue.where((project) =>
+                  project.previewSongPath != null &&
+                  project.previewSongPath!.isNotEmpty &&
+                  !project.previewSongPath!.startsWith('drive://')
+                ).toList();
+                
+                if (projectsWithPreview.isEmpty) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(AppLocalizations.of(context)!.noProjectsAvailableForPlaylist),
+                        duration: const Duration(seconds: 3),
+                      ),
+                    );
+                  }
+                  return;
+                }
+
+                if (mounted) {
+                  final result = await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => _EditPlaylistRoute(
+                        playlist: widget.playlist,
+                        allProjects: allProjectsValue,
+                      ),
+                    ),
+                  );
+                  if (result == true && mounted) {
+                    // Reload playlist items
+                    _loadPlaylistItems();
+                  }
+                }
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete),
+              tooltip: AppLocalizations.of(context)!.delete,
+              onPressed: () async {
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (dialogContext) => AlertDialog(
+                    backgroundColor: Theme.of(context).cardColor,
+                    title: Text(AppLocalizations.of(context)!.deletePlaylist),
+                    content: Text(AppLocalizations.of(context)!.deletePlaylistConfirm(widget.playlist.name)),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(dialogContext, false),
+                        child: Text(AppLocalizations.of(context)!.cancel),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(dialogContext, true),
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.red,
+                        ),
+                        child: Text(AppLocalizations.of(context)!.delete),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (confirmed == true) {
+                  try {
+                    final repo = await ref.read(repositoryProvider.future);
+                    await repo.deletePlaylist(widget.playlist.id);
+                    if (mounted) {
+                      Navigator.of(context).pop(); // Close player page
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(AppLocalizations.of(context)!.playlistDeleted),
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(AppLocalizations.of(context)!.errorDeletingPlaylist),
+                        ),
+                      );
+                    }
+                  }
+                }
+              },
+            ),
+          ],
         ),
         body: Center(
-          child: Text(AppLocalizations.of(context)!.noPreviewSongsInPlaylist),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.music_off,
+                size: 64,
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                AppLocalizations.of(context)!.noPreviewSongsInPlaylist,
+                style: Theme.of(context).textTheme.titleMedium,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                AppLocalizations.of(context)!.tapEditToAddSongs,
+                style: Theme.of(context).textTheme.bodySmall,
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -821,10 +975,22 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
               final projectsAsync = ref.read(allProjectsStreamProvider);
               final allProjectsValue = projectsAsync.value;
               
+              // Check if projects failed to load
               if (allProjectsValue == null) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(AppLocalizations.of(context)!.errorLoadingProjects),
+                  ),
+                );
+                return;
+              }
+              
+              // Check if there are no projects in database at all
+              if (allProjectsValue.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(AppLocalizations.of(context)!.noProjectsInDatabase),
+                    duration: const Duration(seconds: 3),
                   ),
                 );
                 return;
@@ -1118,6 +1284,20 @@ class _EditPlaylistFormState extends ConsumerState<_EditPlaylistForm> {
               (searchQuery.isEmpty ||
                   project.displayName.toLowerCase().contains(searchQuery.toLowerCase())))
           .toList();
+    }
+
+    // Check if there are any available projects before showing dialog
+    final availableProjectsCheck = getFilteredProjects();
+    if (availableProjectsCheck.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.noProjectsAvailableForPlaylist),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+      return;
     }
 
     await showDialog(
