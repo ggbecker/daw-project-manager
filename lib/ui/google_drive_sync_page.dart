@@ -555,13 +555,13 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
       }
       
       setState(() {
-        _syncStatus = 'Upload cancelled';
+        _syncStatus = AppLocalizations.of(context)!.uploadCancelled;
       });
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Backup upload cancelled by user'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.backupUploadCancelledByUser),
             backgroundColor: Colors.orange,
           ),
         );
@@ -873,77 +873,39 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (_isSignedIn) ...[
-                          FutureBuilder<String?>(
-                            future: _syncService.getCurrentUserEmail(),
-                            builder: (context, emailSnapshot) {
-                              if (emailSnapshot.hasData && emailSnapshot.data != null) {
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: 8.0),
-                                  child: Text(
-                                    AppLocalizations.of(context)!.signedInAs(emailSnapshot.data!),
-                                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                                  ),
-                                );
-                              }
-                              return const SizedBox.shrink();
-                            },
-                          ),
-                          if (_lastSyncTime != null)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 8.0),
-                              child: Text(
-                                AppLocalizations.of(context)!.lastSync(
-                                  DateFormat.yMMMd().add_jm().format(_lastSyncTime!),
-                                ),
-                                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                              ),
-                            ),
-                          // Show remote backup time if available
-                          if (_remoteBackupTime != null)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 8.0),
-                              child: Text(
-                                AppLocalizations.of(context)!.remoteBackupTime(
-                                  DateFormat.yMMMd().add_jm().format(_remoteBackupTime!),
-                                ),
-                                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                              ),
-                            ),
-                          // Always reserve space for backup notification on mobile (prevent UI shift)
-                          if (Platform.isAndroid || Platform.isIOS)
-                            AnimatedContainer(
-                              duration: const Duration(milliseconds: 300),
-                              margin: const EdgeInsets.only(bottom: 8.0),
-                              height: _hasNewerBackupAvailable ? null : 0,
-                              child: _hasNewerBackupAvailable
-                                  ? Container(
-                                      padding: const EdgeInsets.all(12.0),
-                                      decoration: BoxDecoration(
-                                        color: Colors.orange.shade50,
-                                        border: Border.all(color: Colors.orange.shade300, width: 1),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.cloud_download, color: Colors.orange.shade700, size: 20),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: Text(
-                                              AppLocalizations.of(context)!.newerBackupAvailable,
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                color: Colors.orange.shade900,
-                                                fontWeight: FontWeight.w500,
-                                              ),
+                        // Always reserve space for backup notification on mobile (prevent UI shift)
+                        if (_isSignedIn && (Platform.isAndroid || Platform.isIOS))
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            margin: const EdgeInsets.only(bottom: 8.0),
+                            height: _hasNewerBackupAvailable ? null : 0,
+                            child: _hasNewerBackupAvailable
+                                ? Container(
+                                    padding: const EdgeInsets.all(12.0),
+                                    decoration: BoxDecoration(
+                                      color: Colors.orange.shade50,
+                                      border: Border.all(color: Colors.orange.shade300, width: 1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.cloud_download, color: Colors.orange.shade700, size: 20),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            AppLocalizations.of(context)!.newerBackupAvailable,
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.orange.shade900,
+                                              fontWeight: FontWeight.w500,
                                             ),
                                           ),
-                                        ],
-                                      ),
-                                    )
-                                  : const SizedBox.shrink(),
-                            ),
-                        ],
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                : const SizedBox.shrink(),
+                          ),
                         // Use Wrap on mobile, Row on desktop
                         isMobile
                             ? Wrap(
@@ -1063,6 +1025,48 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
                                   : Colors.green,
                             ),
                           ),
+                        ],
+                        // Show status information below buttons
+                        if (_isSignedIn) ...[
+                          const SizedBox(height: 16),
+                          const Divider(),
+                          const SizedBox(height: 8),
+                          FutureBuilder<String?>(
+                            future: _syncService.getCurrentUserEmail(),
+                            builder: (context, emailSnapshot) {
+                              if (emailSnapshot.hasData && emailSnapshot.data != null) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 8.0),
+                                  child: Text(
+                                    AppLocalizations.of(context)!.signedInAs(emailSnapshot.data!),
+                                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                                  ),
+                                );
+                              }
+                              return const SizedBox.shrink();
+                            },
+                          ),
+                          if (_lastSyncTime != null)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 8.0),
+                              child: Text(
+                                AppLocalizations.of(context)!.lastSync(
+                                  DateFormat.yMMMd().add_jm().format(_lastSyncTime!),
+                                ),
+                                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                              ),
+                            ),
+                          // Show remote backup time if available
+                          if (_remoteBackupTime != null)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 0.0),
+                              child: Text(
+                                AppLocalizations.of(context)!.remoteBackupTime(
+                                  DateFormat.yMMMd().add_jm().format(_remoteBackupTime!),
+                                ),
+                                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                              ),
+                            ),
                         ],
                       ],
                     ),
@@ -1209,13 +1213,13 @@ class _BackupProgressDialogState extends State<_BackupProgressDialog> {
   String _getStageText(BackupProgressStage stage, BuildContext context) {
     switch (stage) {
       case BackupProgressStage.collectingData:
-        return 'Collecting data...';
+        return AppLocalizations.of(context)!.collectingData;
       case BackupProgressStage.uploadingPreviewSongs:
-        return 'Uploading preview songs...';
+        return AppLocalizations.of(context)!.uploadingPreviewSongs;
       case BackupProgressStage.uploadingDatabase:
-        return 'Uploading database...';
+        return AppLocalizations.of(context)!.uploadingDatabase;
       case BackupProgressStage.completed:
-        return 'Completed!';
+        return AppLocalizations.of(context)!.completed;
     }
   }
 
@@ -1227,7 +1231,7 @@ class _BackupProgressDialogState extends State<_BackupProgressDialog> {
         children: [
           const Icon(Icons.cloud_upload, size: 24),
           const SizedBox(width: 8),
-          Text(_isCancelling ? 'Cancelling...' : 'Uploading Backup'),
+          Text(_isCancelling ? AppLocalizations.of(context)!.cancelling : AppLocalizations.of(context)!.uploadingBackupTitle),
         ],
       ),
       content: StreamBuilder<BackupProgress>(
@@ -1253,7 +1257,7 @@ class _BackupProgressDialogState extends State<_BackupProgressDialog> {
               children: [
                 // Stage indicator
                 Text(
-                  _isCancelling ? 'Cancelling upload...' : _getStageText(progress.stage, context),
+                  _isCancelling ? AppLocalizations.of(context)!.cancellingUpload : _getStageText(progress.stage, context),
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -1264,7 +1268,7 @@ class _BackupProgressDialogState extends State<_BackupProgressDialog> {
                 
                 // Current item
                 Text(
-                  _isCancelling ? 'Please wait while we stop the upload...' : progress.currentItem,
+                  _isCancelling ? AppLocalizations.of(context)!.pleaseWaitCancellingUpload : progress.currentItem,
                   style: TextStyle(
                     fontSize: 14,
                     color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.8),

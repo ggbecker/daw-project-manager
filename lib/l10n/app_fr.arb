@@ -1032,5 +1032,15 @@
   "dueSoon": "Bientôt Échu (7j)",
   "today": "Aujourd'hui",
   "noPreviewSong": "Pas d'aperçu",
-  "playPreview": "Lire l'Aperçu"
+  "playPreview": "Lire l'Aperçu",
+  "uploadCancelled": "Téléchargement annulé",
+  "backupUploadCancelledByUser": "Téléchargement de sauvegarde annulé par l'utilisateur",
+  "collectingData": "Collecte des données...",
+  "uploadingPreviewSongs": "Téléchargement des aperçus musicaux...",
+  "uploadingDatabase": "Téléchargement de la base de données...",
+  "completed": "Terminé !",
+  "cancelling": "Annulation...",
+  "uploadingBackupTitle": "Téléchargement de la Sauvegarde",
+  "cancellingUpload": "Annulation du téléchargement...",
+  "pleaseWaitCancellingUpload": "Veuillez patienter pendant l'arrêt du téléchargement..."
 }

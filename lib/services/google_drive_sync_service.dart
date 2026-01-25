@@ -1189,6 +1189,35 @@ class GoogleDriveSyncService {
     return createdFolder.id!;
   }
 
+  /// Ensure profile_photos folder exists in app data folder
+  Future<String> _ensureProfilePhotosFolder() async {
+    if (_driveApi == null || _appDataFolderId == null) {
+      throw Exception('Not signed in to Google Drive');
+    }
+
+    const folderName = 'profile_photos';
+    
+    // Search for folder in app data folder
+    var response = await _driveApi!.files.list(
+      q: "name='$folderName' and mimeType='application/vnd.google-apps.folder' and parents in '$_appDataFolderId' and trashed=false",
+      spaces: 'drive',
+    );
+
+    if (response.files != null && response.files!.isNotEmpty) {
+      return response.files!.first.id!;
+    }
+
+    // Create folder if it doesn't exist
+    final folder = drive.File();
+    folder.name = folderName;
+    folder.mimeType = 'application/vnd.google-apps.folder';
+    folder.parents = [_appDataFolderId!];
+
+    final createdFolder = await _driveApi!.files.create(folder);
+    if (kDebugMode) print('Created profile_photos folder: ${createdFolder.id}');
+    return createdFolder.id!;
+  }
+
   /// Upload a preview song file to Google Drive
   /// Returns the file ID in Google Drive, the file hash, and the original filename
   /// Only uploads if the file hash has changed
@@ -1300,6 +1329,113 @@ class GoogleDriveSyncService {
     }
   }
 
+  /// Upload a profile photo file to Google Drive
+  /// Returns the file ID in Google Drive and the file hash
+  /// Only uploads if the file hash has changed
+  Future<Map<String, String>?> _uploadProfilePhotoFile({
+    required String profileId,
+    required String localFilePath,
+    String? existingHash, // Hash from previous backup (if available)
+  }) async {
+    if (_driveApi == null) {
+      throw Exception('Not signed in to Google Drive');
+    }
+
+    final file = File(localFilePath);
+    if (!await file.exists()) {
+      if (kDebugMode) print('Profile photo file not found: $localFilePath');
+      return null;
+    }
+
+    try {
+      // Calculate current file hash
+      final currentHash = await _calculateFileHash(localFilePath);
+      
+      // If hash exists and matches, skip upload
+      if (existingHash != null && existingHash == currentHash) {
+        if (kDebugMode) {
+          print('Profile photo unchanged for profile $profileId (hash: $currentHash), skipping upload');
+        }
+        // Still return the file ID if it exists in Drive
+        final profilePhotosFolderId = await _ensureProfilePhotosFolder();
+        final fileExtension = path.extension(localFilePath);
+        final driveFileName = '${profileId}_photo$fileExtension';
+        
+        var response = await _driveApi!.files.list(
+          q: "name='$driveFileName' and parents in '$profilePhotosFolderId' and trashed=false",
+          spaces: 'drive',
+        );
+        
+        if (response.files != null && response.files!.isNotEmpty) {
+          return {
+            'fileId': response.files!.first.id!,
+            'hash': currentHash,
+          };
+        }
+        // If file doesn't exist in Drive but hash matches, something is wrong
+        // Fall through to upload
+      }
+      
+      // Hash changed or file doesn't exist - upload
+      if (kDebugMode) {
+        if (existingHash != null) {
+          print('Profile photo changed for profile $profileId (old: $existingHash, new: $currentHash), uploading...');
+        } else {
+          print('Uploading new profile photo for profile $profileId (hash: $currentHash)');
+        }
+      }
+      
+      // Ensure profile photos folder exists
+      final profilePhotosFolderId = await _ensureProfilePhotosFolder();
+      
+      // Generate a unique filename based on profile ID
+      final fileExtension = path.extension(localFilePath);
+      final driveFileName = '${profileId}_photo$fileExtension';
+      
+      // Check if file already exists
+      var response = await _driveApi!.files.list(
+        q: "name='$driveFileName' and parents in '$profilePhotosFolderId' and trashed=false",
+        spaces: 'drive',
+      );
+
+      final fileBytes = await file.readAsBytes();
+      final media = drive.Media(
+        Stream.value(fileBytes),
+        fileBytes.length,
+        contentType: _getContentTypeForFile(fileExtension),
+      );
+
+      String fileId;
+      if (response.files != null && response.files!.isNotEmpty) {
+        // Update existing file
+        fileId = response.files!.first.id!;
+        await _driveApi!.files.update(
+          drive.File()..name = driveFileName,
+          fileId,
+          uploadMedia: media,
+        );
+        if (kDebugMode) print('Updated profile photo: $driveFileName (ID: $fileId)');
+      } else {
+        // Create new file
+        final driveFile = drive.File();
+        driveFile.name = driveFileName;
+        driveFile.parents = [profilePhotosFolderId];
+        
+        final createdFile = await _driveApi!.files.create(driveFile, uploadMedia: media);
+        fileId = createdFile.id!;
+        if (kDebugMode) print('Uploaded profile photo: $driveFileName (ID: $fileId)');
+      }
+      
+      return {
+        'fileId': fileId,
+        'hash': currentHash,
+      };
+    } catch (e) {
+      if (kDebugMode) print('Error uploading profile photo: $e');
+      return null;
+    }
+  }
+
   /// Download preview song file from Google Drive to local storage
   /// Returns the local file path, or null if download failed
   /// Uses hash comparison to avoid unnecessary downloads
@@ -1391,6 +1527,106 @@ class GoogleDriveSyncService {
       return localFilePath;
     } catch (e) {
       if (kDebugMode) print('Error downloading preview song: $e');
+      return null;
+    }
+  }
+
+  /// Download profile photo file from Google Drive to local storage
+  /// Returns the local file path, or null if download failed
+  /// Uses hash comparison to avoid unnecessary downloads
+  Future<String?> downloadProfilePhotoFile({
+    required String driveFileId,
+    required String profileId,
+    String? expectedHash, // Hash from profile.uploadedPhotoHash
+    String? fileExtension, // File extension from photoPath or default to .jpg
+  }) async {
+    if (_driveApi == null) {
+      if (kDebugMode) print('Drive API not initialized, attempting to restore session...');
+      final restored = await restoreSession();
+      if (!restored) {
+        if (kDebugMode) print('Failed to restore session for profile photo download');
+        return null;
+      }
+    }
+
+    try {
+      // Get local app directory for profile photos
+      final appDir = await getApplicationDocumentsDirectory();
+      final profilePhotosDir = Directory(path.join(appDir.path, 'profile_photos'));
+      if (!await profilePhotosDir.exists()) {
+        await profilePhotosDir.create(recursive: true);
+      }
+      
+      final ext = fileExtension ?? '.jpg';
+      final localFilePath = path.join(profilePhotosDir.path, '${profileId}_photo$ext');
+      
+      // Check if file already exists and hash matches
+      final existingFile = File(localFilePath);
+      if (await existingFile.exists() && expectedHash != null) {
+        try {
+          final existingHash = await _calculateFileHash(localFilePath);
+          if (existingHash == expectedHash) {
+            if (kDebugMode) {
+              print('Profile photo already downloaded with matching hash, skipping download');
+            }
+            return localFilePath;
+          } else {
+            if (kDebugMode) {
+              print('Profile photo hash mismatch (local: $existingHash, expected: $expectedHash), re-downloading...');
+            }
+            // Delete old file
+            await existingFile.delete();
+          }
+        } catch (e) {
+          if (kDebugMode) print('Error checking existing profile photo hash: $e, will re-download');
+          // If hash check fails, delete and re-download
+          if (await existingFile.exists()) {
+            await existingFile.delete();
+          }
+        }
+      }
+      
+      if (kDebugMode) {
+        print('Downloading profile photo from Drive: $driveFileId');
+      }
+      
+      // Download file using Drive API
+      final media = await _driveApi!.files.get(
+        driveFileId,
+        downloadOptions: drive.DownloadOptions.fullMedia,
+      ) as drive.Media;
+      
+      // Read the stream and write to file
+      final file = File(localFilePath);
+      final sink = file.openWrite();
+      
+      await for (final chunk in media.stream) {
+        sink.add(chunk);
+      }
+      await sink.close();
+      
+      // Verify hash if expected hash was provided
+      if (expectedHash != null) {
+        final downloadedHash = await _calculateFileHash(localFilePath);
+        if (downloadedHash != expectedHash) {
+          if (kDebugMode) {
+            print('WARNING: Downloaded profile photo hash mismatch! Expected: $expectedHash, Got: $downloadedHash');
+          }
+          // Still return the file, but log the warning
+        } else {
+          if (kDebugMode) {
+            print('Downloaded profile photo hash verified: $downloadedHash');
+          }
+        }
+      }
+      
+      if (kDebugMode) {
+        print('Downloaded profile photo to: $localFilePath');
+      }
+      
+      return localFilePath;
+    } catch (e) {
+      if (kDebugMode) print('Error downloading profile photo: $e');
       return null;
     }
   }
@@ -1494,8 +1730,16 @@ class GoogleDriveSyncService {
       // projectId -> originalFileName
       final previewSongFileNames = <String, String>{};
       
+      // Map to track profile photo files in Google Drive
+      // profileId -> driveFileId
+      final profilePhotoFileMap = <String, String>{};
+      // Map to track profile photo hashes
+      // profileId -> fileHash
+      final profilePhotoHashes = <String, String>{};
+      
       // Get existing hashes from previous backup (if available) to avoid unnecessary uploads
       Map<String, String> existingHashes = {};
+      Map<String, String> existingProfilePhotoHashes = {};
       try {
         final existingBackup = await downloadDatabase();
         if (existingBackup['previewSongHashes'] != null) {
@@ -1504,10 +1748,16 @@ class GoogleDriveSyncService {
             print('Found ${existingHashes.length} existing preview song hashes from previous backup');
           }
         }
+        if (existingBackup['profilePhotoHashes'] != null) {
+          existingProfilePhotoHashes = Map<String, String>.from(existingBackup['profilePhotoHashes'] as Map);
+          if (kDebugMode) {
+            print('Found ${existingProfilePhotoHashes.length} existing profile photo hashes from previous backup');
+          }
+        }
       } catch (_) {
         // No previous backup or error reading it - that's okay, we'll upload everything
         if (kDebugMode) {
-          print('No previous backup found or error reading it - will upload all preview songs');
+          print('No previous backup found or error reading it - will upload all preview songs and profile photos');
         }
       }
       
@@ -1533,6 +1783,9 @@ class GoogleDriveSyncService {
       
       // Structure to hold preview songs that need upload
       final previewSongsToUpload = <Map<String, dynamic>>[];
+      
+      // Structure to hold profile photos that need upload
+      final profilePhotosToUpload = <Map<String, dynamic>>[];
       
       int profileIndex = 0;
       for (final profile in allProfiles) {
@@ -1674,6 +1927,55 @@ class GoogleDriveSyncService {
             print('  Profile ${profile.name}: ${profileProjectsBox.length} projects, ${profileReleasesBox.length} releases, ${profileRootsBox.length} roots');
           }
           
+          // Check profile photo status (only on desktop - mobile doesn't upload profile photos)
+          // On mobile, we only download profile photos, never upload them
+          if (!Platform.isAndroid && !Platform.isIOS) {
+            if (profile.photoPath != null && profile.photoPath!.isNotEmpty) {
+              try {
+                // Calculate current file hash
+                final currentLocalHash = await _calculateFileHash(profile.photoPath!);
+                
+                // Compare with hash from existing backup
+                final existingHash = existingProfilePhotoHashes[profile.id];
+                
+                // If hash matches, skip upload (file hasn't changed)
+                if (existingHash != null && existingHash == currentLocalHash) {
+                  if (kDebugMode) {
+                    print('  Profile photo unchanged for profile ${profile.id} (hash: $currentLocalHash), skipping upload');
+                  }
+                  // Still need to get the file ID from Drive if it exists
+                  final profilePhotosFolderId = await _ensureProfilePhotosFolder();
+                  final fileExtension = path.extension(profile.photoPath!);
+                  final driveFileName = '${profile.id}_photo$fileExtension';
+                  
+                  var response = await _driveApi!.files.list(
+                    q: "name='$driveFileName' and parents in '$profilePhotosFolderId' and trashed=false",
+                    spaces: 'drive',
+                  );
+                  
+                  if (response.files != null && response.files!.isNotEmpty) {
+                    profilePhotoFileMap[profile.id] = response.files!.first.id!;
+                    profilePhotoHashes[profile.id] = currentLocalHash;
+                  }
+                } else {
+                  // Hash changed or doesn't exist - add to upload queue
+                  profilePhotosToUpload.add({
+                    'profile': profile,
+                    'existingHash': existingHash,
+                  });
+                  
+                  if (kDebugMode) {
+                    print('  Profile photo needs upload for profile ${profile.id}');
+                  }
+                }
+              } catch (e) {
+                if (kDebugMode) {
+                  print('  Error checking profile photo for profile ${profile.id}: $e');
+                }
+              }
+            }
+          }
+          
           // Close boxes after collecting data to free resources
           // Note: We don't close them here because they might be in use by the current repository
           // Instead, we'll let Hive manage them
@@ -1747,6 +2049,54 @@ class GoogleDriveSyncService {
         }
       }
       
+      // Now upload all profile photos that need uploading
+      if (kDebugMode) {
+        print('Found ${profilePhotosToUpload.length} profile photos that need upload');
+      }
+      
+      uploadedCount = 0;
+      for (final uploadInfo in profilePhotosToUpload) {
+        // Check for cancellation
+        if (_isCancelled) {
+          throw UploadCancelledException();
+        }
+        
+        uploadedCount++;
+        final profile = uploadInfo['profile'] as Profile;
+        final existingHash = uploadInfo['existingHash'] as String?;
+        
+        // Emit progress
+        _progressController.add(BackupProgress(
+          stage: BackupProgressStage.uploadingPreviewSongs, // Reuse same stage for simplicity
+          currentItem: 'Uploading profile photo: ${profile.name}',
+          currentIndex: uploadedCount,
+          totalItems: profilePhotosToUpload.length,
+          progress: 0.2 + (uploadedCount / profilePhotosToUpload.length * 0.6), // 20-80% range
+        ));
+        
+        try {
+          final result = await _uploadProfilePhotoFile(
+            profileId: profile.id,
+            localFilePath: profile.photoPath!,
+            existingHash: existingHash,
+          );
+          
+          if (result != null) {
+            profilePhotoFileMap[profile.id] = result['fileId']!;
+            final newHash = result['hash']!;
+            profilePhotoHashes[profile.id] = newHash;
+            
+            if (kDebugMode) {
+              print('  Uploaded profile photo for profile ${profile.id}: ${result['fileId']} (hash: $newHash)');
+            }
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('  Error uploading profile photo for profile ${profile.id}: $e');
+          }
+        }
+      }
+      
       // Collect TODO templates (global, not per-profile)
       final List<TodoTemplate> allTemplates = [];
       try {
@@ -1763,7 +2113,7 @@ class GoogleDriveSyncService {
       
       final data = {
         'timestamp': DateTime.now().toIso8601String(),
-        'version': '1.4', // Incremented version to include TODO templates
+        'version': '1.5', // Incremented version to include profile photos
         'profiles': allProfiles.map((p) => _serializeProfile(p)).toList(),
         'projects': allProjects.map((p) => _serializeProject(p)).toList(),
         'releases': allReleases.map((r) => _serializeRelease(r)).toList(),
@@ -1779,6 +2129,10 @@ class GoogleDriveSyncService {
         'previewSongHashes': previewSongHashes,
         // NEW: Preview song original filenames (projectId -> originalFileName)
         'previewSongFileNames': previewSongFileNames,
+        // NEW: Profile photo file mappings (profileId -> driveFileId)
+        'profilePhotoFiles': profilePhotoFileMap,
+        // NEW: Profile photo hashes (profileId -> fileHash) for change detection
+        'profilePhotoHashes': profilePhotoHashes,
       };
 
       // Check for cancellation before database upload
@@ -2303,16 +2657,69 @@ class GoogleDriveSyncService {
           .map((p) => _deserializeProfile(p as Map<String, dynamic>))
           .toList();
       
+      // Get profile photo file mappings (if available)
+      // Maps profileId -> driveFileId
+      final profilePhotoFiles = remoteData['profilePhotoFiles'] as Map<String, dynamic>?;
+      // Get profile photo hashes (if available)
+      // Maps profileId -> fileHash
+      final profilePhotoHashes = remoteData['profilePhotoHashes'] as Map<String, dynamic>?;
+      
       for (final remoteProfile in remoteProfiles) {
         final localProfile = profileRepo.getProfileById(remoteProfile.id);
+        
+        // Download profile photo if available and downloadPreviewSongs is true
+        Profile profileToSave = remoteProfile;
+        if (downloadPreviewSongs && profilePhotoFiles != null && profilePhotoFiles.containsKey(remoteProfile.id)) {
+          try {
+            final driveFileId = profilePhotoFiles[remoteProfile.id] as String;
+            String? expectedHash;
+            if (profilePhotoHashes != null && profilePhotoHashes.containsKey(remoteProfile.id)) {
+              expectedHash = profilePhotoHashes[remoteProfile.id] as String;
+            }
+            
+            // Determine file extension from remote photoPath
+            String? fileExtension;
+            if (remoteProfile.photoPath != null) {
+              fileExtension = path.extension(remoteProfile.photoPath!);
+            }
+            
+            // Download profile photo file
+            final localFilePath = await downloadProfilePhotoFile(
+              driveFileId: driveFileId,
+              profileId: remoteProfile.id,
+              expectedHash: expectedHash,
+              fileExtension: fileExtension,
+            );
+            
+            if (localFilePath != null) {
+              profileToSave = remoteProfile.copyWith(
+                photoPath: localFilePath,
+              );
+              if (kDebugMode) {
+                print('    Downloaded profile photo for profile: ${remoteProfile.name} (ID: $driveFileId)');
+              }
+            } else {
+              // Download failed, keep remote photoPath as is
+              if (kDebugMode) {
+                print('    Failed to download profile photo for: ${remoteProfile.name}');
+              }
+            }
+          } catch (e) {
+            if (kDebugMode) {
+              print('    Error downloading profile photo for profile ${remoteProfile.id}: $e');
+            }
+            // Continue without profile photo
+          }
+        }
+        
         if (localProfile == null) {
           // New profile from remote - add it
-          await profileRepo.profilesBox.put(remoteProfile.id, remoteProfile);
-          if (kDebugMode) print('Added new profile from backup: ${remoteProfile.name}');
+          await profileRepo.profilesBox.put(profileToSave.id, profileToSave);
+          if (kDebugMode) print('Added new profile from backup: ${profileToSave.name}');
         } else {
           // Update existing profile (merge metadata)
-          await profileRepo.profilesBox.put(remoteProfile.id, remoteProfile);
-          if (kDebugMode) print('Updated profile from backup: ${remoteProfile.name}');
+          await profileRepo.profilesBox.put(profileToSave.id, profileToSave);
+          if (kDebugMode) print('Updated profile from backup: ${profileToSave.name}');
         }
       }
     }

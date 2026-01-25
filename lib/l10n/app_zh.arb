@@ -1032,5 +1032,15 @@
   "dueSoon": "即将到期 (7天)",
   "today": "今天",
   "noPreviewSong": "无预览",
-  "playPreview": "播放预览"
+  "playPreview": "播放预览",
+  "uploadCancelled": "上传已取消",
+  "backupUploadCancelledByUser": "用户取消了备份上传",
+  "collectingData": "正在收集数据...",
+  "uploadingPreviewSongs": "正在上传预览歌曲...",
+  "uploadingDatabase": "正在上传数据库...",
+  "completed": "完成！",
+  "cancelling": "正在取消...",
+  "uploadingBackupTitle": "正在上传备份",
+  "cancellingUpload": "正在取消上传...",
+  "pleaseWaitCancellingUpload": "请稍候，我们正在停止上传..."
 }

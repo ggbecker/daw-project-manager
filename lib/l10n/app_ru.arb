@@ -1032,5 +1032,15 @@
   "dueSoon": "Скоро Истекает (7д)",
   "today": "Сегодня",
   "noPreviewSong": "Нет превью",
-  "playPreview": "Воспроизвести Превью"
+  "playPreview": "Воспроизвести Превью",
+  "uploadCancelled": "Загрузка отменена",
+  "backupUploadCancelledByUser": "Загрузка резервной копии отменена пользователем",
+  "collectingData": "Сбор данных...",
+  "uploadingPreviewSongs": "Загрузка превью песен...",
+  "uploadingDatabase": "Загрузка базы данных...",
+  "completed": "Завершено!",
+  "cancelling": "Отмена...",
+  "uploadingBackupTitle": "Загрузка Резервной Копии",
+  "cancellingUpload": "Отмена загрузки...",
+  "pleaseWaitCancellingUpload": "Пожалуйста, подождите, пока мы остановим загрузку..."
 }
