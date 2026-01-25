@@ -1635,6 +1635,46 @@
   "playPreview": "Play Preview",
   "@playPreview": {
     "description": "Tooltip for play preview button"
+  },
+  "uploadCancelled": "Upload cancelled",
+  "@uploadCancelled": {
+    "description": "Status message when backup upload is cancelled"
+  },
+  "backupUploadCancelledByUser": "Backup upload cancelled by user",
+  "@backupUploadCancelledByUser": {
+    "description": "Message shown when user cancels backup upload"
+  },
+  "collectingData": "Collecting data...",
+  "@collectingData": {
+    "description": "Status message when collecting data for backup"
+  },
+  "uploadingPreviewSongs": "Uploading preview songs...",
+  "@uploadingPreviewSongs": {
+    "description": "Status message when uploading preview song files"
+  },
+  "uploadingDatabase": "Uploading database...",
+  "@uploadingDatabase": {
+    "description": "Status message when uploading database file"
+  },
+  "completed": "Completed!",
+  "@completed": {
+    "description": "Status message when operation is completed"
+  },
+  "cancelling": "Cancelling...",
+  "@cancelling": {
+    "description": "Status message when cancelling an operation"
+  },
+  "uploadingBackupTitle": "Uploading Backup",
+  "@uploadingBackupTitle": {
+    "description": "Title for backup upload progress dialog"
+  },
+  "cancellingUpload": "Cancelling upload...",
+  "@cancellingUpload": {
+    "description": "Status message during upload cancellation"
+  },
+  "pleaseWaitCancellingUpload": "Please wait while we stop the upload...",
+  "@pleaseWaitCancellingUpload": {
+    "description": "Message shown while stopping upload operation"
   }
 }
 

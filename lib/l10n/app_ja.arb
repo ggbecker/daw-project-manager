@@ -1032,5 +1032,15 @@
   "dueSoon": "もうすぐ期限 (7日)",
   "today": "今日",
   "noPreviewSong": "プレビューなし",
-  "playPreview": "プレビュー再生"
+  "playPreview": "プレビュー再生",
+  "uploadCancelled": "アップロードがキャンセルされました",
+  "backupUploadCancelledByUser": "ユーザーによってバックアップのアップロードがキャンセルされました",
+  "collectingData": "データを収集中...",
+  "uploadingPreviewSongs": "プレビュー曲をアップロード中...",
+  "uploadingDatabase": "データベースをアップロード中...",
+  "completed": "完了！",
+  "cancelling": "キャンセル中...",
+  "uploadingBackupTitle": "バックアップをアップロード中",
+  "cancellingUpload": "アップロードをキャンセル中...",
+  "pleaseWaitCancellingUpload": "アップロードを停止していますのでお待ちください..."
 }

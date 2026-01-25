@@ -1086,5 +1086,15 @@
   "dueSoon": "Vence em Breve (7d)",
   "today": "Hoje",
   "noPreviewSong": "Sem prévia",
-  "playPreview": "Reproduzir Prévia"
+  "playPreview": "Reproduzir Prévia",
+  "uploadCancelled": "Upload cancelado",
+  "backupUploadCancelledByUser": "Upload de backup cancelado pelo usuário",
+  "collectingData": "Coletando dados...",
+  "uploadingPreviewSongs": "Enviando músicas de prévia...",
+  "uploadingDatabase": "Enviando banco de dados...",
+  "completed": "Concluído!",
+  "cancelling": "Cancelando...",
+  "uploadingBackupTitle": "Enviando Backup",
+  "cancellingUpload": "Cancelando upload...",
+  "pleaseWaitCancellingUpload": "Por favor aguarde enquanto paramos o upload..."
 }

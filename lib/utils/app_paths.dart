@@ -64,13 +64,14 @@ Future<String> getReleaseArtworkPath() async {
 }
 
 /// Gets the path for preview songs storage
-/// On mobile, this uses the temporary directory or cache directory
+/// On mobile, this uses the application documents directory for persistence
 /// On desktop, this uses the app data directory
 Future<String> getPreviewSongsPath() async {
   if (Platform.isAndroid || Platform.isIOS) {
-    // On mobile, use temporary directory for preview songs
-    final tempDir = await getTemporaryDirectory();
-    final previewSongsDir = Directory(path.join(tempDir.path, 'preview_songs'));
+    // On mobile, use application documents directory for persistent storage
+    // This ensures preview songs are not deleted by the system
+    final appDocDir = await getApplicationDocumentsDirectory();
+    final previewSongsDir = Directory(path.join(appDocDir.path, 'preview_songs'));
     if (!await previewSongsDir.exists()) {
       await previewSongsDir.create(recursive: true);
     }

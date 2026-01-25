@@ -888,60 +888,89 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                               children: [
                                 // Show Hidden Projects checkbox (Mobile) - only show if there are hidden projects
                                 if (hiddenCount > 0)
-                                  Row(
+                                  InkWell(
+                                    onTap: () {
+                                      final currentValue = hiddenMode == 1;
+                                      if (!currentValue) {
+                                        hiddenNotifier.setShowAll(true);
+                                      } else {
+                                        hiddenNotifier.setShowAll(false);
+                                      }
+                                    },
+                                    borderRadius: BorderRadius.circular(4),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Checkbox(
+                                          value: hiddenMode == 1,
+                                          onChanged: (value) {
+                                            if (value == true) {
+                                              hiddenNotifier.setShowAll(true);
+                                            } else {
+                                              hiddenNotifier.setShowAll(false);
+                                            }
+                                          },
+                                        ),
+                                        Text(
+                                          AppLocalizations.of(context)!.showHidden,
+                                          style: const TextStyle(fontSize: 12),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                // Hide Finished Projects checkbox (Mobile)
+                                InkWell(
+                                  onTap: () {
+                                    final currentValue = finishedMode == 1;
+                                    if (!currentValue) {
+                                      finishedNotifier.setHideFinished(true);
+                                    } else {
+                                      finishedNotifier.setHideFinished(false);
+                                    }
+                                  },
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Checkbox(
-                                        value: hiddenMode == 1,
+                                        value: finishedMode == 1,
                                         onChanged: (value) {
                                           if (value == true) {
-                                            hiddenNotifier.setShowAll(true);
+                                            finishedNotifier.setHideFinished(true);
                                           } else {
-                                            hiddenNotifier.setShowAll(false);
+                                            finishedNotifier.setHideFinished(false);
                                           }
                                         },
                                       ),
                                       Text(
-                                        AppLocalizations.of(context)!.showHidden,
+                                        AppLocalizations.of(context)!.hideFinished,
                                         style: const TextStyle(fontSize: 12),
                                       ),
                                     ],
                                   ),
-                                // Hide Finished Projects checkbox (Mobile)
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Checkbox(
-                                      value: finishedMode == 1,
-                                      onChanged: (value) {
-                                        if (value == true) {
-                                          finishedNotifier.setHideFinished(true);
-                                        } else {
-                                          finishedNotifier.setHideFinished(false);
-                                        }
-                                      },
-                                    ),
-                                    Text(
-                                      AppLocalizations.of(context)!.hideFinished,
-                                      style: const TextStyle(fontSize: 12),
-                                    ),
-                                  ],
                                 ),
                                 // Show Deadline checkbox (Mobile)
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Checkbox(
-                                      value: ref.watch(showOnlyWithDeadlineProvider),
-                                      onChanged: (value) {
-                                        ref.read(showOnlyWithDeadlineProvider.notifier).setShowOnlyWithDeadline(value == true);
-                                      },
-                                    ),
-                                    Text(
-                                      AppLocalizations.of(context)!.showOnlyDeadlines,
-                                      style: const TextStyle(fontSize: 12),
-                                    ),
-                                  ],
+                                InkWell(
+                                  onTap: () {
+                                    final currentValue = ref.read(showOnlyWithDeadlineProvider);
+                                    ref.read(showOnlyWithDeadlineProvider.notifier).setShowOnlyWithDeadline(!currentValue);
+                                  },
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Checkbox(
+                                        value: ref.watch(showOnlyWithDeadlineProvider),
+                                        onChanged: (value) {
+                                          ref.read(showOnlyWithDeadlineProvider.notifier).setShowOnlyWithDeadline(value == true);
+                                        },
+                                      ),
+                                      Text(
+                                        AppLocalizations.of(context)!.showOnlyDeadlines,
+                                        style: const TextStyle(fontSize: 12),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                                 if (hiddenCount > 0)
                                   TextButton.icon(
@@ -1336,25 +1365,36 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                           const SizedBox(width: 8),
                           // Show Hidden Projects checkbox - only show if there are hidden projects
                         if (hiddenCount > 0)
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Checkbox(
-                                value: hiddenMode == 1, // Show all mode
-                                onChanged: (value) {
-                                  if (value == true) {
-                                    hiddenNotifier.setShowAll(true);
-                                  } else {
-                                    // If unchecking, go back to show only visible (mode 0)
-                                    hiddenNotifier.setShowAll(false);
-                                  }
-                                },
-                              ),
-                              Text(
-                                AppLocalizations.of(context)!.showHidden,
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                            ],
+                          InkWell(
+                            onTap: () {
+                              final currentValue = hiddenMode == 1;
+                              if (!currentValue) {
+                                hiddenNotifier.setShowAll(true);
+                              } else {
+                                hiddenNotifier.setShowAll(false);
+                              }
+                            },
+                            borderRadius: BorderRadius.circular(4),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Checkbox(
+                                  value: hiddenMode == 1, // Show all mode
+                                  onChanged: (value) {
+                                    if (value == true) {
+                                      hiddenNotifier.setShowAll(true);
+                                    } else {
+                                      // If unchecking, go back to show only visible (mode 0)
+                                      hiddenNotifier.setShowAll(false);
+                                    }
+                                  },
+                                ),
+                                Text(
+                                  AppLocalizations.of(context)!.showHidden,
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                              ],
+                            ),
                           ),
                         if (hiddenCount > 0)
                           const SizedBox(width: 8),
@@ -1386,41 +1426,59 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                           ),
                         const SizedBox(width: 8),
                         // Hide Finished Projects checkbox
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Checkbox(
-                              value: finishedMode == 1,
-                              onChanged: (value) {
-                                if (value == true) {
-                                  finishedNotifier.setHideFinished(true);
-                                } else {
-                                  finishedNotifier.setHideFinished(false);
-                                }
-                              },
-                            ),
-                            Text(
-                              AppLocalizations.of(context)!.hideFinished,
-                              style: const TextStyle(fontSize: 12),
-                            ),
-                          ],
+                        InkWell(
+                          onTap: () {
+                            final currentValue = finishedMode == 1;
+                            if (!currentValue) {
+                              finishedNotifier.setHideFinished(true);
+                            } else {
+                              finishedNotifier.setHideFinished(false);
+                            }
+                          },
+                          borderRadius: BorderRadius.circular(4),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Checkbox(
+                                value: finishedMode == 1,
+                                onChanged: (value) {
+                                  if (value == true) {
+                                    finishedNotifier.setHideFinished(true);
+                                  } else {
+                                    finishedNotifier.setHideFinished(false);
+                                  }
+                                },
+                              ),
+                              Text(
+                                AppLocalizations.of(context)!.hideFinished,
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ],
+                          ),
                         ),
                         const SizedBox(width: 8),
                         // Show Deadline checkbox (Desktop)
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Checkbox(
-                              value: ref.watch(showOnlyWithDeadlineProvider),
-                              onChanged: (value) {
-                                ref.read(showOnlyWithDeadlineProvider.notifier).setShowOnlyWithDeadline(value == true);
-                              },
-                            ),
-                            Text(
-                              AppLocalizations.of(context)!.showOnlyDeadlines,
-                              style: const TextStyle(fontSize: 12),
-                            ),
-                          ],
+                        InkWell(
+                          onTap: () {
+                            final currentValue = ref.read(showOnlyWithDeadlineProvider);
+                            ref.read(showOnlyWithDeadlineProvider.notifier).setShowOnlyWithDeadline(!currentValue);
+                          },
+                          borderRadius: BorderRadius.circular(4),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Checkbox(
+                                value: ref.watch(showOnlyWithDeadlineProvider),
+                                onChanged: (value) {
+                                  ref.read(showOnlyWithDeadlineProvider.notifier).setShowOnlyWithDeadline(value == true);
+                                },
+                              ),
+                              Text(
+                                AppLocalizations.of(context)!.showOnlyDeadlines,
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ],
+                          ),
                         ),
                         const SizedBox(width: 8),
                         // Phase Filter dropdown

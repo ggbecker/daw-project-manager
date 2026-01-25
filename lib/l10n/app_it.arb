@@ -1032,5 +1032,15 @@
   "dueSoon": "Prossima Scadenza (7g)",
   "today": "Oggi",
   "noPreviewSong": "Nessuna anteprima",
-  "playPreview": "Riproduci Anteprima"
+  "playPreview": "Riproduci Anteprima",
+  "uploadCancelled": "Caricamento annullato",
+  "backupUploadCancelledByUser": "Caricamento backup annullato dall'utente",
+  "collectingData": "Raccolta dati...",
+  "uploadingPreviewSongs": "Caricamento anteprime musicali...",
+  "uploadingDatabase": "Caricamento database...",
+  "completed": "Completato!",
+  "cancelling": "Annullamento...",
+  "uploadingBackupTitle": "Caricamento Backup",
+  "cancellingUpload": "Annullamento caricamento...",
+  "pleaseWaitCancellingUpload": "Attendi mentre interrompiamo il caricamento..."
 }

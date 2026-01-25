@@ -1032,5 +1032,15 @@
   "dueSoon": "Próximo a Vencer (7d)",
   "today": "Hoy",
   "noPreviewSong": "Sin vista previa",
-  "playPreview": "Reproducir Vista Previa"
+  "playPreview": "Reproducir Vista Previa",
+  "uploadCancelled": "Subida cancelada",
+  "backupUploadCancelledByUser": "Subida de copia de seguridad cancelada por el usuario",
+  "collectingData": "Recopilando datos...",
+  "uploadingPreviewSongs": "Subiendo canciones de vista previa...",
+  "uploadingDatabase": "Subiendo base de datos...",
+  "completed": "¡Completado!",
+  "cancelling": "Cancelando...",
+  "uploadingBackupTitle": "Subiendo Copia de Seguridad",
+  "cancellingUpload": "Cancelando subida...",
+  "pleaseWaitCancellingUpload": "Por favor espere mientras detenemos la subida..."
 }

@@ -1032,5 +1032,15 @@
   "dueSoon": "Bald fällig (7T)",
   "today": "Heute",
   "noPreviewSong": "Keine Vorschau",
-  "playPreview": "Vorschau abspielen"
+  "playPreview": "Vorschau abspielen",
+  "uploadCancelled": "Upload abgebrochen",
+  "backupUploadCancelledByUser": "Backup-Upload vom Benutzer abgebrochen",
+  "collectingData": "Daten werden gesammelt...",
+  "uploadingPreviewSongs": "Vorschaulieder werden hochgeladen...",
+  "uploadingDatabase": "Datenbank wird hochgeladen...",
+  "completed": "Abgeschlossen!",
+  "cancelling": "Wird abgebrochen...",
+  "uploadingBackupTitle": "Backup wird hochgeladen",
+  "cancellingUpload": "Upload wird abgebrochen...",
+  "pleaseWaitCancellingUpload": "Bitte warten Sie, während der Upload gestoppt wird..."
 }
