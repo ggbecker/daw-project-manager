@@ -477,7 +477,7 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
                     const SizedBox(height: 12),
                     ElevatedButton.icon(
                       icon: const Icon(Icons.alarm),
-                      label: const Text('Request Exact Alarm Permission'),
+                      label: const Text('Request Exact Alarm Permission (Optional)'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.purple.shade600,
                         foregroundColor: Colors.white,
@@ -487,7 +487,7 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('⚙️ Opening system settings. Please enable "Alarms & reminders" permission.'),
+                              content: Text('⚙️ Opening system settings. Enable "Alarms & reminders" for exact timing (optional).'),
                               duration: Duration(seconds: 4),
                             ),
                           );
@@ -496,11 +496,13 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Check console logs for detailed timezone information.\n'
-                      'If notifications don\'t work:\n'
-                      '• Grant "Alarms & reminders" permission\n'
+                      '📋 Check console logs for detailed timezone information.\n\n'
+                      '✅ Notifications work WITHOUT "Alarms & reminders" permission!\n'
+                      '   They may appear with a slight delay (~5-10 min).\n\n'
+                      '🎯 For EXACT timing, grant "Alarms & reminders" permission.\n\n'
+                      '⚡ Other tips:\n'
                       '• Disable battery optimization for this app\n'
-                      '• Ensure notifications are enabled',
+                      '• Ensure notifications are enabled in settings',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.orange.shade700,

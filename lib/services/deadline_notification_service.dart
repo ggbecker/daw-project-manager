@@ -33,6 +33,18 @@ class DeadlineNotificationService {
       // Initialize timezone data
       tz.initializeTimeZones();
       
+      if (kDebugMode) {
+        print('\n🌍 ═══════════════════════════════════════════');
+        print('🌍 TIMEZONE INITIALIZATION');
+        print('🌍 ═══════════════════════════════════════════');
+        print('📱 System timezone name: ${DateTime.now().timeZoneName}');
+        print('📱 System time: ${DateTime.now()}');
+        print('📱 System UTC time: ${DateTime.now().toUtc()}');
+        print('📱 System offset: ${DateTime.now().timeZoneOffset}');
+        print('📱 System offset hours: ${DateTime.now().timeZoneOffset.inHours}');
+        print('📱 System offset minutes: ${DateTime.now().timeZoneOffset.inMinutes}');
+      }
+      
       // Get local timezone with detailed logging
       final String? timeZoneName = await _getLocalTimeZone();
       if (timeZoneName != null) {
@@ -46,7 +58,7 @@ class DeadlineNotificationService {
         final locationOffsetHours = locationOffset ~/ 3600; // Convert seconds to hours
         
         if (kDebugMode) {
-          print('📍 Timezone configured: $timeZoneName');
+          print('🌍 Selected timezone: $timeZoneName');
           print('🕐 Current time in timezone: ${tz.TZDateTime.now(tz.local)}');
           print('⏰ System offset: $systemOffset ($systemOffsetHours hours)');
           print('⏰ Configured offset: $locationOffset seconds ($locationOffsetHours hours)');
@@ -56,19 +68,28 @@ class DeadlineNotificationService {
         final offsetDiff = (locationOffsetHours - systemOffsetHours).abs();
         if (offsetDiff > 1) {
           if (kDebugMode) {
-            print('⚠️ WARNING: Timezone offset mismatch!');
-            print('   System: $systemOffsetHours hours');
-            print('   Configured: $locationOffsetHours hours');
-            print('   This may cause notifications to appear at wrong times!');
+            print('⚠️ ⚠️ ⚠️ WARNING: TIMEZONE OFFSET MISMATCH! ⚠️ ⚠️ ⚠️');
+            print('   System reports: $systemOffsetHours hours');
+            print('   Configured timezone has: $locationOffsetHours hours');
+            print('   Difference: $offsetDiff hours');
+            print('   ⚠️ NOTIFICATIONS WILL APPEAR AT WRONG TIMES!');
           }
         } else {
           if (kDebugMode) {
-            print('✅ Timezone configured correctly (offset diff: $offsetDiff hours, may be DST)');
+            print('✅ Timezone configured correctly');
+            print('   Offset difference: $offsetDiff hours (acceptable for DST)');
           }
+        }
+        
+        if (kDebugMode) {
+          print('🌍 ═══════════════════════════════════════════\n');
         }
       } else {
         // Fallback to UTC
-        if (kDebugMode) print('⚠️ Could not determine timezone, using UTC');
+        if (kDebugMode) {
+          print('⚠️ Could not determine timezone, using UTC');
+          print('🌍 ═══════════════════════════════════════════\n');
+        }
         tz.setLocalLocation(tz.getLocation('UTC'));
       }
 
@@ -478,14 +499,41 @@ class DeadlineNotificationService {
       // Convert to TZ DateTime
       final tzScheduledTime = tz.TZDateTime.from(scheduledTime, tz.local);
       
+      // Check if we can use exact alarms
+      final androidImpl = _notifications.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+      bool canUseExactAlarms = false;
+      AndroidScheduleMode scheduleMode = AndroidScheduleMode.inexactAllowWhileIdle;
+      
+      if (androidImpl != null) {
+        try {
+          canUseExactAlarms = await androidImpl.canScheduleExactNotifications() ?? false;
+          scheduleMode = canUseExactAlarms 
+              ? AndroidScheduleMode.exactAllowWhileIdle 
+              : AndroidScheduleMode.inexactAllowWhileIdle;
+        } catch (e) {
+          if (kDebugMode) print('⚠️ Could not check exact alarm permission: $e');
+        }
+      }
+      
       if (kDebugMode) {
-        print('🔔 SCHEDULING NOTIFICATION:');
+        print('\n🔔 ═════════ SCHEDULING NOTIFICATION ═════════');
         print('   📌 Notification ID: $notificationId');
+        print('   📝 Project: ${project.displayName}');
+        print('   ⏰ Days remaining: $daysRemaining');
         print('   📅 Original DateTime: $scheduledTime');
         print('   🌍 Timezone: ${tz.local.name}');
         print('   ⏰ TZDateTime: $tzScheduledTime');
         print('   🕐 Current TZDateTime: ${tz.TZDateTime.now(tz.local)}');
         print('   ⏱️ Seconds until notification: ${tzScheduledTime.difference(tz.TZDateTime.now(tz.local)).inSeconds}');
+        print('   🎯 Schedule mode: $scheduleMode');
+        print('   🔐 Exact alarms permission: $canUseExactAlarms');
+        if (!canUseExactAlarms) {
+          print('   ⚠️ ⚠️ ⚠️ USING INEXACT MODE ⚠️ ⚠️ ⚠️');
+          print('   ⚠️ Notification may appear with 5-10 min delay');
+        } else {
+          print('   ✅ Using exact mode - will appear at exact time');
+        }
+        print('🔔 ═════════════════════════════════════════\n');
       }
 
       // Schedule the notification
@@ -495,7 +543,7 @@ class DeadlineNotificationService {
         body,
         tzScheduledTime,
         notificationDetails,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        androidScheduleMode: scheduleMode,
         uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
         payload: project.id, // Pass project ID for deep linking
       );
@@ -505,7 +553,7 @@ class DeadlineNotificationService {
         print('Scheduled notification for ${project.displayName}: $daysRemaining days, at $scheduledTime');
       }
     } catch (e) {
-      if (kDebugMode) print('Error scheduling individual notification: $e');
+      if (kDebugMode) print('❌ Error scheduling individual notification: $e');
     }
   }
 
@@ -659,6 +707,22 @@ class DeadlineNotificationService {
       final now = tz.TZDateTime.now(tz.local);
       final scheduledTime = now.add(Duration(seconds: secondsFromNow));
       
+      // Check if we can use exact alarms
+      final androidImpl = _notifications.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+      bool canUseExactAlarms = false;
+      AndroidScheduleMode scheduleMode = AndroidScheduleMode.inexactAllowWhileIdle;
+      
+      if (androidImpl != null) {
+        try {
+          canUseExactAlarms = await androidImpl.canScheduleExactNotifications() ?? false;
+          scheduleMode = canUseExactAlarms 
+              ? AndroidScheduleMode.exactAllowWhileIdle 
+              : AndroidScheduleMode.inexactAllowWhileIdle;
+        } catch (e) {
+          if (kDebugMode) print('⚠️ Could not check exact alarm permission: $e');
+        }
+      }
+      
       if (kDebugMode) {
         print('\n🧪 ═══════════════════════════════════════════');
         print('🧪 SCHEDULING TEST NOTIFICATION');
@@ -671,6 +735,10 @@ class DeadlineNotificationService {
         print('⏰ Will notify at TZ Time: $scheduledTime');
         print('⏰ Will notify at System Time: ${DateTime.now().add(Duration(seconds: secondsFromNow))}');
         print('⏱️ In $secondsFromNow seconds');
+        print('🎯 Schedule mode: $scheduleMode (exact alarms: $canUseExactAlarms)');
+        if (!canUseExactAlarms) {
+          print('⚠️ Using inexact mode - notification may appear with slight delay');
+        }
         print('🧪 ═══════════════════════════════════════════\n');
       }
 
@@ -686,7 +754,7 @@ class DeadlineNotificationService {
         enableVibration: true,
         styleInformation: BigTextStyleInformation(
           'Scheduled for ${scheduledTime.hour.toString().padLeft(2, '0')}:${scheduledTime.minute.toString().padLeft(2, '0')}:${scheduledTime.second.toString().padLeft(2, '0')}. '
-          'Timezone: ${tz.local.name}. System time when scheduled: ${DateTime.now()}',
+          'Timezone: ${tz.local.name}. Mode: $scheduleMode',
         ),
       );
 
@@ -699,7 +767,7 @@ class DeadlineNotificationService {
         'If you see this, notifications are working! Scheduled at ${now.hour}:${now.minute}:${now.second}',
         scheduledTime,
         notificationDetails,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        androidScheduleMode: scheduleMode,
         uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
         payload: 'test',
       );
@@ -717,33 +785,34 @@ class DeadlineNotificationService {
   }
 
   /// Request notification permissions (Android 13+)
+  /// Note: Exact alarm permission is optional - notifications will work in inexact mode without it
   Future<bool> requestPermissions() async {
     if (!Platform.isAndroid) return false;
 
     try {
       final androidImpl = _notifications.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
       if (androidImpl != null) {
-        // Request notification permission
+        // Request notification permission (required)
         final granted = await androidImpl.requestNotificationsPermission();
         
-        // Check and request exact alarm permission if needed (Android 12+)
+        // Check exact alarm permission (optional - for exact timing)
         final canScheduleExactAlarms = await androidImpl.canScheduleExactNotifications();
         if (canScheduleExactAlarms == false) {
           if (kDebugMode) {
             print('⚠️ Exact alarm permission not granted.');
-            print('💡 User needs to grant "Alarms & reminders" permission in app settings.');
+            print('💡 Notifications will use inexact mode (may have slight delay).');
+            print('💡 To get exact timing, grant "Alarms & reminders" permission in app settings.');
           }
-          // Note: We can't programmatically request this permission
-          // User must grant it in system settings
-          return false;
         }
         
         if (kDebugMode) {
           print('✅ Notification permissions: ${granted ?? false}');
-          print('✅ Exact alarm permissions: ${canScheduleExactAlarms ?? false}');
+          print('🎯 Exact alarm permissions: ${canScheduleExactAlarms ?? false}');
         }
         
-        return (granted ?? false) && (canScheduleExactAlarms ?? false);
+        // Return true if basic notification permission is granted
+        // Exact alarm permission is optional
+        return granted ?? false;
       }
       return true; // Pre-Android 13, permissions granted by default
     } catch (e) {
