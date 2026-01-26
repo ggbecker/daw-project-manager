@@ -346,7 +346,7 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
                         Expanded(
                           child: ElevatedButton.icon(
                             icon: const Icon(Icons.schedule),
-                            label: const Text('Schedule +10s'),
+                            label: const Text('Schedule +30s'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.orange.shade600,
                               foregroundColor: Colors.white,
@@ -354,12 +354,12 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
                             onPressed: _hasPermission
                                 ? () async {
                                     try {
-                                      await _notificationService.scheduleTestNotification(secondsFromNow: 10);
+                                      await _notificationService.scheduleTestNotification(secondsFromNow: 30);
                                       if (mounted) {
                                         ScaffoldMessenger.of(context).showSnackBar(
                                           const SnackBar(
-                                            content: Text('✅ Test notification scheduled for 10 seconds!'),
-                                            duration: Duration(seconds: 2),
+                                            content: Text('✅ Test notification scheduled for 30 seconds! Check console logs.'),
+                                            duration: Duration(seconds: 3),
                                           ),
                                         );
                                       }
@@ -474,9 +474,33 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
                         ),
                       ],
                     ),
+                    const SizedBox(height: 12),
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.alarm),
+                      label: const Text('Request Exact Alarm Permission'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.purple.shade600,
+                        foregroundColor: Colors.white,
+                      ),
+                      onPressed: () async {
+                        await _notificationService.requestExactAlarmPermission();
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('⚙️ Opening system settings. Please enable "Alarms & reminders" permission.'),
+                              duration: Duration(seconds: 4),
+                            ),
+                          );
+                        }
+                      },
+                    ),
                     const SizedBox(height: 8),
                     Text(
-                      'Check console logs for detailed timezone information.',
+                      'Check console logs for detailed timezone information.\n'
+                      'If notifications don\'t work:\n'
+                      '• Grant "Alarms & reminders" permission\n'
+                      '• Disable battery optimization for this app\n'
+                      '• Ensure notifications are enabled',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.orange.shade700,
