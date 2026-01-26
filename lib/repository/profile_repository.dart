@@ -44,22 +44,12 @@ class ProfileRepository {
   }
 
   /// Migrates existing data to a default profile if no profiles exist
-  /// On mobile (Android/iOS), no default profile is created
-  /// User must download a backup from Google Drive to initialize profiles
-  /// On desktop, a default profile is created for immediate use
+  /// On mobile (Android/iOS), creates an empty "Default" profile to allow app initialization
+  /// This profile will be automatically removed when a backup is downloaded from Google Drive
+  /// On desktop, a default profile is created for immediate use with data migration
   Future<void> _migrateToDefaultProfile() async {
     if (profilesBox.isEmpty) {
-      // On mobile, don't create default profile
-      // User will download backup from Google Drive which contains profiles
-      if (Platform.isAndroid || Platform.isIOS) {
-        if (kDebugMode) {
-          print('Mobile platform: No default profile created.');
-          print('  User must download backup from Google Drive to initialize app data.');
-        }
-        return; // Exit early - no profile created
-      }
-      
-      // On desktop, create default profile for immediate use
+      // Create default profile on all platforms to allow app initialization
       final defaultProfile = Profile(
         id: _uuid.v4(),
         name: 'Default',
@@ -70,11 +60,19 @@ class ProfileRepository {
       await setCurrentProfileId(defaultProfile.id);
       
       if (kDebugMode) {
-        print('Desktop platform: Created default profile.');
+        if (Platform.isAndroid || Platform.isIOS) {
+          print('Mobile platform: Created empty "Default" profile for app initialization.');
+          print('  This profile will be automatically removed when backup is downloaded from Google Drive.');
+        } else {
+          print('Desktop platform: Created default profile.');
+        }
       }
       
-      // Migrate existing data from old boxes to default profile boxes
-      await _migrateExistingData(defaultProfile.id);
+      // On desktop, migrate existing data from old boxes to default profile boxes
+      // On mobile, skip migration (profile boxes will be empty)
+      if (!Platform.isAndroid && !Platform.isIOS) {
+        await _migrateExistingData(defaultProfile.id);
+      }
     } else {
       // If profiles exist but no current profile is set, set the first one
       final currentId = getCurrentProfileId();

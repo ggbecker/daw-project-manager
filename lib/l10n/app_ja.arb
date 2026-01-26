@@ -948,6 +948,8 @@
   "signedInAs": "サインイン: {email}",
   "lastSync": "最終同期: {date}",
   "remoteBackupTime": "リモートバックアップ: {date}",
+  "lastUploadTime": "最後のアップロード: {date}",
+  "lastDownloadTime": "最後のダウンロード: {date}",
   "checkForBackup": "バックアップを確認",
   "settings": "設定",
   "language": "言語",
@@ -1037,6 +1039,8 @@
   "backupUploadCancelledByUser": "ユーザーによってバックアップのアップロードがキャンセルされました",
   "collectingData": "データを収集中...",
   "uploadingPreviewSongs": "プレビュー曲をアップロード中...",
+  "uploadingProfilePhotos": "プロフィール写真をアップロード中...",
+  "uploadingReleaseArtwork": "リリースアートワークをアップロード中...",
   "uploadingDatabase": "データベースをアップロード中...",
   "completed": "完了！",
   "cancelling": "キャンセル中...",
@@ -1046,6 +1050,7 @@
   "downloadingDatabase": "データベースをダウンロード中...",
   "downloadingPreviewSongs": "プレビュー曲をダウンロード中...",
   "downloadingProfilePhotos": "プロフィール写真をダウンロード中...",
+  "downloadingReleaseArtwork": "リリースアートワークをダウンロード中...",
   "mergingData": "データを統合中...",
   "downloadingBackupTitle": "バックアップをダウンロード中"
 }

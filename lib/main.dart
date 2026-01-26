@@ -11,9 +11,37 @@ import 'package:window_manager/window_manager.dart';
 import 'providers/providers.dart';
 import 'repository/project_repository.dart';
 import 'services/scanner_service.dart';
+import 'services/deadline_notification_service.dart';
+import 'services/notification_background_service.dart';
 
 import 'ui/dashboard_page.dart';
+import 'ui/project_detail_page.dart';
 import 'providers/theme_provider.dart';
+
+// Global navigator key for deep linking
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+// Handle notification tap - navigate to project details
+Future<void> _handleNotificationTap(String projectId) async {
+  if (kDebugMode) print('Handling notification tap for project: $projectId');
+  
+  final context = navigatorKey.currentContext;
+  if (context == null) {
+    if (kDebugMode) print('Navigator context not available');
+    return;
+  }
+
+  try {
+    // Navigate to project details page
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ProjectDetailPage(projectId: projectId),
+      ),
+    );
+  } catch (e) {
+    if (kDebugMode) print('Error navigating to project details: $e');
+  }
+}
 
 // NOVO: Função para executar o scan
 Future<void> _runInitialScan(ProjectRepository repo, ProviderContainer container) async {
@@ -54,7 +82,23 @@ void main() async {
   // 1. Inicialização do Flutter
   WidgetsFlutterBinding.ensureInitialized();
   
-  // 2. Window Manager only for desktop platforms
+  // 2. Initialize notification services (Android only)
+  if (!kIsWeb && Platform.isAndroid) {
+    try {
+      final notificationService = DeadlineNotificationService();
+      await notificationService.initialize();
+      
+      // Set callback for notification taps
+      notificationService.setOnNotificationTapCallback(_handleNotificationTap);
+      
+      await NotificationBackgroundService.initialize();
+      if (kDebugMode) print('Notification services initialized');
+    } catch (e) {
+      if (kDebugMode) print('Error initializing notification services: $e');
+    }
+  }
+  
+  // 3. Window Manager only for desktop platforms
   if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
     await windowManager.ensureInitialized();
 
@@ -115,6 +159,7 @@ class MyApp extends ConsumerWidget {
     final currentLocale = ref.watch(localeProvider);
     
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'DAW Project Manager',
       theme: themeData,
       // Localization support

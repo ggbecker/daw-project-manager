@@ -11,6 +11,11 @@ import '../utils/mobile_utils.dart';
 import '../generated/l10n/app_localizations.dart';
 import '../services/playlist_audio_handler.dart';
 
+/// Global singleton for the audio handler
+/// AudioService.init() should only be called once in the app lifecycle
+PlaylistAudioHandler? _globalAudioHandler;
+bool _isInitializingAudioService = false;
+
 /// Playlists page - Android only
 /// Allows creating playlists with preview songs and playing them in sequence
 class PlaylistsPage extends ConsumerStatefulWidget {
@@ -645,6 +650,35 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
   Future<void> _initAudioService() async {
     if (!Platform.isAndroid) return;
     
+    // Use existing global audio handler if already initialized
+    if (_globalAudioHandler != null) {
+      _audioHandler = _globalAudioHandler;
+      _setupCallbacks();
+      
+      // Listen to playback state
+      _audioHandler?.playbackState.listen((state) {
+        if (mounted) {
+          setState(() {
+            _isPlaying = state.playing;
+          });
+        }
+      });
+      return;
+    }
+    
+    // Wait if another instance is already initializing
+    while (_isInitializingAudioService) {
+      await Future.delayed(const Duration(milliseconds: 100));
+      if (_globalAudioHandler != null) {
+        _audioHandler = _globalAudioHandler;
+        _setupCallbacks();
+        return;
+      }
+    }
+    
+    // Initialize the global audio handler
+    _isInitializingAudioService = true;
+    
     try {
       _audioHandler = await AudioService.init(
         builder: () => PlaylistAudioHandler(
@@ -680,6 +714,9 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
           androidNotificationIcon: 'mipmap/ic_launcher',
         ),
       );
+      
+      // Store globally for reuse
+      _globalAudioHandler = _audioHandler;
 
       // Listen to playback state
       _audioHandler?.playbackState.listen((state) {
@@ -696,6 +733,38 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
           SnackBar(content: Text('Failed to initialize audio service: $e')),
         );
       }
+    } finally {
+      _isInitializingAudioService = false;
+    }
+  }
+  
+  void _setupCallbacks() {
+    // Update callbacks for the current instance
+    if (_audioHandler != null) {
+      (_audioHandler as PlaylistAudioHandler).onIndexChanged = (index) {
+        if (mounted) {
+          setState(() {
+            _currentIndex = index;
+          });
+        }
+      };
+      (_audioHandler as PlaylistAudioHandler).onPositionChanged = (position) {
+        if (mounted) {
+          setState(() {
+            _position = position;
+          });
+        }
+      };
+      (_audioHandler as PlaylistAudioHandler).onDurationChanged = (duration) {
+        if (mounted) {
+          setState(() {
+            _duration = duration;
+          });
+        }
+      };
+      (_audioHandler as PlaylistAudioHandler).onCompleted = () {
+        _playNext();
+      };
     }
   }
 
@@ -822,7 +891,11 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
 
   @override
   void dispose() {
-    _audioHandler?.dispose();
+    // Don't dispose the audio handler as it's shared globally
+    // Only stop playback if needed
+    if (_isPlaying) {
+      _audioHandler?.stop();
+    }
     super.dispose();
   }
 

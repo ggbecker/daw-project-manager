@@ -948,6 +948,8 @@
   "signedInAs": "Connesso come: {email}",
   "lastSync": "Ultima sincronizzazione: {date}",
   "remoteBackupTime": "Backup remoto: {date}",
+  "lastUploadTime": "Ultimo caricamento: {date}",
+  "lastDownloadTime": "Ultimo scaricamento: {date}",
   "checkForBackup": "Controlla Backup",
   "settings": "Impostazioni",
   "language": "Lingua",
@@ -1037,6 +1039,8 @@
   "backupUploadCancelledByUser": "Caricamento backup annullato dall'utente",
   "collectingData": "Raccolta dati...",
   "uploadingPreviewSongs": "Caricamento anteprime musicali...",
+  "uploadingProfilePhotos": "Caricamento foto profilo...",
+  "uploadingReleaseArtwork": "Caricamento artwork pubblicazioni...",
   "uploadingDatabase": "Caricamento database...",
   "completed": "Completato!",
   "cancelling": "Annullamento...",
@@ -1046,6 +1050,7 @@
   "downloadingDatabase": "Scaricamento database...",
   "downloadingPreviewSongs": "Scaricamento canzoni di anteprima...",
   "downloadingProfilePhotos": "Scaricamento foto profilo...",
+  "downloadingReleaseArtwork": "Scaricamento artwork pubblicazioni...",
   "mergingData": "Unione dati...",
   "downloadingBackupTitle": "Scaricamento Backup"
 }

@@ -948,6 +948,8 @@
   "signedInAs": "Connecté en tant que: {email}",
   "lastSync": "Dernière synchronisation: {date}",
   "remoteBackupTime": "Sauvegarde distante: {date}",
+  "lastUploadTime": "Dernier envoi: {date}",
+  "lastDownloadTime": "Dernier téléchargement: {date}",
   "checkForBackup": "Vérifier la sauvegarde",
   "settings": "Paramètres",
   "language": "Langue",
@@ -1037,6 +1039,8 @@
   "backupUploadCancelledByUser": "Téléchargement de sauvegarde annulé par l'utilisateur",
   "collectingData": "Collecte des données...",
   "uploadingPreviewSongs": "Téléchargement des aperçus musicaux...",
+  "uploadingProfilePhotos": "Téléchargement des photos de profil...",
+  "uploadingReleaseArtwork": "Téléchargement des artwork de sortie...",
   "uploadingDatabase": "Téléchargement de la base de données...",
   "completed": "Terminé !",
   "cancelling": "Annulation...",
@@ -1046,6 +1050,7 @@
   "downloadingDatabase": "Téléchargement de la base de données...",
   "downloadingPreviewSongs": "Téléchargement des chansons d'aperçu...",
   "downloadingProfilePhotos": "Téléchargement des photos de profil...",
+  "downloadingReleaseArtwork": "Téléchargement des artwork de sortie...",
   "mergingData": "Fusion des données...",
   "downloadingBackupTitle": "Téléchargement de la Sauvegarde"
 }

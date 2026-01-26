@@ -948,6 +948,8 @@
   "signedInAs": "登录为: {email}",
   "lastSync": "最后同步: {date}",
   "remoteBackupTime": "远程备份: {date}",
+  "lastUploadTime": "上次上传: {date}",
+  "lastDownloadTime": "上次下载: {date}",
   "checkForBackup": "检查备份",
   "settings": "设置",
   "language": "语言",
@@ -1037,6 +1039,8 @@
   "backupUploadCancelledByUser": "用户取消了备份上传",
   "collectingData": "正在收集数据...",
   "uploadingPreviewSongs": "正在上传预览歌曲...",
+  "uploadingProfilePhotos": "正在上传个人资料照片...",
+  "uploadingReleaseArtwork": "正在上传发行封面...",
   "uploadingDatabase": "正在上传数据库...",
   "completed": "完成！",
   "cancelling": "正在取消...",
@@ -1046,6 +1050,7 @@
   "downloadingDatabase": "正在下载数据库...",
   "downloadingPreviewSongs": "正在下载预览歌曲...",
   "downloadingProfilePhotos": "正在下载个人资料照片...",
+  "downloadingReleaseArtwork": "正在下载发行封面...",
   "mergingData": "正在合并数据...",
   "downloadingBackupTitle": "正在下载备份"
 }

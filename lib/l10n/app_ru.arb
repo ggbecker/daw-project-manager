@@ -948,6 +948,8 @@
   "signedInAs": "Вход выполнен как: {email}",
   "lastSync": "Последняя синхронизация: {date}",
   "remoteBackupTime": "Удаленная копия: {date}",
+  "lastUploadTime": "Последняя загрузка: {date}",
+  "lastDownloadTime": "Последнее скачивание: {date}",
   "checkForBackup": "Проверить резервную копию",
   "settings": "Настройки",
   "language": "Язык",
@@ -1037,6 +1039,8 @@
   "backupUploadCancelledByUser": "Загрузка резервной копии отменена пользователем",
   "collectingData": "Сбор данных...",
   "uploadingPreviewSongs": "Загрузка превью песен...",
+  "uploadingProfilePhotos": "Загрузка фото профиля...",
+  "uploadingReleaseArtwork": "Загрузка обложек релизов...",
   "uploadingDatabase": "Загрузка базы данных...",
   "completed": "Завершено!",
   "cancelling": "Отмена...",
@@ -1046,6 +1050,7 @@
   "downloadingDatabase": "Скачивание базы данных...",
   "downloadingPreviewSongs": "Скачивание превью песен...",
   "downloadingProfilePhotos": "Скачивание фотографий профиля...",
+  "downloadingReleaseArtwork": "Скачивание обложек релизов...",
   "mergingData": "Объединение данных...",
   "downloadingBackupTitle": "Скачивание Резервной Копии"
 }
