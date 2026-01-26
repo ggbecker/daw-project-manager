@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../generated/l10n/app_localizations.dart';
@@ -273,6 +274,174 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
               ),
             ),
           ),
+
+          // Debug section (only visible in debug mode)
+          if (kDebugMode) ...[
+            const SizedBox(height: 16),
+            Card(
+              color: Colors.orange.shade50,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.bug_report, color: Colors.orange.shade700),
+                        const SizedBox(width: 8),
+                        Text(
+                          '🧪 Debug Mode',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Colors.orange.shade700,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Test notifications to verify timezone and scheduling:',
+                      style: TextStyle(color: Colors.orange.shade900),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            icon: const Icon(Icons.notifications_active),
+                            label: const Text('Send Now'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orange.shade700,
+                              foregroundColor: Colors.white,
+                            ),
+                            onPressed: _hasPermission
+                                ? () async {
+                                    try {
+                                      await _notificationService.sendTestNotification();
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text('✅ Test notification sent!'),
+                                            duration: Duration(seconds: 2),
+                                          ),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('❌ Error: $e'),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  }
+                                : null,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            icon: const Icon(Icons.schedule),
+                            label: const Text('Schedule +10s'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orange.shade600,
+                              foregroundColor: Colors.white,
+                            ),
+                            onPressed: _hasPermission
+                                ? () async {
+                                    try {
+                                      await _notificationService.scheduleTestNotification(secondsFromNow: 10);
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text('✅ Test notification scheduled for 10 seconds!'),
+                                            duration: Duration(seconds: 2),
+                                          ),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('❌ Error: $e'),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  }
+                                : null,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.info_outline),
+                      label: const Text('Show Debug Info'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange.shade500,
+                        foregroundColor: Colors.white,
+                      ),
+                      onPressed: () async {
+                        final pending = await _notificationService.getPendingNotifications();
+                        if (mounted) {
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('🐛 Debug Information'),
+                              content: SingleChildScrollView(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text('📍 System Timezone: ${DateTime.now().timeZoneName}'),
+                                    Text('⏰ System Time: ${DateTime.now()}'),
+                                    Text('🌐 UTC Time: ${DateTime.now().toUtc()}'),
+                                    Text('⏱️ Offset: ${DateTime.now().timeZoneOffset}'),
+                                    const Divider(height: 24),
+                                    Text('📬 Pending Notifications: ${pending.length}'),
+                                    if (pending.isNotEmpty) ...[
+                                      const SizedBox(height: 8),
+                                      ...pending.map((n) => Padding(
+                                            padding: const EdgeInsets.only(left: 8, bottom: 4),
+                                            child: Text(
+                                              '• ID ${n.id}: ${n.title}\n  Body: ${n.body}',
+                                              style: const TextStyle(fontSize: 12),
+                                            ),
+                                          )),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text('Close'),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Check console logs for detailed timezone information.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.orange.shade700,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

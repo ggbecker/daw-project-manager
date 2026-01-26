@@ -33,10 +33,19 @@ class DeadlineNotificationService {
       // Initialize timezone data
       tz.initializeTimeZones();
       
-      // Get local timezone
+      // Get local timezone with detailed logging
       final String? timeZoneName = await _getLocalTimeZone();
       if (timeZoneName != null) {
         tz.setLocalLocation(tz.getLocation(timeZoneName));
+        if (kDebugMode) {
+          print('📍 Timezone configured: $timeZoneName');
+          print('🕐 Current time in timezone: ${tz.TZDateTime.now(tz.local)}');
+          print('⏰ Timezone offset: ${tz.TZDateTime.now(tz.local).timeZoneOffset}');
+        }
+      } else {
+        // Fallback to UTC
+        if (kDebugMode) print('⚠️ Could not determine timezone, using UTC');
+        tz.setLocalLocation(tz.getLocation('UTC'));
       }
 
       // Initialize Flutter Local Notifications
@@ -56,20 +65,73 @@ class DeadlineNotificationService {
       _preferencesBox = await Hive.openBox<NotificationPreferences>('notification_preferences');
 
       _isInitialized = true;
-      if (kDebugMode) print('Deadline notification service initialized');
+      if (kDebugMode) print('✅ Deadline notification service initialized');
     } catch (e) {
-      if (kDebugMode) print('Error initializing deadline notifications: $e');
+      if (kDebugMode) print('❌ Error initializing deadline notifications: $e');
     }
   }
 
   /// Get local timezone name
   Future<String?> _getLocalTimeZone() async {
     try {
-      // Try to get timezone from platform
-      // Fallback to common timezones
-      return DateTime.now().timeZoneName;
+      // Try to get timezone from system
+      final timeZoneName = DateTime.now().timeZoneName;
+      
+      if (kDebugMode) {
+        print('🌍 System timezone name: $timeZoneName');
+        print('📅 Current system time: ${DateTime.now()}');
+        print('🌐 UTC time: ${DateTime.now().toUtc()}');
+      }
+      
+      // Try to find matching timezone in tz database
+      try {
+        // Common timezone mappings
+        final Map<String, String> timezoneAliases = {
+          'BRT': 'America/Sao_Paulo',  // Brazil Time
+          'BRST': 'America/Sao_Paulo', // Brazil Summer Time
+          'EST': 'America/New_York',
+          'EDT': 'America/New_York',
+          'PST': 'America/Los_Angeles',
+          'PDT': 'America/Los_Angeles',
+          'CET': 'Europe/Paris',
+          'CEST': 'Europe/Paris',
+          'GMT': 'Europe/London',
+          'BST': 'Europe/London',
+        };
+        
+        // Try alias first
+        if (timezoneAliases.containsKey(timeZoneName)) {
+          final mappedZone = timezoneAliases[timeZoneName]!;
+          if (kDebugMode) print('🔄 Mapped $timeZoneName to $mappedZone');
+          return mappedZone;
+        }
+        
+        // Try to use the name directly
+        tz.getLocation(timeZoneName);
+        return timeZoneName;
+      } catch (e) {
+        // If not found, try to find by offset
+        final offset = DateTime.now().timeZoneOffset;
+        if (kDebugMode) print('⏱️ Trying to find timezone by offset: $offset');
+        
+        // Common offsets to timezone mappings
+        if (offset.inHours == -3) {
+          return 'America/Sao_Paulo'; // Brazil
+        } else if (offset.inHours == -5) {
+          return 'America/New_York'; // US East
+        } else if (offset.inHours == -8) {
+          return 'America/Los_Angeles'; // US West
+        } else if (offset.inHours == 0) {
+          return 'UTC';
+        } else if (offset.inHours == 1) {
+          return 'Europe/Paris';
+        }
+        
+        // Default to UTC
+        return 'UTC';
+      }
     } catch (e) {
-      if (kDebugMode) print('Error getting timezone: $e');
+      if (kDebugMode) print('❌ Error getting timezone: $e');
       return null;
     }
   }
@@ -306,6 +368,96 @@ class DeadlineNotificationService {
   Future<List<PendingNotificationRequest>> getPendingNotifications() async {
     if (!Platform.isAndroid || !_isInitialized) return [];
     return await _notifications.pendingNotificationRequests();
+  }
+
+  /// Send a test notification immediately (for debugging)
+  Future<void> sendTestNotification() async {
+    if (!Platform.isAndroid || !_isInitialized) return;
+
+    try {
+      if (kDebugMode) {
+        print('🧪 Sending test notification...');
+        print('📍 Current timezone: ${tz.local.name}');
+        print('🕐 Current time: ${tz.TZDateTime.now(tz.local)}');
+        print('⏰ System time: ${DateTime.now()}');
+      }
+
+      // Android notification details
+      final androidDetails = AndroidNotificationDetails(
+        'deadline_reminders',
+        'Deadline Reminders',
+        channelDescription: 'Notifications for project deadlines',
+        importance: Importance.high,
+        priority: Priority.high,
+        icon: '@mipmap/ic_launcher',
+      );
+
+      final notificationDetails = NotificationDetails(android: androidDetails);
+
+      // Send immediate notification
+      await _notifications.show(
+        999999, // Test notification ID
+        '🧪 Test Notification',
+        'This is a test notification sent at ${DateTime.now().hour.toString().padLeft(2, '0')}:${DateTime.now().minute.toString().padLeft(2, '0')}. Timezone: ${DateTime.now().timeZoneName}',
+        notificationDetails,
+        payload: 'test',
+      );
+
+      if (kDebugMode) {
+        print('✅ Test notification sent successfully!');
+      }
+    } catch (e) {
+      if (kDebugMode) print('❌ Error sending test notification: $e');
+      rethrow;
+    }
+  }
+
+  /// Schedule a test notification in the future (for debugging)
+  Future<void> scheduleTestNotification({int secondsFromNow = 10}) async {
+    if (!Platform.isAndroid || !_isInitialized) return;
+
+    try {
+      final scheduledTime = tz.TZDateTime.now(tz.local).add(Duration(seconds: secondsFromNow));
+      
+      if (kDebugMode) {
+        print('🧪 Scheduling test notification...');
+        print('📍 Current timezone: ${tz.local.name}');
+        print('🕐 Current time: ${tz.TZDateTime.now(tz.local)}');
+        print('⏰ Scheduled for: $scheduledTime');
+        print('⏱️ In $secondsFromNow seconds');
+      }
+
+      // Android notification details
+      final androidDetails = AndroidNotificationDetails(
+        'deadline_reminders',
+        'Deadline Reminders',
+        channelDescription: 'Notifications for project deadlines',
+        importance: Importance.high,
+        priority: Priority.high,
+        icon: '@mipmap/ic_launcher',
+      );
+
+      final notificationDetails = NotificationDetails(android: androidDetails);
+
+      // Schedule the notification
+      await _notifications.zonedSchedule(
+        999998, // Test notification ID
+        '🧪 Scheduled Test Notification',
+        'This notification was scheduled for ${scheduledTime.hour.toString().padLeft(2, '0')}:${scheduledTime.minute.toString().padLeft(2, '0')}. Timezone: ${tz.local.name}',
+        scheduledTime,
+        notificationDetails,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        payload: 'test',
+      );
+
+      if (kDebugMode) {
+        print('✅ Test notification scheduled successfully for $scheduledTime!');
+      }
+    } catch (e) {
+      if (kDebugMode) print('❌ Error scheduling test notification: $e');
+      rethrow;
+    }
   }
 
   /// Request notification permissions (Android 13+)
