@@ -677,20 +677,84 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
   Future<void> _reloadPlaylist() async {
     try {
       final repo = await ref.read(repositoryProvider.future);
-      final playlistsAsync = ref.read(playlistsProvider);
-      await playlistsAsync.whenData((playlists) {
-        final updatedPlaylist = playlists.firstWhere(
-          (p) => p.id == widget.playlist.id,
-          orElse: () => widget.playlist,
-        );
-        if (mounted) {
-          setState(() {
-            _currentPlaylist = updatedPlaylist;
-          });
-        }
-      });
+      // Get playlist directly from repository
+      final updatedPlaylist = repo.getPlaylistById(widget.playlist.id);
+      
+      if (updatedPlaylist != null && mounted) {
+        setState(() {
+          _currentPlaylist = updatedPlaylist;
+        });
+      }
     } catch (e) {
       // If reload fails, keep current playlist
+    }
+  }
+
+  Future<void> _reloadPlaylistAndItems() async {
+    if (!mounted) return;
+    
+    print('🔄 Starting playlist reload...');
+    
+    // Show loading state
+    setState(() {
+      _isLoading = true;
+    });
+    
+    try {
+      final repo = await ref.read(repositoryProvider.future);
+      
+      // Get fresh playlist data from repository
+      final updatedPlaylist = repo.getPlaylistById(widget.playlist.id);
+      if (updatedPlaylist == null) {
+        print('❌ Playlist not found!');
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+        return;
+      }
+      
+      print('✅ Loaded playlist: ${updatedPlaylist.name} with ${updatedPlaylist.projectIds.length} project IDs');
+      
+      // Get all projects
+      final allProjects = repo.getAllProjects();
+      print('📂 Found ${allProjects.length} projects in repository');
+      
+      // Build items list from fresh data
+      final items = <_PlaylistItem>[];
+      for (final projectId in updatedPlaylist.projectIds) {
+        try {
+          final project = allProjects.firstWhere((p) => p.id == projectId);
+          if (project.previewSongPath != null &&
+              project.previewSongPath!.isNotEmpty &&
+              !project.previewSongPath!.startsWith('drive://')) {
+            items.add(_PlaylistItem(project));
+            print('  ➕ Added: ${project.displayName}');
+          }
+        } catch (_) {
+          print('  ⚠️ Project not found: $projectId');
+        }
+      }
+
+      print('🎵 Final playlist has ${items.length} items');
+
+      // Update state with fresh data
+      if (mounted) {
+        setState(() {
+          _currentPlaylist = updatedPlaylist;
+          _playlistItems = items;
+          _isLoading = false;
+        });
+        print('✨ UI updated with new data');
+      }
+    } catch (e) {
+      print('❌ Error reloading: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -850,6 +914,18 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
               icon: const Icon(Icons.edit),
               tooltip: AppLocalizations.of(context)!.edit,
               onPressed: () async {
+                // Don't allow editing while playing
+                if (_isPlaying) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(AppLocalizations.of(context)!.stopPlaybackBeforeEditing),
+                      ),
+                    );
+                  }
+                  return;
+                }
+                
                 final projectsAsync = ref.read(allProjectsStreamProvider);
                 final allProjectsValue = projectsAsync.value;
                 
@@ -907,9 +983,8 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
                     ),
                   );
                   if (result == true && mounted) {
-                    // Reload playlist from database first, then reload items
-                    await _reloadPlaylist();
-                    await _loadPlaylistItems();
+                    // Reload playlist and items together
+                    await _reloadPlaylistAndItems();
                   }
                 }
               },
@@ -1019,6 +1094,16 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
             icon: const Icon(Icons.edit),
             tooltip: AppLocalizations.of(context)!.edit,
             onPressed: () async {
+              // Don't allow editing while playing
+              if (_isPlaying) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(AppLocalizations.of(context)!.stopPlaybackBeforeEditing),
+                  ),
+                );
+                return;
+              }
+              
               final projectsAsync = ref.read(allProjectsStreamProvider);
               final allProjectsValue = projectsAsync.value;
               
@@ -1059,10 +1144,13 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
                   ),
                 );
                 
-                // Reload playlist from database first, then reload items if edited
+                // Reload playlist and items together if edited
                 if (result == true && mounted) {
-                  await _reloadPlaylist();
-                  await _loadPlaylistItems();
+                  // Stop playback before reloading to avoid issues
+                  if (_isPlaying) {
+                    await _audioPlayer.stop();
+                  }
+                  await _reloadPlaylistAndItems();
                 }
               }
             },

@@ -1541,6 +1541,10 @@
   "@editPlaylist": {
     "description": "Dialog title for editing a playlist"
   },
+  "stopPlaybackBeforeEditing": "Please stop playback before editing the playlist",
+  "@stopPlaybackBeforeEditing": {
+    "description": "Message shown when trying to edit playlist while music is playing"
+  },
   "selectPreviewSongs": "Select Preview Songs",
   "@selectPreviewSongs": {
     "description": "Label for selecting preview songs in playlist"

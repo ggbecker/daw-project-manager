@@ -1018,6 +1018,7 @@
   "playlistNameHint": "Minha Playlist",
   "playlistNameRequired": "O nome da playlist é obrigatório",
   "editPlaylist": "Editar Playlist",
+  "stopPlaybackBeforeEditing": "Por favor, pare a reprodução antes de editar a playlist",
   "selectPreviewSongs": "Selecionar Músicas Preview",
   "deletePlaylist": "Excluir Playlist",
   "deletePlaylistConfirm": "Tem certeza que deseja excluir \"{name}\"?",
