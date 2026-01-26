@@ -2,19 +2,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:audio_service/audio_service.dart';
 import 'package:path/path.dart' as p;
 import '../models/playlist.dart';
 import '../models/music_project.dart';
 import '../providers/providers.dart';
 import '../utils/mobile_utils.dart';
 import '../generated/l10n/app_localizations.dart';
-import '../services/playlist_audio_handler.dart';
-
-/// Global singleton for the audio handler
-/// AudioService.init() should only be called once in the app lifecycle
-PlaylistAudioHandler? _globalAudioHandler;
-bool _isInitializingAudioService = false;
 
 /// Playlists page - Android only
 /// Allows creating playlists with preview songs and playing them in sequence
@@ -630,7 +623,7 @@ class _PlaylistItem {
 }
 
 class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
-  PlaylistAudioHandler? _audioHandler;
+  final AudioPlayer _audioPlayer = AudioPlayer();
   bool _isPlaying = false;
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
@@ -643,129 +636,42 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
   void initState() {
     super.initState();
     _currentPlaylist = widget.playlist;
-    _initAudioService();
+    _initAudioPlayer();
     _loadPlaylistItems();
   }
 
-  Future<void> _initAudioService() async {
-    if (!Platform.isAndroid) return;
-    
-    // Use existing global audio handler if already initialized
-    if (_globalAudioHandler != null) {
-      _audioHandler = _globalAudioHandler;
-      _setupCallbacks();
-      
-      // Listen to playback state
-      _audioHandler?.playbackState.listen((state) {
-        if (mounted) {
-          setState(() {
-            _isPlaying = state.playing;
-          });
-        }
-      });
-      return;
-    }
-    
-    // Wait if another instance is already initializing
-    while (_isInitializingAudioService) {
-      await Future.delayed(const Duration(milliseconds: 100));
-      if (_globalAudioHandler != null) {
-        _audioHandler = _globalAudioHandler;
-        _setupCallbacks();
-        return;
-      }
-    }
-    
-    // Initialize the global audio handler
-    _isInitializingAudioService = true;
-    
-    try {
-      _audioHandler = await AudioService.init(
-        builder: () => PlaylistAudioHandler(
-          onIndexChanged: (index) {
-            if (mounted) {
-              setState(() {
-                _currentIndex = index;
-              });
-            }
-          },
-          onPositionChanged: (position) {
-            if (mounted) {
-              setState(() {
-                _position = position;
-              });
-            }
-          },
-          onDurationChanged: (duration) {
-            if (mounted) {
-              setState(() {
-                _duration = duration;
-              });
-            }
-          },
-          onCompleted: () {
-            _playNext();
-          },
-        ),
-        config: const AudioServiceConfig(
-          androidNotificationChannelId: 'com.bandpassrecords.dpm.channel.audio',
-          androidNotificationChannelName: 'Music Playback',
-          androidNotificationOngoing: true,
-          androidNotificationIcon: 'mipmap/ic_launcher',
-        ),
-      );
-      
-      // Store globally for reuse
-      _globalAudioHandler = _audioHandler;
-
-      // Listen to playback state
-      _audioHandler?.playbackState.listen((state) {
-        if (mounted) {
-          setState(() {
-            _isPlaying = state.playing;
-          });
-        }
-      });
-    } catch (e) {
-      // Fallback to regular AudioPlayer if service init fails
+  void _initAudioPlayer() {
+    // Listen to player state
+    _audioPlayer.onPlayerStateChanged.listen((state) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to initialize audio service: $e')),
-        );
+        setState(() {
+          _isPlaying = state == PlayerState.playing;
+        });
       }
-    } finally {
-      _isInitializingAudioService = false;
-    }
-  }
-  
-  void _setupCallbacks() {
-    // Update callbacks for the current instance
-    if (_audioHandler != null) {
-      (_audioHandler as PlaylistAudioHandler).onIndexChanged = (index) {
-        if (mounted) {
-          setState(() {
-            _currentIndex = index;
-          });
-        }
-      };
-      (_audioHandler as PlaylistAudioHandler).onPositionChanged = (position) {
-        if (mounted) {
-          setState(() {
-            _position = position;
-          });
-        }
-      };
-      (_audioHandler as PlaylistAudioHandler).onDurationChanged = (duration) {
-        if (mounted) {
-          setState(() {
-            _duration = duration;
-          });
-        }
-      };
-      (_audioHandler as PlaylistAudioHandler).onCompleted = () {
-        _playNext();
-      };
-    }
+    });
+
+    // Listen to duration changes
+    _audioPlayer.onDurationChanged.listen((duration) {
+      if (mounted) {
+        setState(() {
+          _duration = duration;
+        });
+      }
+    });
+
+    // Listen to position changes
+    _audioPlayer.onPositionChanged.listen((position) {
+      if (mounted) {
+        setState(() {
+          _position = position;
+        });
+      }
+    });
+
+    // Listen to completion
+    _audioPlayer.onPlayerComplete.listen((_) {
+      _playNext();
+    });
   }
 
   Future<void> _reloadPlaylist() async {
@@ -812,39 +718,57 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
           _playlistItems = items;
           _isLoading = false;
         });
-        
-        // Update audio service queue
-        if (Platform.isAndroid && _audioHandler != null && items.isNotEmpty) {
-          final mediaItems = items.map((item) => MediaItem(
-            id: item.projectId,
-            title: item.displayName,
-            artist: _currentPlaylist.name,
-            album: 'Playlist',
-            extras: {'filePath': item.previewSongPath},
-          )).toList();
-          _audioHandler!.updateQueue(mediaItems);
-          _audioHandler!.setInitialIndex(_currentIndex);
-        }
         // Do NOT autoplay - user must click a song
       }
     });
   }
 
   Future<void> _playCurrentSong() async {
-    if (_audioHandler != null) {
-      await _audioHandler!.skipToQueueItem(_currentIndex);
+    if (_playlistItems.isEmpty || _currentIndex < 0 || _currentIndex >= _playlistItems.length) {
+      return;
+    }
+
+    final item = _playlistItems[_currentIndex];
+    if (item.previewSongPath == null || item.previewSongPath!.isEmpty) {
+      return;
+    }
+
+    final file = File(item.previewSongPath!);
+    if (!await file.exists()) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Audio file not found')),
+        );
+      }
+      return;
+    }
+
+    try {
+      await _audioPlayer.play(DeviceFileSource(item.previewSongPath!));
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error playing audio: $e')),
+        );
+      }
     }
   }
 
   Future<void> _playNext() async {
-    if (_audioHandler != null) {
-      await _audioHandler!.skipToNext();
+    if (_currentIndex < _playlistItems.length - 1) {
+      setState(() {
+        _currentIndex++;
+      });
+      await _playCurrentSong();
     }
   }
 
   Future<void> _playPrevious() async {
-    if (_audioHandler != null) {
-      await _audioHandler!.skipToPrevious();
+    if (_currentIndex > 0) {
+      setState(() {
+        _currentIndex--;
+      });
+      await _playCurrentSong();
     }
   }
 
@@ -862,19 +786,21 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
   }
 
   Future<void> _togglePlayPause() async {
-    if (_audioHandler == null) return;
-    
     if (_isPlaying) {
-      await _audioHandler!.pause();
+      await _audioPlayer.pause();
     } else {
-      await _audioHandler!.play();
+      if (_position == Duration.zero && _playlistItems.isNotEmpty) {
+        // Start playing from current index
+        await _playCurrentSong();
+      } else {
+        // Resume playback
+        await _audioPlayer.resume();
+      }
     }
   }
 
   Future<void> _stop() async {
-    if (_audioHandler == null) return;
-    
-    await _audioHandler!.stop();
+    await _audioPlayer.stop();
     setState(() {
       _isPlaying = false;
       _position = Duration.zero;
@@ -891,11 +817,7 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
 
   @override
   void dispose() {
-    // Don't dispose the audio handler as it's shared globally
-    // Only stop playback if needed
-    if (_isPlaying) {
-      _audioHandler?.stop();
-    }
+    _audioPlayer.dispose();
     super.dispose();
   }
 
@@ -1114,8 +1036,8 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
               
               if (mounted) {
                 // Stop playback before editing
-                if (_isPlaying && _audioHandler != null) {
-                  await _audioHandler!.pause();
+                if (_isPlaying) {
+                  await _audioPlayer.pause();
                 }
                 
                 // Navigate to main playlist page's edit dialog
@@ -1208,9 +1130,7 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
                     final newPosition = Duration(
                       milliseconds: (value * _duration.inMilliseconds).round(),
                     );
-                    if (_audioHandler != null) {
-                      await _audioHandler!.seek(newPosition);
-                    }
+                    await _audioPlayer.seek(newPosition);
                   },
                 ),
                 Row(
