@@ -3,13 +3,20 @@ import '../models/backup_progress.dart';
 import '../generated/l10n/app_localizations.dart';
 
 /// Dialog for showing backup download progress (Mobile)
-class DownloadProgressDialog extends StatelessWidget {
+class DownloadProgressDialog extends StatefulWidget {
   final Stream<BackupProgress> progressStream;
 
   const DownloadProgressDialog({
     super.key,
     required this.progressStream,
   });
+
+  @override
+  State<DownloadProgressDialog> createState() => _DownloadProgressDialogState();
+}
+
+class _DownloadProgressDialogState extends State<DownloadProgressDialog> {
+  bool _hasCompleted = false;
 
   String _getStageText(BackupProgressStage stage, BuildContext context) {
     switch (stage) {
@@ -28,6 +35,18 @@ class DownloadProgressDialog extends StatelessWidget {
     }
   }
 
+  void _handleCompletion() {
+    if (!_hasCompleted && mounted) {
+      _hasCompleted = true;
+      // Close dialog after a short delay to show completion
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          Navigator.of(context).pop();
+        }
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -40,7 +59,7 @@ class DownloadProgressDialog extends StatelessWidget {
         ],
       ),
       content: StreamBuilder<BackupProgress>(
-        stream: progressStream,
+        stream: widget.progressStream,
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const SizedBox(
@@ -53,6 +72,13 @@ class DownloadProgressDialog extends StatelessWidget {
 
           final progress = snapshot.data!;
           final percentage = (progress.progress * 100).toStringAsFixed(0);
+          
+          // Auto-close when completed
+          if (progress.stage == BackupProgressStage.completed && progress.progress >= 1.0) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _handleCompletion();
+            });
+          }
 
           return SizedBox(
             width: 400,

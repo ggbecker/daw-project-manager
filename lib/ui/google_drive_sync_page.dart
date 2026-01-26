@@ -1231,6 +1231,7 @@ class _BackupProgressDialog extends StatefulWidget {
 
 class _BackupProgressDialogState extends State<_BackupProgressDialog> {
   bool _isCancelling = false;
+  bool _hasCompleted = false;
 
   String _getStageText(BackupProgressStage stage, BuildContext context) {
     switch (stage) {
@@ -1250,6 +1251,18 @@ class _BackupProgressDialogState extends State<_BackupProgressDialog> {
         return AppLocalizations.of(context)!.mergingData;
       case BackupProgressStage.completed:
         return AppLocalizations.of(context)!.completed;
+    }
+  }
+
+  void _handleCompletion() {
+    if (!_hasCompleted && !_isCancelling && mounted) {
+      _hasCompleted = true;
+      // Close dialog after a short delay to show completion
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          Navigator.of(context).pop();
+        }
+      });
     }
   }
 
@@ -1278,6 +1291,13 @@ class _BackupProgressDialogState extends State<_BackupProgressDialog> {
 
           final progress = snapshot.data!;
           final percentage = (progress.progress * 100).toStringAsFixed(0);
+
+          // Auto-close when completed
+          if (progress.stage == BackupProgressStage.completed && progress.progress >= 1.0) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _handleCompletion();
+            });
+          }
 
           return SizedBox(
             width: 400,
