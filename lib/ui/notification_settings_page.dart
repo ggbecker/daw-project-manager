@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../generated/l10n/app_localizations.dart';
 import '../models/notification_preferences.dart';
 import '../services/deadline_notification_service.dart';
+import '../providers/providers.dart';
 
 /// Page for configuring deadline notification preferences
 class NotificationSettingsPage extends ConsumerStatefulWidget {
@@ -379,54 +380,99 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
                       ],
                     ),
                     const SizedBox(height: 8),
-                    ElevatedButton.icon(
-                      icon: const Icon(Icons.info_outline),
-                      label: const Text('Show Debug Info'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange.shade500,
-                        foregroundColor: Colors.white,
-                      ),
-                      onPressed: () async {
-                        final pending = await _notificationService.getPendingNotifications();
-                        if (mounted) {
-                          showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('🐛 Debug Information'),
-                              content: SingleChildScrollView(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text('📍 System Timezone: ${DateTime.now().timeZoneName}'),
-                                    Text('⏰ System Time: ${DateTime.now()}'),
-                                    Text('🌐 UTC Time: ${DateTime.now().toUtc()}'),
-                                    Text('⏱️ Offset: ${DateTime.now().timeZoneOffset}'),
-                                    const Divider(height: 24),
-                                    Text('📬 Pending Notifications: ${pending.length}'),
-                                    if (pending.isNotEmpty) ...[
-                                      const SizedBox(height: 8),
-                                      ...pending.map((n) => Padding(
-                                            padding: const EdgeInsets.only(left: 8, bottom: 4),
-                                            child: Text(
-                                              '• ID ${n.id}: ${n.title}\n  Body: ${n.body}',
-                                              style: const TextStyle(fontSize: 12),
-                                            ),
-                                          )),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: const Text('Close'),
-                                ),
-                              ],
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            icon: const Icon(Icons.info_outline),
+                            label: const Text('Show Debug Info'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orange.shade500,
+                              foregroundColor: Colors.white,
                             ),
-                          );
-                        }
-                      },
+                            onPressed: () async {
+                              final debugInfo = await _notificationService.getDebugInfo();
+                              if (mounted) {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: const Text('🐛 Debug Information'),
+                                    content: SingleChildScrollView(
+                                      child: SelectableText(
+                                        debugInfo,
+                                        style: const TextStyle(
+                                          fontFamily: 'monospace',
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: const Text('Close'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Re-schedule All'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue.shade600,
+                              foregroundColor: Colors.white,
+                            ),
+                            onPressed: _hasPermission
+                                ? () async {
+                                    try {
+                                      if (kDebugMode) {
+                                        print('\n🔄 Re-scheduling all notifications...');
+                                      }
+                                      
+                                      final projectRepo = ref.read(projectRepositoryProvider);
+                                      final projects = projectRepo.getAllProjects();
+                                      
+                                      if (kDebugMode) {
+                                        print('📦 Total projects: ${projects.length}');
+                                      }
+                                      
+                                      await _notificationService.scheduleAllDeadlineNotifications(
+                                        projects: projects,
+                                      );
+                                      
+                                      final pending = await _notificationService.getPendingNotifications();
+                                      
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('✅ Scheduled ${pending.length} notifications (check console for details)'),
+                                            duration: const Duration(seconds: 3),
+                                          ),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      if (kDebugMode) {
+                                        print('❌ Error re-scheduling: $e');
+                                      }
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('❌ Error: $e'),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  }
+                                : null,
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 8),
                     Text(

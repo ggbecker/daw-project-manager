@@ -133,6 +133,25 @@ void main() async {
     // O await repo... em cima garante que o Hive está pronto antes do scan.
     _runInitialScan(repo, container);
     
+    // 4d. Schedule deadline notifications (Android only)
+    if (!kIsWeb && Platform.isAndroid) {
+      try {
+        final notificationService = DeadlineNotificationService();
+        final projects = repo.getAllProjects();
+        
+        if (kDebugMode) {
+          print('\n🔔 Scheduling deadline notifications on app start...');
+          print('📦 Total projects loaded: ${projects.length}');
+        }
+        
+        await notificationService.scheduleAllDeadlineNotifications(
+          projects: projects,
+        );
+      } catch (e) {
+        if (kDebugMode) print('❌ Error scheduling notifications on startup: $e');
+      }
+    }
+    
   } catch (e) {
     // Mark as complete even on error
     container.read(initialScanStateProvider.notifier).complete();

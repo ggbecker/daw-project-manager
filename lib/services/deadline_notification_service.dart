@@ -186,7 +186,7 @@ class DeadlineNotificationService {
   }
 
   /// Check for projects with upcoming deadlines and schedule notifications
-  Future<void> scheduleAllDeadlineNotifications() async {
+  Future<void> scheduleAllDeadlineNotifications({List<MusicProject>? projects}) async {
     if (!Platform.isAndroid || !_isInitialized) return;
 
     try {
@@ -194,23 +194,64 @@ class DeadlineNotificationService {
       if (!preferences.enabled) {
         // Cancel all scheduled notifications if disabled
         await _notifications.cancelAll();
-        if (kDebugMode) print('Notifications disabled, cancelled all');
+        if (kDebugMode) print('🔕 Notifications disabled, cancelled all');
         return;
       }
 
       // Cancel existing notifications first
       await _notifications.cancelAll();
 
-      // Get all projects from repository
-      // Note: This requires access to ProjectRepository
-      // We'll need to pass this in or make it accessible
+      if (kDebugMode) {
+        print('\n🔔 ═══════════════════════════════════════════');
+        print('🔔 SCHEDULING DEADLINE NOTIFICATIONS');
+        print('🔔 ═══════════════════════════════════════════');
+        print('⏰ Notification time: ${preferences.notificationHour.toString().padLeft(2, '0')}:${preferences.notificationMinute.toString().padLeft(2, '0')}');
+        print('📅 Reminder days: ${preferences.reminderDays}');
+        print('🔔 Notify on deadline day: ${preferences.notifyOnDeadlineDay}');
+      }
+
+      if (projects == null || projects.isEmpty) {
+        if (kDebugMode) print('⚠️ No projects provided to schedule notifications');
+        return;
+      }
+
+      int totalProjects = 0;
+      int totalScheduled = 0;
+      int skippedFinished = 0;
+      int skippedNoDeadline = 0;
+
+      for (final project in projects) {
+        if (project.deadline == null) {
+          skippedNoDeadline++;
+          continue;
+        }
+
+        if (project.status?.toLowerCase() == 'finished' || 
+            project.status?.toLowerCase() == 'finalizado') {
+          skippedFinished++;
+          continue;
+        }
+
+        totalProjects++;
+        await scheduleNotificationsForProject(project, preferences);
+      }
+
+      // Count actual scheduled notifications
+      final pending = await _notifications.pendingNotificationRequests();
+      totalScheduled = pending.length;
 
       if (kDebugMode) {
-        print('Scheduling deadline notifications...');
-        print('Reminder days: ${preferences.reminderDays}');
+        print('\n📊 ═══════════════════════════════════════════');
+        print('📊 SCHEDULING SUMMARY');
+        print('📊 ═══════════════════════════════════════════');
+        print('✓ Total projects with deadlines: $totalProjects');
+        print('⏭️ Skipped (finished): $skippedFinished');
+        print('⏭️ Skipped (no deadline): $skippedNoDeadline');
+        print('📬 Total notifications scheduled: $totalScheduled');
+        print('📊 ═══════════════════════════════════════════\n');
       }
     } catch (e) {
-      if (kDebugMode) print('Error scheduling notifications: $e');
+      if (kDebugMode) print('❌ Error scheduling notifications: $e');
     }
   }
 
@@ -227,16 +268,44 @@ class DeadlineNotificationService {
       final now = DateTime.now();
       final deadline = project.deadline!;
       
+      if (kDebugMode) {
+        print('\n🔔 Checking project: ${project.displayName}');
+        print('   Status: ${project.status}');
+        print('   Deadline: $deadline');
+      }
+      
+      // Don't schedule if project is finished
+      if (project.status?.toLowerCase() == 'finished' || 
+          project.status?.toLowerCase() == 'finalizado') {
+        if (kDebugMode) print('   ⏭️ Skipping: Project is finished');
+        return;
+      }
+      
       // Don't schedule if deadline is in the past
       if (deadline.isBefore(now)) {
+        if (kDebugMode) print('   ⏭️ Skipping: Deadline is in the past');
         return;
       }
 
-      // Calculate days until deadline
-      final daysUntilDeadline = deadline.difference(now).inDays;
+      // Calculate days until deadline (using midnight comparison)
+      final nowMidnight = DateTime(now.year, now.month, now.day);
+      final deadlineMidnight = DateTime(deadline.year, deadline.month, deadline.day);
+      final daysUntilDeadline = deadlineMidnight.difference(nowMidnight).inDays;
+
+      if (kDebugMode) {
+        print('   📅 Days until deadline: $daysUntilDeadline');
+        print('   ⏰ Notification time: ${preferences.notificationHour.toString().padLeft(2, '0')}:${preferences.notificationMinute.toString().padLeft(2, '0')}');
+        print('   📬 Reminder days configured: ${preferences.reminderDays}');
+      }
+
+      int scheduledCount = 0;
 
       // Schedule notification for each reminder day
       for (final reminderDays in preferences.reminderDays) {
+        if (kDebugMode) {
+          print('   🔍 Checking $reminderDays days before deadline:');
+        }
+        
         if (daysUntilDeadline >= reminderDays) {
           // Calculate when to show the notification
           final notificationDate = deadline.subtract(Duration(days: reminderDays));
@@ -250,6 +319,12 @@ class DeadlineNotificationService {
             preferences.notificationMinute,
           );
 
+          if (kDebugMode) {
+            print('      Notification would be at: $notificationTime');
+            print('      Current time: $now');
+            print('      Is in future? ${notificationTime.isAfter(now)}');
+          }
+
           // Only schedule if notification time is in the future
           if (notificationTime.isAfter(now)) {
             await _scheduleNotification(
@@ -257,27 +332,68 @@ class DeadlineNotificationService {
               scheduledTime: notificationTime,
               daysRemaining: reminderDays,
             );
+            scheduledCount++;
+            if (kDebugMode) {
+              print('      ✅ Scheduled for $notificationTime');
+            }
+          } else {
+            if (kDebugMode) {
+              print('      ⏭️ Skipped: Time already passed');
+            }
+          }
+        } else {
+          if (kDebugMode) {
+            print('      ⏭️ Skipped: Deadline is less than $reminderDays days away');
           }
         }
       }
 
       // Schedule notification for deadline day if enabled
-      if (preferences.notifyOnDeadlineDay && daysUntilDeadline == 0) {
-        final notificationTime = DateTime(
-          deadline.year,
-          deadline.month,
-          deadline.day,
-          preferences.notificationHour,
-          preferences.notificationMinute,
-        );
-
-        if (notificationTime.isAfter(now)) {
-          await _scheduleNotification(
-            project: project,
-            scheduledTime: notificationTime,
-            daysRemaining: 0,
-          );
+      if (preferences.notifyOnDeadlineDay) {
+        if (kDebugMode) {
+          print('   🔍 Checking deadline day notification:');
         }
+        
+        // Check if today is the deadline day OR if deadline is tomorrow but we can still schedule for it
+        if (daysUntilDeadline <= 1) {
+          final notificationTime = DateTime(
+            deadline.year,
+            deadline.month,
+            deadline.day,
+            preferences.notificationHour,
+            preferences.notificationMinute,
+          );
+
+          if (kDebugMode) {
+            print('      Notification would be at: $notificationTime');
+            print('      Current time: $now');
+            print('      Is in future? ${notificationTime.isAfter(now)}');
+          }
+
+          if (notificationTime.isAfter(now)) {
+            await _scheduleNotification(
+              project: project,
+              scheduledTime: notificationTime,
+              daysRemaining: 0,
+            );
+            scheduledCount++;
+            if (kDebugMode) {
+              print('      ✅ Scheduled for deadline day at $notificationTime');
+            }
+          } else {
+            if (kDebugMode) {
+              print('      ⏭️ Skipped: Time already passed');
+            }
+          }
+        } else {
+          if (kDebugMode) {
+            print('      ⏭️ Skipped: Deadline is not today');
+          }
+        }
+      }
+
+      if (kDebugMode) {
+        print('   📊 Total notifications scheduled: $scheduledCount');
       }
     } catch (e) {
       if (kDebugMode) print('Error scheduling notifications for project ${project.id}: $e');
@@ -368,6 +484,49 @@ class DeadlineNotificationService {
   Future<List<PendingNotificationRequest>> getPendingNotifications() async {
     if (!Platform.isAndroid || !_isInitialized) return [];
     return await _notifications.pendingNotificationRequests();
+  }
+
+  /// Get detailed debug information about pending notifications
+  Future<String> getDebugInfo() async {
+    if (!Platform.isAndroid || !_isInitialized) return 'Not on Android or not initialized';
+
+    try {
+      final pending = await _notifications.pendingNotificationRequests();
+      final preferences = await getPreferences();
+      
+      final buffer = StringBuffer();
+      buffer.writeln('📊 Notification System Status');
+      buffer.writeln('═' * 40);
+      buffer.writeln('✓ Enabled: ${preferences.enabled}');
+      buffer.writeln('⏰ Time: ${preferences.notificationHour.toString().padLeft(2, '0')}:${preferences.notificationMinute.toString().padLeft(2, '0')}');
+      buffer.writeln('📅 Reminder days: ${preferences.reminderDays.join(", ")}');
+      buffer.writeln('🔔 Notify on deadline day: ${preferences.notifyOnDeadlineDay}');
+      buffer.writeln('\n📍 Timezone Info:');
+      buffer.writeln('   System: ${DateTime.now().timeZoneName}');
+      buffer.writeln('   Configured: ${tz.local.name}');
+      buffer.writeln('   Offset: ${DateTime.now().timeZoneOffset}');
+      buffer.writeln('\n🕐 Current Times:');
+      buffer.writeln('   Local: ${DateTime.now()}');
+      buffer.writeln('   TZ Local: ${tz.TZDateTime.now(tz.local)}');
+      buffer.writeln('   UTC: ${DateTime.now().toUtc()}');
+      buffer.writeln('\n📬 Pending Notifications: ${pending.length}');
+      buffer.writeln('─' * 40);
+      
+      if (pending.isEmpty) {
+        buffer.writeln('No notifications scheduled.');
+      } else {
+        for (final notification in pending) {
+          buffer.writeln('\n📌 ID: ${notification.id}');
+          buffer.writeln('   Title: ${notification.title ?? "N/A"}');
+          buffer.writeln('   Body: ${notification.body ?? "N/A"}');
+          buffer.writeln('   Payload: ${notification.payload ?? "N/A"}');
+        }
+      }
+      
+      return buffer.toString();
+    } catch (e) {
+      return 'Error getting debug info: $e';
+    }
   }
 
   /// Send a test notification immediately (for debugging)
