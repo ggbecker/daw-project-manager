@@ -1,57 +1,25 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:workmanager/workmanager.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/music_project.dart';
 import '../models/notification_preferences.dart';
 import '../utils/app_paths.dart';
 import 'deadline_notification_service.dart';
 
-/// Background service for checking deadlines and scheduling notifications
+/// Service for checking deadlines and scheduling notifications
+/// This is called when the app starts and when projects are updated
 class NotificationBackgroundService {
-  static const String _taskName = 'checkDeadlines';
-  static const String _uniqueName = 'deadline_check';
-
-  /// Initialize the background service
+  /// Initialize the notification scheduling
   static Future<void> initialize() async {
     if (!Platform.isAndroid) return;
 
     try {
-      await Workmanager().initialize(
-        callbackDispatcher,
-        isInDebugMode: kDebugMode,
-      );
-
-      // Schedule periodic check (once per day)
-      await Workmanager().registerPeriodicTask(
-        _uniqueName,
-        _taskName,
-        frequency: const Duration(hours: 24),
-        constraints: Constraints(
-          networkType: NetworkType.not_required,
-          requiresBatteryNotLow: false,
-          requiresCharging: false,
-          requiresDeviceIdle: false,
-          requiresStorageNotLow: false,
-        ),
-        initialDelay: const Duration(minutes: 15), // Start after 15 minutes
-      );
-
-      if (kDebugMode) print('Notification background service initialized');
+      // Schedule notifications on app start
+      await triggerCheck();
+      
+      if (kDebugMode) print('Notification scheduling initialized');
     } catch (e) {
-      if (kDebugMode) print('Error initializing background service: $e');
-    }
-  }
-
-  /// Cancel the background service
-  static Future<void> cancel() async {
-    if (!Platform.isAndroid) return;
-
-    try {
-      await Workmanager().cancelByUniqueName(_uniqueName);
-      if (kDebugMode) print('Notification background service cancelled');
-    } catch (e) {
-      if (kDebugMode) print('Error cancelling background service: $e');
+      if (kDebugMode) print('Error initializing notification scheduling: $e');
     }
   }
 
@@ -111,21 +79,4 @@ class NotificationBackgroundService {
       if (kDebugMode) print('Error checking deadlines: $e');
     }
   }
-}
-
-/// Callback dispatcher for background tasks
-@pragma('vm:entry-point')
-void callbackDispatcher() {
-  Workmanager().executeTask((task, inputData) async {
-    if (task == NotificationBackgroundService._taskName) {
-      try {
-        await NotificationBackgroundService.checkDeadlinesAndScheduleNotifications();
-        return Future.value(true);
-      } catch (e) {
-        if (kDebugMode) print('Background task error: $e');
-        return Future.value(false);
-      }
-    }
-    return Future.value(true);
-  });
 }
