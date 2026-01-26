@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/backup_progress.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../generated/l10n/app_localizations.dart';
 
 /// Dialog for showing backup download progress (Mobile)
 class DownloadProgressDialog extends StatelessWidget {
