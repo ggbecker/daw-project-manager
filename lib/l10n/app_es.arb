@@ -1011,6 +1011,7 @@
   "playlistNameHint": "Mi Lista",
   "playlistNameRequired": "Se requiere nombre de lista",
   "editPlaylist": "Editar Lista",
+  "stopPlaybackBeforeEditing": "Por favor, detenga la reproducción antes de editar la lista de reproducción",
   "selectPreviewSongs": "Seleccionar Vistas Previas",
   "deletePlaylist": "Eliminar Lista",
   "deletePlaylistConfirm": "¿Estás seguro de eliminar \"{name}\"?",

@@ -1011,6 +1011,7 @@
   "playlistNameHint": "我的播放列表",
   "playlistNameRequired": "需要播放列表名称",
   "editPlaylist": "编辑播放列表",
+  "stopPlaybackBeforeEditing": "请在编辑播放列表之前停止播放",
   "selectPreviewSongs": "选择预览歌曲",
   "deletePlaylist": "删除播放列表",
   "deletePlaylistConfirm": "确定要删除「{name}」吗？",

@@ -1011,6 +1011,7 @@
   "playlistNameHint": "La Mia Playlist",
   "playlistNameRequired": "Nome playlist richiesto",
   "editPlaylist": "Modifica Playlist",
+  "stopPlaybackBeforeEditing": "Si prega di interrompere la riproduzione prima di modificare la playlist",
   "selectPreviewSongs": "Seleziona Anteprime",
   "deletePlaylist": "Elimina Playlist",
   "deletePlaylistConfirm": "Sei sicuro di voler eliminare \"{name}\"?",

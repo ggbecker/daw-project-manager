@@ -1011,6 +1011,7 @@
   "playlistNameHint": "マイプレイリスト",
   "playlistNameRequired": "プレイリスト名が必要です",
   "editPlaylist": "プレイリスト編集",
+  "stopPlaybackBeforeEditing": "プレイリストを編集する前に再生を停止してください",
   "selectPreviewSongs": "プレビュー曲を選択",
   "deletePlaylist": "プレイリスト削除",
   "deletePlaylistConfirm": "本当に「{name}」を削除しますか？",

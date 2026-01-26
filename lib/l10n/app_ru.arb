@@ -1011,6 +1011,7 @@
   "playlistNameHint": "Мой Плейлист",
   "playlistNameRequired": "Название плейлиста обязательно",
   "editPlaylist": "Редактировать Плейлист",
+  "stopPlaybackBeforeEditing": "Пожалуйста, остановите воспроизведение перед редактированием плейлиста",
   "selectPreviewSongs": "Выбрать Превью",
   "deletePlaylist": "Удалить Плейлист",
   "deletePlaylistConfirm": "Вы уверены, что хотите удалить \"{name}\"?",
