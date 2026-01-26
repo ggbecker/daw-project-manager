@@ -496,6 +496,7 @@ class DeadlineNotificationService {
         tzScheduledTime,
         notificationDetails,
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
         payload: project.id, // Pass project ID for deep linking
       );
 
@@ -699,6 +700,7 @@ class DeadlineNotificationService {
         scheduledTime,
         notificationDetails,
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
         payload: 'test',
       );
 
