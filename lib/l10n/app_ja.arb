@@ -969,6 +969,8 @@
   "receiveNotificationOnDeadlineDay": "期限当日にも通知を受け取る",
   "howItWorks": "使い方",
   "deadlineNotificationsHelp": "各プロジェクトの期限の前に選択した日数で、指定された時刻に通知を受け取ります。通知をタップするとプロジェクトの詳細が開きます。",
+  "oneDay": "1日",
+  "xDays": "{count}日",
   "settings": "設定",
   "language": "言語",
   "theme": "テーマ",

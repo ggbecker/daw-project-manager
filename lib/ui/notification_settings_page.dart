@@ -570,9 +570,10 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
   Widget _buildReminderChip(int days) {
     final isSelected = _preferences?.reminderDays.contains(days) ?? false;
     final isEnabled = _hasPermission && (_preferences?.enabled ?? true);
+    final l10n = AppLocalizations.of(context)!;
 
     return FilterChip(
-      label: Text(days == 1 ? '1 day' : '$days days'),
+      label: Text(days == 1 ? l10n.oneDay : l10n.xDays(days)),
       selected: isSelected,
       onSelected: isEnabled
           ? (selected) {

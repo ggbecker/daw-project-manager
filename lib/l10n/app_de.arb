@@ -969,6 +969,8 @@
   "receiveNotificationOnDeadlineDay": "Auch am Deadline-Tag selbst eine Benachrichtigung erhalten",
   "howItWorks": "Wie es funktioniert",
   "deadlineNotificationsHelp": "Sie erhalten Benachrichtigungen zur angegebenen Zeit an den ausgewählten Tagen vor jeder Projekt-Deadline. Tippen Sie auf eine Benachrichtigung, um die Projektdetails zu öffnen.",
+  "oneDay": "1 Tag",
+  "xDays": "{count} Tage",
   "settings": "Einstellungen",
   "language": "Sprache",
   "theme": "Design",

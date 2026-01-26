@@ -1464,6 +1464,19 @@
   "@deadlineNotificationsHelp": {
     "description": "Help text explaining notifications"
   },
+  "oneDay": "1 day",
+  "@oneDay": {
+    "description": "One day label for reminder chips"
+  },
+  "xDays": "{count} days",
+  "@xDays": {
+    "description": "Multiple days label for reminder chips",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "settings": "Settings",
   "language": "Language",
   "theme": "Theme",

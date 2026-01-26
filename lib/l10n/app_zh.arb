@@ -969,6 +969,8 @@
   "receiveNotificationOnDeadlineDay": "在截止日期当天也接收通知",
   "howItWorks": "工作原理",
   "deadlineNotificationsHelp": "您将在每个项目截止日期前的选定天数在指定时间收到通知。点击通知以打开项目详情。",
+  "oneDay": "1天",
+  "xDays": "{count}天",
   "settings": "设置",
   "language": "语言",
   "theme": "主题",

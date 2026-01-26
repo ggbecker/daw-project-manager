@@ -969,6 +969,8 @@
   "receiveNotificationOnDeadlineDay": "Ricevi anche una notifica il giorno stesso della scadenza",
   "howItWorks": "Come Funziona",
   "deadlineNotificationsHelp": "Riceverai notifiche all'ora specificata nei giorni selezionati prima di ogni scadenza del progetto. Tocca una notifica per aprire i dettagli del progetto.",
+  "oneDay": "1 giorno",
+  "xDays": "{count} giorni",
   "settings": "Impostazioni",
   "language": "Lingua",
   "theme": "Tema",
