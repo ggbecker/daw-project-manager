@@ -434,7 +434,7 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
                                         print('\n🔄 Re-scheduling all notifications...');
                                       }
                                       
-                                      final projectRepo = ref.read(projectRepositoryProvider);
+                                      final projectRepo = await ref.read(repositoryProvider.future);
                                       final projects = projectRepo.getAllProjects();
                                       
                                       if (kDebugMode) {
