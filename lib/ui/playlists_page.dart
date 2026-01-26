@@ -695,8 +695,11 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
   }
 
   Future<void> _loadPlaylistItems() async {
-    final projectsAsync = ref.read(allProjectsStreamProvider);
-    projectsAsync.whenData((allProjects) {
+    try {
+      // Get the repository to fetch fresh project data
+      final repo = await ref.read(repositoryProvider.future);
+      final allProjects = repo.getAllProjects();
+      
       final items = <_PlaylistItem>[];
 
       // Add projects in order using current playlist state
@@ -720,7 +723,13 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
         });
         // Do NOT autoplay - user must click a song
       }
-    });
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   Future<void> _playCurrentSong() async {
