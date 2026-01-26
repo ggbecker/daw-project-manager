@@ -15,10 +15,14 @@ class NotificationPreferences {
   @HiveField(3)
   final bool notifyOnDeadlineDay; // Also notify on the deadline day itself
 
+  @HiveField(4)
+  final int notificationMinute; // Minute of hour to send notification (0-59)
+
   NotificationPreferences({
     this.enabled = true,
     this.reminderDays = const [1, 3, 7, 14],
     this.notificationHour = 9, // Default: 9 AM
+    this.notificationMinute = 0, // Default: :00
     this.notifyOnDeadlineDay = true,
   });
 
@@ -26,12 +30,14 @@ class NotificationPreferences {
     bool? enabled,
     List<int>? reminderDays,
     int? notificationHour,
+    int? notificationMinute,
     bool? notifyOnDeadlineDay,
   }) {
     return NotificationPreferences(
       enabled: enabled ?? this.enabled,
       reminderDays: reminderDays ?? this.reminderDays,
       notificationHour: notificationHour ?? this.notificationHour,
+      notificationMinute: notificationMinute ?? this.notificationMinute,
       notifyOnDeadlineDay: notifyOnDeadlineDay ?? this.notifyOnDeadlineDay,
     );
   }
@@ -42,6 +48,7 @@ class NotificationPreferences {
       enabled: true,
       reminderDays: [1, 3, 7, 14],
       notificationHour: 9,
+      notificationMinute: 0,
       notifyOnDeadlineDay: true,
     );
   }
@@ -62,13 +69,14 @@ class NotificationPreferencesAdapter extends TypeAdapter<NotificationPreferences
       reminderDays: (fields[1] as List?)?.cast<int>() ?? [1, 3, 7, 14],
       notificationHour: fields[2] as int? ?? 9,
       notifyOnDeadlineDay: fields[3] as bool? ?? true,
+      notificationMinute: fields[4] as int? ?? 0,
     );
   }
 
   @override
   void write(BinaryWriter writer, NotificationPreferences obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(5)
       ..writeByte(0)
       ..write(obj.enabled)
       ..writeByte(1)
@@ -76,7 +84,9 @@ class NotificationPreferencesAdapter extends TypeAdapter<NotificationPreferences
       ..writeByte(2)
       ..write(obj.notificationHour)
       ..writeByte(3)
-      ..write(obj.notifyOnDeadlineDay);
+      ..write(obj.notifyOnDeadlineDay)
+      ..writeByte(4)
+      ..write(obj.notificationMinute);
   }
 
   @override

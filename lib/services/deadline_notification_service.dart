@@ -179,13 +179,13 @@ class DeadlineNotificationService {
           // Calculate when to show the notification
           final notificationDate = deadline.subtract(Duration(days: reminderDays));
           
-          // Set time to configured hour
+          // Set time to configured hour and minute
           final notificationTime = DateTime(
             notificationDate.year,
             notificationDate.month,
             notificationDate.day,
             preferences.notificationHour,
-            0,
+            preferences.notificationMinute,
           );
 
           // Only schedule if notification time is in the future
@@ -206,7 +206,7 @@ class DeadlineNotificationService {
           deadline.month,
           deadline.day,
           preferences.notificationHour,
-          0,
+          preferences.notificationMinute,
         );
 
         if (notificationTime.isAfter(now)) {

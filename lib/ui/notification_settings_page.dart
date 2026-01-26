@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../generated/l10n/app_localizations.dart';
 import '../models/notification_preferences.dart';
@@ -165,13 +164,26 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
             subtitle: Text(
               AppLocalizations.of(context)!.timeToReceiveNotifications,
             ),
-            trailing: Text(
-              '${(_preferences?.notificationHour ?? 9).toString().padLeft(2, '0')}:00',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: (_hasPermission && (_preferences?.enabled ?? true))
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).disabledColor,
-              ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '${(_preferences?.notificationHour ?? 9).toString().padLeft(2, '0')}:${(_preferences?.notificationMinute ?? 0).toString().padLeft(2, '0')}',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: (_hasPermission && (_preferences?.enabled ?? true))
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).disabledColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                if (_hasPermission && (_preferences?.enabled ?? true))
+                  Icon(
+                    Icons.access_time,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 20,
+                  ),
+              ],
             ),
             enabled: _hasPermission && (_preferences?.enabled ?? true),
             onTap: (_hasPermission && (_preferences?.enabled ?? true))
@@ -267,77 +279,31 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
   }
 
   Future<void> _showTimePicker(BuildContext context) async {
-    int selectedHour = _preferences?.notificationHour ?? 9;
-
-    await showModalBottomSheet(
+    final currentHour = _preferences?.notificationHour ?? 9;
+    final currentMinute = _preferences?.notificationMinute ?? 0;
+    
+    final TimeOfDay? picked = await showTimePicker(
       context: context,
-      builder: (BuildContext context) {
-        return Container(
-          height: 300,
-          color: Theme.of(context).scaffoldBackgroundColor,
-          child: Column(
-            children: [
-              // Header
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceVariant,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(16),
-                    topRight: Radius.circular(16),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: Text(AppLocalizations.of(context)!.cancel),
-                    ),
-                    Text(
-                      AppLocalizations.of(context)!.notificationTime,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        setState(() {
-                          _preferences = _preferences?.copyWith(notificationHour: selectedHour) ??
-                              NotificationPreferences(notificationHour: selectedHour);
-                        });
-                        Navigator.pop(context);
-                      },
-                      child: Text(AppLocalizations.of(context)!.save),
-                    ),
-                  ],
-                ),
-              ),
-              // Picker
-              Expanded(
-                child: CupertinoPicker(
-                  scrollController: FixedExtentScrollController(
-                    initialItem: selectedHour,
-                  ),
-                  itemExtent: 50,
-                  onSelectedItemChanged: (int index) {
-                    selectedHour = index;
-                  },
-                  children: List.generate(24, (index) {
-                    return Center(
-                      child: Text(
-                        '${index.toString().padLeft(2, '0')}:00',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                    );
-                  }),
-                ),
-              ),
-            ],
-          ),
+      initialTime: TimeOfDay(hour: currentHour, minute: currentMinute),
+      builder: (BuildContext context, Widget? child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+          child: child!,
         );
       },
     );
+
+    if (picked != null && mounted) {
+      setState(() {
+        _preferences = _preferences?.copyWith(
+          notificationHour: picked.hour,
+          notificationMinute: picked.minute,
+        ) ?? NotificationPreferences(
+          notificationHour: picked.hour,
+          notificationMinute: picked.minute,
+        );
+      });
+    }
   }
 
   Widget _buildReminderChip(int days) {
