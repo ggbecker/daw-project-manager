@@ -520,6 +520,7 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
       
       if (currentProfileId == null) {
         setState(() {
+          _isSyncing = false;
           _syncStatus = AppLocalizations.of(context)!.errorNoProfileSelected;
         });
         return;
@@ -549,7 +550,10 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
         Navigator.of(context, rootNavigator: true).pop();
       }
 
+      // Reset syncing state IMMEDIATELY after upload completes
+      // This unlocks the UI right away
       setState(() {
+        _isSyncing = false;
         _syncStatus = AppLocalizations.of(context)!.backupUploadedSuccessfully;
         _lastSyncTime = DateTime.now();
       });
@@ -621,6 +625,7 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
         final currentProfileId = profileRepo.getCurrentProfileId();
         if (currentProfileId == null) {
           setState(() {
+            _isSyncing = false;
             _syncStatus = AppLocalizations.of(context)!.errorNoProfileSelected;
           });
           return;
@@ -655,6 +660,7 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
             );
           }
           setState(() {
+            _isSyncing = false;
             _syncStatus = AppLocalizations.of(context)!.noBackupFileFoundStatus;
           });
           return;
@@ -678,6 +684,7 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
         
         if (dialogResult == null || dialogResult['confirm'] != true) {
           setState(() {
+            _isSyncing = false;
             _syncStatus = AppLocalizations.of(context)!.downloadCancelled;
           });
           return;
@@ -714,7 +721,10 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
         }
       }
 
+      // Reset syncing state IMMEDIATELY after download completes
+      // This unlocks the UI while we do the provider invalidations below
       setState(() {
+        _isSyncing = false;
         _syncStatus = AppLocalizations.of(context)!.backupDownloadedDetailed(
           result.projectsAdded,
           result.projectsUpdated,

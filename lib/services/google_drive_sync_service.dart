@@ -467,8 +467,8 @@ class GoogleDriveSyncService {
       // Use modifiedTime from the file in the list response (already available)
       final fileInList = response.files!.first;
       if (fileInList.modifiedTime != null) {
-        // modifiedTime is already a DateTime, not a String
-        return fileInList.modifiedTime;
+        // modifiedTime comes from Google Drive in UTC, convert to local timezone
+        return fileInList.modifiedTime!.toLocal();
       }
 
       // If modifiedTime not in list response, try to get it explicitly
@@ -476,8 +476,8 @@ class GoogleDriveSyncService {
         final fileId = fileInList.id!;
         final fileResult = await _driveApi!.files.get(fileId, $fields: 'modifiedTime');
         if (fileResult is drive.File && fileResult.modifiedTime != null) {
-          // modifiedTime is already a DateTime, not a String
-          return fileResult.modifiedTime;
+          // modifiedTime comes from Google Drive in UTC, convert to local timezone
+          return fileResult.modifiedTime!.toLocal();
         }
       } catch (_) {
         // If getting file fails, continue to fallback
@@ -487,7 +487,8 @@ class GoogleDriveSyncService {
       try {
         final backupData = await downloadDatabase();
         if (backupData['timestamp'] != null) {
-          return DateTime.parse(backupData['timestamp'] as String);
+          // Parse and convert to local timezone
+          return DateTime.parse(backupData['timestamp'] as String).toLocal();
         }
       } catch (_) {
         // If download fails, return null
@@ -501,27 +502,27 @@ class GoogleDriveSyncService {
   }
 
   /// Check if a newer backup is available on Drive
-  /// Returns true if remote backup is newer than last sync time
+  /// Returns true if remote backup is newer than last download time
   Future<bool> isNewerBackupAvailable() async {
     try {
-      final lastSync = await getLastSyncTime();
+      final lastDownload = await getLastBackupDownloadTimestamp();
       final remoteTimestamp = await getRemoteBackupTimestamp();
 
       if (remoteTimestamp == null) {
         return false; // No backup available on Drive
       }
 
-      if (lastSync == null) {
-        return true; // Never synced, so remote is "newer"
+      if (lastDownload == null) {
+        return true; // Never downloaded, so remote backup should be downloaded
       }
 
-      // Remote is newer if it was modified after our last sync
+      // Remote is newer if it was modified after our last download
       // Add a small buffer (5 seconds) to avoid false positives from clock differences
-      final isNewer = remoteTimestamp.isAfter(lastSync.add(const Duration(seconds: 5)));
+      final isNewer = remoteTimestamp.isAfter(lastDownload.add(const Duration(seconds: 5)));
       
       if (kDebugMode) {
         print('Backup comparison:');
-        print('  Last sync: $lastSync');
+        print('  Last download: $lastDownload');
         print('  Remote backup: $remoteTimestamp');
         print('  Is newer: $isNewer');
       }
@@ -537,15 +538,27 @@ class GoogleDriveSyncService {
   Future<Map<String, dynamic>> getBackupInfo() async {
     try {
       final remoteTimestamp = await getRemoteBackupTimestamp();
-      final lastSync = await getLastSyncTime();
       final lastDownload = await getLastBackupDownloadTimestamp();
+      final lastUpload = await getLastBackupUploadTimestamp();
+      
+      // Determine if remote is newer than local download
+      bool isNewer = false;
+      if (remoteTimestamp != null) {
+        if (lastDownload == null) {
+          // Never downloaded, so remote backup should be downloaded
+          isNewer = true;
+        } else {
+          // Remote is newer if it was modified after our last download
+          isNewer = remoteTimestamp.isAfter(lastDownload.add(const Duration(seconds: 5)));
+        }
+      }
       
       return {
         'remoteTimestamp': remoteTimestamp,
-        'lastSync': lastSync,
         'lastDownload': lastDownload,
+        'lastUpload': lastUpload,
         'hasRemote': remoteTimestamp != null,
-        'isNewer': remoteTimestamp != null && lastSync != null && remoteTimestamp.isAfter(lastSync.add(const Duration(seconds: 5))),
+        'isNewer': isNewer,
       };
     } catch (e) {
       if (kDebugMode) print('Error getting backup info: $e');
@@ -1973,8 +1986,8 @@ class GoogleDriveSyncService {
       throw Exception('File not found: $filePath');
     }
     
-    final bytes = await file.readAsBytes();
-    final digest = md5.convert(bytes);
+    // Use streaming to avoid loading large files into memory (important for Android)
+    final digest = await md5.bind(file.openRead()).first;
     return digest.toString();
   }
 
@@ -2672,6 +2685,10 @@ class GoogleDriveSyncService {
       
       // Save local timestamp for this device's last upload
       await saveLastBackupUploadTimestamp(uploadTimestamp);
+      
+      // After uploading, this device has the most recent version
+      // Update last download timestamp to reflect that we're in sync
+      await saveLastBackupDownloadTimestamp(uploadTimestamp);
       
       // Emit progress: completed
       _progressController.add(BackupProgress(
