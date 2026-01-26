@@ -52,28 +52,24 @@ class NotificationBackgroundService {
         return;
       }
 
-      // Get all projects with deadlines
+      // Get all projects
       // We need to access the Hive database
       await ensureHiveInitialized();
       
       final projectsBox = await Hive.openBox<MusicProject>('music_projects');
       final projects = projectsBox.values.toList();
 
-      // Filter projects with deadlines
-      final projectsWithDeadlines = projects.where((p) => p.deadline != null).toList();
-
       if (kDebugMode) {
-        print('Found ${projectsWithDeadlines.length} projects with deadlines');
+        print('Found ${projects.length} total projects');
       }
 
-      // Schedule notifications for each project
-      for (final project in projectsWithDeadlines) {
-        await notificationService.scheduleNotificationsForProject(project, preferences);
-      }
+      // Schedule notifications for all projects
+      // The service will filter for deadlines and finished projects internally
+      await notificationService.scheduleAllDeadlineNotifications(projects: projects);
 
       if (kDebugMode) {
         final pending = await notificationService.getPendingNotifications();
-        print('Scheduled ${pending.length} notifications');
+        print('Total pending notifications: ${pending.length}');
       }
     } catch (e) {
       if (kDebugMode) print('Error checking deadlines: $e');
