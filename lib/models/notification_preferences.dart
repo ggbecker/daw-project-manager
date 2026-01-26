@@ -1,7 +1,5 @@
 import 'package:hive/hive.dart';
 
-part 'notification_preferences.g.dart';
-
 /// Notification preferences for deadline reminders
 @HiveType(typeId: 10)
 class NotificationPreferences {

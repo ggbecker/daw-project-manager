@@ -5,10 +5,10 @@ import 'package:audioplayers/audioplayers.dart';
 /// Audio handler for playlist playback with system notifications
 class PlaylistAudioHandler extends BaseAudioHandler {
   final AudioPlayer _audioPlayer = AudioPlayer();
-  final Function(int index)? onIndexChanged;
-  final Function(Duration position)? onPositionChanged;
-  final Function(Duration duration)? onDurationChanged;
-  final Function()? onCompleted;
+  Function(int index)? onIndexChanged;
+  Function(Duration position)? onPositionChanged;
+  Function(Duration duration)? onDurationChanged;
+  Function()? onCompleted;
   
   List<MediaItem> _queue = [];
   int _currentIndex = 0;

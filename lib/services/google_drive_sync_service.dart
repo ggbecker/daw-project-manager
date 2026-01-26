@@ -25,7 +25,7 @@ import '../models/todo_template.dart';
 import '../models/backup_progress.dart';
 import '../repository/profile_repository.dart';
 import '../repository/project_repository.dart';
-import '../utils/app_paths.dart' show ensureHiveInitialized, getPreviewSongsPath;
+import '../utils/app_paths.dart' show ensureHiveInitialized, getPreviewSongsPath, getReleaseArtworkPath;
 import '../config/secrets.dart' show desktopClientSecret, desktopClientId, androidWebClientId;
 
 /// Exception thrown when user cancels an upload operation
@@ -3150,6 +3150,10 @@ class GoogleDriveSyncService {
       
       int photoIndex = 0;
       
+      // Get release artwork file mappings early (need it for counting)
+      final releaseArtworkFiles = remoteData['releaseArtworkFiles'] as Map<String, dynamic>?;
+      final releaseArtworkHashes = remoteData['releaseArtworkHashes'] as Map<String, dynamic>?;
+      
       // Count release artwork files to download
       int artworkToDownload = 0;
       if (downloadPreviewSongs && releaseArtworkFiles != null) {
@@ -3249,12 +3253,7 @@ class GoogleDriveSyncService {
     // Maps projectId -> fileHash
     final previewSongHashes = remoteData['previewSongHashes'] as Map<String, dynamic>?;
     
-    // Get release artwork file mappings (if available, for version 1.6+)
-    // Maps releaseId -> driveFileId
-    final releaseArtworkFiles = remoteData['releaseArtworkFiles'] as Map<String, dynamic>?;
-    // Get release artwork hashes (if available, for version 1.6+)
-    // Maps releaseId -> fileHash
-    final releaseArtworkHashes = remoteData['releaseArtworkHashes'] as Map<String, dynamic>?;
+    // Note: releaseArtworkFiles and releaseArtworkHashes were already extracted earlier
     
     // Create reverse lookup: profileId -> list of project/release/root IDs
     final profileToProjects = <String, List<String>>{};
