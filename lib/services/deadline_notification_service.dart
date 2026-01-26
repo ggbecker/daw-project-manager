@@ -36,11 +36,35 @@ class DeadlineNotificationService {
       // Get local timezone with detailed logging
       final String? timeZoneName = await _getLocalTimeZone();
       if (timeZoneName != null) {
-        tz.setLocalLocation(tz.getLocation(timeZoneName));
+        final location = tz.getLocation(timeZoneName);
+        tz.setLocalLocation(location);
+        
+        // Verify timezone offset matches system
+        final systemOffset = DateTime.now().timeZoneOffset;
+        final systemOffsetHours = systemOffset.inHours;
+        final locationOffset = location.currentTimeZone.offset;
+        final locationOffsetHours = locationOffset ~/ 3600; // Convert seconds to hours
+        
         if (kDebugMode) {
           print('📍 Timezone configured: $timeZoneName');
           print('🕐 Current time in timezone: ${tz.TZDateTime.now(tz.local)}');
-          print('⏰ Timezone offset: ${tz.TZDateTime.now(tz.local).timeZoneOffset}');
+          print('⏰ System offset: $systemOffset ($systemOffsetHours hours)');
+          print('⏰ Configured offset: $locationOffset seconds ($locationOffsetHours hours)');
+        }
+        
+        // Check offset mismatch (allow 1 hour difference for DST)
+        final offsetDiff = (locationOffsetHours - systemOffsetHours).abs();
+        if (offsetDiff > 1) {
+          if (kDebugMode) {
+            print('⚠️ WARNING: Timezone offset mismatch!');
+            print('   System: $systemOffsetHours hours');
+            print('   Configured: $locationOffsetHours hours');
+            print('   This may cause notifications to appear at wrong times!');
+          }
+        } else {
+          if (kDebugMode) {
+            print('✅ Timezone configured correctly (offset diff: $offsetDiff hours, may be DST)');
+          }
         }
       } else {
         // Fallback to UTC
@@ -71,64 +95,75 @@ class DeadlineNotificationService {
     }
   }
 
-  /// Get local timezone name
+  /// Get local timezone name with robust offset-based detection
   Future<String?> _getLocalTimeZone() async {
     try {
-      // Try to get timezone from system
-      final timeZoneName = DateTime.now().timeZoneName;
+      // Get system offset
+      final systemOffset = DateTime.now().timeZoneOffset;
+      final offsetHours = systemOffset.inHours;
+      final offsetMinutes = systemOffset.inMinutes % 60;
       
       if (kDebugMode) {
-        print('🌍 System timezone name: $timeZoneName');
+        print('🌍 System timezone name: ${DateTime.now().timeZoneName}');
+        print('⏱️ System timezone offset: $systemOffset (${offsetHours >= 0 ? '+' : ''}$offsetHours:${offsetMinutes.toString().padLeft(2, '0')})');
         print('📅 Current system time: ${DateTime.now()}');
         print('🌐 UTC time: ${DateTime.now().toUtc()}');
       }
       
-      // Try to find matching timezone in tz database
-      try {
-        // Common timezone mappings
-        final Map<String, String> timezoneAliases = {
-          'BRT': 'America/Sao_Paulo',  // Brazil Time
-          'BRST': 'America/Sao_Paulo', // Brazil Summer Time
-          'EST': 'America/New_York',
-          'EDT': 'America/New_York',
-          'PST': 'America/Los_Angeles',
-          'PDT': 'America/Los_Angeles',
-          'CET': 'Europe/Paris',
-          'CEST': 'Europe/Paris',
-          'GMT': 'Europe/London',
-          'BST': 'Europe/London',
-        };
-        
-        // Try alias first
-        if (timezoneAliases.containsKey(timeZoneName)) {
-          final mappedZone = timezoneAliases[timeZoneName]!;
-          if (kDebugMode) print('🔄 Mapped $timeZoneName to $mappedZone');
-          return mappedZone;
+      // Map offset to real IANA timezone (better DST support than Etc/GMT)
+      final timezoneMap = {
+        0: 'UTC',
+        1: 'Europe/Paris',      // UTC+1 (CET/CEST)
+        -1: 'Atlantic/Azores',   // UTC-1
+        2: 'Europe/Berlin',      // UTC+2 (CEST)
+        -2: 'Atlantic/South_Georgia', // UTC-2
+        3: 'Europe/Moscow',      // UTC+3
+        -3: 'America/Sao_Paulo', // UTC-3 (BRT)
+        4: 'Asia/Dubai',         // UTC+4
+        -4: 'America/New_York',  // UTC-4 (EDT) or UTC-5 (EST)
+        5: 'Asia/Karachi',       // UTC+5
+        -5: 'America/Chicago',   // UTC-5 (CDT) or UTC-6 (CST)
+        -6: 'America/Denver',    // UTC-6 (MDT) or UTC-7 (MST)
+        -7: 'America/Los_Angeles', // UTC-7 (PDT) or UTC-8 (PST)
+        8: 'Asia/Shanghai',      // UTC+8
+        -8: 'Pacific/Pitcairn',  // UTC-8
+        9: 'Asia/Tokyo',         // UTC+9
+        -9: 'Pacific/Gambier',   // UTC-9
+        10: 'Australia/Sydney',  // UTC+10 (AEDT) or UTC+11 (AEST)
+        -10: 'Pacific/Honolulu', // UTC-10
+      };
+      
+      // Try to use timezone based on offset
+      final suggestedTimezone = timezoneMap[offsetHours];
+      if (suggestedTimezone != null) {
+        try {
+          final location = tz.getLocation(suggestedTimezone);
+          final locationOffset = location.currentTimeZone.offset;
+          final locationOffsetHours = locationOffset ~/ 3600;
+          
+          if (kDebugMode) {
+            print('🔄 Mapped offset $offsetHours to timezone: $suggestedTimezone');
+            print('   Location offset: $locationOffset seconds ($locationOffsetHours hours)');
+          }
+          
+          return suggestedTimezone;
+        } catch (e) {
+          if (kDebugMode) print('⚠️ Could not use suggested timezone $suggestedTimezone: $e');
         }
-        
-        // Try to use the name directly
-        tz.getLocation(timeZoneName);
-        return timeZoneName;
-      } catch (e) {
-        // If not found, try to find by offset
-        final offset = DateTime.now().timeZoneOffset;
-        if (kDebugMode) print('⏱️ Trying to find timezone by offset: $offset');
-        
-        // Common offsets to timezone mappings
-        if (offset.inHours == -3) {
-          return 'America/Sao_Paulo'; // Brazil
-        } else if (offset.inHours == -5) {
-          return 'America/New_York'; // US East
-        } else if (offset.inHours == -8) {
-          return 'America/Los_Angeles'; // US West
-        } else if (offset.inHours == 0) {
-          return 'UTC';
-        } else if (offset.inHours == 1) {
-          return 'Europe/Paris';
-        }
-        
-        // Default to UTC
+      }
+      
+      // Fallback to Etc/GMT based on offset
+      // Note: Etc/GMT uses inverted sign: GMT+1 = Etc/GMT-1
+      if (offsetHours == 0) {
         return 'UTC';
+      } else if (offsetHours > 0) {
+        final etcTimezone = 'Etc/GMT-$offsetHours';
+        if (kDebugMode) print('🔄 Fallback to: $etcTimezone');
+        return etcTimezone;
+      } else {
+        final etcTimezone = 'Etc/GMT+${-offsetHours}';
+        if (kDebugMode) print('🔄 Fallback to: $etcTimezone');
+        return etcTimezone;
       }
     } catch (e) {
       if (kDebugMode) print('❌ Error getting timezone: $e');
@@ -433,6 +468,9 @@ class DeadlineNotificationService {
         importance: Importance.high,
         priority: Priority.high,
         icon: '@mipmap/ic_launcher',
+        showWhen: true,
+        enableVibration: true,
+        playSound: true,
       );
 
       final notificationDetails = NotificationDetails(android: androidDetails);
@@ -458,7 +496,6 @@ class DeadlineNotificationService {
         tzScheduledTime,
         notificationDetails,
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
         payload: project.id, // Pass project ID for deep linking
       );
 
@@ -662,7 +699,6 @@ class DeadlineNotificationService {
         scheduledTime,
         notificationDetails,
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
         payload: 'test',
       );
 
