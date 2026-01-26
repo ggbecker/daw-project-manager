@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../generated/l10n/app_localizations.dart';
 import '../models/notification_preferences.dart';
@@ -164,25 +165,18 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
             subtitle: Text(
               AppLocalizations.of(context)!.timeToReceiveNotifications,
             ),
-            trailing: DropdownButton<int>(
-              value: _preferences?.notificationHour ?? 9,
-              items: List.generate(24, (index) => index)
-                  .map((hour) => DropdownMenuItem(
-                        value: hour,
-                        child: Text('${hour.toString().padLeft(2, '0')}:00'),
-                      ))
-                  .toList(),
-              onChanged: _hasPermission && (_preferences?.enabled ?? true)
-                  ? (value) {
-                      if (value != null) {
-                        setState(() {
-                          _preferences = _preferences?.copyWith(notificationHour: value) ??
-                              NotificationPreferences(notificationHour: value);
-                        });
-                      }
-                    }
-                  : null,
+            trailing: Text(
+              '${(_preferences?.notificationHour ?? 9).toString().padLeft(2, '0')}:00',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: (_hasPermission && (_preferences?.enabled ?? true))
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).disabledColor,
+              ),
             ),
+            enabled: _hasPermission && (_preferences?.enabled ?? true),
+            onTap: (_hasPermission && (_preferences?.enabled ?? true))
+                ? () => _showTimePicker(context)
+                : null,
           ),
 
           const Divider(),
@@ -269,6 +263,80 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _showTimePicker(BuildContext context) async {
+    int selectedHour = _preferences?.notificationHour ?? 9;
+
+    await showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return Container(
+          height: 300,
+          color: Theme.of(context).scaffoldBackgroundColor,
+          child: Column(
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceVariant,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(AppLocalizations.of(context)!.cancel),
+                    ),
+                    Text(
+                      AppLocalizations.of(context)!.notificationTime,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _preferences = _preferences?.copyWith(notificationHour: selectedHour) ??
+                              NotificationPreferences(notificationHour: selectedHour);
+                        });
+                        Navigator.pop(context);
+                      },
+                      child: Text(AppLocalizations.of(context)!.save),
+                    ),
+                  ],
+                ),
+              ),
+              // Picker
+              Expanded(
+                child: CupertinoPicker(
+                  scrollController: FixedExtentScrollController(
+                    initialItem: selectedHour,
+                  ),
+                  itemExtent: 50,
+                  onSelectedItemChanged: (int index) {
+                    selectedHour = index;
+                  },
+                  children: List.generate(24, (index) {
+                    return Center(
+                      child: Text(
+                        '${index.toString().padLeft(2, '0')}:00',
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                    );
+                  }),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
