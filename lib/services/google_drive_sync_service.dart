@@ -3150,18 +3150,6 @@ class GoogleDriveSyncService {
       
       int photoIndex = 0;
       
-      // Get release artwork file mappings early (need it for counting)
-      final releaseArtworkFiles = remoteData['releaseArtworkFiles'] as Map<String, dynamic>?;
-      final releaseArtworkHashes = remoteData['releaseArtworkHashes'] as Map<String, dynamic>?;
-      
-      // Count release artwork files to download
-      int artworkToDownload = 0;
-      if (downloadPreviewSongs && releaseArtworkFiles != null) {
-        artworkToDownload = releaseArtworkFiles.length;
-      }
-      
-      int artworkIndex = 0;
-      
       for (final remoteProfile in remoteProfiles) {
         final localProfile = profileRepo.getProfileById(remoteProfile.id);
         
@@ -3253,7 +3241,20 @@ class GoogleDriveSyncService {
     // Maps projectId -> fileHash
     final previewSongHashes = remoteData['previewSongHashes'] as Map<String, dynamic>?;
     
-    // Note: releaseArtworkFiles and releaseArtworkHashes were already extracted earlier
+    // Get release artwork file mappings (if available, for version 1.6+)
+    // Maps releaseId -> driveFileId
+    final releaseArtworkFiles = remoteData['releaseArtworkFiles'] as Map<String, dynamic>?;
+    // Get release artwork hashes (if available, for version 1.6+)
+    // Maps releaseId -> fileHash
+    final releaseArtworkHashes = remoteData['releaseArtworkHashes'] as Map<String, dynamic>?;
+    
+    // Count release artwork files to download
+    int artworkToDownload = 0;
+    if (downloadPreviewSongs && releaseArtworkFiles != null) {
+      artworkToDownload = releaseArtworkFiles.length;
+    }
+    
+    int artworkIndex = 0;
     
     // Create reverse lookup: profileId -> list of project/release/root IDs
     final profileToProjects = <String, List<String>>{};
