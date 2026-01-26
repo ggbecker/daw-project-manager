@@ -909,7 +909,7 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
                   if (result == true && mounted) {
                     // Reload playlist from database first, then reload items
                     await _reloadPlaylist();
-                    _loadPlaylistItems();
+                    await _loadPlaylistItems();
                   }
                 }
               },
@@ -1060,9 +1060,9 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
                 );
                 
                 // Reload playlist from database first, then reload items if edited
-                if (result == true) {
+                if (result == true && mounted) {
                   await _reloadPlaylist();
-                  _loadPlaylistItems();
+                  await _loadPlaylistItems();
                 }
               }
             },
