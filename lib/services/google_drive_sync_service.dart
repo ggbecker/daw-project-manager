@@ -467,8 +467,8 @@ class GoogleDriveSyncService {
       // Use modifiedTime from the file in the list response (already available)
       final fileInList = response.files!.first;
       if (fileInList.modifiedTime != null) {
-        // modifiedTime is already a DateTime, not a String
-        return fileInList.modifiedTime;
+        // modifiedTime comes from Google Drive in UTC, convert to local timezone
+        return fileInList.modifiedTime!.toLocal();
       }
 
       // If modifiedTime not in list response, try to get it explicitly
@@ -476,8 +476,8 @@ class GoogleDriveSyncService {
         final fileId = fileInList.id!;
         final fileResult = await _driveApi!.files.get(fileId, $fields: 'modifiedTime');
         if (fileResult is drive.File && fileResult.modifiedTime != null) {
-          // modifiedTime is already a DateTime, not a String
-          return fileResult.modifiedTime;
+          // modifiedTime comes from Google Drive in UTC, convert to local timezone
+          return fileResult.modifiedTime!.toLocal();
         }
       } catch (_) {
         // If getting file fails, continue to fallback
@@ -487,7 +487,8 @@ class GoogleDriveSyncService {
       try {
         final backupData = await downloadDatabase();
         if (backupData['timestamp'] != null) {
-          return DateTime.parse(backupData['timestamp'] as String);
+          // Parse and convert to local timezone
+          return DateTime.parse(backupData['timestamp'] as String).toLocal();
         }
       } catch (_) {
         // If download fails, return null
@@ -1973,9 +1974,16 @@ class GoogleDriveSyncService {
       throw Exception('File not found: $filePath');
     }
     
-    final bytes = await file.readAsBytes();
-    final digest = md5.convert(bytes);
-    return digest.toString();
+    // Use streaming to avoid loading large files into memory (important for Android)
+    final output = AccumulatorSink<Digest>();
+    final input = md5.startChunkedConversion(output);
+    
+    await for (final chunk in file.openRead()) {
+      input.add(chunk);
+    }
+    input.close();
+    
+    return output.events.single.toString();
   }
 
   /// Get content type for file extension
@@ -2672,6 +2680,10 @@ class GoogleDriveSyncService {
       
       // Save local timestamp for this device's last upload
       await saveLastBackupUploadTimestamp(uploadTimestamp);
+      
+      // After uploading, this device has the most recent version
+      // Update last download timestamp to reflect that we're in sync
+      await saveLastBackupDownloadTimestamp(uploadTimestamp);
       
       // Emit progress: completed
       _progressController.add(BackupProgress(
