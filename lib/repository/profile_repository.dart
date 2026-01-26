@@ -44,13 +44,22 @@ class ProfileRepository {
   }
 
   /// Migrates existing data to a default profile if no profiles exist
-  /// On mobile, creates a default profile to allow app initialization
-  /// The profile can be replaced later when a backup is downloaded
+  /// On mobile (Android/iOS), no default profile is created
+  /// User must download a backup from Google Drive to initialize profiles
+  /// On desktop, a default profile is created for immediate use
   Future<void> _migrateToDefaultProfile() async {
     if (profilesBox.isEmpty) {
-      // Create default profile on all platforms (including mobile)
-      // This allows the app to initialize properly
-      // On mobile, this profile can be replaced when backup is downloaded
+      // On mobile, don't create default profile
+      // User will download backup from Google Drive which contains profiles
+      if (Platform.isAndroid || Platform.isIOS) {
+        if (kDebugMode) {
+          print('Mobile platform: No default profile created.');
+          print('  User must download backup from Google Drive to initialize app data.');
+        }
+        return; // Exit early - no profile created
+      }
+      
+      // On desktop, create default profile for immediate use
       final defaultProfile = Profile(
         id: _uuid.v4(),
         name: 'Default',
@@ -61,12 +70,7 @@ class ProfileRepository {
       await setCurrentProfileId(defaultProfile.id);
       
       if (kDebugMode) {
-        if (Platform.isAndroid || Platform.isIOS) {
-          print('Mobile platform: Created default profile to allow app initialization.');
-          print('  Profile can be replaced when backup is downloaded from Google Drive.');
-        } else {
-          print('Desktop platform: Created default profile.');
-        }
+        print('Desktop platform: Created default profile.');
       }
       
       // Migrate existing data from old boxes to default profile boxes

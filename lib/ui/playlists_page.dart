@@ -1046,7 +1046,7 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
                 }
                 
                 // Navigate to main playlist page's edit dialog
-                await Navigator.of(context).push(
+                final result = await Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => _EditPlaylistRoute(
                       playlist: _currentPlaylist,
@@ -1055,9 +1055,11 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
                   ),
                 );
                 
-                // Reload playlist from database first, then reload items
-                await _reloadPlaylist();
-                _loadPlaylistItems();
+                // Reload playlist from database first, then reload items if edited
+                if (result == true) {
+                  await _reloadPlaylist();
+                  _loadPlaylistItems();
+                }
               }
             },
           ),
@@ -1550,7 +1552,7 @@ class _EditPlaylistFormState extends ConsumerState<_EditPlaylistForm> {
                   ref.invalidate(playlistsProvider);
                   
                   if (mounted) {
-                    Navigator.pop(context);
+                    Navigator.pop(context, true); // Return true to signal success
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(AppLocalizations.of(context)!.playlistUpdated),

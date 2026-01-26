@@ -66,6 +66,14 @@ class ProjectRepository {
     // Get current profile
     final currentProfile = profileRepo.getCurrentProfile();
     if (currentProfile == null) {
+      // On mobile, it's okay to not have a profile initially
+      // User will download backup from Google Drive
+      if (Platform.isAndroid || Platform.isIOS) {
+        if (kDebugMode) {
+          print('Mobile: No active profile found. User must download backup from Google Drive.');
+        }
+        throw Exception('No active profile found - download backup from Google Drive');
+      }
       throw Exception('No active profile found');
     }
     

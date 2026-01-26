@@ -3548,8 +3548,20 @@ class GoogleDriveSyncService {
       print('  Releases: +$releasesAdded ~$releasesUpdated');
     }
 
+    // Return result first, clean up profile asynchronously
+    final result = SyncResult(
+      projectsAdded: projectsAdded,
+      projectsUpdated: projectsUpdated,
+      releasesAdded: releasesAdded,
+      releasesUpdated: releasesUpdated,
+      previewSongsDownloaded: previewSongsDownloaded,
+      previewSongsUpdated: previewSongsUpdated,
+    );
+
     // Remove default empty profile if we restored other non-default profiles (all platforms)
-    try {
+    // Do this asynchronously after returning so it doesn't block the UI
+    Future.microtask(() async {
+      try {
       final allProfiles = profileRepo.getAllProfiles();
       
       if (allProfiles.length > 1) {
@@ -3628,20 +3640,14 @@ class GoogleDriveSyncService {
         }
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error removing default empty profile: $e');
+        if (kDebugMode) {
+          print('Error removing default empty profile: $e');
+        }
+        // Don't throw - this is a convenience feature, not critical
       }
-      // Don't throw - this is a convenience feature, not critical
-    }
+    });
 
-    return SyncResult(
-      projectsAdded: projectsAdded,
-      projectsUpdated: projectsUpdated,
-      releasesAdded: releasesAdded,
-      releasesUpdated: releasesUpdated,
-      previewSongsDownloaded: previewSongsDownloaded,
-      previewSongsUpdated: previewSongsUpdated,
-    );
+    return result;
   }
 
   // Serialization helpers
