@@ -102,5 +102,6 @@ flutter {
 
 dependencies {
     // Core library desugaring for Java 8+ API support
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    // Updated to 2.1.4+ as required by flutter_local_notifications 19.5.0
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
