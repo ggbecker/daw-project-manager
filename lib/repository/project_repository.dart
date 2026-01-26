@@ -13,6 +13,8 @@ import '../models/todo_item.dart';
 import '../models/todo_template.dart';
 import '../models/playlist.dart';
 import '../services/metadata_extractor.dart';
+import '../services/deadline_notification_service.dart';
+import '../services/notification_background_service.dart';
 import '../utils/app_paths.dart';
 import 'profile_repository.dart';
 
@@ -332,7 +334,17 @@ class ProjectRepository {
   List<MusicProject> getAllProjects() => projectsBox.values.toList(growable: false);
 
   Future<void> updateProject(MusicProject project) async {
-    await projectsBox.put(project.id, project.copyWith(updatedAt: DateTime.now()));
+    final updatedProject = project.copyWith(updatedAt: DateTime.now());
+    await projectsBox.put(updatedProject.id, updatedProject);
+    
+    // Reschedule notifications if on Android and deadline changed
+    if (Platform.isAndroid) {
+      try {
+        await NotificationBackgroundService.triggerCheck();
+      } catch (e) {
+        if (kDebugMode) print('Error rescheduling notifications: $e');
+      }
+    }
   }
 
   /// Extracts full metadata for a single project and updates it

@@ -25,6 +25,7 @@ import 'profile_manager_page.dart';
 import 'project_folders_settings_page.dart';
 import 'playlists_page.dart';
 import 'google_drive_sync_page.dart';
+import 'notification_settings_page.dart';
 import 'widgets/language_switcher.dart';
 import 'widgets/theme_switcher.dart';
 import '../generated/l10n/app_localizations.dart';
@@ -639,6 +640,19 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                     ? AppBar(
                         title: const Text('DAW Project Manager'),
                         actions: [
+                          // Notification settings button (Android only)
+                          if (Platform.isAndroid)
+                            IconButton(
+                              icon: const Icon(Icons.notifications),
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => const NotificationSettingsPage(),
+                                  ),
+                                );
+                              },
+                              tooltip: AppLocalizations.of(context)!.notificationSettings,
+                            ),
                           // Profile button
                           Consumer(
                             builder: (context, ref, child) {
@@ -2238,6 +2252,12 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.launchingProject(project.displayName))));
+      }
+      
+      // On desktop, automatically open project details for context
+      // This helps users return to the app with the project context loaded
+      if (mounted && !MobileUtils.isMobile()) {
+        await _viewProjectDetails(project);
       }
     } catch (e) {
       if (mounted) {

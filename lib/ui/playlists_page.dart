@@ -2,14 +2,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:audio_service/audio_service.dart';
 import 'package:path/path.dart' as p;
 import '../models/playlist.dart';
 import '../models/music_project.dart';
 import '../providers/providers.dart';
 import '../utils/mobile_utils.dart';
 import '../generated/l10n/app_localizations.dart';
-import '../services/playlist_audio_handler.dart';
 
 /// Playlists page - Android only
 /// Allows creating playlists with preview songs and playing them in sequence
@@ -625,7 +623,7 @@ class _PlaylistItem {
 }
 
 class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
-  PlaylistAudioHandler? _audioHandler;
+  final AudioPlayer _audioPlayer = AudioPlayer();
   bool _isPlaying = false;
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
@@ -638,90 +636,134 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
   void initState() {
     super.initState();
     _currentPlaylist = widget.playlist;
-    _initAudioService();
+    _initAudioPlayer();
     _loadPlaylistItems();
   }
 
-  Future<void> _initAudioService() async {
-    if (!Platform.isAndroid) return;
-    
-    try {
-      _audioHandler = await AudioService.init(
-        builder: () => PlaylistAudioHandler(
-          onIndexChanged: (index) {
-            if (mounted) {
-              setState(() {
-                _currentIndex = index;
-              });
-            }
-          },
-          onPositionChanged: (position) {
-            if (mounted) {
-              setState(() {
-                _position = position;
-              });
-            }
-          },
-          onDurationChanged: (duration) {
-            if (mounted) {
-              setState(() {
-                _duration = duration;
-              });
-            }
-          },
-          onCompleted: () {
-            _playNext();
-          },
-        ),
-        config: const AudioServiceConfig(
-          androidNotificationChannelId: 'com.bandpassrecords.dpm.channel.audio',
-          androidNotificationChannelName: 'Music Playback',
-          androidNotificationOngoing: true,
-          androidNotificationIcon: 'mipmap/ic_launcher',
-        ),
-      );
-
-      // Listen to playback state
-      _audioHandler?.playbackState.listen((state) {
-        if (mounted) {
-          setState(() {
-            _isPlaying = state.playing;
-          });
-        }
-      });
-    } catch (e) {
-      // Fallback to regular AudioPlayer if service init fails
+  void _initAudioPlayer() {
+    // Listen to player state
+    _audioPlayer.onPlayerStateChanged.listen((state) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to initialize audio service: $e')),
-        );
+        setState(() {
+          _isPlaying = state == PlayerState.playing;
+        });
       }
-    }
+    });
+
+    // Listen to duration changes
+    _audioPlayer.onDurationChanged.listen((duration) {
+      if (mounted) {
+        setState(() {
+          _duration = duration;
+        });
+      }
+    });
+
+    // Listen to position changes
+    _audioPlayer.onPositionChanged.listen((position) {
+      if (mounted) {
+        setState(() {
+          _position = position;
+        });
+      }
+    });
+
+    // Listen to completion
+    _audioPlayer.onPlayerComplete.listen((_) {
+      _playNext();
+    });
   }
 
   Future<void> _reloadPlaylist() async {
     try {
       final repo = await ref.read(repositoryProvider.future);
-      final playlistsAsync = ref.read(playlistsProvider);
-      await playlistsAsync.whenData((playlists) {
-        final updatedPlaylist = playlists.firstWhere(
-          (p) => p.id == widget.playlist.id,
-          orElse: () => widget.playlist,
-        );
-        if (mounted) {
-          setState(() {
-            _currentPlaylist = updatedPlaylist;
-          });
-        }
-      });
+      // Get playlist directly from repository
+      final updatedPlaylist = repo.getPlaylistById(widget.playlist.id);
+      
+      if (updatedPlaylist != null && mounted) {
+        setState(() {
+          _currentPlaylist = updatedPlaylist;
+        });
+      }
     } catch (e) {
       // If reload fails, keep current playlist
     }
   }
 
+  Future<void> _reloadPlaylistAndItems() async {
+    if (!mounted) return;
+    
+    print('🔄 Starting playlist reload...');
+    
+    // Show loading state
+    setState(() {
+      _isLoading = true;
+    });
+    
+    try {
+      final repo = await ref.read(repositoryProvider.future);
+      
+      // Get fresh playlist data from repository
+      final updatedPlaylist = repo.getPlaylistById(widget.playlist.id);
+      if (updatedPlaylist == null) {
+        print('❌ Playlist not found!');
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+        return;
+      }
+      
+      print('✅ Loaded playlist: ${updatedPlaylist.name} with ${updatedPlaylist.projectIds.length} project IDs');
+      
+      // Get all projects
+      final allProjects = repo.getAllProjects();
+      print('📂 Found ${allProjects.length} projects in repository');
+      
+      // Build items list from fresh data
+      final items = <_PlaylistItem>[];
+      for (final projectId in updatedPlaylist.projectIds) {
+        try {
+          final project = allProjects.firstWhere((p) => p.id == projectId);
+          if (project.previewSongPath != null &&
+              project.previewSongPath!.isNotEmpty &&
+              !project.previewSongPath!.startsWith('drive://')) {
+            items.add(_PlaylistItem(project));
+            print('  ➕ Added: ${project.displayName}');
+          }
+        } catch (_) {
+          print('  ⚠️ Project not found: $projectId');
+        }
+      }
+
+      print('🎵 Final playlist has ${items.length} items');
+
+      // Update state with fresh data
+      if (mounted) {
+        setState(() {
+          _currentPlaylist = updatedPlaylist;
+          _playlistItems = items;
+          _isLoading = false;
+        });
+        print('✨ UI updated with new data');
+      }
+    } catch (e) {
+      print('❌ Error reloading: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
   Future<void> _loadPlaylistItems() async {
-    final projectsAsync = ref.read(allProjectsStreamProvider);
-    projectsAsync.whenData((allProjects) {
+    try {
+      // Get the repository to fetch fresh project data
+      final repo = await ref.read(repositoryProvider.future);
+      final allProjects = repo.getAllProjects();
+      
       final items = <_PlaylistItem>[];
 
       // Add projects in order using current playlist state
@@ -743,39 +785,63 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
           _playlistItems = items;
           _isLoading = false;
         });
-        
-        // Update audio service queue
-        if (Platform.isAndroid && _audioHandler != null && items.isNotEmpty) {
-          final mediaItems = items.map((item) => MediaItem(
-            id: item.projectId,
-            title: item.displayName,
-            artist: _currentPlaylist.name,
-            album: 'Playlist',
-            extras: {'filePath': item.previewSongPath},
-          )).toList();
-          _audioHandler!.updateQueue(mediaItems);
-          _audioHandler!.setInitialIndex(_currentIndex);
-        }
         // Do NOT autoplay - user must click a song
       }
-    });
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   Future<void> _playCurrentSong() async {
-    if (_audioHandler != null) {
-      await _audioHandler!.skipToQueueItem(_currentIndex);
+    if (_playlistItems.isEmpty || _currentIndex < 0 || _currentIndex >= _playlistItems.length) {
+      return;
+    }
+
+    final item = _playlistItems[_currentIndex];
+    if (item.previewSongPath == null || item.previewSongPath!.isEmpty) {
+      return;
+    }
+
+    final file = File(item.previewSongPath!);
+    if (!await file.exists()) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Audio file not found')),
+        );
+      }
+      return;
+    }
+
+    try {
+      await _audioPlayer.play(DeviceFileSource(item.previewSongPath!));
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error playing audio: $e')),
+        );
+      }
     }
   }
 
   Future<void> _playNext() async {
-    if (_audioHandler != null) {
-      await _audioHandler!.skipToNext();
+    if (_currentIndex < _playlistItems.length - 1) {
+      setState(() {
+        _currentIndex++;
+      });
+      await _playCurrentSong();
     }
   }
 
   Future<void> _playPrevious() async {
-    if (_audioHandler != null) {
-      await _audioHandler!.skipToPrevious();
+    if (_currentIndex > 0) {
+      setState(() {
+        _currentIndex--;
+      });
+      await _playCurrentSong();
     }
   }
 
@@ -793,19 +859,21 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
   }
 
   Future<void> _togglePlayPause() async {
-    if (_audioHandler == null) return;
-    
     if (_isPlaying) {
-      await _audioHandler!.pause();
+      await _audioPlayer.pause();
     } else {
-      await _audioHandler!.play();
+      if (_position == Duration.zero && _playlistItems.isNotEmpty) {
+        // Start playing from current index
+        await _playCurrentSong();
+      } else {
+        // Resume playback
+        await _audioPlayer.resume();
+      }
     }
   }
 
   Future<void> _stop() async {
-    if (_audioHandler == null) return;
-    
-    await _audioHandler!.stop();
+    await _audioPlayer.stop();
     setState(() {
       _isPlaying = false;
       _position = Duration.zero;
@@ -822,7 +890,7 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
 
   @override
   void dispose() {
-    _audioHandler?.dispose();
+    _audioPlayer.dispose();
     super.dispose();
   }
 
@@ -846,6 +914,18 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
               icon: const Icon(Icons.edit),
               tooltip: AppLocalizations.of(context)!.edit,
               onPressed: () async {
+                // Don't allow editing while playing
+                if (_isPlaying) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(AppLocalizations.of(context)!.stopPlaybackBeforeEditing),
+                      ),
+                    );
+                  }
+                  return;
+                }
+                
                 final projectsAsync = ref.read(allProjectsStreamProvider);
                 final allProjectsValue = projectsAsync.value;
                 
@@ -903,9 +983,8 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
                     ),
                   );
                   if (result == true && mounted) {
-                    // Reload playlist from database first, then reload items
-                    await _reloadPlaylist();
-                    _loadPlaylistItems();
+                    // Reload playlist and items together
+                    await _reloadPlaylistAndItems();
                   }
                 }
               },
@@ -1015,6 +1094,16 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
             icon: const Icon(Icons.edit),
             tooltip: AppLocalizations.of(context)!.edit,
             onPressed: () async {
+              // Don't allow editing while playing
+              if (_isPlaying) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(AppLocalizations.of(context)!.stopPlaybackBeforeEditing),
+                  ),
+                );
+                return;
+              }
+              
               final projectsAsync = ref.read(allProjectsStreamProvider);
               final allProjectsValue = projectsAsync.value;
               
@@ -1041,12 +1130,12 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
               
               if (mounted) {
                 // Stop playback before editing
-                if (_isPlaying && _audioHandler != null) {
-                  await _audioHandler!.pause();
+                if (_isPlaying) {
+                  await _audioPlayer.pause();
                 }
                 
                 // Navigate to main playlist page's edit dialog
-                await Navigator.of(context).push(
+                final result = await Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => _EditPlaylistRoute(
                       playlist: _currentPlaylist,
@@ -1055,9 +1144,14 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
                   ),
                 );
                 
-                // Reload playlist from database first, then reload items
-                await _reloadPlaylist();
-                _loadPlaylistItems();
+                // Reload playlist and items together if edited
+                if (result == true && mounted) {
+                  // Stop playback before reloading to avoid issues
+                  if (_isPlaying) {
+                    await _audioPlayer.stop();
+                  }
+                  await _reloadPlaylistAndItems();
+                }
               }
             },
           ),
@@ -1133,9 +1227,7 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
                     final newPosition = Duration(
                       milliseconds: (value * _duration.inMilliseconds).round(),
                     );
-                    if (_audioHandler != null) {
-                      await _audioHandler!.seek(newPosition);
-                    }
+                    await _audioPlayer.seek(newPosition);
                   },
                 ),
                 Row(
@@ -1550,7 +1642,7 @@ class _EditPlaylistFormState extends ConsumerState<_EditPlaylistForm> {
                   ref.invalidate(playlistsProvider);
                   
                   if (mounted) {
-                    Navigator.pop(context);
+                    Navigator.pop(context, true); // Return true to signal success
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(AppLocalizations.of(context)!.playlistUpdated),

@@ -1604,10 +1604,10 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
     }
   }
 
-  /// Android debug-only: pick a local preview song so you can listen on-device.
+  /// Picks a local audio file on Android/iOS and stores it in the app's preview_songs folder.
   /// This does NOT upload anything to Drive.
-  Future<void> _pickPreviewSongAndroidDebug() async {
-    if (!kDebugMode || !Platform.isAndroid) return;
+  Future<void> _pickPreviewSongMobile() async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
 
     final l10n = AppLocalizations.of(context)!;
 
@@ -1632,9 +1632,9 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
         return;
       }
 
-      // Copy into app temp so we always have file access for playback.
-      final tempDir = await getTemporaryDirectory();
-      final destDir = Directory(p.join(tempDir.path, 'preview_songs', widget.project.id));
+      // Copy into app's persistent documents directory for reliable access
+      final appDir = await getApplicationDocumentsDirectory();
+      final destDir = Directory(p.join(appDir.path, 'preview_songs', widget.project.id));
       if (!await destDir.exists()) {
         await destDir.create(recursive: true);
       }
@@ -2039,21 +2039,19 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                         builder: (context) {
                           final buttons = <Widget>[];
 
-                          // Debug Android: allow selecting/changing preview song (listen-only).
-                          if (kDebugMode && Platform.isAndroid) {
-                            buttons.add(
-                              ElevatedButton.icon(
-                                onPressed: _pickPreviewSongAndroidDebug,
-                                icon: const Icon(Icons.audio_file),
-                                label: Text(
-                                  widget.project.previewSongPath != null &&
-                                          widget.project.previewSongPath!.isNotEmpty
-                                      ? AppLocalizations.of(context)!.changePreviewSong
-                                      : AppLocalizations.of(context)!.selectPreviewSong,
-                                ),
+                          // Mobile: allow selecting/changing preview song locally
+                          buttons.add(
+                            ElevatedButton.icon(
+                              onPressed: _pickPreviewSongMobile,
+                              icon: const Icon(Icons.audio_file),
+                              label: Text(
+                                widget.project.previewSongPath != null &&
+                                        widget.project.previewSongPath!.isNotEmpty
+                                    ? AppLocalizations.of(context)!.changePreviewSong
+                                    : AppLocalizations.of(context)!.selectPreviewSong,
                               ),
-                            );
-                          }
+                            ),
+                          );
 
                           // Share (if a local preview song exists)
                           if (widget.project.previewSongPath != null &&

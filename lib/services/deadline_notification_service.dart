@@ -1,0 +1,581 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
+import '../models/notification_preferences.dart';
+import '../models/music_project.dart';
+import '../utils/app_paths.dart';
+
+/// Service for managing deadline notifications
+/// Based on working implementation from Retro1 app
+class DeadlineNotificationService {
+  static final DeadlineNotificationService _instance = DeadlineNotificationService._internal();
+  factory DeadlineNotificationService() => _instance;
+  DeadlineNotificationService._internal();
+
+  final FlutterLocalNotificationsPlugin _notifications = FlutterLocalNotificationsPlugin();
+  Box<NotificationPreferences>? _preferencesBox;
+  bool _isInitialized = false;
+
+  /// Callback for when notification is tapped
+  Function(String projectId)? _onNotificationTapCallback;
+
+  /// Initialize the notification service
+  Future<void> initialize() async {
+    if (_isInitialized) return;
+
+    if (!Platform.isAndroid) {
+      if (kDebugMode) print('[DeadlineNotification] Not on Android, skipping initialization');
+      return;
+    }
+
+    try {
+      if (kDebugMode) print('[DeadlineNotification] Initializing...');
+      
+      // 1. Initialize timezones first
+      tz.initializeTimeZones();
+      
+      // 2. Configure local system timezone
+      await _configureTimezone();
+      
+      // 3. Configure plugin initialization (Android only)
+      const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const initSettings = InitializationSettings(android: androidSettings);
+
+      final initialized = await _notifications.initialize(
+        initSettings,
+        onDidReceiveNotificationResponse: _onNotificationTapped,
+      );
+      
+      if (kDebugMode) print('[DeadlineNotification] Plugin initialized: $initialized');
+
+      if (initialized != true) {
+        if (kDebugMode) print('[DeadlineNotification] WARNING: Plugin initialization failed');
+        return;
+      }
+
+      // 4. Request permissions
+      await _requestPermissions();
+
+      // 5. Initialize preferences storage
+      await ensureHiveInitialized();
+      if (!Hive.isAdapterRegistered(10)) {
+        Hive.registerAdapter(NotificationPreferencesAdapter());
+      }
+      _preferencesBox = await Hive.openBox<NotificationPreferences>('notification_preferences');
+
+      _isInitialized = true;
+      if (kDebugMode) print('[DeadlineNotification] Initialization complete');
+    } catch (e, stackTrace) {
+      if (kDebugMode) {
+        print('[DeadlineNotification] ERROR initializing: $e');
+        print('[DeadlineNotification] Stack trace: $stackTrace');
+      }
+    }
+  }
+
+  /// Configure timezone based on system offset
+  Future<void> _configureTimezone() async {
+    try {
+      // Get system offset
+      final systemOffset = DateTime.now().timeZoneOffset;
+      final offsetHours = systemOffset.inHours;
+      final offsetMinutes = systemOffset.inMinutes % 60;
+      
+      if (kDebugMode) {
+        print('[DeadlineNotification] System timezone offset: $systemOffset (${offsetHours >= 0 ? '+' : ''}$offsetHours:${offsetMinutes.toString().padLeft(2, '0')})');
+      }
+      
+      // Map offset to real IANA timezone (better DST support than Etc/GMT)
+      final timezoneMap = {
+        0: 'UTC',
+        1: 'Europe/Paris',      // UTC+1 (CET/CEST)
+        -1: 'Atlantic/Azores',   // UTC-1
+        2: 'Europe/Berlin',      // UTC+2 (CEST)
+        -2: 'Atlantic/South_Georgia', // UTC-2
+        3: 'Europe/Moscow',      // UTC+3
+        -3: 'America/Sao_Paulo', // UTC-3 (BRT)
+        4: 'Asia/Dubai',         // UTC+4
+        -4: 'America/New_York',  // UTC-4 (EDT) or UTC-5 (EST)
+        5: 'Asia/Karachi',       // UTC+5
+        -5: 'America/Chicago',   // UTC-5 (CDT) or UTC-6 (CST)
+        -6: 'America/Denver',    // UTC-6 (MDT) or UTC-7 (MST)
+        -7: 'America/Los_Angeles', // UTC-7 (PDT) or UTC-8 (PST)
+        8: 'Asia/Shanghai',      // UTC+8
+        -8: 'Pacific/Pitcairn',  // UTC-8
+        9: 'Asia/Tokyo',         // UTC+9
+        -9: 'Pacific/Gambier',   // UTC-9
+        10: 'Australia/Sydney',  // UTC+10 (AEDT) or UTC+11 (AEST)
+        -10: 'Pacific/Honolulu', // UTC-10
+      };
+      
+      // Try to use timezone based on offset
+      final suggestedTimezone = timezoneMap[offsetHours];
+      if (suggestedTimezone != null) {
+        try {
+          final suggestedLocation = tz.getLocation(suggestedTimezone);
+          tz.setLocalLocation(suggestedLocation);
+          final suggestedOffset = suggestedLocation.currentTimeZone.offset;
+          final suggestedOffsetHours = suggestedOffset ~/ 3600;
+          if (kDebugMode) {
+            print('[DeadlineNotification] Set timezone to: $suggestedTimezone (offset: $suggestedOffset seconds, $suggestedOffsetHours hours)');
+          }
+        } catch (e) {
+          if (kDebugMode) print('[DeadlineNotification] Could not set suggested timezone $suggestedTimezone: $e');
+          _setTimezoneByOffset(offsetHours);
+        }
+      } else {
+        // If no mapping, use Etc/GMT based on offset
+        _setTimezoneByOffset(offsetHours);
+      }
+      
+      // Verify timezone was configured correctly
+      final localLocation = tz.local;
+      final locationOffset = localLocation.currentTimeZone.offset;
+      final locationOffsetHours = locationOffset ~/ 3600;
+      
+      if (kDebugMode) {
+        print('[DeadlineNotification] Configured timezone: ${localLocation.name}');
+        print('[DeadlineNotification] Configured timezone offset: $locationOffset seconds ($locationOffsetHours hours)');
+      }
+      
+      // Check if offset matches system (allow 1 hour difference for DST)
+      final offsetDiff = (locationOffsetHours - offsetHours).abs();
+      if (offsetDiff > 1) {
+        if (kDebugMode) {
+          print('[DeadlineNotification] WARNING: Timezone offset mismatch! System: $offsetHours, Configured: $locationOffsetHours');
+          print('[DeadlineNotification] Attempting to fix...');
+        }
+        _setTimezoneByOffset(offsetHours);
+        
+        // Check again after correction
+        final correctedLocation = tz.local;
+        final correctedOffset = correctedLocation.currentTimeZone.offset;
+        final correctedOffsetHours = correctedOffset ~/ 3600;
+        if (kDebugMode) {
+          print('[DeadlineNotification] After correction - Timezone: ${correctedLocation.name}, Offset: $correctedOffset seconds ($correctedOffsetHours hours)');
+        }
+      } else {
+        if (kDebugMode) {
+          print('[DeadlineNotification] Timezone configured correctly (offset difference: $offsetDiff hours, may be due to DST)');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) print('[DeadlineNotification] WARNING: Could not configure local timezone: $e');
+      // Fallback to UTC if cannot detect
+      try {
+        tz.setLocalLocation(tz.getLocation('UTC'));
+        if (kDebugMode) print('[DeadlineNotification] Fallback to UTC timezone');
+      } catch (e2) {
+        if (kDebugMode) print('[DeadlineNotification] ERROR setting UTC timezone: $e2');
+      }
+    }
+  }
+
+  /// Helper to configure timezone based on offset
+  void _setTimezoneByOffset(int offsetHours) {
+    try {
+      // Etc/GMT uses inverted sign: GMT+1 = Etc/GMT-1
+      String timezoneName;
+      if (offsetHours == 0) {
+        timezoneName = 'UTC';
+      } else if (offsetHours > 0) {
+        timezoneName = 'Etc/GMT-$offsetHours';
+      } else {
+        timezoneName = 'Etc/GMT+${-offsetHours}';
+      }
+      
+      final location = tz.getLocation(timezoneName);
+      tz.setLocalLocation(location);
+      if (kDebugMode) print('[DeadlineNotification] Set timezone to: $timezoneName (offset: $offsetHours)');
+    } catch (e) {
+      if (kDebugMode) print('[DeadlineNotification] ERROR setting timezone by offset: $e');
+    }
+  }
+
+  /// Request notification permissions
+  Future<void> _requestPermissions() async {
+    if (!Platform.isAndroid) return;
+
+    try {
+      final androidPlugin = _notifications.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
+      
+      if (androidPlugin != null) {
+        // Request notification permission (Android 13+)
+        final notificationPermission = await androidPlugin.requestNotificationsPermission();
+        if (kDebugMode) print('[DeadlineNotification] Notification permission granted: $notificationPermission');
+        
+        // Check if notifications are enabled
+        final areNotificationsEnabled = await androidPlugin.areNotificationsEnabled();
+        if (kDebugMode) print('[DeadlineNotification] Are notifications enabled: $areNotificationsEnabled');
+        
+        if (areNotificationsEnabled == false) {
+          if (kDebugMode) print('[DeadlineNotification] WARNING: Notifications are disabled in system settings');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) print('[DeadlineNotification] ERROR requesting permissions: $e');
+    }
+  }
+
+  /// Handle notification tap
+  void _onNotificationTapped(NotificationResponse response) {
+    if (kDebugMode) print('[DeadlineNotification] Notification tapped: ${response.payload}');
+    if (response.payload != null && _onNotificationTapCallback != null) {
+      _onNotificationTapCallback!(response.payload!);
+    }
+  }
+
+  /// Set callback for notification taps
+  void setOnNotificationTapCallback(Function(String projectId) callback) {
+    _onNotificationTapCallback = callback;
+  }
+
+  /// Get notification preferences
+  Future<NotificationPreferences> getPreferences() async {
+    if (_preferencesBox == null) {
+      await initialize();
+    }
+    
+    if (_preferencesBox != null && _preferencesBox!.isNotEmpty) {
+      return _preferencesBox!.values.first;
+    }
+    
+    return NotificationPreferences.getDefault();
+  }
+
+  /// Save notification preferences
+  Future<void> savePreferences(NotificationPreferences preferences) async {
+    if (_preferencesBox == null) {
+      await initialize();
+    }
+    
+    if (_preferencesBox != null) {
+      await _preferencesBox!.clear();
+      await _preferencesBox!.add(preferences);
+      
+      if (kDebugMode) print('[DeadlineNotification] Notification preferences saved');
+    }
+  }
+
+  /// Schedule all deadline notifications
+  Future<void> scheduleAllDeadlineNotifications({List<MusicProject>? projects}) async {
+    if (!Platform.isAndroid || !_isInitialized) return;
+
+    try {
+      if (kDebugMode) print('[DeadlineNotification] Scheduling deadline notifications...');
+      
+      final preferences = await getPreferences();
+      if (!preferences.enabled) {
+        await _notifications.cancelAll();
+        if (kDebugMode) print('[DeadlineNotification] Notifications disabled, cancelled all');
+        return;
+      }
+
+      // Cancel existing notifications first
+      await _notifications.cancelAll();
+
+      if (projects == null || projects.isEmpty) {
+        if (kDebugMode) print('[DeadlineNotification] No projects provided');
+        return;
+      }
+
+      // Get current time in local timezone
+      final systemNow = DateTime.now();
+      final now = tz.TZDateTime.now(tz.local);
+      
+      if (kDebugMode) {
+        print('[DeadlineNotification] System time: $systemNow (offset: ${systemNow.timeZoneOffset})');
+        print('[DeadlineNotification] Local timezone time: $now');
+        print('[DeadlineNotification] Local timezone: ${tz.local.name}');
+        final localOffset = tz.local.currentTimeZone.offset;
+        final localOffsetHours = localOffset ~/ 3600;
+        print('[DeadlineNotification] Local timezone offset: $localOffset seconds ($localOffsetHours hours)');
+      }
+
+      int scheduledCount = 0;
+
+      for (final project in projects) {
+        if (project.deadline == null) continue;
+        
+        // Skip finished projects
+        if (project.status?.toLowerCase() == 'finished' || 
+            project.status?.toLowerCase() == 'finalizado') {
+          continue;
+        }
+
+        final deadline = project.deadline!;
+        
+        // Skip if deadline is in the past
+        if (deadline.isBefore(systemNow)) continue;
+
+        // Schedule notifications for each reminder day
+        for (final reminderDays in preferences.reminderDays) {
+          final notificationDate = deadline.subtract(Duration(days: reminderDays));
+          
+          // Create scheduled date with configured time
+          final scheduledDate = tz.TZDateTime(
+            tz.local,
+            notificationDate.year,
+            notificationDate.month,
+            notificationDate.day,
+            preferences.notificationHour,
+            preferences.notificationMinute,
+          );
+          
+          // Only schedule if in the future
+          if (scheduledDate.isAfter(now)) {
+            await _scheduleNotificationForProject(
+              project: project,
+              scheduledDate: scheduledDate,
+              daysRemaining: reminderDays,
+            );
+            scheduledCount++;
+          }
+        }
+
+        // Schedule deadline day notification if enabled
+        if (preferences.notifyOnDeadlineDay) {
+          final scheduledDate = tz.TZDateTime(
+            tz.local,
+            deadline.year,
+            deadline.month,
+            deadline.day,
+            preferences.notificationHour,
+            preferences.notificationMinute,
+          );
+          
+          if (scheduledDate.isAfter(now)) {
+            await _scheduleNotificationForProject(
+              project: project,
+              scheduledDate: scheduledDate,
+              daysRemaining: 0,
+            );
+            scheduledCount++;
+          }
+        }
+      }
+
+      // Verify pending notifications after scheduling
+      await Future.delayed(const Duration(milliseconds: 500));
+      final pendingNotifications = await _notifications.pendingNotificationRequests();
+      
+      if (kDebugMode) {
+        print('[DeadlineNotification] Total notifications scheduled: $scheduledCount');
+        print('[DeadlineNotification] Total pending notifications: ${pendingNotifications.length}');
+        for (var notif in pendingNotifications) {
+          print('[DeadlineNotification]   - ID: ${notif.id}, Title: ${notif.title}');
+        }
+        print('[DeadlineNotification] Notifications scheduled successfully');
+      }
+    } catch (e, stackTrace) {
+      if (kDebugMode) {
+        print('[DeadlineNotification] ERROR scheduling notifications: $e');
+        print('[DeadlineNotification] Stack trace: $stackTrace');
+      }
+    }
+  }
+
+  /// Schedule a single notification for a project
+  Future<void> _scheduleNotificationForProject({
+    required MusicProject project,
+    required tz.TZDateTime scheduledDate,
+    required int daysRemaining,
+  }) async {
+    try {
+      // Create unique notification ID
+      final notificationId = '${project.id}_$daysRemaining'.hashCode;
+
+      // Build notification message
+      final String title;
+      final String body;
+      
+      if (daysRemaining == 0) {
+        title = 'Deadline Today!';
+        body = 'Today is the deadline for "${project.displayName}"';
+      } else if (daysRemaining == 1) {
+        title = 'Deadline Tomorrow!';
+        body = '1 day left for "${project.displayName}"';
+      } else {
+        title = 'Upcoming Deadline';
+        body = '$daysRemaining days left for "${project.displayName}"';
+      }
+
+      if (kDebugMode) {
+        print('[DeadlineNotification] Scheduling notification for ${project.displayName}: $scheduledDate (day offset: $daysRemaining)');
+      }
+
+      // Android notification details
+      final androidDetails = AndroidNotificationDetails(
+        'deadline_reminders',
+        'Deadline Reminders',
+        channelDescription: 'Notifications for project deadlines',
+        importance: Importance.high,
+        priority: Priority.high,
+        showWhen: true,
+        enableVibration: true,
+        playSound: true,
+      );
+
+      final details = NotificationDetails(android: androidDetails);
+
+      // Schedule notification
+      await _notifications.zonedSchedule(
+        notificationId,
+        title,
+        body,
+        scheduledDate,
+        details,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        payload: project.id,
+      );
+      
+      if (kDebugMode) {
+        print('[DeadlineNotification] Notification scheduled successfully for day $daysRemaining');
+      }
+    } catch (e, stackTrace) {
+      if (kDebugMode) {
+        print('[DeadlineNotification] ERROR scheduling notification: $e');
+        print('[DeadlineNotification] Stack trace: $stackTrace');
+      }
+    }
+  }
+
+  /// Send a test notification immediately
+  Future<void> sendTestNotification() async {
+    if (!Platform.isAndroid || !_isInitialized) return;
+
+    try {
+      if (kDebugMode) print('[DeadlineNotification] Sending test notification...');
+      
+      final androidDetails = AndroidNotificationDetails(
+        'deadline_reminders',
+        'Deadline Reminders',
+        channelDescription: 'Notifications for project deadlines',
+        importance: Importance.high,
+        priority: Priority.high,
+        showWhen: true,
+        enableVibration: true,
+        playSound: true,
+      );
+
+      final details = NotificationDetails(android: androidDetails);
+
+      await _notifications.show(
+        999999,
+        '🧪 Test Notification',
+        'If you\'re seeing this, notifications are working!',
+        details,
+      );
+      
+      if (kDebugMode) print('[DeadlineNotification] Test notification sent successfully');
+    } catch (e) {
+      if (kDebugMode) print('[DeadlineNotification] ERROR sending test notification: $e');
+      rethrow;
+    }
+  }
+
+  /// Schedule a test notification in the future
+  Future<void> scheduleTestNotification({int secondsFromNow = 30}) async {
+    if (!Platform.isAndroid || !_isInitialized) return;
+
+    try {
+      final now = tz.TZDateTime.now(tz.local);
+      final scheduledTime = now.add(Duration(seconds: secondsFromNow));
+      
+      if (kDebugMode) {
+        print('[DeadlineNotification] Scheduling test notification...');
+        print('[DeadlineNotification] Current time: $now');
+        print('[DeadlineNotification] Scheduled for: $scheduledTime');
+        print('[DeadlineNotification] In $secondsFromNow seconds');
+      }
+
+      final androidDetails = AndroidNotificationDetails(
+        'deadline_reminders',
+        'Deadline Reminders',
+        channelDescription: 'Notifications for project deadlines',
+        importance: Importance.high,
+        priority: Priority.high,
+        showWhen: true,
+        enableVibration: true,
+        playSound: true,
+      );
+
+      final details = NotificationDetails(android: androidDetails);
+
+      await _notifications.zonedSchedule(
+        999998,
+        '🧪 Test Notification ($secondsFromNow sec)',
+        'If you see this, notifications are working! Scheduled at ${now.hour}:${now.minute}:${now.second}',
+        scheduledTime,
+        details,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        payload: 'test',
+      );
+
+      if (kDebugMode) {
+        print('[DeadlineNotification] Test notification scheduled successfully!');
+        print('[DeadlineNotification] ID: 999998');
+        print('[DeadlineNotification] Scheduled for: $scheduledTime');
+      }
+    } catch (e, stackTrace) {
+      if (kDebugMode) {
+        print('[DeadlineNotification] ERROR scheduling test notification: $e');
+        print('[DeadlineNotification] Stack trace: $stackTrace');
+      }
+      rethrow;
+    }
+  }
+
+  /// Cancel all notifications
+  Future<void> cancelAllNotifications() async {
+    if (!Platform.isAndroid || !_isInitialized) return;
+    
+    if (kDebugMode) print('[DeadlineNotification] Cancelling all notifications...');
+    await _notifications.cancelAll();
+    if (kDebugMode) print('[DeadlineNotification] All notifications cancelled');
+  }
+
+  /// Get pending notifications
+  Future<List<PendingNotificationRequest>> getPendingNotifications() async {
+    if (!Platform.isAndroid || !_isInitialized) return [];
+    return await _notifications.pendingNotificationRequests();
+  }
+
+  /// Check if notifications are enabled
+  Future<bool> areNotificationsEnabled() async {
+    if (!Platform.isAndroid) return false;
+
+    try {
+      final androidImpl = _notifications.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+      if (androidImpl != null) {
+        final enabled = await androidImpl.areNotificationsEnabled();
+        return enabled ?? false;
+      }
+      return true;
+    } catch (e) {
+      if (kDebugMode) print('[DeadlineNotification] Error checking notification status: $e');
+      return false;
+    }
+  }
+
+  /// Request notification permissions
+  Future<bool> requestPermissions() async {
+    if (!Platform.isAndroid) return false;
+
+    try {
+      final androidImpl = _notifications.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+      if (androidImpl != null) {
+        final granted = await androidImpl.requestNotificationsPermission();
+        return granted ?? false;
+      }
+      return true;
+    } catch (e) {
+      if (kDebugMode) print('[DeadlineNotification] Error requesting notification permissions: $e');
+      return false;
+    }
+  }
+}

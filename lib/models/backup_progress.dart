@@ -34,10 +34,13 @@ class BackupProgress {
 enum BackupProgressStage {
   collectingData,
   uploadingPreviewSongs,
+  uploadingProfilePhotos,
+  uploadingReleaseArtwork,
   uploadingDatabase,
   downloadingDatabase,
   downloadingPreviewSongs,
   downloadingProfilePhotos,
+  downloadingReleaseArtwork,
   mergingData,
   completed,
 }

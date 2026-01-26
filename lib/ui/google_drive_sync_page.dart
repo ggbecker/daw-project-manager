@@ -35,6 +35,8 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
   bool _isCheckingSession = false;
   bool _hasNewerBackupAvailable = false;
   DateTime? _remoteBackupTime;
+  DateTime? _lastDownloadTime;
+  DateTime? _lastUploadTime;
 
   @override
   void initState() {
@@ -158,6 +160,17 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
       if (lastSync != null) {
         setState(() {
           _lastSyncTime = lastSync;
+        });
+      }
+      
+      // Load local backup timestamps
+      final lastDownload = await _syncService.getLastBackupDownloadTimestamp();
+      final lastUpload = await _syncService.getLastBackupUploadTimestamp();
+      
+      if (mounted) {
+        setState(() {
+          _lastDownloadTime = lastDownload;
+          _lastUploadTime = lastUpload;
         });
       }
       
@@ -1081,12 +1094,34 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
                           // Show remote backup time if available
                           if (_remoteBackupTime != null)
                             Padding(
-                              padding: const EdgeInsets.only(bottom: 0.0),
+                              padding: const EdgeInsets.only(bottom: 4.0),
                               child: Text(
                                 AppLocalizations.of(context)!.remoteBackupTime(
                                   DateFormat.yMMMd().add_jm().format(_remoteBackupTime!),
                                 ),
                                 style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                              ),
+                            ),
+                          // Show last upload time if available
+                          if (_lastUploadTime != null)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 4.0),
+                              child: Text(
+                                AppLocalizations.of(context)!.lastUploadTime(
+                                  DateFormat.yMMMd().add_jm().format(_lastUploadTime!),
+                                ),
+                                style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                              ),
+                            ),
+                          // Show last download time if available
+                          if (_lastDownloadTime != null)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 0.0),
+                              child: Text(
+                                AppLocalizations.of(context)!.lastDownloadTime(
+                                  DateFormat.yMMMd().add_jm().format(_lastDownloadTime!),
+                                ),
+                                style: TextStyle(fontSize: 14, color: Colors.grey[700]),
                               ),
                             ),
                         ],
@@ -1239,6 +1274,10 @@ class _BackupProgressDialogState extends State<_BackupProgressDialog> {
         return AppLocalizations.of(context)!.collectingData;
       case BackupProgressStage.uploadingPreviewSongs:
         return AppLocalizations.of(context)!.uploadingPreviewSongs;
+      case BackupProgressStage.uploadingProfilePhotos:
+        return AppLocalizations.of(context)!.uploadingProfilePhotos;
+      case BackupProgressStage.uploadingReleaseArtwork:
+        return AppLocalizations.of(context)!.uploadingReleaseArtwork;
       case BackupProgressStage.uploadingDatabase:
         return AppLocalizations.of(context)!.uploadingDatabase;
       case BackupProgressStage.downloadingDatabase:
@@ -1247,6 +1286,8 @@ class _BackupProgressDialogState extends State<_BackupProgressDialog> {
         return AppLocalizations.of(context)!.downloadingPreviewSongs;
       case BackupProgressStage.downloadingProfilePhotos:
         return AppLocalizations.of(context)!.downloadingProfilePhotos;
+      case BackupProgressStage.downloadingReleaseArtwork:
+        return AppLocalizations.of(context)!.downloadingReleaseArtwork;
       case BackupProgressStage.mergingData:
         return AppLocalizations.of(context)!.mergingData;
       case BackupProgressStage.completed:

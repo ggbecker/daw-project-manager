@@ -7,6 +7,7 @@
   "projectDetails": "Project Details",
   "back": "Back",
   "save": "Save",
+  "enable": "Enable",
   "cancel": "Cancel",
   "launch": "Launch",
   "view": "View",
@@ -1375,9 +1376,106 @@
       }
     }
   },
+  "lastUploadTime": "Last upload: {date}",
+  "@lastUploadTime": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "lastDownloadTime": "Last download: {date}",
+  "@lastDownloadTime": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "checkForBackup": "Check for Backup",
   "@checkForBackup": {
     "description": "Button to check if newer backup is available"
+  },
+  "notificationSettings": "Notification Settings",
+  "@notificationSettings": {
+    "description": "Title for notification settings page"
+  },
+  "notificationsOnlyOnAndroid": "Deadline notifications are only available on Android devices.",
+  "@notificationsOnlyOnAndroid": {
+    "description": "Message shown on non-Android platforms"
+  },
+  "notificationPermissionRequired": "Notification Permission Required",
+  "@notificationPermissionRequired": {
+    "description": "Title for permission request card"
+  },
+  "notificationPermissionDescription": "Please enable notifications to receive deadline reminders.",
+  "@notificationPermissionDescription": {
+    "description": "Description for permission request"
+  },
+  "notificationPermissionDenied": "Notification permission denied. Please enable it in settings.",
+  "@notificationPermissionDenied": {
+    "description": "Error message when permission is denied"
+  },
+  "notificationSettingsSaved": "Notification settings saved successfully",
+  "@notificationSettingsSaved": {
+    "description": "Success message after saving settings"
+  },
+  "errorSavingSettings": "Error saving settings",
+  "@errorSavingSettings": {
+    "description": "Error message when saving fails"
+  },
+  "enableDeadlineNotifications": "Enable Deadline Notifications",
+  "@enableDeadlineNotifications": {
+    "description": "Toggle to enable/disable notifications"
+  },
+  "receiveRemindersForDeadlines": "Receive reminders for project deadlines",
+  "@receiveRemindersForDeadlines": {
+    "description": "Description for enable toggle"
+  },
+  "notificationTime": "Notification Time",
+  "@notificationTime": {
+    "description": "Title for time picker"
+  },
+  "timeToReceiveNotifications": "Time of day to receive notifications",
+  "@timeToReceiveNotifications": {
+    "description": "Description for time picker"
+  },
+  "reminderDays": "Reminder Days",
+  "@reminderDays": {
+    "description": "Title for reminder days section"
+  },
+  "selectDaysBeforeDeadline": "Select how many days before the deadline you want to be notified",
+  "@selectDaysBeforeDeadline": {
+    "description": "Description for reminder days"
+  },
+  "notifyOnDeadlineDay": "Notify on Deadline Day",
+  "@notifyOnDeadlineDay": {
+    "description": "Toggle for deadline day notification"
+  },
+  "receiveNotificationOnDeadlineDay": "Also receive a notification on the deadline day itself",
+  "@receiveNotificationOnDeadlineDay": {
+    "description": "Description for deadline day toggle"
+  },
+  "howItWorks": "How It Works",
+  "@howItWorks": {
+    "description": "Title for help section"
+  },
+  "deadlineNotificationsHelp": "You will receive notifications at the specified time on the selected days before each project deadline. Tap a notification to open the project details.",
+  "@deadlineNotificationsHelp": {
+    "description": "Help text explaining notifications"
+  },
+  "oneDay": "1 day",
+  "@oneDay": {
+    "description": "One day label for reminder chips"
+  },
+  "xDays": "{count} days",
+  "@xDays": {
+    "description": "Multiple days label for reminder chips",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "settings": "Settings",
   "language": "Language",
@@ -1455,6 +1553,10 @@
   "editPlaylist": "Edit Playlist",
   "@editPlaylist": {
     "description": "Dialog title for editing a playlist"
+  },
+  "stopPlaybackBeforeEditing": "Please stop playback before editing the playlist",
+  "@stopPlaybackBeforeEditing": {
+    "description": "Message shown when trying to edit playlist while music is playing"
   },
   "selectPreviewSongs": "Select Preview Songs",
   "@selectPreviewSongs": {
@@ -1652,6 +1754,14 @@
   "@uploadingPreviewSongs": {
     "description": "Status message when uploading preview song files"
   },
+  "uploadingProfilePhotos": "Uploading profile photos...",
+  "@uploadingProfilePhotos": {
+    "description": "Status message when uploading profile photo files"
+  },
+  "uploadingReleaseArtwork": "Uploading release artwork...",
+  "@uploadingReleaseArtwork": {
+    "description": "Status message when uploading release artwork files"
+  },
   "uploadingDatabase": "Uploading database...",
   "@uploadingDatabase": {
     "description": "Status message when uploading database file"
@@ -1687,6 +1797,10 @@
   "downloadingProfilePhotos": "Downloading profile photos...",
   "@downloadingProfilePhotos": {
     "description": "Status message when downloading profile photo files"
+  },
+  "downloadingReleaseArtwork": "Downloading release artwork...",
+  "@downloadingReleaseArtwork": {
+    "description": "Status message when downloading release artwork files"
   },
   "mergingData": "Merging data...",
   "@mergingData": {

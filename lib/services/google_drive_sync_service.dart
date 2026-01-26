@@ -25,7 +25,7 @@ import '../models/todo_template.dart';
 import '../models/backup_progress.dart';
 import '../repository/profile_repository.dart';
 import '../repository/project_repository.dart';
-import '../utils/app_paths.dart' show ensureHiveInitialized, getPreviewSongsPath;
+import '../utils/app_paths.dart' show ensureHiveInitialized, getPreviewSongsPath, getReleaseArtworkPath;
 import '../config/secrets.dart' show desktopClientSecret, desktopClientId, androidWebClientId;
 
 /// Exception thrown when user cancels an upload operation
@@ -357,6 +357,19 @@ class GoogleDriveSyncService {
     }
   }
 
+  /// Save last backup upload timestamp
+  Future<void> saveLastBackupUploadTimestamp(DateTime timestamp) async {
+    try {
+      await _initializeBackupTimestampStorage();
+      if (_backupTimestampBox != null) {
+        await _backupTimestampBox!.put('lastUpload', timestamp.toIso8601String());
+        if (kDebugMode) print('Saved last backup upload timestamp: ${timestamp.toIso8601String()}');
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error saving last backup upload timestamp: $e');
+    }
+  }
+
   /// Get last backup download timestamp
   Future<DateTime?> getLastBackupDownloadTimestamp() async {
     try {
@@ -372,6 +385,66 @@ class GoogleDriveSyncService {
       if (kDebugMode) print('Error getting last backup download timestamp: $e');
       return null;
     }
+  }
+
+  /// Get last backup upload timestamp
+  Future<DateTime?> getLastBackupUploadTimestamp() async {
+    try {
+      await _initializeBackupTimestampStorage();
+      if (_backupTimestampBox != null) {
+        final timestampString = _backupTimestampBox!.get('lastUpload');
+        if (timestampString != null) {
+          return DateTime.parse(timestampString);
+        }
+      }
+      return null;
+    } catch (e) {
+      if (kDebugMode) print('Error getting last backup upload timestamp: $e');
+      return null;
+    }
+  }
+
+  /// Get the most recent local backup timestamp (either upload or download)
+  Future<DateTime?> getLastLocalBackupTimestamp() async {
+    final lastDownload = await getLastBackupDownloadTimestamp();
+    final lastUpload = await getLastBackupUploadTimestamp();
+    
+    if (lastDownload == null && lastUpload == null) {
+      return null;
+    } else if (lastDownload == null) {
+      return lastUpload;
+    } else if (lastUpload == null) {
+      return lastDownload;
+    } else {
+      // Return the most recent one
+      return lastDownload.isAfter(lastUpload) ? lastDownload : lastUpload;
+    }
+  }
+
+  /// Check if remote backup is newer than local
+  /// Returns true if remote backup should be downloaded
+  Future<bool> isRemoteBackupNewer() async {
+    final remoteTimestamp = await getRemoteBackupTimestamp();
+    if (remoteTimestamp == null) {
+      return false; // No remote backup exists
+    }
+    
+    final localTimestamp = await getLastLocalBackupTimestamp();
+    if (localTimestamp == null) {
+      return true; // No local backup, so remote is "newer"
+    }
+    
+    // Remote is newer if its timestamp is after local
+    return remoteTimestamp.isAfter(localTimestamp);
+  }
+
+  /// Get all backup timestamps for display in UI
+  Future<Map<String, DateTime?>> getAllBackupTimestamps() async {
+    return {
+      'lastDownload': await getLastBackupDownloadTimestamp(),
+      'lastUpload': await getLastBackupUploadTimestamp(),
+      'remote': await getRemoteBackupTimestamp(),
+    };
   }
 
   /// Get remote backup timestamp from Drive
@@ -1218,6 +1291,35 @@ class GoogleDriveSyncService {
     return createdFolder.id!;
   }
 
+  /// Ensure the release_artwork folder exists in Google Drive
+  Future<String> _ensureReleaseArtworkFolder() async {
+    if (_driveApi == null || _appDataFolderId == null) {
+      throw Exception('Not signed in to Google Drive');
+    }
+
+    const folderName = 'release_artwork';
+    
+    // Search for folder in app data folder
+    var response = await _driveApi!.files.list(
+      q: "name='$folderName' and mimeType='application/vnd.google-apps.folder' and parents in '$_appDataFolderId' and trashed=false",
+      spaces: 'drive',
+    );
+
+    if (response.files != null && response.files!.isNotEmpty) {
+      return response.files!.first.id!;
+    }
+
+    // Create folder if it doesn't exist
+    final folder = drive.File();
+    folder.name = folderName;
+    folder.mimeType = 'application/vnd.google-apps.folder';
+    folder.parents = [_appDataFolderId!];
+
+    final createdFolder = await _driveApi!.files.create(folder);
+    if (kDebugMode) print('Created release_artwork folder: ${createdFolder.id}');
+    return createdFolder.id!;
+  }
+
   /// Upload a preview song file to Google Drive
   /// Returns the file ID in Google Drive, the file hash, and the original filename
   /// Only uploads if the file hash has changed
@@ -1436,6 +1538,113 @@ class GoogleDriveSyncService {
     }
   }
 
+  /// Upload release artwork file to Google Drive
+  /// Returns the file ID in Google Drive and the file hash
+  /// Uses hash comparison to avoid unnecessary uploads
+  Future<Map<String, String>?> _uploadReleaseArtworkFile({
+    required String releaseId,
+    required String localFilePath,
+    String? existingHash, // Hash from previous backup (if available)
+  }) async {
+    if (_driveApi == null) {
+      throw Exception('Not signed in to Google Drive');
+    }
+
+    final file = File(localFilePath);
+    if (!await file.exists()) {
+      if (kDebugMode) print('Release artwork file not found: $localFilePath');
+      return null;
+    }
+
+    try {
+      // Calculate current file hash
+      final currentHash = await _calculateFileHash(localFilePath);
+      
+      // If hash exists and matches, skip upload
+      if (existingHash != null && existingHash == currentHash) {
+        if (kDebugMode) {
+          print('Release artwork unchanged for release $releaseId (hash: $currentHash), skipping upload');
+        }
+        // Still return the file ID if it exists in Drive
+        final releaseArtworkFolderId = await _ensureReleaseArtworkFolder();
+        final fileExtension = path.extension(localFilePath);
+        final driveFileName = '${releaseId}_artwork$fileExtension';
+        
+        var response = await _driveApi!.files.list(
+          q: "name='$driveFileName' and parents in '$releaseArtworkFolderId' and trashed=false",
+          spaces: 'drive',
+        );
+        
+        if (response.files != null && response.files!.isNotEmpty) {
+          return {
+            'fileId': response.files!.first.id!,
+            'hash': currentHash,
+          };
+        }
+        // If file doesn't exist in Drive but hash matches, something is wrong
+        // Fall through to upload
+      }
+      
+      // Hash changed or file doesn't exist - upload
+      if (kDebugMode) {
+        if (existingHash != null) {
+          print('Release artwork changed for release $releaseId (old: $existingHash, new: $currentHash), uploading...');
+        } else {
+          print('Uploading new release artwork for release $releaseId (hash: $currentHash)');
+        }
+      }
+      
+      // Ensure release artwork folder exists
+      final releaseArtworkFolderId = await _ensureReleaseArtworkFolder();
+      
+      // Generate a unique filename based on release ID
+      final fileExtension = path.extension(localFilePath);
+      final driveFileName = '${releaseId}_artwork$fileExtension';
+      
+      // Check if file already exists
+      var response = await _driveApi!.files.list(
+        q: "name='$driveFileName' and parents in '$releaseArtworkFolderId' and trashed=false",
+        spaces: 'drive',
+      );
+
+      final fileBytes = await file.readAsBytes();
+      final media = drive.Media(
+        Stream.value(fileBytes),
+        fileBytes.length,
+        contentType: _getContentTypeForFile(fileExtension),
+      );
+
+      String fileId;
+      if (response.files != null && response.files!.isNotEmpty) {
+        // Update existing file
+        fileId = response.files!.first.id!;
+        await _driveApi!.files.update(
+          drive.File()..name = driveFileName,
+          fileId,
+          uploadMedia: media,
+        );
+        if (kDebugMode) print('Updated release artwork: $driveFileName (ID: $fileId)');
+      } else {
+        // Create new file
+        final driveFile = drive.File();
+        driveFile.name = driveFileName;
+        driveFile.parents = [releaseArtworkFolderId];
+        
+        final createdFile = await _driveApi!.files.create(driveFile, uploadMedia: media);
+        fileId = createdFile.id!;
+        if (kDebugMode) print('Uploaded release artwork: $driveFileName (ID: $fileId)');
+      }
+      
+      return {
+        'fileId': fileId,
+        'hash': currentHash,
+      };
+    } catch (e) {
+      if (kDebugMode) print('Error uploading release artwork: $e');
+      return null;
+    }
+  }
+
   /// Download preview song file from Google Drive to local storage
   /// Returns the local file path, or null if download failed
   /// Uses hash comparison to avoid unnecessary downloads
@@ -1631,6 +1840,106 @@ class GoogleDriveSyncService {
     }
   }
 
+  /// Download release artwork file from Google Drive to local storage
+  /// Returns the local file path, or null if download failed
+  /// Uses hash comparison to avoid unnecessary downloads
+  Future<String?> downloadReleaseArtworkFile({
+    required String driveFileId,
+    required String releaseId,
+    String? expectedHash, // Hash from backup metadata
+    String? fileExtension, // File extension from artworkImagePath or default to .jpg
+  }) async {
+    if (_driveApi == null) {
+      if (kDebugMode) print('Drive API not initialized, attempting to restore session...');
+      final restored = await restoreSession();
+      if (!restored) {
+        if (kDebugMode) print('Failed to restore session for release artwork download');
+        return null;
+      }
+    }
+
+    try {
+      // Get local release artwork directory
+      final releaseArtworkPath = await getReleaseArtworkPath();
+      final releaseArtworkDir = Directory(releaseArtworkPath);
+      if (!await releaseArtworkDir.exists()) {
+        await releaseArtworkDir.create(recursive: true);
+      }
+      
+      final ext = fileExtension ?? '.jpg';
+      final localFilePath = path.join(releaseArtworkPath, '${releaseId}_artwork$ext');
+      
+      // Check if file already exists and hash matches
+      final existingFile = File(localFilePath);
+      if (await existingFile.exists() && expectedHash != null) {
+        try {
+          final existingHash = await _calculateFileHash(localFilePath);
+          if (existingHash == expectedHash) {
+            if (kDebugMode) {
+              print('Release artwork already downloaded with matching hash, skipping download');
+            }
+            return localFilePath;
+          } else {
+            if (kDebugMode) {
+              print('Release artwork hash mismatch (local: $existingHash, expected: $expectedHash), re-downloading...');
+            }
+            // Delete old file
+            await existingFile.delete();
+          }
+        } catch (e) {
+          if (kDebugMode) print('Error checking existing release artwork hash: $e, will re-download');
+          // If hash check fails, delete and re-download
+          if (await existingFile.exists()) {
+            await existingFile.delete();
+          }
+        }
+      }
+      
+      if (kDebugMode) {
+        print('Downloading release artwork from Drive: $driveFileId');
+      }
+      
+      // Download file using Drive API
+      final media = await _driveApi!.files.get(
+        driveFileId,
+        downloadOptions: drive.DownloadOptions.fullMedia,
+      ) as drive.Media;
+      
+      // Read the stream and write to file
+      final file = File(localFilePath);
+      final sink = file.openWrite();
+      
+      await for (final chunk in media.stream) {
+        sink.add(chunk);
+      }
+      await sink.close();
+      
+      // Verify hash if expected hash was provided
+      if (expectedHash != null) {
+        final downloadedHash = await _calculateFileHash(localFilePath);
+        if (downloadedHash != expectedHash) {
+          if (kDebugMode) {
+            print('WARNING: Downloaded release artwork hash mismatch! Expected: $expectedHash, Got: $downloadedHash');
+          }
+          // Still return the file, but log the warning
+        } else {
+          if (kDebugMode) {
+            print('Downloaded release artwork hash verified: $downloadedHash');
+          }
+        }
+      }
+      
+      if (kDebugMode) {
+        print('Downloaded release artwork to: $localFilePath');
+      }
+      
+      return localFilePath;
+    } catch (e) {
+      if (kDebugMode) print('Error downloading release artwork: $e');
+      return null;
+    }
+  }
+
 
   /// Check if a preview song path is a Google Drive file reference
   /// Format: "drive://{fileId}"
@@ -1737,9 +2046,17 @@ class GoogleDriveSyncService {
       // profileId -> fileHash
       final profilePhotoHashes = <String, String>{};
       
+      // Map to track release artwork files in Google Drive
+      // releaseId -> driveFileId
+      final releaseArtworkFileMap = <String, String>{};
+      // Map to track release artwork hashes
+      // releaseId -> fileHash
+      final releaseArtworkHashes = <String, String>{};
+      
       // Get existing hashes from previous backup (if available) to avoid unnecessary uploads
       Map<String, String> existingHashes = {};
       Map<String, String> existingProfilePhotoHashes = {};
+      Map<String, String> existingReleaseArtworkHashes = {};
       try {
         final existingBackup = await downloadDatabase();
         if (existingBackup['previewSongHashes'] != null) {
@@ -1754,10 +2071,16 @@ class GoogleDriveSyncService {
             print('Found ${existingProfilePhotoHashes.length} existing profile photo hashes from previous backup');
           }
         }
+        if (existingBackup['releaseArtworkHashes'] != null) {
+          existingReleaseArtworkHashes = Map<String, String>.from(existingBackup['releaseArtworkHashes'] as Map);
+          if (kDebugMode) {
+            print('Found ${existingReleaseArtworkHashes.length} existing release artwork hashes from previous backup');
+          }
+        }
       } catch (_) {
         // No previous backup or error reading it - that's okay, we'll upload everything
         if (kDebugMode) {
-          print('No previous backup found or error reading it - will upload all preview songs and profile photos');
+          print('No previous backup found or error reading it - will upload all media files');
         }
       }
       
@@ -1786,6 +2109,9 @@ class GoogleDriveSyncService {
       
       // Structure to hold profile photos that need upload
       final profilePhotosToUpload = <Map<String, dynamic>>[];
+      
+      // Structure to hold release artwork that needs upload
+      final releaseArtworkToUpload = <Map<String, dynamic>>[];
       
       int profileIndex = 0;
       for (final profile in allProfiles) {
@@ -1922,6 +2248,69 @@ class GoogleDriveSyncService {
             }
             // Track that this release belongs to this profile
             releaseToProfileMap[release.id] = profile.id;
+            
+            // Check release artwork status (only on desktop - mobile doesn't upload artwork)
+            // On mobile, we only download artwork, never upload them
+            if (!Platform.isAndroid && !Platform.isIOS) {
+              if (release.artworkImagePath != null && release.artworkImagePath!.isNotEmpty) {
+                try {
+                  // Calculate current file hash
+                  final currentLocalHash = await _calculateFileHash(release.artworkImagePath!);
+                  
+                  // Compare with hash from existing backup
+                  final existingHash = existingReleaseArtworkHashes[release.id];
+                  
+                  // If hash matches, check if file exists in Drive
+                  if (existingHash != null && existingHash == currentLocalHash) {
+                    if (kDebugMode) {
+                      print('  Release artwork hash matches for release ${release.id} (hash: $currentLocalHash), checking Drive...');
+                    }
+                    // Check if file exists in Drive
+                    final releaseArtworkFolderId = await _ensureReleaseArtworkFolder();
+                    final fileExtension = path.extension(release.artworkImagePath!);
+                    final driveFileName = '${release.id}_artwork$fileExtension';
+                    
+                    var response = await _driveApi!.files.list(
+                      q: "name='$driveFileName' and parents in '$releaseArtworkFolderId' and trashed=false",
+                      spaces: 'drive',
+                    );
+                    
+                    if (response.files != null && response.files!.isNotEmpty) {
+                      // File exists in Drive and hash matches - skip upload
+                      releaseArtworkFileMap[release.id] = response.files!.first.id!;
+                      releaseArtworkHashes[release.id] = currentLocalHash;
+                      if (kDebugMode) {
+                        print('  Release artwork found in Drive, skipping upload');
+                      }
+                    } else {
+                      // Hash matches but file NOT in Drive - need to upload!
+                      if (kDebugMode) {
+                        print('  Release artwork NOT found in Drive despite matching hash, will upload');
+                      }
+                      // Add to upload queue
+                      releaseArtworkToUpload.add({
+                        'release': release,
+                        'existingHash': existingHash,
+                      });
+                    }
+                  } else {
+                    // Hash changed or doesn't exist - add to upload queue
+                    releaseArtworkToUpload.add({
+                      'release': release,
+                      'existingHash': existingHash,
+                    });
+                    
+                    if (kDebugMode) {
+                      print('  Release artwork needs upload for release ${release.id}');
+                    }
+                  }
+                } catch (e) {
+                  if (kDebugMode) {
+                    print('  Error checking release artwork for release ${release.id}: $e');
+                  }
+                }
+              }
+            }
           }
           
           // Collect roots and track which profile they belong to
@@ -2121,6 +2510,54 @@ class GoogleDriveSyncService {
         }
       }
       
+      // Now upload all release artwork that needs uploading
+      if (kDebugMode) {
+        print('Found ${releaseArtworkToUpload.length} release artworks that need upload');
+      }
+      
+      uploadedCount = 0;
+      for (final uploadInfo in releaseArtworkToUpload) {
+        // Check for cancellation
+        if (_isCancelled) {
+          throw UploadCancelledException();
+        }
+        
+        uploadedCount++;
+        final release = uploadInfo['release'] as Release;
+        final existingHash = uploadInfo['existingHash'] as String?;
+        
+        // Emit progress
+        _progressController.add(BackupProgress(
+          stage: BackupProgressStage.uploadingReleaseArtwork,
+          currentItem: 'Uploading release artwork: ${release.title}',
+          currentIndex: uploadedCount,
+          totalItems: releaseArtworkToUpload.length,
+          progress: 0.2 + (uploadedCount / releaseArtworkToUpload.length * 0.6), // 20-80% range
+        ));
+        
+        try {
+          final result = await _uploadReleaseArtworkFile(
+            releaseId: release.id,
+            localFilePath: release.artworkImagePath!,
+            existingHash: existingHash,
+          );
+          
+          if (result != null) {
+            releaseArtworkFileMap[release.id] = result['fileId']!;
+            final newHash = result['hash']!;
+            releaseArtworkHashes[release.id] = newHash;
+            
+            if (kDebugMode) {
+              print('  Uploaded release artwork for release ${release.id}: ${result['fileId']} (hash: $newHash)');
+            }
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('  Error uploading release artwork for release ${release.id}: $e');
+          }
+        }
+      }
+      
       // Collect TODO templates (global, not per-profile)
       final List<TodoTemplate> allTemplates = [];
       try {
@@ -2137,7 +2574,7 @@ class GoogleDriveSyncService {
       
       final data = {
         'timestamp': DateTime.now().toIso8601String(),
-        'version': '1.5', // Incremented version to include profile photos
+        'version': '1.6', // Incremented version to include release artwork
         'profiles': allProfiles.map((p) => _serializeProfile(p)).toList(),
         'projects': allProjects.map((p) => _serializeProject(p)).toList(),
         'releases': allReleases.map((r) => _serializeRelease(r)).toList(),
@@ -2157,6 +2594,10 @@ class GoogleDriveSyncService {
         'profilePhotoFiles': profilePhotoFileMap,
         // NEW: Profile photo hashes (profileId -> fileHash) for change detection
         'profilePhotoHashes': profilePhotoHashes,
+        // NEW: Release artwork file mappings (releaseId -> driveFileId)
+        'releaseArtworkFiles': releaseArtworkFileMap,
+        // NEW: Release artwork hashes (releaseId -> fileHash) for change detection
+        'releaseArtworkHashes': releaseArtworkHashes,
       };
 
       // Check for cancellation before database upload
@@ -2226,7 +2667,11 @@ class GoogleDriveSyncService {
       }
 
       // Update sync metadata (global, not per-profile)
-      await _updateSyncMetadata(DateTime.now());
+      final uploadTimestamp = DateTime.now();
+      await _updateSyncMetadata(uploadTimestamp);
+      
+      // Save local timestamp for this device's last upload
+      await saveLastBackupUploadTimestamp(uploadTimestamp);
       
       // Emit progress: completed
       _progressController.add(BackupProgress(
@@ -2704,6 +3149,7 @@ class GoogleDriveSyncService {
       }
       
       int photoIndex = 0;
+      
       for (final remoteProfile in remoteProfiles) {
         final localProfile = profileRepo.getProfileById(remoteProfile.id);
         
@@ -2794,6 +3240,21 @@ class GoogleDriveSyncService {
     // Get preview song hashes (if available, for version 1.3+)
     // Maps projectId -> fileHash
     final previewSongHashes = remoteData['previewSongHashes'] as Map<String, dynamic>?;
+    
+    // Get release artwork file mappings (if available, for version 1.6+)
+    // Maps releaseId -> driveFileId
+    final releaseArtworkFiles = remoteData['releaseArtworkFiles'] as Map<String, dynamic>?;
+    // Get release artwork hashes (if available, for version 1.6+)
+    // Maps releaseId -> fileHash
+    final releaseArtworkHashes = remoteData['releaseArtworkHashes'] as Map<String, dynamic>?;
+    
+    // Count release artwork files to download
+    int artworkToDownload = 0;
+    if (downloadPreviewSongs && releaseArtworkFiles != null) {
+      artworkToDownload = releaseArtworkFiles.length;
+    }
+    
+    int artworkIndex = 0;
     
     // Create reverse lookup: profileId -> list of project/release/root IDs
     final profileToProjects = <String, List<String>>{};
@@ -3437,43 +3898,99 @@ class GoogleDriveSyncService {
             if (profileReleaseIds.contains(remoteRelease.id)) {
               final localRelease = profileReleasesBox.get(remoteRelease.id);
               
+              // Download release artwork if available
+              var releaseToSave = remoteRelease;
+              if (downloadPreviewSongs && releaseArtworkFiles != null && releaseArtworkFiles.containsKey(remoteRelease.id)) {
+                try {
+                  artworkIndex++;
+                  
+                  // Emit progress for release artwork download
+                  _progressController.add(BackupProgress(
+                    stage: BackupProgressStage.downloadingReleaseArtwork,
+                    currentItem: 'Downloading release artwork: ${remoteRelease.title}',
+                    currentIndex: artworkIndex,
+                    totalItems: artworkToDownload,
+                    progress: 0.20 + (artworkIndex / artworkToDownload * 0.15), // 20-35%
+                  ));
+                  
+                  final driveFileId = releaseArtworkFiles[remoteRelease.id] as String;
+                  String? expectedHash;
+                  if (releaseArtworkHashes != null && releaseArtworkHashes.containsKey(remoteRelease.id)) {
+                    expectedHash = releaseArtworkHashes[remoteRelease.id] as String;
+                  }
+                  
+                  // Determine file extension from remote artworkImagePath
+                  String? fileExtension;
+                  if (remoteRelease.artworkImagePath != null) {
+                    fileExtension = path.extension(remoteRelease.artworkImagePath!);
+                  }
+                  
+                  // Download release artwork file
+                  final localFilePath = await downloadReleaseArtworkFile(
+                    driveFileId: driveFileId,
+                    releaseId: remoteRelease.id,
+                    expectedHash: expectedHash,
+                    fileExtension: fileExtension,
+                  );
+                  
+                  if (localFilePath != null) {
+                    releaseToSave = remoteRelease.copyWith(
+                      artworkImagePath: localFilePath,
+                    );
+                    if (kDebugMode) {
+                      print('    Downloaded release artwork for: ${remoteRelease.title} (ID: $driveFileId)');
+                    }
+                  } else {
+                    // Download failed, keep remote artworkImagePath as is
+                    if (kDebugMode) {
+                      print('    Failed to download release artwork for: ${remoteRelease.title}');
+                    }
+                  }
+                } catch (e) {
+                  if (kDebugMode) {
+                    print('    Error downloading release artwork for release ${remoteRelease.id}: $e');
+                  }
+                  // Continue without artwork
+                }
+              }
+              
               if (localRelease == null) {
                 // New release from remote
-                await profileReleasesBox.put(remoteRelease.id, remoteRelease);
+                await profileReleasesBox.put(releaseToSave.id, releaseToSave);
                 releasesAdded++;
                 profileReleasesAdded++;
                 if (kDebugMode) {
-                  print('    + Added new release: ${remoteRelease.title}');
+                  print('    + Added new release: ${releaseToSave.title}');
                 }
               } else {
                 // For releases, we compare based on content changes
                 // Since Release doesn't have updatedAt, we check if content changed
-                final hasChanges = remoteRelease.title != localRelease.title ||
-                    remoteRelease.description != localRelease.description ||
-                    remoteRelease.releaseDate != localRelease.releaseDate ||
-                    remoteRelease.artworkImagePath != localRelease.artworkImagePath ||
-                    remoteRelease.trackIds.length != localRelease.trackIds.length ||
-                    !_listEquals(remoteRelease.trackIds, localRelease.trackIds) ||
-                    remoteRelease.todos.length != localRelease.todos.length ||
-                    remoteRelease.files.length != localRelease.files.length;
+                final hasChanges = releaseToSave.title != localRelease.title ||
+                    releaseToSave.description != localRelease.description ||
+                    releaseToSave.releaseDate != localRelease.releaseDate ||
+                    releaseToSave.artworkImagePath != localRelease.artworkImagePath ||
+                    releaseToSave.trackIds.length != localRelease.trackIds.length ||
+                    !_listEquals(releaseToSave.trackIds, localRelease.trackIds) ||
+                    releaseToSave.todos.length != localRelease.todos.length ||
+                    releaseToSave.files.length != localRelease.files.length;
                 
                 if (hasChanges) {
                   // Content changed - update (remote takes precedence for releases)
                   // This ensures changes from Android (todos, description, etc.) sync back to desktop
-                  await profileReleasesBox.put(remoteRelease.id, remoteRelease);
+                  await profileReleasesBox.put(releaseToSave.id, releaseToSave);
                   releasesUpdated++;
                   profileReleasesUpdated++;
                   if (kDebugMode) {
                     final changes = <String>[];
-                    if (remoteRelease.title != localRelease.title) changes.add('title');
-                    if (remoteRelease.description != localRelease.description) changes.add('description');
-                    if (remoteRelease.todos.length != localRelease.todos.length) {
-                      changes.add('todos (${remoteRelease.todos.length} vs ${localRelease.todos.length})');
+                    if (releaseToSave.title != localRelease.title) changes.add('title');
+                    if (releaseToSave.description != localRelease.description) changes.add('description');
+                    if (releaseToSave.todos.length != localRelease.todos.length) {
+                      changes.add('todos (${releaseToSave.todos.length} vs ${localRelease.todos.length})');
                     }
-                    if (remoteRelease.trackIds.length != localRelease.trackIds.length) {
-                      changes.add('tracks (${remoteRelease.trackIds.length} vs ${localRelease.trackIds.length})');
+                    if (releaseToSave.trackIds.length != localRelease.trackIds.length) {
+                      changes.add('tracks (${releaseToSave.trackIds.length} vs ${localRelease.trackIds.length})');
                     }
-                    print('    ~ Updated release: ${remoteRelease.title} (${changes.join(", ")})');
+                    print('    ~ Updated release: ${releaseToSave.title} (${changes.join(", ")})');
                   }
                 } else {
                   // No changes - skip
@@ -3548,8 +4065,20 @@ class GoogleDriveSyncService {
       print('  Releases: +$releasesAdded ~$releasesUpdated');
     }
 
+    // Return result first, clean up profile asynchronously
+    final result = SyncResult(
+      projectsAdded: projectsAdded,
+      projectsUpdated: projectsUpdated,
+      releasesAdded: releasesAdded,
+      releasesUpdated: releasesUpdated,
+      previewSongsDownloaded: previewSongsDownloaded,
+      previewSongsUpdated: previewSongsUpdated,
+    );
+
     // Remove default empty profile if we restored other non-default profiles (all platforms)
-    try {
+    // Do this asynchronously after returning so it doesn't block the UI
+    Future.microtask(() async {
+      try {
       final allProfiles = profileRepo.getAllProfiles();
       
       if (allProfiles.length > 1) {
@@ -3628,20 +4157,14 @@ class GoogleDriveSyncService {
         }
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error removing default empty profile: $e');
+        if (kDebugMode) {
+          print('Error removing default empty profile: $e');
+        }
+        // Don't throw - this is a convenience feature, not critical
       }
-      // Don't throw - this is a convenience feature, not critical
-    }
+    });
 
-    return SyncResult(
-      projectsAdded: projectsAdded,
-      projectsUpdated: projectsUpdated,
-      releasesAdded: releasesAdded,
-      releasesUpdated: releasesUpdated,
-      previewSongsDownloaded: previewSongsDownloaded,
-      previewSongsUpdated: previewSongsUpdated,
-    );
+    return result;
   }
 
   // Serialization helpers
