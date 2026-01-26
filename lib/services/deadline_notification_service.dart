@@ -422,14 +422,14 @@ class DeadlineNotificationService {
 
       final details = NotificationDetails(android: androidDetails);
 
-      // Schedule notification
+      // Schedule notification (inexact - no special permission required)
       await _notifications.zonedSchedule(
         notificationId,
         title,
         body,
         scheduledDate,
         details,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         payload: project.id,
       );
       
@@ -512,7 +512,7 @@ class DeadlineNotificationService {
         'If you see this, notifications are working! Scheduled at ${now.hour}:${now.minute}:${now.second}',
         scheduledTime,
         details,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         payload: 'test',
       );
 
