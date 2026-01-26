@@ -1987,15 +1987,8 @@ class GoogleDriveSyncService {
     }
     
     // Use streaming to avoid loading large files into memory (important for Android)
-    final output = AccumulatorSink<Digest>();
-    final input = md5.startChunkedConversion(output);
-    
-    await for (final chunk in file.openRead()) {
-      input.add(chunk);
-    }
-    input.close();
-    
-    return output.events.single.toString();
+    final digest = await md5.bind(file.openRead()).first;
+    return digest.toString();
   }
 
   /// Get content type for file extension
