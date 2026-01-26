@@ -391,7 +391,9 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
                               foregroundColor: Colors.white,
                             ),
                             onPressed: () async {
-                              final debugInfo = await _notificationService.getDebugInfo();
+                              final pending = await _notificationService.getPendingNotifications();
+                              final enabled = await _notificationService.areNotificationsEnabled();
+                              
                               if (mounted) {
                                 showDialog(
                                   context: context,
@@ -399,7 +401,12 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
                                     title: const Text('🐛 Debug Information'),
                                     content: SingleChildScrollView(
                                       child: SelectableText(
-                                        debugInfo,
+                                        '📊 Notification System Status\n'
+                                        '══════════════════════════════════\n'
+                                        '✓ Notifications enabled: $enabled\n'
+                                        '📬 Pending notifications: ${pending.length}\n\n'
+                                        'Pending notifications:\n'
+                                        '${pending.isEmpty ? "No notifications scheduled" : pending.map((n) => "• ${n.title}\n  ${n.body}").join("\n\n")}',
                                         style: const TextStyle(
                                           fontFamily: 'monospace',
                                           fontSize: 12,
@@ -474,35 +481,48 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    ElevatedButton.icon(
-                      icon: const Icon(Icons.alarm),
-                      label: const Text('Request Exact Alarm Permission (Optional)'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.purple.shade600,
-                        foregroundColor: Colors.white,
-                      ),
-                      onPressed: () async {
-                        await _notificationService.requestExactAlarmPermission();
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('⚙️ Opening system settings. Enable "Alarms & reminders" for exact timing (optional).'),
-                              duration: Duration(seconds: 4),
-                            ),
-                          );
-                        }
-                      },
-                    ),
                     const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        border: Border.all(color: Colors.red.shade300, width: 2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.warning, color: Colors.red.shade700, size: 20),
+                              const SizedBox(width: 8),
+                              Text(
+                                '⚠️ EMULATOR WARNING',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.red.shade700,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Scheduled notifications often DON\'T WORK on Android emulators!\n\n'
+                            '✅ TEST ON A REAL DEVICE for accurate results!',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.red.shade900,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
                     Text(
-                      '📋 Check console logs for detailed timezone information.\n\n'
-                      '✅ Notifications work WITHOUT "Alarms & reminders" permission!\n'
-                      '   They may appear with a slight delay (~5-10 min).\n\n'
-                      '🎯 For EXACT timing, grant "Alarms & reminders" permission.\n\n'
-                      '⚡ Other tips:\n'
-                      '• Disable battery optimization for this app\n'
-                      '• Ensure notifications are enabled in settings',
+                      '📋 Check console logs for detailed information.\n'
+                      '⚡ Disable battery optimization for best results.\n'
+                      '🔔 Ensure notifications are enabled in settings.',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.orange.shade700,

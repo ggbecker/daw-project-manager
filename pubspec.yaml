@@ -61,8 +61,8 @@ dependencies:
   crypto: ^3.0.5
   share_plus: ^10.1.4
   flutter_secure_storage: ^10.0.0
-  flutter_local_notifications: ^18.0.1
-  timezone: ^0.9.4
+  flutter_local_notifications: ^19.5.0
+  timezone: ^0.10.1
 
 dev_dependencies:
   flutter_test:
