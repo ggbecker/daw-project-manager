@@ -502,27 +502,27 @@ class GoogleDriveSyncService {
   }
 
   /// Check if a newer backup is available on Drive
-  /// Returns true if remote backup is newer than last sync time
+  /// Returns true if remote backup is newer than last download time
   Future<bool> isNewerBackupAvailable() async {
     try {
-      final lastSync = await getLastSyncTime();
+      final lastDownload = await getLastBackupDownloadTimestamp();
       final remoteTimestamp = await getRemoteBackupTimestamp();
 
       if (remoteTimestamp == null) {
         return false; // No backup available on Drive
       }
 
-      if (lastSync == null) {
-        return true; // Never synced, so remote is "newer"
+      if (lastDownload == null) {
+        return true; // Never downloaded, so remote backup should be downloaded
       }
 
-      // Remote is newer if it was modified after our last sync
+      // Remote is newer if it was modified after our last download
       // Add a small buffer (5 seconds) to avoid false positives from clock differences
-      final isNewer = remoteTimestamp.isAfter(lastSync.add(const Duration(seconds: 5)));
+      final isNewer = remoteTimestamp.isAfter(lastDownload.add(const Duration(seconds: 5)));
       
       if (kDebugMode) {
         print('Backup comparison:');
-        print('  Last sync: $lastSync');
+        print('  Last download: $lastDownload');
         print('  Remote backup: $remoteTimestamp');
         print('  Is newer: $isNewer');
       }
@@ -538,15 +538,27 @@ class GoogleDriveSyncService {
   Future<Map<String, dynamic>> getBackupInfo() async {
     try {
       final remoteTimestamp = await getRemoteBackupTimestamp();
-      final lastSync = await getLastSyncTime();
       final lastDownload = await getLastBackupDownloadTimestamp();
+      final lastUpload = await getLastBackupUploadTimestamp();
+      
+      // Determine if remote is newer than local download
+      bool isNewer = false;
+      if (remoteTimestamp != null) {
+        if (lastDownload == null) {
+          // Never downloaded, so remote backup should be downloaded
+          isNewer = true;
+        } else {
+          // Remote is newer if it was modified after our last download
+          isNewer = remoteTimestamp.isAfter(lastDownload.add(const Duration(seconds: 5)));
+        }
+      }
       
       return {
         'remoteTimestamp': remoteTimestamp,
-        'lastSync': lastSync,
         'lastDownload': lastDownload,
+        'lastUpload': lastUpload,
         'hasRemote': remoteTimestamp != null,
-        'isNewer': remoteTimestamp != null && lastSync != null && remoteTimestamp.isAfter(lastSync.add(const Duration(seconds: 5))),
+        'isNewer': isNewer,
       };
     } catch (e) {
       if (kDebugMode) print('Error getting backup info: $e');
