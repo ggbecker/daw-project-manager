@@ -34,6 +34,14 @@
       }
     }
   },
+  "failedToLaunchProject": "Не удалось открыть {projectName}",
+  "@failedToLaunchProject": {
+    "placeholders": {
+      "projectName": {
+        "type": "String"
+      }
+    }
+  },
   "clearLibrary": "Очистить библиотеку",
   "clearLibraryMessage": "Это удалит все сохраненные проекты и исходные папки. Продолжить?",
   "clear": "Очистить",

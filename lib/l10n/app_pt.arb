@@ -34,6 +34,14 @@
       }
     }
   },
+  "failedToLaunchProject": "Falha ao abrir {projectName}",
+  "@failedToLaunchProject": {
+    "placeholders": {
+      "projectName": {
+        "type": "String"
+      }
+    }
+  },
   "clearLibrary": "Limpar Biblioteca",
   "clearLibraryMessage": "Isso removerá todos os projetos salvos e pastas de origem. Continuar?",
   "clear": "Limpar",

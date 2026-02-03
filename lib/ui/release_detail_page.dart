@@ -20,6 +20,7 @@ import '../providers/providers.dart';
 import '../repository/project_repository.dart';
 import '../utils/app_paths.dart';
 import '../utils/mobile_utils.dart';
+import '../utils/file_launcher.dart';
 import '../generated/l10n/app_localizations.dart';
 import 'project_detail_page.dart';
 import 'widgets/todo_list_widget.dart';
@@ -309,13 +310,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
               label: AppLocalizations.of(context)!.openFolder,
               onPressed: () async {
                 final folderPath = path.dirname(zipFile.path);
-                if (Platform.isWindows) {
-                  await Process.run('explorer', [folderPath]);
-                } else if (Platform.isMacOS) {
-                  await Process.run('open', [folderPath]);
-                } else if (Platform.isLinux) {
-                  await Process.run('xdg-open', [folderPath]);
-                }
+                await FileLauncher.openFolder(folderPath);
               },
             ),
           ),
@@ -1232,23 +1227,18 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
       }
       return;
     }
-    try {
-      if (Platform.isMacOS) {
-        await Process.start('open', [project.filePath]);
-      } else if (Platform.isWindows) {
-        await Process.start('cmd', ['/c', 'start', '', project.filePath]);
-      } else {
-        await Process.start(project.filePath, []);
-      }
+    final success = await FileLauncher.launchProject(project.filePath);
+    
+    if (success) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppLocalizations.of(context)!.launchingProject(project.displayName))),
         );
       }
-    } catch (e) {
+    } else {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.failedToLaunch(e.toString()))),
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedToLaunchProject(project.displayName))),
         );
       }
     }
@@ -1265,25 +1255,12 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
       return;
     }
     
-    try {
-      if (Platform.isMacOS) {
-        await Process.start('open', [folderPath]);
-      } else if (Platform.isWindows) {
-        await Process.start('explorer', [folderPath]);
-      } else if (Platform.isLinux) {
-        await Process.start('xdg-open', [folderPath]);
-      }
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.openingFolder(project.displayName))),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.failedToOpenFolder(e.toString()))),
-        );
-      }
+    final success = await FileLauncher.openFolder(folderPath);
+    
+    if (success && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.openingFolder(project.displayName))),
+      );
     }
   }
 
@@ -1699,23 +1676,18 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
                                                 }
                                                 return;
                                               }
-                                              try {
-                                                if (Platform.isMacOS) {
-                                                  await Process.start('open', [project.filePath]);
-                                                } else if (Platform.isWindows) {
-                                                  await Process.start('cmd', ['/c', 'start', '', project.filePath]);
-                                                } else {
-                                                  await Process.start(project.filePath, []);
-                                                }
+                                              final success = await FileLauncher.launchProject(project.filePath);
+                                              
+                                              if (success) {
                                                 if (context.mounted) {
                                                   ScaffoldMessenger.of(context).showSnackBar(
                                                     SnackBar(content: Text(AppLocalizations.of(context)!.launchingProject(project.displayName))),
                                                   );
                                                 }
-                                              } catch (e) {
+                                              } else {
                                                 if (context.mounted) {
                                                   ScaffoldMessenger.of(context).showSnackBar(
-                                                    SnackBar(content: Text(AppLocalizations.of(context)!.failedToLaunch(e.toString()))),
+                                                    SnackBar(content: Text(AppLocalizations.of(context)!.failedToLaunchProject(project.displayName))),
                                                   );
                                                 }
                                               }
@@ -1757,25 +1729,12 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
                                                 return;
                                               }
                                               
-                                              try {
-                                                if (Platform.isMacOS) {
-                                                  await Process.start('open', [folderPath]);
-                                                } else if (Platform.isWindows) {
-                                                  await Process.start('explorer', [folderPath]);
-                                                } else if (Platform.isLinux) {
-                                                  await Process.start('xdg-open', [folderPath]);
-                                                }
-                                                if (context.mounted) {
-                                                  ScaffoldMessenger.of(context).showSnackBar(
-                                                    SnackBar(content: Text(AppLocalizations.of(context)!.openingFolder(project.displayName))),
-                                                  );
-                                                }
-                                              } catch (e) {
-                                                if (context.mounted) {
-                                                  ScaffoldMessenger.of(context).showSnackBar(
-                                                    SnackBar(content: Text(AppLocalizations.of(context)!.failedToOpenFolder(e.toString()))),
-                                                  );
-                                                }
+                                              final success = await FileLauncher.openFolder(folderPath);
+                                              
+                                              if (success && context.mounted) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(content: Text(AppLocalizations.of(context)!.openingFolder(project.displayName))),
+                                                );
                                               }
                                             },
                                           ),
@@ -2302,20 +2261,11 @@ class _FilesSectionState extends ConsumerState<_FilesSection> {
               onTap: fileExists
                   ? () async {
                       // Open file
-                      try {
-                        if (Platform.isWindows) {
-                          await Process.run('cmd', ['/c', 'start', '', file.filePath]);
-                        } else if (Platform.isMacOS) {
-                          await Process.run('open', [file.filePath]);
-                        } else if (Platform.isLinux) {
-                          await Process.run('xdg-open', [file.filePath]);
-                        }
-                      } catch (e) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(AppLocalizations.of(context)!.failedToOpenFile(e.toString()))),
-                          );
-                        }
+                      final success = await FileLauncher.openFile(file.filePath);
+                      if (!success && context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(AppLocalizations.of(context)!.failedToOpenFile('Unable to open file'))),
+                        );
                       }
                     }
                   : null,

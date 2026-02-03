@@ -18,6 +18,7 @@ import 'package:archive/archive_io.dart';
 
 import '../services/scanner_service.dart';
 import '../utils/mobile_utils.dart';
+import '../utils/file_launcher.dart';
 import 'project_detail_page.dart';
 import 'releases_tab_page.dart';
 import 'release_detail_page.dart';
@@ -2240,16 +2241,9 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       }
       return;
     }
-    try {
-      // Lançamento específico para Windows e macOS
-      if (Platform.isMacOS) {
-        await Process.start('open', [project.filePath]);
-      } else if (Platform.isWindows) {
-        await Process.start('cmd', ['/c', 'start', '', project.filePath]);
-      } else {
-        // Fallback para outros sistemas operacionais (e.g. Linux)
-        await Process.start(project.filePath, []);
-      }
+    final success = await FileLauncher.launchProject(project.filePath);
+    
+    if (success) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.launchingProject(project.displayName))));
       }
@@ -2259,9 +2253,11 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       if (mounted && !MobileUtils.isMobile()) {
         await _viewProjectDetails(project);
       }
-    } catch (e) {
+    } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.failedToLaunch(e.toString()))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedToLaunchProject(project.displayName))),
+        );
       }
     }
   }
@@ -2286,28 +2282,15 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       return;
     }
     
-    try {
-      // Lógica para abrir o diretório no explorador de arquivos nativo
-      if (Platform.isMacOS) {
-        await Process.start('open', [folderPath]);
-      } else if (Platform.isWindows) {
-        // Usar 'explorer' para Windows
-        await Process.start('explorer', [folderPath]);
-      } else if (Platform.isLinux) {
-        // Usar 'xdg-open' para a maioria dos ambientes Linux
-        await Process.start('xdg-open', [folderPath]);
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.osNotSupportedForOpeningFolder)));
-        }
-        return;
-      }
+    final success = await FileLauncher.openFolder(folderPath);
+    
+    if (success) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.openingFolder(project.displayName))));
       }
-    } catch (e) {
+    } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.failedToOpenFolder(e.toString()))));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.couldNotOpenFolder('Unable to open folder'))));
       }
     }
   }
