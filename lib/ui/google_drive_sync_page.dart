@@ -259,51 +259,18 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
           });
         }
       } else {
-        // Desktop sign-in
+        // Desktop sign-in (loopback flow: browser opens, redirect comes back to local server)
         setState(() {
           _isSyncing = true;
           _syncStatus = null;
         });
 
         try {
-          // Get authorization URL
-          final authUrl = await _syncService.getDesktopAuthorizationUrl();
-
-          // Launch browser for authorization
-          final launched = await launchUrl(
-            authUrl,
-            mode: LaunchMode.externalApplication,
-          );
-
-          if (!launched) {
-            setState(() {
-              _syncStatus = AppLocalizations.of(context)!.failedToLaunchBrowser;
-              _isSyncing = false;
-            });
-            return;
-          }
-
-          // Show dialog to enter authorization code
-          final code = await showDialog<String>(
-            context: context,
-            barrierDismissible: false,
-            builder: (context) => _AuthorizationCodeDialog(),
-          );
-
-          if (code == null || code.isEmpty) {
-            setState(() {
-              _syncStatus = AppLocalizations.of(context)!.signInCancelled;
-              _isSyncing = false;
-            });
-            return;
-          }
-
-          // Exchange code for tokens
-          final authClient = await _syncService.signInDesktopWithCode(code);
+          final authClient = await _syncService.signInDesktopWithLoopback();
 
           if (authClient == null) {
             setState(() {
-              _syncStatus = AppLocalizations.of(context)!.failedToExchangeAuthorizationCode;
+              _syncStatus = AppLocalizations.of(context)!.signInCancelledOrFailed;
               _isSyncing = false;
             });
             return;

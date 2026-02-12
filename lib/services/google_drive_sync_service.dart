@@ -719,7 +719,7 @@ class GoogleDriveSyncService {
         // Desktop: OAuth2 flow requires manual code entry
         if (kDebugMode) {
           print('Desktop platform detected.');
-          print('Desktop sign-in requires manual code entry. Use getDesktopAuthorizationUrl() and _signInDesktopWithCode() instead.');
+          print('Desktop sign-in uses loopback flow. Use signInDesktopWithLoopback() instead.');
         }
         return false;
       }
@@ -737,58 +737,114 @@ class GoogleDriveSyncService {
     }
   }
 
-  /// Sign in on desktop using OAuth2 flow (manual code entry)
-  /// Opens browser and returns the authorization URL
-  /// Following the pattern recommended for desktop apps using googleapis_auth
-  Future<Uri> getDesktopAuthorizationUrl() async {
-    // Use 'urn:ietf:wg:oauth:2.0:oob' for desktop apps - Google will show the code on the page
-    final redirectUri = Uri.parse('urn:ietf:wg:oauth:2.0:oob');
-    
-    // Build authorization URL following OAuth 2.0 spec
-    final authUrl = Uri.parse('https://accounts.google.com/o/oauth2/v2/auth').replace(
-      queryParameters: {
-        'client_id': _desktopClientId,
-        'redirect_uri': redirectUri.toString(),
-        'response_type': 'code',
-        'scope': _scopes.join(' '),
-        'access_type': 'offline', // Request refresh token
-        'prompt': 'consent', // Force consent screen to ensure refresh token
-      },
-    );
-    
-    if (kDebugMode) {
-      print('Desktop OAuth2 Authorization URL generated');
-      print('Redirect URI: $redirectUri');
-      print('Scopes: $_scopes');
+  /// Loopback port for desktop OAuth (Google requires a fixed redirect URI in the console).
+  /// Add http://127.0.0.1:4567/ to your Desktop OAuth client's authorized redirect URIs.
+  static const int _desktopLoopbackPort = 4567;
+  static Uri get _desktopRedirectUri =>
+      Uri.parse('http://127.0.0.1:$_desktopLoopbackPort/');
+
+  /// Sign in on desktop using OAuth2 loopback flow (no manual code entry).
+  /// Opens browser; after user consents, Google redirects to a local server and we exchange the code.
+  /// Migrated from deprecated OOB flow (urn:ietf:wg:oauth:2.0:oob) per Google's migration guide.
+  Future<auth_io.AutoRefreshingAuthClient?> signInDesktopWithLoopback() async {
+    final state = _generateState();
+    HttpServer? server;
+    final codeCompleter = Completer<String?>();
+
+    try {
+      server = await HttpServer.bind(InternetAddress.loopbackIPv4, _desktopLoopbackPort);
+      if (kDebugMode) print('Loopback server listening on http://127.0.0.1:$_desktopLoopbackPort/');
+
+      server.listen((request) async {
+        if (codeCompleter.isCompleted) return;
+        final uri = request.uri;
+        if (uri.queryParameters.containsKey('code')) {
+          final code = uri.queryParameters['code'];
+          final returnedState = uri.queryParameters['state'];
+          if (returnedState != state) {
+            if (kDebugMode) print('State mismatch in OAuth callback');
+            request.response
+              ..statusCode = 400
+              ..headers.contentType = ContentType.html
+              ..write('''<!DOCTYPE html><html><body><p>Invalid state. Please try again.</p></body></html>''');
+            await request.response.close();
+            codeCompleter.complete(null);
+            return;
+          }
+          request.response
+            ..statusCode = 200
+            ..headers.contentType = ContentType.html
+            ..write('''<!DOCTYPE html><html><head><meta charset="utf-8"><title>Sign-in successful</title></head><body><p>Sign-in successful. You can close this window and return to the app.</p></body></html>''');
+          await request.response.close();
+          codeCompleter.complete(code);
+        } else if (uri.queryParameters.containsKey('error')) {
+          if (kDebugMode) print('OAuth error: ${uri.queryParameters['error']}');
+          request.response
+            ..statusCode = 200
+            ..headers.contentType = ContentType.html
+            ..write('''<!DOCTYPE html><html><body><p>Sign-in was denied or failed. You can close this window.</p></body></html>''');
+          await request.response.close();
+          codeCompleter.complete(null);
+        }
+      });
+
+      final authUrl = Uri.parse('https://accounts.google.com/o/oauth2/v2/auth').replace(
+        queryParameters: {
+          'client_id': _desktopClientId,
+          'redirect_uri': _desktopRedirectUri.toString(),
+          'response_type': 'code',
+          'scope': _scopes.join(' '),
+          'access_type': 'offline',
+          'prompt': 'consent',
+          'state': state,
+        },
+      );
+
+      if (kDebugMode) {
+        print('Desktop OAuth2 loopback: opening browser');
+        print('Redirect URI: $_desktopRedirectUri');
+      }
+
+      final launched = await launchUrl(authUrl, mode: LaunchMode.externalApplication);
+      if (!launched) {
+        codeCompleter.complete(null);
+        return null;
+      }
+
+      final code = await codeCompleter.future;
+      if (code == null || code.isEmpty) return null;
+      return _exchangeDesktopCode(code);
+    } on SocketException catch (e) {
+      if (kDebugMode) print('Loopback server bind failed (port in use?): $e');
+      return null;
+    } finally {
+      await server?.close(force: true);
     }
-    
-    return authUrl;
   }
 
-  /// Complete desktop sign-in with authorization code
-  /// Uses googleapis_auth to create an authenticated client following best practices
-  /// This follows the pattern recommended for desktop apps using googleapis and googleapis_auth
-  Future<auth_io.AutoRefreshingAuthClient?> signInDesktopWithCode(String code) async {
+  static String _generateState() {
+    final bytes = sha256.convert(utf8.encode('${DateTime.now().microsecondsSinceEpoch}-${_desktopClientId}')).bytes;
+    return base64Url.encode(bytes).replaceAll('=', '');
+  }
+
+  /// Exchange authorization code for tokens (used by loopback flow; redirect_uri must match).
+  Future<auth_io.AutoRefreshingAuthClient?> _exchangeDesktopCode(String code) async {
     try {
-      final redirectUri = Uri.parse('urn:ietf:wg:oauth:2.0:oob');
       final clientId = auth_io.ClientId(
-        _desktopClientId, 
+        _desktopClientId,
         _desktopClientSecret.isEmpty ? null : _desktopClientSecret,
       );
-      
+
       if (kDebugMode) {
         print('Exchanging authorization code for access token...');
-        print('Using googleapis_auth to create authenticated client');
-        print('Code: ${code.substring(0, 20)}...');
+        print('Redirect URI: $_desktopRedirectUri');
       }
-      
-      // Exchange authorization code for access token
-      // Following OAuth 2.0 specification for desktop apps
+
       final tokenEndpoint = Uri.parse('https://oauth2.googleapis.com/token');
       final bodyParams = <String, String>{
         'code': code.trim(),
         'client_id': _desktopClientId,
-        'redirect_uri': redirectUri.toString(),
+        'redirect_uri': _desktopRedirectUri.toString(),
         'grant_type': 'authorization_code',
       };
       if (_desktopClientSecret.isNotEmpty) {
