@@ -36,9 +36,6 @@ jobs:
           flutter-version: ${{ env.FLUTTER_BASE_VERSION }}
           channel: 'stable' 
 
-      - name: Run Flutter Upgrade
-        run: flutter upgrade
-
       - name: Get dependencies
         run: flutter pub get
 
@@ -58,9 +55,12 @@ jobs:
       - name: Generate Localizations
         run: flutter gen-l10n
 
+      - name: Precache Flutter Artifacts
+        run: flutter precache
+
       # NEW: Generate code with build_runner
       - name: Generate Hive Adapters
-        run: dart run build_runner build --delete-conflicting-outputs
+        run: flutter pub run build_runner build --delete-conflicting-outputs
 
       - name: Build Test
         run: flutter build windows --release
@@ -131,9 +131,6 @@ jobs:
           flutter-version: ${{ env.FLUTTER_BASE_VERSION }}
           channel: 'stable' 
 
-      - name: Run Flutter Upgrade
-        run: flutter upgrade
-
       - name: Get dependencies
         run: flutter pub get
 
@@ -165,9 +162,12 @@ jobs:
       - name: Generate Localizations
         run: flutter gen-l10n
 
+      - name: Precache Flutter Artifacts
+        run: flutter precache
+
       # NEW: Generate code with build_runner
       - name: Generate Hive Adapters
-        run: dart run build_runner build --delete-conflicting-outputs
+        run: flutter pub run build_runner build --delete-conflicting-outputs
 
       # 2.5. Sanitize ref name for file paths (replace slashes and invalid chars)
       - name: Sanitize ref name
@@ -452,9 +452,6 @@ jobs:
           flutter-version: ${{ env.FLUTTER_BASE_VERSION }}
           channel: 'stable'
 
-      - name: Run Flutter Upgrade
-        run: flutter upgrade
-
       - name: Get dependencies
         run: flutter pub get
 
@@ -504,8 +501,11 @@ jobs:
       - name: Generate Localizations
         run: flutter gen-l10n
 
+      - name: Precache Flutter Artifacts
+        run: flutter precache
+
       - name: Generate Hive Adapters
-        run: dart run build_runner build --delete-conflicting-outputs
+        run: flutter pub run build_runner build --delete-conflicting-outputs
 
       - name: Build Android App Bundle (AAB) - Release
         if: startsWith(github.ref, 'refs/tags/v')
