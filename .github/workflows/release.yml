@@ -36,6 +36,9 @@ jobs:
           flutter-version: ${{ env.FLUTTER_BASE_VERSION }}
           channel: 'stable' 
 
+      - name: Run Flutter Upgrade
+        run: flutter upgrade
+
       - name: Get dependencies
         run: flutter pub get
 
@@ -130,6 +133,9 @@ jobs:
         with:
           flutter-version: ${{ env.FLUTTER_BASE_VERSION }}
           channel: 'stable' 
+
+      - name: Run Flutter Upgrade
+        run: flutter upgrade
 
       - name: Get dependencies
         run: flutter pub get
@@ -452,8 +458,14 @@ jobs:
           flutter-version: ${{ env.FLUTTER_BASE_VERSION }}
           channel: 'stable'
 
+      - name: Run Flutter Upgrade
+        run: flutter upgrade
+
       - name: Get dependencies
         run: flutter pub get
+
+      - name: Precache Flutter Artifacts
+        run: flutter precache
 
       - name: Inject OAuth Credentials
         run: |
