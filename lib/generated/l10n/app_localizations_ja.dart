@@ -21,6 +21,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get save => '保存';
 
   @override
+  String get enable => '有効にする';
+
+  @override
   String get cancel => 'キャンセル';
 
   @override
@@ -1424,7 +1427,78 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String lastUploadTime(String date) {
+    return '最後のアップロード: $date';
+  }
+
+  @override
+  String lastDownloadTime(String date) {
+    return '最後のダウンロード: $date';
+  }
+
+  @override
   String get checkForBackup => 'バックアップを確認';
+
+  @override
+  String get notificationSettings => '通知設定';
+
+  @override
+  String get notificationsOnlyOnAndroid => '期限通知はAndroidデバイスでのみ利用可能です。';
+
+  @override
+  String get notificationPermissionRequired => '通知の許可が必要です';
+
+  @override
+  String get notificationPermissionDescription =>
+      '期限のリマインダーを受け取るには、通知を有効にしてください。';
+
+  @override
+  String get notificationPermissionDenied => '通知の許可が拒否されました。設定で有効にしてください。';
+
+  @override
+  String get notificationSettingsSaved => '通知設定を正常に保存しました';
+
+  @override
+  String get errorSavingSettings => '設定の保存エラー';
+
+  @override
+  String get enableDeadlineNotifications => '期限通知を有効にする';
+
+  @override
+  String get receiveRemindersForDeadlines => 'プロジェクトの期限のリマインダーを受け取る';
+
+  @override
+  String get notificationTime => '通知時刻';
+
+  @override
+  String get timeToReceiveNotifications => '通知を受け取る時刻';
+
+  @override
+  String get reminderDays => 'リマインダー日数';
+
+  @override
+  String get selectDaysBeforeDeadline => '期限の何日前に通知を受け取るか選択してください';
+
+  @override
+  String get notifyOnDeadlineDay => '期限当日に通知';
+
+  @override
+  String get receiveNotificationOnDeadlineDay => '期限当日にも通知を受け取る';
+
+  @override
+  String get howItWorks => '使い方';
+
+  @override
+  String get deadlineNotificationsHelp =>
+      '各プロジェクトの期限の前に選択した日数で、指定された時刻に通知を受け取ります。通知をタップするとプロジェクトの詳細が開きます。';
+
+  @override
+  String get oneDay => '1日';
+
+  @override
+  String xDays(int count) {
+    return '$count日';
+  }
 
   @override
   String get settings => '設定';
@@ -1497,6 +1571,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get editPlaylist => 'プレイリスト編集';
+
+  @override
+  String get stopPlaybackBeforeEditing => 'プレイリストを編集する前に再生を停止してください';
 
   @override
   String get selectPreviewSongs => 'プレビュー曲を選択';
@@ -1631,4 +1708,58 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get playPreview => 'プレビュー再生';
+
+  @override
+  String get uploadCancelled => 'アップロードがキャンセルされました';
+
+  @override
+  String get backupUploadCancelledByUser => 'ユーザーによってバックアップのアップロードがキャンセルされました';
+
+  @override
+  String get collectingData => 'データを収集中...';
+
+  @override
+  String get uploadingPreviewSongs => 'プレビュー曲をアップロード中...';
+
+  @override
+  String get uploadingProfilePhotos => 'プロフィール写真をアップロード中...';
+
+  @override
+  String get uploadingReleaseArtwork => 'リリースアートワークをアップロード中...';
+
+  @override
+  String get uploadingDatabase => 'データベースをアップロード中...';
+
+  @override
+  String get completed => '完了！';
+
+  @override
+  String get cancelling => 'キャンセル中...';
+
+  @override
+  String get uploadingBackupTitle => 'バックアップをアップロード中';
+
+  @override
+  String get cancellingUpload => 'アップロードをキャンセル中...';
+
+  @override
+  String get pleaseWaitCancellingUpload => 'アップロードを停止していますのでお待ちください...';
+
+  @override
+  String get downloadingDatabase => 'データベースをダウンロード中...';
+
+  @override
+  String get downloadingPreviewSongs => 'プレビュー曲をダウンロード中...';
+
+  @override
+  String get downloadingProfilePhotos => 'プロフィール写真をダウンロード中...';
+
+  @override
+  String get downloadingReleaseArtwork => 'リリースアートワークをダウンロード中...';
+
+  @override
+  String get mergingData => 'データを統合中...';
+
+  @override
+  String get downloadingBackupTitle => 'バックアップをダウンロード中';
 }

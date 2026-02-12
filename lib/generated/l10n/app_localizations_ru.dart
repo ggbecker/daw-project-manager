@@ -21,6 +21,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get save => 'Сохранить';
 
   @override
+  String get enable => 'Включить';
+
+  @override
   String get cancel => 'Отмена';
 
   @override
@@ -1446,7 +1449,86 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String lastUploadTime(String date) {
+    return 'Последняя загрузка: $date';
+  }
+
+  @override
+  String lastDownloadTime(String date) {
+    return 'Последнее скачивание: $date';
+  }
+
+  @override
   String get checkForBackup => 'Проверить резервную копию';
+
+  @override
+  String get notificationSettings => 'Настройки уведомлений';
+
+  @override
+  String get notificationsOnlyOnAndroid =>
+      'Уведомления о сроках доступны только на устройствах Android.';
+
+  @override
+  String get notificationPermissionRequired =>
+      'Требуется разрешение на уведомления';
+
+  @override
+  String get notificationPermissionDescription =>
+      'Пожалуйста, включите уведомления, чтобы получать напоминания о сроках.';
+
+  @override
+  String get notificationPermissionDenied =>
+      'Разрешение на уведомления отклонено. Пожалуйста, включите его в настройках.';
+
+  @override
+  String get notificationSettingsSaved =>
+      'Настройки уведомлений успешно сохранены';
+
+  @override
+  String get errorSavingSettings => 'Ошибка сохранения настроек';
+
+  @override
+  String get enableDeadlineNotifications => 'Включить уведомления о сроках';
+
+  @override
+  String get receiveRemindersForDeadlines =>
+      'Получать напоминания о сроках проектов';
+
+  @override
+  String get notificationTime => 'Время уведомления';
+
+  @override
+  String get timeToReceiveNotifications =>
+      'Время суток для получения уведомлений';
+
+  @override
+  String get reminderDays => 'Дни напоминания';
+
+  @override
+  String get selectDaysBeforeDeadline =>
+      'Выберите, за сколько дней до срока вы хотите получать уведомления';
+
+  @override
+  String get notifyOnDeadlineDay => 'Уведомить в день срока';
+
+  @override
+  String get receiveNotificationOnDeadlineDay =>
+      'Также получать уведомление в сам день срока';
+
+  @override
+  String get howItWorks => 'Как это работает';
+
+  @override
+  String get deadlineNotificationsHelp =>
+      'Вы будете получать уведомления в указанное время в выбранные дни до каждого срока проекта. Нажмите на уведомление, чтобы открыть детали проекта.';
+
+  @override
+  String get oneDay => '1 день';
+
+  @override
+  String xDays(int count) {
+    return '$count дней';
+  }
 
   @override
   String get settings => 'Настройки';
@@ -1520,6 +1602,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get editPlaylist => 'Редактировать Плейлист';
+
+  @override
+  String get stopPlaybackBeforeEditing =>
+      'Пожалуйста, остановите воспроизведение перед редактированием плейлиста';
 
   @override
   String get selectPreviewSongs => 'Выбрать Превью';
@@ -1659,4 +1745,60 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get playPreview => 'Воспроизвести Превью';
+
+  @override
+  String get uploadCancelled => 'Загрузка отменена';
+
+  @override
+  String get backupUploadCancelledByUser =>
+      'Загрузка резервной копии отменена пользователем';
+
+  @override
+  String get collectingData => 'Сбор данных...';
+
+  @override
+  String get uploadingPreviewSongs => 'Загрузка превью песен...';
+
+  @override
+  String get uploadingProfilePhotos => 'Загрузка фото профиля...';
+
+  @override
+  String get uploadingReleaseArtwork => 'Загрузка обложек релизов...';
+
+  @override
+  String get uploadingDatabase => 'Загрузка базы данных...';
+
+  @override
+  String get completed => 'Завершено!';
+
+  @override
+  String get cancelling => 'Отмена...';
+
+  @override
+  String get uploadingBackupTitle => 'Загрузка Резервной Копии';
+
+  @override
+  String get cancellingUpload => 'Отмена загрузки...';
+
+  @override
+  String get pleaseWaitCancellingUpload =>
+      'Пожалуйста, подождите, пока мы остановим загрузку...';
+
+  @override
+  String get downloadingDatabase => 'Скачивание базы данных...';
+
+  @override
+  String get downloadingPreviewSongs => 'Скачивание превью песен...';
+
+  @override
+  String get downloadingProfilePhotos => 'Скачивание фотографий профиля...';
+
+  @override
+  String get downloadingReleaseArtwork => 'Скачивание обложек релизов...';
+
+  @override
+  String get mergingData => 'Объединение данных...';
+
+  @override
+  String get downloadingBackupTitle => 'Скачивание Резервной Копии';
 }

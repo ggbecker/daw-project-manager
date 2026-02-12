@@ -21,6 +21,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get save => 'Guardar';
 
   @override
+  String get enable => 'Habilitar';
+
+  @override
   String get cancel => 'Cancelar';
 
   @override
@@ -1455,7 +1458,87 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String lastUploadTime(String date) {
+    return 'Última subida: $date';
+  }
+
+  @override
+  String lastDownloadTime(String date) {
+    return 'Última descarga: $date';
+  }
+
+  @override
   String get checkForBackup => 'Verificar Copia de Seguridad';
+
+  @override
+  String get notificationSettings => 'Configuración de Notificaciones';
+
+  @override
+  String get notificationsOnlyOnAndroid =>
+      'Las notificaciones de plazos solo están disponibles en dispositivos Android.';
+
+  @override
+  String get notificationPermissionRequired =>
+      'Permiso de Notificación Requerido';
+
+  @override
+  String get notificationPermissionDescription =>
+      'Por favor, habilite las notificaciones para recibir recordatorios de plazos.';
+
+  @override
+  String get notificationPermissionDenied =>
+      'Permiso de notificación denegado. Por favor, habilítelo en la configuración.';
+
+  @override
+  String get notificationSettingsSaved =>
+      'Configuración de notificaciones guardada exitosamente';
+
+  @override
+  String get errorSavingSettings => 'Error al guardar la configuración';
+
+  @override
+  String get enableDeadlineNotifications =>
+      'Habilitar Notificaciones de Plazos';
+
+  @override
+  String get receiveRemindersForDeadlines =>
+      'Recibir recordatorios para plazos de proyectos';
+
+  @override
+  String get notificationTime => 'Hora de Notificación';
+
+  @override
+  String get timeToReceiveNotifications =>
+      'Hora del día para recibir notificaciones';
+
+  @override
+  String get reminderDays => 'Días de Recordatorio';
+
+  @override
+  String get selectDaysBeforeDeadline =>
+      'Seleccione cuántos días antes del plazo desea ser notificado';
+
+  @override
+  String get notifyOnDeadlineDay => 'Notificar en el Día del Plazo';
+
+  @override
+  String get receiveNotificationOnDeadlineDay =>
+      'También recibir una notificación en el día del plazo mismo';
+
+  @override
+  String get howItWorks => 'Cómo Funciona';
+
+  @override
+  String get deadlineNotificationsHelp =>
+      'Recibirá notificaciones a la hora especificada en los días seleccionados antes de cada plazo del proyecto. Toque una notificación para abrir los detalles del proyecto.';
+
+  @override
+  String get oneDay => '1 día';
+
+  @override
+  String xDays(int count) {
+    return '$count días';
+  }
 
   @override
   String get settings => 'Configuración';
@@ -1531,6 +1614,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get editPlaylist => 'Editar Lista';
+
+  @override
+  String get stopPlaybackBeforeEditing =>
+      'Por favor, detenga la reproducción antes de editar la lista de reproducción';
 
   @override
   String get selectPreviewSongs => 'Seleccionar Vistas Previas';
@@ -1671,4 +1758,61 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get playPreview => 'Reproducir Vista Previa';
+
+  @override
+  String get uploadCancelled => 'Subida cancelada';
+
+  @override
+  String get backupUploadCancelledByUser =>
+      'Subida de copia de seguridad cancelada por el usuario';
+
+  @override
+  String get collectingData => 'Recopilando datos...';
+
+  @override
+  String get uploadingPreviewSongs => 'Subiendo canciones de vista previa...';
+
+  @override
+  String get uploadingProfilePhotos => 'Subiendo fotos de perfil...';
+
+  @override
+  String get uploadingReleaseArtwork => 'Subiendo arte de lanzamientos...';
+
+  @override
+  String get uploadingDatabase => 'Subiendo base de datos...';
+
+  @override
+  String get completed => '¡Completado!';
+
+  @override
+  String get cancelling => 'Cancelando...';
+
+  @override
+  String get uploadingBackupTitle => 'Subiendo Copia de Seguridad';
+
+  @override
+  String get cancellingUpload => 'Cancelando subida...';
+
+  @override
+  String get pleaseWaitCancellingUpload =>
+      'Por favor espere mientras detenemos la subida...';
+
+  @override
+  String get downloadingDatabase => 'Descargando base de datos...';
+
+  @override
+  String get downloadingPreviewSongs =>
+      'Descargando canciones de vista previa...';
+
+  @override
+  String get downloadingProfilePhotos => 'Descargando fotos de perfil...';
+
+  @override
+  String get downloadingReleaseArtwork => 'Descargando arte de lanzamientos...';
+
+  @override
+  String get mergingData => 'Fusionando datos...';
+
+  @override
+  String get downloadingBackupTitle => 'Descargando Copia de Seguridad';
 }

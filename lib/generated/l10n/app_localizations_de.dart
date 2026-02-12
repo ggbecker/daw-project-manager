@@ -21,6 +21,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get save => 'Speichern';
 
   @override
+  String get enable => 'Aktivieren';
+
+  @override
   String get cancel => 'Abbrechen';
 
   @override
@@ -1452,7 +1455,87 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String lastUploadTime(String date) {
+    return 'Letzter Upload: $date';
+  }
+
+  @override
+  String lastDownloadTime(String date) {
+    return 'Letzter Download: $date';
+  }
+
+  @override
   String get checkForBackup => 'Nach Backup suchen';
+
+  @override
+  String get notificationSettings => 'Benachrichtigungseinstellungen';
+
+  @override
+  String get notificationsOnlyOnAndroid =>
+      'Deadline-Benachrichtigungen sind nur auf Android-Geräten verfügbar.';
+
+  @override
+  String get notificationPermissionRequired =>
+      'Benachrichtigungsberechtigung erforderlich';
+
+  @override
+  String get notificationPermissionDescription =>
+      'Bitte aktivieren Sie Benachrichtigungen, um Deadline-Erinnerungen zu erhalten.';
+
+  @override
+  String get notificationPermissionDenied =>
+      'Benachrichtigungsberechtigung verweigert. Bitte aktivieren Sie sie in den Einstellungen.';
+
+  @override
+  String get notificationSettingsSaved =>
+      'Benachrichtigungseinstellungen erfolgreich gespeichert';
+
+  @override
+  String get errorSavingSettings => 'Fehler beim Speichern der Einstellungen';
+
+  @override
+  String get enableDeadlineNotifications =>
+      'Deadline-Benachrichtigungen aktivieren';
+
+  @override
+  String get receiveRemindersForDeadlines =>
+      'Erinnerungen für Projekt-Deadlines erhalten';
+
+  @override
+  String get notificationTime => 'Benachrichtigungszeit';
+
+  @override
+  String get timeToReceiveNotifications =>
+      'Tageszeit zum Empfangen von Benachrichtigungen';
+
+  @override
+  String get reminderDays => 'Erinnerungstage';
+
+  @override
+  String get selectDaysBeforeDeadline =>
+      'Wählen Sie aus, wie viele Tage vor der Deadline Sie benachrichtigt werden möchten';
+
+  @override
+  String get notifyOnDeadlineDay => 'Am Deadline-Tag benachrichtigen';
+
+  @override
+  String get receiveNotificationOnDeadlineDay =>
+      'Auch am Deadline-Tag selbst eine Benachrichtigung erhalten';
+
+  @override
+  String get howItWorks => 'Wie es funktioniert';
+
+  @override
+  String get deadlineNotificationsHelp =>
+      'Sie erhalten Benachrichtigungen zur angegebenen Zeit an den ausgewählten Tagen vor jeder Projekt-Deadline. Tippen Sie auf eine Benachrichtigung, um die Projektdetails zu öffnen.';
+
+  @override
+  String get oneDay => '1 Tag';
+
+  @override
+  String xDays(int count) {
+    return '$count Tage';
+  }
 
   @override
   String get settings => 'Einstellungen';
@@ -1527,6 +1610,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get editPlaylist => 'Playlist bearbeiten';
+
+  @override
+  String get stopPlaybackBeforeEditing =>
+      'Bitte stoppen Sie die Wiedergabe, bevor Sie die Playlist bearbeiten';
 
   @override
   String get selectPreviewSongs => 'Vorschaulieder auswählen';
@@ -1668,4 +1755,63 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get playPreview => 'Vorschau abspielen';
+
+  @override
+  String get uploadCancelled => 'Upload abgebrochen';
+
+  @override
+  String get backupUploadCancelledByUser =>
+      'Backup-Upload vom Benutzer abgebrochen';
+
+  @override
+  String get collectingData => 'Daten werden gesammelt...';
+
+  @override
+  String get uploadingPreviewSongs => 'Vorschaulieder werden hochgeladen...';
+
+  @override
+  String get uploadingProfilePhotos => 'Profilfotos werden hochgeladen...';
+
+  @override
+  String get uploadingReleaseArtwork => 'Release-Artwork wird hochgeladen...';
+
+  @override
+  String get uploadingDatabase => 'Datenbank wird hochgeladen...';
+
+  @override
+  String get completed => 'Abgeschlossen!';
+
+  @override
+  String get cancelling => 'Wird abgebrochen...';
+
+  @override
+  String get uploadingBackupTitle => 'Backup wird hochgeladen';
+
+  @override
+  String get cancellingUpload => 'Upload wird abgebrochen...';
+
+  @override
+  String get pleaseWaitCancellingUpload =>
+      'Bitte warten Sie, während der Upload gestoppt wird...';
+
+  @override
+  String get downloadingDatabase => 'Datenbank wird heruntergeladen...';
+
+  @override
+  String get downloadingPreviewSongs =>
+      'Vorschaulieder werden heruntergeladen...';
+
+  @override
+  String get downloadingProfilePhotos =>
+      'Profilfotos werden heruntergeladen...';
+
+  @override
+  String get downloadingReleaseArtwork =>
+      'Release-Artwork wird heruntergeladen...';
+
+  @override
+  String get mergingData => 'Daten werden zusammengeführt...';
+
+  @override
+  String get downloadingBackupTitle => 'Backup wird heruntergeladen';
 }

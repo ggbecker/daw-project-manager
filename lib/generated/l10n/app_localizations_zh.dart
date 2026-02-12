@@ -21,6 +21,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get save => '保存';
 
   @override
+  String get enable => '启用';
+
+  @override
   String get cancel => '取消';
 
   @override
@@ -1409,7 +1412,77 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String lastUploadTime(String date) {
+    return '上次上传: $date';
+  }
+
+  @override
+  String lastDownloadTime(String date) {
+    return '上次下载: $date';
+  }
+
+  @override
   String get checkForBackup => '检查备份';
+
+  @override
+  String get notificationSettings => '通知设置';
+
+  @override
+  String get notificationsOnlyOnAndroid => '截止日期通知仅在Android设备上可用。';
+
+  @override
+  String get notificationPermissionRequired => '需要通知权限';
+
+  @override
+  String get notificationPermissionDescription => '请启用通知以接收截止日期提醒。';
+
+  @override
+  String get notificationPermissionDenied => '通知权限被拒绝。请在设置中启用。';
+
+  @override
+  String get notificationSettingsSaved => '通知设置已成功保存';
+
+  @override
+  String get errorSavingSettings => '保存设置时出错';
+
+  @override
+  String get enableDeadlineNotifications => '启用截止日期通知';
+
+  @override
+  String get receiveRemindersForDeadlines => '接收项目截止日期提醒';
+
+  @override
+  String get notificationTime => '通知时间';
+
+  @override
+  String get timeToReceiveNotifications => '接收通知的时间';
+
+  @override
+  String get reminderDays => '提醒天数';
+
+  @override
+  String get selectDaysBeforeDeadline => '选择在截止日期前多少天收到通知';
+
+  @override
+  String get notifyOnDeadlineDay => '在截止日期当天通知';
+
+  @override
+  String get receiveNotificationOnDeadlineDay => '在截止日期当天也接收通知';
+
+  @override
+  String get howItWorks => '工作原理';
+
+  @override
+  String get deadlineNotificationsHelp =>
+      '您将在每个项目截止日期前的选定天数在指定时间收到通知。点击通知以打开项目详情。';
+
+  @override
+  String get oneDay => '1天';
+
+  @override
+  String xDays(int count) {
+    return '$count天';
+  }
 
   @override
   String get settings => '设置';
@@ -1481,6 +1554,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get editPlaylist => '编辑播放列表';
+
+  @override
+  String get stopPlaybackBeforeEditing => '请在编辑播放列表之前停止播放';
 
   @override
   String get selectPreviewSongs => '选择预览歌曲';
@@ -1615,4 +1691,58 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get playPreview => '播放预览';
+
+  @override
+  String get uploadCancelled => '上传已取消';
+
+  @override
+  String get backupUploadCancelledByUser => '用户取消了备份上传';
+
+  @override
+  String get collectingData => '正在收集数据...';
+
+  @override
+  String get uploadingPreviewSongs => '正在上传预览歌曲...';
+
+  @override
+  String get uploadingProfilePhotos => '正在上传个人资料照片...';
+
+  @override
+  String get uploadingReleaseArtwork => '正在上传发行封面...';
+
+  @override
+  String get uploadingDatabase => '正在上传数据库...';
+
+  @override
+  String get completed => '完成！';
+
+  @override
+  String get cancelling => '正在取消...';
+
+  @override
+  String get uploadingBackupTitle => '正在上传备份';
+
+  @override
+  String get cancellingUpload => '正在取消上传...';
+
+  @override
+  String get pleaseWaitCancellingUpload => '请稍候，我们正在停止上传...';
+
+  @override
+  String get downloadingDatabase => '正在下载数据库...';
+
+  @override
+  String get downloadingPreviewSongs => '正在下载预览歌曲...';
+
+  @override
+  String get downloadingProfilePhotos => '正在下载个人资料照片...';
+
+  @override
+  String get downloadingReleaseArtwork => '正在下载发行封面...';
+
+  @override
+  String get mergingData => '正在合并数据...';
+
+  @override
+  String get downloadingBackupTitle => '正在下载备份';
 }

@@ -136,6 +136,12 @@ abstract class AppLocalizations {
   /// **'Save'**
   String get save;
 
+  /// No description provided for @enable.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable'**
+  String get enable;
+
   /// No description provided for @cancel.
   ///
   /// In en, this message translates to:
@@ -2414,11 +2420,137 @@ abstract class AppLocalizations {
   /// **'Remote backup: {date}'**
   String remoteBackupTime(String date);
 
+  /// No description provided for @lastUploadTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Last upload: {date}'**
+  String lastUploadTime(String date);
+
+  /// No description provided for @lastDownloadTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Last download: {date}'**
+  String lastDownloadTime(String date);
+
   /// Button to check if newer backup is available
   ///
   /// In en, this message translates to:
   /// **'Check for Backup'**
   String get checkForBackup;
+
+  /// Title for notification settings page
+  ///
+  /// In en, this message translates to:
+  /// **'Notification Settings'**
+  String get notificationSettings;
+
+  /// Message shown on non-Android platforms
+  ///
+  /// In en, this message translates to:
+  /// **'Deadline notifications are only available on Android devices.'**
+  String get notificationsOnlyOnAndroid;
+
+  /// Title for permission request card
+  ///
+  /// In en, this message translates to:
+  /// **'Notification Permission Required'**
+  String get notificationPermissionRequired;
+
+  /// Description for permission request
+  ///
+  /// In en, this message translates to:
+  /// **'Please enable notifications to receive deadline reminders.'**
+  String get notificationPermissionDescription;
+
+  /// Error message when permission is denied
+  ///
+  /// In en, this message translates to:
+  /// **'Notification permission denied. Please enable it in settings.'**
+  String get notificationPermissionDenied;
+
+  /// Success message after saving settings
+  ///
+  /// In en, this message translates to:
+  /// **'Notification settings saved successfully'**
+  String get notificationSettingsSaved;
+
+  /// Error message when saving fails
+  ///
+  /// In en, this message translates to:
+  /// **'Error saving settings'**
+  String get errorSavingSettings;
+
+  /// Toggle to enable/disable notifications
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Deadline Notifications'**
+  String get enableDeadlineNotifications;
+
+  /// Description for enable toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Receive reminders for project deadlines'**
+  String get receiveRemindersForDeadlines;
+
+  /// Title for time picker
+  ///
+  /// In en, this message translates to:
+  /// **'Notification Time'**
+  String get notificationTime;
+
+  /// Description for time picker
+  ///
+  /// In en, this message translates to:
+  /// **'Time of day to receive notifications'**
+  String get timeToReceiveNotifications;
+
+  /// Title for reminder days section
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder Days'**
+  String get reminderDays;
+
+  /// Description for reminder days
+  ///
+  /// In en, this message translates to:
+  /// **'Select how many days before the deadline you want to be notified'**
+  String get selectDaysBeforeDeadline;
+
+  /// Toggle for deadline day notification
+  ///
+  /// In en, this message translates to:
+  /// **'Notify on Deadline Day'**
+  String get notifyOnDeadlineDay;
+
+  /// Description for deadline day toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Also receive a notification on the deadline day itself'**
+  String get receiveNotificationOnDeadlineDay;
+
+  /// Title for help section
+  ///
+  /// In en, this message translates to:
+  /// **'How It Works'**
+  String get howItWorks;
+
+  /// Help text explaining notifications
+  ///
+  /// In en, this message translates to:
+  /// **'You will receive notifications at the specified time on the selected days before each project deadline. Tap a notification to open the project details.'**
+  String get deadlineNotificationsHelp;
+
+  /// One day label for reminder chips
+  ///
+  /// In en, this message translates to:
+  /// **'1 day'**
+  String get oneDay;
+
+  /// Multiple days label for reminder chips
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days'**
+  String xDays(int count);
 
   /// No description provided for @settings.
   ///
@@ -2545,6 +2677,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edit Playlist'**
   String get editPlaylist;
+
+  /// Message shown when trying to edit playlist while music is playing
+  ///
+  /// In en, this message translates to:
+  /// **'Please stop playback before editing the playlist'**
+  String get stopPlaybackBeforeEditing;
 
   /// Label for selecting preview songs in playlist
   ///
@@ -2797,6 +2935,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Play Preview'**
   String get playPreview;
+
+  /// Status message when backup upload is cancelled
+  ///
+  /// In en, this message translates to:
+  /// **'Upload cancelled'**
+  String get uploadCancelled;
+
+  /// Message shown when user cancels backup upload
+  ///
+  /// In en, this message translates to:
+  /// **'Backup upload cancelled by user'**
+  String get backupUploadCancelledByUser;
+
+  /// Status message when collecting data for backup
+  ///
+  /// In en, this message translates to:
+  /// **'Collecting data...'**
+  String get collectingData;
+
+  /// Status message when uploading preview song files
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading preview songs...'**
+  String get uploadingPreviewSongs;
+
+  /// Status message when uploading profile photo files
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading profile photos...'**
+  String get uploadingProfilePhotos;
+
+  /// Status message when uploading release artwork files
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading release artwork...'**
+  String get uploadingReleaseArtwork;
+
+  /// Status message when uploading database file
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading database...'**
+  String get uploadingDatabase;
+
+  /// Status message when operation is completed
+  ///
+  /// In en, this message translates to:
+  /// **'Completed!'**
+  String get completed;
+
+  /// Status message when cancelling an operation
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelling...'**
+  String get cancelling;
+
+  /// Title for backup upload progress dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading Backup'**
+  String get uploadingBackupTitle;
+
+  /// Status message during upload cancellation
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelling upload...'**
+  String get cancellingUpload;
+
+  /// Message shown while stopping upload operation
+  ///
+  /// In en, this message translates to:
+  /// **'Please wait while we stop the upload...'**
+  String get pleaseWaitCancellingUpload;
+
+  /// Status message when downloading database file
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading database...'**
+  String get downloadingDatabase;
+
+  /// Status message when downloading preview song files
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading preview songs...'**
+  String get downloadingPreviewSongs;
+
+  /// Status message when downloading profile photo files
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading profile photos...'**
+  String get downloadingProfilePhotos;
+
+  /// Status message when downloading release artwork files
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading release artwork...'**
+  String get downloadingReleaseArtwork;
+
+  /// Status message when merging downloaded data
+  ///
+  /// In en, this message translates to:
+  /// **'Merging data...'**
+  String get mergingData;
+
+  /// Title for backup download progress dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading Backup'**
+  String get downloadingBackupTitle;
 }
 
 class _AppLocalizationsDelegate
