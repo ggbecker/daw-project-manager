@@ -403,11 +403,36 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(AppLocalizations.of(context)!.newerBackupAvailable),
+              duration: const Duration(seconds: 4),
               backgroundColor: Colors.orange,
-              action: SnackBarAction(
-                label: AppLocalizations.of(context)!.download,
-                onPressed: () => _downloadBackupFromDrive(),
+              content: Row(
+                children: [
+                  // Texto da mensagem
+                  Expanded(
+                    child: Text(
+                      AppLocalizations.of(context)!.newerBackupAvailable,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                  // Botão de Download (como texto clicável)
+                  TextButton(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                      _downloadBackupFromDrive();
+                    },
+                    child: Text(
+                      AppLocalizations.of(context)!.download.toUpperCase(),
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  // O seu botão de "X" para fechar
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white),
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                    },
+                  ),
+                ],
               ),
             ),
           );
