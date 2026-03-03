@@ -34,6 +34,14 @@
       }
     }
   },
+  "failedToLaunchProject": "{projectName}を開けませんでした",
+  "@failedToLaunchProject": {
+    "placeholders": {
+      "projectName": {
+        "type": "String"
+      }
+    }
+  },
   "clearLibrary": "ライブラリをクリア",
   "clearLibraryMessage": "これにより、保存されたすべてのプロジェクトとソースフォルダが削除されます。続行しますか？",
   "clear": "クリア",

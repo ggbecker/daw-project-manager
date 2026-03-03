@@ -34,6 +34,14 @@
       }
     }
   },
+  "failedToLaunchProject": "无法打开{projectName}",
+  "@failedToLaunchProject": {
+    "placeholders": {
+      "projectName": {
+        "type": "String"
+      }
+    }
+  },
   "clearLibrary": "清空库",
   "clearLibraryMessage": "这将删除所有保存的项目和源文件夹。继续吗？",
   "clear": "清空",

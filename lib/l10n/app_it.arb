@@ -34,6 +34,14 @@
       }
     }
   },
+  "failedToLaunchProject": "Impossibile aprire {projectName}",
+  "@failedToLaunchProject": {
+    "placeholders": {
+      "projectName": {
+        "type": "String"
+      }
+    }
+  },
   "clearLibrary": "Svuota Libreria",
   "clearLibraryMessage": "Questo rimuoverà tutti i progetti salvati e le cartelle sorgente. Continuare?",
   "clear": "Svuota",

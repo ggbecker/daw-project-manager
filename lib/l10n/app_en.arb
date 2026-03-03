@@ -34,6 +34,14 @@
       }
     }
   },
+  "failedToLaunchProject": "Failed to launch {projectName}",
+  "@failedToLaunchProject": {
+    "placeholders": {
+      "projectName": {
+        "type": "String"
+      }
+    }
+  },
   "clearLibrary": "Clear Library",
   "clearLibraryMessage": "This will remove all saved projects and source folders. Continue?",
   "clear": "Clear",

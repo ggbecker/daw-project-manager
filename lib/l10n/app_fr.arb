@@ -34,6 +34,14 @@
       }
     }
   },
+  "failedToLaunchProject": "Échec de l'ouverture de {projectName}",
+  "@failedToLaunchProject": {
+    "placeholders": {
+      "projectName": {
+        "type": "String"
+      }
+    }
+  },
   "clearLibrary": "Vider la Bibliothèque",
   "clearLibraryMessage": "Cela supprimera tous les projets enregistrés et dossiers sources. Continuer?",
   "clear": "Vider",

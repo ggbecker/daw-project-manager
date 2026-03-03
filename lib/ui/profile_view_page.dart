@@ -12,6 +12,7 @@ import '../providers/providers.dart';
 import '../repository/profile_repository.dart';
 import '../utils/app_paths.dart';
 import '../utils/mobile_utils.dart';
+import '../utils/file_launcher.dart';
 import '../generated/l10n/app_localizations.dart';
 import 'dashboard_page.dart' show WindowButtons;
 
@@ -783,20 +784,11 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
   }
 
   Future<void> _openFile(String filePath) async {
-    try {
-      if (Platform.isWindows) {
-        await Process.run('explorer', [filePath]);
-      } else if (Platform.isMacOS) {
-        await Process.run('open', [filePath]);
-      } else if (Platform.isLinux) {
-        await Process.run('xdg-open', [filePath]);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to open file: $e')),
-        );
-      }
+    final success = await FileLauncher.openFile(filePath);
+    if (!success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to open file')),
+      );
     }
   }
 

@@ -20,6 +20,7 @@ import '../models/todo_item.dart';
 import '../providers/providers.dart';
 import '../repository/project_repository.dart';
 import '../utils/mobile_utils.dart';
+import '../utils/file_launcher.dart';
 import '../generated/l10n/app_localizations.dart';
 import '../services/google_drive_sync_service.dart';
 import 'dashboard_page.dart';
@@ -201,34 +202,16 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
         ? p.dirname(filePath)
         : filePath;
 
-    final Uri uri = Uri.directory(folderPath);
-
-    try {
-      if (await launchUrl(uri)) {
-        return;
-      }
-    } catch (_) {
-      // Tenta métodos nativos como fallback se o launchUrl falhar
-    }
-
-    try {
-      if (Platform.isWindows) {
-        await Process.run('explorer', [folderPath]);
-      } else if (Platform.isMacOS) {
-        await Process.run('open', [folderPath]);
-      } else if (Platform.isLinux) {
-        await Process.run('xdg-open', [folderPath]);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)!.couldNotOpenFolder(e.toString()),
-            ),
+    final success = await FileLauncher.openFolder(folderPath);
+    
+    if (!success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!.couldNotOpenFolder('Unable to open folder'),
           ),
-        );
-      }
+        ),
+      );
     }
   }
 
@@ -1136,25 +1119,13 @@ updatedProject.lastModifiedAt.toString(),
                                       // BOTÃO OPEN IN DAW (Existente)
                                       ElevatedButton.icon(
                                         onPressed: () async {
-                                          try {
-                                            if (Platform.isMacOS) {
-                                              await Process.start('open', [
-                                                updatedProject.filePath,
-                                              ]);
-                                            } else if (Platform.isWindows) {
-                                              await Process.start('cmd', [
-                                                '/c',
-                                                'start',
-                                                '',
-                                                updatedProject.filePath,
-                                              ]);
-                                            } else {
-                                              await Process.start(
-                                                updatedProject.filePath,
-                                                [],
-                                              );
-                                            }
-                                          } catch (_) {
+                                          final success = await FileLauncher.launchProject(updatedProject.filePath);
+                                          if (!success && mounted) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(content: Text(AppLocalizations.of(context)!.failedToLaunchProject(updatedProject.displayName))),
+                                            );
+                                          }
+                                          if (success) {
                                             if (mounted) {
                                               ScaffoldMessenger.of(
                                                 context,
