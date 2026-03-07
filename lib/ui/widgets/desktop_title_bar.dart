@@ -11,11 +11,10 @@ import 'package:window_manager/window_manager.dart'
 /// draggable area, title, optional back button, optional extra [actions], and
 /// native-style window control buttons (minimize / maximize / close).
 ///
-/// **macOS:** The native macOS title bar (traffic-light buttons + window title)
-/// is shown automatically when [TitleBarStyle.normal] is used in window setup.
-/// This widget renders only a slim in-content navigation bar when [showBack]
-/// is true so the user can navigate back. No drag handle and no window buttons
-/// are included – the native chrome handles those.
+/// **macOS:** [TitleBarStyle.hidden] + fullSizeContentView is used so Flutter
+/// content fills the entire window and the traffic-light buttons float over it.
+/// This widget reserves 28 pt at the top when [showBack] is false, or renders
+/// a slim back-navigation bar when [showBack] is true.
 ///
 /// **Mobile / web / debug mode:** Returns an empty widget.
 class DesktopTitleBar extends StatelessWidget {
@@ -42,10 +41,24 @@ class DesktopTitleBar extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    // macOS: native title bar handles window chrome; only show slim nav bar
-    // for pages that need a back button.
+    // macOS: TitleBarStyle.hidden + fullSizeContentView means Flutter content
+    // starts at y=0, with the traffic lights floating over the top-left area.
+    // Reserve 28pt at the top so content doesn't slide under the buttons.
     if (Platform.isMacOS) {
-      if (!showBack) return const SizedBox.shrink();
+      if (!showBack) {
+        // Make the spacer draggable and double-tap to maximize.
+        return GestureDetector(
+          onPanStart: (_) => windowManager.startDragging(),
+          onDoubleTap: () async {
+            if (await windowManager.isMaximized()) {
+              windowManager.restore();
+            } else {
+              windowManager.maximize();
+            }
+          },
+          child: const SizedBox(height: 28, width: double.infinity),
+        );
+      }
       return Container(
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
@@ -56,6 +69,8 @@ class DesktopTitleBar extends StatelessWidget {
         height: 40,
         child: Row(
           children: [
+            // Reserve space for macOS traffic lights (~75pt from left edge).
+            const SizedBox(width: 75),
             IconButton(
               icon: Icon(
                 Icons.arrow_back,

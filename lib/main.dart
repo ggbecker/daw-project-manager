@@ -110,9 +110,11 @@ void main() async {
       minimumSize: minimumSize,
       center: true,
       title: "DAW Project Manager",
-      // macOS uses the native title bar (traffic lights + title).
-      // Windows/Linux use a hidden title bar with a custom Flutter title bar.
-      titleBarStyle: (Platform.isMacOS || kDebugMode)
+      // macOS: hidden style = fullSizeContentView + transparent title bar.
+      // Traffic lights remain visible and float over the Flutter content.
+      // Windows/Linux debug: normal (for easy development).
+      // Windows/Linux release: hidden (custom Flutter title bar).
+      titleBarStyle: (!Platform.isMacOS && kDebugMode)
           ? TitleBarStyle.normal
           : TitleBarStyle.hidden,
     );

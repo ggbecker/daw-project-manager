@@ -256,6 +256,12 @@ class BackupService {
       'dawVersion': project.dawVersion,
       'todos': project.todos.map((t) => _todoToJson(t)).toList(),
       'hidden': project.hidden,
+      'previewSongPath': project.previewSongPath,
+      'fileCreatedAt': project.fileCreatedAt?.toIso8601String(),
+      'statusChangedAt': project.statusChangedAt?.toIso8601String(),
+      'previewSongFileName': project.previewSongFileName,
+      'uploadedPreviewSongHash': project.uploadedPreviewSongHash,
+      'deadline': project.deadline?.toIso8601String(),
     };
   }
 
@@ -279,6 +285,12 @@ class BackupService {
       dawVersion: json['dawVersion'] as String?,
       todos: (json['todos'] as List?)?.map((t) => _todoFromJson(t as Map<String, dynamic>)).toList() ?? [],
       hidden: json['hidden'] as bool? ?? false,
+      previewSongPath: json['previewSongPath'] as String?,
+      fileCreatedAt: json['fileCreatedAt'] != null ? DateTime.parse(json['fileCreatedAt'] as String) : null,
+      statusChangedAt: json['statusChangedAt'] != null ? DateTime.parse(json['statusChangedAt'] as String) : null,
+      previewSongFileName: json['previewSongFileName'] as String?,
+      uploadedPreviewSongHash: json['uploadedPreviewSongHash'] as String?,
+      deadline: json['deadline'] != null ? DateTime.parse(json['deadline'] as String) : null,
     );
   }
 
