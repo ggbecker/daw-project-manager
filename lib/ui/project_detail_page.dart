@@ -377,6 +377,8 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                 });
 
         final isMobile = MobileUtils.isMobile();
+        final sourceFileExists = File(updatedProject.filePath).existsSync() ||
+            Directory(updatedProject.filePath).existsSync();
         return Stack(
           children: [
             Padding(
@@ -385,6 +387,29 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                 key: _formKey,
                 child: ListView(
                   children: [
+                    if (!sourceFileExists)
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.orange.withValues(alpha: 0.4)),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.cloud_off, size: 16, color: Colors.orange.shade400),
+                            const SizedBox(width: 8),
+                            const Expanded(
+                              child: Text(
+                                'Source file not found on this machine — metadata-only mode. '
+                                'You can still edit and export metadata.',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     Text(
                       updatedProject.displayName,
                               style: const TextStyle(

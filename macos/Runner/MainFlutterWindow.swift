@@ -21,7 +21,9 @@ class MainFlutterWindow: NSWindow {
     let toolbar = NSToolbar(identifier: "MainToolbar")
     toolbar.showsBaselineSeparator = false
     self.toolbar = toolbar
-    self.toolbarStyle = .unified
+    if #available(macOS 11.0, *) {
+      self.toolbarStyle = .unified
+    }
 
     RegisterGeneratedPlugins(registry: flutterViewController)
 

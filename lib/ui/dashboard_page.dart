@@ -2423,12 +2423,25 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           if (project == null) {
             return Text(rendererContext.cell.value.toString());
           }
-          
+
+          final fileExists = File(project.filePath).existsSync() ||
+              Directory(project.filePath).existsSync();
+
           return GestureDetector(
             onSecondaryTapDown: (TapDownDetails details) {
               _showContextMenu(context, project, details.globalPosition);
             },
-            child: Text(rendererContext.cell.value.toString()),
+            child: Row(
+              children: [
+                Expanded(child: Text(rendererContext.cell.value.toString())),
+                if (!fileExists)
+                  Tooltip(
+                    message: 'Source file not on this machine',
+                    child: Icon(Icons.cloud_off, size: 14,
+                        color: Colors.orange.shade400),
+                  ),
+              ],
+            ),
           );
         },
       ),
@@ -3778,6 +3791,9 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
               final project = widget.projects[index];
               final isSelected = _selectedProjectIds.contains(project.id);
               
+              final fileExists = File(project.filePath).existsSync() ||
+                  Directory(project.filePath).existsSync();
+
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 child: ListTile(
@@ -3787,9 +3803,21 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                           onChanged: (_) => _toggleProjectSelection(project.id),
                         )
                       : null,
-                  title: Text(
-                    project.displayName,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  title: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          project.displayName,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      if (!fileExists)
+                        Tooltip(
+                          message: 'Source file not on this machine',
+                          child: Icon(Icons.cloud_off, size: 16,
+                              color: Colors.orange.shade400),
+                        ),
+                    ],
                   ),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
