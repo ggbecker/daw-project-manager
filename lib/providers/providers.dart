@@ -810,3 +810,38 @@ class TodoTemplatesNotifier extends Notifier<void> {
 final todoTemplatesNotifierProvider = NotifierProvider<TodoTemplatesNotifier, void>(() {
   return TodoTemplatesNotifier();
 });
+
+// Warn Before Quit Setting
+class WarnBeforeQuitNotifier extends Notifier<bool> {
+  @override
+  bool build() {
+    SchedulerBinding.instance.addPostFrameCallback((_) => _load());
+    return false;
+  }
+
+  Future<void> _load() async {
+    try {
+      await ensureHiveInitialized();
+      final box = await Hive.openBox<String>('settings');
+      final saved = box.get('warnBeforeQuit');
+      if (saved != null) state = saved == 'true';
+    } catch (e) {
+      if (kDebugMode) print('Failed to load warnBeforeQuit: $e');
+    }
+  }
+
+  Future<void> toggle() async {
+    state = !state;
+    try {
+      await ensureHiveInitialized();
+      final box = await Hive.openBox<String>('settings');
+      await box.put('warnBeforeQuit', state.toString());
+    } catch (e) {
+      if (kDebugMode) print('Failed to save warnBeforeQuit: $e');
+    }
+  }
+}
+
+final warnBeforeQuitProvider = NotifierProvider<WarnBeforeQuitNotifier, bool>(() {
+  return WarnBeforeQuitNotifier();
+});

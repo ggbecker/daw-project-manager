@@ -172,42 +172,109 @@ void main() async {
   );
 }
 
-// ... (O resto da classe MyApp permanece o mesmo)
-class MyApp extends ConsumerWidget {
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends ConsumerState<MyApp> with WindowListener {
+  static bool get _isDesktop =>
+      !kIsWeb && (Platform.isMacOS || Platform.isWindows || Platform.isLinux);
+
+  static Color _bgForTheme(AppThemeType t) =>
+      t == AppThemeType.neonDark ? const Color(0xFF0A0A14) : const Color(0xFF1E1F22);
+
+  @override
+  void initState() {
+    super.initState();
+    if (_isDesktop) {
+      windowManager.addListener(this);
+      windowManager.setPreventClose(true);
+    }
+    if (!kIsWeb && Platform.isMacOS) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        windowManager.setBackgroundColor(_bgForTheme(ref.read(themeTypeProvider)));
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    if (_isDesktop) windowManager.removeListener(this);
+    super.dispose();
+  }
+
+  @override
+  void onWindowClose() async {
+    final warn = ref.read(warnBeforeQuitProvider);
+    if (!warn) {
+      await windowManager.destroy();
+      return;
+    }
+    final context = navigatorKey.currentContext;
+    if (context == null) {
+      await windowManager.destroy();
+      return;
+    }
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Theme.of(ctx).cardColor,
+        title: const Text('Quit DAW Project Manager?'),
+        content: const Text('Are you sure you want to quit?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Quit'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) await windowManager.destroy();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final themeData = ref.watch(themeDataProvider);
     final currentLocale = ref.watch(localeProvider);
-    
+
+    // Keep window background colour in sync with the active theme (macOS only)
+    if (!kIsWeb && Platform.isMacOS) {
+      ref.listen(themeTypeProvider, (_, next) {
+        windowManager.setBackgroundColor(_bgForTheme(next));
+      });
+    }
+
     return MacOSMenuBar(
       child: MaterialApp(
-      navigatorKey: navigatorKey,
-      title: 'DAW Project Manager',
-      theme: themeData,
-      // Localization support
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: const [
-        Locale('en', ''), // English
-        Locale('pt', ''), // Portuguese
-        Locale('es', ''), // Spanish
-        Locale('fr', ''), // French
-        Locale('it', ''), // Italian
-        Locale('de', ''), // German
-        Locale('ru', ''), // Russian
-        Locale('ja', ''), // Japanese
-        Locale('zh', ''), // Chinese
-      ],
-      locale: currentLocale,
-      // Remove localeResolutionCallback - let Flutter handle it automatically
-      // The locale from provider will be used directly
-      home: const DashboardPage(),
+        navigatorKey: navigatorKey,
+        title: 'DAW Project Manager',
+        theme: themeData,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [
+          Locale('en', ''),
+          Locale('pt', ''),
+          Locale('es', ''),
+          Locale('fr', ''),
+          Locale('it', ''),
+          Locale('de', ''),
+          Locale('ru', ''),
+          Locale('ja', ''),
+          Locale('zh', ''),
+        ],
+        locale: currentLocale,
+        home: const DashboardPage(),
       ),
     );
   }

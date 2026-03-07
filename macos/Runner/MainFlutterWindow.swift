@@ -11,6 +11,9 @@ class MainFlutterWindow: NSWindow {
     // Disable automatic window tabbing (hides "Show Tab Bar" / "Show All Tabs" menu items)
     NSWindow.allowsAutomaticWindowTabbing = false
 
+    // Make title bar transparent so it blends with the Flutter background color
+    self.titlebarAppearsTransparent = true
+
     RegisterGeneratedPlugins(registry: flutterViewController)
 
     super.awakeFromNib()

@@ -2,9 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:window_manager/window_manager.dart';
 
 import '../../providers/providers.dart';
 import '../../providers/theme_provider.dart';
@@ -33,6 +33,7 @@ class MacOSMenuBar extends ConsumerWidget {
 
     final themeType = ref.watch(themeTypeProvider);
     final currentLocale = ref.watch(localeProvider);
+    final warnBeforeQuit = ref.watch(warnBeforeQuitProvider);
 
     final themeLabel = themeType == AppThemeType.neonDark
         ? 'Switch to Classic Dark'
@@ -44,33 +45,51 @@ class MacOSMenuBar extends ConsumerWidget {
           label: 'View',
           menus: [
             PlatformMenuItemGroup(
-            members: [
-              PlatformMenuItem(
-                label: 'About DAW Project Manager',
-                onSelected: _showAboutDialog,
-              ),
-              ]
-            ),
-            PlatformMenuItem(
-              label: themeLabel,
-              onSelected: () => ref.read(themeTypeProvider.notifier).cycle(),
-            ),
-            PlatformMenu(
-              label: 'Language',
-              menus: [
-                for (final entry in LanguageSwitcher.languageNames.entries)
-                  PlatformMenuItem(
-                    label: '${entry.value}${currentLocale.languageCode == entry.key ? ' ✓' : ''}',
-                    onSelected: () =>
-                        ref.read(localeProvider.notifier).setLocale(Locale(entry.key)),
-                  ),
+              members: [
+                PlatformMenuItem(
+                  label: 'About DAW Project Manager',
+                  onSelected: _showAboutDialog,
+                ),
               ],
             ),
-            PlatformMenuItem(
-              label: 'Quit',
-              onSelected: () async {
-                await SystemChannels.platform.invokeMethod('SystemNavigator.pop');
-              }
+            PlatformMenuItemGroup(
+              members: [
+                PlatformMenuItem(
+                  label: themeLabel,
+                  onSelected: () => ref.read(themeTypeProvider.notifier).cycle(),
+                ),
+                PlatformMenu(
+                  label: 'Language',
+                  menus: [
+                    for (final entry in LanguageSwitcher.languageNames.entries)
+                      PlatformMenuItem(
+                        label: '${entry.value}${currentLocale.languageCode == entry.key ? ' ✓' : ''}',
+                        onSelected: () =>
+                            ref.read(localeProvider.notifier).setLocale(Locale(entry.key)),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+            PlatformMenuItemGroup(
+              members: [
+                PlatformMenuItem(
+                  label: '${warnBeforeQuit ? '✓ ' : ''}Warn Before Quitting (Cmd+Q)',
+                  onSelected: () => ref.read(warnBeforeQuitProvider.notifier).toggle(),
+                ),
+                PlatformMenuItem(
+                  label: 'Quit DAW Project Manager',
+                  onSelected: () => windowManager.close(),
+                ),
+              ],
+            ),
+          ],
+        ),
+        PlatformMenu(
+          label: 'Window',
+          menus: [
+            const PlatformProvidedMenuItem(
+              type: PlatformProvidedMenuItemType.toggleFullScreen,
             ),
           ],
         ),
@@ -121,10 +140,6 @@ class _AboutDialog extends StatelessWidget {
         ],
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Close'),
-        ),
         FilledButton.icon(
           onPressed: () {
             launchUrl(
@@ -144,6 +159,10 @@ class _AboutDialog extends StatelessWidget {
           },
           icon: const Icon(Icons.web, size: 16),
           label: const Text('Website'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Close'),
         ),
       ],
     );
