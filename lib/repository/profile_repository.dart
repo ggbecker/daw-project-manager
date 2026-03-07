@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kDebugMode;
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:uuid/uuid.dart';
 import '../models/profile.dart';
 import '../models/music_project.dart';

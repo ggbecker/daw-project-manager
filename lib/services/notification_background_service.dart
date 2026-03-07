@@ -1,8 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hive_ce_flutter/hive_flutter.dart';
 import '../models/music_project.dart';
-import '../models/notification_preferences.dart';
 import '../utils/app_paths.dart';
 import 'deadline_notification_service.dart';
 

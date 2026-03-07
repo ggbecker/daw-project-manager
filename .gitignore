@@ -44,8 +44,9 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Generated files from build_runner
-*.g.dart
+# Generated files from build_runner - regenerated via `dart run build_runner build`
+# Keep generated files committed so CI builds work without running build_runner
+# *.g.dart
 
 # Build outputs and installers
 /Output/

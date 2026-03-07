@@ -302,7 +302,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
           Expanded(
             child: repoAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (_, __) => Center(
+              error: (_, _) => Center(
                 child: Text(AppLocalizations.of(context)!.failedToLoad),
               ),
               data: (repo) {
@@ -330,7 +330,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                     );
                     return _buildProjectContent(repo, project, allProjectsAsync);
                   },
-                  error: (_, __) {
+                  error: (_, _) {
                     // Fallback to repo if stream has error
                     final allProjects = repo.getAllProjects();
                     final project = allProjects.firstWhere(
@@ -386,9 +386,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
               }
             } else {
               // Se o texto foi modificado pelo usuário, atualiza o valor salvo apenas se ainda não foi inicializado
-              if (_lastSavedName == null) {
-                _lastSavedName = currentName;
-              }
+              _lastSavedName ??= currentName;
             }
           }
           
@@ -399,9 +397,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                 _lastSavedBpm = currentBpm;
               }
             } else {
-              if (_lastSavedBpm == null) {
-                _lastSavedBpm = currentBpm;
-              }
+              _lastSavedBpm ??= currentBpm;
             }
           }
           
@@ -412,9 +408,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                 _lastSavedKey = currentKey;
               }
             } else {
-              if (_lastSavedKey == null) {
-                _lastSavedKey = currentKey;
-              }
+              _lastSavedKey ??= currentKey;
             }
           }
           
@@ -426,9 +420,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                 _lastSavedNotes = currentNotes;
               }
             } else {
-              if (_lastSavedNotes == null) {
-                _lastSavedNotes = currentNotes;
-              }
+              _lastSavedNotes ??= currentNotes;
             }
           }
           // Sincroniza fase do projeto (only on first load)
@@ -751,7 +743,7 @@ updatedProject.lastModifiedAt.toString(),
 
                             // Project Phase Dropdown
                             DropdownButtonFormField<String>(
-                              value:
+                              initialValue:
                                   _selectedPhase ??
                                   _getProjectPhases(context).first,
                               decoration: InputDecoration(
@@ -1739,8 +1731,8 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
             // Extract file paths from dropped files
             final filePaths = <String>[];
             for (final file in detail.files) {
-              if (file.path != null && file.path!.isNotEmpty) {
-                filePaths.add(file.path!);
+              if (file.path.isNotEmpty) {
+                filePaths.add(file.path);
               }
             }
 

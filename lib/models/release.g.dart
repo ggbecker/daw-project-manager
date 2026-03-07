@@ -8,7 +8,7 @@ part of 'release.dart';
 
 class ReleaseAdapter extends TypeAdapter<Release> {
   @override
-  final int typeId = 3;
+  final typeId = 3;
 
   @override
   Release read(BinaryReader reader) {
@@ -23,8 +23,12 @@ class ReleaseAdapter extends TypeAdapter<Release> {
       artworkImagePath: fields[3] as String?,
       description: fields[4] as String?,
       trackIds: (fields[5] as List).cast<String>(),
-      files: (fields[6] as List).cast<ReleaseFile>(),
-      todos: (fields[7] as List).cast<TodoItem>(),
+      files: fields[6] == null
+          ? const []
+          : (fields[6] as List).cast<ReleaseFile>(),
+      todos: fields[7] == null
+          ? const []
+          : (fields[7] as List).cast<TodoItem>(),
     );
   }
 

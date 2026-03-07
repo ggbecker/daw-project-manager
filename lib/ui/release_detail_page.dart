@@ -45,7 +45,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final releases = ref.read(releasesProvider);
-      final release = releases.asData?.value?.firstWhere(
+      final release = releases.asData?.value.firstWhere(
         (r) => r.id == widget.releaseId,
         orElse: () => throw StateError('Release not found'),
       );
@@ -295,10 +295,8 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
       }
 
       final zipData = ZipEncoder().encode(archive);
-      if (zipData != null) {
-        await zipFile.writeAsBytes(zipData);
-      }
-
+      await zipFile.writeAsBytes(zipData);
+    
       // Close loading dialog
       if (mounted) {
         Navigator.of(context).pop();
@@ -329,7 +327,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
 
   Future<void> _pickImage() async {
     final releases = ref.read(releasesProvider);
-    final release = releases.asData?.value?.firstWhere(
+    final release = releases.asData?.value.firstWhere(
       (r) => r.id == widget.releaseId,
       orElse: () => throw StateError('Release not found'),
     );
@@ -877,7 +875,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
               tooltip: AppLocalizations.of(context)!.save,
               onPressed: () async {
                 final releases = ref.read(releasesProvider);
-                final release = releases.asData?.value?.firstWhere(
+                final release = releases.asData?.value.firstWhere(
                   (r) => r.id == widget.releaseId,
                   orElse: () => throw StateError('Release not found'),
                 );
@@ -1380,7 +1378,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
                   tooltip: AppLocalizations.of(context)!.save,
                   onPressed: () async {
                     final releases = ref.read(releasesProvider);
-                    final release = releases.asData?.value?.firstWhere(
+                    final release = releases.asData?.value.firstWhere(
                       (r) => r.id == widget.releaseId,
                       orElse: () => throw StateError('Release not found'),
                     );

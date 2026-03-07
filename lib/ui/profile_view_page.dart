@@ -301,10 +301,8 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
       }
 
       final zipData = ZipEncoder().encode(archive);
-      if (zipData != null) {
-        await zipFile.writeAsBytes(zipData);
-      }
-
+      await zipFile.writeAsBytes(zipData);
+    
       if (mounted) {
         Navigator.pop(context); // Close loading dialog
         ScaffoldMessenger.of(context).showSnackBar(
@@ -670,10 +668,8 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
       }
 
       final zipData = ZipEncoder().encode(archive);
-      if (zipData != null) {
-        await zipFile.writeAsBytes(zipData);
-      }
-
+      await zipFile.writeAsBytes(zipData);
+    
       if (mounted) {
         Navigator.pop(context); // Close loading dialog
         ScaffoldMessenger.of(context).showSnackBar(

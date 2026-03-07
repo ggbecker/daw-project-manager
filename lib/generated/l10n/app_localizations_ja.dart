@@ -83,6 +83,11 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String failedToLaunchProject(String projectName) {
+    return '$projectNameを開けませんでした';
+  }
+
+  @override
   String get clearLibrary => 'ライブラリをクリア';
 
   @override

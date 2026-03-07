@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -10,11 +9,9 @@ import 'package:pluto_grid/pluto_grid.dart';
 import '../models/release.dart';
 import '../models/music_project.dart';
 import '../providers/providers.dart';
-import '../repository/project_repository.dart';
 import '../utils/mobile_utils.dart';
 import '../generated/l10n/app_localizations.dart';
 import 'release_detail_page.dart';
-import 'dialogs/add_to_release_dialog.dart';
 
 class ReleasesTabPage extends ConsumerStatefulWidget {
   const ReleasesTabPage({super.key});

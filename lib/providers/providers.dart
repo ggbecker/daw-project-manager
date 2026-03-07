@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import '../utils/app_paths.dart';
@@ -62,7 +62,7 @@ final repositoryProvider = FutureProvider<ProjectRepository>((ref) async {
 
 final rootsWatchProvider = StreamProvider<void>((ref) async* {
   final repo = await ref.watch(repositoryProvider.future);
-  yield* repo.watchRoots().map((_) => null);
+  yield* repo.watchRoots().map((_) {});
 });
 
 final scanRootsProvider = Provider<List<ScanRoot>>((ref) {
@@ -77,7 +77,7 @@ final scanRootsProvider = Provider<List<ScanRoot>>((ref) {
 
 final ignoredPathsWatchProvider = StreamProvider<void>((ref) async* {
   final repo = await ref.watch(repositoryProvider.future);
-  yield* repo.watchIgnoredPaths().map((_) => null);
+  yield* repo.watchIgnoredPaths().map((_) {});
 });
 
 final ignoredPathsProvider = Provider<List<IgnoredPath>>((ref) {
@@ -451,7 +451,7 @@ final projectsProvider = Provider<List<MusicProject>>((ref) {
     data: (projects) => projects,
     // Garante que a lista não é nula, mesmo carregando ou com erro
     loading: () => const <MusicProject>[], 
-    error: (_, __) => const <MusicProject>[],
+    error: (_, _) => const <MusicProject>[],
   );
 });
 

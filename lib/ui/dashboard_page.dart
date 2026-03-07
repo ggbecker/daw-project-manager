@@ -670,7 +670,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                   },
                                   tooltip: AppLocalizations.of(context)!.profileManager,
                                 ),
-                                error: (_, __) => IconButton(
+                                error: (_, _) => IconButton(
                                   icon: const Icon(Icons.person),
                                   onPressed: () {
                                     Navigator.of(context).push(
@@ -869,7 +869,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                   Expanded(
                                     child: repoAsync.when(
                                       loading: () => const SizedBox.shrink(),
-                                      error: (_, __) => const SizedBox.shrink(),
+                                      error: (_, _) => const SizedBox.shrink(),
                                       data: (repo) {
                                         String projectText;
                                         final l10n = AppLocalizations.of(context)!;
@@ -1138,7 +1138,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                   },
                                 ),
                               ),
-                              error: (_, __) => Tooltip(
+                              error: (_, _) => Tooltip(
                                 message: AppLocalizations.of(context)!.profileManager,
                                 child: TextButton.icon(
                                   icon: const Icon(Icons.person, size: 24),
@@ -1352,7 +1352,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                           Flexible(
                             child: repoAsync.when(
                               loading: () => const SizedBox.shrink(),
-                              error: (_, __) => const SizedBox.shrink(),
+                              error: (_, _) => const SizedBox.shrink(),
                               data: (repo) {
                                 String projectText;
                                 final l10n = AppLocalizations.of(context)!;

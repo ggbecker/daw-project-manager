@@ -12,7 +12,7 @@ import 'package:googleapis_auth/auth_io.dart' as auth_io;
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/profile.dart';
@@ -823,7 +823,7 @@ class GoogleDriveSyncService {
   }
 
   static String _generateState() {
-    final bytes = sha256.convert(utf8.encode('${DateTime.now().microsecondsSinceEpoch}-${_desktopClientId}')).bytes;
+    final bytes = sha256.convert(utf8.encode('${DateTime.now().microsecondsSinceEpoch}-$_desktopClientId')).bytes;
     return base64Url.encode(bytes).replaceAll('=', '');
   }
 

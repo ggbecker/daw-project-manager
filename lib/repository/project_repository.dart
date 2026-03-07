@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
 
@@ -13,7 +13,6 @@ import '../models/todo_item.dart';
 import '../models/todo_template.dart';
 import '../models/playlist.dart';
 import '../services/metadata_extractor.dart';
-import '../services/deadline_notification_service.dart';
 import '../services/notification_background_service.dart';
 import '../utils/app_paths.dart';
 import 'profile_repository.dart';

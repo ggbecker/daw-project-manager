@@ -256,6 +256,12 @@ abstract class AppLocalizations {
   /// **'Launching {projectName}…'**
   String launchingProject(String projectName);
 
+  /// No description provided for @failedToLaunchProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to launch {projectName}'**
+  String failedToLaunchProject(String projectName);
+
   /// No description provided for @clearLibrary.
   ///
   /// In en, this message translates to:

@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import '../models/notification_preferences.dart';
@@ -45,7 +45,7 @@ class DeadlineNotificationService {
       const initSettings = InitializationSettings(android: androidSettings);
 
       final initialized = await _notifications.initialize(
-        initSettings,
+        settings: initSettings,
         onDidReceiveNotificationResponse: _onNotificationTapped,
       );
       
@@ -118,7 +118,7 @@ class DeadlineNotificationService {
           final suggestedLocation = tz.getLocation(suggestedTimezone);
           tz.setLocalLocation(suggestedLocation);
           final suggestedOffset = suggestedLocation.currentTimeZone.offset;
-          final suggestedOffsetHours = suggestedOffset ~/ 3600;
+          final suggestedOffsetHours = suggestedOffset.inHours;
           if (kDebugMode) {
             print('[DeadlineNotification] Set timezone to: $suggestedTimezone (offset: $suggestedOffset seconds, $suggestedOffsetHours hours)');
           }
@@ -134,7 +134,7 @@ class DeadlineNotificationService {
       // Verify timezone was configured correctly
       final localLocation = tz.local;
       final locationOffset = localLocation.currentTimeZone.offset;
-      final locationOffsetHours = locationOffset ~/ 3600;
+      final locationOffsetHours = locationOffset.inHours;
       
       if (kDebugMode) {
         print('[DeadlineNotification] Configured timezone: ${localLocation.name}');
@@ -302,8 +302,8 @@ class DeadlineNotificationService {
         if (project.deadline == null) continue;
         
         // Skip finished projects
-        if (project.status?.toLowerCase() == 'finished' || 
-            project.status?.toLowerCase() == 'finalizado') {
+        if (project.status.toLowerCase() == 'finished' || 
+            project.status.toLowerCase() == 'finalizado') {
           continue;
         }
 
@@ -424,11 +424,11 @@ class DeadlineNotificationService {
 
       // Schedule notification (inexact - no special permission required)
       await _notifications.zonedSchedule(
-        notificationId,
-        title,
-        body,
-        scheduledDate,
-        details,
+        id: notificationId,
+        title: title,
+        body: body,
+        scheduledDate: scheduledDate,
+        notificationDetails: details,
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         payload: project.id,
       );
@@ -465,10 +465,10 @@ class DeadlineNotificationService {
       final details = NotificationDetails(android: androidDetails);
 
       await _notifications.show(
-        999999,
-        '🧪 Test Notification',
-        'If you\'re seeing this, notifications are working!',
-        details,
+        id: 999999,
+        title: '🧪 Test Notification',
+        body: 'If you\'re seeing this, notifications are working!',
+        notificationDetails: details,
       );
       
       if (kDebugMode) print('[DeadlineNotification] Test notification sent successfully');
@@ -507,11 +507,11 @@ class DeadlineNotificationService {
       final details = NotificationDetails(android: androidDetails);
 
       await _notifications.zonedSchedule(
-        999998,
-        '🧪 Test Notification ($secondsFromNow sec)',
-        'If you see this, notifications are working! Scheduled at ${now.hour}:${now.minute}:${now.second}',
-        scheduledTime,
-        details,
+        id: 999998,
+        title: '🧪 Test Notification ($secondsFromNow sec)',
+        body: 'If you see this, notifications are working! Scheduled at ${now.hour}:${now.minute}:${now.second}',
+        scheduledDate: scheduledTime,
+        notificationDetails: details,
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         payload: 'test',
       );

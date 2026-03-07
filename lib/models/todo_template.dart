@@ -1,4 +1,4 @@
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive.dart';
 
 part 'todo_template.g.dart';
 
@@ -19,7 +19,7 @@ class TodoTemplate extends HiveObject {
   @HiveField(4)
   final DateTime updatedAt;
 
-  TodoTemplate({
+  TodoTemplate({  
     required this.id,
     required this.name,
     required this.items,

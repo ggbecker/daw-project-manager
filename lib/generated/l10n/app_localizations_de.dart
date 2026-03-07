@@ -83,6 +83,11 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String failedToLaunchProject(String projectName) {
+    return 'Fehler beim Öffnen von $projectName';
+  }
+
+  @override
   String get clearLibrary => 'Bibliothek leeren';
 
   @override

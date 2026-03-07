@@ -83,6 +83,11 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String failedToLaunchProject(String projectName) {
+    return '无法打开$projectName';
+  }
+
+  @override
   String get clearLibrary => '清空库';
 
   @override

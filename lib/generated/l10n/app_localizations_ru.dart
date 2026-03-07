@@ -83,6 +83,11 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String failedToLaunchProject(String projectName) {
+    return 'Не удалось открыть $projectName';
+  }
+
+  @override
   String get clearLibrary => 'Очистить библиотеку';
 
   @override

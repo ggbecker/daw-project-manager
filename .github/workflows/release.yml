@@ -17,7 +17,7 @@ on:
 
 # Variáveis de Configuração
 env:
-  FLUTTER_BASE_VERSION: 3.38.x
+  FLUTTER_BASE_VERSION: 3.41.3
 
 # 2. Jobs
 jobs:
@@ -54,16 +54,16 @@ jobs:
           DESKTOP_CLIENT_SECRET: ${{ secrets.DESKTOP_CLIENT_SECRET }}
           ANDROID_WEB_CLIENT_ID: ${{ secrets.ANDROID_WEB_CLIENT_ID }}
 
+      # Generate Hive Adapters
+      - name: Generate Hive Adapters
+        run: dart run build_runner build --delete-conflicting-outputs
+
       # Generate localization files
       - name: Generate Localizations
         run: flutter gen-l10n
 
       - name: Precache Flutter Artifacts
         run: flutter precache
-
-      # NEW: Generate code with build_runner
-      - name: Generate Hive Adapters
-        run: flutter pub run build_runner build --delete-conflicting-outputs
 
       - name: Build Test
         run: flutter build windows --release
@@ -164,16 +164,16 @@ jobs:
           DESKTOP_CLIENT_SECRET: ${{ secrets.DESKTOP_CLIENT_SECRET }}
           ANDROID_WEB_CLIENT_ID: ${{ secrets.ANDROID_WEB_CLIENT_ID }}
 
+      # Generate Hive Adapters
+      - name: Generate Hive Adapters
+        run: dart run build_runner build --delete-conflicting-outputs
+
       # Generate localization files
       - name: Generate Localizations
         run: flutter gen-l10n
 
       - name: Precache Flutter Artifacts
         run: flutter precache
-
-      # NEW: Generate code with build_runner
-      - name: Generate Hive Adapters
-        run: flutter pub run build_runner build --delete-conflicting-outputs
 
       # 2.5. Sanitize ref name for file paths (replace slashes and invalid chars)
       - name: Sanitize ref name
@@ -510,14 +510,15 @@ jobs:
           echo "version_name=${VERSION_NAME}" >> "$GITHUB_OUTPUT"
           echo "version_code=${VERSION_CODE}" >> "$GITHUB_OUTPUT"
 
+      # Generate Hive Adapters
+      - name: Generate Hive Adapters
+        run: dart run build_runner build --delete-conflicting-outputs
+
       - name: Generate Localizations
         run: flutter gen-l10n
 
       - name: Precache Flutter Artifacts
         run: flutter precache
-
-      - name: Generate Hive Adapters
-        run: flutter pub run build_runner build --delete-conflicting-outputs
 
       - name: Build Android App Bundle (AAB) - Release
         if: startsWith(github.ref, 'refs/tags/v')

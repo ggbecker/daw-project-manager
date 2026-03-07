@@ -1,4 +1,4 @@
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive.dart';
 
 /// Notification preferences for deadline reminders
 @HiveType(typeId: 10)

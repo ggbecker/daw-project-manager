@@ -254,7 +254,7 @@ class BackupService {
       'notes': project.notes,
       'dawType': project.dawType,
       'dawVersion': project.dawVersion,
-      'todos': project.todos.map((t) => _todoToJson(t as TodoItem)).toList(),
+      'todos': project.todos.map((t) => _todoToJson(t)).toList(),
       'hidden': project.hidden,
     };
   }
@@ -277,7 +277,7 @@ class BackupService {
       notes: json['notes'] as String?,
       dawType: json['dawType'] as String?,
       dawVersion: json['dawVersion'] as String?,
-      todos: (json['todos'] as List?)?.map((t) => _todoFromJson(t as Map<String, dynamic>) as TodoItem).toList() ?? [],
+      todos: (json['todos'] as List?)?.map((t) => _todoFromJson(t as Map<String, dynamic>)).toList() ?? [],
       hidden: json['hidden'] as bool? ?? false,
     );
   }
@@ -324,8 +324,8 @@ class BackupService {
       'artworkImagePath': release.artworkImagePath,
       'description': release.description,
       'trackIds': release.trackIds,
-      'files': release.files.map((f) => _releaseFileToJson(f as ReleaseFile)).toList(),
-      'todos': release.todos.map((t) => _todoToJson(t as TodoItem)).toList(),
+      'files': release.files.map((f) => _releaseFileToJson(f)).toList(),
+      'todos': release.todos.map((t) => _todoToJson(t)).toList(),
     };
   }
 
@@ -337,8 +337,8 @@ class BackupService {
       artworkImagePath: json['artworkImagePath'] as String?,
       description: json['description'] as String?,
       trackIds: (json['trackIds'] as List?)?.map((e) => e as String).toList() ?? [],
-      files: (json['files'] as List?)?.map((f) => _releaseFileFromJson(f as Map<String, dynamic>) as ReleaseFile).toList() ?? [],
-      todos: (json['todos'] as List?)?.map((t) => _todoFromJson(t as Map<String, dynamic>) as TodoItem).toList() ?? [],
+      files: (json['files'] as List?)?.map((f) => _releaseFileFromJson(f as Map<String, dynamic>)).toList() ?? [],
+      todos: (json['todos'] as List?)?.map((t) => _todoFromJson(t as Map<String, dynamic>)).toList() ?? [],
     );
   }
 
