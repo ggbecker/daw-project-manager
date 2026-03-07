@@ -46,18 +46,10 @@ class DesktopTitleBar extends StatelessWidget {
     // Reserve 28pt at the top so content doesn't slide under the buttons.
     if (Platform.isMacOS) {
       if (!showBack) {
-        // Make the spacer draggable and double-tap to maximize.
-        return GestureDetector(
-          onPanStart: (_) => windowManager.startDragging(),
-          onDoubleTap: () async {
-            if (await windowManager.isMaximized()) {
-              windowManager.restore();
-            } else {
-              windowManager.maximize();
-            }
-          },
-          child: const SizedBox(height: 28, width: double.infinity),
-        );
+        // Drag and double-click-to-maximize are handled natively in
+        // MainFlutterWindow.swift via NSEvent monitors — no Flutter
+        // gesture detection needed here.
+        return const SizedBox(height: 28, width: double.infinity);
       }
       return Container(
         decoration: BoxDecoration(
