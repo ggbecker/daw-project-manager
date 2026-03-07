@@ -13,7 +13,7 @@ class _WindowButtons extends StatelessWidget {
   const _WindowButtons();
 
   void _toggleMaximize() async {
-    if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
+    if (!kIsWeb && (Platform.isWindows || Platform.isLinux)) {
       if (await windowManager.isMaximized()) {
         windowManager.restore();
       } else {
@@ -24,8 +24,8 @@ class _WindowButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Only show on desktop platforms
-    if (kIsWeb || (!Platform.isWindows && !Platform.isMacOS && !Platform.isLinux)) {
+    // Only show on Windows/Linux (macOS has native traffic lights)
+    if (kIsWeb || (!Platform.isWindows && !Platform.isLinux)) {
       return const SizedBox.shrink();
     }
 

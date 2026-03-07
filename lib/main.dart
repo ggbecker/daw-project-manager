@@ -15,6 +15,7 @@ import 'services/notification_background_service.dart';
 
 import 'ui/dashboard_page.dart';
 import 'ui/project_detail_page.dart';
+import 'ui/widgets/macos_menu_bar.dart';
 import 'providers/theme_provider.dart';
 
 // Global navigator key for deep linking
@@ -109,7 +110,11 @@ void main() async {
       minimumSize: minimumSize,
       center: true,
       title: "DAW Project Manager",
-      titleBarStyle: kDebugMode ? TitleBarStyle.normal : TitleBarStyle.hidden,
+      // macOS uses the native title bar (traffic lights + title).
+      // Windows/Linux use a hidden title bar with a custom Flutter title bar.
+      titleBarStyle: (Platform.isMacOS || kDebugMode)
+          ? TitleBarStyle.normal
+          : TitleBarStyle.hidden,
     );
     
     // Criação e exibição da janela
@@ -176,7 +181,8 @@ class MyApp extends ConsumerWidget {
     final themeData = ref.watch(themeDataProvider);
     final currentLocale = ref.watch(localeProvider);
     
-    return MaterialApp(
+    return MacOSMenuBar(
+      child: MaterialApp(
       navigatorKey: navigatorKey,
       title: 'DAW Project Manager',
       theme: themeData,
@@ -202,6 +208,7 @@ class MyApp extends ConsumerWidget {
       // Remove localeResolutionCallback - let Flutter handle it automatically
       // The locale from provider will be used directly
       home: const DashboardPage(),
+      ),
     );
   }
 }

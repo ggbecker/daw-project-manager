@@ -4,17 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as path;
-import 'package:window_manager/window_manager.dart';
-import 'package:flutter/foundation.dart';
+import 'widgets/desktop_title_bar.dart';
 import 'package:archive/archive.dart';
 import '../models/profile.dart';
 import '../providers/providers.dart';
-import '../repository/profile_repository.dart';
 import '../utils/app_paths.dart';
 import '../utils/mobile_utils.dart';
 import '../utils/file_launcher.dart';
 import '../generated/l10n/app_localizations.dart';
-import 'dashboard_page.dart' show WindowButtons;
 
 class ProfileViewPage extends ConsumerStatefulWidget {
   final String profileId;
@@ -805,52 +802,10 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
           : null,
       body: Column(
         children: [
-          // Window title bar at the top (desktop only)
-          if (!isMobile)
-            GestureDetector(
-              onPanStart: (_) => windowManager.startDragging(),
-              onDoubleTap: () async {
-                if (await windowManager.isMaximized()) {
-                  windowManager.restore();
-                } else {
-                  windowManager.maximize();
-                }
-              },
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  border: Border(
-                    bottom: BorderSide(
-                      color: Theme.of(context).dividerColor,
-                      width: 1,
-                    ),
-                  ),
-                ),
-                height: 40,
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.arrow_back, color: Theme.of(context).textTheme.bodyMedium?.color, size: 20),
-                      onPressed: () => Navigator.pop(context),
-                      tooltip: AppLocalizations.of(context)!.back,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 4),
-                      child: Text(
-                        AppLocalizations.of(context)!.profile,
-                        style: TextStyle(
-                          color: Theme.of(context).textTheme.titleMedium?.color,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    const Spacer(),
-                    const WindowButtons(),
-                  ],
-                ),
-              ),
-            ),
+          DesktopTitleBar(
+            title: AppLocalizations.of(context)!.profile,
+            showBack: true,
+          ),
           Expanded(
             child: profileAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),

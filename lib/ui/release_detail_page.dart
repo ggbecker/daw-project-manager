@@ -10,10 +10,8 @@ import 'package:path/path.dart' as path;
 import 'package:uuid/uuid.dart';
 import 'package:archive/archive.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:window_manager/window_manager.dart';
-
 import '../models/release.dart';
-import 'dashboard_page.dart';
+import 'widgets/desktop_title_bar.dart';
 import '../models/release_file.dart';
 import '../models/music_project.dart';
 import '../providers/providers.dart';
@@ -426,39 +424,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
         appBar: null,
         body: Column(
           children: [
-            if (!kDebugMode)
-              GestureDetector(
-                onPanStart: (_) => windowManager.startDragging(),
-                onDoubleTap: () async {
-                  if (await windowManager.isMaximized()) {
-                    windowManager.restore();
-                  } else {
-                    windowManager.maximize();
-                  }
-                },
-                child: Container(
-                  color: Theme.of(context).cardColor,
-                  height: 40,
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.arrow_back, color: Theme.of(context).textTheme.bodyMedium?.color, size: 20),
-                        onPressed: () => Navigator.pop(context),
-                        tooltip: AppLocalizations.of(context)!.back,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 4),
-                        child: Text(
-                          AppLocalizations.of(context)!.releaseDetails,
-                          style: TextStyle(color: Theme.of(context).textTheme.titleMedium?.color, fontSize: 16),
-                        ),
-                      ),
-                      const Spacer(),
-                      const WindowButtons(),
-                    ],
-                  ),
-                ),
-              ),
+            DesktopTitleBar(title: AppLocalizations.of(context)!.releaseDetails, showBack: true),
             const Expanded(child: Center(child: CircularProgressIndicator())),
           ],
         ),
@@ -470,39 +436,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
         appBar: null,
         body: Column(
           children: [
-            if (!kDebugMode)
-              GestureDetector(
-                onPanStart: (_) => windowManager.startDragging(),
-                onDoubleTap: () async {
-                  if (await windowManager.isMaximized()) {
-                    windowManager.restore();
-                  } else {
-                    windowManager.maximize();
-                  }
-                },
-                child: Container(
-                  color: Theme.of(context).cardColor,
-                  height: 40,
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.arrow_back, color: Theme.of(context).textTheme.bodyMedium?.color, size: 20),
-                        onPressed: () => Navigator.pop(context),
-                        tooltip: AppLocalizations.of(context)!.back,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 4),
-                        child: Text(
-                          AppLocalizations.of(context)!.error,
-                          style: TextStyle(color: Theme.of(context).textTheme.titleMedium?.color, fontSize: 16),
-                        ),
-                      ),
-                      const Spacer(),
-                      const WindowButtons(),
-                    ],
-                  ),
-                ),
-              ),
+            DesktopTitleBar(title: AppLocalizations.of(context)!.error, showBack: true),
             Expanded(child: Center(child: Text(AppLocalizations.of(context)!.errorLoadingRelease(releases.error.toString())))),
           ],
         ),
@@ -514,34 +448,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
         appBar: null,
         body: Column(
           children: [
-            if (!kDebugMode)
-              GestureDetector(
-                onPanStart: (_) => windowManager.startDragging(),
-                onDoubleTap: () async {
-                  if (await windowManager.isMaximized()) {
-                    windowManager.restore();
-                  } else {
-                    windowManager.maximize();
-                  }
-                },
-                child: Container(
-                  color: Theme.of(context).cardColor,
-                  height: 40,
-                  child: Row(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(left: 12),
-                        child: Text(
-                          AppLocalizations.of(context)!.error,
-                          style: TextStyle(color: Theme.of(context).textTheme.titleMedium?.color, fontSize: 16),
-                        ),
-                      ),
-                      Spacer(),
-                      WindowButtons(),
-                    ],
-                  ),
-                ),
-              ),
+            DesktopTitleBar(title: AppLocalizations.of(context)!.error, showBack: true),
             Expanded(child: Center(child: Text('${AppLocalizations.of(context)!.errorLoadingProjects}: ${allProjectsAsync.error}'))),
           ],
         ),
@@ -616,39 +523,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
             : null,
         body: Column(
           children: [
-            if (!isMobile && !kDebugMode)
-              GestureDetector(
-                onPanStart: (_) => windowManager.startDragging(),
-                onDoubleTap: () async {
-                  if (await windowManager.isMaximized()) {
-                    windowManager.restore();
-                  } else {
-                    windowManager.maximize();
-                  }
-                },
-                child: Container(
-                  color: Theme.of(context).cardColor,
-                  height: 40,
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.arrow_back, color: Theme.of(context).textTheme.bodyMedium?.color, size: 20),
-                        onPressed: () => Navigator.pop(context),
-                        tooltip: AppLocalizations.of(context)!.back,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 4),
-                        child: Text(
-                          AppLocalizations.of(context)!.releaseNotFound,
-                          style: TextStyle(color: Theme.of(context).textTheme.titleMedium?.color, fontSize: 16),
-                        ),
-                      ),
-                      const Spacer(),
-                      const WindowButtons(),
-                    ],
-                  ),
-                ),
-              ),
+            if (!isMobile) DesktopTitleBar(title: AppLocalizations.of(context)!.releaseNotFound, showBack: true),
             Expanded(child: Center(child: Text(AppLocalizations.of(context)!.releaseNotFound))),
           ],
         ),
@@ -693,62 +568,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
     return Scaffold(
       body: Column(
         children: [
-          // Window title bar (release mode) or back button (debug mode)
-          if (!kDebugMode)
-            GestureDetector(
-              onPanStart: (_) => windowManager.startDragging(),
-              onDoubleTap: () async {
-                if (await windowManager.isMaximized()) {
-                  windowManager.restore();
-                } else {
-                  windowManager.maximize();
-                }
-              },
-              child: Container(
-                color: Theme.of(context).cardColor,
-                height: 40,
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.arrow_back, color: Theme.of(context).textTheme.bodyMedium?.color, size: 20),
-                      onPressed: () => Navigator.pop(context),
-                      tooltip: AppLocalizations.of(context)!.back,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 4),
-                      child: Text(
-                        release.title,
-                        style: TextStyle(color: Theme.of(context).textTheme.titleMedium?.color, fontSize: 16),
-                      ),
-                    ),
-                    const Spacer(),
-                    const WindowButtons(),
-                  ],
-                ),
-              ),
-            )
-          else
-            // Debug mode: simple back button bar
-            Container(
-              color: Theme.of(context).cardColor,
-              height: 40,
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.arrow_back, color: Theme.of(context).textTheme.bodyMedium?.color, size: 20),
-                    onPressed: () => Navigator.pop(context),
-                    tooltip: AppLocalizations.of(context)!.back,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 4),
-                    child: Text(
-                      release.title,
-                      style: TextStyle(color: Theme.of(context).textTheme.titleMedium?.color, fontSize: 16),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          DesktopTitleBar(title: release.title, showBack: true),
           Expanded(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,

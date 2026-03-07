@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart'; // NOVO IMPORT
 import 'package:path/path.dart' as p; // NOVO IMPORT
-import 'package:window_manager/window_manager.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:intl/intl.dart';
@@ -23,7 +22,7 @@ import '../utils/mobile_utils.dart';
 import '../utils/file_launcher.dart';
 import '../generated/l10n/app_localizations.dart';
 import '../services/google_drive_sync_service.dart';
-import 'dashboard_page.dart';
+import 'widgets/desktop_title_bar.dart';
 import 'widgets/todo_list_widget.dart';
 
 class ProjectDetailPage extends ConsumerStatefulWidget {
@@ -233,72 +232,10 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
           : null,
       body: Column(
         children: [
-          // Window title bar (release mode) - desktop only
-          if (!isMobile && !kDebugMode)
-            GestureDetector(
-              onPanStart: (_) => windowManager.startDragging(),
-              onDoubleTap: () async {
-                if (await windowManager.isMaximized()) {
-                  windowManager.restore();
-                } else {
-                  windowManager.maximize();
-                }
-              },
-              child: Container(
-                color: Theme.of(context).cardColor,
-                height: 40,
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(
-                        Icons.arrow_back,
-                        color: Theme.of(context).textTheme.bodyMedium?.color,
-                        size: 20,
-                      ),
-                      onPressed: () => Navigator.pop(context),
-                      tooltip: AppLocalizations.of(context)!.back,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 4),
-                      child: Text(
-                        AppLocalizations.of(context)!.projectDetails,
-                        style: TextStyle(
-                          color: Theme.of(context).textTheme.titleMedium?.color,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                    const Spacer(),
-                    const WindowButtons(),
-                  ],
-                ),
-              ),
-            ),
-          // Debug mode back button (Windows desktop only)
-          if (!isMobile && kDebugMode && Platform.isWindows)
-            Container(
-              color: Theme.of(context).cardColor,
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    onPressed: () => Navigator.pop(context),
-                    tooltip: AppLocalizations.of(context)!.back,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 4),
-                    child: Text(
-                      AppLocalizations.of(context)!.projectDetails,
-                      style: TextStyle(
-                        color: Theme.of(context).textTheme.titleMedium?.color,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          DesktopTitleBar(
+            title: AppLocalizations.of(context)!.projectDetails,
+            showBack: true,
+          ),
           Expanded(
             child: repoAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),

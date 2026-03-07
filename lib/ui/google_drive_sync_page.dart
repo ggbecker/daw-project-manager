@@ -1,18 +1,17 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/services.dart' show PlatformException;
 import 'package:google_sign_in/google_sign_in.dart' show GoogleSignInException, GoogleSignInExceptionCode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:window_manager/window_manager.dart';
+import 'widgets/desktop_title_bar.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import '../services/google_drive_sync_service.dart' show GoogleDriveSyncService, UploadCancelledException;
 import '../models/backup_progress.dart';
 import '../providers/providers.dart';
 import '../utils/mobile_utils.dart';
 import '../generated/l10n/app_localizations.dart';
-import 'dashboard_page.dart';
 import 'google_drive_sync_page_download_dialog.dart';
 
 class GoogleDriveSyncPage extends ConsumerStatefulWidget {
@@ -804,81 +803,10 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
           : null,
       body: Column(
         children: [
-          // Window title bar (desktop only)
-          if (!isMobile && !kDebugMode && !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux))
-            GestureDetector(
-              onPanStart: (_) => windowManager.startDragging(),
-              onDoubleTap: () async {
-                if (await windowManager.isMaximized()) {
-                  windowManager.restore();
-                } else {
-                  windowManager.maximize();
-                }
-              },
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  border: Border(
-                    bottom: BorderSide(
-                      color: Theme.of(context).dividerColor,
-                      width: 1,
-                    ),
-                  ),
-                ),
-                height: 40,
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(
-                        Icons.arrow_back,
-                        color: Theme.of(context).textTheme.bodyMedium?.color,
-                        size: 20,
-                      ),
-                      onPressed: () => Navigator.pop(context),
-                      tooltip: AppLocalizations.of(context)!.back,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 4),
-                      child: Text(
-                        AppLocalizations.of(context)!.googleDriveSync,
-                        style: TextStyle(
-                          color: Theme.of(context).textTheme.titleMedium?.color,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                    const Spacer(),
-                    if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux))
-                      const WindowButtons(),
-                  ],
-                ),
-              ),
-            ),
-          // Debug mode back button (Windows desktop only)
-          if (!isMobile && kDebugMode && Platform.isWindows)
-            Container(
-              color: Theme.of(context).cardColor,
-              height: 40,
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.arrow_back, color: Theme.of(context).textTheme.bodyMedium?.color, size: 20),
-                    onPressed: () => Navigator.pop(context),
-                    tooltip: AppLocalizations.of(context)!.back,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 4),
-                    child: Text(
-                      AppLocalizations.of(context)!.googleDriveSync,
-                      style: TextStyle(
-                        color: Theme.of(context).textTheme.titleMedium?.color,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          DesktopTitleBar(
+            title: AppLocalizations.of(context)!.googleDriveSync,
+            showBack: true,
+          ),
           Expanded(
             child: SingleChildScrollView(
               padding: MobileUtils.getResponsivePadding(context),

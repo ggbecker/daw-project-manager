@@ -8,7 +8,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
 import 'package:flutter/services.dart'; 
-import 'package:window_manager/window_manager.dart' if (dart.library.html) 'package:window_manager/window_manager_stub.dart'; 
 import 'package:path/path.dart' as path; // 🚨 NOVO IMPORT
 import 'package:url_launcher/url_launcher.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -27,6 +26,7 @@ import 'project_folders_settings_page.dart';
 import 'playlists_page.dart';
 import 'google_drive_sync_page.dart';
 import 'notification_settings_page.dart';
+import 'widgets/desktop_title_bar.dart';
 import 'widgets/language_switcher.dart';
 import 'widgets/theme_switcher.dart';
 import '../generated/l10n/app_localizations.dart';
@@ -40,52 +40,6 @@ import 'package:uuid/uuid.dart';
 /// App version embedded at build-time (CI passes `--dart-define=APP_VERSION=x.y.z`).
 /// For PR/local builds, we fall back to a dummy version.
 const String appVersion = String.fromEnvironment('APP_VERSION', defaultValue: '0.0.0');
-
-// WIDGET CORRIGIDO: Botões de controle da janela usando window_manager (desktop only)
-class WindowButtons extends StatelessWidget {
-  const WindowButtons({super.key});
-
-  // Função auxiliar assíncrona para alternar entre maximizar e restaurar
-  void _toggleMaximize() async {
-    if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
-      if (await windowManager.isMaximized()) {
-        windowManager.restore();
-      } else {
-        windowManager.maximize();
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // Only show on desktop platforms
-    if (kIsWeb || (!Platform.isWindows && !Platform.isMacOS && !Platform.isLinux)) {
-      return const SizedBox.shrink();
-    }
-
-    return Row(
-      children: [
-        // Minimize
-        IconButton(
-          icon: Icon(Icons.minimize, size: 18, color: Theme.of(context).textTheme.bodyMedium?.color),
-          onPressed: () => windowManager.minimize(),
-        ),
-        // Maximize/Restore
-        IconButton(
-          icon: Icon(Icons.crop_square_sharp, size: 18, color: Theme.of(context).textTheme.bodyMedium?.color),
-          onPressed: _toggleMaximize, 
-        ),
-        // Close
-        IconButton(
-          icon: Icon(Icons.close, size: 18, color: Theme.of(context).textTheme.bodyMedium?.color),
-          onPressed: () => windowManager.close(), 
-          splashColor: Colors.transparent, 
-          highlightColor: const Color(0xFFC42B1C), 
-        ),
-      ],
-    );
-  }
-}
 
 // Intent classes for keyboard shortcuts
 class _SearchIntent extends Intent {
@@ -730,80 +684,40 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                     : null,
                 body: Column(
           children: [
-            // ----------------------------------------------------
-            // LÓGICA DE WINDOW BAR: APENHAS MOSTRA A BARRA PERSONALIZADA SE NÃO ESTIVER EM DEBUG E FOR DESKTOP
-            if (!kDebugMode && !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux))
-              GestureDetector(
-                onPanStart: (_) => windowManager.startDragging(),
-                // LÓGICA para alternar maximizar/restaurar no double tap
-                onDoubleTap: () async {
-                  if (await windowManager.isMaximized()) {
-                    windowManager.restore();
-                  } else {
-                    windowManager.maximize();
-                  }
-                }, 
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).cardColor,
-                    border: Border(
-                      bottom: BorderSide(
-                        color: Theme.of(context).dividerColor,
-                        width: 1,
-                      ),
-                    ),
-                  ),
-                  height: 40, // Altura padrão para a barra
-                  child: Row(
-                    children: [
-                      // Título da Aplicação com versão (como antes)
-                      Padding(
-                        padding: const EdgeInsets.only(left: 12),
-                        child: Text(
-                          'DAW Project Manager v$appVersion',
-                          style: TextStyle(
-                            color: Theme.of(context).textTheme.titleMedium?.color,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
+            // Custom title bar – Windows/Linux only.
+            // macOS uses the native title bar + MacOSMenuBar for Theme/Language/Support.
+            DesktopTitleBar(
+              title: 'DAW Project Manager v$appVersion',
+              actions: [
+                // Donate button
+                Consumer(
+                  builder: (context, ref, child) {
+                    final l10n = AppLocalizations.of(context)!;
+                    return Tooltip(
+                      message: l10n.supportTheProject,
+                      child: TextButton.icon(
+                        icon: const Icon(Icons.card_giftcard, size: 18, color: Colors.white70),
+                        label: Text(
+                          l10n.support,
+                          style: const TextStyle(color: Colors.white70, fontSize: 14),
                         ),
-                      ),
-                      const Spacer(), // Espaçador para empurrar os botões para a direita
-                      const SizedBox(width: 4),
-                      // Donate button
-                      Consumer(
-                        builder: (context, ref, child) {
-                          final l10n = AppLocalizations.of(context)!;
-                          return Tooltip(
-                            message: l10n.supportTheProject,
-                            child: TextButton.icon(
-                              icon: const Icon(Icons.card_giftcard, size: 18, color: Colors.white70),
-                              label: Text(
-                                l10n.support,
-                                style: const TextStyle(color: Colors.white70, fontSize: 14),
-                              ),
-                              onPressed: () async {
-                                final uri = Uri.parse('https://www.paypal.com/donate/?hosted_button_id=QHVVZ3LAF39BL');
-                                if (await canLaunchUrl(uri)) {
-                                  await launchUrl(uri, mode: LaunchMode.externalApplication);
-                                } 
-                              },
-                            ),
-                          );
+                        onPressed: () async {
+                          final uri = Uri.parse('https://www.paypal.com/donate/?hosted_button_id=QHVVZ3LAF39BL');
+                          if (await canLaunchUrl(uri)) {
+                            await launchUrl(uri, mode: LaunchMode.externalApplication);
+                          }
                         },
                       ),
-                      const SizedBox(width: 8),
-                      const ThemeSwitcher(),
-                      const SizedBox(width: 8),
-                      const LanguageSwitcher(),
-                      const SizedBox(width: 8),
-                      // Botões de minimizar, maximizar e fechar
-                      const WindowButtons(),
-                    ],
-                  ),
+                    );
+                  },
                 ),
-              ),
-            // ----------------------------------------------------
+                const SizedBox(width: 8),
+                const ThemeSwitcher(),
+                const SizedBox(width: 8),
+                const LanguageSwitcher(),
+                const SizedBox(width: 8),
+              ],
+            ),
             
             // CONTEÚDO DA BARRA DE AÇÕES E PESQUISA
             Builder(

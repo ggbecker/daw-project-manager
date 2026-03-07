@@ -1,11 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as path;
 import 'package:uuid/uuid.dart';
-import 'package:window_manager/window_manager.dart';
+import 'widgets/desktop_title_bar.dart';
 import '../models/profile.dart';
 import '../models/music_project.dart';
 import '../models/release.dart';
@@ -16,7 +16,6 @@ import '../services/scanner_service.dart';
 import '../utils/app_paths.dart';
 import '../utils/mobile_utils.dart';
 import '../generated/l10n/app_localizations.dart';
-import 'dashboard_page.dart';
 import 'profile_view_page.dart';
 import '../services/backup_service.dart';
 import 'google_drive_sync_page.dart';
@@ -1000,81 +999,10 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
           : null,
       body: Column(
         children: [
-          // Window title bar (desktop only)
-          if (!isMobile && !kDebugMode && !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux))
-            GestureDetector(
-              onPanStart: (_) => windowManager.startDragging(),
-              onDoubleTap: () async {
-                if (await windowManager.isMaximized()) {
-                  windowManager.restore();
-                } else {
-                  windowManager.maximize();
-                }
-              },
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  border: Border(
-                    bottom: BorderSide(
-                      color: Theme.of(context).dividerColor,
-                      width: 1,
-                    ),
-                  ),
-                ),
-                height: 40,
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(
-                        Icons.arrow_back,
-                        color: Theme.of(context).textTheme.bodyMedium?.color,
-                        size: 20,
-                      ),
-                      onPressed: () => Navigator.of(context).pop(),
-                      tooltip: AppLocalizations.of(context)!.back,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 4),
-                      child: Text(
-                        AppLocalizations.of(context)!.profileManager,
-                        style: TextStyle(
-                          color: Theme.of(context).textTheme.titleMedium?.color,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                    const Spacer(),
-                    if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux))
-                      const WindowButtons(),
-                  ],
-                ),
-              ),
-            ),
-          // Debug mode back button (Windows desktop only)
-          if (!isMobile && kDebugMode && Platform.isWindows)
-            Container(
-              color: Theme.of(context).cardColor,
-              height: 40,
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.arrow_back, color: Theme.of(context).textTheme.bodyMedium?.color, size: 20),
-                    onPressed: () => Navigator.of(context).pop(),
-                    tooltip: AppLocalizations.of(context)!.back,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 4),
-                    child: Text(
-                      AppLocalizations.of(context)!.profileManager,
-                      style: TextStyle(
-                        color: Theme.of(context).textTheme.titleMedium?.color,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          DesktopTitleBar(
+            title: AppLocalizations.of(context)!.profileManager,
+            showBack: true,
+          ),
           Expanded(
             child: SingleChildScrollView(
               padding: MobileUtils.getResponsivePadding(context),
