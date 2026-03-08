@@ -725,7 +725,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
           title: Text(AppLocalizations.of(context)!.releaseDate),
           subtitle: Text(
             _releaseDate != null
-                ? DateFormat.yMMMd().format(_releaseDate!)
+                ? DateFormat.yMMMd(Localizations.localeOf(context).toString()).format(_releaseDate!)
                 : AppLocalizations.of(context)!.noDateSet,
             style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
           ),
@@ -1228,7 +1228,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
               title: Text(AppLocalizations.of(context)!.releaseDate),
               subtitle: Text(
                 _releaseDate != null
-                    ? DateFormat.yMMMd().format(_releaseDate!)
+                    ? DateFormat.yMMMd(Localizations.localeOf(context).toString()).format(_releaseDate!)
                     : AppLocalizations.of(context)!.noDateSet,
                 style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
               ),
@@ -2053,7 +2053,7 @@ class _FilesSectionState extends ConsumerState<_FilesSection> {
                       style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color, fontSize: 12),
                     ),
                   Text(
-                    DateFormat.yMMMd().add_jm().format(file.addedAt),
+                    DateFormat.yMMMd(Localizations.localeOf(context).toString()).add_jm().format(file.addedAt),
                     style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5), fontSize: 11),
                   ),
                 ],
@@ -2268,7 +2268,7 @@ class _AudioFileItemState extends ConsumerState<_AudioFileItem> {
                               overflow: TextOverflow.ellipsis,
                             ),
                             Text(
-                              '${_formatFileSize(widget.file.fileSizeBytes)} • ${DateFormat.yMMMd().add_jm().format(widget.file.addedAt)}',
+                              '${_formatFileSize(widget.file.fileSizeBytes)} • ${DateFormat.yMMMd(Localizations.localeOf(context).toString()).add_jm().format(widget.file.addedAt)}',
                               style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color, fontSize: 11),
                             ),
                           ],

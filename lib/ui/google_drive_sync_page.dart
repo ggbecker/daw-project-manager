@@ -1011,7 +1011,7 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
                               padding: const EdgeInsets.only(bottom: 8.0),
                               child: Text(
                                 AppLocalizations.of(context)!.lastSync(
-                                  DateFormat.yMMMd().add_jm().format(_lastSyncTime!),
+                                  DateFormat.yMMMd(Localizations.localeOf(context).toString()).add_jm().format(_lastSyncTime!),
                                 ),
                                 style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                               ),
@@ -1022,7 +1022,7 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
                               padding: const EdgeInsets.only(bottom: 4.0),
                               child: Text(
                                 AppLocalizations.of(context)!.remoteBackupTime(
-                                  DateFormat.yMMMd().add_jm().format(_remoteBackupTime!),
+                                  DateFormat.yMMMd(Localizations.localeOf(context).toString()).add_jm().format(_remoteBackupTime!),
                                 ),
                                 style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                               ),
@@ -1033,7 +1033,7 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
                               padding: const EdgeInsets.only(bottom: 4.0),
                               child: Text(
                                 AppLocalizations.of(context)!.lastUploadTime(
-                                  DateFormat.yMMMd().add_jm().format(_lastUploadTime!),
+                                  DateFormat.yMMMd(Localizations.localeOf(context).toString()).add_jm().format(_lastUploadTime!),
                                 ),
                                 style: TextStyle(fontSize: 14, color: Colors.grey[700]),
                               ),
@@ -1044,7 +1044,7 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
                               padding: const EdgeInsets.only(bottom: 0.0),
                               child: Text(
                                 AppLocalizations.of(context)!.lastDownloadTime(
-                                  DateFormat.yMMMd().add_jm().format(_lastDownloadTime!),
+                                  DateFormat.yMMMd(Localizations.localeOf(context).toString()).add_jm().format(_lastDownloadTime!),
                                 ),
                                 style: TextStyle(fontSize: 14, color: Colors.grey[700]),
                               ),

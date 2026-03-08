@@ -21,7 +21,6 @@ class ReleasesTabPage extends ConsumerStatefulWidget {
 }
 
 class _ReleasesTabPageState extends ConsumerState<ReleasesTabPage> {
-  final DateFormat _dateFormat = DateFormat.yMMMd();
 
   Future<void> _createNewRelease() async {
     final projects = ref.read(projectsProvider);
@@ -92,6 +91,8 @@ class _ReleasesTabPageState extends ConsumerState<ReleasesTabPage> {
 
   @override
   Widget build(BuildContext context) {
+    final locale = ref.watch(localeProvider).toString();
+    final dateFormat = DateFormat.yMMMd(locale);
     final releasesAsync = ref.watch(releasesProvider);
     final allProjectsAsync = ref.watch(allProjectsStreamProvider);
     // Use allProjects to include preserved projects, not just filtered projectsProvider
@@ -231,12 +232,12 @@ class _ReleasesTabPageState extends ConsumerState<ReleasesTabPage> {
                   ? _MobileReleasesList(
                       releases: filteredReleases,
                       projects: projects,
-                      dateFormat: _dateFormat,
+                      dateFormat: dateFormat,
                     )
                   : _ReleasesTable(
                       releases: filteredReleases,
                       projects: projects,
-                      dateFormat: _dateFormat,
+                      dateFormat: dateFormat,
                     ),
             ),
           ],

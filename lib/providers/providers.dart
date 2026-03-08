@@ -450,7 +450,10 @@ final projectsProvider = Provider<List<MusicProject>>((ref) {
   );
 });
 
-final dateFormatProvider = Provider<DateFormat>((ref) => DateFormat.yMMMd().add_jm());
+final dateFormatProvider = Provider<DateFormat>((ref) {
+  final locale = ref.watch(localeProvider);
+  return DateFormat.yMMMd(locale.toString()).add_jm();
+});
 
 // Releases Provider
 final releasesProvider = StreamProvider<List<Release>>((ref) async* {
