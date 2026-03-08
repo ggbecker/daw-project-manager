@@ -2615,14 +2615,14 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         field: 'lastModified',
         type: PlutoColumnType.text(),
         enableEditingMode: false,
-        width: 160,
-        minWidth: 140,
+        width: 200,
+        minWidth: 160,
         renderer: (rendererContext) {
           final project = rendererContext.row.cells['data']?.value as MusicProject?;
           if (project == null) {
             return Text(rendererContext.cell.value.toString());
           }
-          
+
           final status = project.status;
           
           // If status is "Finished", show green
