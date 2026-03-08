@@ -1210,10 +1210,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                     flex: 3,
                     child: Row(
                       children: [
-                        Flexible(
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 400),
-                            child: TextField(
+                        SizedBox(
+                          width: 400,
+                          child: TextField(
                               // Associar o FocusNode ao TextField
                               focusNode: _searchFocusNode,
                               controller: _searchController,
@@ -1255,7 +1254,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                 }
                               },
                             ),
-                          ),
                         ),
                         const SizedBox(width: 8),
                         const Spacer(),
