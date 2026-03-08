@@ -27,6 +27,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get cancel => 'キャンセル';
 
   @override
+  String get close => '閉じる';
+
+  @override
   String get launch => '開く';
 
   @override

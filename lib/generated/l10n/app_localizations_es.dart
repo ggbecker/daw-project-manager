@@ -27,6 +27,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get cancel => 'Cancelar';
 
   @override
+  String get close => 'Cerrar';
+
+  @override
   String get launch => 'Abrir';
 
   @override

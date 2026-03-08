@@ -27,6 +27,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get cancel => 'Annulla';
 
   @override
+  String get close => 'Chiudi';
+
+  @override
   String get launch => 'Apri';
 
   @override
