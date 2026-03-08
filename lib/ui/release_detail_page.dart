@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:convert';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -15,14 +14,12 @@ import 'widgets/desktop_title_bar.dart';
 import '../models/release_file.dart';
 import '../models/music_project.dart';
 import '../providers/providers.dart';
-import '../repository/project_repository.dart';
 import '../utils/app_paths.dart';
 import '../utils/mobile_utils.dart';
 import '../utils/file_launcher.dart';
 import '../generated/l10n/app_localizations.dart';
 import 'project_detail_page.dart';
 import 'widgets/todo_list_widget.dart';
-import '../models/todo_item.dart';
 
 class ReleaseDetailPage extends ConsumerStatefulWidget {
   final String releaseId;
@@ -2082,7 +2079,7 @@ class _FilesSectionState extends ConsumerState<_FilesSection> {
                       final success = await FileLauncher.openFile(file.filePath);
                       if (!success && context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(AppLocalizations.of(context)!.failedToOpenFile('Unable to open file'))),
+                          SnackBar(content: Text(AppLocalizations.of(context)!.failedToOpenFile)),
                         );
                       }
                     }

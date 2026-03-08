@@ -193,7 +193,10 @@ class _MyAppState extends ConsumerState<MyApp> with WindowListener {
     super.initState();
     if (_isDesktop) {
       windowManager.addListener(this);
-      windowManager.setPreventClose(true);
+      // Quit-warning dialog is macOS-only; intercept close only there.
+      if (!kIsWeb && Platform.isMacOS) {
+        windowManager.setPreventClose(true);
+      }
     }
     if (!kIsWeb && Platform.isMacOS) {
       WidgetsBinding.instance.addPostFrameCallback((_) {

@@ -516,25 +516,25 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
 
       final projectRepo = await ref.read(repositoryProvider.future);
       
-      // Show progress dialog on desktop
-      if (!MobileUtils.isMobile()) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => _BackupProgressDialog(
-            progressStream: _syncService.progressStream,
-            syncService: _syncService,
-          ),
-        );
-      }
-      
+      // Show progress dialog on all platforms
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => MobileUtils.isMobile()
+            ? UploadProgressDialog(progressStream: _syncService.progressStream)
+            : _BackupProgressDialog(
+                progressStream: _syncService.progressStream,
+                syncService: _syncService,
+              ),
+      );
+
       await _syncService.uploadDatabase(
         projectRepo: projectRepo,
         profileRepo: profileRepo,
       );
 
-      // Close progress dialog if it's open
-      if (!MobileUtils.isMobile() && mounted) {
+      // Close progress dialog
+      if (mounted) {
         Navigator.of(context, rootNavigator: true).pop();
       }
 
@@ -730,14 +730,12 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
         await _checkForNewerBackup();
       }
 
-      // CRITICAL: Don't invalidate repositoryProvider - it will lose the box reference!
-      // The repository already has the correct box reference, we just need to restart the stream
-      // Invalidate only the stream providers to force them to re-read from the box
+      // The mergeData call above already performed any profile switch synchronously,
+      // so we can now safely invalidate all providers including repositoryProvider.
+      ref.invalidate(repositoryProvider);
       ref.invalidate(allProjectsStreamProvider);
       ref.invalidate(releasesProvider);
       ref.invalidate(scanRootsProvider);
-      
-      // Also invalidate currentProfileProvider to ensure profile state is refreshed
       ref.invalidate(currentProfileProvider);
       
       // Wait a bit for stream to restart

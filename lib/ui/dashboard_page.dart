@@ -1,8 +1,6 @@
 import 'dart:io';
-import 'dart:ui' show Canvas, Paint, PaintingStyle, Rect;
 
 import 'package:pluto_grid/pluto_grid.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -34,7 +32,6 @@ import '../generated/l10n/app_localizations.dart';
 import '../models/music_project.dart';
 import '../models/release.dart';
 import '../providers/providers.dart';
-import '../repository/project_repository.dart';
 import 'package:uuid/uuid.dart';
 
 /// App version embedded at build-time (CI passes `--dart-define=APP_VERSION=x.y.z`).
@@ -2003,7 +2000,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     if (!await file.exists()) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Preview song file not found')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
         );
       }
       return;
@@ -2436,7 +2433,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                 Expanded(child: Text(rendererContext.cell.value.toString())),
                 if (!fileExists)
                   Tooltip(
-                    message: 'Source file not on this machine',
+                    message: AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
                     child: Icon(Icons.cloud_off, size: 14,
                         color: Colors.orange.shade400),
                   ),
@@ -2762,6 +2759,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           
           // Lógica para determinar o diretório pai
           final String projectPath = project.filePath;
+          final bool sourceFileExists = File(projectPath).existsSync() || Directory(projectPath).existsSync();
           final String folderPath = FileSystemEntity.isDirectorySync(projectPath)
               ? projectPath // Se for um diretório, usa o próprio caminho
               : path.dirname(projectPath); // Se for um arquivo, usa o diretório pai
@@ -2795,10 +2793,13 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                 ),
               ),
               // Launch button
-              IconButton(
-                icon: const Icon(Icons.open_in_new),
-                tooltip: AppLocalizations.of(context)!.tooltipLaunchInDaw,
-                onPressed: () => _launchProject(project),
+              Tooltip(
+                message: sourceFileExists ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
+                child: IconButton(
+                  icon: const Icon(Icons.open_in_new),
+                  tooltip: sourceFileExists ? AppLocalizations.of(context)!.tooltipLaunchInDaw : null,
+                  onPressed: sourceFileExists ? () => _launchProject(project) : null,
+                ),
               ),
               // Separator
               Padding(
@@ -2815,10 +2816,13 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                 onPressed: () => _viewProjectDetails(project),
               ),
               // Open Folder button
-              IconButton(
-                icon: const Icon(Icons.folder_open),
-                tooltip: AppLocalizations.of(context)!.openFolder,
-                onPressed: () => _openProjectFolder(project),
+              Tooltip(
+                message: sourceFileExists ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
+                child: IconButton(
+                  icon: const Icon(Icons.folder_open),
+                  tooltip: sourceFileExists ? AppLocalizations.of(context)!.openFolder : null,
+                  onPressed: sourceFileExists ? () => _openProjectFolder(project) : null,
+                ),
               ),
               // Separator
               Padding(
@@ -3086,7 +3090,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
     if (!await file.exists()) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Preview song file not found')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
         );
         Navigator.pop(context);
       }
@@ -3098,7 +3102,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to play preview: ${e.toString()}')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedToPlayPreview(e.toString()))),
         );
       }
     }
@@ -3126,7 +3130,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to play preview: ${e.toString()}')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedToPlayPreview(e.toString()))),
         );
       }
     }
@@ -3348,7 +3352,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Preview song file not found')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
         );
       }
       return;
@@ -3361,7 +3365,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Preview song not available. Please download backup first.')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.previewSongNotAvailableDownloadFirst)),
         );
       }
       return;
@@ -3378,7 +3382,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
         }
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Preview song file not found')),
+            SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
           );
         }
         return;
@@ -3444,7 +3448,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to share preview song: ${e.toString()}')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedToSharePreviewSong(e.toString()))),
         );
       }
     }
@@ -3456,7 +3460,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
     if (widget.project.previewSongPath == null || widget.project.previewSongPath!.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Preview song file not found')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
         );
       }
       return;
@@ -3466,7 +3470,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
     if (widget.project.previewSongPath!.startsWith('drive://')) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Preview song not available. Please download backup first.')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.previewSongNotAvailableDownloadFirst)),
         );
       }
       return;
@@ -3477,7 +3481,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
       if (!await sourceFile.exists()) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Preview song file not found')),
+            SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
           );
         }
         return;
@@ -3536,7 +3540,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to share preview song as ZIP: ${e.toString()}')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedToSharePreviewSongAsZip(e.toString()))),
         );
       }
     }
@@ -3578,12 +3582,12 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
                     !widget.project.previewSongPath!.startsWith('drive://')) ...[
                   IconButton(
                     icon: const Icon(Icons.share),
-                    tooltip: 'Share preview song',
+                    tooltip: AppLocalizations.of(context)!.sharePreviewSong,
                     onPressed: _sharePreviewSong,
                   ),
                   IconButton(
                     icon: const Icon(Icons.archive),
-                    tooltip: 'Share as ZIP',
+                    tooltip: AppLocalizations.of(context)!.shareAsZip,
                     onPressed: _sharePreviewSongAsZip,
                   ),
                 ],
@@ -3673,7 +3677,7 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
     if (!await file.exists()) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Preview song file not found')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
         );
       }
       return;
@@ -3813,7 +3817,7 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                       ),
                       if (!fileExists)
                         Tooltip(
-                          message: 'Source file not on this machine',
+                          message: AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
                           child: Icon(Icons.cloud_off, size: 16,
                               color: Colors.orange.shade400),
                         ),

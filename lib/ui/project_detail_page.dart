@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart'; // NOVO IMPORT
+// NOVO IMPORT
 import 'package:path/path.dart' as p; // NOVO IMPORT
 import 'package:file_picker/file_picker.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -15,13 +15,11 @@ import 'package:path_provider/path_provider.dart';
 import 'package:archive/archive_io.dart';
 
 import '../models/music_project.dart';
-import '../models/todo_item.dart';
 import '../providers/providers.dart';
 import '../repository/project_repository.dart';
 import '../utils/mobile_utils.dart';
 import '../utils/file_launcher.dart';
 import '../generated/l10n/app_localizations.dart';
-import '../services/google_drive_sync_service.dart';
 import 'widgets/desktop_title_bar.dart';
 import 'widgets/todo_list_widget.dart';
 
@@ -538,6 +536,7 @@ updatedProject.lastModifiedAt.toString(),
                                       if (updatedProject.camelotCode != null) ...[
                                         const SizedBox(height: 12),
                                         TextFormField(
+                                          key: ValueKey(updatedProject.camelotCode),
                                           enabled: false,
                                           initialValue: updatedProject.camelotCode,
                                           decoration: InputDecoration(
@@ -866,7 +865,7 @@ updatedProject.lastModifiedAt.toString(),
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         content: Text(
-                                          'Error: ${e.toString()}',
+                                          '${AppLocalizations.of(context)!.error}: ${e.toString()}',
                                         ),
                                       ),
                                     );
@@ -964,8 +963,9 @@ updatedProject.lastModifiedAt.toString(),
                                               musicalKey: _keyCtrl.text.trim().isEmpty
                                                   ? null
                                                   : _keyCtrl.text.trim(),
-                                              notes: newNotes, // NOVO: Salva Notas
-                                              status: newStatus, // Save project phase
+                                              notes: newNotes,
+                                              clearNotes: newNotes == null,
+                                              status: newStatus,
                                               statusChangedAt: statusChanged ? DateTime.now() : null,
                                             );
 
@@ -1029,8 +1029,9 @@ updatedProject.lastModifiedAt.toString(),
                                             musicalKey: _keyCtrl.text.trim().isEmpty
                                                 ? null
                                                 : _keyCtrl.text.trim(),
-                                            notes: newNotes, // NOVO: Salva Notas
-                                            status: newStatus, // Save project phase
+                                            notes: newNotes,
+                                            clearNotes: newNotes == null,
+                                            status: newStatus,
                                             statusChangedAt: statusChanged ? DateTime.now() : null,
                                           );
 
@@ -1060,44 +1061,45 @@ updatedProject.lastModifiedAt.toString(),
                                       const SizedBox(width: 12),
 
                                       // NOVO: BOTÃO OPEN FOLDER
-                                      ElevatedButton.icon(
-                                        onPressed: () =>
-                                            _openProjectFolder(updatedProject.filePath),
-                                        icon: const Icon(Icons.folder_open),
-                                        label: Text(
-                                          AppLocalizations.of(context)!.openFolder,
+                                      Tooltip(
+                                        message: sourceFileExists ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
+                                        child: ElevatedButton.icon(
+                                          onPressed: sourceFileExists
+                                              ? () => _openProjectFolder(updatedProject.filePath)
+                                              : null,
+                                          icon: const Icon(Icons.folder_open),
+                                          label: Text(
+                                            AppLocalizations.of(context)!.openFolder,
+                                          ),
                                         ),
                                       ),
                                       const SizedBox(width: 12),
 
                                       // BOTÃO OPEN IN DAW (Existente)
-                                      ElevatedButton.icon(
-                                        onPressed: () async {
-                                          final success = await FileLauncher.launchProject(updatedProject.filePath);
-                                          if (!success && mounted) {
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(content: Text(AppLocalizations.of(context)!.failedToLaunchProject(updatedProject.displayName))),
-                                            );
-                                          }
-                                          if (success) {
-                                            if (mounted) {
-                                              ScaffoldMessenger.of(
-                                                context,
-                                              ).showSnackBar(
-                                                SnackBar(
-                                                  content: Text(
-                                                    AppLocalizations.of(
-                                                      context,
-                                                    )!.failedToLaunchDaw,
-                                                  ),
-                                                ),
-                                              );
-                                            }
-                                          }
-                                        },
-                                        icon: const Icon(Icons.open_in_new),
-                                        label: Text(
-                                          AppLocalizations.of(context)!.openInDaw,
+                                      Tooltip(
+                                        message: sourceFileExists ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
+                                        child: ElevatedButton.icon(
+                                          onPressed: sourceFileExists
+                                              ? () async {
+                                                  final success = await FileLauncher.launchProject(updatedProject.filePath);
+                                                  if (!success && mounted) {
+                                                    ScaffoldMessenger.of(context).showSnackBar(
+                                                      SnackBar(content: Text(AppLocalizations.of(context)!.failedToLaunchProject(updatedProject.displayName))),
+                                                    );
+                                                  }
+                                                  if (success) {
+                                                    if (mounted) {
+                                                      ScaffoldMessenger.of(context).showSnackBar(
+                                                        SnackBar(content: Text(AppLocalizations.of(context)!.failedToLaunchDaw)),
+                                                      );
+                                                    }
+                                                  }
+                                                }
+                                              : null,
+                                          icon: const Icon(Icons.open_in_new),
+                                          label: Text(
+                                            AppLocalizations.of(context)!.openInDaw,
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -1335,7 +1337,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Preview song file not found')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
         );
       }
       return;
@@ -1348,7 +1350,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Preview song not available. Please download backup first.')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.previewSongNotAvailableDownloadFirst)),
         );
       }
       return;
@@ -1365,7 +1367,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
         }
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Preview song file not found')),
+            SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
           );
         }
         return;
@@ -1431,7 +1433,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to share preview song: ${e.toString()}')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedToSharePreviewSong(e.toString()))),
         );
       }
     }
@@ -1443,7 +1445,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
     if (widget.project.previewSongPath == null || widget.project.previewSongPath!.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Preview song file not found')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
         );
       }
       return;
@@ -1453,7 +1455,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
     if (widget.project.previewSongPath!.startsWith('drive://')) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Preview song not available. Please download backup first.')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.previewSongNotAvailableDownloadFirst)),
         );
       }
       return;
@@ -1464,7 +1466,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
       if (!await sourceFile.exists()) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Preview song file not found')),
+            SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
           );
         }
         return;
@@ -1523,7 +1525,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to share preview song as ZIP: ${e.toString()}')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedToSharePreviewSongAsZip(e.toString()))),
         );
       }
     }
@@ -1608,7 +1610,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text('${AppLocalizations.of(context)!.error}: ${e.toString()}'),
             duration: const Duration(seconds: 4),
           ),
         );
@@ -1986,7 +1988,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                               ElevatedButton.icon(
                                 onPressed: _sharePreviewSong,
                                 icon: const Icon(Icons.share),
-                                label: const Text('Share'),
+                                label: Text(AppLocalizations.of(context)!.share),
                               ),
                             );
 
@@ -1995,7 +1997,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                                 ElevatedButton.icon(
                                   onPressed: _sharePreviewSongAsZip,
                                   icon: const Icon(Icons.archive),
-                                  label: const Text('Share ZIP'),
+                                  label: Text(AppLocalizations.of(context)!.shareZip),
                                 ),
                               );
                             }

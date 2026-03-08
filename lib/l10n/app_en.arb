@@ -1817,6 +1817,338 @@
   "downloadingBackupTitle": "Downloading Backup",
   "@downloadingBackupTitle": {
     "description": "Title for backup download progress dialog"
+  },
+  "sourceFileNotFoundOnThisMachine": "Source file not found on this machine",
+  "@sourceFileNotFoundOnThisMachine": {
+    "description": "Tooltip shown when the project source file does not exist on the current machine"
+  },
+  "previewSongNotAvailableDownloadFirst": "Preview song not available. Please download backup first.",
+  "@previewSongNotAvailableDownloadFirst": {
+    "description": "Message shown when preview song is not available locally and needs to be downloaded"
+  },
+  "sharePreviewSong": "Share preview song",
+  "@sharePreviewSong": {
+    "description": "Tooltip for the share preview song button"
+  },
+  "shareAsZip": "Share as ZIP",
+  "@shareAsZip": {
+    "description": "Tooltip for the share as ZIP button"
+  },
+  "share": "Share",
+  "@share": {
+    "description": "Label for the share button"
+  },
+  "shareZip": "Share ZIP",
+  "@shareZip": {
+    "description": "Label for the share as ZIP button"
+  },
+  "failedToSharePreviewSong": "Failed to share preview song: {error}",
+  "@failedToSharePreviewSong": {
+    "description": "Error message when sharing preview song fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToSharePreviewSongAsZip": "Failed to share preview song as ZIP: {error}",
+  "@failedToSharePreviewSongAsZip": {
+    "description": "Error message when sharing preview song as ZIP fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "biographySaved": "Biography saved",
+  "@biographySaved": {
+    "description": "Success message when biography is saved"
+  },
+  "failedToSaveBiography": "Failed to save biography: {error}",
+  "@failedToSaveBiography": {
+    "description": "Error message when saving biography fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fileSavedTo": "File saved to {filename}",
+  "@fileSavedTo": {
+    "description": "Success message when a file is saved",
+    "placeholders": {
+      "filename": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToDownloadFile": "Failed to download file: {error}",
+  "@failedToDownloadFile": {
+    "description": "Error message when downloading a file fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "allFilesSavedTo": "All files saved to {filename}",
+  "@allFilesSavedTo": {
+    "description": "Success message when all files are saved to a zip",
+    "placeholders": {
+      "filename": {
+        "type": "String"
+      }
+    }
+  },
+  "artworkAdded": "Artwork added",
+  "@artworkAdded": {
+    "description": "Success message when artwork is added"
+  },
+  "failedToAddArtwork": "Failed to add artwork: {error}",
+  "@failedToAddArtwork": {
+    "description": "Error message when adding artwork fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "artworkRemoved": "Artwork removed",
+  "@artworkRemoved": {
+    "description": "Success message when artwork is removed"
+  },
+  "failedToRemoveArtwork": "Failed to remove artwork: {error}",
+  "@failedToRemoveArtwork": {
+    "description": "Error message when removing artwork fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pressKitFileAdded": "Press kit file added",
+  "@pressKitFileAdded": {
+    "description": "Success message when a press kit file is added"
+  },
+  "failedToAddPressKitFile": "Failed to add press kit file: {error}",
+  "@failedToAddPressKitFile": {
+    "description": "Error message when adding press kit file fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pressKitFileRemoved": "Press kit file removed",
+  "@pressKitFileRemoved": {
+    "description": "Success message when a press kit file is removed"
+  },
+  "failedToRemovePressKitFile": "Failed to remove press kit file: {error}",
+  "@failedToRemovePressKitFile": {
+    "description": "Error message when removing press kit file fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "selectFilesToDownload": "Select Files to Download",
+  "@selectFilesToDownload": {
+    "description": "Title for the dialog to select files for download"
+  },
+  "biography": "Biography",
+  "@biography": {
+    "description": "Label for the biography field"
+  },
+  "biographyWillBeSaved": "Will be saved as biography.txt",
+  "@biographyWillBeSaved": {
+    "description": "Subtitle explaining how the biography file will be saved"
+  },
+  "artworkFiles": "Artwork Files",
+  "@artworkFiles": {
+    "description": "Section header for artwork files"
+  },
+  "pressKitFiles": "Press Kit Files",
+  "@pressKitFiles": {
+    "description": "Section header for press kit files"
+  },
+  "additionalAssets": "Additional Assets",
+  "@additionalAssets": {
+    "description": "Section header for additional assets"
+  },
+  "downloadNFiles": "Download {count} file{plural}",
+  "@downloadNFiles": {
+    "description": "Button label to download N files",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      }
+    }
+  },
+  "nFilesSavedTo": "{count} file{plural} saved to {filename}",
+  "@nFilesSavedTo": {
+    "description": "Success message when N files are saved",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      },
+      "filename": {
+        "type": "String"
+      }
+    }
+  },
+  "addAsset": "Add Asset",
+  "@addAsset": {
+    "description": "Dialog title and button label for adding an asset"
+  },
+  "assetNameLabel": "Asset Name",
+  "@assetNameLabel": {
+    "description": "Label for asset name input field"
+  },
+  "assetNameHint": "e.g., Logo, Banner, Photo",
+  "@assetNameHint": {
+    "description": "Hint text for asset name input field"
+  },
+  "assetAddedSuccessfully": "{assetName} added successfully",
+  "@assetAddedSuccessfully": {
+    "description": "Success message when an asset is added",
+    "placeholders": {
+      "assetName": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToAddAsset": "Failed to add asset: {error}",
+  "@failedToAddAsset": {
+    "description": "Error message when adding an asset fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "assetRemoved": "{assetName} removed",
+  "@assetRemoved": {
+    "description": "Success message when an asset is removed",
+    "placeholders": {
+      "assetName": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToRemoveAsset": "Failed to remove asset: {error}",
+  "@failedToRemoveAsset": {
+    "description": "Error message when removing an asset fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToOpenFile": "Failed to open file",
+  "@failedToOpenFile": {
+    "description": "Error message when opening a file fails"
+  },
+  "profileNotFound": "Profile not found",
+  "@profileNotFound": {
+    "description": "Message when a profile cannot be found"
+  },
+  "selectFiles": "Select Files",
+  "@selectFiles": {
+    "description": "Button label to select files"
+  },
+  "downloadAll": "Download All",
+  "@downloadAll": {
+    "description": "Button label to download all files"
+  },
+  "saveBiographyTooltip": "Save Biography",
+  "@saveBiographyTooltip": {
+    "description": "Tooltip for the save biography button"
+  },
+  "enterBiographyHint": "Enter profile biography...",
+  "@enterBiographyHint": {
+    "description": "Hint text for biography input field"
+  },
+  "addArtwork": "Add Artwork",
+  "@addArtwork": {
+    "description": "Button label to add artwork"
+  },
+  "addFile": "Add File",
+  "@addFile": {
+    "description": "Button label to add a press kit file"
+  },
+  "openFile": "Open File",
+  "@openFile": {
+    "description": "Tooltip for the open file button"
+  },
+  "menuView": "View",
+  "@menuView": {
+    "description": "macOS menu bar View menu label"
+  },
+  "menuAbout": "About DAW Project Manager",
+  "@menuAbout": {
+    "description": "macOS menu item for About dialog"
+  },
+  "menuLanguage": "Language",
+  "@menuLanguage": {
+    "description": "macOS menu item for language selection"
+  },
+  "menuWarnBeforeQuit": "Warn Before Quitting (Cmd+Q)",
+  "@menuWarnBeforeQuit": {
+    "description": "macOS menu item to toggle quit warning"
+  },
+  "menuQuit": "Quit DAW Project Manager",
+  "@menuQuit": {
+    "description": "macOS menu item to quit the app"
+  },
+  "menuWindow": "Window",
+  "@menuWindow": {
+    "description": "macOS menu bar Window menu label"
+  },
+  "donate": "Donate",
+  "@donate": {
+    "description": "Button label for the donate button in the About dialog"
+  },
+  "website": "Website",
+  "@website": {
+    "description": "Button label for the website button in the About dialog"
+  },
+  "switchToClassicDark": "Switch to Classic Dark",
+  "@switchToClassicDark": {
+    "description": "Theme switcher label to switch to classic dark theme"
+  },
+  "switchToNeonDark": "Switch to Neon Dark",
+  "@switchToNeonDark": {
+    "description": "Theme switcher label to switch to neon dark theme"
+  },
+  "switchToClassicTheme": "Switch to Classic Theme",
+  "@switchToClassicTheme": {
+    "description": "Tooltip to switch to classic theme"
+  },
+  "switchToNeonTheme": "Switch to Neon Theme",
+  "@switchToNeonTheme": {
+    "description": "Tooltip to switch to neon theme"
+  },
+  "menuTheme": "Theme",
+  "@menuTheme": {
+    "description": "macOS menu item for theme switching"
+  },
+  "appDescription": "A project manager for music producers and sound designers.",
+  "@appDescription": {
+    "description": "Short description of the app shown in the About dialog"
+  },
+  "neonDarkThemeName": "Neon Dark",
+  "@neonDarkThemeName": {
+    "description": "Display name for the Neon Dark theme"
+  },
+  "classicDarkThemeName": "Classic Dark",
+  "@classicDarkThemeName": {
+    "description": "Display name for the Classic Dark theme"
   }
 }
-

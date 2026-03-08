@@ -197,7 +197,6 @@
   "daw": "DAW",
   "lastModifiedColumn": "最后修改",
   "actions": "操作",
-  "launch": "打开",
   "hide": "隐藏",
   "unhide": "显示",
   "extractMetadata": "提取元数据",
@@ -564,13 +563,9 @@
   "releaseDateSaved": "发布日期已保存。",
   "releaseDateCleared": "发布日期已清除。",
   "saveReleaseFilesZip": "保存发布文件ZIP",
-  "failedToOpenFile": "打开文件失败: {error}",
+  "failedToOpenFile": "无法打开文件",
   "@failedToOpenFile": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
+    "description": "Error message when opening a file fails"
   },
   "failedToPlayAudio": "播放音频失败: {error}",
   "@failedToPlayAudio": {
@@ -620,14 +615,6 @@
   "@couldNotOpenFolder": {
     "placeholders": {
       "error": {
-        "type": "String"
-      }
-    }
-  },
-  "lastModified": "最后修改: {date}",
-  "@lastModified": {
-    "placeholders": {
-      "date": {
         "type": "String"
       }
     }
@@ -914,7 +901,6 @@
   "enterAuthorizationCode": "输入授权代码",
   "authorizationCode": "授权代码",
   "pasteCodeFromBrowser": "从浏览器粘贴代码",
-  "continueButton": "继续",
   "sessionActive": "会话活跃",
   "signedIn": "已登录",
   "creatingInitialBackup": "正在创建初始备份...",
@@ -1081,5 +1067,325 @@
   "downloadingProfilePhotos": "正在下载个人资料照片...",
   "downloadingReleaseArtwork": "正在下载发行封面...",
   "mergingData": "正在合并数据...",
-  "downloadingBackupTitle": "正在下载备份"
+  "downloadingBackupTitle": "正在下载备份",
+  "sourceFileNotFoundOnThisMachine": "在此设备上找不到源文件",
+  "@sourceFileNotFoundOnThisMachine": {
+    "description": "Tooltip shown when the project source file does not exist on the current machine"
+  },
+  "previewSongNotAvailableDownloadFirst": "预览歌曲不可用。请先下载备份。",
+  "@previewSongNotAvailableDownloadFirst": {
+    "description": "Message shown when preview song is not available locally and needs to be downloaded"
+  },
+  "sharePreviewSong": "分享预览歌曲",
+  "@sharePreviewSong": {
+    "description": "Tooltip for the share preview song button"
+  },
+  "shareAsZip": "以ZIP格式分享",
+  "@shareAsZip": {
+    "description": "Tooltip for the share as ZIP button"
+  },
+  "share": "分享",
+  "@share": {
+    "description": "Label for the share button"
+  },
+  "shareZip": "分享ZIP",
+  "@shareZip": {
+    "description": "Label for the share as ZIP button"
+  },
+  "failedToSharePreviewSong": "无法分享预览歌曲：{error}",
+  "@failedToSharePreviewSong": {
+    "description": "Error message when sharing preview song fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToSharePreviewSongAsZip": "无法以ZIP格式分享预览歌曲：{error}",
+  "@failedToSharePreviewSongAsZip": {
+    "description": "Error message when sharing preview song as ZIP fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "biographySaved": "简介已保存",
+  "@biographySaved": {
+    "description": "Success message when biography is saved"
+  },
+  "failedToSaveBiography": "无法保存简介：{error}",
+  "@failedToSaveBiography": {
+    "description": "Error message when saving biography fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fileSavedTo": "文件已保存至 {filename}",
+  "@fileSavedTo": {
+    "description": "Success message when a file is saved",
+    "placeholders": {
+      "filename": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToDownloadFile": "无法下载文件：{error}",
+  "@failedToDownloadFile": {
+    "description": "Error message when downloading a file fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "allFilesSavedTo": "所有文件已保存至 {filename}",
+  "@allFilesSavedTo": {
+    "description": "Success message when all files are saved to a zip",
+    "placeholders": {
+      "filename": {
+        "type": "String"
+      }
+    }
+  },
+  "artworkAdded": "封面已添加",
+  "@artworkAdded": {
+    "description": "Success message when artwork is added"
+  },
+  "failedToAddArtwork": "无法添加封面：{error}",
+  "@failedToAddArtwork": {
+    "description": "Error message when adding artwork fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "artworkRemoved": "封面已删除",
+  "@artworkRemoved": {
+    "description": "Success message when artwork is removed"
+  },
+  "failedToRemoveArtwork": "无法删除封面：{error}",
+  "@failedToRemoveArtwork": {
+    "description": "Error message when removing artwork fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pressKitFileAdded": "新闻资料袋文件已添加",
+  "@pressKitFileAdded": {
+    "description": "Success message when a press kit file is added"
+  },
+  "failedToAddPressKitFile": "无法添加新闻资料袋文件：{error}",
+  "@failedToAddPressKitFile": {
+    "description": "Error message when adding press kit file fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pressKitFileRemoved": "新闻资料袋文件已删除",
+  "@pressKitFileRemoved": {
+    "description": "Success message when a press kit file is removed"
+  },
+  "failedToRemovePressKitFile": "无法删除新闻资料袋文件：{error}",
+  "@failedToRemovePressKitFile": {
+    "description": "Error message when removing press kit file fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "selectFilesToDownload": "选择要下载的文件",
+  "@selectFilesToDownload": {
+    "description": "Title for the dialog to select files for download"
+  },
+  "biography": "简介",
+  "@biography": {
+    "description": "Label for the biography field"
+  },
+  "biographyWillBeSaved": "将保存为 biography.txt",
+  "@biographyWillBeSaved": {
+    "description": "Subtitle explaining how the biography file will be saved"
+  },
+  "artworkFiles": "封面文件",
+  "@artworkFiles": {
+    "description": "Section header for artwork files"
+  },
+  "pressKitFiles": "新闻资料袋文件",
+  "@pressKitFiles": {
+    "description": "Section header for press kit files"
+  },
+  "additionalAssets": "附加资源",
+  "@additionalAssets": {
+    "description": "Section header for additional assets"
+  },
+  "downloadNFiles": "下载 {count} 个文件{plural}",
+  "@downloadNFiles": {
+    "description": "Button label to download N files",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      }
+    }
+  },
+  "nFilesSavedTo": "{count} 个文件{plural}已保存至 {filename}",
+  "@nFilesSavedTo": {
+    "description": "Success message when N files are saved",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      },
+      "filename": {
+        "type": "String"
+      }
+    }
+  },
+  "addAsset": "添加资源",
+  "@addAsset": {
+    "description": "Dialog title and button label for adding an asset"
+  },
+  "assetNameLabel": "资源名称",
+  "@assetNameLabel": {
+    "description": "Label for asset name input field"
+  },
+  "assetNameHint": "例如：Logo、横幅、照片",
+  "@assetNameHint": {
+    "description": "Hint text for asset name input field"
+  },
+  "assetAddedSuccessfully": "{assetName} 已成功添加",
+  "@assetAddedSuccessfully": {
+    "description": "Success message when an asset is added",
+    "placeholders": {
+      "assetName": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToAddAsset": "无法添加资源：{error}",
+  "@failedToAddAsset": {
+    "description": "Error message when adding an asset fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "assetRemoved": "{assetName} 已删除",
+  "@assetRemoved": {
+    "description": "Success message when an asset is removed",
+    "placeholders": {
+      "assetName": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToRemoveAsset": "无法删除资源：{error}",
+  "@failedToRemoveAsset": {
+    "description": "Error message when removing an asset fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "profileNotFound": "找不到个人资料",
+  "@profileNotFound": {
+    "description": "Message when a profile cannot be found"
+  },
+  "selectFiles": "选择文件",
+  "@selectFiles": {
+    "description": "Button label to select files"
+  },
+  "downloadAll": "全部下载",
+  "@downloadAll": {
+    "description": "Button label to download all files"
+  },
+  "saveBiographyTooltip": "保存简介",
+  "@saveBiographyTooltip": {
+    "description": "Tooltip for the save biography button"
+  },
+  "enterBiographyHint": "输入个人简介...",
+  "@enterBiographyHint": {
+    "description": "Hint text for biography input field"
+  },
+  "addArtwork": "添加封面",
+  "@addArtwork": {
+    "description": "Button label to add artwork"
+  },
+  "addFile": "添加文件",
+  "@addFile": {
+    "description": "Button label to add a press kit file"
+  },
+  "openFile": "打开文件",
+  "@openFile": {
+    "description": "Tooltip for the open file button"
+  },
+  "menuView": "视图",
+  "@menuView": {
+    "description": "macOS menu bar View menu label"
+  },
+  "menuAbout": "关于 DAW Project Manager",
+  "@menuAbout": {
+    "description": "macOS menu item for About dialog"
+  },
+  "menuLanguage": "语言",
+  "@menuLanguage": {
+    "description": "macOS menu item for language selection"
+  },
+  "menuWarnBeforeQuit": "退出前警告 (Cmd+Q)",
+  "@menuWarnBeforeQuit": {
+    "description": "macOS menu item to toggle quit warning"
+  },
+  "menuQuit": "退出 DAW Project Manager",
+  "@menuQuit": {
+    "description": "macOS menu item to quit the app"
+  },
+  "menuWindow": "窗口",
+  "@menuWindow": {
+    "description": "macOS menu bar Window menu label"
+  },
+  "donate": "捐赠",
+  "@donate": {
+    "description": "Button label for the donate button in the About dialog"
+  },
+  "website": "网站",
+  "@website": {
+    "description": "Button label for the website button in the About dialog"
+  },
+  "switchToClassicDark": "切换到 Classic Dark",
+  "@switchToClassicDark": {
+    "description": "Theme switcher label to switch to classic dark theme"
+  },
+  "switchToNeonDark": "切换到 Neon Dark",
+  "@switchToNeonDark": {
+    "description": "Theme switcher label to switch to neon dark theme"
+  },
+  "switchToClassicTheme": "切换到经典主题",
+  "@switchToClassicTheme": {
+    "description": "Tooltip to switch to classic theme"
+  },
+  "switchToNeonTheme": "切换到霓虹主题",
+  "@switchToNeonTheme": {
+    "description": "Tooltip to switch to neon theme"
+  },
+  "menuTheme": "主题",
+  "@menuTheme": {
+    "description": "macOS menu item for theme switching"
+  },
+  "appDescription": "面向音乐制作人和音效设计师的项目管理工具。",
+  "neonDarkThemeName": "霓虹暗色",
+  "classicDarkThemeName": "经典暗色"
 }

@@ -660,9 +660,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get saveReleaseFilesZip => 'リリースファイルZIPを保存';
 
   @override
-  String failedToOpenFile(String error) {
-    return 'ファイルを開けませんでした: $error';
-  }
+  String get failedToOpenFile => 'ファイルを開けませんでした';
 
   @override
   String failedToPlayAudio(String error) {
@@ -1767,4 +1765,218 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get downloadingBackupTitle => 'バックアップをダウンロード中';
+
+  @override
+  String get sourceFileNotFoundOnThisMachine => 'このマシンにソースファイルが見つかりません';
+
+  @override
+  String get previewSongNotAvailableDownloadFirst =>
+      'プレビュー曲が利用できません。先にバックアップをダウンロードしてください。';
+
+  @override
+  String get sharePreviewSong => 'プレビュー曲を共有';
+
+  @override
+  String get shareAsZip => 'ZIPとして共有';
+
+  @override
+  String get share => '共有';
+
+  @override
+  String get shareZip => 'ZIPを共有';
+
+  @override
+  String failedToSharePreviewSong(String error) {
+    return 'プレビュー曲を共有できませんでした: $error';
+  }
+
+  @override
+  String failedToSharePreviewSongAsZip(String error) {
+    return 'プレビュー曲をZIPとして共有できませんでした: $error';
+  }
+
+  @override
+  String get biographySaved => 'プロフィールが保存されました';
+
+  @override
+  String failedToSaveBiography(String error) {
+    return 'プロフィールを保存できませんでした: $error';
+  }
+
+  @override
+  String fileSavedTo(String filename) {
+    return 'ファイルを $filename に保存しました';
+  }
+
+  @override
+  String failedToDownloadFile(String error) {
+    return 'ファイルをダウンロードできませんでした: $error';
+  }
+
+  @override
+  String allFilesSavedTo(String filename) {
+    return 'すべてのファイルを $filename に保存しました';
+  }
+
+  @override
+  String get artworkAdded => 'アートワークを追加しました';
+
+  @override
+  String failedToAddArtwork(String error) {
+    return 'アートワークを追加できませんでした: $error';
+  }
+
+  @override
+  String get artworkRemoved => 'アートワークを削除しました';
+
+  @override
+  String failedToRemoveArtwork(String error) {
+    return 'アートワークを削除できませんでした: $error';
+  }
+
+  @override
+  String get pressKitFileAdded => 'プレスキットファイルを追加しました';
+
+  @override
+  String failedToAddPressKitFile(String error) {
+    return 'プレスキットファイルを追加できませんでした: $error';
+  }
+
+  @override
+  String get pressKitFileRemoved => 'プレスキットファイルを削除しました';
+
+  @override
+  String failedToRemovePressKitFile(String error) {
+    return 'プレスキットファイルを削除できませんでした: $error';
+  }
+
+  @override
+  String get selectFilesToDownload => 'ダウンロードするファイルを選択';
+
+  @override
+  String get biography => 'プロフィール';
+
+  @override
+  String get biographyWillBeSaved => 'biography.txt として保存されます';
+
+  @override
+  String get artworkFiles => 'アートワークファイル';
+
+  @override
+  String get pressKitFiles => 'プレスキットファイル';
+
+  @override
+  String get additionalAssets => '追加アセット';
+
+  @override
+  String downloadNFiles(int count, String plural) {
+    return '$count個のファイル$pluralをダウンロード';
+  }
+
+  @override
+  String nFilesSavedTo(int count, String plural, String filename) {
+    return '$count個のファイル$pluralを $filename に保存しました';
+  }
+
+  @override
+  String get addAsset => 'アセットを追加';
+
+  @override
+  String get assetNameLabel => 'アセット名';
+
+  @override
+  String get assetNameHint => '例：ロゴ、バナー、写真';
+
+  @override
+  String assetAddedSuccessfully(String assetName) {
+    return '$assetName を正常に追加しました';
+  }
+
+  @override
+  String failedToAddAsset(String error) {
+    return 'アセットを追加できませんでした: $error';
+  }
+
+  @override
+  String assetRemoved(String assetName) {
+    return '$assetName を削除しました';
+  }
+
+  @override
+  String failedToRemoveAsset(String error) {
+    return 'アセットを削除できませんでした: $error';
+  }
+
+  @override
+  String get profileNotFound => 'プロフィールが見つかりません';
+
+  @override
+  String get selectFiles => 'ファイルを選択';
+
+  @override
+  String get downloadAll => 'すべてダウンロード';
+
+  @override
+  String get saveBiographyTooltip => 'プロフィールを保存';
+
+  @override
+  String get enterBiographyHint => 'プロフィールの経歴を入力...';
+
+  @override
+  String get addArtwork => 'アートワークを追加';
+
+  @override
+  String get addFile => 'ファイルを追加';
+
+  @override
+  String get openFile => 'ファイルを開く';
+
+  @override
+  String get menuView => '表示';
+
+  @override
+  String get menuAbout => 'DAW Project Manager について';
+
+  @override
+  String get menuLanguage => '言語';
+
+  @override
+  String get menuWarnBeforeQuit => '終了前に警告する (Cmd+Q)';
+
+  @override
+  String get menuQuit => 'DAW Project Manager を終了';
+
+  @override
+  String get menuWindow => 'ウィンドウ';
+
+  @override
+  String get donate => '寄付';
+
+  @override
+  String get website => 'ウェブサイト';
+
+  @override
+  String get switchToClassicDark => 'Classic Dark に切り替え';
+
+  @override
+  String get switchToNeonDark => 'Neon Dark に切り替え';
+
+  @override
+  String get switchToClassicTheme => 'Classic テーマに切り替え';
+
+  @override
+  String get switchToNeonTheme => 'Neon テーマに切り替え';
+
+  @override
+  String get menuTheme => 'テーマ';
+
+  @override
+  String get appDescription =>
+      'A project manager for music producers and sound designers.';
+
+  @override
+  String get neonDarkThemeName => 'Neon Dark';
+
+  @override
+  String get classicDarkThemeName => 'Classic Dark';
 }

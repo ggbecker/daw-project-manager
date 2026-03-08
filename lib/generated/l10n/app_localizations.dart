@@ -1202,11 +1202,11 @@ abstract class AppLocalizations {
   /// **'Save release files ZIP'**
   String get saveReleaseFilesZip;
 
-  /// No description provided for @failedToOpenFile.
+  /// Error message when opening a file fails
   ///
   /// In en, this message translates to:
-  /// **'Failed to open file: {error}'**
-  String failedToOpenFile(String error);
+  /// **'Failed to open file'**
+  String get failedToOpenFile;
 
   /// No description provided for @failedToPlayAudio.
   ///
@@ -3049,6 +3049,366 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Downloading Backup'**
   String get downloadingBackupTitle;
+
+  /// Tooltip shown when the project source file does not exist on the current machine
+  ///
+  /// In en, this message translates to:
+  /// **'Source file not found on this machine'**
+  String get sourceFileNotFoundOnThisMachine;
+
+  /// Message shown when preview song is not available locally and needs to be downloaded
+  ///
+  /// In en, this message translates to:
+  /// **'Preview song not available. Please download backup first.'**
+  String get previewSongNotAvailableDownloadFirst;
+
+  /// Tooltip for the share preview song button
+  ///
+  /// In en, this message translates to:
+  /// **'Share preview song'**
+  String get sharePreviewSong;
+
+  /// Tooltip for the share as ZIP button
+  ///
+  /// In en, this message translates to:
+  /// **'Share as ZIP'**
+  String get shareAsZip;
+
+  /// Label for the share button
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get share;
+
+  /// Label for the share as ZIP button
+  ///
+  /// In en, this message translates to:
+  /// **'Share ZIP'**
+  String get shareZip;
+
+  /// Error message when sharing preview song fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to share preview song: {error}'**
+  String failedToSharePreviewSong(String error);
+
+  /// Error message when sharing preview song as ZIP fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to share preview song as ZIP: {error}'**
+  String failedToSharePreviewSongAsZip(String error);
+
+  /// Success message when biography is saved
+  ///
+  /// In en, this message translates to:
+  /// **'Biography saved'**
+  String get biographySaved;
+
+  /// Error message when saving biography fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save biography: {error}'**
+  String failedToSaveBiography(String error);
+
+  /// Success message when a file is saved
+  ///
+  /// In en, this message translates to:
+  /// **'File saved to {filename}'**
+  String fileSavedTo(String filename);
+
+  /// Error message when downloading a file fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to download file: {error}'**
+  String failedToDownloadFile(String error);
+
+  /// Success message when all files are saved to a zip
+  ///
+  /// In en, this message translates to:
+  /// **'All files saved to {filename}'**
+  String allFilesSavedTo(String filename);
+
+  /// Success message when artwork is added
+  ///
+  /// In en, this message translates to:
+  /// **'Artwork added'**
+  String get artworkAdded;
+
+  /// Error message when adding artwork fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to add artwork: {error}'**
+  String failedToAddArtwork(String error);
+
+  /// Success message when artwork is removed
+  ///
+  /// In en, this message translates to:
+  /// **'Artwork removed'**
+  String get artworkRemoved;
+
+  /// Error message when removing artwork fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to remove artwork: {error}'**
+  String failedToRemoveArtwork(String error);
+
+  /// Success message when a press kit file is added
+  ///
+  /// In en, this message translates to:
+  /// **'Press kit file added'**
+  String get pressKitFileAdded;
+
+  /// Error message when adding press kit file fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to add press kit file: {error}'**
+  String failedToAddPressKitFile(String error);
+
+  /// Success message when a press kit file is removed
+  ///
+  /// In en, this message translates to:
+  /// **'Press kit file removed'**
+  String get pressKitFileRemoved;
+
+  /// Error message when removing press kit file fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to remove press kit file: {error}'**
+  String failedToRemovePressKitFile(String error);
+
+  /// Title for the dialog to select files for download
+  ///
+  /// In en, this message translates to:
+  /// **'Select Files to Download'**
+  String get selectFilesToDownload;
+
+  /// Label for the biography field
+  ///
+  /// In en, this message translates to:
+  /// **'Biography'**
+  String get biography;
+
+  /// Subtitle explaining how the biography file will be saved
+  ///
+  /// In en, this message translates to:
+  /// **'Will be saved as biography.txt'**
+  String get biographyWillBeSaved;
+
+  /// Section header for artwork files
+  ///
+  /// In en, this message translates to:
+  /// **'Artwork Files'**
+  String get artworkFiles;
+
+  /// Section header for press kit files
+  ///
+  /// In en, this message translates to:
+  /// **'Press Kit Files'**
+  String get pressKitFiles;
+
+  /// Section header for additional assets
+  ///
+  /// In en, this message translates to:
+  /// **'Additional Assets'**
+  String get additionalAssets;
+
+  /// Button label to download N files
+  ///
+  /// In en, this message translates to:
+  /// **'Download {count} file{plural}'**
+  String downloadNFiles(int count, String plural);
+
+  /// Success message when N files are saved
+  ///
+  /// In en, this message translates to:
+  /// **'{count} file{plural} saved to {filename}'**
+  String nFilesSavedTo(int count, String plural, String filename);
+
+  /// Dialog title and button label for adding an asset
+  ///
+  /// In en, this message translates to:
+  /// **'Add Asset'**
+  String get addAsset;
+
+  /// Label for asset name input field
+  ///
+  /// In en, this message translates to:
+  /// **'Asset Name'**
+  String get assetNameLabel;
+
+  /// Hint text for asset name input field
+  ///
+  /// In en, this message translates to:
+  /// **'e.g., Logo, Banner, Photo'**
+  String get assetNameHint;
+
+  /// Success message when an asset is added
+  ///
+  /// In en, this message translates to:
+  /// **'{assetName} added successfully'**
+  String assetAddedSuccessfully(String assetName);
+
+  /// Error message when adding an asset fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to add asset: {error}'**
+  String failedToAddAsset(String error);
+
+  /// Success message when an asset is removed
+  ///
+  /// In en, this message translates to:
+  /// **'{assetName} removed'**
+  String assetRemoved(String assetName);
+
+  /// Error message when removing an asset fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to remove asset: {error}'**
+  String failedToRemoveAsset(String error);
+
+  /// Message when a profile cannot be found
+  ///
+  /// In en, this message translates to:
+  /// **'Profile not found'**
+  String get profileNotFound;
+
+  /// Button label to select files
+  ///
+  /// In en, this message translates to:
+  /// **'Select Files'**
+  String get selectFiles;
+
+  /// Button label to download all files
+  ///
+  /// In en, this message translates to:
+  /// **'Download All'**
+  String get downloadAll;
+
+  /// Tooltip for the save biography button
+  ///
+  /// In en, this message translates to:
+  /// **'Save Biography'**
+  String get saveBiographyTooltip;
+
+  /// Hint text for biography input field
+  ///
+  /// In en, this message translates to:
+  /// **'Enter profile biography...'**
+  String get enterBiographyHint;
+
+  /// Button label to add artwork
+  ///
+  /// In en, this message translates to:
+  /// **'Add Artwork'**
+  String get addArtwork;
+
+  /// Button label to add a press kit file
+  ///
+  /// In en, this message translates to:
+  /// **'Add File'**
+  String get addFile;
+
+  /// Tooltip for the open file button
+  ///
+  /// In en, this message translates to:
+  /// **'Open File'**
+  String get openFile;
+
+  /// macOS menu bar View menu label
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get menuView;
+
+  /// macOS menu item for About dialog
+  ///
+  /// In en, this message translates to:
+  /// **'About DAW Project Manager'**
+  String get menuAbout;
+
+  /// macOS menu item for language selection
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get menuLanguage;
+
+  /// macOS menu item to toggle quit warning
+  ///
+  /// In en, this message translates to:
+  /// **'Warn Before Quitting (Cmd+Q)'**
+  String get menuWarnBeforeQuit;
+
+  /// macOS menu item to quit the app
+  ///
+  /// In en, this message translates to:
+  /// **'Quit DAW Project Manager'**
+  String get menuQuit;
+
+  /// macOS menu bar Window menu label
+  ///
+  /// In en, this message translates to:
+  /// **'Window'**
+  String get menuWindow;
+
+  /// Button label for the donate button in the About dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Donate'**
+  String get donate;
+
+  /// Button label for the website button in the About dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Website'**
+  String get website;
+
+  /// Theme switcher label to switch to classic dark theme
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to Classic Dark'**
+  String get switchToClassicDark;
+
+  /// Theme switcher label to switch to neon dark theme
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to Neon Dark'**
+  String get switchToNeonDark;
+
+  /// Tooltip to switch to classic theme
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to Classic Theme'**
+  String get switchToClassicTheme;
+
+  /// Tooltip to switch to neon theme
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to Neon Theme'**
+  String get switchToNeonTheme;
+
+  /// macOS menu item for theme switching
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get menuTheme;
+
+  /// Short description of the app shown in the About dialog
+  ///
+  /// In en, this message translates to:
+  /// **'A project manager for music producers and sound designers.'**
+  String get appDescription;
+
+  /// Display name for the Neon Dark theme
+  ///
+  /// In en, this message translates to:
+  /// **'Neon Dark'**
+  String get neonDarkThemeName;
+
+  /// Display name for the Classic Dark theme
+  ///
+  /// In en, this message translates to:
+  /// **'Classic Dark'**
+  String get classicDarkThemeName;
 }
 
 class _AppLocalizationsDelegate

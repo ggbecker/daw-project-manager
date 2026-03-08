@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../../generated/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:window_manager/window_manager.dart';
@@ -35,19 +36,20 @@ class MacOSMenuBar extends ConsumerWidget {
     final currentLocale = ref.watch(localeProvider);
     final warnBeforeQuit = ref.watch(warnBeforeQuitProvider);
 
+    final l10n = AppLocalizations.of(context)!;
     final themeLabel = themeType == AppThemeType.neonDark
-        ? 'Switch to Classic Dark'
-        : 'Switch to Neon Dark';
+        ? l10n.switchToClassicDark
+        : l10n.switchToNeonDark;
 
     return PlatformMenuBar(
       menus: [
         PlatformMenu(
-          label: 'View',
+          label: l10n.menuView,
           menus: [
             PlatformMenuItemGroup(
               members: [
                 PlatformMenuItem(
-                  label: 'About DAW Project Manager',
+                  label: l10n.menuAbout,
                   onSelected: _showAboutDialog,
                 ),
               ],
@@ -59,7 +61,7 @@ class MacOSMenuBar extends ConsumerWidget {
                   onSelected: () => ref.read(themeTypeProvider.notifier).cycle(),
                 ),
                 PlatformMenu(
-                  label: 'Language',
+                  label: l10n.menuLanguage,
                   menus: [
                     for (final entry in LanguageSwitcher.languageNames.entries)
                       PlatformMenuItem(
@@ -74,11 +76,11 @@ class MacOSMenuBar extends ConsumerWidget {
             PlatformMenuItemGroup(
               members: [
                 PlatformMenuItem(
-                  label: '${warnBeforeQuit ? '✓ ' : ''}Warn Before Quitting (Cmd+Q)',
+                  label: '${warnBeforeQuit ? '✓ ' : ''}${l10n.menuWarnBeforeQuit}',
                   onSelected: () => ref.read(warnBeforeQuitProvider.notifier).toggle(),
                 ),
                 PlatformMenuItem(
-                  label: 'Quit DAW Project Manager',
+                  label: l10n.menuQuit,
                   onSelected: () => windowManager.close(),
                 ),
               ],
@@ -86,7 +88,7 @@ class MacOSMenuBar extends ConsumerWidget {
           ],
         ),
         PlatformMenu(
-          label: 'Window',
+          label: l10n.menuWindow,
           menus: [
             const PlatformProvidedMenuItem(
               type: PlatformProvidedMenuItemType.toggleFullScreen,
@@ -114,7 +116,7 @@ class _AboutDialog extends StatelessWidget {
           Image.asset('app_icon.png', width: 80, height: 80),
           const SizedBox(height: 12),
           Text(
-            'DAW Project Manager',
+            AppLocalizations.of(context)!.appTitle,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
           ),
           if (appVersion.isNotEmpty) ...[
@@ -126,7 +128,7 @@ class _AboutDialog extends StatelessWidget {
           ],
           const SizedBox(height: 16),
           Text(
-            'A project manager for music producers and sound designers.',
+            AppLocalizations.of(context)!.appDescription,
             style: Theme.of(context).textTheme.bodyMedium,
             textAlign: TextAlign.center,
           ),
@@ -148,7 +150,7 @@ class _AboutDialog extends StatelessWidget {
             );
           },
           icon: const Icon(Icons.favorite, size: 16),
-          label: const Text('Donate'),
+          label: Text(AppLocalizations.of(context)!.donate),
         ),
         FilledButton.icon(
           onPressed: () {
@@ -158,11 +160,11 @@ class _AboutDialog extends StatelessWidget {
             );
           },
           icon: const Icon(Icons.web, size: 16),
-          label: const Text('Website'),
+          label: Text(AppLocalizations.of(context)!.website),
         ),
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Close'),
+          child: Text(AppLocalizations.of(context)!.cancel),
         ),
       ],
     );

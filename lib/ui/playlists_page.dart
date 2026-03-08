@@ -2,11 +2,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:path/path.dart' as p;
 import '../models/playlist.dart';
 import '../models/music_project.dart';
 import '../providers/providers.dart';
-import '../utils/mobile_utils.dart';
 import '../generated/l10n/app_localizations.dart';
 
 /// Playlists page - Android only

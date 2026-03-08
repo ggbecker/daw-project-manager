@@ -672,9 +672,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get saveReleaseFilesZip => 'Guardar archivos ZIP del lanzamiento';
 
   @override
-  String failedToOpenFile(String error) {
-    return 'Error al abrir archivo: $error';
-  }
+  String get failedToOpenFile => 'Error al abrir archivo';
 
   @override
   String failedToPlayAudio(String error) {
@@ -1820,4 +1818,219 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get downloadingBackupTitle => 'Descargando Copia de Seguridad';
+
+  @override
+  String get sourceFileNotFoundOnThisMachine =>
+      'Archivo fuente no encontrado en esta máquina';
+
+  @override
+  String get previewSongNotAvailableDownloadFirst =>
+      'Canción de vista previa no disponible. Por favor, descarga el backup primero.';
+
+  @override
+  String get sharePreviewSong => 'Compartir canción de vista previa';
+
+  @override
+  String get shareAsZip => 'Compartir como ZIP';
+
+  @override
+  String get share => 'Compartir';
+
+  @override
+  String get shareZip => 'Compartir ZIP';
+
+  @override
+  String failedToSharePreviewSong(String error) {
+    return 'Error al compartir canción de vista previa: $error';
+  }
+
+  @override
+  String failedToSharePreviewSongAsZip(String error) {
+    return 'Error al compartir canción de vista previa como ZIP: $error';
+  }
+
+  @override
+  String get biographySaved => 'Biografía guardada';
+
+  @override
+  String failedToSaveBiography(String error) {
+    return 'Error al guardar biografía: $error';
+  }
+
+  @override
+  String fileSavedTo(String filename) {
+    return 'Archivo guardado en $filename';
+  }
+
+  @override
+  String failedToDownloadFile(String error) {
+    return 'Error al descargar archivo: $error';
+  }
+
+  @override
+  String allFilesSavedTo(String filename) {
+    return 'Todos los archivos guardados en $filename';
+  }
+
+  @override
+  String get artworkAdded => 'Arte agregada';
+
+  @override
+  String failedToAddArtwork(String error) {
+    return 'Error al agregar arte: $error';
+  }
+
+  @override
+  String get artworkRemoved => 'Arte eliminada';
+
+  @override
+  String failedToRemoveArtwork(String error) {
+    return 'Error al eliminar arte: $error';
+  }
+
+  @override
+  String get pressKitFileAdded => 'Archivo de press kit agregado';
+
+  @override
+  String failedToAddPressKitFile(String error) {
+    return 'Error al agregar archivo de press kit: $error';
+  }
+
+  @override
+  String get pressKitFileRemoved => 'Archivo de press kit eliminado';
+
+  @override
+  String failedToRemovePressKitFile(String error) {
+    return 'Error al eliminar archivo de press kit: $error';
+  }
+
+  @override
+  String get selectFilesToDownload => 'Seleccionar Archivos para Descargar';
+
+  @override
+  String get biography => 'Biografía';
+
+  @override
+  String get biographyWillBeSaved => 'Se guardará como biography.txt';
+
+  @override
+  String get artworkFiles => 'Archivos de Arte';
+
+  @override
+  String get pressKitFiles => 'Archivos de Press Kit';
+
+  @override
+  String get additionalAssets => 'Activos Adicionales';
+
+  @override
+  String downloadNFiles(int count, String plural) {
+    return 'Descargar $count archivo$plural';
+  }
+
+  @override
+  String nFilesSavedTo(int count, String plural, String filename) {
+    return '$count archivo$plural guardado en $filename';
+  }
+
+  @override
+  String get addAsset => 'Agregar Activo';
+
+  @override
+  String get assetNameLabel => 'Nombre del Activo';
+
+  @override
+  String get assetNameHint => 'ej., Logo, Banner, Foto';
+
+  @override
+  String assetAddedSuccessfully(String assetName) {
+    return '$assetName agregado exitosamente';
+  }
+
+  @override
+  String failedToAddAsset(String error) {
+    return 'Error al agregar activo: $error';
+  }
+
+  @override
+  String assetRemoved(String assetName) {
+    return '$assetName eliminado';
+  }
+
+  @override
+  String failedToRemoveAsset(String error) {
+    return 'Error al eliminar activo: $error';
+  }
+
+  @override
+  String get profileNotFound => 'Perfil no encontrado';
+
+  @override
+  String get selectFiles => 'Seleccionar Archivos';
+
+  @override
+  String get downloadAll => 'Descargar Todo';
+
+  @override
+  String get saveBiographyTooltip => 'Guardar Biografía';
+
+  @override
+  String get enterBiographyHint => 'Ingrese la biografía del perfil...';
+
+  @override
+  String get addArtwork => 'Agregar Arte';
+
+  @override
+  String get addFile => 'Agregar Archivo';
+
+  @override
+  String get openFile => 'Abrir Archivo';
+
+  @override
+  String get menuView => 'Ver';
+
+  @override
+  String get menuAbout => 'Acerca de DAW Project Manager';
+
+  @override
+  String get menuLanguage => 'Idioma';
+
+  @override
+  String get menuWarnBeforeQuit => 'Advertir Antes de Salir (Cmd+Q)';
+
+  @override
+  String get menuQuit => 'Salir de DAW Project Manager';
+
+  @override
+  String get menuWindow => 'Ventana';
+
+  @override
+  String get donate => 'Donar';
+
+  @override
+  String get website => 'Sitio Web';
+
+  @override
+  String get switchToClassicDark => 'Cambiar a Classic Dark';
+
+  @override
+  String get switchToNeonDark => 'Cambiar a Neon Dark';
+
+  @override
+  String get switchToClassicTheme => 'Cambiar al Tema Clásico';
+
+  @override
+  String get switchToNeonTheme => 'Cambiar al Tema Neón';
+
+  @override
+  String get menuTheme => 'Tema';
+
+  @override
+  String get appDescription =>
+      'A project manager for music producers and sound designers.';
+
+  @override
+  String get neonDarkThemeName => 'Neon Dark';
+
+  @override
+  String get classicDarkThemeName => 'Classic Dark';
 }

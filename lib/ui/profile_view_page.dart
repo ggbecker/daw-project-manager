@@ -81,7 +81,7 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save file: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedToSaveBiography(e.toString()))),
         );
       }
     }
@@ -99,7 +99,7 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
       if (currentProfile == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Profile not found')),
+            SnackBar(content: Text(AppLocalizations.of(context)!.profileNotFound)),
           );
         }
         return;
@@ -114,13 +114,13 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Biography saved')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.biographySaved)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save biography: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedToSaveBiography(e.toString()))),
         );
       }
     } finally {
@@ -136,7 +136,7 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
       if (!await sourceFile.exists()) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('File not found')),
+            SnackBar(content: Text(AppLocalizations.of(context)!.fileNotFound)),
           );
         }
         return;
@@ -155,13 +155,13 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('File saved to ${path.basename(savePath)}')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.fileSavedTo(path.basename(savePath)))),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to download file: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedToDownloadFile(e.toString()))),
         );
       }
     }
@@ -204,7 +204,7 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
     if (filesToDownload.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No files to download')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.noFilesToDownload)),
         );
       }
       return;
@@ -235,7 +235,7 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
                 const CircularProgressIndicator(),
                 const SizedBox(height: 16),
                 Text(
-                  'Creating ZIP file...',
+                  AppLocalizations.of(context)!.creatingZipFile,
                   style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
                 ),
               ],
@@ -303,14 +303,14 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
       if (mounted) {
         Navigator.pop(context); // Close loading dialog
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('All files saved to ${path.basename(savePath)}')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.allFilesSavedTo(path.basename(savePath)))),
         );
       }
     } catch (e) {
       if (mounted) {
         Navigator.pop(context); // Close loading dialog
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to create ZIP file: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedToCreateZip(e.toString()))),
         );
       }
     }
@@ -333,14 +333,14 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
             ref.invalidate(currentProfileProvider);
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Artwork added')),
+                SnackBar(content: Text(AppLocalizations.of(context)!.artworkAdded)),
               );
             }
           }
         } catch (e) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Failed to add artwork: $e')),
+              SnackBar(content: Text(AppLocalizations.of(context)!.failedToAddArtwork(e.toString()))),
             );
           }
         }
@@ -360,14 +360,14 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
         ref.invalidate(currentProfileProvider);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Artwork removed')),
+            SnackBar(content: Text(AppLocalizations.of(context)!.artworkRemoved)),
           );
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to remove artwork: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedToRemoveArtwork(e.toString()))),
         );
       }
     }
@@ -390,14 +390,14 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
             ref.invalidate(currentProfileProvider);
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Press kit file added')),
+                SnackBar(content: Text(AppLocalizations.of(context)!.pressKitFileAdded)),
               );
             }
           }
         } catch (e) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Failed to add press kit file: $e')),
+              SnackBar(content: Text(AppLocalizations.of(context)!.failedToAddPressKitFile(e.toString()))),
             );
           }
         }
@@ -417,14 +417,14 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
         ref.invalidate(currentProfileProvider);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Press kit file removed')),
+            SnackBar(content: Text(AppLocalizations.of(context)!.pressKitFileRemoved)),
           );
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to remove press kit file: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedToRemovePressKitFile(e.toString()))),
         );
       }
     }
@@ -442,7 +442,7 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
           final allAdditionalAssets = profile.additionalAssets ?? {};
 
           return AlertDialog(
-            title: const Text('Select Files to Download'),
+            title: Text(AppLocalizations.of(context)!.selectFilesToDownload),
             content: SizedBox(
               width: 500,
               child: SingleChildScrollView(
@@ -453,8 +453,8 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
                     // Biography option
                     if (profile.bio != null && profile.bio!.trim().isNotEmpty)
                       CheckboxListTile(
-                        title: const Text('Biography'),
-                        subtitle: const Text('Will be saved as biography.txt'),
+                        title: Text(AppLocalizations.of(context)!.biography),
+                        subtitle: Text(AppLocalizations.of(context)!.biographyWillBeSaved),
                         value: selectedFiles.containsKey('biography.txt'),
                         onChanged: (value) {
                           setState(() {
@@ -469,7 +469,7 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
                     const Divider(),
                     // Artwork files
                     if (allArtworkPaths.isNotEmpty) ...[
-                      const Text('Artwork Files:', style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text(AppLocalizations.of(context)!.artworkFiles, style: const TextStyle(fontWeight: FontWeight.bold)),
                       const SizedBox(height: 8),
                       ...allArtworkPaths.asMap().entries.map((entry) {
                         final index = entry.key;
@@ -496,7 +496,7 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
                     ],
                     // Press Kit files
                     if (allPressKitPaths.isNotEmpty) ...[
-                      const Text('Press Kit Files:', style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text(AppLocalizations.of(context)!.pressKitFiles, style: const TextStyle(fontWeight: FontWeight.bold)),
                       const SizedBox(height: 8),
                       ...allPressKitPaths.asMap().entries.map((entry) {
                         final index = entry.key;
@@ -523,7 +523,7 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
                     ],
                     // Additional Assets
                     if (allAdditionalAssets.isNotEmpty) ...[
-                      const Text('Additional Assets:', style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text(AppLocalizations.of(context)!.additionalAssets, style: const TextStyle(fontWeight: FontWeight.bold)),
                       const SizedBox(height: 8),
                       ...allAdditionalAssets.entries.map((entry) {
                         final assetName = entry.key;
@@ -571,7 +571,7 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
                 onPressed: selectedFiles.isEmpty
                     ? null
                     : () => Navigator.pop(context, selectedFiles),
-                child: Text('Download ${selectedFiles.length} file${selectedFiles.length == 1 ? '' : 's'}'),
+                child: Text(AppLocalizations.of(context)!.downloadNFiles(selectedFiles.length, selectedFiles.length == 1 ? '' : 's')),
               ),
             ],
           );
@@ -612,7 +612,7 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
                 const CircularProgressIndicator(),
                 const SizedBox(height: 16),
                 Text(
-                  'Creating ZIP file...',
+                  AppLocalizations.of(context)!.creatingZipFile,
                   style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
                 ),
               ],
@@ -670,14 +670,14 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
       if (mounted) {
         Navigator.pop(context); // Close loading dialog
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${selectedFiles.length} file${selectedFiles.length == 1 ? '' : 's'} saved to ${path.basename(savePath)}')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.nFilesSavedTo(selectedFiles.length, selectedFiles.length == 1 ? '' : 's', path.basename(savePath)))),
         );
       }
     } catch (e) {
       if (mounted) {
         Navigator.pop(context); // Close loading dialog
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to create ZIP file: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedToCreateZip(e.toString()))),
         );
       }
     }
@@ -687,12 +687,12 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
     final assetName = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Add Asset'),
+        title: Text(AppLocalizations.of(context)!.addAsset),
         content: TextField(
           controller: _assetNameController,
-          decoration: const InputDecoration(
-            labelText: 'Asset Name',
-            hintText: 'e.g., Logo, Banner, Photo',
+          decoration: InputDecoration(
+            labelText: AppLocalizations.of(context)!.assetNameLabel,
+            hintText: AppLocalizations.of(context)!.assetNameHint,
           ),
           autofocus: true,
           onSubmitted: (value) {
@@ -712,7 +712,7 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
                 Navigator.pop(ctx, _assetNameController.text.trim());
               }
             },
-            child: const Text('Add'),
+            child: Text(AppLocalizations.of(context)!.add),
           ),
         ],
       ),
@@ -736,14 +736,14 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
             ref.invalidate(currentProfileProvider);
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('$assetName added successfully')),
+                SnackBar(content: Text(AppLocalizations.of(context)!.assetAddedSuccessfully(assetName))),
               );
             }
           }
         } catch (e) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Failed to add asset: $e')),
+              SnackBar(content: Text(AppLocalizations.of(context)!.failedToAddAsset(e.toString()))),
             );
           }
         }
@@ -763,14 +763,14 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
         ref.invalidate(currentProfileProvider);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('$assetName removed')),
+            SnackBar(content: Text(AppLocalizations.of(context)!.assetRemoved(assetName))),
           );
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to remove asset: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedToRemoveAsset(e.toString()))),
         );
       }
     }
@@ -780,7 +780,7 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
     final success = await FileLauncher.openFile(filePath);
     if (!success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to open file')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.failedToOpenFile)),
       );
     }
   }
@@ -810,7 +810,7 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
             child: profileAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, stack) => Center(
-                child: Text('Error loading profile: $error'),
+                child: Text('${AppLocalizations.of(context)!.error}: $error'),
               ),
               data: (profile) {
                 if (profile == null || profile.id != widget.profileId) {
@@ -822,7 +822,7 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
                         return const Center(child: CircularProgressIndicator());
                       }
                       if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
-                        return const Center(child: Text('Profile not found'));
+                        return Center(child: Text(AppLocalizations.of(context)!.profileNotFound));
                       }
                       final profile = snapshot.data!;
                       if (_bioController.text != (profile.bio ?? '')) {
@@ -922,13 +922,13 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
                                         children: [
                                           ElevatedButton.icon(
                                             icon: const Icon(Icons.select_all, size: 18),
-                                            label: const Text('Select Files'),
+                                            label: Text(AppLocalizations.of(context)!.selectFiles),
                                             onPressed: () => _showSelectFilesDialog(profile),
                                           ),
                                           const SizedBox(height: 8),
                                           ElevatedButton.icon(
                                             icon: const Icon(Icons.download, size: 18),
-                                            label: const Text('Download All'),
+                                            label: Text(AppLocalizations.of(context)!.downloadAll),
                                             onPressed: () => _downloadAllFiles(profile),
                                           ),
                                         ],
@@ -994,13 +994,13 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
                                       children: [
                                         ElevatedButton.icon(
                                           icon: const Icon(Icons.select_all, size: 18),
-                                          label: const Text('Select Files'),
+                                          label: Text(AppLocalizations.of(context)!.selectFiles),
                                           onPressed: () => _showSelectFilesDialog(profile),
                                         ),
                                         const SizedBox(width: 8),
                                         ElevatedButton.icon(
                                           icon: const Icon(Icons.download, size: 18),
-                                          label: const Text('Download All'),
+                                          label: Text(AppLocalizations.of(context)!.downloadAll),
                                           onPressed: () => _downloadAllFiles(profile),
                                         ),
                                       ],
@@ -1035,7 +1035,7 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
                                     IconButton(
                                       icon: const Icon(Icons.save),
                                       onPressed: _saveBio,
-                                      tooltip: 'Save Biography',
+                                      tooltip: AppLocalizations.of(context)!.saveBiographyTooltip,
                                     ),
                                 ],
                               ),
@@ -1043,9 +1043,9 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
                               TextField(
                                 controller: _bioController,
                                 maxLines: 8,
-                                decoration: const InputDecoration(
-                                  hintText: 'Enter profile biography...',
-                                  border: OutlineInputBorder(),
+                                decoration: InputDecoration(
+                                  hintText: AppLocalizations.of(context)!.enterBiographyHint,
+                                  border: const OutlineInputBorder(),
                                 ),
                                 onChanged: (_) {
                                   // Auto-save could be implemented here if needed
@@ -1073,7 +1073,7 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
                                   ),
                                   ElevatedButton.icon(
                                     icon: const Icon(Icons.add, size: 18),
-                                    label: const Text('Add Artwork'),
+                                    label: Text(AppLocalizations.of(context)!.addArtwork),
                                     onPressed: _addArtwork,
                                   ),
                                 ],
@@ -1157,7 +1157,7 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
                                                       artworkPath,
                                                       'artwork_${index + 1}${path.extension(artworkPath)}',
                                                     ),
-                                                    tooltip: 'Download',
+                                                    tooltip: AppLocalizations.of(context)!.download,
                                                     style: IconButton.styleFrom(
                                                       backgroundColor: Colors.black54,
                                                       foregroundColor: Theme.of(context).textTheme.bodyLarge?.color,
@@ -1169,7 +1169,7 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
                                                   IconButton(
                                                     icon: const Icon(Icons.delete_outline, size: 18),
                                                     onPressed: () => _removeArtwork(artworkPath),
-                                                    tooltip: 'Remove',
+                                                    tooltip: AppLocalizations.of(context)!.remove,
                                                     style: IconButton.styleFrom(
                                                       backgroundColor: Colors.black54,
                                                       foregroundColor: Colors.red.shade300,
@@ -1228,7 +1228,7 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
                                   ),
                                   ElevatedButton.icon(
                                     icon: const Icon(Icons.add, size: 18),
-                                    label: const Text('Add File'),
+                                    label: Text(AppLocalizations.of(context)!.addFile),
                                     onPressed: _addPressKitFile,
                                   ),
                                 ],
@@ -1279,17 +1279,17 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
                                                   pressKitPath,
                                                   path.basename(pressKitPath),
                                                 ),
-                                                tooltip: 'Download',
+                                                tooltip: AppLocalizations.of(context)!.download,
                                               ),
                                               IconButton(
                                                 icon: const Icon(Icons.folder_open),
                                                 onPressed: () => _openFile(pressKitPath),
-                                                tooltip: 'Open File',
+                                                tooltip: AppLocalizations.of(context)!.openFile,
                                               ),
                                               IconButton(
                                                 icon: const Icon(Icons.delete_outline),
                                                 onPressed: () => _removePressKitFile(pressKitPath),
-                                                tooltip: 'Remove',
+                                                tooltip: AppLocalizations.of(context)!.remove,
                                                 color: Colors.red.shade300,
                                               ),
                                             ],
@@ -1322,7 +1322,7 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
                                   ),
                                   ElevatedButton.icon(
                                     icon: const Icon(Icons.add, size: 18),
-                                    label: const Text('Add Asset'),
+                                    label: Text(AppLocalizations.of(context)!.addAsset),
                                     onPressed: _addAdditionalAsset,
                                   ),
                                 ],
@@ -1356,18 +1356,18 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
                                                 entry.value,
                                                 entry.key + path.extension(entry.value),
                                               ),
-                                              tooltip: 'Download',
+                                              tooltip: AppLocalizations.of(context)!.download,
                                             ),
                                             IconButton(
                                               icon: const Icon(Icons.folder_open),
                                               onPressed: () => _openFile(entry.value),
-                                              tooltip: 'Open File',
+                                              tooltip: AppLocalizations.of(context)!.openFile,
                                             ),
                                           ],
                                           IconButton(
                                             icon: const Icon(Icons.delete_outline),
                                             onPressed: () => _removeAsset(entry.key),
-                                            tooltip: 'Remove',
+                                            tooltip: AppLocalizations.of(context)!.remove,
                                             color: Colors.red.shade300,
                                           ),
                                         ],

@@ -340,7 +340,8 @@ class MusicProject {
     DateTime? updatedAt,
     double? bpm,
     String? musicalKey,
-    String? notes, // NOVO CAMPO NO COPYWITH
+    String? notes,
+    bool clearNotes = false,
     String? dawType,
     String? dawVersion,
     List<TodoItem>? todos,
@@ -370,7 +371,7 @@ class MusicProject {
       updatedAt: updatedAt ?? this.updatedAt,
       bpm: bpm ?? this.bpm,
       musicalKey: musicalKey ?? this.musicalKey,
-      notes: notes ?? this.notes, // NOVO CAMPO
+      notes: clearNotes ? null : (notes ?? this.notes),
       dawType: dawType ?? this.dawType,
       dawVersion: dawVersion ?? this.dawVersion,
       todos: todos ?? this.todos,

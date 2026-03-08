@@ -197,7 +197,6 @@
   "daw": "DAW",
   "lastModifiedColumn": "Última Modificação",
   "actions": "Ações",
-  "launch": "Abrir",
   "hide": "Ocultar",
   "unhide": "Mostrar",
   "extractMetadata": "Extrair Metadados",
@@ -543,7 +542,7 @@
       }
     }
   },
-  "errorLoadingProjects": "Erro ao carregar projetos: {error}",
+  "errorLoadingProjects": "Erro ao carregar projetos",
   "@errorLoadingProjects": {
     "placeholders": {
       "error": {
@@ -564,13 +563,9 @@
   "releaseDateSaved": "Data do lançamento salva.",
   "releaseDateCleared": "Data do lançamento limpa.",
   "saveReleaseFilesZip": "Salvar arquivos ZIP do lançamento",
-  "failedToOpenFile": "Falha ao abrir arquivo: {error}",
+  "failedToOpenFile": "Falha ao abrir arquivo",
   "@failedToOpenFile": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
+    "description": "Error message when opening a file fails"
   },
   "failedToPlayAudio": "Falha ao reproduzir áudio: {error}",
   "@failedToPlayAudio": {
@@ -620,14 +615,6 @@
   "@couldNotOpenFolder": {
     "placeholders": {
       "error": {
-        "type": "String"
-      }
-    }
-  },
-  "lastModified": "Última modificação: {date}",
-  "@lastModified": {
-    "placeholders": {
-      "date": {
         "type": "String"
       }
     }
@@ -914,7 +901,6 @@
   "enterAuthorizationCode": "Inserir Código de Autorização",
   "authorizationCode": "Código de Autorização",
   "pasteCodeFromBrowser": "Cole o código do navegador",
-  "continueButton": "Continuar",
   "sessionActive": "Sessão ativa",
   "signedIn": "Conectado",
   "creatingInitialBackup": "Criando backup inicial...",
@@ -1013,7 +999,7 @@
   },
   "playlists": "Playlists",
   "playlistsDesktopOnly": "Playlists estão disponíveis apenas no Android.",
-  "noPlaylistsYet": "Nenhuma playlist ainda",
+  "noPlaylistsYet": "Ainda não há playlists",
   "createFirstPlaylist": "Toque no botão + para criar sua primeira playlist",
   "playlistSongCount": "{count} músicas",
   "@playlistSongCount": {
@@ -1026,10 +1012,10 @@
   "createPlaylist": "Criar Playlist",
   "playlistName": "Nome da Playlist",
   "playlistNameHint": "Minha Playlist",
-  "playlistNameRequired": "O nome da playlist é obrigatório",
+  "playlistNameRequired": "Nome da playlist é obrigatório",
   "editPlaylist": "Editar Playlist",
   "stopPlaybackBeforeEditing": "Por favor, pare a reprodução antes de editar a playlist",
-  "selectPreviewSongs": "Selecionar Músicas Preview",
+  "selectPreviewSongs": "Selecionar Prévias",
   "deletePlaylist": "Excluir Playlist",
   "deletePlaylistConfirm": "Tem certeza que deseja excluir \"{name}\"?",
   "@deletePlaylistConfirm": {
@@ -1056,9 +1042,8 @@
       }
     }
   },
-  "noPreviewSongsInPlaylist": "Nenhuma música preview disponível nesta playlist",
+  "noPreviewSongsInPlaylist": "Nenhuma prévia disponível nesta playlist",
   "errorLoadingPlaylists": "Erro ao carregar playlists",
-  "errorLoadingProjects": "Erro ao carregar projetos",
   "playlistItems": "Itens da Playlist",
   "addSongs": "Adicionar Músicas",
   "addAudioFiles": "Adicionar Arquivos de Áudio",
@@ -1066,41 +1051,12 @@
   "selectFromProjects": "Selecionar dos Projetos",
   "add": "Adicionar",
   "fromProject": "Do Projeto",
-  "playlists": "Playlists",
-  "playlistsDesktopOnly": "Playlists estão disponíveis apenas no Android.",
-  "noPlaylistsYet": "Ainda não há playlists",
-  "createFirstPlaylist": "Toque no botão + para criar sua primeira playlist",
-  "playlistSongCount": "{count} músicas",
-  "createPlaylist": "Criar Playlist",
-  "playlistName": "Nome da Playlist",
-  "playlistNameHint": "Minha Playlist",
-  "playlistNameRequired": "Nome da playlist é obrigatório",
-  "editPlaylist": "Editar Playlist",
-  "selectPreviewSongs": "Selecionar Prévias",
-  "deletePlaylist": "Excluir Playlist",
-  "deletePlaylistConfirm": "Tem certeza que deseja excluir \"{name}\"?",
-  "playlistDeleted": "Playlist excluída",
-  "errorDeletingPlaylist": "Erro ao excluir playlist",
-  "playlistUpdated": "Playlist atualizada",
-  "changeSong": "Trocar Música",
-  "changeSongConfirm": "Uma música está tocando. Deseja trocar para esta música?",
-  "changeSongButton": "Trocar",
-  "playlistProgress": "{current} de {total}",
-  "noPreviewSongsInPlaylist": "Nenhuma prévia disponível nesta playlist",
   "tapEditToAddSongs": "Toque em editar para adicionar músicas a esta playlist",
   "noProjectsAvailableForPlaylist": "Nenhum projeto com músicas de preview disponíveis para adicionar",
   "noProjectsInDatabase": "Nenhum projeto encontrado no banco de dados. Por favor, sincronize seus projetos primeiro.",
   "firstTimeSyncTitle": "Parece que é sua primeira vez aqui!",
   "firstTimeSyncMessage": "Vamos sincronizar seus dados do Google Drive para começar",
   "syncWithGoogleDrive": "Sincronizar com Google Drive",
-  "errorLoadingPlaylists": "Erro ao carregar playlists",
-  "playlistItems": "Itens da Playlist",
-  "addSongs": "Adicionar Músicas",
-  "addAudioFiles": "Adicionar Arquivos de Áudio",
-  "selectAudioFiles": "Selecionar Arquivos de Áudio",
-  "selectFromProjects": "Selecionar dos Projetos",
-  "add": "Adicionar",
-  "fromProject": "Do Projeto",
   "projectDeadline": "Prazo do Projeto",
   "noDeadlineSet": "Sem prazo definido",
   "camelotCode": "Código Camelot",
@@ -1135,5 +1091,325 @@
   "downloadingProfilePhotos": "Baixando fotos de perfil...",
   "downloadingReleaseArtwork": "Baixando artwork de lançamentos...",
   "mergingData": "Mesclando dados...",
-  "downloadingBackupTitle": "Baixando Backup"
+  "downloadingBackupTitle": "Baixando Backup",
+  "sourceFileNotFoundOnThisMachine": "Arquivo fonte não encontrado nesta máquina",
+  "@sourceFileNotFoundOnThisMachine": {
+    "description": "Tooltip shown when the project source file does not exist on the current machine"
+  },
+  "previewSongNotAvailableDownloadFirst": "Música de prévia não disponível. Por favor, baixe o backup primeiro.",
+  "@previewSongNotAvailableDownloadFirst": {
+    "description": "Message shown when preview song is not available locally and needs to be downloaded"
+  },
+  "sharePreviewSong": "Compartilhar música de prévia",
+  "@sharePreviewSong": {
+    "description": "Tooltip for the share preview song button"
+  },
+  "shareAsZip": "Compartilhar como ZIP",
+  "@shareAsZip": {
+    "description": "Tooltip for the share as ZIP button"
+  },
+  "share": "Compartilhar",
+  "@share": {
+    "description": "Label for the share button"
+  },
+  "shareZip": "Compartilhar ZIP",
+  "@shareZip": {
+    "description": "Label for the share as ZIP button"
+  },
+  "failedToSharePreviewSong": "Falha ao compartilhar música de prévia: {error}",
+  "@failedToSharePreviewSong": {
+    "description": "Error message when sharing preview song fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToSharePreviewSongAsZip": "Falha ao compartilhar música de prévia como ZIP: {error}",
+  "@failedToSharePreviewSongAsZip": {
+    "description": "Error message when sharing preview song as ZIP fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "biographySaved": "Biografia salva",
+  "@biographySaved": {
+    "description": "Success message when biography is saved"
+  },
+  "failedToSaveBiography": "Falha ao salvar biografia: {error}",
+  "@failedToSaveBiography": {
+    "description": "Error message when saving biography fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fileSavedTo": "Arquivo salvo em {filename}",
+  "@fileSavedTo": {
+    "description": "Success message when a file is saved",
+    "placeholders": {
+      "filename": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToDownloadFile": "Falha ao baixar arquivo: {error}",
+  "@failedToDownloadFile": {
+    "description": "Error message when downloading a file fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "allFilesSavedTo": "Todos os arquivos salvos em {filename}",
+  "@allFilesSavedTo": {
+    "description": "Success message when all files are saved to a zip",
+    "placeholders": {
+      "filename": {
+        "type": "String"
+      }
+    }
+  },
+  "artworkAdded": "Arte adicionada",
+  "@artworkAdded": {
+    "description": "Success message when artwork is added"
+  },
+  "failedToAddArtwork": "Falha ao adicionar arte: {error}",
+  "@failedToAddArtwork": {
+    "description": "Error message when adding artwork fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "artworkRemoved": "Arte removida",
+  "@artworkRemoved": {
+    "description": "Success message when artwork is removed"
+  },
+  "failedToRemoveArtwork": "Falha ao remover arte: {error}",
+  "@failedToRemoveArtwork": {
+    "description": "Error message when removing artwork fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pressKitFileAdded": "Arquivo do press kit adicionado",
+  "@pressKitFileAdded": {
+    "description": "Success message when a press kit file is added"
+  },
+  "failedToAddPressKitFile": "Falha ao adicionar arquivo do press kit: {error}",
+  "@failedToAddPressKitFile": {
+    "description": "Error message when adding press kit file fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pressKitFileRemoved": "Arquivo do press kit removido",
+  "@pressKitFileRemoved": {
+    "description": "Success message when a press kit file is removed"
+  },
+  "failedToRemovePressKitFile": "Falha ao remover arquivo do press kit: {error}",
+  "@failedToRemovePressKitFile": {
+    "description": "Error message when removing press kit file fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "selectFilesToDownload": "Selecionar Arquivos para Baixar",
+  "@selectFilesToDownload": {
+    "description": "Title for the dialog to select files for download"
+  },
+  "biography": "Biografia",
+  "@biography": {
+    "description": "Label for the biography field"
+  },
+  "biographyWillBeSaved": "Será salvo como biography.txt",
+  "@biographyWillBeSaved": {
+    "description": "Subtitle explaining how the biography file will be saved"
+  },
+  "artworkFiles": "Arquivos de Arte",
+  "@artworkFiles": {
+    "description": "Section header for artwork files"
+  },
+  "pressKitFiles": "Arquivos do Press Kit",
+  "@pressKitFiles": {
+    "description": "Section header for press kit files"
+  },
+  "additionalAssets": "Ativos Adicionais",
+  "@additionalAssets": {
+    "description": "Section header for additional assets"
+  },
+  "downloadNFiles": "Baixar {count} arquivo{plural}",
+  "@downloadNFiles": {
+    "description": "Button label to download N files",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      }
+    }
+  },
+  "nFilesSavedTo": "{count} arquivo{plural} salvo em {filename}",
+  "@nFilesSavedTo": {
+    "description": "Success message when N files are saved",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      },
+      "filename": {
+        "type": "String"
+      }
+    }
+  },
+  "addAsset": "Adicionar Ativo",
+  "@addAsset": {
+    "description": "Dialog title and button label for adding an asset"
+  },
+  "assetNameLabel": "Nome do Ativo",
+  "@assetNameLabel": {
+    "description": "Label for asset name input field"
+  },
+  "assetNameHint": "ex.: Logo, Banner, Foto",
+  "@assetNameHint": {
+    "description": "Hint text for asset name input field"
+  },
+  "assetAddedSuccessfully": "{assetName} adicionado com sucesso",
+  "@assetAddedSuccessfully": {
+    "description": "Success message when an asset is added",
+    "placeholders": {
+      "assetName": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToAddAsset": "Falha ao adicionar ativo: {error}",
+  "@failedToAddAsset": {
+    "description": "Error message when adding an asset fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "assetRemoved": "{assetName} removido",
+  "@assetRemoved": {
+    "description": "Success message when an asset is removed",
+    "placeholders": {
+      "assetName": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToRemoveAsset": "Falha ao remover ativo: {error}",
+  "@failedToRemoveAsset": {
+    "description": "Error message when removing an asset fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "profileNotFound": "Perfil não encontrado",
+  "@profileNotFound": {
+    "description": "Message when a profile cannot be found"
+  },
+  "selectFiles": "Selecionar Arquivos",
+  "@selectFiles": {
+    "description": "Button label to select files"
+  },
+  "downloadAll": "Baixar Tudo",
+  "@downloadAll": {
+    "description": "Button label to download all files"
+  },
+  "saveBiographyTooltip": "Salvar Biografia",
+  "@saveBiographyTooltip": {
+    "description": "Tooltip for the save biography button"
+  },
+  "enterBiographyHint": "Digite a biografia do perfil...",
+  "@enterBiographyHint": {
+    "description": "Hint text for biography input field"
+  },
+  "addArtwork": "Adicionar Arte",
+  "@addArtwork": {
+    "description": "Button label to add artwork"
+  },
+  "addFile": "Adicionar Arquivo",
+  "@addFile": {
+    "description": "Button label to add a press kit file"
+  },
+  "openFile": "Abrir Arquivo",
+  "@openFile": {
+    "description": "Tooltip for the open file button"
+  },
+  "menuView": "Visualizar",
+  "@menuView": {
+    "description": "macOS menu bar View menu label"
+  },
+  "menuAbout": "Sobre o DAW Project Manager",
+  "@menuAbout": {
+    "description": "macOS menu item for About dialog"
+  },
+  "menuLanguage": "Idioma",
+  "@menuLanguage": {
+    "description": "macOS menu item for language selection"
+  },
+  "menuWarnBeforeQuit": "Avisar Antes de Sair (Cmd+Q)",
+  "@menuWarnBeforeQuit": {
+    "description": "macOS menu item to toggle quit warning"
+  },
+  "menuQuit": "Sair do DAW Project Manager",
+  "@menuQuit": {
+    "description": "macOS menu item to quit the app"
+  },
+  "menuWindow": "Janela",
+  "@menuWindow": {
+    "description": "macOS menu bar Window menu label"
+  },
+  "donate": "Doar",
+  "@donate": {
+    "description": "Button label for the donate button in the About dialog"
+  },
+  "website": "Site",
+  "@website": {
+    "description": "Button label for the website button in the About dialog"
+  },
+  "switchToClassicDark": "Mudar para Classic Dark",
+  "@switchToClassicDark": {
+    "description": "Theme switcher label to switch to classic dark theme"
+  },
+  "switchToNeonDark": "Mudar para Neon Dark",
+  "@switchToNeonDark": {
+    "description": "Theme switcher label to switch to neon dark theme"
+  },
+  "switchToClassicTheme": "Mudar para Tema Classic",
+  "@switchToClassicTheme": {
+    "description": "Tooltip to switch to classic theme"
+  },
+  "switchToNeonTheme": "Mudar para Tema Neon",
+  "@switchToNeonTheme": {
+    "description": "Tooltip to switch to neon theme"
+  },
+  "menuTheme": "Tema",
+  "@menuTheme": {
+    "description": "macOS menu item for theme switching"
+  },
+  "appDescription": "Um gerenciador de projetos para produtores musicais e designers de som.",
+  "neonDarkThemeName": "Neon Escuro",
+  "classicDarkThemeName": "Clássico Escuro"
 }

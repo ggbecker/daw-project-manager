@@ -197,7 +197,6 @@
   "daw": "DAW",
   "lastModifiedColumn": "最終更新",
   "actions": "アクション",
-  "launch": "開く",
   "hide": "非表示にする",
   "unhide": "表示する",
   "extractMetadata": "メタデータを抽出",
@@ -439,7 +438,7 @@
     }
   },
   "selectTracks": "トラックを選択",
-  "continueButton": "続ける",
+  "continueButton": "続行",
   "noReleasesYet": "まだリリースがありません",
   "createFirstRelease": "プロジェクトからトラックを選択して最初のリリースを作成してください",
   "releasesCount": "リリース（{count}）",
@@ -564,13 +563,9 @@
   "releaseDateSaved": "リリース日を保存しました。",
   "releaseDateCleared": "リリース日をクリアしました。",
   "saveReleaseFilesZip": "リリースファイルZIPを保存",
-  "failedToOpenFile": "ファイルを開けませんでした: {error}",
+  "failedToOpenFile": "ファイルを開けませんでした",
   "@failedToOpenFile": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
+    "description": "Error message when opening a file fails"
   },
   "failedToPlayAudio": "オーディオの再生に失敗しました: {error}",
   "@failedToPlayAudio": {
@@ -620,14 +615,6 @@
   "@couldNotOpenFolder": {
     "placeholders": {
       "error": {
-        "type": "String"
-      }
-    }
-  },
-  "lastModified": "最終更新: {date}",
-  "@lastModified": {
-    "placeholders": {
-      "date": {
         "type": "String"
       }
     }
@@ -914,7 +901,6 @@
   "enterAuthorizationCode": "認証コードを入力",
   "authorizationCode": "認証コード",
   "pasteCodeFromBrowser": "ブラウザからコードを貼り付け",
-  "continueButton": "続行",
   "sessionActive": "セッション有効",
   "signedIn": "サインイン済み",
   "creatingInitialBackup": "初期バックアップを作成中...",
@@ -1081,5 +1067,325 @@
   "downloadingProfilePhotos": "プロフィール写真をダウンロード中...",
   "downloadingReleaseArtwork": "リリースアートワークをダウンロード中...",
   "mergingData": "データを統合中...",
-  "downloadingBackupTitle": "バックアップをダウンロード中"
+  "downloadingBackupTitle": "バックアップをダウンロード中",
+  "sourceFileNotFoundOnThisMachine": "このマシンにソースファイルが見つかりません",
+  "@sourceFileNotFoundOnThisMachine": {
+    "description": "Tooltip shown when the project source file does not exist on the current machine"
+  },
+  "previewSongNotAvailableDownloadFirst": "プレビュー曲が利用できません。先にバックアップをダウンロードしてください。",
+  "@previewSongNotAvailableDownloadFirst": {
+    "description": "Message shown when preview song is not available locally and needs to be downloaded"
+  },
+  "sharePreviewSong": "プレビュー曲を共有",
+  "@sharePreviewSong": {
+    "description": "Tooltip for the share preview song button"
+  },
+  "shareAsZip": "ZIPとして共有",
+  "@shareAsZip": {
+    "description": "Tooltip for the share as ZIP button"
+  },
+  "share": "共有",
+  "@share": {
+    "description": "Label for the share button"
+  },
+  "shareZip": "ZIPを共有",
+  "@shareZip": {
+    "description": "Label for the share as ZIP button"
+  },
+  "failedToSharePreviewSong": "プレビュー曲を共有できませんでした: {error}",
+  "@failedToSharePreviewSong": {
+    "description": "Error message when sharing preview song fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToSharePreviewSongAsZip": "プレビュー曲をZIPとして共有できませんでした: {error}",
+  "@failedToSharePreviewSongAsZip": {
+    "description": "Error message when sharing preview song as ZIP fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "biographySaved": "プロフィールが保存されました",
+  "@biographySaved": {
+    "description": "Success message when biography is saved"
+  },
+  "failedToSaveBiography": "プロフィールを保存できませんでした: {error}",
+  "@failedToSaveBiography": {
+    "description": "Error message when saving biography fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fileSavedTo": "ファイルを {filename} に保存しました",
+  "@fileSavedTo": {
+    "description": "Success message when a file is saved",
+    "placeholders": {
+      "filename": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToDownloadFile": "ファイルをダウンロードできませんでした: {error}",
+  "@failedToDownloadFile": {
+    "description": "Error message when downloading a file fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "allFilesSavedTo": "すべてのファイルを {filename} に保存しました",
+  "@allFilesSavedTo": {
+    "description": "Success message when all files are saved to a zip",
+    "placeholders": {
+      "filename": {
+        "type": "String"
+      }
+    }
+  },
+  "artworkAdded": "アートワークを追加しました",
+  "@artworkAdded": {
+    "description": "Success message when artwork is added"
+  },
+  "failedToAddArtwork": "アートワークを追加できませんでした: {error}",
+  "@failedToAddArtwork": {
+    "description": "Error message when adding artwork fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "artworkRemoved": "アートワークを削除しました",
+  "@artworkRemoved": {
+    "description": "Success message when artwork is removed"
+  },
+  "failedToRemoveArtwork": "アートワークを削除できませんでした: {error}",
+  "@failedToRemoveArtwork": {
+    "description": "Error message when removing artwork fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pressKitFileAdded": "プレスキットファイルを追加しました",
+  "@pressKitFileAdded": {
+    "description": "Success message when a press kit file is added"
+  },
+  "failedToAddPressKitFile": "プレスキットファイルを追加できませんでした: {error}",
+  "@failedToAddPressKitFile": {
+    "description": "Error message when adding press kit file fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pressKitFileRemoved": "プレスキットファイルを削除しました",
+  "@pressKitFileRemoved": {
+    "description": "Success message when a press kit file is removed"
+  },
+  "failedToRemovePressKitFile": "プレスキットファイルを削除できませんでした: {error}",
+  "@failedToRemovePressKitFile": {
+    "description": "Error message when removing press kit file fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "selectFilesToDownload": "ダウンロードするファイルを選択",
+  "@selectFilesToDownload": {
+    "description": "Title for the dialog to select files for download"
+  },
+  "biography": "プロフィール",
+  "@biography": {
+    "description": "Label for the biography field"
+  },
+  "biographyWillBeSaved": "biography.txt として保存されます",
+  "@biographyWillBeSaved": {
+    "description": "Subtitle explaining how the biography file will be saved"
+  },
+  "artworkFiles": "アートワークファイル",
+  "@artworkFiles": {
+    "description": "Section header for artwork files"
+  },
+  "pressKitFiles": "プレスキットファイル",
+  "@pressKitFiles": {
+    "description": "Section header for press kit files"
+  },
+  "additionalAssets": "追加アセット",
+  "@additionalAssets": {
+    "description": "Section header for additional assets"
+  },
+  "downloadNFiles": "{count}個のファイル{plural}をダウンロード",
+  "@downloadNFiles": {
+    "description": "Button label to download N files",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      }
+    }
+  },
+  "nFilesSavedTo": "{count}個のファイル{plural}を {filename} に保存しました",
+  "@nFilesSavedTo": {
+    "description": "Success message when N files are saved",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      },
+      "filename": {
+        "type": "String"
+      }
+    }
+  },
+  "addAsset": "アセットを追加",
+  "@addAsset": {
+    "description": "Dialog title and button label for adding an asset"
+  },
+  "assetNameLabel": "アセット名",
+  "@assetNameLabel": {
+    "description": "Label for asset name input field"
+  },
+  "assetNameHint": "例：ロゴ、バナー、写真",
+  "@assetNameHint": {
+    "description": "Hint text for asset name input field"
+  },
+  "assetAddedSuccessfully": "{assetName} を正常に追加しました",
+  "@assetAddedSuccessfully": {
+    "description": "Success message when an asset is added",
+    "placeholders": {
+      "assetName": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToAddAsset": "アセットを追加できませんでした: {error}",
+  "@failedToAddAsset": {
+    "description": "Error message when adding an asset fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "assetRemoved": "{assetName} を削除しました",
+  "@assetRemoved": {
+    "description": "Success message when an asset is removed",
+    "placeholders": {
+      "assetName": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToRemoveAsset": "アセットを削除できませんでした: {error}",
+  "@failedToRemoveAsset": {
+    "description": "Error message when removing an asset fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "profileNotFound": "プロフィールが見つかりません",
+  "@profileNotFound": {
+    "description": "Message when a profile cannot be found"
+  },
+  "selectFiles": "ファイルを選択",
+  "@selectFiles": {
+    "description": "Button label to select files"
+  },
+  "downloadAll": "すべてダウンロード",
+  "@downloadAll": {
+    "description": "Button label to download all files"
+  },
+  "saveBiographyTooltip": "プロフィールを保存",
+  "@saveBiographyTooltip": {
+    "description": "Tooltip for the save biography button"
+  },
+  "enterBiographyHint": "プロフィールの経歴を入力...",
+  "@enterBiographyHint": {
+    "description": "Hint text for biography input field"
+  },
+  "addArtwork": "アートワークを追加",
+  "@addArtwork": {
+    "description": "Button label to add artwork"
+  },
+  "addFile": "ファイルを追加",
+  "@addFile": {
+    "description": "Button label to add a press kit file"
+  },
+  "openFile": "ファイルを開く",
+  "@openFile": {
+    "description": "Tooltip for the open file button"
+  },
+  "menuView": "表示",
+  "@menuView": {
+    "description": "macOS menu bar View menu label"
+  },
+  "menuAbout": "DAW Project Manager について",
+  "@menuAbout": {
+    "description": "macOS menu item for About dialog"
+  },
+  "menuLanguage": "言語",
+  "@menuLanguage": {
+    "description": "macOS menu item for language selection"
+  },
+  "menuWarnBeforeQuit": "終了前に警告する (Cmd+Q)",
+  "@menuWarnBeforeQuit": {
+    "description": "macOS menu item to toggle quit warning"
+  },
+  "menuQuit": "DAW Project Manager を終了",
+  "@menuQuit": {
+    "description": "macOS menu item to quit the app"
+  },
+  "menuWindow": "ウィンドウ",
+  "@menuWindow": {
+    "description": "macOS menu bar Window menu label"
+  },
+  "donate": "寄付",
+  "@donate": {
+    "description": "Button label for the donate button in the About dialog"
+  },
+  "website": "ウェブサイト",
+  "@website": {
+    "description": "Button label for the website button in the About dialog"
+  },
+  "switchToClassicDark": "Classic Dark に切り替え",
+  "@switchToClassicDark": {
+    "description": "Theme switcher label to switch to classic dark theme"
+  },
+  "switchToNeonDark": "Neon Dark に切り替え",
+  "@switchToNeonDark": {
+    "description": "Theme switcher label to switch to neon dark theme"
+  },
+  "switchToClassicTheme": "Classic テーマに切り替え",
+  "@switchToClassicTheme": {
+    "description": "Tooltip to switch to classic theme"
+  },
+  "switchToNeonTheme": "Neon テーマに切り替え",
+  "@switchToNeonTheme": {
+    "description": "Tooltip to switch to neon theme"
+  },
+  "menuTheme": "テーマ",
+  "@menuTheme": {
+    "description": "macOS menu item for theme switching"
+  },
+  "appDescription": "音楽プロデューサーとサウンドデザイナーのためのプロジェクト管理ツール。",
+  "neonDarkThemeName": "ネオンダーク",
+  "classicDarkThemeName": "クラシックダーク"
 }

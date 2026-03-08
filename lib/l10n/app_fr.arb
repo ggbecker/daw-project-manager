@@ -197,7 +197,6 @@
   "daw": "DAW",
   "lastModifiedColumn": "Dernière Modification",
   "actions": "Actions",
-  "launch": "Ouvrir",
   "hide": "Masquer",
   "unhide": "Afficher",
   "extractMetadata": "Extraire les Métadonnées",
@@ -564,13 +563,9 @@
   "releaseDateSaved": "Date de sortie enregistrée.",
   "releaseDateCleared": "Date de sortie effacée.",
   "saveReleaseFilesZip": "Enregistrer les fichiers ZIP de la sortie",
-  "failedToOpenFile": "Échec de l'ouverture du fichier: {error}",
+  "failedToOpenFile": "Échec de l'ouverture du fichier",
   "@failedToOpenFile": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
+    "description": "Error message when opening a file fails"
   },
   "failedToPlayAudio": "Échec de la lecture audio: {error}",
   "@failedToPlayAudio": {
@@ -620,14 +615,6 @@
   "@couldNotOpenFolder": {
     "placeholders": {
       "error": {
-        "type": "String"
-      }
-    }
-  },
-  "lastModified": "Dernière modification: {date}",
-  "@lastModified": {
-    "placeholders": {
-      "date": {
         "type": "String"
       }
     }
@@ -914,7 +901,6 @@
   "enterAuthorizationCode": "Entrer le Code d'Autorisation",
   "authorizationCode": "Code d'Autorisation",
   "pasteCodeFromBrowser": "Collez le code du navigateur",
-  "continueButton": "Continuer",
   "sessionActive": "Session active",
   "signedIn": "Connecté",
   "creatingInitialBackup": "Création de la sauvegarde initiale...",
@@ -1081,5 +1067,325 @@
   "downloadingProfilePhotos": "Téléchargement des photos de profil...",
   "downloadingReleaseArtwork": "Téléchargement des artwork de sortie...",
   "mergingData": "Fusion des données...",
-  "downloadingBackupTitle": "Téléchargement de la Sauvegarde"
+  "downloadingBackupTitle": "Téléchargement de la Sauvegarde",
+  "sourceFileNotFoundOnThisMachine": "Fichier source introuvable sur cette machine",
+  "@sourceFileNotFoundOnThisMachine": {
+    "description": "Tooltip shown when the project source file does not exist on the current machine"
+  },
+  "previewSongNotAvailableDownloadFirst": "Chanson d'aperçu non disponible. Veuillez d'abord télécharger la sauvegarde.",
+  "@previewSongNotAvailableDownloadFirst": {
+    "description": "Message shown when preview song is not available locally and needs to be downloaded"
+  },
+  "sharePreviewSong": "Partager la chanson d'aperçu",
+  "@sharePreviewSong": {
+    "description": "Tooltip for the share preview song button"
+  },
+  "shareAsZip": "Partager en ZIP",
+  "@shareAsZip": {
+    "description": "Tooltip for the share as ZIP button"
+  },
+  "share": "Partager",
+  "@share": {
+    "description": "Label for the share button"
+  },
+  "shareZip": "Partager ZIP",
+  "@shareZip": {
+    "description": "Label for the share as ZIP button"
+  },
+  "failedToSharePreviewSong": "Échec du partage de la chanson d'aperçu : {error}",
+  "@failedToSharePreviewSong": {
+    "description": "Error message when sharing preview song fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToSharePreviewSongAsZip": "Échec du partage de la chanson d'aperçu en ZIP : {error}",
+  "@failedToSharePreviewSongAsZip": {
+    "description": "Error message when sharing preview song as ZIP fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "biographySaved": "Biographie enregistrée",
+  "@biographySaved": {
+    "description": "Success message when biography is saved"
+  },
+  "failedToSaveBiography": "Échec de l'enregistrement de la biographie : {error}",
+  "@failedToSaveBiography": {
+    "description": "Error message when saving biography fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fileSavedTo": "Fichier enregistré dans {filename}",
+  "@fileSavedTo": {
+    "description": "Success message when a file is saved",
+    "placeholders": {
+      "filename": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToDownloadFile": "Échec du téléchargement du fichier : {error}",
+  "@failedToDownloadFile": {
+    "description": "Error message when downloading a file fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "allFilesSavedTo": "Tous les fichiers enregistrés dans {filename}",
+  "@allFilesSavedTo": {
+    "description": "Success message when all files are saved to a zip",
+    "placeholders": {
+      "filename": {
+        "type": "String"
+      }
+    }
+  },
+  "artworkAdded": "Artwork ajouté",
+  "@artworkAdded": {
+    "description": "Success message when artwork is added"
+  },
+  "failedToAddArtwork": "Échec de l'ajout de l'artwork : {error}",
+  "@failedToAddArtwork": {
+    "description": "Error message when adding artwork fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "artworkRemoved": "Artwork supprimé",
+  "@artworkRemoved": {
+    "description": "Success message when artwork is removed"
+  },
+  "failedToRemoveArtwork": "Échec de la suppression de l'artwork : {error}",
+  "@failedToRemoveArtwork": {
+    "description": "Error message when removing artwork fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pressKitFileAdded": "Fichier de presse ajouté",
+  "@pressKitFileAdded": {
+    "description": "Success message when a press kit file is added"
+  },
+  "failedToAddPressKitFile": "Échec de l'ajout du fichier de presse : {error}",
+  "@failedToAddPressKitFile": {
+    "description": "Error message when adding press kit file fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pressKitFileRemoved": "Fichier de presse supprimé",
+  "@pressKitFileRemoved": {
+    "description": "Success message when a press kit file is removed"
+  },
+  "failedToRemovePressKitFile": "Échec de la suppression du fichier de presse : {error}",
+  "@failedToRemovePressKitFile": {
+    "description": "Error message when removing press kit file fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "selectFilesToDownload": "Sélectionner les Fichiers à Télécharger",
+  "@selectFilesToDownload": {
+    "description": "Title for the dialog to select files for download"
+  },
+  "biography": "Biographie",
+  "@biography": {
+    "description": "Label for the biography field"
+  },
+  "biographyWillBeSaved": "Sera enregistré sous biography.txt",
+  "@biographyWillBeSaved": {
+    "description": "Subtitle explaining how the biography file will be saved"
+  },
+  "artworkFiles": "Fichiers Artwork",
+  "@artworkFiles": {
+    "description": "Section header for artwork files"
+  },
+  "pressKitFiles": "Fichiers de Presse",
+  "@pressKitFiles": {
+    "description": "Section header for press kit files"
+  },
+  "additionalAssets": "Ressources Supplémentaires",
+  "@additionalAssets": {
+    "description": "Section header for additional assets"
+  },
+  "downloadNFiles": "Télécharger {count} fichier{plural}",
+  "@downloadNFiles": {
+    "description": "Button label to download N files",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      }
+    }
+  },
+  "nFilesSavedTo": "{count} fichier{plural} enregistré dans {filename}",
+  "@nFilesSavedTo": {
+    "description": "Success message when N files are saved",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      },
+      "filename": {
+        "type": "String"
+      }
+    }
+  },
+  "addAsset": "Ajouter une Ressource",
+  "@addAsset": {
+    "description": "Dialog title and button label for adding an asset"
+  },
+  "assetNameLabel": "Nom de la Ressource",
+  "@assetNameLabel": {
+    "description": "Label for asset name input field"
+  },
+  "assetNameHint": "ex., Logo, Bannière, Photo",
+  "@assetNameHint": {
+    "description": "Hint text for asset name input field"
+  },
+  "assetAddedSuccessfully": "{assetName} ajouté avec succès",
+  "@assetAddedSuccessfully": {
+    "description": "Success message when an asset is added",
+    "placeholders": {
+      "assetName": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToAddAsset": "Échec de l'ajout de la ressource : {error}",
+  "@failedToAddAsset": {
+    "description": "Error message when adding an asset fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "assetRemoved": "{assetName} supprimé",
+  "@assetRemoved": {
+    "description": "Success message when an asset is removed",
+    "placeholders": {
+      "assetName": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToRemoveAsset": "Échec de la suppression de la ressource : {error}",
+  "@failedToRemoveAsset": {
+    "description": "Error message when removing an asset fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "profileNotFound": "Profil introuvable",
+  "@profileNotFound": {
+    "description": "Message when a profile cannot be found"
+  },
+  "selectFiles": "Sélectionner des Fichiers",
+  "@selectFiles": {
+    "description": "Button label to select files"
+  },
+  "downloadAll": "Tout Télécharger",
+  "@downloadAll": {
+    "description": "Button label to download all files"
+  },
+  "saveBiographyTooltip": "Enregistrer la Biographie",
+  "@saveBiographyTooltip": {
+    "description": "Tooltip for the save biography button"
+  },
+  "enterBiographyHint": "Entrez la biographie du profil...",
+  "@enterBiographyHint": {
+    "description": "Hint text for biography input field"
+  },
+  "addArtwork": "Ajouter un Artwork",
+  "@addArtwork": {
+    "description": "Button label to add artwork"
+  },
+  "addFile": "Ajouter un Fichier",
+  "@addFile": {
+    "description": "Button label to add a press kit file"
+  },
+  "openFile": "Ouvrir le Fichier",
+  "@openFile": {
+    "description": "Tooltip for the open file button"
+  },
+  "menuView": "Affichage",
+  "@menuView": {
+    "description": "macOS menu bar View menu label"
+  },
+  "menuAbout": "À propos de DAW Project Manager",
+  "@menuAbout": {
+    "description": "macOS menu item for About dialog"
+  },
+  "menuLanguage": "Langue",
+  "@menuLanguage": {
+    "description": "macOS menu item for language selection"
+  },
+  "menuWarnBeforeQuit": "Avertir Avant de Quitter (Cmd+Q)",
+  "@menuWarnBeforeQuit": {
+    "description": "macOS menu item to toggle quit warning"
+  },
+  "menuQuit": "Quitter DAW Project Manager",
+  "@menuQuit": {
+    "description": "macOS menu item to quit the app"
+  },
+  "menuWindow": "Fenêtre",
+  "@menuWindow": {
+    "description": "macOS menu bar Window menu label"
+  },
+  "donate": "Faire un Don",
+  "@donate": {
+    "description": "Button label for the donate button in the About dialog"
+  },
+  "website": "Site Web",
+  "@website": {
+    "description": "Button label for the website button in the About dialog"
+  },
+  "switchToClassicDark": "Passer à Classic Dark",
+  "@switchToClassicDark": {
+    "description": "Theme switcher label to switch to classic dark theme"
+  },
+  "switchToNeonDark": "Passer à Neon Dark",
+  "@switchToNeonDark": {
+    "description": "Theme switcher label to switch to neon dark theme"
+  },
+  "switchToClassicTheme": "Passer au Thème Classique",
+  "@switchToClassicTheme": {
+    "description": "Tooltip to switch to classic theme"
+  },
+  "switchToNeonTheme": "Passer au Thème Néon",
+  "@switchToNeonTheme": {
+    "description": "Tooltip to switch to neon theme"
+  },
+  "menuTheme": "Thème",
+  "@menuTheme": {
+    "description": "macOS menu item for theme switching"
+  },
+  "appDescription": "Un gestionnaire de projets pour les producteurs de musique et les concepteurs sonores.",
+  "neonDarkThemeName": "Néon Sombre",
+  "classicDarkThemeName": "Classique Sombre"
 }

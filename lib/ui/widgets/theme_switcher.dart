@@ -1,27 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../generated/l10n/app_localizations.dart';
 import '../../providers/theme_provider.dart';
 
 class ThemeSwitcher extends ConsumerWidget {
   const ThemeSwitcher({super.key});
 
-  String _getThemeName(AppThemeType themeType) {
-    switch (themeType) {
-      case AppThemeType.neonDark:
-        return 'Neon Dark';
-      case AppThemeType.classicDark:
-        return 'Classic Dark';
-    }
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final themeType = ref.watch(themeTypeProvider);
     final isNeon = themeType == AppThemeType.neonDark;
-    final themeName = _getThemeName(themeType);
+    final themeName = isNeon ? l10n.neonDarkThemeName : l10n.classicDarkThemeName;
+    final tooltip = isNeon ? l10n.switchToClassicTheme : l10n.switchToNeonTheme;
 
     return Tooltip(
-      message: isNeon ? 'Switch to Classic Theme' : 'Switch to Neon Theme',
+      message: tooltip,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -40,7 +34,7 @@ class ThemeSwitcher extends ConsumerWidget {
             },
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
-            tooltip: isNeon ? 'Switch to Classic Theme' : 'Switch to Neon Theme',
+            tooltip: tooltip,
           ),
           TextButton(
             onPressed: () {
@@ -64,4 +58,3 @@ class ThemeSwitcher extends ConsumerWidget {
     );
   }
 }
-

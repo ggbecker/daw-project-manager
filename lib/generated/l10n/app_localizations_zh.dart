@@ -656,9 +656,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get saveReleaseFilesZip => '保存发布文件ZIP';
 
   @override
-  String failedToOpenFile(String error) {
-    return '打开文件失败: $error';
-  }
+  String get failedToOpenFile => '无法打开文件';
 
   @override
   String failedToPlayAudio(String error) {
@@ -1750,4 +1748,217 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get downloadingBackupTitle => '正在下载备份';
+
+  @override
+  String get sourceFileNotFoundOnThisMachine => '在此设备上找不到源文件';
+
+  @override
+  String get previewSongNotAvailableDownloadFirst => '预览歌曲不可用。请先下载备份。';
+
+  @override
+  String get sharePreviewSong => '分享预览歌曲';
+
+  @override
+  String get shareAsZip => '以ZIP格式分享';
+
+  @override
+  String get share => '分享';
+
+  @override
+  String get shareZip => '分享ZIP';
+
+  @override
+  String failedToSharePreviewSong(String error) {
+    return '无法分享预览歌曲：$error';
+  }
+
+  @override
+  String failedToSharePreviewSongAsZip(String error) {
+    return '无法以ZIP格式分享预览歌曲：$error';
+  }
+
+  @override
+  String get biographySaved => '简介已保存';
+
+  @override
+  String failedToSaveBiography(String error) {
+    return '无法保存简介：$error';
+  }
+
+  @override
+  String fileSavedTo(String filename) {
+    return '文件已保存至 $filename';
+  }
+
+  @override
+  String failedToDownloadFile(String error) {
+    return '无法下载文件：$error';
+  }
+
+  @override
+  String allFilesSavedTo(String filename) {
+    return '所有文件已保存至 $filename';
+  }
+
+  @override
+  String get artworkAdded => '封面已添加';
+
+  @override
+  String failedToAddArtwork(String error) {
+    return '无法添加封面：$error';
+  }
+
+  @override
+  String get artworkRemoved => '封面已删除';
+
+  @override
+  String failedToRemoveArtwork(String error) {
+    return '无法删除封面：$error';
+  }
+
+  @override
+  String get pressKitFileAdded => '新闻资料袋文件已添加';
+
+  @override
+  String failedToAddPressKitFile(String error) {
+    return '无法添加新闻资料袋文件：$error';
+  }
+
+  @override
+  String get pressKitFileRemoved => '新闻资料袋文件已删除';
+
+  @override
+  String failedToRemovePressKitFile(String error) {
+    return '无法删除新闻资料袋文件：$error';
+  }
+
+  @override
+  String get selectFilesToDownload => '选择要下载的文件';
+
+  @override
+  String get biography => '简介';
+
+  @override
+  String get biographyWillBeSaved => '将保存为 biography.txt';
+
+  @override
+  String get artworkFiles => '封面文件';
+
+  @override
+  String get pressKitFiles => '新闻资料袋文件';
+
+  @override
+  String get additionalAssets => '附加资源';
+
+  @override
+  String downloadNFiles(int count, String plural) {
+    return '下载 $count 个文件$plural';
+  }
+
+  @override
+  String nFilesSavedTo(int count, String plural, String filename) {
+    return '$count 个文件$plural已保存至 $filename';
+  }
+
+  @override
+  String get addAsset => '添加资源';
+
+  @override
+  String get assetNameLabel => '资源名称';
+
+  @override
+  String get assetNameHint => '例如：Logo、横幅、照片';
+
+  @override
+  String assetAddedSuccessfully(String assetName) {
+    return '$assetName 已成功添加';
+  }
+
+  @override
+  String failedToAddAsset(String error) {
+    return '无法添加资源：$error';
+  }
+
+  @override
+  String assetRemoved(String assetName) {
+    return '$assetName 已删除';
+  }
+
+  @override
+  String failedToRemoveAsset(String error) {
+    return '无法删除资源：$error';
+  }
+
+  @override
+  String get profileNotFound => '找不到个人资料';
+
+  @override
+  String get selectFiles => '选择文件';
+
+  @override
+  String get downloadAll => '全部下载';
+
+  @override
+  String get saveBiographyTooltip => '保存简介';
+
+  @override
+  String get enterBiographyHint => '输入个人简介...';
+
+  @override
+  String get addArtwork => '添加封面';
+
+  @override
+  String get addFile => '添加文件';
+
+  @override
+  String get openFile => '打开文件';
+
+  @override
+  String get menuView => '视图';
+
+  @override
+  String get menuAbout => '关于 DAW Project Manager';
+
+  @override
+  String get menuLanguage => '语言';
+
+  @override
+  String get menuWarnBeforeQuit => '退出前警告 (Cmd+Q)';
+
+  @override
+  String get menuQuit => '退出 DAW Project Manager';
+
+  @override
+  String get menuWindow => '窗口';
+
+  @override
+  String get donate => '捐赠';
+
+  @override
+  String get website => '网站';
+
+  @override
+  String get switchToClassicDark => '切换到 Classic Dark';
+
+  @override
+  String get switchToNeonDark => '切换到 Neon Dark';
+
+  @override
+  String get switchToClassicTheme => '切换到经典主题';
+
+  @override
+  String get switchToNeonTheme => '切换到霓虹主题';
+
+  @override
+  String get menuTheme => '主题';
+
+  @override
+  String get appDescription =>
+      'A project manager for music producers and sound designers.';
+
+  @override
+  String get neonDarkThemeName => 'Neon Dark';
+
+  @override
+  String get classicDarkThemeName => 'Classic Dark';
 }
