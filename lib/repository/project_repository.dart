@@ -433,12 +433,37 @@ class ProjectRepository {
       }
       return;
     }
-    
+
+    // Only consider scan roots that actually exist on this machine.
+    // Projects whose paths fall under a non-existent root (e.g. from a backup
+    // made on another machine) are preserved — deleting them would discard
+    // backup data that was intentionally restored.
+    final localRoots = rootsBox.values
+        .map((r) => r.path)
+        .where((rootPath) => Directory(rootPath).existsSync())
+        .toList(growable: false);
+
+    if (localRoots.isEmpty) {
+      if (kDebugMode) {
+        print('clearMissingFiles: No local scan roots exist on this machine — skipping to preserve backup data');
+      }
+      return;
+    }
+
     final toDelete = <dynamic>[];
     for (final entry in projectsBox.values) {
-      if (!File(entry.filePath).existsSync() && !Directory(entry.filePath).existsSync()) {
+      final isUnderLocalRoot = localRoots.any(
+        (rootPath) => p.isWithin(rootPath, entry.filePath) || entry.filePath == rootPath,
+      );
+      if (isUnderLocalRoot &&
+          !File(entry.filePath).existsSync() &&
+          !Directory(entry.filePath).existsSync()) {
         toDelete.add(entry.id);
       }
+    }
+
+    if (kDebugMode) {
+      print('clearMissingFiles: Deleting ${toDelete.length} missing projects (under ${localRoots.length} local roots)');
     }
     await projectsBox.deleteAll(toDelete);
   }
