@@ -169,19 +169,19 @@ void main() async {
   runApp(
     UncontrolledProviderScope(
       container: container,
-      child: const MyApp(),
+      child: const DawProjectManagerApp(),
     ),
   );
 }
 
-class MyApp extends ConsumerStatefulWidget {
-  const MyApp({super.key});
+class DawProjectManagerApp extends ConsumerStatefulWidget {
+  const DawProjectManagerApp({super.key});
 
   @override
-  ConsumerState<MyApp> createState() => _MyAppState();
+  ConsumerState<DawProjectManagerApp> createState() => _DawProjectManagerAppState();
 }
 
-class _MyAppState extends ConsumerState<MyApp> with WindowListener {
+class _DawProjectManagerAppState extends ConsumerState<DawProjectManagerApp> with WindowListener {
   static bool get _isDesktop =>
       !kIsWeb && (Platform.isMacOS || Platform.isWindows || Platform.isLinux);
 
