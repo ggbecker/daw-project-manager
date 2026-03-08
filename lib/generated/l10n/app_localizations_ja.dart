@@ -1971,12 +1971,11 @@ class AppLocalizationsJa extends AppLocalizations {
   String get menuTheme => 'テーマ';
 
   @override
-  String get appDescription =>
-      'A project manager for music producers and sound designers.';
+  String get appDescription => '音楽プロデューサーとサウンドデザイナーのためのプロジェクト管理ツール。';
 
   @override
-  String get neonDarkThemeName => 'Neon Dark';
+  String get neonDarkThemeName => 'ネオンダーク';
 
   @override
-  String get classicDarkThemeName => 'Classic Dark';
+  String get classicDarkThemeName => 'クラシックダーク';
 }

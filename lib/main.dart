@@ -256,31 +256,32 @@ class _DawProjectManagerAppState extends ConsumerState<DawProjectManagerApp> wit
       });
     }
 
-    return MacOSMenuBar(
-      child: MaterialApp(
-        navigatorKey: navigatorKey,
-        title: 'DAW Project Manager',
-        theme: themeData,
-        localizationsDelegates: const [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        supportedLocales: const [
-          Locale('en', ''),
-          Locale('pt', ''),
-          Locale('es', ''),
-          Locale('fr', ''),
-          Locale('it', ''),
-          Locale('de', ''),
-          Locale('ru', ''),
-          Locale('ja', ''),
-          Locale('zh', ''),
-        ],
-        locale: currentLocale,
-        home: const DashboardPage(),
-      ),
+    return MaterialApp(
+      navigatorKey: navigatorKey,
+      title: 'DAW Project Manager',
+      theme: themeData,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('en', ''),
+        Locale('pt', ''),
+        Locale('es', ''),
+        Locale('fr', ''),
+        Locale('it', ''),
+        Locale('de', ''),
+        Locale('ru', ''),
+        Locale('ja', ''),
+        Locale('zh', ''),
+      ],
+      locale: currentLocale,
+      // MacOSMenuBar must build with a context that has localizations — placing
+      // it in builder ensures it runs after MaterialApp installs its delegates.
+      builder: (context, child) => MacOSMenuBar(child: child ?? const SizedBox()),
+      home: const DashboardPage(),
     );
   }
 }

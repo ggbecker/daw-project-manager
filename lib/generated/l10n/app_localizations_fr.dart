@@ -2031,11 +2031,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get appDescription =>
-      'A project manager for music producers and sound designers.';
+      'Un gestionnaire de projets pour les producteurs de musique et les concepteurs sonores.';
 
   @override
-  String get neonDarkThemeName => 'Neon Dark';
+  String get neonDarkThemeName => 'Néon Sombre';
 
   @override
-  String get classicDarkThemeName => 'Classic Dark';
+  String get classicDarkThemeName => 'Classique Sombre';
 }

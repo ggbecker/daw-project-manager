@@ -1953,12 +1953,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get menuTheme => '主题';
 
   @override
-  String get appDescription =>
-      'A project manager for music producers and sound designers.';
+  String get appDescription => '面向音乐制作人和音效设计师的项目管理工具。';
 
   @override
-  String get neonDarkThemeName => 'Neon Dark';
+  String get neonDarkThemeName => '霓虹暗色';
 
   @override
-  String get classicDarkThemeName => 'Classic Dark';
+  String get classicDarkThemeName => '经典暗色';
 }

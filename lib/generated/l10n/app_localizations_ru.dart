@@ -2012,11 +2012,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get appDescription =>
-      'A project manager for music producers and sound designers.';
+      'Менеджер проектов для музыкальных продюсеров и звуковых дизайнеров.';
 
   @override
-  String get neonDarkThemeName => 'Neon Dark';
+  String get neonDarkThemeName => 'Неоновая тёмная';
 
   @override
-  String get classicDarkThemeName => 'Classic Dark';
+  String get classicDarkThemeName => 'Классическая тёмная';
 }
