@@ -3415,6 +3415,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Classic Dark'**
   String get classicDarkThemeName;
+
+  /// No description provided for @statisticsTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Statistics'**
+  String get statisticsTab;
+
+  /// No description provided for @statsTotalProjects.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Projects'**
+  String get statsTotalProjects;
+
+  /// No description provided for @statsInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'In Progress'**
+  String get statsInProgress;
+
+  /// No description provided for @statsFinished.
+  ///
+  /// In en, this message translates to:
+  /// **'Finished'**
+  String get statsFinished;
+
+  /// No description provided for @statsAvgCompletion.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg. Completion'**
+  String get statsAvgCompletion;
+
+  /// No description provided for @statsPhaseDistribution.
+  ///
+  /// In en, this message translates to:
+  /// **'Projects by Phase'**
+  String get statsPhaseDistribution;
+
+  /// No description provided for @statsAvgTimePerPhase.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg. Days per Phase'**
+  String get statsAvgTimePerPhase;
+
+  /// No description provided for @statsProductivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Productivity'**
+  String get statsProductivity;
+
+  /// No description provided for @statsCreatedSeries.
+  ///
+  /// In en, this message translates to:
+  /// **'Created'**
+  String get statsCreatedSeries;
+
+  /// No description provided for @statsProjectHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Project Age & Health'**
+  String get statsProjectHealth;
+
+  /// No description provided for @statsCatalogInsights.
+  ///
+  /// In en, this message translates to:
+  /// **'Catalog Insights'**
+  String get statsCatalogInsights;
+
+  /// No description provided for @statsBpmDistribution.
+  ///
+  /// In en, this message translates to:
+  /// **'BPM Distribution'**
+  String get statsBpmDistribution;
+
+  /// No description provided for @statsTopKeys.
+  ///
+  /// In en, this message translates to:
+  /// **'Top Musical Keys'**
+  String get statsTopKeys;
+
+  /// No description provided for @statsDawTypes.
+  ///
+  /// In en, this message translates to:
+  /// **'DAW Types'**
+  String get statsDawTypes;
+
+  /// No description provided for @statsProjectActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Project Activity'**
+  String get statsProjectActivity;
+
+  /// No description provided for @statsNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'No data yet'**
+  String get statsNoData;
+
+  /// No description provided for @statsNoPhaseData.
+  ///
+  /// In en, this message translates to:
+  /// **'Phase data will appear after projects move between phases.'**
+  String get statsNoPhaseData;
+
+  /// No description provided for @statsLastActivityDaysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'Last activity: {days} days ago'**
+  String statsLastActivityDaysAgo(int days);
+
+  /// No description provided for @statsLastActivityToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Active today'**
+  String get statsLastActivityToday;
+
+  /// No description provided for @statsNoEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'No events recorded yet'**
+  String get statsNoEvents;
+
+  /// No description provided for @statsEventPhaseChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Phase: {from} → {to}'**
+  String statsEventPhaseChanged(String from, String to);
+
+  /// No description provided for @statsEventMetadataUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated: {fields}'**
+  String statsEventMetadataUpdated(String fields);
+
+  /// No description provided for @statsEventTodoCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed: {text}'**
+  String statsEventTodoCompleted(String text);
+
+  /// No description provided for @statsEventFileModified.
+  ///
+  /// In en, this message translates to:
+  /// **'File modified on disk'**
+  String get statsEventFileModified;
+
+  /// No description provided for @statsClearHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear history'**
+  String get statsClearHistory;
+
+  /// No description provided for @statsClearHistoryConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all recorded events for this project?'**
+  String get statsClearHistoryConfirm;
+
+  /// No description provided for @statsSearchProjects.
+  ///
+  /// In en, this message translates to:
+  /// **'Search projects…'**
+  String get statsSearchProjects;
+
+  /// No description provided for @statsEventCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} events'**
+  String statsEventCount(int count);
+
+  /// No description provided for @statsNoProjectsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No projects found'**
+  String get statsNoProjectsFound;
+
+  /// No description provided for @statsNotTouchedDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Not touched in {days} days'**
+  String statsNotTouchedDays(int days);
 }
 
 class _AppLocalizationsDelegate

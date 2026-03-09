@@ -2021,4 +2021,108 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get classicDarkThemeName => 'Classic Dark';
+
+  @override
+  String get statisticsTab => 'Statistics';
+
+  @override
+  String get statsTotalProjects => 'Total Projects';
+
+  @override
+  String get statsInProgress => 'In Progress';
+
+  @override
+  String get statsFinished => 'Finished';
+
+  @override
+  String get statsAvgCompletion => 'Avg. Completion';
+
+  @override
+  String get statsPhaseDistribution => 'Projects by Phase';
+
+  @override
+  String get statsAvgTimePerPhase => 'Avg. Days per Phase';
+
+  @override
+  String get statsProductivity => 'Productivity';
+
+  @override
+  String get statsCreatedSeries => 'Created';
+
+  @override
+  String get statsProjectHealth => 'Project Age & Health';
+
+  @override
+  String get statsCatalogInsights => 'Catalog Insights';
+
+  @override
+  String get statsBpmDistribution => 'BPM Distribution';
+
+  @override
+  String get statsTopKeys => 'Top Musical Keys';
+
+  @override
+  String get statsDawTypes => 'DAW Types';
+
+  @override
+  String get statsProjectActivity => 'Project Activity';
+
+  @override
+  String get statsNoData => 'No data yet';
+
+  @override
+  String get statsNoPhaseData =>
+      'Phase data will appear after projects move between phases.';
+
+  @override
+  String statsLastActivityDaysAgo(int days) {
+    return 'Last activity: $days days ago';
+  }
+
+  @override
+  String get statsLastActivityToday => 'Active today';
+
+  @override
+  String get statsNoEvents => 'No events recorded yet';
+
+  @override
+  String statsEventPhaseChanged(String from, String to) {
+    return 'Phase: $from → $to';
+  }
+
+  @override
+  String statsEventMetadataUpdated(String fields) {
+    return 'Updated: $fields';
+  }
+
+  @override
+  String statsEventTodoCompleted(String text) {
+    return 'Completed: $text';
+  }
+
+  @override
+  String get statsEventFileModified => 'File modified on disk';
+
+  @override
+  String get statsClearHistory => 'Clear history';
+
+  @override
+  String get statsClearHistoryConfirm =>
+      'Clear all recorded events for this project?';
+
+  @override
+  String get statsSearchProjects => 'Search projects…';
+
+  @override
+  String statsEventCount(int count) {
+    return '$count events';
+  }
+
+  @override
+  String get statsNoProjectsFound => 'No projects found';
+
+  @override
+  String statsNotTouchedDays(int days) {
+    return 'Not touched in $days days';
+  }
 }

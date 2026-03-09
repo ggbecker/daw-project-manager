@@ -1963,4 +1963,106 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get classicDarkThemeName => '经典暗色';
+
+  @override
+  String get statisticsTab => '统计';
+
+  @override
+  String get statsTotalProjects => '总项目数';
+
+  @override
+  String get statsInProgress => '进行中';
+
+  @override
+  String get statsFinished => '已完成';
+
+  @override
+  String get statsAvgCompletion => '平均完成时间';
+
+  @override
+  String get statsPhaseDistribution => '各阶段项目';
+
+  @override
+  String get statsAvgTimePerPhase => '每阶段平均天数';
+
+  @override
+  String get statsProductivity => '生产力';
+
+  @override
+  String get statsCreatedSeries => '已创建';
+
+  @override
+  String get statsProjectHealth => '项目年龄与健康';
+
+  @override
+  String get statsCatalogInsights => '目录洞察';
+
+  @override
+  String get statsBpmDistribution => 'BPM分布';
+
+  @override
+  String get statsTopKeys => '热门音乐调式';
+
+  @override
+  String get statsDawTypes => 'DAW类型';
+
+  @override
+  String get statsProjectActivity => '项目活动';
+
+  @override
+  String get statsNoData => '暂无数据';
+
+  @override
+  String get statsNoPhaseData => '项目变更阶段后将显示数据。';
+
+  @override
+  String statsLastActivityDaysAgo(int days) {
+    return '最近活动: $days天前';
+  }
+
+  @override
+  String get statsLastActivityToday => '今日活跃';
+
+  @override
+  String get statsNoEvents => '暂无事件记录';
+
+  @override
+  String statsEventPhaseChanged(String from, String to) {
+    return '阶段: $from → $to';
+  }
+
+  @override
+  String statsEventMetadataUpdated(String fields) {
+    return '已更新: $fields';
+  }
+
+  @override
+  String statsEventTodoCompleted(String text) {
+    return '已完成: $text';
+  }
+
+  @override
+  String get statsEventFileModified => '磁盘上的文件已修改';
+
+  @override
+  String get statsClearHistory => '清除历史';
+
+  @override
+  String get statsClearHistoryConfirm => '清除此项目的所有记录事件？';
+
+  @override
+  String get statsSearchProjects => '搜索项目…';
+
+  @override
+  String statsEventCount(int count) {
+    return '$count个事件';
+  }
+
+  @override
+  String get statsNoProjectsFound => '未找到项目';
+
+  @override
+  String statsNotTouchedDays(int days) {
+    return '$days天未修改';
+  }
 }

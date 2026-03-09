@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -17,6 +18,7 @@ import '../models/release.dart';
 import '../models/profile.dart';
 import '../models/playlist.dart';
 import '../models/todo_template.dart';
+import '../models/project_event.dart';
 import '../repository/project_repository.dart';
 import '../repository/profile_repository.dart';
 import '../services/google_drive_sync_service.dart';
@@ -843,3 +845,224 @@ class WarnBeforeQuitNotifier extends Notifier<bool> {
 final warnBeforeQuitProvider = NotifierProvider<WarnBeforeQuitNotifier, bool>(() {
   return WarnBeforeQuitNotifier();
 });
+
+// ---------------------------------------------------------------------------
+// Statistics — Event Providers + GlobalStats
+// ---------------------------------------------------------------------------
+
+/// Computed aggregate statistics across all projects and events.
+class GlobalStats {
+  final int totalProjects;
+  final int inProgressCount;
+  final int finishedCount;
+  final Duration? avgCompletionTime;
+  /// phase name → project count
+  final Map<String, int> countPerPhase;
+  /// phase name → average days spent in that phase (completed intervals only)
+  final Map<String, double> avgDaysPerPhase;
+  /// month key "yyyy-MM" → count of projects created that month (last 12 months)
+  final Map<String, int> createdPerMonth;
+  /// month key "yyyy-MM" → count of projects finished that month (last 12 months)
+  final Map<String, int> finishedPerMonth;
+  /// projectId → most recent event occurredAt (for sorting by activity)
+  final Map<String, DateTime> lastEventPerProject;
+
+  const GlobalStats({
+    required this.totalProjects,
+    required this.inProgressCount,
+    required this.finishedCount,
+    required this.avgCompletionTime,
+    required this.countPerPhase,
+    required this.avgDaysPerPhase,
+    required this.createdPerMonth,
+    required this.finishedPerMonth,
+    required this.lastEventPerProject,
+  });
+
+  static const empty = GlobalStats(
+    totalProjects: 0,
+    inProgressCount: 0,
+    finishedCount: 0,
+    avgCompletionTime: null,
+    countPerPhase: {},
+    avgDaysPerPhase: {},
+    createdPerMonth: {},
+    finishedPerMonth: {},
+    lastEventPerProject: {},
+  );
+}
+
+/// Stream of all events — restarts automatically on profile switch.
+final allEventsStreamProvider = StreamProvider<List<ProjectEvent>>((ref) async* {
+  final repo = await ref.watch(repositoryProvider.future);
+  yield repo.getAllEvents();
+  yield* repo.watchEvents().map((_) => repo.getAllEvents());
+});
+
+/// Events for a specific project (family, parametrized by projectId).
+final eventsForProjectProvider =
+    Provider.family<List<ProjectEvent>, String>((ref, projectId) {
+  final eventsAsync = ref.watch(allEventsStreamProvider);
+  return eventsAsync.whenData((events) {
+    final filtered = events.where((e) => e.projectId == projectId).toList()
+      ..sort((a, b) => b.occurredAt.compareTo(a.occurredAt));
+    return filtered;
+  }).asData?.value ?? [];
+});
+
+/// Projects sorted by most recent event activity (most active first).
+/// Projects with no events are sorted by updatedAt at the end.
+final projectsWithRecentActivityProvider =
+    Provider<List<MusicProject>>((ref) {
+  final projectsAsync = ref.watch(allProjectsStreamProvider);
+  final eventsAsync = ref.watch(allEventsStreamProvider);
+
+  final projects = projectsAsync.asData?.value ?? [];
+  final events = eventsAsync.asData?.value ?? [];
+
+  // Build map projectId → most recent event time
+  final lastEvent = <String, DateTime>{};
+  for (final e in events) {
+    final existing = lastEvent[e.projectId];
+    if (existing == null || e.occurredAt.isAfter(existing)) {
+      lastEvent[e.projectId] = e.occurredAt;
+    }
+  }
+
+  final sorted = List<MusicProject>.from(projects)
+    ..sort((a, b) {
+      final aTime = lastEvent[a.id];
+      final bTime = lastEvent[b.id];
+      if (aTime == null && bTime == null) {
+        return b.updatedAt.compareTo(a.updatedAt);
+      }
+      if (aTime == null) return 1;
+      if (bTime == null) return -1;
+      return bTime.compareTo(aTime);
+    });
+  return sorted;
+});
+
+/// Fully computed global statistics derived from projects + events.
+final globalStatsProvider = Provider<GlobalStats>((ref) {
+  final projectsAsync = ref.watch(allProjectsStreamProvider);
+  final eventsAsync = ref.watch(allEventsStreamProvider);
+
+  final projects = projectsAsync.asData?.value;
+  final events = eventsAsync.asData?.value;
+  if (projects == null || events == null) return GlobalStats.empty;
+
+  // Basic counts
+  final total = projects.length;
+  final finished = projects.where((p) => p.status == 'Finished').toList();
+  final inProgress = projects.where((p) => p.status != 'Finished').toList();
+
+  // Average completion time (from model field, only for finished projects)
+  Duration? avgCompletion;
+  final completionTimes = finished
+      .map((p) => p.timeToCompletion)
+      .whereType<Duration>()
+      .toList();
+  if (completionTimes.isNotEmpty) {
+    final totalMs =
+        completionTimes.fold<int>(0, (sum, d) => sum + d.inMilliseconds);
+    avgCompletion = Duration(milliseconds: totalMs ~/ completionTimes.length);
+  }
+
+  // Count per phase
+  const phases = ['Idea', 'Arranging', 'Mixing', 'Mastering', 'Finished'];
+  final countPerPhase = <String, int>{for (final ph in phases) ph: 0};
+  for (final p in projects) {
+    final ph = p.status;
+    countPerPhase[ph] = (countPerPhase[ph] ?? 0) + 1;
+  }
+
+  // Average days per phase from status_change event log
+  // For each project: iterate consecutive status_change events sorted asc.
+  // The time spent in phase X = time between entering X and leaving X.
+  final daysPerPhase = <String, List<int>>{};
+  final statusEventsByProject = <String, List<ProjectEvent>>{};
+  for (final e in events) {
+    if (e.eventType == ProjectEvent.statusChange) {
+      statusEventsByProject.putIfAbsent(e.projectId, () => []).add(e);
+    }
+  }
+  for (final evList in statusEventsByProject.values) {
+    evList.sort((a, b) => a.occurredAt.compareTo(b.occurredAt));
+    for (int i = 0; i < evList.length - 1; i++) {
+      try {
+        final payload = jsonDecode(evList[i].payload ?? '{}') as Map<String, dynamic>;
+        final phaseEntered = payload['to'] as String?;
+        if (phaseEntered == null) continue;
+        final days =
+            evList[i + 1].occurredAt.difference(evList[i].occurredAt).inDays;
+        daysPerPhase.putIfAbsent(phaseEntered, () => []).add(days);
+      } catch (_) {
+        // Malformed payload — skip
+      }
+    }
+  }
+  final avgDaysPerPhase = <String, double>{};
+  daysPerPhase.forEach((phase, daysList) {
+    avgDaysPerPhase[phase] =
+        daysList.fold<int>(0, (sum, d) => sum + d) / daysList.length;
+  });
+
+  // Productivity: projects created / finished per month (last 12 months)
+  final now = DateTime.now();
+  final createdPerMonth = <String, int>{};
+  final finishedPerMonth = <String, int>{};
+  for (int i = 11; i >= 0; i--) {
+    final month = DateTime(now.year, now.month - i, 1);
+    final key = '${month.year}-${month.month.toString().padLeft(2, '0')}';
+    createdPerMonth[key] = 0;
+    finishedPerMonth[key] = 0;
+  }
+  for (final p in projects) {
+    final key =
+        '${p.createdAt.year}-${p.createdAt.month.toString().padLeft(2, '0')}';
+    if (createdPerMonth.containsKey(key)) {
+      createdPerMonth[key] = createdPerMonth[key]! + 1;
+    }
+    if (p.status == 'Finished') {
+      final finKey =
+          '${p.updatedAt.year}-${p.updatedAt.month.toString().padLeft(2, '0')}';
+      if (finishedPerMonth.containsKey(finKey)) {
+        finishedPerMonth[finKey] = finishedPerMonth[finKey]! + 1;
+      }
+    }
+  }
+
+  // Last event per project map (for projectsWithRecentActivityProvider)
+  final lastEventPerProject = <String, DateTime>{};
+  for (final e in events) {
+    final existing = lastEventPerProject[e.projectId];
+    if (existing == null || e.occurredAt.isAfter(existing)) {
+      lastEventPerProject[e.projectId] = e.occurredAt;
+    }
+  }
+
+  return GlobalStats(
+    totalProjects: total,
+    inProgressCount: inProgress.length,
+    finishedCount: finished.length,
+    avgCompletionTime: avgCompletion,
+    countPerPhase: countPerPhase,
+    avgDaysPerPhase: avgDaysPerPhase,
+    createdPerMonth: createdPerMonth,
+    finishedPerMonth: finishedPerMonth,
+    lastEventPerProject: lastEventPerProject,
+  );
+});
+
+/// Search text within the Statistics tab's project history list.
+class StatisticsSearchNotifier extends Notifier<String> {
+  @override
+  String build() => '';
+  void set(String text) => state = text;
+  void clear() => state = '';
+}
+
+final statisticsSearchProvider =
+    NotifierProvider<StatisticsSearchNotifier, String>(
+        StatisticsSearchNotifier.new);

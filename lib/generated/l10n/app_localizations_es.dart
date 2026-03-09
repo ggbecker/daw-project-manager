@@ -2036,4 +2036,108 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get classicDarkThemeName => 'Clásico Oscuro';
+
+  @override
+  String get statisticsTab => 'Estadísticas';
+
+  @override
+  String get statsTotalProjects => 'Total de Proyectos';
+
+  @override
+  String get statsInProgress => 'En curso';
+
+  @override
+  String get statsFinished => 'Terminados';
+
+  @override
+  String get statsAvgCompletion => 'Finalización media';
+
+  @override
+  String get statsPhaseDistribution => 'Proyectos por Fase';
+
+  @override
+  String get statsAvgTimePerPhase => 'Días medios por Fase';
+
+  @override
+  String get statsProductivity => 'Productividad';
+
+  @override
+  String get statsCreatedSeries => 'Creados';
+
+  @override
+  String get statsProjectHealth => 'Edad y Salud de Proyectos';
+
+  @override
+  String get statsCatalogInsights => 'Análisis del Catálogo';
+
+  @override
+  String get statsBpmDistribution => 'Distribución de BPM';
+
+  @override
+  String get statsTopKeys => 'Tonalidades principales';
+
+  @override
+  String get statsDawTypes => 'Tipos de DAW';
+
+  @override
+  String get statsProjectActivity => 'Actividad de Proyectos';
+
+  @override
+  String get statsNoData => 'Sin datos aún';
+
+  @override
+  String get statsNoPhaseData =>
+      'Los datos de fases aparecerán cuando los proyectos cambien de fase.';
+
+  @override
+  String statsLastActivityDaysAgo(int days) {
+    return 'Última actividad: hace $days días';
+  }
+
+  @override
+  String get statsLastActivityToday => 'Activo hoy';
+
+  @override
+  String get statsNoEvents => 'Aún no hay eventos registrados';
+
+  @override
+  String statsEventPhaseChanged(String from, String to) {
+    return 'Fase: $from → $to';
+  }
+
+  @override
+  String statsEventMetadataUpdated(String fields) {
+    return 'Actualizado: $fields';
+  }
+
+  @override
+  String statsEventTodoCompleted(String text) {
+    return 'Completado: $text';
+  }
+
+  @override
+  String get statsEventFileModified => 'Archivo modificado en disco';
+
+  @override
+  String get statsClearHistory => 'Borrar historial';
+
+  @override
+  String get statsClearHistoryConfirm =>
+      '¿Borrar todos los eventos registrados para este proyecto?';
+
+  @override
+  String get statsSearchProjects => 'Buscar proyectos…';
+
+  @override
+  String statsEventCount(int count) {
+    return '$count eventos';
+  }
+
+  @override
+  String get statsNoProjectsFound => 'No se encontraron proyectos';
+
+  @override
+  String statsNotTouchedDays(int days) {
+    return 'Sin cambios en $days días';
+  }
 }

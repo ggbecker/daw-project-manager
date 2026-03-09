@@ -2022,4 +2022,107 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get classicDarkThemeName => 'Классическая тёмная';
+
+  @override
+  String get statisticsTab => 'Статистика';
+
+  @override
+  String get statsTotalProjects => 'Всего проектов';
+
+  @override
+  String get statsInProgress => 'В работе';
+
+  @override
+  String get statsFinished => 'Завершено';
+
+  @override
+  String get statsAvgCompletion => 'Ср. завершение';
+
+  @override
+  String get statsPhaseDistribution => 'Проекты по фазам';
+
+  @override
+  String get statsAvgTimePerPhase => 'Ср. дней на фазу';
+
+  @override
+  String get statsProductivity => 'Продуктивность';
+
+  @override
+  String get statsCreatedSeries => 'Создано';
+
+  @override
+  String get statsProjectHealth => 'Возраст и состояние проектов';
+
+  @override
+  String get statsCatalogInsights => 'Анализ каталога';
+
+  @override
+  String get statsBpmDistribution => 'Распределение BPM';
+
+  @override
+  String get statsTopKeys => 'Популярные тональности';
+
+  @override
+  String get statsDawTypes => 'Типы DAW';
+
+  @override
+  String get statsProjectActivity => 'Активность проектов';
+
+  @override
+  String get statsNoData => 'Нет данных';
+
+  @override
+  String get statsNoPhaseData => 'Данные появятся после смены фаз.';
+
+  @override
+  String statsLastActivityDaysAgo(int days) {
+    return 'Последняя активность: $days дн. назад';
+  }
+
+  @override
+  String get statsLastActivityToday => 'Активен сегодня';
+
+  @override
+  String get statsNoEvents => 'Событий пока нет';
+
+  @override
+  String statsEventPhaseChanged(String from, String to) {
+    return 'Фаза: $from → $to';
+  }
+
+  @override
+  String statsEventMetadataUpdated(String fields) {
+    return 'Обновлено: $fields';
+  }
+
+  @override
+  String statsEventTodoCompleted(String text) {
+    return 'Выполнено: $text';
+  }
+
+  @override
+  String get statsEventFileModified => 'Файл изменён на диске';
+
+  @override
+  String get statsClearHistory => 'Очистить историю';
+
+  @override
+  String get statsClearHistoryConfirm =>
+      'Удалить все записанные события для этого проекта?';
+
+  @override
+  String get statsSearchProjects => 'Поиск проектов…';
+
+  @override
+  String statsEventCount(int count) {
+    return '$count событий';
+  }
+
+  @override
+  String get statsNoProjectsFound => 'Проекты не найдены';
+
+  @override
+  String statsNotTouchedDays(int days) {
+    return 'Не изменялся $days дн.';
+  }
 }

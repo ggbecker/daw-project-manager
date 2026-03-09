@@ -198,7 +198,6 @@
   "daw": "DAW",
   "lastModifiedColumn": "Last Modified",
   "actions": "Actions",
-  "launch": "Launch",
   "hide": "Hide",
   "unhide": "Unhide",
   "extractMetadata": "Extract Metadata",
@@ -544,13 +543,9 @@
       }
     }
   },
-  "errorLoadingProjects": "Error loading projects: {error}",
+  "errorLoadingProjects": "Error loading projects",
   "@errorLoadingProjects": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
+    "description": "Error message when projects fail to load"
   },
   "releaseSaved": "Release saved.",
   "releaseDate": "Release Date",
@@ -565,13 +560,9 @@
   "releaseDateSaved": "Release date saved.",
   "releaseDateCleared": "Release date cleared.",
   "saveReleaseFilesZip": "Save release files ZIP",
-  "failedToOpenFile": "Failed to open file: {error}",
+  "failedToOpenFile": "Failed to open file",
   "@failedToOpenFile": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
+    "description": "Error message when opening a file fails"
   },
   "failedToPlayAudio": "Failed to play audio: {error}",
   "@failedToPlayAudio": {
@@ -621,14 +612,6 @@
   "@couldNotOpenFolder": {
     "placeholders": {
       "error": {
-        "type": "String"
-      }
-    }
-  },
-  "lastModified": "Last modified: {date}",
-  "@lastModified": {
-    "placeholders": {
-      "date": {
         "type": "String"
       }
     }
@@ -1132,7 +1115,6 @@
   "@pasteCodeFromBrowser": {
     "description": "Hint text for authorization code input field"
   },
-  "continueButton": "Continue",
   "@continueButton": {
     "description": "Button to continue with authorization code"
   },
@@ -1640,10 +1622,6 @@
   "@errorLoadingPlaylists": {
     "description": "Error message when playlists fail to load"
   },
-  "errorLoadingProjects": "Error loading projects",
-  "@errorLoadingProjects": {
-    "description": "Error message when projects fail to load"
-  },
   "playlistItems": "Playlist Items",
   "@playlistItems": {
     "description": "Label for playlist items section"
@@ -2052,10 +2030,6 @@
       }
     }
   },
-  "failedToOpenFile": "Failed to open file",
-  "@failedToOpenFile": {
-    "description": "Error message when opening a file fails"
-  },
   "profileNotFound": "Profile not found",
   "@profileNotFound": {
     "description": "Message when a profile cannot be found"
@@ -2151,5 +2125,80 @@
   "classicDarkThemeName": "Classic Dark",
   "@classicDarkThemeName": {
     "description": "Display name for the Classic Dark theme"
+  },
+  "statisticsTab": "Statistics",
+  "statsTotalProjects": "Total Projects",
+  "statsInProgress": "In Progress",
+  "statsFinished": "Finished",
+  "statsAvgCompletion": "Avg. Completion",
+  "statsPhaseDistribution": "Projects by Phase",
+  "statsAvgTimePerPhase": "Avg. Days per Phase",
+  "statsProductivity": "Productivity",
+  "statsCreatedSeries": "Created",
+  "statsProjectHealth": "Project Age & Health",
+  "statsCatalogInsights": "Catalog Insights",
+  "statsBpmDistribution": "BPM Distribution",
+  "statsTopKeys": "Top Musical Keys",
+  "statsDawTypes": "DAW Types",
+  "statsProjectActivity": "Project Activity",
+  "statsNoData": "No data yet",
+  "statsNoPhaseData": "Phase data will appear after projects move between phases.",
+  "statsLastActivityDaysAgo": "Last activity: {days} days ago",
+  "@statsLastActivityDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "statsLastActivityToday": "Active today",
+  "statsNoEvents": "No events recorded yet",
+  "statsEventPhaseChanged": "Phase: {from} → {to}",
+  "@statsEventPhaseChanged": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "statsEventMetadataUpdated": "Updated: {fields}",
+  "@statsEventMetadataUpdated": {
+    "placeholders": {
+      "fields": {
+        "type": "String"
+      }
+    }
+  },
+  "statsEventTodoCompleted": "Completed: {text}",
+  "@statsEventTodoCompleted": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "statsEventFileModified": "File modified on disk",
+  "statsClearHistory": "Clear history",
+  "statsClearHistoryConfirm": "Clear all recorded events for this project?",
+  "statsSearchProjects": "Search projects…",
+  "statsEventCount": "{count} events",
+  "@statsEventCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "statsNoProjectsFound": "No projects found",
+  "statsNotTouchedDays": "Not touched in {days} days",
+  "@statsNotTouchedDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
   }
 }

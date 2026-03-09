@@ -23,6 +23,7 @@ import 'profile_manager_page.dart';
 import 'project_folders_settings_page.dart';
 import 'playlists_page.dart';
 import 'google_drive_sync_page.dart';
+import 'statistics_page.dart';
 import 'notification_settings_page.dart';
 import 'widgets/desktop_title_bar.dart';
 import 'widgets/language_switcher.dart';
@@ -100,8 +101,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
   @override
   void initState() {
     super.initState();
-    // Android has 3 tabs (Projects, Releases, Playlists), desktop has 2
-    final tabCount = Platform.isAndroid ? 3 : 2;
+    // Android has 4 tabs (Projects, Releases, Playlists, Statistics), desktop has 3
+    final tabCount = Platform.isAndroid ? 4 : 3;
     _tabController = TabController(length: tabCount, vsync: this);
     _searchController = TextEditingController();
     
@@ -149,12 +150,15 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
         if (_searchController.text != projectsSearch) {
           _searchController.text = projectsSearch;
         }
-      } else {
+      } else if (currentTabIndex == 1) {
         // Releases tab
         final releasesSearch = ref.read(releasesSearchProvider);
         if (_searchController.text != releasesSearch) {
           _searchController.text = releasesSearch;
         }
+      } else {
+        // Playlists / Statistics tab — clear search bar
+        _searchController.clear();
       }
       setState(() {}); // Rebuild to update search placeholder when tab animation completes
     }
@@ -484,7 +488,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
     // Get current search text based on active tab
     final currentSearch = _tabController.index == 0
         ? ref.watch(projectsSearchProvider)
-        : ref.watch(releasesSearchProvider);
+        : _tabController.index == 1
+            ? ref.watch(releasesSearchProvider)
+            : '';
     final projects = ref.watch(projectsProvider);
     final hiddenMode = ref.watch(showHiddenProjectsProvider);
     final hiddenNotifier = ref.read(showHiddenProjectsProvider.notifier);
@@ -675,6 +681,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                             Tab(text: AppLocalizations.of(context)!.releasesTab),
                             if (Platform.isAndroid)
                               Tab(text: AppLocalizations.of(context)!.playlists),
+                            Tab(text: AppLocalizations.of(context)!.statisticsTab),
                           ],
                         ),
                       )
@@ -726,8 +733,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                       ? Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Search bar on top for mobile
-                            TextField(
+                            // Search bar on top for mobile (hidden on Statistics tab)
+                            if (_tabController.index != (Platform.isAndroid ? 3 : 2)) TextField(
                               focusNode: _searchFocusNode,
                               controller: _searchController,
                               decoration: InputDecoration(
@@ -772,7 +779,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                 }
                               },
                             ),
-                            const SizedBox(height: 12),
+                            if (_tabController.index != (Platform.isAndroid ? 3 : 2))
+                              const SizedBox(height: 12),
                             // Filters and info row (only show on Projects tab)
                             if (_tabController.index == 0) ...[
                               Row(
@@ -1205,7 +1213,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                       ],
                     ),
                   ),
-                  // Área de Pesquisa e Filtro (desktop only)
+                  // Área de Pesquisa e Filtro (desktop only — hidden on Statistics tab)
+                  if (_tabController.index != (Platform.isAndroid ? 3 : 2))
                   Flexible(
                     flex: 3,
                     child: Row(
@@ -1470,6 +1479,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                     Tab(icon: Icon(Icons.album), text: AppLocalizations.of(context)!.releasesTab),
                     if (Platform.isAndroid)
                       Tab(icon: Icon(Icons.playlist_play), text: AppLocalizations.of(context)!.playlists),
+                    Tab(icon: Icon(Icons.bar_chart_rounded), text: AppLocalizations.of(context)!.statisticsTab),
                   ],
                   labelColor: Theme.of(context).textTheme.titleMedium?.color,
                   unselectedLabelColor: Theme.of(context).textTheme.bodySmall?.color,
@@ -1517,6 +1527,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                         ),
                   const ReleasesTabPage(),
                   if (Platform.isAndroid) const PlaylistsPage(),
+                  const StatisticsPage(),
                 ],
               ),
             ),

@@ -1981,4 +1981,106 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get classicDarkThemeName => 'クラシックダーク';
+
+  @override
+  String get statisticsTab => '統計';
+
+  @override
+  String get statsTotalProjects => '総プロジェクト数';
+
+  @override
+  String get statsInProgress => '進行中';
+
+  @override
+  String get statsFinished => '完成';
+
+  @override
+  String get statsAvgCompletion => '平均完成時間';
+
+  @override
+  String get statsPhaseDistribution => 'フェーズ別プロジェクト';
+
+  @override
+  String get statsAvgTimePerPhase => 'フェーズあたりの平均日数';
+
+  @override
+  String get statsProductivity => '生産性';
+
+  @override
+  String get statsCreatedSeries => '作成';
+
+  @override
+  String get statsProjectHealth => 'プロジェクトの年齢と健全性';
+
+  @override
+  String get statsCatalogInsights => 'カタログの洞察';
+
+  @override
+  String get statsBpmDistribution => 'BPM分布';
+
+  @override
+  String get statsTopKeys => '主な音楽キー';
+
+  @override
+  String get statsDawTypes => 'DAWの種類';
+
+  @override
+  String get statsProjectActivity => 'プロジェクトのアクティビティ';
+
+  @override
+  String get statsNoData => 'データなし';
+
+  @override
+  String get statsNoPhaseData => 'フェーズ移行後にデータが表示されます。';
+
+  @override
+  String statsLastActivityDaysAgo(int days) {
+    return '最終活動: $days日前';
+  }
+
+  @override
+  String get statsLastActivityToday => '今日アクティブ';
+
+  @override
+  String get statsNoEvents => 'まだイベントなし';
+
+  @override
+  String statsEventPhaseChanged(String from, String to) {
+    return 'フェーズ: $from → $to';
+  }
+
+  @override
+  String statsEventMetadataUpdated(String fields) {
+    return '更新: $fields';
+  }
+
+  @override
+  String statsEventTodoCompleted(String text) {
+    return '完了: $text';
+  }
+
+  @override
+  String get statsEventFileModified => 'ディスク上のファイルが変更されました';
+
+  @override
+  String get statsClearHistory => '履歴をクリア';
+
+  @override
+  String get statsClearHistoryConfirm => 'このプロジェクトのすべてのイベントをクリアしますか？';
+
+  @override
+  String get statsSearchProjects => 'プロジェクトを検索…';
+
+  @override
+  String statsEventCount(int count) {
+    return '$count件のイベント';
+  }
+
+  @override
+  String get statsNoProjectsFound => 'プロジェクトが見つかりません';
+
+  @override
+  String statsNotTouchedDays(int days) {
+    return '$days日間変更なし';
+  }
 }

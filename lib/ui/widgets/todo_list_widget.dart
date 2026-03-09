@@ -12,11 +12,14 @@ import '../todo_templates_page.dart';
 class TodoListWidget extends ConsumerStatefulWidget {
   final List<TodoItem> todos;
   final Function(List<TodoItem>) onTodosChanged;
+  /// Optional callback fired when a todo is completed (false → true).
+  final Future<void> Function(TodoItem)? onTodoCompleted;
 
   const TodoListWidget({
     super.key,
     required this.todos,
     required this.onTodosChanged,
+    this.onTodoCompleted,
   });
 
   @override
@@ -235,18 +238,18 @@ class _TodoListWidgetState extends ConsumerState<TodoListWidget> {
   }
 
   void _toggleTodo(String id) {
+    TodoItem? completedTodo;
     final updatedTodos = _currentTodos.map((todo) {
       if (todo.id == id) {
-        // When marking as completed, update createdAt to current time so it appears at top of done list
-        // When uncompleting, keep the original createdAt
         if (!todo.completed) {
-          // Marking as done - update createdAt to now so it sorts to top
-          return todo.copyWith(
+          // Marking as done — update createdAt to now so it sorts to top
+          final updated = todo.copyWith(
             completed: true,
             createdAt: DateTime.now(),
           );
+          completedTodo = updated;
+          return updated;
         } else {
-          // Unmarking - just toggle completed status
           return todo.copyWith(completed: false);
         }
       }
@@ -254,6 +257,11 @@ class _TodoListWidgetState extends ConsumerState<TodoListWidget> {
     }).toList();
 
     widget.onTodosChanged(updatedTodos);
+
+    // Fire optional completion callback (fire-and-forget)
+    if (completedTodo != null) {
+      widget.onTodoCompleted?.call(completedTodo!);
+    }
   }
 
   void _deleteTodo(String id) {
