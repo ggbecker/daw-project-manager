@@ -8,6 +8,8 @@ import '../generated/l10n/app_localizations.dart';
 import '../models/project_event.dart';
 import '../models/music_project.dart';
 import '../providers/providers.dart';
+import 'project_detail_page.dart';
+import 'widgets/project_event_chart.dart';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -72,11 +74,6 @@ class _StatisticsPageState extends ConsumerState<StatisticsPage> {
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                flex: 3,
-                child: _ChartsPanel(stats: stats, l10n: l10n),
-              ),
-              const VerticalDivider(width: 1),
               SizedBox(
                 width: 340,
                 child: _HistoryPanel(
@@ -87,6 +84,11 @@ class _StatisticsPageState extends ConsumerState<StatisticsPage> {
                   searchController: _searchController,
                   l10n: l10n,
                 ),
+              ),
+              const VerticalDivider(width: 1),
+              Expanded(
+                flex: 3,
+                child: _ChartsPanel(stats: stats, l10n: l10n),
               ),
             ],
           );
@@ -133,12 +135,27 @@ class _ChartsPanel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final hideFinished = ref.watch(statsHideFinishedProvider);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _SummaryCards(stats: stats, l10n: l10n),
+          Row(
+            children: [
+              Expanded(child: _SummaryCards(stats: stats, l10n: l10n)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          FilterChip(
+            label: Text(l10n.hideFinished,
+                style: const TextStyle(fontSize: 12)),
+            selected: hideFinished,
+            onSelected: (_) =>
+                ref.read(statsHideFinishedProvider.notifier).toggle(),
+            visualDensity: VisualDensity.compact,
+          ),
           const SizedBox(height: 24),
           _SectionTitle(l10n.statsPhaseDistribution),
           const SizedBox(height: 8),
@@ -637,7 +654,11 @@ class _ProjectHealthList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final projectsAsync = ref.watch(allProjectsStreamProvider);
-    final projects = projectsAsync.asData?.value ?? [];
+    final hideFinished = ref.watch(statsHideFinishedProvider);
+    final allProjects = projectsAsync.asData?.value ?? [];
+    final projects = hideFinished
+        ? allProjects.where((p) => p.status != 'Finished').toList()
+        : allProjects;
 
     final inProgress = projects
         .where((p) => p.status != 'Finished' && !p.hidden)
@@ -683,6 +704,11 @@ class _ProjectHealthList extends ConsumerWidget {
                   ),
             ),
             trailing: _PhaseBadge(phase: p.status),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => ProjectDetailPage(projectId: p.id),
+              ),
+            ),
           );
         }).toList(),
       ),
@@ -702,7 +728,11 @@ class _CatalogInsights extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final projectsAsync = ref.watch(allProjectsStreamProvider);
-    final projects = projectsAsync.asData?.value ?? [];
+    final hideFinished = ref.watch(statsHideFinishedProvider);
+    final allProjects = projectsAsync.asData?.value ?? [];
+    final projects = hideFinished
+        ? allProjects.where((p) => p.status != 'Finished').toList()
+        : allProjects;
 
     // BPM buckets
     final bpmBuckets = {'<90': 0, '90–119': 0, '120–139': 0, '140+': 0};
@@ -1147,7 +1177,12 @@ class _EventHistorySection extends StatelessWidget {
               child: Text(l10n.statsNoEvents,
                   style: Theme.of(context).textTheme.bodySmall),
             )
-          else
+          else ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
+              child: ProjectEventChart(events: events),
+            ),
+            const Divider(height: 1),
             ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 320),
               child: ListView.builder(
@@ -1162,6 +1197,7 @@ class _EventHistorySection extends StatelessWidget {
                 ),
               ),
             ),
+          ],
         ],
       ),
     );

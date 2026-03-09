@@ -1829,6 +1829,14 @@ class AppLocalizationsRu extends AppLocalizations {
   String get shareZip => 'Поделиться ZIP';
 
   @override
+  String get saveCopy => 'Сохранить копию';
+
+  @override
+  String savedCopyTo(String path) {
+    return 'Сохранено в $path';
+  }
+
+  @override
   String failedToSharePreviewSong(String error) {
     return 'Не удалось поделиться превью: $error';
   }

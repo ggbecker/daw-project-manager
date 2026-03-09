@@ -1771,6 +1771,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get shareZip => '分享ZIP';
 
   @override
+  String get saveCopy => '保存副本';
+
+  @override
+  String savedCopyTo(String path) {
+    return '已保存到 $path';
+  }
+
+  @override
   String failedToSharePreviewSong(String error) {
     return '无法分享预览歌曲：$error';
   }

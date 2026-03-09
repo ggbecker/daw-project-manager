@@ -3092,6 +3092,18 @@ abstract class AppLocalizations {
   /// **'Share ZIP'**
   String get shareZip;
 
+  /// Desktop save a copy: saveCopy
+  ///
+  /// In en, this message translates to:
+  /// **'Save a copy'**
+  String get saveCopy;
+
+  /// Desktop save a copy: savedCopyTo
+  ///
+  /// In en, this message translates to:
+  /// **'Saved to {path}'**
+  String savedCopyTo(String path);
+
   /// Error message when sharing preview song fails
   ///
   /// In en, this message translates to:

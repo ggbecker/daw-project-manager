@@ -1828,6 +1828,14 @@ class AppLocalizationsPt extends AppLocalizations {
   String get shareZip => 'Compartilhar ZIP';
 
   @override
+  String get saveCopy => 'Guardar cópia';
+
+  @override
+  String savedCopyTo(String path) {
+    return 'Guardado em $path';
+  }
+
+  @override
   String failedToSharePreviewSong(String error) {
     return 'Falha ao compartilhar música de prévia: $error';
   }

@@ -1818,6 +1818,19 @@
     "description": "Label for the share button"
   },
   "shareZip": "Share ZIP",
+  "saveCopy": "Save a copy",
+  "@saveCopy": {
+    "description": "Desktop save a copy: saveCopy"
+  },
+  "savedCopyTo": "Saved to {path}",
+  "@savedCopyTo": {
+    "description": "Desktop save a copy: savedCopyTo",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "@shareZip": {
     "description": "Label for the share as ZIP button"
   },

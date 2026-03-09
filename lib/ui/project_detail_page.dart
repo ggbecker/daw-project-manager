@@ -26,6 +26,7 @@ import '../utils/file_launcher.dart';
 import '../generated/l10n/app_localizations.dart';
 import 'widgets/desktop_title_bar.dart';
 import 'widgets/todo_list_widget.dart';
+import 'widgets/project_event_chart.dart';
 
 class ProjectDetailPage extends ConsumerStatefulWidget {
   final String projectId;
@@ -1590,6 +1591,68 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
     }
   }
 
+  /// Desktop (macOS/Windows): opens a save dialog and copies the preview song to the chosen location.
+  Future<void> _exportPreviewSongDesktop() async {
+    final l10n = AppLocalizations.of(context)!;
+    final songPath = widget.project.previewSongPath;
+
+    if (songPath == null || songPath.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.previewSongFileNotFound)),
+        );
+      }
+      return;
+    }
+
+    if (songPath.startsWith('drive://')) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.previewSongNotAvailableDownloadFirst)),
+        );
+      }
+      return;
+    }
+
+    try {
+      final sourceFile = File(songPath);
+      if (!await sourceFile.exists()) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.previewSongFileNotFound)),
+          );
+        }
+        return;
+      }
+
+      final originalName = widget.project.previewSongFileName ?? p.basename(songPath);
+      final ext = p.extension(songPath).replaceFirst('.', '');
+
+      final destPath = await FilePicker.platform.saveFile(
+        dialogTitle: l10n.saveCopy,
+        fileName: originalName,
+        type: FileType.custom,
+        allowedExtensions: [ext.isNotEmpty ? ext : 'mp3'],
+      );
+
+      if (destPath == null) return; // user cancelled
+
+      await sourceFile.copy(destPath);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.savedCopyTo(destPath))),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.failedToSharePreviewSong(e.toString()))),
+        );
+      }
+    }
+  }
+
   /// Picks a local audio file on Android/iOS and stores it in the app's preview_songs folder.
   /// This does NOT upload anything to Drive.
   Future<void> _pickPreviewSongMobile() async {
@@ -2066,40 +2129,40 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                           return Wrap(spacing: 8, runSpacing: 8, children: buttons);
                         },
                       )
-                    : ElevatedButton.icon(
-                        onPressed: () async {
-                          // Get the project's directory to start the file picker there
-                          final projectDir = p.dirname(widget.project.filePath);
-
-                          // Open file picker - attempt to start in project directory
-                          // Note: file_picker package doesn't support initialDirectory parameter directly
-                          // On Windows, the file picker may open in the project directory if it's accessible
-                          // The user can navigate to the project folder if needed
-                          final result = await FilePicker.platform.pickFiles(
-                            type: FileType.custom,
-                            allowedExtensions: [
-                              'mp3',
-                              'wav',
-                              'm4a',
-                              'aac',
-                              'ogg',
-                              'flac',
-                            ],
-                            dialogTitle: AppLocalizations.of(
-                              context,
-                            )!.selectPreviewSong,
-                          );
-                          if (result != null && result.files.single.path != null) {
-                            widget.onSongChanged(result.files.single.path!);
-                          }
-                        },
-                        icon: const Icon(Icons.audio_file),
-                        label: Text(
-                          widget.project.previewSongPath != null &&
-                                  widget.project.previewSongPath!.isNotEmpty
-                              ? AppLocalizations.of(context)!.changePreviewSong
-                              : AppLocalizations.of(context)!.selectPreviewSong,
-                        ),
+                    : Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: () async {
+                              final result = await FilePicker.platform.pickFiles(
+                                type: FileType.custom,
+                                allowedExtensions: const [
+                                  'mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac',
+                                ],
+                                dialogTitle: AppLocalizations.of(context)!.selectPreviewSong,
+                              );
+                              if (result != null && result.files.single.path != null) {
+                                widget.onSongChanged(result.files.single.path!);
+                              }
+                            },
+                            icon: const Icon(Icons.audio_file),
+                            label: Text(
+                              widget.project.previewSongPath != null &&
+                                      widget.project.previewSongPath!.isNotEmpty
+                                  ? AppLocalizations.of(context)!.changePreviewSong
+                                  : AppLocalizations.of(context)!.selectPreviewSong,
+                            ),
+                          ),
+                          if (widget.project.previewSongPath != null &&
+                              widget.project.previewSongPath!.isNotEmpty &&
+                              !widget.project.previewSongPath!.startsWith('drive://'))
+                            ElevatedButton.icon(
+                              onPressed: _exportPreviewSongDesktop,
+                              icon: const Icon(Icons.save_alt),
+                              label: Text(AppLocalizations.of(context)!.saveCopy),
+                            ),
+                        ],
                       ),
               ],
             ),
@@ -2159,6 +2222,8 @@ class _ProjectHistoryTimeline extends ConsumerWidget {
             padding: const EdgeInsets.only(top: 4, bottom: 8),
             child: Column(
               children: [
+                ProjectEventChart(events: events),
+                const Divider(height: 16),
                 for (int i = 0; i < chronological.length; i++)
                   _buildTimelineRow(
                     context,

@@ -916,8 +916,12 @@ final projectsWithRecentActivityProvider =
     Provider<List<MusicProject>>((ref) {
   final projectsAsync = ref.watch(allProjectsStreamProvider);
   final eventsAsync = ref.watch(allEventsStreamProvider);
+  final hideFinished = ref.watch(statsHideFinishedProvider);
 
-  final projects = projectsAsync.asData?.value ?? [];
+  final allProjects = projectsAsync.asData?.value ?? [];
+  final projects = hideFinished
+      ? allProjects.where((p) => p.status != 'Finished').toList()
+      : allProjects;
   final events = eventsAsync.asData?.value ?? [];
 
   // Build map projectId → most recent event time
@@ -943,14 +947,50 @@ final projectsWithRecentActivityProvider =
   return sorted;
 });
 
+/// Whether the statistics page should exclude finished projects from all computations.
+final statsHideFinishedProvider =
+    NotifierProvider<StatsHideFinishedNotifier, bool>(
+        StatsHideFinishedNotifier.new);
+
+class StatsHideFinishedNotifier extends Notifier<bool> {
+  static const _key = 'statsHideFinished';
+
+  @override
+  bool build() {
+    SchedulerBinding.instance.addPostFrameCallback((_) => _load());
+    return false;
+  }
+
+  Future<void> _load() async {
+    try {
+      final box = await Hive.openBox<String>('settings');
+      final saved = box.get(_key);
+      if (saved != null) state = saved == 'true';
+    } catch (_) {}
+  }
+
+  Future<void> toggle() async {
+    state = !state;
+    try {
+      final box = await Hive.openBox<String>('settings');
+      await box.put(_key, state.toString());
+    } catch (_) {}
+  }
+}
+
 /// Fully computed global statistics derived from projects + events.
 final globalStatsProvider = Provider<GlobalStats>((ref) {
   final projectsAsync = ref.watch(allProjectsStreamProvider);
   final eventsAsync = ref.watch(allEventsStreamProvider);
+  final hideFinished = ref.watch(statsHideFinishedProvider);
 
-  final projects = projectsAsync.asData?.value;
+  final allProjects = projectsAsync.asData?.value;
   final events = eventsAsync.asData?.value;
-  if (projects == null || events == null) return GlobalStats.empty;
+  if (allProjects == null || events == null) return GlobalStats.empty;
+
+  final projects = hideFinished
+      ? allProjects.where((p) => p.status != 'Finished').toList()
+      : allProjects;
 
   // Basic counts
   final total = projects.length;

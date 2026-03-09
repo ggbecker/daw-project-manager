@@ -1789,6 +1789,14 @@ class AppLocalizationsJa extends AppLocalizations {
   String get shareZip => 'ZIPを共有';
 
   @override
+  String get saveCopy => 'コピーを保存';
+
+  @override
+  String savedCopyTo(String path) {
+    return '$path に保存しました';
+  }
+
+  @override
   String failedToSharePreviewSong(String error) {
     return 'プレビュー曲を共有できませんでした: $error';
   }

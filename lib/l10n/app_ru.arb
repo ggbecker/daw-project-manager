@@ -1090,6 +1090,19 @@
     "description": "Label for the share button"
   },
   "shareZip": "Поделиться ZIP",
+  "saveCopy": "Сохранить копию",
+  "@saveCopy": {
+    "description": "Desktop save a copy: saveCopy"
+  },
+  "savedCopyTo": "Сохранено в {path}",
+  "@savedCopyTo": {
+    "description": "Desktop save a copy: savedCopyTo",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "@shareZip": {
     "description": "Label for the share as ZIP button"
   },

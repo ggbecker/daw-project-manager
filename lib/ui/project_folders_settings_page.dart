@@ -434,7 +434,7 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
     );
 
     return Scaffold(
-      appBar: kDebugMode ? AppBar(
+      appBar: !_isDesktop ? AppBar(
         title: Text('${l10n.settings} • ${l10n.roots}'),
         actions: [
           if (_busy)

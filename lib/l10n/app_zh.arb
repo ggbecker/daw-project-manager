@@ -1090,6 +1090,19 @@
     "description": "Label for the share button"
   },
   "shareZip": "分享ZIP",
+  "saveCopy": "保存副本",
+  "@saveCopy": {
+    "description": "Desktop save a copy: saveCopy"
+  },
+  "savedCopyTo": "已保存到 {path}",
+  "@savedCopyTo": {
+    "description": "Desktop save a copy: savedCopyTo",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "@shareZip": {
     "description": "Label for the share as ZIP button"
   },
