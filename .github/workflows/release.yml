@@ -207,6 +207,22 @@ jobs:
           echo "version_name=${VERSION_NAME}" >> "$GITHUB_OUTPUT"
           echo "version_code=${VERSION_CODE}" >> "$GITHUB_OUTPUT"
 
+      # 2.9. Disable Xcode automatic code signing for macOS CI build.
+      # The app is re-signed with the real Developer ID in the post-build step.
+      # flutter build macos does not support passing xcodebuild settings via --,
+      # so we patch project.pbxproj directly before building.
+      - name: Disable Xcode automatic code signing (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          PBXPROJ="macos/Runner.xcodeproj/project.pbxproj"
+          # Switch every build configuration from Automatic to Manual signing
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' "$PBXPROJ"
+          # Clear the team so Xcode does not require a provisioning profile
+          sed -i '' 's/DEVELOPMENT_TEAM = [A-Z0-9]*;/DEVELOPMENT_TEAM = "";/g' "$PBXPROJ"
+          # Use ad-hoc signing ("-") so no certificate or profile is needed.
+          # Manual + no team still errors without an explicit identity.
+          sed -i '' 's/"CODE_SIGN_IDENTITY\[sdk=macosx\*\]" = "Apple Development"/"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-"/g' "$PBXPROJ"
+
       # 3. Build
       - name: Build ${{ matrix.os_name }} Executable
         shell: bash
@@ -247,10 +263,10 @@ jobs:
           codesign --force --deep --sign "$APPLE_DEVELOPER_ID" \
             --options runtime \
             --entitlements macos/Runner/Release.entitlements \
-            build/macos/Build/Products/Release/daw_project_manager.app
+            build/macos/Build/Products/Release/DAWProjectManager.app
           
           # Verify the signature
-          codesign --verify --verbose build/macos/Build/Products/Release/daw_project_manager.app
+          codesign --verify --verbose build/macos/Build/Products/Release/DAWProjectManager.app
           
       # 4b. Notarize macOS App (optional but recommended)
       - name: Notarize macOS App
@@ -262,7 +278,7 @@ jobs:
         run: |
           # Create a zip for notarization
           cd build/macos/Build/Products/Release
-          zip -r daw_project_manager_notarize.zip daw_project_manager.app
+          zip -r daw_project_manager_notarize.zip DAWProjectManager.app
           
           # Submit for notarization
           xcrun notarytool submit daw_project_manager_notarize.zip \
@@ -273,8 +289,8 @@ jobs:
             --timeout 30m
           
           # Staple the notarization ticket
-          xcrun stapler staple daw_project_manager.app
-          xcrun stapler validate daw_project_manager.app
+          xcrun stapler staple DAWProjectManager.app
+          xcrun stapler validate DAWProjectManager.app
           
           # Clean up
           rm daw_project_manager_notarize.zip
@@ -288,7 +304,7 @@ jobs:
           mkdir -p "$DMG_DIR"
           
           # Copy the signed .app bundle to the DMG directory
-          cp -R build/macos/Build/Products/Release/daw_project_manager.app "$DMG_DIR/"
+          cp -R build/macos/Build/Products/Release/DAWProjectManager.app "$DMG_DIR/"
           
           # Create a symbolic link to Applications folder
           ln -s /Applications "$DMG_DIR/Applications"
@@ -325,7 +341,7 @@ jobs:
         run: |
           # macOS: Compacta o bundle .app (already signed)
           cd build/macos/Build/Products/Release
-          zip -r DAW_Project_Manager-${{ steps.sanitize_ref.outputs.sanitized_ref }}.zip daw_project_manager.app
+          zip -r DAW_Project_Manager-${{ steps.sanitize_ref.outputs.sanitized_ref }}.zip DAWProjectManager.app
 
       # 4e. Clean up keychain
       - name: Clean up keychain
