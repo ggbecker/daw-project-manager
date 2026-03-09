@@ -22,7 +22,7 @@ import '../models/todo_template.dart';
 import '../models/backup_progress.dart';
 import '../repository/profile_repository.dart';
 import '../repository/project_repository.dart';
-import '../utils/app_paths.dart' show ensureHiveInitialized, getPreviewSongsPath, getReleaseArtworkPath;
+import '../utils/app_paths.dart' show ensureHiveInitialized, getLocalAppDataPath, getPreviewSongsPath, getReleaseArtworkPath;
 import '../config/secrets.dart' show desktopClientSecret, desktopClientId, androidWebClientId;
 
 /// Exception thrown when user cancels an upload operation
@@ -918,19 +918,31 @@ class GoogleDriveSyncService {
     }
   }
 
-  /// Save desktop credentials for session persistence directly in flutter_secure_storage.
-  /// Avoids the fragile Hive AES intermediate layer that failed silently on macOS.
+  /// Returns the credentials file path for macOS (avoids Keychain prompts).
+  Future<File> _credentialsFile() async {
+    final dir = await getLocalAppDataPath();
+    return File(path.join(dir, 'google_drive_credentials.json'));
+  }
+
+  /// Save desktop credentials for session persistence.
+  /// On macOS: plain JSON file in app-support dir (avoids Keychain prompts).
+  /// On Windows/Linux: flutter_secure_storage.
   Future<void> _saveCredentials(String refreshToken, String accessToken, DateTime expiryTime) async {
     if (Platform.isAndroid) return;
 
+    final credentialsData = {
+      'refresh_token': refreshToken,
+      'access_token': accessToken,
+      'expiry_time': expiryTime.toIso8601String(),
+    };
     try {
-      const secureStorage = FlutterSecureStorage();
-      final credentialsData = {
-        'refresh_token': refreshToken,
-        'access_token': accessToken,
-        'expiry_time': expiryTime.toIso8601String(),
-      };
-      await secureStorage.write(key: _credentialsStorageKey, value: jsonEncode(credentialsData));
+      if (Platform.isMacOS) {
+        final file = await _credentialsFile();
+        await file.writeAsString(jsonEncode(credentialsData));
+      } else {
+        const secureStorage = FlutterSecureStorage();
+        await secureStorage.write(key: _credentialsStorageKey, value: jsonEncode(credentialsData));
+      }
       if (kDebugMode) print('Credentials saved for session persistence');
     } catch (e) {
       if (kDebugMode) print('Error saving credentials: $e');
@@ -942,8 +954,13 @@ class GoogleDriveSyncService {
     if (Platform.isAndroid) return;
 
     try {
-      const secureStorage = FlutterSecureStorage();
-      await secureStorage.delete(key: _credentialsStorageKey);
+      if (Platform.isMacOS) {
+        final file = await _credentialsFile();
+        if (await file.exists()) await file.delete();
+      } else {
+        const secureStorage = FlutterSecureStorage();
+        await secureStorage.delete(key: _credentialsStorageKey);
+      }
       if (kDebugMode) print('Credentials cleared');
     } catch (e) {
       if (kDebugMode) print('Error clearing credentials: $e');
@@ -965,10 +982,16 @@ class GoogleDriveSyncService {
       return _currentUser != null && _isAuthenticated;
     }
 
-    // Desktop: restore from saved credentials (stored directly in flutter_secure_storage)
+    // Desktop: restore from saved credentials
     try {
-      const secureStorage = FlutterSecureStorage();
-      final credentialsJson = await secureStorage.read(key: _credentialsStorageKey);
+      String? credentialsJson;
+      if (Platform.isMacOS) {
+        final file = await _credentialsFile();
+        if (await file.exists()) credentialsJson = await file.readAsString();
+      } else {
+        const secureStorage = FlutterSecureStorage();
+        credentialsJson = await secureStorage.read(key: _credentialsStorageKey);
+      }
       if (credentialsJson == null) {
         if (kDebugMode) print('No saved credentials found');
         return false;
