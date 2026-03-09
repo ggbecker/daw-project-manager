@@ -2127,6 +2127,20 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get statsViewHistory => 'Статистика проекта';
+
+  @override
+  String get statsPhaseHistory => 'История фаз';
+
+  @override
+  String get statsEventBreakdown => 'Сводка событий';
+
+  @override
+  String statsDaysSoFar(int days) {
+    return 'Уже $daysд';
+  }
+
+  @override
   String get statsNoProjectsFound => 'Проекты не найдены';
 
   @override

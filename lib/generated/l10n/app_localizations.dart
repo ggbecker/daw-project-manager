@@ -3596,6 +3596,30 @@ abstract class AppLocalizations {
   /// **'{count} events'**
   String statsEventCount(int count);
 
+  /// Button/page title for per-project statistics
+  ///
+  /// In en, this message translates to:
+  /// **'Project Statistics'**
+  String get statsViewHistory;
+
+  /// Section title: phase history
+  ///
+  /// In en, this message translates to:
+  /// **'Phase History'**
+  String get statsPhaseHistory;
+
+  /// Section title: event breakdown
+  ///
+  /// In en, this message translates to:
+  /// **'Event Breakdown'**
+  String get statsEventBreakdown;
+
+  /// Current phase duration indicator
+  ///
+  /// In en, this message translates to:
+  /// **'{days}d so far'**
+  String statsDaysSoFar(int days);
+
   /// No description provided for @statsNoProjectsFound.
   ///
   /// In en, this message translates to:

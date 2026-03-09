@@ -1430,6 +1430,27 @@
   "statsClearHistoryConfirm": "Cancellare tutti gli eventi registrati per questo progetto?",
   "statsSearchProjects": "Cerca progetti…",
   "statsEventCount": "{count} eventi",
+  "statsViewHistory": "Statistiche Progetto",
+  "@statsViewHistory": {
+    "description": "Button/page title for per-project statistics"
+  },
+  "statsPhaseHistory": "Cronologia Fasi",
+  "@statsPhaseHistory": {
+    "description": "Section title: phase history"
+  },
+  "statsEventBreakdown": "Riepilogo Eventi",
+  "@statsEventBreakdown": {
+    "description": "Section title: event breakdown"
+  },
+  "statsDaysSoFar": "{days}g finora",
+  "@statsDaysSoFar": {
+    "description": "Current phase duration indicator",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "statsNoProjectsFound": "Nessun progetto trovato",
   "statsNotTouchedDays": "Invariato da {days} giorni"
 }

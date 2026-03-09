@@ -1430,6 +1430,27 @@
   "statsClearHistoryConfirm": "Удалить все записанные события для этого проекта?",
   "statsSearchProjects": "Поиск проектов…",
   "statsEventCount": "{count} событий",
+  "statsViewHistory": "Статистика проекта",
+  "@statsViewHistory": {
+    "description": "Button/page title for per-project statistics"
+  },
+  "statsPhaseHistory": "История фаз",
+  "@statsPhaseHistory": {
+    "description": "Section title: phase history"
+  },
+  "statsEventBreakdown": "Сводка событий",
+  "@statsEventBreakdown": {
+    "description": "Section title: event breakdown"
+  },
+  "statsDaysSoFar": "Уже {days}д",
+  "@statsDaysSoFar": {
+    "description": "Current phase duration indicator",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "statsNoProjectsFound": "Проекты не найдены",
   "statsNotTouchedDays": "Не изменялся {days} дн."
 }

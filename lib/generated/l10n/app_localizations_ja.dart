@@ -2085,6 +2085,20 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get statsViewHistory => 'プロジェクト統計';
+
+  @override
+  String get statsPhaseHistory => 'フェーズ履歴';
+
+  @override
+  String get statsEventBreakdown => 'イベント内訳';
+
+  @override
+  String statsDaysSoFar(int days) {
+    return '現在$days日';
+  }
+
+  @override
   String get statsNoProjectsFound => 'プロジェクトが見つかりません';
 
   @override

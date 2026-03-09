@@ -2127,6 +2127,20 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get statsViewHistory => 'Project Statistics';
+
+  @override
+  String get statsPhaseHistory => 'Phase History';
+
+  @override
+  String get statsEventBreakdown => 'Event Breakdown';
+
+  @override
+  String statsDaysSoFar(int days) {
+    return '${days}d so far';
+  }
+
+  @override
   String get statsNoProjectsFound => 'No projects found';
 
   @override

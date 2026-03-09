@@ -1430,6 +1430,27 @@
   "statsClearHistoryConfirm": "清除此项目的所有记录事件？",
   "statsSearchProjects": "搜索项目…",
   "statsEventCount": "{count}个事件",
+  "statsViewHistory": "项目统计",
+  "@statsViewHistory": {
+    "description": "Button/page title for per-project statistics"
+  },
+  "statsPhaseHistory": "阶段历史",
+  "@statsPhaseHistory": {
+    "description": "Section title: phase history"
+  },
+  "statsEventBreakdown": "事件概览",
+  "@statsEventBreakdown": {
+    "description": "Section title: event breakdown"
+  },
+  "statsDaysSoFar": "已{days}天",
+  "@statsDaysSoFar": {
+    "description": "Current phase duration indicator",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "statsNoProjectsFound": "未找到项目",
   "statsNotTouchedDays": "{days}天未修改"
 }

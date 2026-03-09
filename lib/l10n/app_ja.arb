@@ -1430,6 +1430,27 @@
   "statsClearHistoryConfirm": "このプロジェクトのすべてのイベントをクリアしますか？",
   "statsSearchProjects": "プロジェクトを検索…",
   "statsEventCount": "{count}件のイベント",
+  "statsViewHistory": "プロジェクト統計",
+  "@statsViewHistory": {
+    "description": "Button/page title for per-project statistics"
+  },
+  "statsPhaseHistory": "フェーズ履歴",
+  "@statsPhaseHistory": {
+    "description": "Section title: phase history"
+  },
+  "statsEventBreakdown": "イベント内訳",
+  "@statsEventBreakdown": {
+    "description": "Section title: event breakdown"
+  },
+  "statsDaysSoFar": "現在{days}日",
+  "@statsDaysSoFar": {
+    "description": "Current phase duration indicator",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "statsNoProjectsFound": "プロジェクトが見つかりません",
   "statsNotTouchedDays": "{days}日間変更なし"
 }

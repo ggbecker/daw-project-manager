@@ -2067,6 +2067,20 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get statsViewHistory => '项目统计';
+
+  @override
+  String get statsPhaseHistory => '阶段历史';
+
+  @override
+  String get statsEventBreakdown => '事件概览';
+
+  @override
+  String statsDaysSoFar(int days) {
+    return '已$days天';
+  }
+
+  @override
   String get statsNoProjectsFound => '未找到项目';
 
   @override

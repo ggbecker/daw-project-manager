@@ -26,7 +26,7 @@ import '../utils/file_launcher.dart';
 import '../generated/l10n/app_localizations.dart';
 import 'widgets/desktop_title_bar.dart';
 import 'widgets/todo_list_widget.dart';
-import 'widgets/project_event_chart.dart';
+import 'project_statistics_page.dart';
 
 class ProjectDetailPage extends ConsumerStatefulWidget {
   final String projectId;
@@ -1161,9 +1161,9 @@ updatedProject.lastModifiedAt.toString(),
                                       ),
                                     ],
                                   ),
-                    // ── Project History Timeline ──────────────────────────
+                    // ── Project Statistics button ─────────────────────────
                     const SizedBox(height: 16),
-                    _ProjectHistoryTimeline(projectId: updatedProject.id),
+                    _ProjectStatsButton(projectId: updatedProject.id),
                   ],
                 ),
               ),
@@ -2174,240 +2174,38 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
 }
 
 // ---------------------------------------------------------------------------
-// Project History Timeline — embedded in the detail page
+// Project Stats Button — navigates to the dedicated statistics page
 // ---------------------------------------------------------------------------
 
-class _ProjectHistoryTimeline extends ConsumerWidget {
+class _ProjectStatsButton extends ConsumerWidget {
   final String projectId;
-  const _ProjectHistoryTimeline({required this.projectId});
-
-  static const double _dotSize = 10;
-  static const double _lineWidth = 2;
-  static const double _dateColWidth = 54;
+  const _ProjectStatsButton({required this.projectId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final events = ref.watch(eventsForProjectProvider(projectId));
 
-    // Chronological order: oldest at top, newest at bottom
-    final chronological = [...events]
-      ..sort((a, b) => a.occurredAt.compareTo(b.occurredAt));
-
-    return ExpansionTile(
-      tilePadding: EdgeInsets.zero,
-      childrenPadding: EdgeInsets.zero,
-      leading: const Icon(Icons.timeline, size: 20),
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.bar_chart_rounded, size: 20),
       title: Text(
         l10n.statsProjectActivity,
         style: Theme.of(context).textTheme.titleSmall,
       ),
-      subtitle: events.isEmpty
-          ? Text(l10n.statsNoEvents,
-              style: Theme.of(context).textTheme.bodySmall)
-          : Text(l10n.statsEventCount(events.length),
-              style: Theme.of(context).textTheme.bodySmall),
-      children: [
-        if (events.isEmpty)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(0, 4, 0, 12),
-            child: Text(l10n.statsNoEvents,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall
-                    ?.copyWith(color: Theme.of(context).hintColor)),
-          )
-        else
-          Padding(
-            padding: const EdgeInsets.only(top: 4, bottom: 8),
-            child: Column(
-              children: [
-                ProjectEventChart(events: events),
-                const Divider(height: 16),
-                for (int i = 0; i < chronological.length; i++)
-                  _buildTimelineRow(
-                    context,
-                    chronological[i],
-                    isFirst: i == 0,
-                    isLast: i == chronological.length - 1,
-                    l10n: l10n,
-                  ),
-              ],
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildTimelineRow(
-    BuildContext context,
-    ProjectEvent event, {
-    required bool isFirst,
-    required bool isLast,
-    required AppLocalizations l10n,
-  }) {
-    final hintColor = Theme.of(context).hintColor;
-    final bodySmall = Theme.of(context).textTheme.bodySmall;
-    final colorScheme = Theme.of(context).colorScheme;
-
-    IconData icon;
-    String label;
-    Color dotColor;
-
-    try {
-      final payload = event.payload != null
-          ? jsonDecode(event.payload!) as Map<String, dynamic>
-          : <String, dynamic>{};
-
-      switch (event.eventType) {
-        case ProjectEvent.statusChange:
-          icon = Icons.swap_horiz;
-          final toPhase = payload['to'] as String? ?? '';
-          dotColor = _phaseColor(toPhase);
-          label = l10n.statsEventPhaseChanged(
-              payload['from'] as String? ?? '', toPhase);
-          break;
-        case ProjectEvent.metadataEdit:
-          icon = Icons.edit_outlined;
-          dotColor = colorScheme.secondary;
-          final fields =
-              (payload['fields'] as List?)?.cast<String>().join(', ') ?? '';
-          label = l10n.statsEventMetadataUpdated(fields);
-          break;
-        case ProjectEvent.todoCompleted:
-          icon = Icons.check_circle_outline;
-          dotColor = Colors.green;
-          label = l10n
-              .statsEventTodoCompleted(payload['todoText'] as String? ?? '');
-          break;
-        case ProjectEvent.fileChanged:
-          icon = Icons.folder_outlined;
-          dotColor = Colors.orange;
-          label = l10n.statsEventFileModified;
-          break;
-        default:
-          icon = Icons.circle_outlined;
-          dotColor = hintColor;
-          label = event.eventType;
-      }
-    } catch (_) {
-      icon = Icons.circle_outlined;
-      dotColor = hintColor;
-      label = event.eventType;
-    }
-
-    final dt = event.occurredAt;
-    final timeStr =
-        '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-    final isToday = DateTime.now().difference(dt).inDays == 0;
-    final dateLabel = isToday
-        ? timeStr
-        : '${dt.day}/${dt.month}/${dt.year.toString().substring(2)}\n$timeStr';
-
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Date label
-          SizedBox(
-            width: _dateColWidth,
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: Text(
-                dateLabel,
-                textAlign: TextAlign.right,
-                style: bodySmall?.copyWith(
-                  fontSize: 9,
-                  color: hintColor,
-                  height: 1.3,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          // Line + dot
-          SizedBox(
-            width: _dotSize + 8,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Center(
-                    child: isFirst
-                        ? const SizedBox.shrink()
-                        : Container(
-                            width: _lineWidth,
-                            color: hintColor.withValues(alpha: 0.25)),
-                  ),
-                ),
-                Container(
-                  width: _dotSize,
-                  height: _dotSize,
-                  decoration: BoxDecoration(
-                    color: dotColor,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: dotColor.withValues(alpha: 0.35),
-                        blurRadius: 4,
-                        spreadRadius: 1,
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Center(
-                    child: isLast
-                        ? const SizedBox.shrink()
-                        : Container(
-                            width: _lineWidth,
-                            color: hintColor.withValues(alpha: 0.25)),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          // Icon + description
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Icon(icon, size: 14, color: dotColor),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(label,
-                        style: bodySmall?.copyWith(height: 1.3),
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+      subtitle: Text(
+        events.isEmpty
+            ? l10n.statsNoEvents
+            : l10n.statsEventCount(events.length),
+        style: Theme.of(context).textTheme.bodySmall,
+      ),
+      trailing: const Icon(Icons.chevron_right, size: 18),
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ProjectStatisticsPage(projectId: projectId),
+        ),
       ),
     );
-  }
-
-  Color _phaseColor(String phase) {
-    switch (phase) {
-      case 'Idea':
-        return Colors.purple;
-      case 'Composing':
-        return Colors.blue;
-      case 'Arranging':
-        return Colors.teal;
-      case 'Mixing':
-        return Colors.orange;
-      case 'Mastering':
-        return Colors.deepOrange;
-      case 'Finished':
-        return Colors.green;
-      default:
-        return Colors.grey;
-    }
   }
 }

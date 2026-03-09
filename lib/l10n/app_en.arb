@@ -2198,6 +2198,27 @@
   "statsClearHistoryConfirm": "Clear all recorded events for this project?",
   "statsSearchProjects": "Search projects…",
   "statsEventCount": "{count} events",
+  "statsViewHistory": "Project Statistics",
+  "@statsViewHistory": {
+    "description": "Button/page title for per-project statistics"
+  },
+  "statsPhaseHistory": "Phase History",
+  "@statsPhaseHistory": {
+    "description": "Section title: phase history"
+  },
+  "statsEventBreakdown": "Event Breakdown",
+  "@statsEventBreakdown": {
+    "description": "Section title: event breakdown"
+  },
+  "statsDaysSoFar": "{days}d so far",
+  "@statsDaysSoFar": {
+    "description": "Current phase duration indicator",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "@statsEventCount": {
     "placeholders": {
       "count": {
