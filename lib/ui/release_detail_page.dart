@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:convert';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -10,21 +9,17 @@ import 'package:path/path.dart' as path;
 import 'package:uuid/uuid.dart';
 import 'package:archive/archive.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:window_manager/window_manager.dart';
-
 import '../models/release.dart';
-import 'dashboard_page.dart';
+import 'widgets/desktop_title_bar.dart';
 import '../models/release_file.dart';
 import '../models/music_project.dart';
 import '../providers/providers.dart';
-import '../repository/project_repository.dart';
 import '../utils/app_paths.dart';
 import '../utils/mobile_utils.dart';
 import '../utils/file_launcher.dart';
 import '../generated/l10n/app_localizations.dart';
 import 'project_detail_page.dart';
 import 'widgets/todo_list_widget.dart';
-import '../models/todo_item.dart';
 
 class ReleaseDetailPage extends ConsumerStatefulWidget {
   final String releaseId;
@@ -45,7 +40,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final releases = ref.read(releasesProvider);
-      final release = releases.asData?.value?.firstWhere(
+      final release = releases.asData?.value.firstWhere(
         (r) => r.id == widget.releaseId,
         orElse: () => throw StateError('Release not found'),
       );
@@ -295,10 +290,8 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
       }
 
       final zipData = ZipEncoder().encode(archive);
-      if (zipData != null) {
-        await zipFile.writeAsBytes(zipData);
-      }
-
+      await zipFile.writeAsBytes(zipData);
+    
       // Close loading dialog
       if (mounted) {
         Navigator.of(context).pop();
@@ -329,7 +322,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
 
   Future<void> _pickImage() async {
     final releases = ref.read(releasesProvider);
-    final release = releases.asData?.value?.firstWhere(
+    final release = releases.asData?.value.firstWhere(
       (r) => r.id == widget.releaseId,
       orElse: () => throw StateError('Release not found'),
     );
@@ -428,39 +421,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
         appBar: null,
         body: Column(
           children: [
-            if (!kDebugMode)
-              GestureDetector(
-                onPanStart: (_) => windowManager.startDragging(),
-                onDoubleTap: () async {
-                  if (await windowManager.isMaximized()) {
-                    windowManager.restore();
-                  } else {
-                    windowManager.maximize();
-                  }
-                },
-                child: Container(
-                  color: Theme.of(context).cardColor,
-                  height: 40,
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.arrow_back, color: Theme.of(context).textTheme.bodyMedium?.color, size: 20),
-                        onPressed: () => Navigator.pop(context),
-                        tooltip: AppLocalizations.of(context)!.back,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 4),
-                        child: Text(
-                          AppLocalizations.of(context)!.releaseDetails,
-                          style: TextStyle(color: Theme.of(context).textTheme.titleMedium?.color, fontSize: 16),
-                        ),
-                      ),
-                      const Spacer(),
-                      const WindowButtons(),
-                    ],
-                  ),
-                ),
-              ),
+            DesktopTitleBar(title: AppLocalizations.of(context)!.releaseDetails, showBack: true),
             const Expanded(child: Center(child: CircularProgressIndicator())),
           ],
         ),
@@ -472,39 +433,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
         appBar: null,
         body: Column(
           children: [
-            if (!kDebugMode)
-              GestureDetector(
-                onPanStart: (_) => windowManager.startDragging(),
-                onDoubleTap: () async {
-                  if (await windowManager.isMaximized()) {
-                    windowManager.restore();
-                  } else {
-                    windowManager.maximize();
-                  }
-                },
-                child: Container(
-                  color: Theme.of(context).cardColor,
-                  height: 40,
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.arrow_back, color: Theme.of(context).textTheme.bodyMedium?.color, size: 20),
-                        onPressed: () => Navigator.pop(context),
-                        tooltip: AppLocalizations.of(context)!.back,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 4),
-                        child: Text(
-                          AppLocalizations.of(context)!.error,
-                          style: TextStyle(color: Theme.of(context).textTheme.titleMedium?.color, fontSize: 16),
-                        ),
-                      ),
-                      const Spacer(),
-                      const WindowButtons(),
-                    ],
-                  ),
-                ),
-              ),
+            DesktopTitleBar(title: AppLocalizations.of(context)!.error, showBack: true),
             Expanded(child: Center(child: Text(AppLocalizations.of(context)!.errorLoadingRelease(releases.error.toString())))),
           ],
         ),
@@ -516,34 +445,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
         appBar: null,
         body: Column(
           children: [
-            if (!kDebugMode)
-              GestureDetector(
-                onPanStart: (_) => windowManager.startDragging(),
-                onDoubleTap: () async {
-                  if (await windowManager.isMaximized()) {
-                    windowManager.restore();
-                  } else {
-                    windowManager.maximize();
-                  }
-                },
-                child: Container(
-                  color: Theme.of(context).cardColor,
-                  height: 40,
-                  child: Row(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(left: 12),
-                        child: Text(
-                          AppLocalizations.of(context)!.error,
-                          style: TextStyle(color: Theme.of(context).textTheme.titleMedium?.color, fontSize: 16),
-                        ),
-                      ),
-                      Spacer(),
-                      WindowButtons(),
-                    ],
-                  ),
-                ),
-              ),
+            DesktopTitleBar(title: AppLocalizations.of(context)!.error, showBack: true),
             Expanded(child: Center(child: Text('${AppLocalizations.of(context)!.errorLoadingProjects}: ${allProjectsAsync.error}'))),
           ],
         ),
@@ -618,39 +520,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
             : null,
         body: Column(
           children: [
-            if (!isMobile && !kDebugMode)
-              GestureDetector(
-                onPanStart: (_) => windowManager.startDragging(),
-                onDoubleTap: () async {
-                  if (await windowManager.isMaximized()) {
-                    windowManager.restore();
-                  } else {
-                    windowManager.maximize();
-                  }
-                },
-                child: Container(
-                  color: Theme.of(context).cardColor,
-                  height: 40,
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.arrow_back, color: Theme.of(context).textTheme.bodyMedium?.color, size: 20),
-                        onPressed: () => Navigator.pop(context),
-                        tooltip: AppLocalizations.of(context)!.back,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 4),
-                        child: Text(
-                          AppLocalizations.of(context)!.releaseNotFound,
-                          style: TextStyle(color: Theme.of(context).textTheme.titleMedium?.color, fontSize: 16),
-                        ),
-                      ),
-                      const Spacer(),
-                      const WindowButtons(),
-                    ],
-                  ),
-                ),
-              ),
+            if (!isMobile) DesktopTitleBar(title: AppLocalizations.of(context)!.releaseNotFound, showBack: true),
             Expanded(child: Center(child: Text(AppLocalizations.of(context)!.releaseNotFound))),
           ],
         ),
@@ -695,62 +565,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
     return Scaffold(
       body: Column(
         children: [
-          // Window title bar (release mode) or back button (debug mode)
-          if (!kDebugMode)
-            GestureDetector(
-              onPanStart: (_) => windowManager.startDragging(),
-              onDoubleTap: () async {
-                if (await windowManager.isMaximized()) {
-                  windowManager.restore();
-                } else {
-                  windowManager.maximize();
-                }
-              },
-              child: Container(
-                color: Theme.of(context).cardColor,
-                height: 40,
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.arrow_back, color: Theme.of(context).textTheme.bodyMedium?.color, size: 20),
-                      onPressed: () => Navigator.pop(context),
-                      tooltip: AppLocalizations.of(context)!.back,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 4),
-                      child: Text(
-                        release.title,
-                        style: TextStyle(color: Theme.of(context).textTheme.titleMedium?.color, fontSize: 16),
-                      ),
-                    ),
-                    const Spacer(),
-                    const WindowButtons(),
-                  ],
-                ),
-              ),
-            )
-          else
-            // Debug mode: simple back button bar
-            Container(
-              color: Theme.of(context).cardColor,
-              height: 40,
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.arrow_back, color: Theme.of(context).textTheme.bodyMedium?.color, size: 20),
-                    onPressed: () => Navigator.pop(context),
-                    tooltip: AppLocalizations.of(context)!.back,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 4),
-                    child: Text(
-                      release.title,
-                      style: TextStyle(color: Theme.of(context).textTheme.titleMedium?.color, fontSize: 16),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          DesktopTitleBar(title: release.title, showBack: true),
           Expanded(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -877,7 +692,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
               tooltip: AppLocalizations.of(context)!.save,
               onPressed: () async {
                 final releases = ref.read(releasesProvider);
-                final release = releases.asData?.value?.firstWhere(
+                final release = releases.asData?.value.firstWhere(
                   (r) => r.id == widget.releaseId,
                   orElse: () => throw StateError('Release not found'),
                 );
@@ -910,7 +725,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
           title: Text(AppLocalizations.of(context)!.releaseDate),
           subtitle: Text(
             _releaseDate != null
-                ? DateFormat.yMMMd().format(_releaseDate!)
+                ? DateFormat.yMMMd(Localizations.localeOf(context).toString()).format(_releaseDate!)
                 : AppLocalizations.of(context)!.noDateSet,
             style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
           ),
@@ -1380,7 +1195,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
                   tooltip: AppLocalizations.of(context)!.save,
                   onPressed: () async {
                     final releases = ref.read(releasesProvider);
-                    final release = releases.asData?.value?.firstWhere(
+                    final release = releases.asData?.value.firstWhere(
                       (r) => r.id == widget.releaseId,
                       orElse: () => throw StateError('Release not found'),
                     );
@@ -1413,7 +1228,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
               title: Text(AppLocalizations.of(context)!.releaseDate),
               subtitle: Text(
                 _releaseDate != null
-                    ? DateFormat.yMMMd().format(_releaseDate!)
+                    ? DateFormat.yMMMd(Localizations.localeOf(context).toString()).format(_releaseDate!)
                     : AppLocalizations.of(context)!.noDateSet,
                 style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
               ),
@@ -2238,7 +2053,7 @@ class _FilesSectionState extends ConsumerState<_FilesSection> {
                       style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color, fontSize: 12),
                     ),
                   Text(
-                    DateFormat.yMMMd().add_jm().format(file.addedAt),
+                    DateFormat.yMMMd(Localizations.localeOf(context).toString()).add_jm().format(file.addedAt),
                     style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5), fontSize: 11),
                   ),
                 ],
@@ -2264,7 +2079,7 @@ class _FilesSectionState extends ConsumerState<_FilesSection> {
                       final success = await FileLauncher.openFile(file.filePath);
                       if (!success && context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(AppLocalizations.of(context)!.failedToOpenFile('Unable to open file'))),
+                          SnackBar(content: Text(AppLocalizations.of(context)!.failedToOpenFile)),
                         );
                       }
                     }
@@ -2453,7 +2268,7 @@ class _AudioFileItemState extends ConsumerState<_AudioFileItem> {
                               overflow: TextOverflow.ellipsis,
                             ),
                             Text(
-                              '${_formatFileSize(widget.file.fileSizeBytes)} • ${DateFormat.yMMMd().add_jm().format(widget.file.addedAt)}',
+                              '${_formatFileSize(widget.file.fileSizeBytes)} • ${DateFormat.yMMMd(Localizations.localeOf(context).toString()).add_jm().format(widget.file.addedAt)}',
                               style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color, fontSize: 11),
                             ),
                           ],

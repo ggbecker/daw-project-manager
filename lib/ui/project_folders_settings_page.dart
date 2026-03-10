@@ -4,7 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:window_manager/window_manager.dart' if (dart.library.html) 'package:window_manager/window_manager_stub.dart';
+import 'widgets/desktop_title_bar.dart';
 
 import '../generated/l10n/app_localizations.dart';
 import '../providers/providers.dart';
@@ -19,46 +19,6 @@ class ProjectFoldersSettingsPage extends ConsumerStatefulWidget {
   ConsumerState<ProjectFoldersSettingsPage> createState() => _ProjectFoldersSettingsPageState();
 }
 
-// Desktop window controls (release builds use hidden title bar)
-class WindowButtons extends StatelessWidget {
-  const WindowButtons({super.key});
-
-  void _toggleMaximize() async {
-    if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
-      if (await windowManager.isMaximized()) {
-        windowManager.restore();
-      } else {
-        windowManager.maximize();
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (kIsWeb || (!Platform.isWindows && !Platform.isMacOS && !Platform.isLinux)) {
-      return const SizedBox.shrink();
-    }
-
-    return Row(
-      children: [
-        IconButton(
-          icon: Icon(Icons.minimize, size: 18, color: Theme.of(context).textTheme.bodyMedium?.color),
-          onPressed: () => windowManager.minimize(),
-        ),
-        IconButton(
-          icon: Icon(Icons.crop_square_sharp, size: 18, color: Theme.of(context).textTheme.bodyMedium?.color),
-          onPressed: _toggleMaximize,
-        ),
-        IconButton(
-          icon: Icon(Icons.close, size: 18, color: Theme.of(context).textTheme.bodyMedium?.color),
-          onPressed: () => windowManager.close(),
-          splashColor: Colors.transparent,
-          highlightColor: const Color(0xFFC42B1C),
-        ),
-      ],
-    );
-  }
-}
 
 class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSettingsPage> {
   bool _busy = false;
@@ -473,52 +433,8 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
       ],
     );
 
-    // Match ReleaseDetailPage: custom draggable title bar + window buttons (desktop release builds)
-    if (!kDebugMode) {
-      return Scaffold(
-        appBar: null,
-        body: Column(
-          children: [
-            GestureDetector(
-              onPanStart: (_) => windowManager.startDragging(),
-              onDoubleTap: () async {
-                if (await windowManager.isMaximized()) {
-                  windowManager.restore();
-                } else {
-                  windowManager.maximize();
-                }
-              },
-              child: Container(
-                color: Theme.of(context).cardColor,
-                height: 40,
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.arrow_back, color: Theme.of(context).textTheme.bodyMedium?.color, size: 20),
-                      onPressed: () => Navigator.pop(context),
-                      tooltip: l10n.back,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 4),
-                      child: Text(
-                        l10n.roots,
-                        style: TextStyle(color: Theme.of(context).textTheme.titleMedium?.color, fontSize: 16),
-                      ),
-                    ),
-                    const Spacer(),
-                    const WindowButtons(),
-                  ],
-                ),
-              ),
-            ),
-            Expanded(child: listBody),
-          ],
-        ),
-      );
-    }
-
     return Scaffold(
-      appBar: AppBar(
+      appBar: !_isDesktop ? AppBar(
         title: Text('${l10n.settings} • ${l10n.roots}'),
         actions: [
           if (_busy)
@@ -529,8 +445,13 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
               ),
             ),
         ],
+      ) : null,
+      body: Column(
+        children: [
+          DesktopTitleBar(title: l10n.roots, showBack: true),
+          Expanded(child: listBody),
+        ],
       ),
-      body: listBody,
     );
   }
 }

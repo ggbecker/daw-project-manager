@@ -1,12 +1,12 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart'; // NOVO IMPORT
+// NOVO IMPORT
 import 'package:path/path.dart' as p; // NOVO IMPORT
-import 'package:window_manager/window_manager.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:intl/intl.dart';
@@ -15,16 +15,18 @@ import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:archive/archive_io.dart';
 
+import 'package:uuid/uuid.dart';
+
 import '../models/music_project.dart';
-import '../models/todo_item.dart';
+import '../models/project_event.dart';
 import '../providers/providers.dart';
 import '../repository/project_repository.dart';
 import '../utils/mobile_utils.dart';
 import '../utils/file_launcher.dart';
 import '../generated/l10n/app_localizations.dart';
-import '../services/google_drive_sync_service.dart';
-import 'dashboard_page.dart';
+import 'widgets/desktop_title_bar.dart';
 import 'widgets/todo_list_widget.dart';
+import 'project_statistics_page.dart';
 
 class ProjectDetailPage extends ConsumerStatefulWidget {
   final String projectId;
@@ -35,6 +37,7 @@ class ProjectDetailPage extends ConsumerStatefulWidget {
 }
 
 class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
+  final _uuid = const Uuid();
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameCtrl;
   late TextEditingController _bpmCtrl;
@@ -51,6 +54,43 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
   String? _selectedPhase;
   bool _hasInitializedPhase = false; // Track if we've initialized the phase
   bool _extractingMetadata = false; // Track metadata extraction state
+
+  /// Records status-change and/or metadata-edit events after saving a project.
+  Future<void> _recordSaveEvents(
+    ProjectRepository repo,
+    MusicProject oldProject,
+    MusicProject newProject,
+    String newStatus,
+    bool statusChanged,
+  ) async {
+    final now = DateTime.now();
+    if (statusChanged) {
+      await repo.addEvent(ProjectEvent(
+        id: _uuid.v4(),
+        projectId: newProject.id,
+        eventType: ProjectEvent.statusChange,
+        occurredAt: now,
+        payload: jsonEncode({'from': oldProject.status, 'to': newStatus}),
+      ));
+    }
+    final changedFields = <String>[];
+    if (oldProject.customDisplayName != newProject.customDisplayName) {
+      changedFields.add('name');
+    }
+    if (oldProject.bpm != newProject.bpm) changedFields.add('bpm');
+    if (oldProject.musicalKey != newProject.musicalKey) changedFields.add('key');
+    if (oldProject.notes != newProject.notes) changedFields.add('notes');
+    if (oldProject.deadline != newProject.deadline) changedFields.add('deadline');
+    if (changedFields.isNotEmpty) {
+      await repo.addEvent(ProjectEvent(
+        id: _uuid.v4(),
+        projectId: newProject.id,
+        eventType: ProjectEvent.metadataEdit,
+        occurredAt: now,
+        payload: jsonEncode({'fields': changedFields}),
+      ));
+    }
+  }
 
   List<String> _getProjectPhases(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -233,76 +273,14 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
           : null,
       body: Column(
         children: [
-          // Window title bar (release mode) - desktop only
-          if (!isMobile && !kDebugMode)
-            GestureDetector(
-              onPanStart: (_) => windowManager.startDragging(),
-              onDoubleTap: () async {
-                if (await windowManager.isMaximized()) {
-                  windowManager.restore();
-                } else {
-                  windowManager.maximize();
-                }
-              },
-              child: Container(
-                color: Theme.of(context).cardColor,
-                height: 40,
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(
-                        Icons.arrow_back,
-                        color: Theme.of(context).textTheme.bodyMedium?.color,
-                        size: 20,
-                      ),
-                      onPressed: () => Navigator.pop(context),
-                      tooltip: AppLocalizations.of(context)!.back,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 4),
-                      child: Text(
-                        AppLocalizations.of(context)!.projectDetails,
-                        style: TextStyle(
-                          color: Theme.of(context).textTheme.titleMedium?.color,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                    const Spacer(),
-                    const WindowButtons(),
-                  ],
-                ),
-              ),
-            ),
-          // Debug mode back button (Windows desktop only)
-          if (!isMobile && kDebugMode && Platform.isWindows)
-            Container(
-              color: Theme.of(context).cardColor,
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    onPressed: () => Navigator.pop(context),
-                    tooltip: AppLocalizations.of(context)!.back,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 4),
-                    child: Text(
-                      AppLocalizations.of(context)!.projectDetails,
-                      style: TextStyle(
-                        color: Theme.of(context).textTheme.titleMedium?.color,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          DesktopTitleBar(
+            title: AppLocalizations.of(context)!.projectDetails,
+            showBack: true,
+          ),
           Expanded(
             child: repoAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (_, __) => Center(
+              error: (_, _) => Center(
                 child: Text(AppLocalizations.of(context)!.failedToLoad),
               ),
               data: (repo) {
@@ -330,7 +308,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                     );
                     return _buildProjectContent(repo, project, allProjectsAsync);
                   },
-                  error: (_, __) {
+                  error: (_, _) {
                     // Fallback to repo if stream has error
                     final allProjects = repo.getAllProjects();
                     final project = allProjects.firstWhere(
@@ -386,9 +364,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
               }
             } else {
               // Se o texto foi modificado pelo usuário, atualiza o valor salvo apenas se ainda não foi inicializado
-              if (_lastSavedName == null) {
-                _lastSavedName = currentName;
-              }
+              _lastSavedName ??= currentName;
             }
           }
           
@@ -399,9 +375,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                 _lastSavedBpm = currentBpm;
               }
             } else {
-              if (_lastSavedBpm == null) {
-                _lastSavedBpm = currentBpm;
-              }
+              _lastSavedBpm ??= currentBpm;
             }
           }
           
@@ -412,9 +386,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                 _lastSavedKey = currentKey;
               }
             } else {
-              if (_lastSavedKey == null) {
-                _lastSavedKey = currentKey;
-              }
+              _lastSavedKey ??= currentKey;
             }
           }
           
@@ -426,9 +398,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                 _lastSavedNotes = currentNotes;
               }
             } else {
-              if (_lastSavedNotes == null) {
-                _lastSavedNotes = currentNotes;
-              }
+              _lastSavedNotes ??= currentNotes;
             }
           }
           // Sincroniza fase do projeto (only on first load)
@@ -448,6 +418,8 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                 });
 
         final isMobile = MobileUtils.isMobile();
+        final sourceFileExists = File(updatedProject.filePath).existsSync() ||
+            Directory(updatedProject.filePath).existsSync();
         return Stack(
           children: [
             Padding(
@@ -456,6 +428,29 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                 key: _formKey,
                 child: ListView(
                   children: [
+                    if (!sourceFileExists)
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.orange.withValues(alpha: 0.4)),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.cloud_off, size: 16, color: Colors.orange.shade400),
+                            const SizedBox(width: 8),
+                            const Expanded(
+                              child: Text(
+                                'Source file not found on this machine — metadata-only mode. '
+                                'You can still edit and export metadata.',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     Text(
                       updatedProject.displayName,
                               style: const TextStyle(
@@ -584,6 +579,7 @@ updatedProject.lastModifiedAt.toString(),
                                       if (updatedProject.camelotCode != null) ...[
                                         const SizedBox(height: 12),
                                         TextFormField(
+                                          key: ValueKey(updatedProject.camelotCode),
                                           enabled: false,
                                           initialValue: updatedProject.camelotCode,
                                           decoration: InputDecoration(
@@ -751,7 +747,7 @@ updatedProject.lastModifiedAt.toString(),
 
                             // Project Phase Dropdown
                             DropdownButtonFormField<String>(
-                              value:
+                              initialValue:
                                   _selectedPhase ??
                                   _getProjectPhases(context).first,
                               decoration: InputDecoration(
@@ -912,7 +908,7 @@ updatedProject.lastModifiedAt.toString(),
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         content: Text(
-                                          'Error: ${e.toString()}',
+                                          '${AppLocalizations.of(context)!.error}: ${e.toString()}',
                                         ),
                                       ),
                                     );
@@ -968,6 +964,18 @@ updatedProject.lastModifiedAt.toString(),
                                   ref.invalidate(allProjectsStreamProvider);
                                 }
                               },
+                              onTodoCompleted: (completedTodo) async {
+                                await repo.addEvent(ProjectEvent(
+                                  id: _uuid.v4(),
+                                  projectId: updatedProject.id,
+                                  eventType: ProjectEvent.todoCompleted,
+                                  occurredAt: DateTime.now(),
+                                  payload: jsonEncode({
+                                    'todoId': completedTodo.id,
+                                    'todoText': completedTodo.text,
+                                  }),
+                                ));
+                              },
                             ),
 
                             const SizedBox(height: 24),
@@ -1010,12 +1018,14 @@ updatedProject.lastModifiedAt.toString(),
                                               musicalKey: _keyCtrl.text.trim().isEmpty
                                                   ? null
                                                   : _keyCtrl.text.trim(),
-                                              notes: newNotes, // NOVO: Salva Notas
-                                              status: newStatus, // Save project phase
+                                              notes: newNotes,
+                                              clearNotes: newNotes == null,
+                                              status: newStatus,
                                               statusChangedAt: statusChanged ? DateTime.now() : null,
                                             );
 
                                             await repo.updateProject(updated);
+                                            await _recordSaveEvents(repo, project, updated, newStatus, statusChanged);
                                             // Atualiza os valores salvos para preservar o texto na próxima reconstrução
                                             _lastSavedName = newCustomDisplayName ?? updatedProject.fileName;
                                             _lastSavedBpm = _bpmCtrl.text.trim();
@@ -1075,12 +1085,14 @@ updatedProject.lastModifiedAt.toString(),
                                             musicalKey: _keyCtrl.text.trim().isEmpty
                                                 ? null
                                                 : _keyCtrl.text.trim(),
-                                            notes: newNotes, // NOVO: Salva Notas
-                                            status: newStatus, // Save project phase
+                                            notes: newNotes,
+                                            clearNotes: newNotes == null,
+                                            status: newStatus,
                                             statusChangedAt: statusChanged ? DateTime.now() : null,
                                           );
 
                                           await repo.updateProject(updated);
+                                          await _recordSaveEvents(repo, project, updated, newStatus, statusChanged);
                                           // Atualiza os valores salvos para preservar o texto na próxima reconstrução
                                           _lastSavedName = newCustomDisplayName ?? updatedProject.fileName;
                                           _lastSavedBpm = _bpmCtrl.text.trim();
@@ -1106,48 +1118,52 @@ updatedProject.lastModifiedAt.toString(),
                                       const SizedBox(width: 12),
 
                                       // NOVO: BOTÃO OPEN FOLDER
-                                      ElevatedButton.icon(
-                                        onPressed: () =>
-                                            _openProjectFolder(updatedProject.filePath),
-                                        icon: const Icon(Icons.folder_open),
-                                        label: Text(
-                                          AppLocalizations.of(context)!.openFolder,
+                                      Tooltip(
+                                        message: sourceFileExists ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
+                                        child: ElevatedButton.icon(
+                                          onPressed: sourceFileExists
+                                              ? () => _openProjectFolder(updatedProject.filePath)
+                                              : null,
+                                          icon: const Icon(Icons.folder_open),
+                                          label: Text(
+                                            AppLocalizations.of(context)!.openFolder,
+                                          ),
                                         ),
                                       ),
                                       const SizedBox(width: 12),
 
                                       // BOTÃO OPEN IN DAW (Existente)
-                                      ElevatedButton.icon(
-                                        onPressed: () async {
-                                          final success = await FileLauncher.launchProject(updatedProject.filePath);
-                                          if (!success && mounted) {
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(content: Text(AppLocalizations.of(context)!.failedToLaunchProject(updatedProject.displayName))),
-                                            );
-                                          }
-                                          if (success) {
-                                            if (mounted) {
-                                              ScaffoldMessenger.of(
-                                                context,
-                                              ).showSnackBar(
-                                                SnackBar(
-                                                  content: Text(
-                                                    AppLocalizations.of(
-                                                      context,
-                                                    )!.failedToLaunchDaw,
-                                                  ),
-                                                ),
-                                              );
-                                            }
-                                          }
-                                        },
-                                        icon: const Icon(Icons.open_in_new),
-                                        label: Text(
-                                          AppLocalizations.of(context)!.openInDaw,
+                                      Tooltip(
+                                        message: sourceFileExists ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
+                                        child: ElevatedButton.icon(
+                                          onPressed: sourceFileExists
+                                              ? () async {
+                                                  final success = await FileLauncher.launchProject(updatedProject.filePath);
+                                                  if (!success && mounted) {
+                                                    ScaffoldMessenger.of(context).showSnackBar(
+                                                      SnackBar(content: Text(AppLocalizations.of(context)!.failedToLaunchProject(updatedProject.displayName))),
+                                                    );
+                                                  }
+                                                  if (success) {
+                                                    if (mounted) {
+                                                      ScaffoldMessenger.of(context).showSnackBar(
+                                                        SnackBar(content: Text(AppLocalizations.of(context)!.failedToLaunchDaw)),
+                                                      );
+                                                    }
+                                                  }
+                                                }
+                                              : null,
+                                          icon: const Icon(Icons.open_in_new),
+                                          label: Text(
+                                            AppLocalizations.of(context)!.openInDaw,
+                                          ),
                                         ),
                                       ),
                                     ],
                                   ),
+                    // ── Project Statistics button ─────────────────────────
+                    const SizedBox(height: 16),
+                    _ProjectStatsButton(projectId: updatedProject.id),
                   ],
                 ),
               ),
@@ -1381,7 +1397,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Preview song file not found')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
         );
       }
       return;
@@ -1394,7 +1410,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Preview song not available. Please download backup first.')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.previewSongNotAvailableDownloadFirst)),
         );
       }
       return;
@@ -1411,7 +1427,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
         }
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Preview song file not found')),
+            SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
           );
         }
         return;
@@ -1477,7 +1493,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to share preview song: ${e.toString()}')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedToSharePreviewSong(e.toString()))),
         );
       }
     }
@@ -1489,7 +1505,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
     if (widget.project.previewSongPath == null || widget.project.previewSongPath!.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Preview song file not found')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
         );
       }
       return;
@@ -1499,7 +1515,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
     if (widget.project.previewSongPath!.startsWith('drive://')) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Preview song not available. Please download backup first.')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.previewSongNotAvailableDownloadFirst)),
         );
       }
       return;
@@ -1510,7 +1526,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
       if (!await sourceFile.exists()) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Preview song file not found')),
+            SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
           );
         }
         return;
@@ -1569,7 +1585,69 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to share preview song as ZIP: ${e.toString()}')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedToSharePreviewSongAsZip(e.toString()))),
+        );
+      }
+    }
+  }
+
+  /// Desktop (macOS/Windows): opens a save dialog and copies the preview song to the chosen location.
+  Future<void> _exportPreviewSongDesktop() async {
+    final l10n = AppLocalizations.of(context)!;
+    final songPath = widget.project.previewSongPath;
+
+    if (songPath == null || songPath.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.previewSongFileNotFound)),
+        );
+      }
+      return;
+    }
+
+    if (songPath.startsWith('drive://')) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.previewSongNotAvailableDownloadFirst)),
+        );
+      }
+      return;
+    }
+
+    try {
+      final sourceFile = File(songPath);
+      if (!await sourceFile.exists()) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.previewSongFileNotFound)),
+          );
+        }
+        return;
+      }
+
+      final originalName = widget.project.previewSongFileName ?? p.basename(songPath);
+      final ext = p.extension(songPath).replaceFirst('.', '');
+
+      final destPath = await FilePicker.platform.saveFile(
+        dialogTitle: l10n.saveCopy,
+        fileName: originalName,
+        type: FileType.custom,
+        allowedExtensions: [ext.isNotEmpty ? ext : 'mp3'],
+      );
+
+      if (destPath == null) return; // user cancelled
+
+      await sourceFile.copy(destPath);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.savedCopyTo(destPath))),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.failedToSharePreviewSong(e.toString()))),
         );
       }
     }
@@ -1654,7 +1732,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text('${AppLocalizations.of(context)!.error}: ${e.toString()}'),
             duration: const Duration(seconds: 4),
           ),
         );
@@ -1739,8 +1817,8 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
             // Extract file paths from dropped files
             final filePaths = <String>[];
             for (final file in detail.files) {
-              if (file.path != null && file.path!.isNotEmpty) {
-                filePaths.add(file.path!);
+              if (file.path.isNotEmpty) {
+                filePaths.add(file.path);
               }
             }
 
@@ -2032,7 +2110,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                               ElevatedButton.icon(
                                 onPressed: _sharePreviewSong,
                                 icon: const Icon(Icons.share),
-                                label: const Text('Share'),
+                                label: Text(AppLocalizations.of(context)!.share),
                               ),
                             );
 
@@ -2041,7 +2119,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                                 ElevatedButton.icon(
                                   onPressed: _sharePreviewSongAsZip,
                                   icon: const Icon(Icons.archive),
-                                  label: const Text('Share ZIP'),
+                                  label: Text(AppLocalizations.of(context)!.shareZip),
                                 ),
                               );
                             }
@@ -2051,44 +2129,81 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                           return Wrap(spacing: 8, runSpacing: 8, children: buttons);
                         },
                       )
-                    : ElevatedButton.icon(
-                        onPressed: () async {
-                          // Get the project's directory to start the file picker there
-                          final projectDir = p.dirname(widget.project.filePath);
-
-                          // Open file picker - attempt to start in project directory
-                          // Note: file_picker package doesn't support initialDirectory parameter directly
-                          // On Windows, the file picker may open in the project directory if it's accessible
-                          // The user can navigate to the project folder if needed
-                          final result = await FilePicker.platform.pickFiles(
-                            type: FileType.custom,
-                            allowedExtensions: [
-                              'mp3',
-                              'wav',
-                              'm4a',
-                              'aac',
-                              'ogg',
-                              'flac',
-                            ],
-                            dialogTitle: AppLocalizations.of(
-                              context,
-                            )!.selectPreviewSong,
-                          );
-                          if (result != null && result.files.single.path != null) {
-                            widget.onSongChanged(result.files.single.path!);
-                          }
-                        },
-                        icon: const Icon(Icons.audio_file),
-                        label: Text(
-                          widget.project.previewSongPath != null &&
-                                  widget.project.previewSongPath!.isNotEmpty
-                              ? AppLocalizations.of(context)!.changePreviewSong
-                              : AppLocalizations.of(context)!.selectPreviewSong,
-                        ),
+                    : Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: () async {
+                              final result = await FilePicker.platform.pickFiles(
+                                type: FileType.custom,
+                                allowedExtensions: const [
+                                  'mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac',
+                                ],
+                                dialogTitle: AppLocalizations.of(context)!.selectPreviewSong,
+                              );
+                              if (result != null && result.files.single.path != null) {
+                                widget.onSongChanged(result.files.single.path!);
+                              }
+                            },
+                            icon: const Icon(Icons.audio_file),
+                            label: Text(
+                              widget.project.previewSongPath != null &&
+                                      widget.project.previewSongPath!.isNotEmpty
+                                  ? AppLocalizations.of(context)!.changePreviewSong
+                                  : AppLocalizations.of(context)!.selectPreviewSong,
+                            ),
+                          ),
+                          if (widget.project.previewSongPath != null &&
+                              widget.project.previewSongPath!.isNotEmpty &&
+                              !widget.project.previewSongPath!.startsWith('drive://'))
+                            ElevatedButton.icon(
+                              onPressed: _exportPreviewSongDesktop,
+                              icon: const Icon(Icons.save_alt),
+                              label: Text(AppLocalizations.of(context)!.saveCopy),
+                            ),
+                        ],
                       ),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Project Stats Button — navigates to the dedicated statistics page
+// ---------------------------------------------------------------------------
+
+class _ProjectStatsButton extends ConsumerWidget {
+  final String projectId;
+  const _ProjectStatsButton({required this.projectId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final events = ref.watch(eventsForProjectProvider(projectId));
+
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.bar_chart_rounded, size: 20),
+      title: Text(
+        l10n.statsProjectActivity,
+        style: Theme.of(context).textTheme.titleSmall,
+      ),
+      subtitle: Text(
+        events.isEmpty
+            ? l10n.statsNoEvents
+            : l10n.statsEventCount(events.length),
+        style: Theme.of(context).textTheme.bodySmall,
+      ),
+      trailing: const Icon(Icons.chevron_right, size: 18),
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ProjectStatisticsPage(projectId: projectId),
         ),
       ),
     );

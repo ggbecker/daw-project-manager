@@ -27,6 +27,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get cancel => 'Cancelar';
 
   @override
+  String get close => 'Fechar';
+
+  @override
   String get launch => 'Abrir';
 
   @override
@@ -80,6 +83,11 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String launchingProject(String projectName) {
     return 'Abrindo $projectName…';
+  }
+
+  @override
+  String failedToLaunchProject(String projectName) {
+    return 'Falha ao abrir $projectName';
   }
 
   @override
@@ -665,9 +673,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get saveReleaseFilesZip => 'Salvar arquivos ZIP do lançamento';
 
   @override
-  String failedToOpenFile(String error) {
-    return 'Falha ao abrir arquivo: $error';
-  }
+  String get failedToOpenFile => 'Falha ao abrir arquivo';
 
   @override
   String failedToPlayAudio(String error) {
@@ -1800,4 +1806,345 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get downloadingBackupTitle => 'Baixando Backup';
+
+  @override
+  String get sourceFileNotFoundOnThisMachine =>
+      'Arquivo fonte não encontrado nesta máquina';
+
+  @override
+  String get previewSongNotAvailableDownloadFirst =>
+      'Música de prévia não disponível. Por favor, baixe o backup primeiro.';
+
+  @override
+  String get sharePreviewSong => 'Compartilhar música de prévia';
+
+  @override
+  String get shareAsZip => 'Compartilhar como ZIP';
+
+  @override
+  String get share => 'Compartilhar';
+
+  @override
+  String get shareZip => 'Compartilhar ZIP';
+
+  @override
+  String get saveCopy => 'Guardar cópia';
+
+  @override
+  String savedCopyTo(String path) {
+    return 'Guardado em $path';
+  }
+
+  @override
+  String failedToSharePreviewSong(String error) {
+    return 'Falha ao compartilhar música de prévia: $error';
+  }
+
+  @override
+  String failedToSharePreviewSongAsZip(String error) {
+    return 'Falha ao compartilhar música de prévia como ZIP: $error';
+  }
+
+  @override
+  String get biographySaved => 'Biografia salva';
+
+  @override
+  String failedToSaveBiography(String error) {
+    return 'Falha ao salvar biografia: $error';
+  }
+
+  @override
+  String fileSavedTo(String filename) {
+    return 'Arquivo salvo em $filename';
+  }
+
+  @override
+  String failedToDownloadFile(String error) {
+    return 'Falha ao baixar arquivo: $error';
+  }
+
+  @override
+  String allFilesSavedTo(String filename) {
+    return 'Todos os arquivos salvos em $filename';
+  }
+
+  @override
+  String get artworkAdded => 'Arte adicionada';
+
+  @override
+  String failedToAddArtwork(String error) {
+    return 'Falha ao adicionar arte: $error';
+  }
+
+  @override
+  String get artworkRemoved => 'Arte removida';
+
+  @override
+  String failedToRemoveArtwork(String error) {
+    return 'Falha ao remover arte: $error';
+  }
+
+  @override
+  String get pressKitFileAdded => 'Arquivo do press kit adicionado';
+
+  @override
+  String failedToAddPressKitFile(String error) {
+    return 'Falha ao adicionar arquivo do press kit: $error';
+  }
+
+  @override
+  String get pressKitFileRemoved => 'Arquivo do press kit removido';
+
+  @override
+  String failedToRemovePressKitFile(String error) {
+    return 'Falha ao remover arquivo do press kit: $error';
+  }
+
+  @override
+  String get selectFilesToDownload => 'Selecionar Arquivos para Baixar';
+
+  @override
+  String get biography => 'Biografia';
+
+  @override
+  String get biographyWillBeSaved => 'Será salvo como biography.txt';
+
+  @override
+  String get artworkFiles => 'Arquivos de Arte';
+
+  @override
+  String get pressKitFiles => 'Arquivos do Press Kit';
+
+  @override
+  String get additionalAssets => 'Ativos Adicionais';
+
+  @override
+  String downloadNFiles(int count, String plural) {
+    return 'Baixar $count arquivo$plural';
+  }
+
+  @override
+  String nFilesSavedTo(int count, String plural, String filename) {
+    return '$count arquivo$plural salvo em $filename';
+  }
+
+  @override
+  String get addAsset => 'Adicionar Ativo';
+
+  @override
+  String get assetNameLabel => 'Nome do Ativo';
+
+  @override
+  String get assetNameHint => 'ex.: Logo, Banner, Foto';
+
+  @override
+  String assetAddedSuccessfully(String assetName) {
+    return '$assetName adicionado com sucesso';
+  }
+
+  @override
+  String failedToAddAsset(String error) {
+    return 'Falha ao adicionar ativo: $error';
+  }
+
+  @override
+  String assetRemoved(String assetName) {
+    return '$assetName removido';
+  }
+
+  @override
+  String failedToRemoveAsset(String error) {
+    return 'Falha ao remover ativo: $error';
+  }
+
+  @override
+  String get profileNotFound => 'Perfil não encontrado';
+
+  @override
+  String get selectFiles => 'Selecionar Arquivos';
+
+  @override
+  String get downloadAll => 'Baixar Tudo';
+
+  @override
+  String get saveBiographyTooltip => 'Salvar Biografia';
+
+  @override
+  String get enterBiographyHint => 'Digite a biografia do perfil...';
+
+  @override
+  String get addArtwork => 'Adicionar Arte';
+
+  @override
+  String get addFile => 'Adicionar Arquivo';
+
+  @override
+  String get openFile => 'Abrir Arquivo';
+
+  @override
+  String get menuView => 'Visualizar';
+
+  @override
+  String get menuAbout => 'Sobre o DAW Project Manager';
+
+  @override
+  String get menuLanguage => 'Idioma';
+
+  @override
+  String get menuWarnBeforeQuit => 'Avisar Antes de Sair (Cmd+Q)';
+
+  @override
+  String get menuQuit => 'Sair do DAW Project Manager';
+
+  @override
+  String get menuWindow => 'Janela';
+
+  @override
+  String get donate => 'Doar';
+
+  @override
+  String get website => 'Site';
+
+  @override
+  String get switchToClassicDark => 'Mudar para Classic Dark';
+
+  @override
+  String get switchToNeonDark => 'Mudar para Neon Dark';
+
+  @override
+  String get switchToClassicTheme => 'Mudar para Tema Classic';
+
+  @override
+  String get switchToNeonTheme => 'Mudar para Tema Neon';
+
+  @override
+  String get menuTheme => 'Tema';
+
+  @override
+  String get appDescription =>
+      'Um gerenciador de projetos para produtores musicais e designers de som.';
+
+  @override
+  String get neonDarkThemeName => 'Neon Escuro';
+
+  @override
+  String get classicDarkThemeName => 'Clássico Escuro';
+
+  @override
+  String get statisticsTab => 'Estatísticas';
+
+  @override
+  String get statsTotalProjects => 'Total de Projetos';
+
+  @override
+  String get statsInProgress => 'Em andamento';
+
+  @override
+  String get statsFinished => 'Concluídos';
+
+  @override
+  String get statsAvgCompletion => 'Conclusão média';
+
+  @override
+  String get statsPhaseDistribution => 'Projetos por Fase';
+
+  @override
+  String get statsAvgTimePerPhase => 'Dias médios por Fase';
+
+  @override
+  String get statsProductivity => 'Produtividade';
+
+  @override
+  String get statsCreatedSeries => 'Criados';
+
+  @override
+  String get statsProjectHealth => 'Idade e Saúde dos Projetos';
+
+  @override
+  String get statsCatalogInsights => 'Análise do Catálogo';
+
+  @override
+  String get statsBpmDistribution => 'Distribuição de BPM';
+
+  @override
+  String get statsTopKeys => 'Tonalidades mais usadas';
+
+  @override
+  String get statsDawTypes => 'Tipos de DAW';
+
+  @override
+  String get statsProjectActivity => 'Atividade dos Projetos';
+
+  @override
+  String get statsNoData => 'Sem dados ainda';
+
+  @override
+  String get statsNoPhaseData =>
+      'Os dados de fases aparecerão após os projetos mudarem de fase.';
+
+  @override
+  String statsLastActivityDaysAgo(int days) {
+    return 'Última atividade: há $days dias';
+  }
+
+  @override
+  String get statsLastActivityToday => 'Ativo hoje';
+
+  @override
+  String get statsNoEvents => 'Nenhum evento registrado ainda';
+
+  @override
+  String statsEventPhaseChanged(String from, String to) {
+    return 'Fase: $from → $to';
+  }
+
+  @override
+  String statsEventMetadataUpdated(String fields) {
+    return 'Atualizado: $fields';
+  }
+
+  @override
+  String statsEventTodoCompleted(String text) {
+    return 'Concluído: $text';
+  }
+
+  @override
+  String get statsEventFileModified => 'Arquivo modificado no disco';
+
+  @override
+  String get statsClearHistory => 'Limpar histórico';
+
+  @override
+  String get statsClearHistoryConfirm =>
+      'Limpar todos os eventos registrados para este projeto?';
+
+  @override
+  String get statsSearchProjects => 'Pesquisar projetos…';
+
+  @override
+  String statsEventCount(int count) {
+    return '$count eventos';
+  }
+
+  @override
+  String get statsViewHistory => 'Estatísticas do Projeto';
+
+  @override
+  String get statsPhaseHistory => 'Histórico de Fases';
+
+  @override
+  String get statsEventBreakdown => 'Resumo de Eventos';
+
+  @override
+  String statsDaysSoFar(int days) {
+    return '${days}d até agora';
+  }
+
+  @override
+  String get statsNoProjectsFound => 'Nenhum projeto encontrado';
+
+  @override
+  String statsNotTouchedDays(int days) {
+    return 'Sem alterações há $days dias';
+  }
 }

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
+import 'package:path/path.dart' as p;
 import '../models/music_project.dart';
 import '../models/scan_root.dart';
 import '../models/ignored_path.dart';
@@ -10,6 +11,7 @@ import '../models/profile.dart';
 import '../models/todo_item.dart';
 import '../repository/project_repository.dart';
 import '../repository/profile_repository.dart';
+import '../utils/app_paths.dart';
 
 class BackupService {
   /// Exports all data for the current profile to a JSON file
@@ -32,11 +34,11 @@ class BackupService {
         'version': '1.0',
         'exportDate': DateTime.now().toIso8601String(),
         'profileId': profileId,
-        'profile': profile != null ? _profileToJson(profile) : null,
-        'projects': projects.map((p) => _projectToJson(p)).toList(),
+        'profile': profile != null ? await _profileToJson(profile) : null,
+        'projects': projects.map((proj) => _projectToJson(proj)).toList(),
         'roots': roots.map((r) => _rootToJson(r)).toList(),
-        'ignoredPaths': ignoredPaths.map((p) => _ignoredPathToJson(p)).toList(),
-        'releases': releases.map((r) => _releaseToJson(r, projects)).toList(),
+        'ignoredPaths': ignoredPaths.map((ip) => _ignoredPathToJson(ip)).toList(),
+        'releases': await Future.wait(releases.map((r) => _releaseToJson(r))),
       };
 
       // Convert to JSON
@@ -146,7 +148,7 @@ class BackupService {
         final releasesList = backupData['releases'] as List;
         for (var releaseJson in releasesList) {
           try {
-            final release = _releaseFromJson(releaseJson as Map<String, dynamic>);
+            final release = await _releaseFromJson(releaseJson as Map<String, dynamic>);
             importedReleases.add(release);
           } catch (e) {
             // Skip invalid releases
@@ -222,6 +224,27 @@ class BackupService {
         await targetRepo.updateRelease(release);
       }
 
+      // Restore profile photo if embedded in backup
+      final profileJson = backupData['profile'] as Map<String, dynamic>?;
+      if (profileJson != null) {
+        final photoBase64 = profileJson['photoData'] as String?;
+        if (photoBase64 != null && photoBase64.isNotEmpty) {
+          try {
+            final photoFileName = profileJson['photoFileName'] as String? ?? 'photo.jpg';
+            final photosDir = p.join(await getLocalAppDataPath(), 'profile_photos');
+            final dir = Directory(photosDir);
+            if (!await dir.exists()) await dir.create(recursive: true);
+            final ext = p.extension(photoFileName);
+            final destPath = p.join(photosDir, '${targetProfileId}_photo$ext');
+            await File(destPath).writeAsBytes(base64Decode(photoBase64));
+            final currentProfile = profileRepo.getProfileById(targetProfileId);
+            if (currentProfile != null) {
+              await profileRepo.updateProfile(currentProfile.copyWith(photoPath: destPath));
+            }
+          } catch (_) {}
+        }
+      }
+
       return ImportResult(
         cancelled: false,
         projectsCount: importedProjects.length,
@@ -254,8 +277,14 @@ class BackupService {
       'notes': project.notes,
       'dawType': project.dawType,
       'dawVersion': project.dawVersion,
-      'todos': project.todos.map((t) => _todoToJson(t as TodoItem)).toList(),
+      'todos': project.todos.map((t) => _todoToJson(t)).toList(),
       'hidden': project.hidden,
+      'previewSongPath': project.previewSongPath,
+      'fileCreatedAt': project.fileCreatedAt?.toIso8601String(),
+      'statusChangedAt': project.statusChangedAt?.toIso8601String(),
+      'previewSongFileName': project.previewSongFileName,
+      'uploadedPreviewSongHash': project.uploadedPreviewSongHash,
+      'deadline': project.deadline?.toIso8601String(),
     };
   }
 
@@ -277,8 +306,14 @@ class BackupService {
       notes: json['notes'] as String?,
       dawType: json['dawType'] as String?,
       dawVersion: json['dawVersion'] as String?,
-      todos: (json['todos'] as List?)?.map((t) => _todoFromJson(t as Map<String, dynamic>) as TodoItem).toList() ?? [],
+      todos: (json['todos'] as List?)?.map((t) => _todoFromJson(t as Map<String, dynamic>)).toList() ?? [],
       hidden: json['hidden'] as bool? ?? false,
+      previewSongPath: json['previewSongPath'] as String?,
+      fileCreatedAt: json['fileCreatedAt'] != null ? DateTime.parse(json['fileCreatedAt'] as String) : null,
+      statusChangedAt: json['statusChangedAt'] != null ? DateTime.parse(json['statusChangedAt'] as String) : null,
+      previewSongFileName: json['previewSongFileName'] as String?,
+      uploadedPreviewSongHash: json['uploadedPreviewSongHash'] as String?,
+      deadline: json['deadline'] != null ? DateTime.parse(json['deadline'] as String) : null,
     );
   }
 
@@ -316,29 +351,59 @@ class BackupService {
     );
   }
 
-  static Map<String, dynamic> _releaseToJson(Release release, List<MusicProject> allProjects) {
+  static Future<Map<String, dynamic>> _releaseToJson(Release release) async {
+    String? artworkBase64;
+    String? artworkFileName;
+    if (release.artworkImagePath != null) {
+      try {
+        final file = File(release.artworkImagePath!);
+        if (await file.exists()) {
+          final bytes = await file.readAsBytes();
+          artworkBase64 = base64Encode(bytes);
+          artworkFileName = p.basename(release.artworkImagePath!);
+        }
+      } catch (_) {}
+    }
     return {
       'id': release.id,
       'title': release.title,
       'releaseDate': release.releaseDate?.toIso8601String(),
       'artworkImagePath': release.artworkImagePath,
+      'artworkData': artworkBase64,
+      'artworkFileName': artworkFileName,
       'description': release.description,
       'trackIds': release.trackIds,
-      'files': release.files.map((f) => _releaseFileToJson(f as ReleaseFile)).toList(),
-      'todos': release.todos.map((t) => _todoToJson(t as TodoItem)).toList(),
+      'files': release.files.map((f) => _releaseFileToJson(f)).toList(),
+      'todos': release.todos.map((t) => _todoToJson(t)).toList(),
     };
   }
 
-  static Release _releaseFromJson(Map<String, dynamic> json) {
+  static Future<Release> _releaseFromJson(Map<String, dynamic> json) async {
+    String? artworkImagePath = json['artworkImagePath'] as String?;
+    final artworkBase64 = json['artworkData'] as String?;
+    if (artworkBase64 != null && artworkBase64.isNotEmpty) {
+      try {
+        final artworkFileName = json['artworkFileName'] as String? ?? 'artwork.jpg';
+        final artworkDir = await getReleaseArtworkPath();
+        final dir = Directory(artworkDir);
+        if (!await dir.exists()) await dir.create(recursive: true);
+        final releaseId = json['id'] as String? ?? '';
+        final ext = p.extension(artworkFileName);
+        final destFileName = releaseId.isNotEmpty ? '${releaseId}_artwork$ext' : artworkFileName;
+        final destPath = p.join(artworkDir, destFileName);
+        await File(destPath).writeAsBytes(base64Decode(artworkBase64));
+        artworkImagePath = destPath;
+      } catch (_) {}
+    }
     return Release(
       id: json['id'] as String,
       title: json['title'] as String,
       releaseDate: json['releaseDate'] != null ? DateTime.parse(json['releaseDate'] as String) : null,
-      artworkImagePath: json['artworkImagePath'] as String?,
+      artworkImagePath: artworkImagePath,
       description: json['description'] as String?,
       trackIds: (json['trackIds'] as List?)?.map((e) => e as String).toList() ?? [],
-      files: (json['files'] as List?)?.map((f) => _releaseFileFromJson(f as Map<String, dynamic>) as ReleaseFile).toList() ?? [],
-      todos: (json['todos'] as List?)?.map((t) => _todoFromJson(t as Map<String, dynamic>) as TodoItem).toList() ?? [],
+      files: (json['files'] as List?)?.map((f) => _releaseFileFromJson(f as Map<String, dynamic>)).toList() ?? [],
+      todos: (json['todos'] as List?)?.map((t) => _todoFromJson(t as Map<String, dynamic>)).toList() ?? [],
     );
   }
 
@@ -366,13 +431,27 @@ class BackupService {
     );
   }
 
-  static Map<String, dynamic> _profileToJson(Profile profile) {
+  static Future<Map<String, dynamic>> _profileToJson(Profile profile) async {
+    String? photoBase64;
+    String? photoFileName;
+    if (profile.photoPath != null) {
+      try {
+        final file = File(profile.photoPath!);
+        if (await file.exists()) {
+          final bytes = await file.readAsBytes();
+          photoBase64 = base64Encode(bytes);
+          photoFileName = p.basename(profile.photoPath!);
+        }
+      } catch (_) {}
+    }
     return {
       'id': profile.id,
       'name': profile.name,
       'createdAt': profile.createdAt.toIso8601String(),
       'lastUsedAt': profile.lastUsedAt?.toIso8601String(),
       'photoPath': profile.photoPath,
+      'photoData': photoBase64,
+      'photoFileName': photoFileName,
     };
   }
 

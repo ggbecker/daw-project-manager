@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -10,11 +9,9 @@ import 'package:pluto_grid/pluto_grid.dart';
 import '../models/release.dart';
 import '../models/music_project.dart';
 import '../providers/providers.dart';
-import '../repository/project_repository.dart';
 import '../utils/mobile_utils.dart';
 import '../generated/l10n/app_localizations.dart';
 import 'release_detail_page.dart';
-import 'dialogs/add_to_release_dialog.dart';
 
 class ReleasesTabPage extends ConsumerStatefulWidget {
   const ReleasesTabPage({super.key});
@@ -24,7 +21,6 @@ class ReleasesTabPage extends ConsumerStatefulWidget {
 }
 
 class _ReleasesTabPageState extends ConsumerState<ReleasesTabPage> {
-  final DateFormat _dateFormat = DateFormat.yMMMd();
 
   Future<void> _createNewRelease() async {
     final projects = ref.read(projectsProvider);
@@ -95,6 +91,8 @@ class _ReleasesTabPageState extends ConsumerState<ReleasesTabPage> {
 
   @override
   Widget build(BuildContext context) {
+    final locale = ref.watch(localeProvider).toString();
+    final dateFormat = DateFormat.yMMMd(locale);
     final releasesAsync = ref.watch(releasesProvider);
     final allProjectsAsync = ref.watch(allProjectsStreamProvider);
     // Use allProjects to include preserved projects, not just filtered projectsProvider
@@ -234,12 +232,12 @@ class _ReleasesTabPageState extends ConsumerState<ReleasesTabPage> {
                   ? _MobileReleasesList(
                       releases: filteredReleases,
                       projects: projects,
-                      dateFormat: _dateFormat,
+                      dateFormat: dateFormat,
                     )
                   : _ReleasesTable(
                       releases: filteredReleases,
                       projects: projects,
-                      dateFormat: _dateFormat,
+                      dateFormat: dateFormat,
                     ),
             ),
           ],

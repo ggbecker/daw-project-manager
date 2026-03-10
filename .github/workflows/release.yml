@@ -17,7 +17,7 @@ on:
 
 # Variáveis de Configuração
 env:
-  FLUTTER_BASE_VERSION: 3.38.x
+  FLUTTER_BASE_VERSION: 3.41.3
 
 # 2. Jobs
 jobs:
@@ -54,16 +54,16 @@ jobs:
           DESKTOP_CLIENT_SECRET: ${{ secrets.DESKTOP_CLIENT_SECRET }}
           ANDROID_WEB_CLIENT_ID: ${{ secrets.ANDROID_WEB_CLIENT_ID }}
 
+      # Generate Hive Adapters
+      - name: Generate Hive Adapters
+        run: dart run build_runner build --delete-conflicting-outputs
+
       # Generate localization files
       - name: Generate Localizations
         run: flutter gen-l10n
 
       - name: Precache Flutter Artifacts
         run: flutter precache
-
-      # NEW: Generate code with build_runner
-      - name: Generate Hive Adapters
-        run: flutter pub run build_runner build --delete-conflicting-outputs
 
       - name: Build Test
         run: flutter build windows --release
@@ -164,16 +164,16 @@ jobs:
           DESKTOP_CLIENT_SECRET: ${{ secrets.DESKTOP_CLIENT_SECRET }}
           ANDROID_WEB_CLIENT_ID: ${{ secrets.ANDROID_WEB_CLIENT_ID }}
 
+      # Generate Hive Adapters
+      - name: Generate Hive Adapters
+        run: dart run build_runner build --delete-conflicting-outputs
+
       # Generate localization files
       - name: Generate Localizations
         run: flutter gen-l10n
 
       - name: Precache Flutter Artifacts
         run: flutter precache
-
-      # NEW: Generate code with build_runner
-      - name: Generate Hive Adapters
-        run: flutter pub run build_runner build --delete-conflicting-outputs
 
       # 2.5. Sanitize ref name for file paths (replace slashes and invalid chars)
       - name: Sanitize ref name
@@ -206,6 +206,22 @@ jobs:
           fi
           echo "version_name=${VERSION_NAME}" >> "$GITHUB_OUTPUT"
           echo "version_code=${VERSION_CODE}" >> "$GITHUB_OUTPUT"
+
+      # 2.9. Disable Xcode automatic code signing for macOS CI build.
+      # The app is re-signed with the real Developer ID in the post-build step.
+      # flutter build macos does not support passing xcodebuild settings via --,
+      # so we patch project.pbxproj directly before building.
+      - name: Disable Xcode automatic code signing (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          PBXPROJ="macos/Runner.xcodeproj/project.pbxproj"
+          # Switch every build configuration from Automatic to Manual signing
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' "$PBXPROJ"
+          # Clear the team so Xcode does not require a provisioning profile
+          sed -i '' 's/DEVELOPMENT_TEAM = [A-Z0-9]*;/DEVELOPMENT_TEAM = "";/g' "$PBXPROJ"
+          # Use ad-hoc signing ("-") so no certificate or profile is needed.
+          # Manual + no team still errors without an explicit identity.
+          sed -i '' 's/"CODE_SIGN_IDENTITY\[sdk=macosx\*\]" = "Apple Development"/"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-"/g' "$PBXPROJ"
 
       # 3. Build
       - name: Build ${{ matrix.os_name }} Executable
@@ -247,10 +263,10 @@ jobs:
           codesign --force --deep --sign "$APPLE_DEVELOPER_ID" \
             --options runtime \
             --entitlements macos/Runner/Release.entitlements \
-            build/macos/Build/Products/Release/daw_project_manager.app
+            build/macos/Build/Products/Release/DAWProjectManager.app
           
           # Verify the signature
-          codesign --verify --verbose build/macos/Build/Products/Release/daw_project_manager.app
+          codesign --verify --verbose build/macos/Build/Products/Release/DAWProjectManager.app
           
       # 4b. Notarize macOS App (optional but recommended)
       - name: Notarize macOS App
@@ -262,7 +278,7 @@ jobs:
         run: |
           # Create a zip for notarization
           cd build/macos/Build/Products/Release
-          zip -r daw_project_manager_notarize.zip daw_project_manager.app
+          zip -r daw_project_manager_notarize.zip DAWProjectManager.app
           
           # Submit for notarization
           xcrun notarytool submit daw_project_manager_notarize.zip \
@@ -273,34 +289,41 @@ jobs:
             --timeout 30m
           
           # Staple the notarization ticket
-          xcrun stapler staple daw_project_manager.app
-          xcrun stapler validate daw_project_manager.app
+          xcrun stapler staple DAWProjectManager.app
+          xcrun stapler validate DAWProjectManager.app
           
           # Clean up
           rm daw_project_manager_notarize.zip
           
       # 4c. Create DMG (Apenas para macOS DMG)
+      - name: Install create-dmg
+        if: matrix.is_dmg == true
+        run: brew install create-dmg
+
       - name: Create macOS DMG
         if: matrix.is_dmg == true
         run: |
-          # Create a temporary directory for DMG contents
-          DMG_DIR="build/macos/Build/Products/Release/dmg_temp"
-          mkdir -p "$DMG_DIR"
-          
-          # Copy the signed .app bundle to the DMG directory
-          cp -R build/macos/Build/Products/Release/daw_project_manager.app "$DMG_DIR/"
-          
-          # Create a symbolic link to Applications folder
-          ln -s /Applications "$DMG_DIR/Applications"
-          
-          # Create the DMG using hdiutil
-          hdiutil create -volname "DAW Project Manager" \
-            -srcfolder "$DMG_DIR" \
-            -ov -format UDZO \
-            "build/macos/Build/Products/Release/DAW_Project_Manager-${{ steps.sanitize_ref.outputs.sanitized_ref }}.dmg"
-          
-          # Clean up temporary directory
-          rm -rf "$DMG_DIR"
+          APP="build/macos/Build/Products/Release/DAWProjectManager.app"
+          DMG_OUT="build/macos/Build/Products/Release/DAW_Project_Manager-${{ steps.sanitize_ref.outputs.sanitized_ref }}.dmg"
+          BACKGROUND="resources/macos/dmg_background.png"
+
+          # create-dmg args depend on whether a custom background exists
+          EXTRA_ARGS=()
+          if [ -f "$BACKGROUND" ]; then
+            EXTRA_ARGS+=(--background "$BACKGROUND")
+          fi
+
+          create-dmg \
+            --volname "DAW Project Manager" \
+            "${EXTRA_ARGS[@]}" \
+            --window-pos 200 120 \
+            --window-size 800 450 \
+            --icon-size 100 \
+            --icon "DAWProjectManager.app" 200 200 \
+            --hide-extension "DAWProjectManager.app" \
+            --app-drop-link 600 200 \
+            "$DMG_OUT" \
+            "$APP"
           
       # 4d. Sign DMG
       - name: Sign macOS DMG
@@ -325,7 +348,7 @@ jobs:
         run: |
           # macOS: Compacta o bundle .app (already signed)
           cd build/macos/Build/Products/Release
-          zip -r DAW_Project_Manager-${{ steps.sanitize_ref.outputs.sanitized_ref }}.zip daw_project_manager.app
+          zip -r DAW_Project_Manager-${{ steps.sanitize_ref.outputs.sanitized_ref }}.zip DAWProjectManager.app
 
       # 4e. Clean up keychain
       - name: Clean up keychain
@@ -510,14 +533,15 @@ jobs:
           echo "version_name=${VERSION_NAME}" >> "$GITHUB_OUTPUT"
           echo "version_code=${VERSION_CODE}" >> "$GITHUB_OUTPUT"
 
+      # Generate Hive Adapters
+      - name: Generate Hive Adapters
+        run: dart run build_runner build --delete-conflicting-outputs
+
       - name: Generate Localizations
         run: flutter gen-l10n
 
       - name: Precache Flutter Artifacts
         run: flutter precache
-
-      - name: Generate Hive Adapters
-        run: flutter pub run build_runner build --delete-conflicting-outputs
 
       - name: Build Android App Bundle (AAB) - Release
         if: startsWith(github.ref, 'refs/tags/v')

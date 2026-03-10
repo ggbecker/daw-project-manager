@@ -1,14 +1,11 @@
 import 'dart:io';
-import 'dart:ui' show Canvas, Paint, PaintingStyle, Rect;
 
 import 'package:pluto_grid/pluto_grid.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
 import 'package:flutter/services.dart'; 
-import 'package:window_manager/window_manager.dart' if (dart.library.html) 'package:window_manager/window_manager_stub.dart'; 
 import 'package:path/path.dart' as path; // 🚨 NOVO IMPORT
 import 'package:url_launcher/url_launcher.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -26,7 +23,9 @@ import 'profile_manager_page.dart';
 import 'project_folders_settings_page.dart';
 import 'playlists_page.dart';
 import 'google_drive_sync_page.dart';
+import 'statistics_page.dart';
 import 'notification_settings_page.dart';
+import 'widgets/desktop_title_bar.dart';
 import 'widgets/language_switcher.dart';
 import 'widgets/theme_switcher.dart';
 import '../generated/l10n/app_localizations.dart';
@@ -34,58 +33,11 @@ import '../generated/l10n/app_localizations.dart';
 import '../models/music_project.dart';
 import '../models/release.dart';
 import '../providers/providers.dart';
-import '../repository/project_repository.dart';
 import 'package:uuid/uuid.dart';
 
 /// App version embedded at build-time (CI passes `--dart-define=APP_VERSION=x.y.z`).
 /// For PR/local builds, we fall back to a dummy version.
 const String appVersion = String.fromEnvironment('APP_VERSION', defaultValue: '0.0.0');
-
-// WIDGET CORRIGIDO: Botões de controle da janela usando window_manager (desktop only)
-class WindowButtons extends StatelessWidget {
-  const WindowButtons({super.key});
-
-  // Função auxiliar assíncrona para alternar entre maximizar e restaurar
-  void _toggleMaximize() async {
-    if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
-      if (await windowManager.isMaximized()) {
-        windowManager.restore();
-      } else {
-        windowManager.maximize();
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // Only show on desktop platforms
-    if (kIsWeb || (!Platform.isWindows && !Platform.isMacOS && !Platform.isLinux)) {
-      return const SizedBox.shrink();
-    }
-
-    return Row(
-      children: [
-        // Minimize
-        IconButton(
-          icon: Icon(Icons.minimize, size: 18, color: Theme.of(context).textTheme.bodyMedium?.color),
-          onPressed: () => windowManager.minimize(),
-        ),
-        // Maximize/Restore
-        IconButton(
-          icon: Icon(Icons.crop_square_sharp, size: 18, color: Theme.of(context).textTheme.bodyMedium?.color),
-          onPressed: _toggleMaximize, 
-        ),
-        // Close
-        IconButton(
-          icon: Icon(Icons.close, size: 18, color: Theme.of(context).textTheme.bodyMedium?.color),
-          onPressed: () => windowManager.close(), 
-          splashColor: Colors.transparent, 
-          highlightColor: const Color(0xFFC42B1C), 
-        ),
-      ],
-    );
-  }
-}
 
 // Intent classes for keyboard shortcuts
 class _SearchIntent extends Intent {
@@ -149,8 +101,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
   @override
   void initState() {
     super.initState();
-    // Android has 3 tabs (Projects, Releases, Playlists), desktop has 2
-    final tabCount = Platform.isAndroid ? 3 : 2;
+    // Android has 4 tabs (Projects, Releases, Playlists, Statistics), desktop has 3
+    final tabCount = Platform.isAndroid ? 4 : 3;
     _tabController = TabController(length: tabCount, vsync: this);
     _searchController = TextEditingController();
     
@@ -198,12 +150,15 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
         if (_searchController.text != projectsSearch) {
           _searchController.text = projectsSearch;
         }
-      } else {
+      } else if (currentTabIndex == 1) {
         // Releases tab
         final releasesSearch = ref.read(releasesSearchProvider);
         if (_searchController.text != releasesSearch) {
           _searchController.text = releasesSearch;
         }
+      } else {
+        // Playlists / Statistics tab — clear search bar
+        _searchController.clear();
       }
       setState(() {}); // Rebuild to update search placeholder when tab animation completes
     }
@@ -533,7 +488,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
     // Get current search text based on active tab
     final currentSearch = _tabController.index == 0
         ? ref.watch(projectsSearchProvider)
-        : ref.watch(releasesSearchProvider);
+        : _tabController.index == 1
+            ? ref.watch(releasesSearchProvider)
+            : '';
     final projects = ref.watch(projectsProvider);
     final hiddenMode = ref.watch(showHiddenProjectsProvider);
     final hiddenNotifier = ref.read(showHiddenProjectsProvider.notifier);
@@ -670,7 +627,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                   },
                                   tooltip: AppLocalizations.of(context)!.profileManager,
                                 ),
-                                error: (_, __) => IconButton(
+                                error: (_, _) => IconButton(
                                   icon: const Icon(Icons.person),
                                   onPressed: () {
                                     Navigator.of(context).push(
@@ -724,86 +681,47 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                             Tab(text: AppLocalizations.of(context)!.releasesTab),
                             if (Platform.isAndroid)
                               Tab(text: AppLocalizations.of(context)!.playlists),
+                            Tab(text: AppLocalizations.of(context)!.statisticsTab),
                           ],
                         ),
                       )
                     : null,
                 body: Column(
           children: [
-            // ----------------------------------------------------
-            // LÓGICA DE WINDOW BAR: APENHAS MOSTRA A BARRA PERSONALIZADA SE NÃO ESTIVER EM DEBUG E FOR DESKTOP
-            if (!kDebugMode && !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux))
-              GestureDetector(
-                onPanStart: (_) => windowManager.startDragging(),
-                // LÓGICA para alternar maximizar/restaurar no double tap
-                onDoubleTap: () async {
-                  if (await windowManager.isMaximized()) {
-                    windowManager.restore();
-                  } else {
-                    windowManager.maximize();
-                  }
-                }, 
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).cardColor,
-                    border: Border(
-                      bottom: BorderSide(
-                        color: Theme.of(context).dividerColor,
-                        width: 1,
-                      ),
-                    ),
-                  ),
-                  height: 40, // Altura padrão para a barra
-                  child: Row(
-                    children: [
-                      // Título da Aplicação com versão (como antes)
-                      Padding(
-                        padding: const EdgeInsets.only(left: 12),
-                        child: Text(
-                          'DAW Project Manager v$appVersion',
-                          style: TextStyle(
-                            color: Theme.of(context).textTheme.titleMedium?.color,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
+            // Custom title bar – Windows/Linux only.
+            // macOS uses the native title bar + MacOSMenuBar for Theme/Language/Support.
+            DesktopTitleBar(
+              title: 'DAW Project Manager v$appVersion',
+              actions: [
+                // Donate button
+                Consumer(
+                  builder: (context, ref, child) {
+                    final l10n = AppLocalizations.of(context)!;
+                    return Tooltip(
+                      message: l10n.supportTheProject,
+                      child: TextButton.icon(
+                        icon: const Icon(Icons.card_giftcard, size: 18, color: Colors.white70),
+                        label: Text(
+                          l10n.support,
+                          style: const TextStyle(color: Colors.white70, fontSize: 14),
                         ),
-                      ),
-                      const Spacer(), // Espaçador para empurrar os botões para a direita
-                      const SizedBox(width: 4),
-                      // Donate button
-                      Consumer(
-                        builder: (context, ref, child) {
-                          final l10n = AppLocalizations.of(context)!;
-                          return Tooltip(
-                            message: l10n.supportTheProject,
-                            child: TextButton.icon(
-                              icon: const Icon(Icons.card_giftcard, size: 18, color: Colors.white70),
-                              label: Text(
-                                l10n.support,
-                                style: const TextStyle(color: Colors.white70, fontSize: 14),
-                              ),
-                              onPressed: () async {
-                                final uri = Uri.parse('https://www.paypal.com/donate/?hosted_button_id=QHVVZ3LAF39BL');
-                                if (await canLaunchUrl(uri)) {
-                                  await launchUrl(uri, mode: LaunchMode.externalApplication);
-                                } 
-                              },
-                            ),
-                          );
+                        onPressed: () async {
+                          final uri = Uri.parse('https://www.paypal.com/donate/?hosted_button_id=QHVVZ3LAF39BL');
+                          if (await canLaunchUrl(uri)) {
+                            await launchUrl(uri, mode: LaunchMode.externalApplication);
+                          }
                         },
                       ),
-                      const SizedBox(width: 8),
-                      const ThemeSwitcher(),
-                      const SizedBox(width: 8),
-                      const LanguageSwitcher(),
-                      const SizedBox(width: 8),
-                      // Botões de minimizar, maximizar e fechar
-                      const WindowButtons(),
-                    ],
-                  ),
+                    );
+                  },
                 ),
-              ),
-            // ----------------------------------------------------
+                const SizedBox(width: 8),
+                const ThemeSwitcher(),
+                const SizedBox(width: 8),
+                const LanguageSwitcher(),
+                const SizedBox(width: 8),
+              ],
+            ),
             
             // CONTEÚDO DA BARRA DE AÇÕES E PESQUISA
             Builder(
@@ -815,8 +733,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                       ? Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Search bar on top for mobile
-                            TextField(
+                            // Search bar on top for mobile (hidden on Statistics tab)
+                            if (_tabController.index != (Platform.isAndroid ? 3 : 2)) TextField(
                               focusNode: _searchFocusNode,
                               controller: _searchController,
                               decoration: InputDecoration(
@@ -861,7 +779,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                 }
                               },
                             ),
-                            const SizedBox(height: 12),
+                            if (_tabController.index != (Platform.isAndroid ? 3 : 2))
+                              const SizedBox(height: 12),
                             // Filters and info row (only show on Projects tab)
                             if (_tabController.index == 0) ...[
                               Row(
@@ -869,7 +788,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                   Expanded(
                                     child: repoAsync.when(
                                       loading: () => const SizedBox.shrink(),
-                                      error: (_, __) => const SizedBox.shrink(),
+                                      error: (_, _) => const SizedBox.shrink(),
                                       data: (repo) {
                                         String projectText;
                                         final l10n = AppLocalizations.of(context)!;
@@ -1138,7 +1057,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                   },
                                 ),
                               ),
-                              error: (_, __) => Tooltip(
+                              error: (_, _) => Tooltip(
                                 message: AppLocalizations.of(context)!.profileManager,
                                 child: TextButton.icon(
                                   icon: const Icon(Icons.person, size: 24),
@@ -1294,7 +1213,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                       ],
                     ),
                   ),
-                  // Área de Pesquisa e Filtro (desktop only)
+                  // Área de Pesquisa e Filtro (desktop only — hidden on Statistics tab)
+                  if (_tabController.index != (Platform.isAndroid ? 3 : 2))
                   Flexible(
                     flex: 3,
                     child: Row(
@@ -1303,7 +1223,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                           width: 400,
                           child: TextField(
                               // Associar o FocusNode ao TextField
-                              focusNode: _searchFocusNode, 
+                              focusNode: _searchFocusNode,
                               controller: _searchController,
                               decoration: InputDecoration(
                                 hintText: _tabController.index == 0
@@ -1352,7 +1272,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                           Flexible(
                             child: repoAsync.when(
                               loading: () => const SizedBox.shrink(),
-                              error: (_, __) => const SizedBox.shrink(),
+                              error: (_, _) => const SizedBox.shrink(),
                               data: (repo) {
                                 String projectText;
                                 final l10n = AppLocalizations.of(context)!;
@@ -1559,6 +1479,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                     Tab(icon: Icon(Icons.album), text: AppLocalizations.of(context)!.releasesTab),
                     if (Platform.isAndroid)
                       Tab(icon: Icon(Icons.playlist_play), text: AppLocalizations.of(context)!.playlists),
+                    Tab(icon: Icon(Icons.bar_chart_rounded), text: AppLocalizations.of(context)!.statisticsTab),
                   ],
                   labelColor: Theme.of(context).textTheme.titleMedium?.color,
                   unselectedLabelColor: Theme.of(context).textTheme.bodySmall?.color,
@@ -1606,6 +1527,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                         ),
                   const ReleasesTabPage(),
                   if (Platform.isAndroid) const PlaylistsPage(),
+                  const StatisticsPage(),
                 ],
               ),
             ),
@@ -2089,7 +2011,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     if (!await file.exists()) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Preview song file not found')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
         );
       }
       return;
@@ -2509,12 +2431,25 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           if (project == null) {
             return Text(rendererContext.cell.value.toString());
           }
-          
+
+          final fileExists = File(project.filePath).existsSync() ||
+              Directory(project.filePath).existsSync();
+
           return GestureDetector(
             onSecondaryTapDown: (TapDownDetails details) {
               _showContextMenu(context, project, details.globalPosition);
             },
-            child: Text(rendererContext.cell.value.toString()),
+            child: Row(
+              children: [
+                Expanded(child: Text(rendererContext.cell.value.toString())),
+                if (!fileExists)
+                  Tooltip(
+                    message: AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
+                    child: Icon(Icons.cloud_off, size: 14,
+                        color: Colors.orange.shade400),
+                  ),
+              ],
+            ),
           );
         },
       ),
@@ -2691,14 +2626,14 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         field: 'lastModified',
         type: PlutoColumnType.text(),
         enableEditingMode: false,
-        width: 160,
-        minWidth: 140,
+        width: 200,
+        minWidth: 160,
         renderer: (rendererContext) {
           final project = rendererContext.row.cells['data']?.value as MusicProject?;
           if (project == null) {
             return Text(rendererContext.cell.value.toString());
           }
-          
+
           final status = project.status;
           
           // If status is "Finished", show green
@@ -2835,6 +2770,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           
           // Lógica para determinar o diretório pai
           final String projectPath = project.filePath;
+          final bool sourceFileExists = File(projectPath).existsSync() || Directory(projectPath).existsSync();
           final String folderPath = FileSystemEntity.isDirectorySync(projectPath)
               ? projectPath // Se for um diretório, usa o próprio caminho
               : path.dirname(projectPath); // Se for um arquivo, usa o diretório pai
@@ -2868,10 +2804,13 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                 ),
               ),
               // Launch button
-              IconButton(
-                icon: const Icon(Icons.open_in_new),
-                tooltip: AppLocalizations.of(context)!.tooltipLaunchInDaw,
-                onPressed: () => _launchProject(project),
+              Tooltip(
+                message: sourceFileExists ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
+                child: IconButton(
+                  icon: const Icon(Icons.open_in_new),
+                  tooltip: sourceFileExists ? AppLocalizations.of(context)!.tooltipLaunchInDaw : null,
+                  onPressed: sourceFileExists ? () => _launchProject(project) : null,
+                ),
               ),
               // Separator
               Padding(
@@ -2888,10 +2827,13 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                 onPressed: () => _viewProjectDetails(project),
               ),
               // Open Folder button
-              IconButton(
-                icon: const Icon(Icons.folder_open),
-                tooltip: AppLocalizations.of(context)!.openFolder,
-                onPressed: () => _openProjectFolder(project),
+              Tooltip(
+                message: sourceFileExists ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
+                child: IconButton(
+                  icon: const Icon(Icons.folder_open),
+                  tooltip: sourceFileExists ? AppLocalizations.of(context)!.openFolder : null,
+                  onPressed: sourceFileExists ? () => _openProjectFolder(project) : null,
+                ),
               ),
               // Separator
               Padding(
@@ -3159,7 +3101,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
     if (!await file.exists()) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Preview song file not found')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
         );
         Navigator.pop(context);
       }
@@ -3171,7 +3113,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to play preview: ${e.toString()}')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedToPlayPreview(e.toString()))),
         );
       }
     }
@@ -3199,7 +3141,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to play preview: ${e.toString()}')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedToPlayPreview(e.toString()))),
         );
       }
     }
@@ -3421,7 +3363,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Preview song file not found')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
         );
       }
       return;
@@ -3434,7 +3376,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Preview song not available. Please download backup first.')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.previewSongNotAvailableDownloadFirst)),
         );
       }
       return;
@@ -3451,7 +3393,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
         }
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Preview song file not found')),
+            SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
           );
         }
         return;
@@ -3517,7 +3459,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to share preview song: ${e.toString()}')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedToSharePreviewSong(e.toString()))),
         );
       }
     }
@@ -3529,7 +3471,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
     if (widget.project.previewSongPath == null || widget.project.previewSongPath!.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Preview song file not found')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
         );
       }
       return;
@@ -3539,7 +3481,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
     if (widget.project.previewSongPath!.startsWith('drive://')) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Preview song not available. Please download backup first.')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.previewSongNotAvailableDownloadFirst)),
         );
       }
       return;
@@ -3550,7 +3492,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
       if (!await sourceFile.exists()) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Preview song file not found')),
+            SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
           );
         }
         return;
@@ -3609,7 +3551,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to share preview song as ZIP: ${e.toString()}')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedToSharePreviewSongAsZip(e.toString()))),
         );
       }
     }
@@ -3651,12 +3593,12 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
                     !widget.project.previewSongPath!.startsWith('drive://')) ...[
                   IconButton(
                     icon: const Icon(Icons.share),
-                    tooltip: 'Share preview song',
+                    tooltip: AppLocalizations.of(context)!.sharePreviewSong,
                     onPressed: _sharePreviewSong,
                   ),
                   IconButton(
                     icon: const Icon(Icons.archive),
-                    tooltip: 'Share as ZIP',
+                    tooltip: AppLocalizations.of(context)!.shareAsZip,
                     onPressed: _sharePreviewSongAsZip,
                   ),
                 ],
@@ -3746,7 +3688,7 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
     if (!await file.exists()) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Preview song file not found')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
         );
       }
       return;
@@ -3864,6 +3806,9 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
               final project = widget.projects[index];
               final isSelected = _selectedProjectIds.contains(project.id);
               
+              final fileExists = File(project.filePath).existsSync() ||
+                  Directory(project.filePath).existsSync();
+
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 child: ListTile(
@@ -3873,9 +3818,21 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                           onChanged: (_) => _toggleProjectSelection(project.id),
                         )
                       : null,
-                  title: Text(
-                    project.displayName,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  title: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          project.displayName,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      if (!fileExists)
+                        Tooltip(
+                          message: AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
+                          child: Icon(Icons.cloud_off, size: 16,
+                              color: Colors.orange.shade400),
+                        ),
+                    ],
                   ),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

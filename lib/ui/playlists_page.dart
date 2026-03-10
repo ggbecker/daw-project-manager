@@ -2,11 +2,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:path/path.dart' as p;
 import '../models/playlist.dart';
 import '../models/music_project.dart';
 import '../providers/providers.dart';
-import '../utils/mobile_utils.dart';
 import '../generated/l10n/app_localizations.dart';
 
 /// Playlists page - Android only
@@ -41,12 +39,12 @@ class _PlaylistsPageState extends ConsumerState<PlaylistsPage> {
         data: (playlists) => projectsAsync.when(
           data: (allProjects) => _buildPlaylistsList(context, playlists, allProjects),
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, __) => Center(
+          error: (_, _) => Center(
             child: Text(AppLocalizations.of(context)!.errorLoadingProjects),
           ),
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => Center(
+        error: (_, _) => Center(
           child: Text(AppLocalizations.of(context)!.errorLoadingPlaylists),
         ),
       ),
@@ -117,7 +115,7 @@ class _PlaylistsPageState extends ConsumerState<PlaylistsPage> {
             })
             .where((project) =>
                 project != null &&
-                project!.previewSongPath != null &&
+                project.previewSongPath != null &&
                 project.previewSongPath!.isNotEmpty &&
                 !project.previewSongPath!.startsWith('drive://'))
             .cast<MusicProject>()
@@ -1392,7 +1390,7 @@ class _EditPlaylistForm extends ConsumerStatefulWidget {
 class _EditPlaylistFormState extends ConsumerState<_EditPlaylistForm> {
   late TextEditingController _nameController;
   late List<String> _orderedProjectIds;
-  String _searchQuery = '';
+  final String _searchQuery = '';
 
   @override
   void initState() {

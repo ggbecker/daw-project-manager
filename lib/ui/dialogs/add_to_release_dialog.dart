@@ -4,7 +4,6 @@ import 'package:uuid/uuid.dart';
 
 import '../../models/release.dart';
 import '../../providers/providers.dart';
-import '../../repository/project_repository.dart';
 import '../../generated/l10n/app_localizations.dart';
 
 class AddToReleaseDialog extends ConsumerStatefulWidget {

@@ -1,21 +1,17 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/services.dart' show PlatformException;
 import 'package:google_sign_in/google_sign_in.dart' show GoogleSignInException, GoogleSignInExceptionCode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:window_manager/window_manager.dart';
+import 'widgets/desktop_title_bar.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import '../services/google_drive_sync_service.dart' show GoogleDriveSyncService, UploadCancelledException;
 import '../models/backup_progress.dart';
 import '../providers/providers.dart';
-import '../repository/profile_repository.dart';
-import '../repository/project_repository.dart';
 import '../utils/mobile_utils.dart';
 import '../generated/l10n/app_localizations.dart';
-import 'dashboard_page.dart';
 import 'google_drive_sync_page_download_dialog.dart';
 
 class GoogleDriveSyncPage extends ConsumerStatefulWidget {
@@ -520,25 +516,25 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
 
       final projectRepo = await ref.read(repositoryProvider.future);
       
-      // Show progress dialog on desktop
-      if (!MobileUtils.isMobile()) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => _BackupProgressDialog(
-            progressStream: _syncService.progressStream,
-            syncService: _syncService,
-          ),
-        );
-      }
-      
+      // Show progress dialog on all platforms
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => MobileUtils.isMobile()
+            ? UploadProgressDialog(progressStream: _syncService.progressStream)
+            : _BackupProgressDialog(
+                progressStream: _syncService.progressStream,
+                syncService: _syncService,
+              ),
+      );
+
       await _syncService.uploadDatabase(
         projectRepo: projectRepo,
         profileRepo: profileRepo,
       );
 
-      // Close progress dialog if it's open
-      if (!MobileUtils.isMobile() && mounted) {
+      // Close progress dialog
+      if (mounted) {
         Navigator.of(context, rootNavigator: true).pop();
       }
 
@@ -734,14 +730,12 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
         await _checkForNewerBackup();
       }
 
-      // CRITICAL: Don't invalidate repositoryProvider - it will lose the box reference!
-      // The repository already has the correct box reference, we just need to restart the stream
-      // Invalidate only the stream providers to force them to re-read from the box
+      // The mergeData call above already performed any profile switch synchronously,
+      // so we can now safely invalidate all providers including repositoryProvider.
+      ref.invalidate(repositoryProvider);
       ref.invalidate(allProjectsStreamProvider);
       ref.invalidate(releasesProvider);
       ref.invalidate(scanRootsProvider);
-      
-      // Also invalidate currentProfileProvider to ensure profile state is refreshed
       ref.invalidate(currentProfileProvider);
       
       // Wait a bit for stream to restart
@@ -807,81 +801,10 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
           : null,
       body: Column(
         children: [
-          // Window title bar (desktop only)
-          if (!isMobile && !kDebugMode && !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux))
-            GestureDetector(
-              onPanStart: (_) => windowManager.startDragging(),
-              onDoubleTap: () async {
-                if (await windowManager.isMaximized()) {
-                  windowManager.restore();
-                } else {
-                  windowManager.maximize();
-                }
-              },
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  border: Border(
-                    bottom: BorderSide(
-                      color: Theme.of(context).dividerColor,
-                      width: 1,
-                    ),
-                  ),
-                ),
-                height: 40,
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(
-                        Icons.arrow_back,
-                        color: Theme.of(context).textTheme.bodyMedium?.color,
-                        size: 20,
-                      ),
-                      onPressed: () => Navigator.pop(context),
-                      tooltip: AppLocalizations.of(context)!.back,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 4),
-                      child: Text(
-                        AppLocalizations.of(context)!.googleDriveSync,
-                        style: TextStyle(
-                          color: Theme.of(context).textTheme.titleMedium?.color,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                    const Spacer(),
-                    if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux))
-                      const WindowButtons(),
-                  ],
-                ),
-              ),
-            ),
-          // Debug mode back button (Windows desktop only)
-          if (!isMobile && kDebugMode && Platform.isWindows)
-            Container(
-              color: Theme.of(context).cardColor,
-              height: 40,
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.arrow_back, color: Theme.of(context).textTheme.bodyMedium?.color, size: 20),
-                    onPressed: () => Navigator.pop(context),
-                    tooltip: AppLocalizations.of(context)!.back,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 4),
-                    child: Text(
-                      AppLocalizations.of(context)!.googleDriveSync,
-                      style: TextStyle(
-                        color: Theme.of(context).textTheme.titleMedium?.color,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          DesktopTitleBar(
+            title: AppLocalizations.of(context)!.googleDriveSync,
+            showBack: true,
+          ),
           Expanded(
             child: SingleChildScrollView(
               padding: MobileUtils.getResponsivePadding(context),
@@ -1088,7 +1011,7 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
                               padding: const EdgeInsets.only(bottom: 8.0),
                               child: Text(
                                 AppLocalizations.of(context)!.lastSync(
-                                  DateFormat.yMMMd().add_jm().format(_lastSyncTime!),
+                                  DateFormat.yMMMd(Localizations.localeOf(context).toString()).add_jm().format(_lastSyncTime!),
                                 ),
                                 style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                               ),
@@ -1099,7 +1022,7 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
                               padding: const EdgeInsets.only(bottom: 4.0),
                               child: Text(
                                 AppLocalizations.of(context)!.remoteBackupTime(
-                                  DateFormat.yMMMd().add_jm().format(_remoteBackupTime!),
+                                  DateFormat.yMMMd(Localizations.localeOf(context).toString()).add_jm().format(_remoteBackupTime!),
                                 ),
                                 style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                               ),
@@ -1110,7 +1033,7 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
                               padding: const EdgeInsets.only(bottom: 4.0),
                               child: Text(
                                 AppLocalizations.of(context)!.lastUploadTime(
-                                  DateFormat.yMMMd().add_jm().format(_lastUploadTime!),
+                                  DateFormat.yMMMd(Localizations.localeOf(context).toString()).add_jm().format(_lastUploadTime!),
                                 ),
                                 style: TextStyle(fontSize: 14, color: Colors.grey[700]),
                               ),
@@ -1121,7 +1044,7 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
                               padding: const EdgeInsets.only(bottom: 0.0),
                               child: Text(
                                 AppLocalizations.of(context)!.lastDownloadTime(
-                                  DateFormat.yMMMd().add_jm().format(_lastDownloadTime!),
+                                  DateFormat.yMMMd(Localizations.localeOf(context).toString()).add_jm().format(_lastDownloadTime!),
                                 ),
                                 style: TextStyle(fontSize: 14, color: Colors.grey[700]),
                               ),

@@ -27,6 +27,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cancel => '取消';
 
   @override
+  String get close => '关闭';
+
+  @override
   String get launch => '打开';
 
   @override
@@ -80,6 +83,11 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String launchingProject(String projectName) {
     return '正在打开$projectName…';
+  }
+
+  @override
+  String failedToLaunchProject(String projectName) {
+    return '无法打开$projectName';
   }
 
   @override
@@ -651,9 +659,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get saveReleaseFilesZip => '保存发布文件ZIP';
 
   @override
-  String failedToOpenFile(String error) {
-    return '打开文件失败: $error';
-  }
+  String get failedToOpenFile => '无法打开文件';
 
   @override
   String failedToPlayAudio(String error) {
@@ -1745,4 +1751,340 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get downloadingBackupTitle => '正在下载备份';
+
+  @override
+  String get sourceFileNotFoundOnThisMachine => '在此设备上找不到源文件';
+
+  @override
+  String get previewSongNotAvailableDownloadFirst => '预览歌曲不可用。请先下载备份。';
+
+  @override
+  String get sharePreviewSong => '分享预览歌曲';
+
+  @override
+  String get shareAsZip => '以ZIP格式分享';
+
+  @override
+  String get share => '分享';
+
+  @override
+  String get shareZip => '分享ZIP';
+
+  @override
+  String get saveCopy => '保存副本';
+
+  @override
+  String savedCopyTo(String path) {
+    return '已保存到 $path';
+  }
+
+  @override
+  String failedToSharePreviewSong(String error) {
+    return '无法分享预览歌曲：$error';
+  }
+
+  @override
+  String failedToSharePreviewSongAsZip(String error) {
+    return '无法以ZIP格式分享预览歌曲：$error';
+  }
+
+  @override
+  String get biographySaved => '简介已保存';
+
+  @override
+  String failedToSaveBiography(String error) {
+    return '无法保存简介：$error';
+  }
+
+  @override
+  String fileSavedTo(String filename) {
+    return '文件已保存至 $filename';
+  }
+
+  @override
+  String failedToDownloadFile(String error) {
+    return '无法下载文件：$error';
+  }
+
+  @override
+  String allFilesSavedTo(String filename) {
+    return '所有文件已保存至 $filename';
+  }
+
+  @override
+  String get artworkAdded => '封面已添加';
+
+  @override
+  String failedToAddArtwork(String error) {
+    return '无法添加封面：$error';
+  }
+
+  @override
+  String get artworkRemoved => '封面已删除';
+
+  @override
+  String failedToRemoveArtwork(String error) {
+    return '无法删除封面：$error';
+  }
+
+  @override
+  String get pressKitFileAdded => '新闻资料袋文件已添加';
+
+  @override
+  String failedToAddPressKitFile(String error) {
+    return '无法添加新闻资料袋文件：$error';
+  }
+
+  @override
+  String get pressKitFileRemoved => '新闻资料袋文件已删除';
+
+  @override
+  String failedToRemovePressKitFile(String error) {
+    return '无法删除新闻资料袋文件：$error';
+  }
+
+  @override
+  String get selectFilesToDownload => '选择要下载的文件';
+
+  @override
+  String get biography => '简介';
+
+  @override
+  String get biographyWillBeSaved => '将保存为 biography.txt';
+
+  @override
+  String get artworkFiles => '封面文件';
+
+  @override
+  String get pressKitFiles => '新闻资料袋文件';
+
+  @override
+  String get additionalAssets => '附加资源';
+
+  @override
+  String downloadNFiles(int count, String plural) {
+    return '下载 $count 个文件$plural';
+  }
+
+  @override
+  String nFilesSavedTo(int count, String plural, String filename) {
+    return '$count 个文件$plural已保存至 $filename';
+  }
+
+  @override
+  String get addAsset => '添加资源';
+
+  @override
+  String get assetNameLabel => '资源名称';
+
+  @override
+  String get assetNameHint => '例如：Logo、横幅、照片';
+
+  @override
+  String assetAddedSuccessfully(String assetName) {
+    return '$assetName 已成功添加';
+  }
+
+  @override
+  String failedToAddAsset(String error) {
+    return '无法添加资源：$error';
+  }
+
+  @override
+  String assetRemoved(String assetName) {
+    return '$assetName 已删除';
+  }
+
+  @override
+  String failedToRemoveAsset(String error) {
+    return '无法删除资源：$error';
+  }
+
+  @override
+  String get profileNotFound => '找不到个人资料';
+
+  @override
+  String get selectFiles => '选择文件';
+
+  @override
+  String get downloadAll => '全部下载';
+
+  @override
+  String get saveBiographyTooltip => '保存简介';
+
+  @override
+  String get enterBiographyHint => '输入个人简介...';
+
+  @override
+  String get addArtwork => '添加封面';
+
+  @override
+  String get addFile => '添加文件';
+
+  @override
+  String get openFile => '打开文件';
+
+  @override
+  String get menuView => '视图';
+
+  @override
+  String get menuAbout => '关于 DAW Project Manager';
+
+  @override
+  String get menuLanguage => '语言';
+
+  @override
+  String get menuWarnBeforeQuit => '退出前警告 (Cmd+Q)';
+
+  @override
+  String get menuQuit => '退出 DAW Project Manager';
+
+  @override
+  String get menuWindow => '窗口';
+
+  @override
+  String get donate => '捐赠';
+
+  @override
+  String get website => '网站';
+
+  @override
+  String get switchToClassicDark => '切换到 Classic Dark';
+
+  @override
+  String get switchToNeonDark => '切换到 Neon Dark';
+
+  @override
+  String get switchToClassicTheme => '切换到经典主题';
+
+  @override
+  String get switchToNeonTheme => '切换到霓虹主题';
+
+  @override
+  String get menuTheme => '主题';
+
+  @override
+  String get appDescription => '面向音乐制作人和音效设计师的项目管理工具。';
+
+  @override
+  String get neonDarkThemeName => '霓虹暗色';
+
+  @override
+  String get classicDarkThemeName => '经典暗色';
+
+  @override
+  String get statisticsTab => '统计';
+
+  @override
+  String get statsTotalProjects => '总项目数';
+
+  @override
+  String get statsInProgress => '进行中';
+
+  @override
+  String get statsFinished => '已完成';
+
+  @override
+  String get statsAvgCompletion => '平均完成时间';
+
+  @override
+  String get statsPhaseDistribution => '各阶段项目';
+
+  @override
+  String get statsAvgTimePerPhase => '每阶段平均天数';
+
+  @override
+  String get statsProductivity => '生产力';
+
+  @override
+  String get statsCreatedSeries => '已创建';
+
+  @override
+  String get statsProjectHealth => '项目年龄与健康';
+
+  @override
+  String get statsCatalogInsights => '目录洞察';
+
+  @override
+  String get statsBpmDistribution => 'BPM分布';
+
+  @override
+  String get statsTopKeys => '热门音乐调式';
+
+  @override
+  String get statsDawTypes => 'DAW类型';
+
+  @override
+  String get statsProjectActivity => '项目活动';
+
+  @override
+  String get statsNoData => '暂无数据';
+
+  @override
+  String get statsNoPhaseData => '项目变更阶段后将显示数据。';
+
+  @override
+  String statsLastActivityDaysAgo(int days) {
+    return '最近活动: $days天前';
+  }
+
+  @override
+  String get statsLastActivityToday => '今日活跃';
+
+  @override
+  String get statsNoEvents => '暂无事件记录';
+
+  @override
+  String statsEventPhaseChanged(String from, String to) {
+    return '阶段: $from → $to';
+  }
+
+  @override
+  String statsEventMetadataUpdated(String fields) {
+    return '已更新: $fields';
+  }
+
+  @override
+  String statsEventTodoCompleted(String text) {
+    return '已完成: $text';
+  }
+
+  @override
+  String get statsEventFileModified => '磁盘上的文件已修改';
+
+  @override
+  String get statsClearHistory => '清除历史';
+
+  @override
+  String get statsClearHistoryConfirm => '清除此项目的所有记录事件？';
+
+  @override
+  String get statsSearchProjects => '搜索项目…';
+
+  @override
+  String statsEventCount(int count) {
+    return '$count个事件';
+  }
+
+  @override
+  String get statsViewHistory => '项目统计';
+
+  @override
+  String get statsPhaseHistory => '阶段历史';
+
+  @override
+  String get statsEventBreakdown => '事件概览';
+
+  @override
+  String statsDaysSoFar(int days) {
+    return '已$days天';
+  }
+
+  @override
+  String get statsNoProjectsFound => '未找到项目';
+
+  @override
+  String statsNotTouchedDays(int days) {
+    return '$days天未修改';
+  }
 }

@@ -27,6 +27,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get cancel => 'Отмена';
 
   @override
+  String get close => 'Закрыть';
+
+  @override
   String get launch => 'Открыть';
 
   @override
@@ -80,6 +83,11 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String launchingProject(String projectName) {
     return 'Открытие $projectName…';
+  }
+
+  @override
+  String failedToLaunchProject(String projectName) {
+    return 'Не удалось открыть $projectName';
   }
 
   @override
@@ -664,9 +672,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get saveReleaseFilesZip => 'Сохранить ZIP файлы релиза';
 
   @override
-  String failedToOpenFile(String error) {
-    return 'Ошибка открытия файла: $error';
-  }
+  String get failedToOpenFile => 'Не удалось открыть файл';
 
   @override
   String failedToPlayAudio(String error) {
@@ -1801,4 +1807,344 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get downloadingBackupTitle => 'Скачивание Резервной Копии';
+
+  @override
+  String get sourceFileNotFoundOnThisMachine =>
+      'Исходный файл не найден на этом устройстве';
+
+  @override
+  String get previewSongNotAvailableDownloadFirst =>
+      'Превью недоступно. Пожалуйста, сначала загрузите резервную копию.';
+
+  @override
+  String get sharePreviewSong => 'Поделиться превью';
+
+  @override
+  String get shareAsZip => 'Поделиться как ZIP';
+
+  @override
+  String get share => 'Поделиться';
+
+  @override
+  String get shareZip => 'Поделиться ZIP';
+
+  @override
+  String get saveCopy => 'Сохранить копию';
+
+  @override
+  String savedCopyTo(String path) {
+    return 'Сохранено в $path';
+  }
+
+  @override
+  String failedToSharePreviewSong(String error) {
+    return 'Не удалось поделиться превью: $error';
+  }
+
+  @override
+  String failedToSharePreviewSongAsZip(String error) {
+    return 'Не удалось поделиться превью как ZIP: $error';
+  }
+
+  @override
+  String get biographySaved => 'Биография сохранена';
+
+  @override
+  String failedToSaveBiography(String error) {
+    return 'Не удалось сохранить биографию: $error';
+  }
+
+  @override
+  String fileSavedTo(String filename) {
+    return 'Файл сохранён в $filename';
+  }
+
+  @override
+  String failedToDownloadFile(String error) {
+    return 'Не удалось скачать файл: $error';
+  }
+
+  @override
+  String allFilesSavedTo(String filename) {
+    return 'Все файлы сохранены в $filename';
+  }
+
+  @override
+  String get artworkAdded => 'Обложка добавлена';
+
+  @override
+  String failedToAddArtwork(String error) {
+    return 'Не удалось добавить обложку: $error';
+  }
+
+  @override
+  String get artworkRemoved => 'Обложка удалена';
+
+  @override
+  String failedToRemoveArtwork(String error) {
+    return 'Не удалось удалить обложку: $error';
+  }
+
+  @override
+  String get pressKitFileAdded => 'Файл пресс-кита добавлен';
+
+  @override
+  String failedToAddPressKitFile(String error) {
+    return 'Не удалось добавить файл пресс-кита: $error';
+  }
+
+  @override
+  String get pressKitFileRemoved => 'Файл пресс-кита удалён';
+
+  @override
+  String failedToRemovePressKitFile(String error) {
+    return 'Не удалось удалить файл пресс-кита: $error';
+  }
+
+  @override
+  String get selectFilesToDownload => 'Выберите файлы для загрузки';
+
+  @override
+  String get biography => 'Биография';
+
+  @override
+  String get biographyWillBeSaved => 'Будет сохранена как biography.txt';
+
+  @override
+  String get artworkFiles => 'Файлы обложек';
+
+  @override
+  String get pressKitFiles => 'Файлы пресс-кита';
+
+  @override
+  String get additionalAssets => 'Дополнительные ресурсы';
+
+  @override
+  String downloadNFiles(int count, String plural) {
+    return 'Скачать $count файл$plural';
+  }
+
+  @override
+  String nFilesSavedTo(int count, String plural, String filename) {
+    return '$count файл$plural сохранено в $filename';
+  }
+
+  @override
+  String get addAsset => 'Добавить ресурс';
+
+  @override
+  String get assetNameLabel => 'Название ресурса';
+
+  @override
+  String get assetNameHint => 'Например: Логотип, Баннер, Фото';
+
+  @override
+  String assetAddedSuccessfully(String assetName) {
+    return '$assetName успешно добавлен';
+  }
+
+  @override
+  String failedToAddAsset(String error) {
+    return 'Не удалось добавить ресурс: $error';
+  }
+
+  @override
+  String assetRemoved(String assetName) {
+    return '$assetName удалён';
+  }
+
+  @override
+  String failedToRemoveAsset(String error) {
+    return 'Не удалось удалить ресурс: $error';
+  }
+
+  @override
+  String get profileNotFound => 'Профиль не найден';
+
+  @override
+  String get selectFiles => 'Выбрать файлы';
+
+  @override
+  String get downloadAll => 'Скачать всё';
+
+  @override
+  String get saveBiographyTooltip => 'Сохранить биографию';
+
+  @override
+  String get enterBiographyHint => 'Введите биографию профиля...';
+
+  @override
+  String get addArtwork => 'Добавить обложку';
+
+  @override
+  String get addFile => 'Добавить файл';
+
+  @override
+  String get openFile => 'Открыть файл';
+
+  @override
+  String get menuView => 'Вид';
+
+  @override
+  String get menuAbout => 'О программе DAW Project Manager';
+
+  @override
+  String get menuLanguage => 'Язык';
+
+  @override
+  String get menuWarnBeforeQuit => 'Предупреждать перед выходом (Cmd+Q)';
+
+  @override
+  String get menuQuit => 'Выйти из DAW Project Manager';
+
+  @override
+  String get menuWindow => 'Окно';
+
+  @override
+  String get donate => 'Пожертвовать';
+
+  @override
+  String get website => 'Сайт';
+
+  @override
+  String get switchToClassicDark => 'Переключить на Classic Dark';
+
+  @override
+  String get switchToNeonDark => 'Переключить на Neon Dark';
+
+  @override
+  String get switchToClassicTheme => 'Переключить на Classic тему';
+
+  @override
+  String get switchToNeonTheme => 'Переключить на Neon тему';
+
+  @override
+  String get menuTheme => 'Тема';
+
+  @override
+  String get appDescription =>
+      'Менеджер проектов для музыкальных продюсеров и звуковых дизайнеров.';
+
+  @override
+  String get neonDarkThemeName => 'Неоновая тёмная';
+
+  @override
+  String get classicDarkThemeName => 'Классическая тёмная';
+
+  @override
+  String get statisticsTab => 'Статистика';
+
+  @override
+  String get statsTotalProjects => 'Всего проектов';
+
+  @override
+  String get statsInProgress => 'В работе';
+
+  @override
+  String get statsFinished => 'Завершено';
+
+  @override
+  String get statsAvgCompletion => 'Ср. завершение';
+
+  @override
+  String get statsPhaseDistribution => 'Проекты по фазам';
+
+  @override
+  String get statsAvgTimePerPhase => 'Ср. дней на фазу';
+
+  @override
+  String get statsProductivity => 'Продуктивность';
+
+  @override
+  String get statsCreatedSeries => 'Создано';
+
+  @override
+  String get statsProjectHealth => 'Возраст и состояние проектов';
+
+  @override
+  String get statsCatalogInsights => 'Анализ каталога';
+
+  @override
+  String get statsBpmDistribution => 'Распределение BPM';
+
+  @override
+  String get statsTopKeys => 'Популярные тональности';
+
+  @override
+  String get statsDawTypes => 'Типы DAW';
+
+  @override
+  String get statsProjectActivity => 'Активность проектов';
+
+  @override
+  String get statsNoData => 'Нет данных';
+
+  @override
+  String get statsNoPhaseData => 'Данные появятся после смены фаз.';
+
+  @override
+  String statsLastActivityDaysAgo(int days) {
+    return 'Последняя активность: $days дн. назад';
+  }
+
+  @override
+  String get statsLastActivityToday => 'Активен сегодня';
+
+  @override
+  String get statsNoEvents => 'Событий пока нет';
+
+  @override
+  String statsEventPhaseChanged(String from, String to) {
+    return 'Фаза: $from → $to';
+  }
+
+  @override
+  String statsEventMetadataUpdated(String fields) {
+    return 'Обновлено: $fields';
+  }
+
+  @override
+  String statsEventTodoCompleted(String text) {
+    return 'Выполнено: $text';
+  }
+
+  @override
+  String get statsEventFileModified => 'Файл изменён на диске';
+
+  @override
+  String get statsClearHistory => 'Очистить историю';
+
+  @override
+  String get statsClearHistoryConfirm =>
+      'Удалить все записанные события для этого проекта?';
+
+  @override
+  String get statsSearchProjects => 'Поиск проектов…';
+
+  @override
+  String statsEventCount(int count) {
+    return '$count событий';
+  }
+
+  @override
+  String get statsViewHistory => 'Статистика проекта';
+
+  @override
+  String get statsPhaseHistory => 'История фаз';
+
+  @override
+  String get statsEventBreakdown => 'Сводка событий';
+
+  @override
+  String statsDaysSoFar(int days) {
+    return 'Уже $daysд';
+  }
+
+  @override
+  String get statsNoProjectsFound => 'Проекты не найдены';
+
+  @override
+  String statsNotTouchedDays(int days) {
+    return 'Не изменялся $days дн.';
+  }
 }

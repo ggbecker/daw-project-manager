@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../generated/l10n/app_localizations.dart';
 import '../../providers/providers.dart';
 
 class LanguageSwitcher extends ConsumerWidget {

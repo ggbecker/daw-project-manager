@@ -27,6 +27,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get cancel => 'Abbrechen';
 
   @override
+  String get close => 'Schließen';
+
+  @override
   String get launch => 'Öffnen';
 
   @override
@@ -80,6 +83,11 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String launchingProject(String projectName) {
     return 'Öffne $projectName…';
+  }
+
+  @override
+  String failedToLaunchProject(String projectName) {
+    return 'Fehler beim Öffnen von $projectName';
   }
 
   @override
@@ -667,9 +675,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get saveReleaseFilesZip => 'Veröffentlichungsdateien ZIP speichern';
 
   @override
-  String failedToOpenFile(String error) {
-    return 'Datei konnte nicht geöffnet werden: $error';
-  }
+  String get failedToOpenFile => 'Datei konnte nicht geöffnet werden';
 
   @override
   String failedToPlayAudio(String error) {
@@ -1814,4 +1820,345 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get downloadingBackupTitle => 'Backup wird heruntergeladen';
+
+  @override
+  String get sourceFileNotFoundOnThisMachine =>
+      'Quelldatei nicht auf diesem Gerät gefunden';
+
+  @override
+  String get previewSongNotAvailableDownloadFirst =>
+      'Vorschaulied nicht verfügbar. Bitte zuerst Backup herunterladen.';
+
+  @override
+  String get sharePreviewSong => 'Vorschaulied teilen';
+
+  @override
+  String get shareAsZip => 'Als ZIP teilen';
+
+  @override
+  String get share => 'Teilen';
+
+  @override
+  String get shareZip => 'ZIP teilen';
+
+  @override
+  String get saveCopy => 'Kopie speichern';
+
+  @override
+  String savedCopyTo(String path) {
+    return 'Gespeichert in $path';
+  }
+
+  @override
+  String failedToSharePreviewSong(String error) {
+    return 'Vorschaulied konnte nicht geteilt werden: $error';
+  }
+
+  @override
+  String failedToSharePreviewSongAsZip(String error) {
+    return 'Vorschaulied konnte nicht als ZIP geteilt werden: $error';
+  }
+
+  @override
+  String get biographySaved => 'Biografie gespeichert';
+
+  @override
+  String failedToSaveBiography(String error) {
+    return 'Biografie konnte nicht gespeichert werden: $error';
+  }
+
+  @override
+  String fileSavedTo(String filename) {
+    return 'Datei gespeichert unter $filename';
+  }
+
+  @override
+  String failedToDownloadFile(String error) {
+    return 'Datei konnte nicht heruntergeladen werden: $error';
+  }
+
+  @override
+  String allFilesSavedTo(String filename) {
+    return 'Alle Dateien gespeichert unter $filename';
+  }
+
+  @override
+  String get artworkAdded => 'Artwork hinzugefügt';
+
+  @override
+  String failedToAddArtwork(String error) {
+    return 'Artwork konnte nicht hinzugefügt werden: $error';
+  }
+
+  @override
+  String get artworkRemoved => 'Artwork entfernt';
+
+  @override
+  String failedToRemoveArtwork(String error) {
+    return 'Artwork konnte nicht entfernt werden: $error';
+  }
+
+  @override
+  String get pressKitFileAdded => 'Pressemappe-Datei hinzugefügt';
+
+  @override
+  String failedToAddPressKitFile(String error) {
+    return 'Pressemappe-Datei konnte nicht hinzugefügt werden: $error';
+  }
+
+  @override
+  String get pressKitFileRemoved => 'Pressemappe-Datei entfernt';
+
+  @override
+  String failedToRemovePressKitFile(String error) {
+    return 'Pressemappe-Datei konnte nicht entfernt werden: $error';
+  }
+
+  @override
+  String get selectFilesToDownload => 'Dateien zum Herunterladen auswählen';
+
+  @override
+  String get biography => 'Biografie';
+
+  @override
+  String get biographyWillBeSaved => 'Wird als biography.txt gespeichert';
+
+  @override
+  String get artworkFiles => 'Artwork-Dateien';
+
+  @override
+  String get pressKitFiles => 'Pressemappe-Dateien';
+
+  @override
+  String get additionalAssets => 'Zusätzliche Assets';
+
+  @override
+  String downloadNFiles(int count, String plural) {
+    return '$count Datei$plural herunterladen';
+  }
+
+  @override
+  String nFilesSavedTo(int count, String plural, String filename) {
+    return '$count Datei$plural gespeichert unter $filename';
+  }
+
+  @override
+  String get addAsset => 'Asset hinzufügen';
+
+  @override
+  String get assetNameLabel => 'Asset-Name';
+
+  @override
+  String get assetNameHint => 'z.B. Logo, Banner, Foto';
+
+  @override
+  String assetAddedSuccessfully(String assetName) {
+    return '$assetName erfolgreich hinzugefügt';
+  }
+
+  @override
+  String failedToAddAsset(String error) {
+    return 'Asset konnte nicht hinzugefügt werden: $error';
+  }
+
+  @override
+  String assetRemoved(String assetName) {
+    return '$assetName entfernt';
+  }
+
+  @override
+  String failedToRemoveAsset(String error) {
+    return 'Asset konnte nicht entfernt werden: $error';
+  }
+
+  @override
+  String get profileNotFound => 'Profil nicht gefunden';
+
+  @override
+  String get selectFiles => 'Dateien auswählen';
+
+  @override
+  String get downloadAll => 'Alle herunterladen';
+
+  @override
+  String get saveBiographyTooltip => 'Biografie speichern';
+
+  @override
+  String get enterBiographyHint => 'Profilbiografie eingeben...';
+
+  @override
+  String get addArtwork => 'Artwork hinzufügen';
+
+  @override
+  String get addFile => 'Datei hinzufügen';
+
+  @override
+  String get openFile => 'Datei öffnen';
+
+  @override
+  String get menuView => 'Ansicht';
+
+  @override
+  String get menuAbout => 'Über DAW Project Manager';
+
+  @override
+  String get menuLanguage => 'Sprache';
+
+  @override
+  String get menuWarnBeforeQuit => 'Vor dem Beenden warnen (Cmd+Q)';
+
+  @override
+  String get menuQuit => 'DAW Project Manager beenden';
+
+  @override
+  String get menuWindow => 'Fenster';
+
+  @override
+  String get donate => 'Spenden';
+
+  @override
+  String get website => 'Website';
+
+  @override
+  String get switchToClassicDark => 'Zu Classic Dark wechseln';
+
+  @override
+  String get switchToNeonDark => 'Zu Neon Dark wechseln';
+
+  @override
+  String get switchToClassicTheme => 'Zu Classic-Theme wechseln';
+
+  @override
+  String get switchToNeonTheme => 'Zu Neon-Theme wechseln';
+
+  @override
+  String get menuTheme => 'Design';
+
+  @override
+  String get appDescription =>
+      'Ein Projektmanager für Musikproduzenten und Sounddesigner.';
+
+  @override
+  String get neonDarkThemeName => 'Neon Dunkel';
+
+  @override
+  String get classicDarkThemeName => 'Klassisch Dunkel';
+
+  @override
+  String get statisticsTab => 'Statistiken';
+
+  @override
+  String get statsTotalProjects => 'Projekte gesamt';
+
+  @override
+  String get statsInProgress => 'In Bearbeitung';
+
+  @override
+  String get statsFinished => 'Abgeschlossen';
+
+  @override
+  String get statsAvgCompletion => 'Ø Abschlusszeit';
+
+  @override
+  String get statsPhaseDistribution => 'Projekte je Phase';
+
+  @override
+  String get statsAvgTimePerPhase => 'Ø Tage je Phase';
+
+  @override
+  String get statsProductivity => 'Produktivität';
+
+  @override
+  String get statsCreatedSeries => 'Erstellt';
+
+  @override
+  String get statsProjectHealth => 'Projektalter & Status';
+
+  @override
+  String get statsCatalogInsights => 'Katalog-Analyse';
+
+  @override
+  String get statsBpmDistribution => 'BPM-Verteilung';
+
+  @override
+  String get statsTopKeys => 'Häufige Tonarten';
+
+  @override
+  String get statsDawTypes => 'DAW-Typen';
+
+  @override
+  String get statsProjectActivity => 'Projektaktivität';
+
+  @override
+  String get statsNoData => 'Noch keine Daten';
+
+  @override
+  String get statsNoPhaseData =>
+      'Phasendaten erscheinen, wenn Projekte die Phase wechseln.';
+
+  @override
+  String statsLastActivityDaysAgo(int days) {
+    return 'Letzte Aktivität: vor $days Tagen';
+  }
+
+  @override
+  String get statsLastActivityToday => 'Heute aktiv';
+
+  @override
+  String get statsNoEvents => 'Noch keine Ereignisse';
+
+  @override
+  String statsEventPhaseChanged(String from, String to) {
+    return 'Phase: $from → $to';
+  }
+
+  @override
+  String statsEventMetadataUpdated(String fields) {
+    return 'Aktualisiert: $fields';
+  }
+
+  @override
+  String statsEventTodoCompleted(String text) {
+    return 'Erledigt: $text';
+  }
+
+  @override
+  String get statsEventFileModified => 'Datei auf Datenträger geändert';
+
+  @override
+  String get statsClearHistory => 'Verlauf löschen';
+
+  @override
+  String get statsClearHistoryConfirm =>
+      'Alle aufgezeichneten Ereignisse für dieses Projekt löschen?';
+
+  @override
+  String get statsSearchProjects => 'Projekte suchen…';
+
+  @override
+  String statsEventCount(int count) {
+    return '$count Ereignisse';
+  }
+
+  @override
+  String get statsViewHistory => 'Projektstatistiken';
+
+  @override
+  String get statsPhaseHistory => 'Phasenverlauf';
+
+  @override
+  String get statsEventBreakdown => 'Ereignisübersicht';
+
+  @override
+  String statsDaysSoFar(int days) {
+    return 'Bisher ${days}T';
+  }
+
+  @override
+  String get statsNoProjectsFound => 'Keine Projekte gefunden';
+
+  @override
+  String statsNotTouchedDays(int days) {
+    return 'Seit $days Tagen unverändert';
+  }
 }

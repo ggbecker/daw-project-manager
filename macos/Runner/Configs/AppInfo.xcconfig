@@ -5,10 +5,12 @@
 // 'flutter create' template.
 
 // The application's name. By default this is also the title of the Flutter window.
-PRODUCT_NAME = daw_project_manager
+// PRODUCT_NAME must not contain spaces — spaces in the .app bundle path break the Metal shader compiler.
+PRODUCT_NAME = DAWProjectManager
+PRODUCT_DISPLAY_NAME = "DAW Project Manager"
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.dawProjectManager
+PRODUCT_BUNDLE_IDENTIFIER = com.bandpassrecords.dpm
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2025 com.example. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2026 Bandpass Records. All rights reserved.

@@ -9,6 +9,7 @@
   "save": "Сохранить",
   "enable": "Включить",
   "cancel": "Отмена",
+  "close": "Закрыть",
   "launch": "Открыть",
   "view": "Просмотр",
   "openFolder": "Открыть папку",
@@ -197,7 +198,6 @@
   "daw": "DAW",
   "lastModifiedColumn": "Последнее Изменение",
   "actions": "Действия",
-  "launch": "Открыть",
   "hide": "Скрыть",
   "unhide": "Показать",
   "extractMetadata": "Извлечь Метаданные",
@@ -564,13 +564,9 @@
   "releaseDateSaved": "Дата релиза сохранена.",
   "releaseDateCleared": "Дата релиза очищена.",
   "saveReleaseFilesZip": "Сохранить ZIP файлы релиза",
-  "failedToOpenFile": "Ошибка открытия файла: {error}",
+  "failedToOpenFile": "Не удалось открыть файл",
   "@failedToOpenFile": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
+    "description": "Error message when opening a file fails"
   },
   "failedToPlayAudio": "Ошибка воспроизведения аудио: {error}",
   "@failedToPlayAudio": {
@@ -620,14 +616,6 @@
   "@couldNotOpenFolder": {
     "placeholders": {
       "error": {
-        "type": "String"
-      }
-    }
-  },
-  "lastModified": "Последнее изменение: {date}",
-  "@lastModified": {
-    "placeholders": {
-      "date": {
         "type": "String"
       }
     }
@@ -914,7 +902,6 @@
   "enterAuthorizationCode": "Ввести код авторизации",
   "authorizationCode": "Код авторизации",
   "pasteCodeFromBrowser": "Вставьте код из браузера",
-  "continueButton": "Продолжить",
   "sessionActive": "Сессия активна",
   "signedIn": "Вход выполнен",
   "creatingInitialBackup": "Создание начальной резервной копии...",
@@ -1081,5 +1068,389 @@
   "downloadingProfilePhotos": "Скачивание фотографий профиля...",
   "downloadingReleaseArtwork": "Скачивание обложек релизов...",
   "mergingData": "Объединение данных...",
-  "downloadingBackupTitle": "Скачивание Резервной Копии"
+  "downloadingBackupTitle": "Скачивание Резервной Копии",
+  "sourceFileNotFoundOnThisMachine": "Исходный файл не найден на этом устройстве",
+  "@sourceFileNotFoundOnThisMachine": {
+    "description": "Tooltip shown when the project source file does not exist on the current machine"
+  },
+  "previewSongNotAvailableDownloadFirst": "Превью недоступно. Пожалуйста, сначала загрузите резервную копию.",
+  "@previewSongNotAvailableDownloadFirst": {
+    "description": "Message shown when preview song is not available locally and needs to be downloaded"
+  },
+  "sharePreviewSong": "Поделиться превью",
+  "@sharePreviewSong": {
+    "description": "Tooltip for the share preview song button"
+  },
+  "shareAsZip": "Поделиться как ZIP",
+  "@shareAsZip": {
+    "description": "Tooltip for the share as ZIP button"
+  },
+  "share": "Поделиться",
+  "@share": {
+    "description": "Label for the share button"
+  },
+  "shareZip": "Поделиться ZIP",
+  "saveCopy": "Сохранить копию",
+  "@saveCopy": {
+    "description": "Desktop save a copy: saveCopy"
+  },
+  "savedCopyTo": "Сохранено в {path}",
+  "@savedCopyTo": {
+    "description": "Desktop save a copy: savedCopyTo",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "@shareZip": {
+    "description": "Label for the share as ZIP button"
+  },
+  "failedToSharePreviewSong": "Не удалось поделиться превью: {error}",
+  "@failedToSharePreviewSong": {
+    "description": "Error message when sharing preview song fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToSharePreviewSongAsZip": "Не удалось поделиться превью как ZIP: {error}",
+  "@failedToSharePreviewSongAsZip": {
+    "description": "Error message when sharing preview song as ZIP fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "biographySaved": "Биография сохранена",
+  "@biographySaved": {
+    "description": "Success message when biography is saved"
+  },
+  "failedToSaveBiography": "Не удалось сохранить биографию: {error}",
+  "@failedToSaveBiography": {
+    "description": "Error message when saving biography fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fileSavedTo": "Файл сохранён в {filename}",
+  "@fileSavedTo": {
+    "description": "Success message when a file is saved",
+    "placeholders": {
+      "filename": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToDownloadFile": "Не удалось скачать файл: {error}",
+  "@failedToDownloadFile": {
+    "description": "Error message when downloading a file fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "allFilesSavedTo": "Все файлы сохранены в {filename}",
+  "@allFilesSavedTo": {
+    "description": "Success message when all files are saved to a zip",
+    "placeholders": {
+      "filename": {
+        "type": "String"
+      }
+    }
+  },
+  "artworkAdded": "Обложка добавлена",
+  "@artworkAdded": {
+    "description": "Success message when artwork is added"
+  },
+  "failedToAddArtwork": "Не удалось добавить обложку: {error}",
+  "@failedToAddArtwork": {
+    "description": "Error message when adding artwork fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "artworkRemoved": "Обложка удалена",
+  "@artworkRemoved": {
+    "description": "Success message when artwork is removed"
+  },
+  "failedToRemoveArtwork": "Не удалось удалить обложку: {error}",
+  "@failedToRemoveArtwork": {
+    "description": "Error message when removing artwork fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pressKitFileAdded": "Файл пресс-кита добавлен",
+  "@pressKitFileAdded": {
+    "description": "Success message when a press kit file is added"
+  },
+  "failedToAddPressKitFile": "Не удалось добавить файл пресс-кита: {error}",
+  "@failedToAddPressKitFile": {
+    "description": "Error message when adding press kit file fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pressKitFileRemoved": "Файл пресс-кита удалён",
+  "@pressKitFileRemoved": {
+    "description": "Success message when a press kit file is removed"
+  },
+  "failedToRemovePressKitFile": "Не удалось удалить файл пресс-кита: {error}",
+  "@failedToRemovePressKitFile": {
+    "description": "Error message when removing press kit file fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "selectFilesToDownload": "Выберите файлы для загрузки",
+  "@selectFilesToDownload": {
+    "description": "Title for the dialog to select files for download"
+  },
+  "biography": "Биография",
+  "@biography": {
+    "description": "Label for the biography field"
+  },
+  "biographyWillBeSaved": "Будет сохранена как biography.txt",
+  "@biographyWillBeSaved": {
+    "description": "Subtitle explaining how the biography file will be saved"
+  },
+  "artworkFiles": "Файлы обложек",
+  "@artworkFiles": {
+    "description": "Section header for artwork files"
+  },
+  "pressKitFiles": "Файлы пресс-кита",
+  "@pressKitFiles": {
+    "description": "Section header for press kit files"
+  },
+  "additionalAssets": "Дополнительные ресурсы",
+  "@additionalAssets": {
+    "description": "Section header for additional assets"
+  },
+  "downloadNFiles": "Скачать {count} файл{plural}",
+  "@downloadNFiles": {
+    "description": "Button label to download N files",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      }
+    }
+  },
+  "nFilesSavedTo": "{count} файл{plural} сохранено в {filename}",
+  "@nFilesSavedTo": {
+    "description": "Success message when N files are saved",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      },
+      "filename": {
+        "type": "String"
+      }
+    }
+  },
+  "addAsset": "Добавить ресурс",
+  "@addAsset": {
+    "description": "Dialog title and button label for adding an asset"
+  },
+  "assetNameLabel": "Название ресурса",
+  "@assetNameLabel": {
+    "description": "Label for asset name input field"
+  },
+  "assetNameHint": "Например: Логотип, Баннер, Фото",
+  "@assetNameHint": {
+    "description": "Hint text for asset name input field"
+  },
+  "assetAddedSuccessfully": "{assetName} успешно добавлен",
+  "@assetAddedSuccessfully": {
+    "description": "Success message when an asset is added",
+    "placeholders": {
+      "assetName": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToAddAsset": "Не удалось добавить ресурс: {error}",
+  "@failedToAddAsset": {
+    "description": "Error message when adding an asset fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "assetRemoved": "{assetName} удалён",
+  "@assetRemoved": {
+    "description": "Success message when an asset is removed",
+    "placeholders": {
+      "assetName": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToRemoveAsset": "Не удалось удалить ресурс: {error}",
+  "@failedToRemoveAsset": {
+    "description": "Error message when removing an asset fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "profileNotFound": "Профиль не найден",
+  "@profileNotFound": {
+    "description": "Message when a profile cannot be found"
+  },
+  "selectFiles": "Выбрать файлы",
+  "@selectFiles": {
+    "description": "Button label to select files"
+  },
+  "downloadAll": "Скачать всё",
+  "@downloadAll": {
+    "description": "Button label to download all files"
+  },
+  "saveBiographyTooltip": "Сохранить биографию",
+  "@saveBiographyTooltip": {
+    "description": "Tooltip for the save biography button"
+  },
+  "enterBiographyHint": "Введите биографию профиля...",
+  "@enterBiographyHint": {
+    "description": "Hint text for biography input field"
+  },
+  "addArtwork": "Добавить обложку",
+  "@addArtwork": {
+    "description": "Button label to add artwork"
+  },
+  "addFile": "Добавить файл",
+  "@addFile": {
+    "description": "Button label to add a press kit file"
+  },
+  "openFile": "Открыть файл",
+  "@openFile": {
+    "description": "Tooltip for the open file button"
+  },
+  "menuView": "Вид",
+  "@menuView": {
+    "description": "macOS menu bar View menu label"
+  },
+  "menuAbout": "О программе DAW Project Manager",
+  "@menuAbout": {
+    "description": "macOS menu item for About dialog"
+  },
+  "menuLanguage": "Язык",
+  "@menuLanguage": {
+    "description": "macOS menu item for language selection"
+  },
+  "menuWarnBeforeQuit": "Предупреждать перед выходом (Cmd+Q)",
+  "@menuWarnBeforeQuit": {
+    "description": "macOS menu item to toggle quit warning"
+  },
+  "menuQuit": "Выйти из DAW Project Manager",
+  "@menuQuit": {
+    "description": "macOS menu item to quit the app"
+  },
+  "menuWindow": "Окно",
+  "@menuWindow": {
+    "description": "macOS menu bar Window menu label"
+  },
+  "donate": "Пожертвовать",
+  "@donate": {
+    "description": "Button label for the donate button in the About dialog"
+  },
+  "website": "Сайт",
+  "@website": {
+    "description": "Button label for the website button in the About dialog"
+  },
+  "switchToClassicDark": "Переключить на Classic Dark",
+  "@switchToClassicDark": {
+    "description": "Theme switcher label to switch to classic dark theme"
+  },
+  "switchToNeonDark": "Переключить на Neon Dark",
+  "@switchToNeonDark": {
+    "description": "Theme switcher label to switch to neon dark theme"
+  },
+  "switchToClassicTheme": "Переключить на Classic тему",
+  "@switchToClassicTheme": {
+    "description": "Tooltip to switch to classic theme"
+  },
+  "switchToNeonTheme": "Переключить на Neon тему",
+  "@switchToNeonTheme": {
+    "description": "Tooltip to switch to neon theme"
+  },
+  "menuTheme": "Тема",
+  "@menuTheme": {
+    "description": "macOS menu item for theme switching"
+  },
+  "appDescription": "Менеджер проектов для музыкальных продюсеров и звуковых дизайнеров.",
+  "neonDarkThemeName": "Неоновая тёмная",
+  "classicDarkThemeName": "Классическая тёмная",
+  "statisticsTab": "Статистика",
+  "statsTotalProjects": "Всего проектов",
+  "statsInProgress": "В работе",
+  "statsFinished": "Завершено",
+  "statsAvgCompletion": "Ср. завершение",
+  "statsPhaseDistribution": "Проекты по фазам",
+  "statsAvgTimePerPhase": "Ср. дней на фазу",
+  "statsProductivity": "Продуктивность",
+  "statsCreatedSeries": "Создано",
+  "statsProjectHealth": "Возраст и состояние проектов",
+  "statsCatalogInsights": "Анализ каталога",
+  "statsBpmDistribution": "Распределение BPM",
+  "statsTopKeys": "Популярные тональности",
+  "statsDawTypes": "Типы DAW",
+  "statsProjectActivity": "Активность проектов",
+  "statsNoData": "Нет данных",
+  "statsNoPhaseData": "Данные появятся после смены фаз.",
+  "statsLastActivityDaysAgo": "Последняя активность: {days} дн. назад",
+  "statsLastActivityToday": "Активен сегодня",
+  "statsNoEvents": "Событий пока нет",
+  "statsEventPhaseChanged": "Фаза: {from} → {to}",
+  "statsEventMetadataUpdated": "Обновлено: {fields}",
+  "statsEventTodoCompleted": "Выполнено: {text}",
+  "statsEventFileModified": "Файл изменён на диске",
+  "statsClearHistory": "Очистить историю",
+  "statsClearHistoryConfirm": "Удалить все записанные события для этого проекта?",
+  "statsSearchProjects": "Поиск проектов…",
+  "statsEventCount": "{count} событий",
+  "statsViewHistory": "Статистика проекта",
+  "@statsViewHistory": {
+    "description": "Button/page title for per-project statistics"
+  },
+  "statsPhaseHistory": "История фаз",
+  "@statsPhaseHistory": {
+    "description": "Section title: phase history"
+  },
+  "statsEventBreakdown": "Сводка событий",
+  "@statsEventBreakdown": {
+    "description": "Section title: event breakdown"
+  },
+  "statsDaysSoFar": "Уже {days}д",
+  "@statsDaysSoFar": {
+    "description": "Current phase duration indicator",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "statsNoProjectsFound": "Проекты не найдены",
+  "statsNotTouchedDays": "Не изменялся {days} дн."
 }

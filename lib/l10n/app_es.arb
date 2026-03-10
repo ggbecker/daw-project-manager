@@ -9,6 +9,7 @@
   "save": "Guardar",
   "enable": "Habilitar",
   "cancel": "Cancelar",
+  "close": "Cerrar",
   "launch": "Abrir",
   "view": "Ver",
   "openFolder": "Abrir Carpeta",
@@ -197,7 +198,6 @@
   "daw": "DAW",
   "lastModifiedColumn": "Última Modificación",
   "actions": "Acciones",
-  "launch": "Abrir",
   "hide": "Ocultar",
   "unhide": "Mostrar",
   "extractMetadata": "Extraer Metadatos",
@@ -564,13 +564,9 @@
   "releaseDateSaved": "Fecha del lanzamiento guardada.",
   "releaseDateCleared": "Fecha del lanzamiento limpiada.",
   "saveReleaseFilesZip": "Guardar archivos ZIP del lanzamiento",
-  "failedToOpenFile": "Error al abrir archivo: {error}",
+  "failedToOpenFile": "Error al abrir archivo",
   "@failedToOpenFile": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
+    "description": "Error message when opening a file fails"
   },
   "failedToPlayAudio": "Error al reproducir audio: {error}",
   "@failedToPlayAudio": {
@@ -620,14 +616,6 @@
   "@couldNotOpenFolder": {
     "placeholders": {
       "error": {
-        "type": "String"
-      }
-    }
-  },
-  "lastModified": "Última modificación: {date}",
-  "@lastModified": {
-    "placeholders": {
-      "date": {
         "type": "String"
       }
     }
@@ -914,7 +902,6 @@
   "enterAuthorizationCode": "Ingresar Código de Autorización",
   "authorizationCode": "Código de Autorización",
   "pasteCodeFromBrowser": "Pega el código del navegador",
-  "continueButton": "Continuar",
   "sessionActive": "Sesión activa",
   "signedIn": "Conectado",
   "creatingInitialBackup": "Creando copia de seguridad inicial...",
@@ -1081,5 +1068,389 @@
   "downloadingProfilePhotos": "Descargando fotos de perfil...",
   "downloadingReleaseArtwork": "Descargando arte de lanzamientos...",
   "mergingData": "Fusionando datos...",
-  "downloadingBackupTitle": "Descargando Copia de Seguridad"
+  "downloadingBackupTitle": "Descargando Copia de Seguridad",
+  "sourceFileNotFoundOnThisMachine": "Archivo fuente no encontrado en esta máquina",
+  "@sourceFileNotFoundOnThisMachine": {
+    "description": "Tooltip shown when the project source file does not exist on the current machine"
+  },
+  "previewSongNotAvailableDownloadFirst": "Canción de vista previa no disponible. Por favor, descarga el backup primero.",
+  "@previewSongNotAvailableDownloadFirst": {
+    "description": "Message shown when preview song is not available locally and needs to be downloaded"
+  },
+  "sharePreviewSong": "Compartir canción de vista previa",
+  "@sharePreviewSong": {
+    "description": "Tooltip for the share preview song button"
+  },
+  "shareAsZip": "Compartir como ZIP",
+  "@shareAsZip": {
+    "description": "Tooltip for the share as ZIP button"
+  },
+  "share": "Compartir",
+  "@share": {
+    "description": "Label for the share button"
+  },
+  "shareZip": "Compartir ZIP",
+  "saveCopy": "Guardar copia",
+  "@saveCopy": {
+    "description": "Desktop save a copy: saveCopy"
+  },
+  "savedCopyTo": "Guardado en {path}",
+  "@savedCopyTo": {
+    "description": "Desktop save a copy: savedCopyTo",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "@shareZip": {
+    "description": "Label for the share as ZIP button"
+  },
+  "failedToSharePreviewSong": "Error al compartir canción de vista previa: {error}",
+  "@failedToSharePreviewSong": {
+    "description": "Error message when sharing preview song fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToSharePreviewSongAsZip": "Error al compartir canción de vista previa como ZIP: {error}",
+  "@failedToSharePreviewSongAsZip": {
+    "description": "Error message when sharing preview song as ZIP fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "biographySaved": "Biografía guardada",
+  "@biographySaved": {
+    "description": "Success message when biography is saved"
+  },
+  "failedToSaveBiography": "Error al guardar biografía: {error}",
+  "@failedToSaveBiography": {
+    "description": "Error message when saving biography fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fileSavedTo": "Archivo guardado en {filename}",
+  "@fileSavedTo": {
+    "description": "Success message when a file is saved",
+    "placeholders": {
+      "filename": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToDownloadFile": "Error al descargar archivo: {error}",
+  "@failedToDownloadFile": {
+    "description": "Error message when downloading a file fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "allFilesSavedTo": "Todos los archivos guardados en {filename}",
+  "@allFilesSavedTo": {
+    "description": "Success message when all files are saved to a zip",
+    "placeholders": {
+      "filename": {
+        "type": "String"
+      }
+    }
+  },
+  "artworkAdded": "Arte agregada",
+  "@artworkAdded": {
+    "description": "Success message when artwork is added"
+  },
+  "failedToAddArtwork": "Error al agregar arte: {error}",
+  "@failedToAddArtwork": {
+    "description": "Error message when adding artwork fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "artworkRemoved": "Arte eliminada",
+  "@artworkRemoved": {
+    "description": "Success message when artwork is removed"
+  },
+  "failedToRemoveArtwork": "Error al eliminar arte: {error}",
+  "@failedToRemoveArtwork": {
+    "description": "Error message when removing artwork fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pressKitFileAdded": "Archivo de press kit agregado",
+  "@pressKitFileAdded": {
+    "description": "Success message when a press kit file is added"
+  },
+  "failedToAddPressKitFile": "Error al agregar archivo de press kit: {error}",
+  "@failedToAddPressKitFile": {
+    "description": "Error message when adding press kit file fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pressKitFileRemoved": "Archivo de press kit eliminado",
+  "@pressKitFileRemoved": {
+    "description": "Success message when a press kit file is removed"
+  },
+  "failedToRemovePressKitFile": "Error al eliminar archivo de press kit: {error}",
+  "@failedToRemovePressKitFile": {
+    "description": "Error message when removing press kit file fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "selectFilesToDownload": "Seleccionar Archivos para Descargar",
+  "@selectFilesToDownload": {
+    "description": "Title for the dialog to select files for download"
+  },
+  "biography": "Biografía",
+  "@biography": {
+    "description": "Label for the biography field"
+  },
+  "biographyWillBeSaved": "Se guardará como biography.txt",
+  "@biographyWillBeSaved": {
+    "description": "Subtitle explaining how the biography file will be saved"
+  },
+  "artworkFiles": "Archivos de Arte",
+  "@artworkFiles": {
+    "description": "Section header for artwork files"
+  },
+  "pressKitFiles": "Archivos de Press Kit",
+  "@pressKitFiles": {
+    "description": "Section header for press kit files"
+  },
+  "additionalAssets": "Activos Adicionales",
+  "@additionalAssets": {
+    "description": "Section header for additional assets"
+  },
+  "downloadNFiles": "Descargar {count} archivo{plural}",
+  "@downloadNFiles": {
+    "description": "Button label to download N files",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      }
+    }
+  },
+  "nFilesSavedTo": "{count} archivo{plural} guardado en {filename}",
+  "@nFilesSavedTo": {
+    "description": "Success message when N files are saved",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      },
+      "filename": {
+        "type": "String"
+      }
+    }
+  },
+  "addAsset": "Agregar Activo",
+  "@addAsset": {
+    "description": "Dialog title and button label for adding an asset"
+  },
+  "assetNameLabel": "Nombre del Activo",
+  "@assetNameLabel": {
+    "description": "Label for asset name input field"
+  },
+  "assetNameHint": "ej., Logo, Banner, Foto",
+  "@assetNameHint": {
+    "description": "Hint text for asset name input field"
+  },
+  "assetAddedSuccessfully": "{assetName} agregado exitosamente",
+  "@assetAddedSuccessfully": {
+    "description": "Success message when an asset is added",
+    "placeholders": {
+      "assetName": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToAddAsset": "Error al agregar activo: {error}",
+  "@failedToAddAsset": {
+    "description": "Error message when adding an asset fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "assetRemoved": "{assetName} eliminado",
+  "@assetRemoved": {
+    "description": "Success message when an asset is removed",
+    "placeholders": {
+      "assetName": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToRemoveAsset": "Error al eliminar activo: {error}",
+  "@failedToRemoveAsset": {
+    "description": "Error message when removing an asset fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "profileNotFound": "Perfil no encontrado",
+  "@profileNotFound": {
+    "description": "Message when a profile cannot be found"
+  },
+  "selectFiles": "Seleccionar Archivos",
+  "@selectFiles": {
+    "description": "Button label to select files"
+  },
+  "downloadAll": "Descargar Todo",
+  "@downloadAll": {
+    "description": "Button label to download all files"
+  },
+  "saveBiographyTooltip": "Guardar Biografía",
+  "@saveBiographyTooltip": {
+    "description": "Tooltip for the save biography button"
+  },
+  "enterBiographyHint": "Ingrese la biografía del perfil...",
+  "@enterBiographyHint": {
+    "description": "Hint text for biography input field"
+  },
+  "addArtwork": "Agregar Arte",
+  "@addArtwork": {
+    "description": "Button label to add artwork"
+  },
+  "addFile": "Agregar Archivo",
+  "@addFile": {
+    "description": "Button label to add a press kit file"
+  },
+  "openFile": "Abrir Archivo",
+  "@openFile": {
+    "description": "Tooltip for the open file button"
+  },
+  "menuView": "Ver",
+  "@menuView": {
+    "description": "macOS menu bar View menu label"
+  },
+  "menuAbout": "Acerca de DAW Project Manager",
+  "@menuAbout": {
+    "description": "macOS menu item for About dialog"
+  },
+  "menuLanguage": "Idioma",
+  "@menuLanguage": {
+    "description": "macOS menu item for language selection"
+  },
+  "menuWarnBeforeQuit": "Advertir Antes de Salir (Cmd+Q)",
+  "@menuWarnBeforeQuit": {
+    "description": "macOS menu item to toggle quit warning"
+  },
+  "menuQuit": "Salir de DAW Project Manager",
+  "@menuQuit": {
+    "description": "macOS menu item to quit the app"
+  },
+  "menuWindow": "Ventana",
+  "@menuWindow": {
+    "description": "macOS menu bar Window menu label"
+  },
+  "donate": "Donar",
+  "@donate": {
+    "description": "Button label for the donate button in the About dialog"
+  },
+  "website": "Sitio Web",
+  "@website": {
+    "description": "Button label for the website button in the About dialog"
+  },
+  "switchToClassicDark": "Cambiar a Classic Dark",
+  "@switchToClassicDark": {
+    "description": "Theme switcher label to switch to classic dark theme"
+  },
+  "switchToNeonDark": "Cambiar a Neon Dark",
+  "@switchToNeonDark": {
+    "description": "Theme switcher label to switch to neon dark theme"
+  },
+  "switchToClassicTheme": "Cambiar al Tema Clásico",
+  "@switchToClassicTheme": {
+    "description": "Tooltip to switch to classic theme"
+  },
+  "switchToNeonTheme": "Cambiar al Tema Neón",
+  "@switchToNeonTheme": {
+    "description": "Tooltip to switch to neon theme"
+  },
+  "menuTheme": "Tema",
+  "@menuTheme": {
+    "description": "macOS menu item for theme switching"
+  },
+  "appDescription": "Un gestor de proyectos para productores musicales y diseñadores de sonido.",
+  "neonDarkThemeName": "Neón Oscuro",
+  "classicDarkThemeName": "Clásico Oscuro",
+  "statisticsTab": "Estadísticas",
+  "statsTotalProjects": "Total de Proyectos",
+  "statsInProgress": "En curso",
+  "statsFinished": "Terminados",
+  "statsAvgCompletion": "Finalización media",
+  "statsPhaseDistribution": "Proyectos por Fase",
+  "statsAvgTimePerPhase": "Días medios por Fase",
+  "statsProductivity": "Productividad",
+  "statsCreatedSeries": "Creados",
+  "statsProjectHealth": "Edad y Salud de Proyectos",
+  "statsCatalogInsights": "Análisis del Catálogo",
+  "statsBpmDistribution": "Distribución de BPM",
+  "statsTopKeys": "Tonalidades principales",
+  "statsDawTypes": "Tipos de DAW",
+  "statsProjectActivity": "Actividad de Proyectos",
+  "statsNoData": "Sin datos aún",
+  "statsNoPhaseData": "Los datos de fases aparecerán cuando los proyectos cambien de fase.",
+  "statsLastActivityDaysAgo": "Última actividad: hace {days} días",
+  "statsLastActivityToday": "Activo hoy",
+  "statsNoEvents": "Aún no hay eventos registrados",
+  "statsEventPhaseChanged": "Fase: {from} → {to}",
+  "statsEventMetadataUpdated": "Actualizado: {fields}",
+  "statsEventTodoCompleted": "Completado: {text}",
+  "statsEventFileModified": "Archivo modificado en disco",
+  "statsClearHistory": "Borrar historial",
+  "statsClearHistoryConfirm": "¿Borrar todos los eventos registrados para este proyecto?",
+  "statsSearchProjects": "Buscar proyectos…",
+  "statsEventCount": "{count} eventos",
+  "statsViewHistory": "Estadísticas del Proyecto",
+  "@statsViewHistory": {
+    "description": "Button/page title for per-project statistics"
+  },
+  "statsPhaseHistory": "Historial de Fases",
+  "@statsPhaseHistory": {
+    "description": "Section title: phase history"
+  },
+  "statsEventBreakdown": "Desglose de Eventos",
+  "@statsEventBreakdown": {
+    "description": "Section title: event breakdown"
+  },
+  "statsDaysSoFar": "{days}d hasta ahora",
+  "@statsDaysSoFar": {
+    "description": "Current phase duration indicator",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "statsNoProjectsFound": "No se encontraron proyectos",
+  "statsNotTouchedDays": "Sin cambios en {days} días"
 }

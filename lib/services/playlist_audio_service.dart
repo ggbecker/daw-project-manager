@@ -117,7 +117,7 @@ class PlaylistAudioService extends BaseAudioHandler with QueueHandler, SeekHandl
     // Load playlist items
     for (final projectId in playlist.projectIds) {
       try {
-        final projects = await _repository.getAllProjects();
+        final projects = _repository.getAllProjects();
         final project = projects.firstWhere((p) => p.id == projectId);
         if (project.previewSongPath != null &&
             project.previewSongPath!.isNotEmpty &&

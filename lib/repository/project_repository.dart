@@ -1,8 +1,10 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
+
+import 'dart:convert';
 
 import '../models/music_project.dart';
 import '../models/scan_root.dart';
@@ -12,8 +14,8 @@ import '../models/release_file.dart';
 import '../models/todo_item.dart';
 import '../models/todo_template.dart';
 import '../models/playlist.dart';
+import '../models/project_event.dart';
 import '../services/metadata_extractor.dart';
-import '../services/deadline_notification_service.dart';
 import '../services/notification_background_service.dart';
 import '../utils/app_paths.dart';
 import 'profile_repository.dart';
@@ -25,6 +27,7 @@ class ProjectRepository {
   final Box<IgnoredPath> ignoredPathsBox;
   final Box<Release> releasesBox;
   final Box<Playlist> playlistsBox;
+  final Box<ProjectEvent> eventsBox;
   final _uuid = const Uuid();
 
   ProjectRepository({
@@ -34,6 +37,7 @@ class ProjectRepository {
     required this.ignoredPathsBox,
     required this.releasesBox,
     required this.playlistsBox,
+    required this.eventsBox,
   });
 
   static Future<ProjectRepository> init(ProfileRepository profileRepo) async {
@@ -64,27 +68,31 @@ class ProjectRepository {
     if (!Hive.isAdapterRegistered(9)) {
       Hive.registerAdapter(TodoTemplateAdapter());
     }
+    if (!Hive.isAdapterRegistered(11)) {
+      Hive.registerAdapter(ProjectEventAdapter());
+    }
 
     // Get current profile
     final currentProfile = profileRepo.getCurrentProfile();
     if (currentProfile == null) {
       throw Exception('No active profile found');
     }
-    
+
     final profileId = currentProfile.id;
-    
+
     // Use profile-specific box names
     final projects = await Hive.openBox<MusicProject>('${profileId}_projects');
     final roots = await Hive.openBox<ScanRoot>('${profileId}_roots');
     final ignoredPaths = await Hive.openBox<IgnoredPath>('${profileId}_ignored_paths');
     final releases = await Hive.openBox<Release>('${profileId}_releases');
     final playlists = await Hive.openBox<Playlist>('${profileId}_playlists');
-    
+    final events = await Hive.openBox<ProjectEvent>('${profileId}_events');
+
     if (kDebugMode) {
       print('ProjectRepository.init: Opened boxes for profile $profileId');
       print('  Projects box: ${projects.length} projects');
     }
-    
+
     return ProjectRepository(
       profileId: profileId,
       projectsBox: projects,
@@ -92,21 +100,27 @@ class ProjectRepository {
       ignoredPathsBox: ignoredPaths,
       releasesBox: releases,
       playlistsBox: playlists,
+      eventsBox: events,
     );
   }
-  
+
   /// Reinitialize with a different profile
   static Future<ProjectRepository> initWithProfile(ProfileRepository profileRepo, String profileId) async {
     // Ensure Hive is initialized (only once)
     await ensureHiveInitialized();
-    
+
+    if (!Hive.isAdapterRegistered(11)) {
+      Hive.registerAdapter(ProjectEventAdapter());
+    }
+
     // Use profile-specific box names
     final projects = await Hive.openBox<MusicProject>('${profileId}_projects');
     final roots = await Hive.openBox<ScanRoot>('${profileId}_roots');
     final ignoredPaths = await Hive.openBox<IgnoredPath>('${profileId}_ignored_paths');
     final releases = await Hive.openBox<Release>('${profileId}_releases');
     final playlists = await Hive.openBox<Playlist>('${profileId}_playlists');
-    
+    final events = await Hive.openBox<ProjectEvent>('${profileId}_events');
+
     return ProjectRepository(
       profileId: profileId,
       projectsBox: projects,
@@ -114,6 +128,7 @@ class ProjectRepository {
       ignoredPathsBox: ignoredPaths,
       releasesBox: releases,
       playlistsBox: playlists,
+      eventsBox: events,
     );
   }
 
@@ -329,6 +344,24 @@ class ProjectRepository {
     );
 
     await projectsBox.put(projectToSave.id, projectToSave);
+
+    // Record a file_changed event if an existing project had its file mutated
+    if (existing != null &&
+        (existing.fileSizeBytes != size ||
+            existing.lastModifiedAt != lastModified)) {
+      final event = ProjectEvent(
+        id: _uuid.v4(),
+        projectId: projectToSave.id,
+        eventType: ProjectEvent.fileChanged,
+        occurredAt: DateTime.now(),
+        payload: jsonEncode({
+          'sizeChanged': existing.fileSizeBytes != size,
+          'lastModifiedChanged': existing.lastModifiedAt != lastModified,
+          'newSizeBytes': size,
+        }),
+      );
+      await eventsBox.put(event.id, event);
+    }
   }
 
   List<MusicProject> getAllProjects() => projectsBox.values.toList(growable: false);
@@ -368,6 +401,31 @@ class ProjectRepository {
     } catch (_) {
       // If extraction fails, silently continue
     }
+  }
+
+  // --- Event methods ---
+
+  Future<void> addEvent(ProjectEvent event) async {
+    await eventsBox.put(event.id, event);
+  }
+
+  List<ProjectEvent> getEventsForProject(String projectId) {
+    return eventsBox.values
+        .where((e) => e.projectId == projectId)
+        .toList(growable: false)
+      ..sort((a, b) => b.occurredAt.compareTo(a.occurredAt));
+  }
+
+  List<ProjectEvent> getAllEvents() => eventsBox.values.toList(growable: false);
+
+  Stream<BoxEvent> watchEvents() => eventsBox.watch();
+
+  Future<void> clearEventsForProject(String projectId) async {
+    final keys = eventsBox.values
+        .where((e) => e.projectId == projectId)
+        .map((e) => e.id)
+        .toList(growable: false);
+    await eventsBox.deleteAll(keys);
   }
 
   // Reactive listeners
@@ -423,6 +481,9 @@ class ProjectRepository {
 
     // Clear ignored paths
     await ignoredPathsBox.clear();
+
+    // Clear event log
+    await eventsBox.clear();
   }
 
   Future<void> clearMissingFiles() async {
@@ -434,12 +495,37 @@ class ProjectRepository {
       }
       return;
     }
-    
+
+    // Only consider scan roots that actually exist on this machine.
+    // Projects whose paths fall under a non-existent root (e.g. from a backup
+    // made on another machine) are preserved — deleting them would discard
+    // backup data that was intentionally restored.
+    final localRoots = rootsBox.values
+        .map((r) => r.path)
+        .where((rootPath) => Directory(rootPath).existsSync())
+        .toList(growable: false);
+
+    if (localRoots.isEmpty) {
+      if (kDebugMode) {
+        print('clearMissingFiles: No local scan roots exist on this machine — skipping to preserve backup data');
+      }
+      return;
+    }
+
     final toDelete = <dynamic>[];
     for (final entry in projectsBox.values) {
-      if (!File(entry.filePath).existsSync() && !Directory(entry.filePath).existsSync()) {
+      final isUnderLocalRoot = localRoots.any(
+        (rootPath) => p.isWithin(rootPath, entry.filePath) || entry.filePath == rootPath,
+      );
+      if (isUnderLocalRoot &&
+          !File(entry.filePath).existsSync() &&
+          !Directory(entry.filePath).existsSync()) {
         toDelete.add(entry.id);
       }
+    }
+
+    if (kDebugMode) {
+      print('clearMissingFiles: Deleting ${toDelete.length} missing projects (under ${localRoots.length} local roots)');
     }
     await projectsBox.deleteAll(toDelete);
   }

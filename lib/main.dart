@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'generated/l10n/app_localizations.dart';
 import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:window_manager/window_manager.dart';
 
 // NOVO: Importar providers e serviços para a lógica de auto-scan
@@ -16,6 +15,7 @@ import 'services/notification_background_service.dart';
 
 import 'ui/dashboard_page.dart';
 import 'ui/project_detail_page.dart';
+import 'ui/widgets/macos_menu_bar.dart';
 import 'providers/theme_provider.dart';
 
 // Global navigator key for deep linking
@@ -110,7 +110,13 @@ void main() async {
       minimumSize: minimumSize,
       center: true,
       title: "DAW Project Manager",
-      titleBarStyle: kDebugMode ? TitleBarStyle.normal : TitleBarStyle.hidden,
+      // macOS: hidden style = fullSizeContentView + transparent title bar.
+      // Traffic lights remain visible and float over the Flutter content.
+      // Windows/Linux debug: normal (for easy development).
+      // Windows/Linux release: hidden (custom Flutter title bar).
+      titleBarStyle: (!Platform.isMacOS && kDebugMode)
+          ? TitleBarStyle.normal
+          : TitleBarStyle.hidden,
     );
     
     // Criação e exibição da janela
@@ -163,25 +169,97 @@ void main() async {
   runApp(
     UncontrolledProviderScope(
       container: container,
-      child: const MyApp(),
+      child: const DawProjectManagerApp(),
     ),
   );
 }
 
-// ... (O resto da classe MyApp permanece o mesmo)
-class MyApp extends ConsumerWidget {
-  const MyApp({super.key});
+class DawProjectManagerApp extends ConsumerStatefulWidget {
+  const DawProjectManagerApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DawProjectManagerApp> createState() => _DawProjectManagerAppState();
+}
+
+class _DawProjectManagerAppState extends ConsumerState<DawProjectManagerApp> with WindowListener {
+  static bool get _isDesktop =>
+      !kIsWeb && (Platform.isMacOS || Platform.isWindows || Platform.isLinux);
+
+  static Color _bgForTheme(AppThemeType t) =>
+      t == AppThemeType.neonDark ? const Color(0xFF0A0A14) : const Color(0xFF1E1F22);
+
+  @override
+  void initState() {
+    super.initState();
+    if (_isDesktop) {
+      windowManager.addListener(this);
+      // Quit-warning dialog is macOS-only; intercept close only there.
+      if (!kIsWeb && Platform.isMacOS) {
+        windowManager.setPreventClose(true);
+      }
+    }
+    if (!kIsWeb && Platform.isMacOS) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        windowManager.setBackgroundColor(_bgForTheme(ref.read(themeTypeProvider)));
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    if (_isDesktop) windowManager.removeListener(this);
+    super.dispose();
+  }
+
+  @override
+  void onWindowClose() async {
+    final warn = ref.read(warnBeforeQuitProvider);
+    if (!warn) {
+      await windowManager.destroy();
+      return;
+    }
+    final context = navigatorKey.currentContext;
+    if (context == null) {
+      await windowManager.destroy();
+      return;
+    }
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Theme.of(ctx).cardColor,
+        title: const Text('Quit DAW Project Manager?'),
+        content: const Text('Are you sure you want to quit?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Quit'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) await windowManager.destroy();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final themeData = ref.watch(themeDataProvider);
     final currentLocale = ref.watch(localeProvider);
-    
+
+    // Keep window background colour in sync with the active theme (macOS only)
+    if (!kIsWeb && Platform.isMacOS) {
+      ref.listen(themeTypeProvider, (_, next) {
+        windowManager.setBackgroundColor(_bgForTheme(next));
+      });
+    }
+
     return MaterialApp(
       navigatorKey: navigatorKey,
       title: 'DAW Project Manager',
       theme: themeData,
-      // Localization support
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
@@ -189,19 +267,20 @@ class MyApp extends ConsumerWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: const [
-        Locale('en', ''), // English
-        Locale('pt', ''), // Portuguese
-        Locale('es', ''), // Spanish
-        Locale('fr', ''), // French
-        Locale('it', ''), // Italian
-        Locale('de', ''), // German
-        Locale('ru', ''), // Russian
-        Locale('ja', ''), // Japanese
-        Locale('zh', ''), // Chinese
+        Locale('en', ''),
+        Locale('pt', ''),
+        Locale('es', ''),
+        Locale('fr', ''),
+        Locale('it', ''),
+        Locale('de', ''),
+        Locale('ru', ''),
+        Locale('ja', ''),
+        Locale('zh', ''),
       ],
       locale: currentLocale,
-      // Remove localeResolutionCallback - let Flutter handle it automatically
-      // The locale from provider will be used directly
+      // MacOSMenuBar must build with a context that has localizations — placing
+      // it in builder ensures it runs after MaterialApp installs its delegates.
+      builder: (context, child) => MacOSMenuBar(child: child ?? const SizedBox()),
       home: const DashboardPage(),
     );
   }

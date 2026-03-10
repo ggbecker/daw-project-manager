@@ -27,6 +27,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get cancel => 'キャンセル';
 
   @override
+  String get close => '閉じる';
+
+  @override
   String get launch => '開く';
 
   @override
@@ -80,6 +83,11 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String launchingProject(String projectName) {
     return '$projectNameを開いています…';
+  }
+
+  @override
+  String failedToLaunchProject(String projectName) {
+    return '$projectNameを開けませんでした';
   }
 
   @override
@@ -655,9 +663,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get saveReleaseFilesZip => 'リリースファイルZIPを保存';
 
   @override
-  String failedToOpenFile(String error) {
-    return 'ファイルを開けませんでした: $error';
-  }
+  String get failedToOpenFile => 'ファイルを開けませんでした';
 
   @override
   String failedToPlayAudio(String error) {
@@ -1762,4 +1768,341 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get downloadingBackupTitle => 'バックアップをダウンロード中';
+
+  @override
+  String get sourceFileNotFoundOnThisMachine => 'このマシンにソースファイルが見つかりません';
+
+  @override
+  String get previewSongNotAvailableDownloadFirst =>
+      'プレビュー曲が利用できません。先にバックアップをダウンロードしてください。';
+
+  @override
+  String get sharePreviewSong => 'プレビュー曲を共有';
+
+  @override
+  String get shareAsZip => 'ZIPとして共有';
+
+  @override
+  String get share => '共有';
+
+  @override
+  String get shareZip => 'ZIPを共有';
+
+  @override
+  String get saveCopy => 'コピーを保存';
+
+  @override
+  String savedCopyTo(String path) {
+    return '$path に保存しました';
+  }
+
+  @override
+  String failedToSharePreviewSong(String error) {
+    return 'プレビュー曲を共有できませんでした: $error';
+  }
+
+  @override
+  String failedToSharePreviewSongAsZip(String error) {
+    return 'プレビュー曲をZIPとして共有できませんでした: $error';
+  }
+
+  @override
+  String get biographySaved => 'プロフィールが保存されました';
+
+  @override
+  String failedToSaveBiography(String error) {
+    return 'プロフィールを保存できませんでした: $error';
+  }
+
+  @override
+  String fileSavedTo(String filename) {
+    return 'ファイルを $filename に保存しました';
+  }
+
+  @override
+  String failedToDownloadFile(String error) {
+    return 'ファイルをダウンロードできませんでした: $error';
+  }
+
+  @override
+  String allFilesSavedTo(String filename) {
+    return 'すべてのファイルを $filename に保存しました';
+  }
+
+  @override
+  String get artworkAdded => 'アートワークを追加しました';
+
+  @override
+  String failedToAddArtwork(String error) {
+    return 'アートワークを追加できませんでした: $error';
+  }
+
+  @override
+  String get artworkRemoved => 'アートワークを削除しました';
+
+  @override
+  String failedToRemoveArtwork(String error) {
+    return 'アートワークを削除できませんでした: $error';
+  }
+
+  @override
+  String get pressKitFileAdded => 'プレスキットファイルを追加しました';
+
+  @override
+  String failedToAddPressKitFile(String error) {
+    return 'プレスキットファイルを追加できませんでした: $error';
+  }
+
+  @override
+  String get pressKitFileRemoved => 'プレスキットファイルを削除しました';
+
+  @override
+  String failedToRemovePressKitFile(String error) {
+    return 'プレスキットファイルを削除できませんでした: $error';
+  }
+
+  @override
+  String get selectFilesToDownload => 'ダウンロードするファイルを選択';
+
+  @override
+  String get biography => 'プロフィール';
+
+  @override
+  String get biographyWillBeSaved => 'biography.txt として保存されます';
+
+  @override
+  String get artworkFiles => 'アートワークファイル';
+
+  @override
+  String get pressKitFiles => 'プレスキットファイル';
+
+  @override
+  String get additionalAssets => '追加アセット';
+
+  @override
+  String downloadNFiles(int count, String plural) {
+    return '$count個のファイル$pluralをダウンロード';
+  }
+
+  @override
+  String nFilesSavedTo(int count, String plural, String filename) {
+    return '$count個のファイル$pluralを $filename に保存しました';
+  }
+
+  @override
+  String get addAsset => 'アセットを追加';
+
+  @override
+  String get assetNameLabel => 'アセット名';
+
+  @override
+  String get assetNameHint => '例：ロゴ、バナー、写真';
+
+  @override
+  String assetAddedSuccessfully(String assetName) {
+    return '$assetName を正常に追加しました';
+  }
+
+  @override
+  String failedToAddAsset(String error) {
+    return 'アセットを追加できませんでした: $error';
+  }
+
+  @override
+  String assetRemoved(String assetName) {
+    return '$assetName を削除しました';
+  }
+
+  @override
+  String failedToRemoveAsset(String error) {
+    return 'アセットを削除できませんでした: $error';
+  }
+
+  @override
+  String get profileNotFound => 'プロフィールが見つかりません';
+
+  @override
+  String get selectFiles => 'ファイルを選択';
+
+  @override
+  String get downloadAll => 'すべてダウンロード';
+
+  @override
+  String get saveBiographyTooltip => 'プロフィールを保存';
+
+  @override
+  String get enterBiographyHint => 'プロフィールの経歴を入力...';
+
+  @override
+  String get addArtwork => 'アートワークを追加';
+
+  @override
+  String get addFile => 'ファイルを追加';
+
+  @override
+  String get openFile => 'ファイルを開く';
+
+  @override
+  String get menuView => '表示';
+
+  @override
+  String get menuAbout => 'DAW Project Manager について';
+
+  @override
+  String get menuLanguage => '言語';
+
+  @override
+  String get menuWarnBeforeQuit => '終了前に警告する (Cmd+Q)';
+
+  @override
+  String get menuQuit => 'DAW Project Manager を終了';
+
+  @override
+  String get menuWindow => 'ウィンドウ';
+
+  @override
+  String get donate => '寄付';
+
+  @override
+  String get website => 'ウェブサイト';
+
+  @override
+  String get switchToClassicDark => 'Classic Dark に切り替え';
+
+  @override
+  String get switchToNeonDark => 'Neon Dark に切り替え';
+
+  @override
+  String get switchToClassicTheme => 'Classic テーマに切り替え';
+
+  @override
+  String get switchToNeonTheme => 'Neon テーマに切り替え';
+
+  @override
+  String get menuTheme => 'テーマ';
+
+  @override
+  String get appDescription => '音楽プロデューサーとサウンドデザイナーのためのプロジェクト管理ツール。';
+
+  @override
+  String get neonDarkThemeName => 'ネオンダーク';
+
+  @override
+  String get classicDarkThemeName => 'クラシックダーク';
+
+  @override
+  String get statisticsTab => '統計';
+
+  @override
+  String get statsTotalProjects => '総プロジェクト数';
+
+  @override
+  String get statsInProgress => '進行中';
+
+  @override
+  String get statsFinished => '完成';
+
+  @override
+  String get statsAvgCompletion => '平均完成時間';
+
+  @override
+  String get statsPhaseDistribution => 'フェーズ別プロジェクト';
+
+  @override
+  String get statsAvgTimePerPhase => 'フェーズあたりの平均日数';
+
+  @override
+  String get statsProductivity => '生産性';
+
+  @override
+  String get statsCreatedSeries => '作成';
+
+  @override
+  String get statsProjectHealth => 'プロジェクトの年齢と健全性';
+
+  @override
+  String get statsCatalogInsights => 'カタログの洞察';
+
+  @override
+  String get statsBpmDistribution => 'BPM分布';
+
+  @override
+  String get statsTopKeys => '主な音楽キー';
+
+  @override
+  String get statsDawTypes => 'DAWの種類';
+
+  @override
+  String get statsProjectActivity => 'プロジェクトのアクティビティ';
+
+  @override
+  String get statsNoData => 'データなし';
+
+  @override
+  String get statsNoPhaseData => 'フェーズ移行後にデータが表示されます。';
+
+  @override
+  String statsLastActivityDaysAgo(int days) {
+    return '最終活動: $days日前';
+  }
+
+  @override
+  String get statsLastActivityToday => '今日アクティブ';
+
+  @override
+  String get statsNoEvents => 'まだイベントなし';
+
+  @override
+  String statsEventPhaseChanged(String from, String to) {
+    return 'フェーズ: $from → $to';
+  }
+
+  @override
+  String statsEventMetadataUpdated(String fields) {
+    return '更新: $fields';
+  }
+
+  @override
+  String statsEventTodoCompleted(String text) {
+    return '完了: $text';
+  }
+
+  @override
+  String get statsEventFileModified => 'ディスク上のファイルが変更されました';
+
+  @override
+  String get statsClearHistory => '履歴をクリア';
+
+  @override
+  String get statsClearHistoryConfirm => 'このプロジェクトのすべてのイベントをクリアしますか？';
+
+  @override
+  String get statsSearchProjects => 'プロジェクトを検索…';
+
+  @override
+  String statsEventCount(int count) {
+    return '$count件のイベント';
+  }
+
+  @override
+  String get statsViewHistory => 'プロジェクト統計';
+
+  @override
+  String get statsPhaseHistory => 'フェーズ履歴';
+
+  @override
+  String get statsEventBreakdown => 'イベント内訳';
+
+  @override
+  String statsDaysSoFar(int days) {
+    return '現在$days日';
+  }
+
+  @override
+  String get statsNoProjectsFound => 'プロジェクトが見つかりません';
+
+  @override
+  String statsNotTouchedDays(int days) {
+    return '$days日間変更なし';
+  }
 }

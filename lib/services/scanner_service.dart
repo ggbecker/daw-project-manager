@@ -24,9 +24,25 @@ class ScannerService {
     '.bun', // Cakewalk Bundle
   };
 
+  static const _backupFolderNames = {
+    'backup',               // Ableton Live, FL Studio, Cubase
+    'auto-backups',         // Bitwig Studio
+    'session file backups', // Pro Tools
+    'history',              // Studio One
+    'autosave',             // Cakewalk
+    'auto save',            // FL Studio (alternate)
+  };
+
   bool _isInBackupFolder(String path) {
     final segments = p.split(path);
-    return segments.any((s) => s.toLowerCase() == 'backup');
+    return segments.any((s) => _backupFolderNames.contains(s.toLowerCase()));
+  }
+
+  /// Cubase / Nuendo auto-saves land in the same folder as the project
+  /// but with "_AutoSave" appended to the base name.
+  bool _isCubaseAutoSave(String path) {
+    final base = p.basenameWithoutExtension(path).toLowerCase();
+    return base.contains('_autosave');
   }
 
   Stream<FileSystemEntity> scanDirectory(
@@ -66,8 +82,12 @@ class ScannerService {
           final ext = p.extension(entity.path).toLowerCase();
           if (!supportedExtensions.contains(ext)) continue;
 
-          // Ignore Ableton backup projects (typically under a Backup folder)
-          if ((ext == '.als' || ext == '.alp') && _isInBackupFolder(entity.path)) {
+          // Ignore auto-backup copies created by various DAWs.
+          if (_isInBackupFolder(entity.path)) continue;
+
+          // Cubase / Nuendo auto-saves stay in the project folder but include
+          // "_AutoSave" in the filename instead of using a subfolder.
+          if ((ext == '.cpr' || ext == '.npr') && _isCubaseAutoSave(entity.path)) {
             continue;
           }
 

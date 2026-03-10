@@ -1,18 +1,15 @@
 import 'dart:io';
 import 'dart:convert';
 import 'dart:async';
-import 'dart:async' show StreamSubscription;
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart' show PlatformException;
 import 'package:google_sign_in/google_sign_in.dart';
-import 'dart:async' show unawaited;
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:googleapis_auth/auth_io.dart' as auth_io;
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/profile.dart';
@@ -25,7 +22,7 @@ import '../models/todo_template.dart';
 import '../models/backup_progress.dart';
 import '../repository/profile_repository.dart';
 import '../repository/project_repository.dart';
-import '../utils/app_paths.dart' show ensureHiveInitialized, getPreviewSongsPath, getReleaseArtworkPath;
+import '../utils/app_paths.dart' show ensureHiveInitialized, getLocalAppDataPath, getPreviewSongsPath, getReleaseArtworkPath;
 import '../config/secrets.dart' show desktopClientSecret, desktopClientId, androidWebClientId;
 
 /// Exception thrown when user cancels an upload operation
@@ -42,7 +39,7 @@ class GoogleDriveSyncService {
   static const String _appDataFolderName = 'DAW Project Manager';
   static const String _databaseFileName = 'database_backup.json';
   static const String _metadataFileName = 'sync_metadata.json';
-  static const String _credentialsBoxName = 'google_drive_credentials';
+  static const String _credentialsStorageKey = 'google_drive_credentials_json';
   static const String _backupTimestampBoxName = 'backup_timestamps';
   
   bool _isInitialized = false;
@@ -51,7 +48,6 @@ class GoogleDriveSyncService {
   drive.DriveApi? _driveApi;
   String? _appDataFolderId;
   auth_io.AutoRefreshingAuthClient? _desktopAuthClient; // For desktop OAuth
-  Box<String>? _credentialsBox; // For storing desktop credentials
   Box<String>? _backupTimestampBox; // For storing last backup download timestamp
   StreamSubscription? _authEventsSubscription; // Listen to authentication events
   static bool _sessionInitialized = false; // Track if lightweight auth was attempted this session
@@ -289,46 +285,9 @@ class GoogleDriveSyncService {
   }
 
   /// Initialize credentials storage (call this before using the service)
-  /// Uses encrypted storage for desktop platforms
-  Future<void> initializeCredentialsStorage() async {
-    if (Platform.isAndroid) return;
-
-    try {
-      const secureStorage = FlutterSecureStorage();
-      
-      // 1. Check if we already have an encryption key
-      String? encryptionKey = await secureStorage.read(key: 'hive_encryption_key');
-      
-      if (encryptionKey == null) {
-        // 2. Generate a new key if it doesn't exist
-        final key = Hive.generateSecureKey();
-        await secureStorage.write(
-          key: 'hive_encryption_key', 
-          value: base64UrlEncode(key)
-        );
-        encryptionKey = base64UrlEncode(key);
-      }
-
-      final decodedKey = base64Url.decode(encryptionKey);
-
-      // Ensure Hive is initialized (only once)
-      await ensureHiveInitialized();
-
-      // 3. Open the box with the encryption cipher
-      if (!Hive.isBoxOpen(_credentialsBoxName)) {
-        _credentialsBox = await Hive.openBox<String>(
-          _credentialsBoxName,
-          encryptionCipher: HiveAesCipher(decodedKey),
-        );
-        if (kDebugMode) print('Encrypted credentials storage initialized');
-      } else {
-        _credentialsBox = Hive.box<String>(_credentialsBoxName);
-        if (kDebugMode) print('Encrypted credentials storage already open');
-      }
-    } catch (e) {
-      if (kDebugMode) print('Error initializing encrypted storage: $e');
-    }
-  }
+  /// No-op kept for API compatibility — credentials are now stored directly
+  /// in flutter_secure_storage, removing the fragile Hive AES intermediate layer.
+  Future<void> initializeCredentialsStorage() async {}
 
   /// Initialize backup timestamp storage (local, unencrypted)
   Future<void> _initializeBackupTimestampStorage() async {
@@ -823,7 +782,7 @@ class GoogleDriveSyncService {
   }
 
   static String _generateState() {
-    final bytes = sha256.convert(utf8.encode('${DateTime.now().microsecondsSinceEpoch}-${_desktopClientId}')).bytes;
+    final bytes = sha256.convert(utf8.encode('${DateTime.now().microsecondsSinceEpoch}-$_desktopClientId')).bytes;
     return base64Url.encode(bytes).replaceAll('=', '');
   }
 
@@ -959,18 +918,31 @@ class GoogleDriveSyncService {
     }
   }
 
-  /// Save desktop credentials for session persistence
+  /// Returns the credentials file path for macOS (avoids Keychain prompts).
+  Future<File> _credentialsFile() async {
+    final dir = await getLocalAppDataPath();
+    return File(path.join(dir, 'google_drive_credentials.json'));
+  }
+
+  /// Save desktop credentials for session persistence.
+  /// On macOS: plain JSON file in app-support dir (avoids Keychain prompts).
+  /// On Windows/Linux: flutter_secure_storage.
   Future<void> _saveCredentials(String refreshToken, String accessToken, DateTime expiryTime) async {
-    if (Platform.isAndroid || _credentialsBox == null) return;
-    
+    if (Platform.isAndroid) return;
+
+    final credentialsData = {
+      'refresh_token': refreshToken,
+      'access_token': accessToken,
+      'expiry_time': expiryTime.toIso8601String(),
+    };
     try {
-      final credentialsData = {
-        'refresh_token': refreshToken,
-        'access_token': accessToken,
-        'expiry_time': expiryTime.toIso8601String(),
-      };
-      
-      await _credentialsBox!.put('credentials', jsonEncode(credentialsData));
+      if (Platform.isMacOS) {
+        final file = await _credentialsFile();
+        await file.writeAsString(jsonEncode(credentialsData));
+      } else {
+        const secureStorage = FlutterSecureStorage();
+        await secureStorage.write(key: _credentialsStorageKey, value: jsonEncode(credentialsData));
+      }
       if (kDebugMode) print('Credentials saved for session persistence');
     } catch (e) {
       if (kDebugMode) print('Error saving credentials: $e');
@@ -979,10 +951,16 @@ class GoogleDriveSyncService {
 
   /// Clear saved credentials
   Future<void> _clearCredentials() async {
-    if (Platform.isAndroid || _credentialsBox == null) return;
-    
+    if (Platform.isAndroid) return;
+
     try {
-      await _credentialsBox!.delete('credentials');
+      if (Platform.isMacOS) {
+        final file = await _credentialsFile();
+        if (await file.exists()) await file.delete();
+      } else {
+        const secureStorage = FlutterSecureStorage();
+        await secureStorage.delete(key: _credentialsStorageKey);
+      }
       if (kDebugMode) print('Credentials cleared');
     } catch (e) {
       if (kDebugMode) print('Error clearing credentials: $e');
@@ -1005,17 +983,15 @@ class GoogleDriveSyncService {
     }
 
     // Desktop: restore from saved credentials
-    if (_credentialsBox == null) {
-      await initializeCredentialsStorage();
-    }
-
-    if (_credentialsBox == null) {
-      if (kDebugMode) print('Credentials box not available');
-      return false;
-    }
-
     try {
-      final credentialsJson = _credentialsBox!.get('credentials');
+      String? credentialsJson;
+      if (Platform.isMacOS) {
+        final file = await _credentialsFile();
+        if (await file.exists()) credentialsJson = await file.readAsString();
+      } else {
+        const secureStorage = FlutterSecureStorage();
+        credentialsJson = await secureStorage.read(key: _credentialsStorageKey);
+      }
       if (credentialsJson == null) {
         if (kDebugMode) print('No saved credentials found');
         return false;
@@ -4138,8 +4114,64 @@ class GoogleDriveSyncService {
       print('  Releases: +$releasesAdded ~$releasesUpdated');
     }
 
-    // Return result first, clean up profile asynchronously
-    final result = SyncResult(
+    // After restoring: if the CURRENT active profile is empty but a restored profile has
+    // data, switch to that profile and clean up the empty one.
+    // This handles the common case: fresh Mac install downloads a Windows backup.
+    // IMPORTANT: Must complete BEFORE returning so stream invalidations in the caller
+    // pick up the correct profile.
+    try {
+      final currentProfileId = profileRepo.getCurrentProfileId();
+      if (currentProfileId != null) {
+        final currentProjectsBox = await Hive.openBox<MusicProject>('${currentProfileId}_projects');
+        final currentReleasesBox = await Hive.openBox<Release>('${currentProfileId}_releases');
+        final isCurrentEmpty = currentProjectsBox.isEmpty && currentReleasesBox.isEmpty;
+
+        if (kDebugMode) {
+          print('Post-merge profile check:');
+          print('  Current profile: $currentProfileId');
+          print('  Current projects: ${currentProjectsBox.length}');
+          print('  Current releases: ${currentReleasesBox.length}');
+          print('  Is current empty: $isCurrentEmpty');
+        }
+
+        if (isCurrentEmpty) {
+          // Find the first non-current profile that has projects or releases
+          Profile? targetProfile;
+          for (final profile in profileRepo.getAllProfiles()) {
+            if (profile.id == currentProfileId) continue;
+            final box = await Hive.openBox<MusicProject>('${profile.id}_projects');
+            if (box.isNotEmpty) {
+              targetProfile = profile;
+              break;
+            }
+          }
+
+          if (targetProfile != null) {
+            if (kDebugMode) {
+              print('Current profile is empty. Switching to "${targetProfile.name}" (${targetProfile.id})');
+            }
+
+            // Delete the empty current profile and its boxes
+            await currentProjectsBox.close();
+            await currentReleasesBox.close();
+            await profileRepo.profilesBox.delete(currentProfileId);
+            try { await Hive.deleteBoxFromDisk('${currentProfileId}_projects'); } catch (_) {}
+            try { await Hive.deleteBoxFromDisk('${currentProfileId}_releases'); } catch (_) {}
+            try { await Hive.deleteBoxFromDisk('${currentProfileId}_roots'); } catch (_) {}
+            try { await Hive.deleteBoxFromDisk('${currentProfileId}_ignored_paths'); } catch (_) {}
+
+            await profileRepo.setCurrentProfileId(targetProfile.id);
+
+            if (kDebugMode) print('Successfully switched to restored profile: ${targetProfile.name}');
+          }
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error switching to restored profile: $e');
+      // Non-critical — don't rethrow
+    }
+
+    return SyncResult(
       projectsAdded: projectsAdded,
       projectsUpdated: projectsUpdated,
       releasesAdded: releasesAdded,
@@ -4147,97 +4179,6 @@ class GoogleDriveSyncService {
       previewSongsDownloaded: previewSongsDownloaded,
       previewSongsUpdated: previewSongsUpdated,
     );
-
-    // Remove default empty profile if we restored other non-default profiles (all platforms)
-    // Do this asynchronously after returning so it doesn't block the UI
-    Future.microtask(() async {
-      try {
-      final allProfiles = profileRepo.getAllProfiles();
-      
-      if (allProfiles.length > 1) {
-        // Find the default profile by name pattern (case insensitive)
-        Profile? defaultProfile;
-        for (final profile in allProfiles) {
-          final nameLower = profile.name.toLowerCase();
-          if (nameLower == 'default' || nameLower == 'default profile') {
-            defaultProfile = profile;
-            break;
-          }
-        }
-        
-        // If no profile with "default" name found, try the oldest one as fallback
-        if (defaultProfile == null) {
-          for (final profile in allProfiles) {
-            if (defaultProfile == null || profile.createdAt.isBefore(defaultProfile.createdAt)) {
-              defaultProfile = profile;
-            }
-          }
-        }
-        
-        if (defaultProfile != null) {
-          // Check if default profile is empty (0 projects AND 0 releases)
-          final defaultProjectsBox = await Hive.openBox<MusicProject>('${defaultProfile.id}_projects');
-          final defaultReleasesBox = await Hive.openBox<Release>('${defaultProfile.id}_releases');
-          
-          final isDefaultEmpty = defaultProjectsBox.isEmpty && defaultReleasesBox.isEmpty;
-          
-          if (kDebugMode) {
-            print('Default profile check:');
-            print('  Name: ${defaultProfile.name}');
-            print('  Projects: ${defaultProjectsBox.length}');
-            print('  Releases: ${defaultReleasesBox.length}');
-            print('  Is empty: $isDefaultEmpty');
-          }
-          
-          if (isDefaultEmpty) {
-            // Find the first non-default profile from the restored backup
-            Profile? firstRestoredProfile;
-            for (final profile in allProfiles) {
-              if (profile.id != defaultProfile.id) {
-                firstRestoredProfile = profile;
-                break;
-              }
-            }
-            
-            if (firstRestoredProfile != null) {
-              if (kDebugMode) {
-                print('Removing empty default profile "${defaultProfile.name}" and switching to "${firstRestoredProfile.name}"');
-              }
-              
-              // Delete the default profile and its empty boxes
-              await profileRepo.profilesBox.delete(defaultProfile.id);
-              await defaultProjectsBox.close();
-              await defaultReleasesBox.close();
-              await Hive.deleteBoxFromDisk('${defaultProfile.id}_projects');
-              await Hive.deleteBoxFromDisk('${defaultProfile.id}_releases');
-              
-              // Also delete other related boxes
-              try {
-                await Hive.deleteBoxFromDisk('${defaultProfile.id}_roots');
-              } catch (_) {}
-              try {
-                await Hive.deleteBoxFromDisk('${defaultProfile.id}_ignoredPaths');
-              } catch (_) {}
-              
-              // Set the first restored profile as current
-              await profileRepo.setCurrentProfileId(firstRestoredProfile.id);
-              
-              if (kDebugMode) {
-                print('Successfully switched to restored profile: ${firstRestoredProfile.name}');
-              }
-            }
-          }
-        }
-      }
-    } catch (e) {
-        if (kDebugMode) {
-          print('Error removing default empty profile: $e');
-        }
-        // Don't throw - this is a convenience feature, not critical
-      }
-    });
-
-    return result;
   }
 
   // Serialization helpers
