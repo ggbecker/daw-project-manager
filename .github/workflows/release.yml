@@ -296,27 +296,34 @@ jobs:
           rm daw_project_manager_notarize.zip
           
       # 4c. Create DMG (Apenas para macOS DMG)
+      - name: Install create-dmg
+        if: matrix.is_dmg == true
+        run: brew install create-dmg
+
       - name: Create macOS DMG
         if: matrix.is_dmg == true
         run: |
-          # Create a temporary directory for DMG contents
-          DMG_DIR="build/macos/Build/Products/Release/dmg_temp"
-          mkdir -p "$DMG_DIR"
-          
-          # Copy the signed .app bundle to the DMG directory
-          cp -R build/macos/Build/Products/Release/DAWProjectManager.app "$DMG_DIR/"
-          
-          # Create a symbolic link to Applications folder
-          ln -s /Applications "$DMG_DIR/Applications"
-          
-          # Create the DMG using hdiutil
-          hdiutil create -volname "DAW Project Manager" \
-            -srcfolder "$DMG_DIR" \
-            -ov -format UDZO \
-            "build/macos/Build/Products/Release/DAW_Project_Manager-${{ steps.sanitize_ref.outputs.sanitized_ref }}.dmg"
-          
-          # Clean up temporary directory
-          rm -rf "$DMG_DIR"
+          APP="build/macos/Build/Products/Release/DAWProjectManager.app"
+          DMG_OUT="build/macos/Build/Products/Release/DAW_Project_Manager-${{ steps.sanitize_ref.outputs.sanitized_ref }}.dmg"
+          BACKGROUND="resources/macos/dmg_background.png"
+
+          # create-dmg args depend on whether a custom background exists
+          EXTRA_ARGS=()
+          if [ -f "$BACKGROUND" ]; then
+            EXTRA_ARGS+=(--background "$BACKGROUND")
+          fi
+
+          create-dmg \
+            --volname "DAW Project Manager" \
+            "${EXTRA_ARGS[@]}" \
+            --window-pos 200 120 \
+            --window-size 800 450 \
+            --icon-size 100 \
+            --icon "DAWProjectManager.app" 200 200 \
+            --hide-extension "DAWProjectManager.app" \
+            --app-drop-link 600 200 \
+            "$DMG_OUT" \
+            "$APP"
           
       # 4d. Sign DMG
       - name: Sign macOS DMG
