@@ -1008,12 +1008,17 @@ class _HistoryPanel extends ConsumerWidget {
           ),
           const Divider(height: 1),
         ],
-        Expanded(
-          child: filtered.isEmpty
-              ? Center(
-                  child: Text(l10n.statsNoProjectsFound,
-                      style: Theme.of(context).textTheme.bodySmall))
-              : ListView.builder(
+        if (filtered.isEmpty)
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Center(
+                child: Text(l10n.statsNoProjectsFound,
+                    style: Theme.of(context).textTheme.bodySmall)),
+          )
+        else
+          ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
                   itemCount: filtered.length,
                   itemBuilder: (context, index) {
                     final project = filtered[index];
@@ -1070,7 +1075,6 @@ class _HistoryPanel extends ConsumerWidget {
                     );
                   },
                 ),
-        ),
       ],
     );
   }

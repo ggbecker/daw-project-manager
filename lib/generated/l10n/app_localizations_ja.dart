@@ -338,6 +338,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get filterByPhase => 'フェーズでフィルター';
 
   @override
+  String get filters => 'フィルター';
+
+  @override
   String get allPhases => 'すべてのフェーズ';
 
   @override

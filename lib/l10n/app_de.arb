@@ -193,6 +193,7 @@
   "name": "Name",
   "status": "Status",
   "phase": "Phase",
+  "filters": "Filter",
   "filterByPhase": "Nach Phase filtern",
   "allPhases": "Alle Phasen",
   "daw": "DAW",

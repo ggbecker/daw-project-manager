@@ -193,6 +193,7 @@
   "name": "Название",
   "status": "Статус",
   "phase": "Фаза",
+  "filters": "Фильтры",
   "filterByPhase": "Фильтровать по Фазе",
   "allPhases": "Все Фазы",
   "daw": "DAW",

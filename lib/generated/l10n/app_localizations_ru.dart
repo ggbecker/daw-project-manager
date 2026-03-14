@@ -343,6 +343,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get filterByPhase => 'Фильтровать по Фазе';
 
   @override
+  String get filters => 'Фильтры';
+
+  @override
   String get allPhases => 'Все Фазы';
 
   @override

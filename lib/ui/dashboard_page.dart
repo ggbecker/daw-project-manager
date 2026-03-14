@@ -83,6 +83,7 @@ class DashboardPage extends ConsumerStatefulWidget {
 class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTickerProviderStateMixin {
   bool _scanning = false;
   bool _extractingMetadata = false;
+  bool _isSearchingMobile = false;
   late TabController _tabController;
   
   // 1. FocusNode para a barra de pesquisa
@@ -167,7 +168,31 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
         // Playlists tab — clear search bar
         _searchController.clear();
       }
+      if (MobileUtils.isMobile() && _isSearchingMobile) {
+        _isSearchingMobile = false;
+      }
       setState(() {}); // Rebuild to update search placeholder when tab animation completes
+    }
+  }
+
+  void _clearCurrentTabSearch() {
+    _searchController.clear();
+    if (_tabController.index == 0) {
+      ref.read(projectsSearchProvider.notifier).clear();
+    } else if (_tabController.index == 1) {
+      ref.read(releasesSearchProvider.notifier).clear();
+    } else {
+      ref.read(statisticsSearchProvider.notifier).set('');
+    }
+  }
+
+  void _updateCurrentTabSearch(String text) {
+    if (_tabController.index == 0) {
+      ref.read(projectsSearchProvider.notifier).setSearchText(text);
+    } else if (_tabController.index == 1) {
+      ref.read(releasesSearchProvider.notifier).setSearchText(text);
+    } else {
+      ref.read(statisticsSearchProvider.notifier).set(text);
     }
   }
 
@@ -606,94 +631,155 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
               Scaffold(
                 appBar: MobileUtils.isMobile()
                     ? AppBar(
-                        title: const Text('DAW Project Manager'),
-                        actions: [
-                          // Notification settings button (Android only)
-                          if (Platform.isAndroid)
-                            IconButton(
-                              icon: const Icon(Icons.notifications),
-                              onPressed: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) => const NotificationSettingsPage(),
+                        leading: _isSearchingMobile
+                            ? IconButton(
+                                icon: const Icon(Icons.arrow_back),
+                                onPressed: () {
+                                  setState(() => _isSearchingMobile = false);
+                                  _clearCurrentTabSearch();
+                                },
+                              )
+                            : null,
+                        title: _isSearchingMobile
+                            ? TextField(
+                                autofocus: true,
+                                controller: _searchController,
+                                decoration: InputDecoration(
+                                  hintText: _tabController.index == 0
+                                      ? AppLocalizations.of(context)!.searchProjects
+                                      : _tabController.index == 1
+                                          ? AppLocalizations.of(context)!.searchReleases
+                                          : AppLocalizations.of(context)!.statsSearchProjects,
+                                  border: InputBorder.none,
+                                  hintStyle: const TextStyle(color: Colors.white54),
+                                ),
+                                style: const TextStyle(color: Colors.white),
+                                onChanged: _updateCurrentTabSearch,
+                              )
+                            : Image.asset('app_icon.png', height: 32),
+                        actions: _isSearchingMobile
+                            ? [
+                                if (currentSearch.isNotEmpty)
+                                  IconButton(
+                                    icon: const Icon(Icons.close),
+                                    onPressed: () {
+                                      _clearCurrentTabSearch();
+                                    },
                                   ),
-                                );
-                              },
-                              tooltip: AppLocalizations.of(context)!.notificationSettings,
-                            ),
-                          // Profile button
-                          Consumer(
-                            builder: (context, ref, child) {
-                              final currentProfileAsync = ref.watch(currentProfileProvider);
-                              return currentProfileAsync.when(
-                                loading: () => IconButton(
-                                  icon: const Icon(Icons.person),
-                                  onPressed: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) => const ProfileManagerPage(),
-                                      ),
-                                    );
-                                  },
-                                  tooltip: AppLocalizations.of(context)!.profileManager,
-                                ),
-                                error: (_, _) => IconButton(
-                                  icon: const Icon(Icons.person),
-                                  onPressed: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) => const ProfileManagerPage(),
-                                      ),
-                                    );
-                                  },
-                                  tooltip: AppLocalizations.of(context)!.profileManager,
-                                ),
-                                data: (currentProfile) {
-                                  Widget profileIcon;
-                                  if (currentProfile?.photoPath != null && 
-                                      File(currentProfile!.photoPath!).existsSync()) {
-                                    profileIcon = ClipRRect(
-                                      borderRadius: BorderRadius.circular(16),
-                                      child: Image.file(
-                                        File(currentProfile.photoPath!),
-                                        width: 32,
-                                        height: 32,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) {
-                                          return const Icon(Icons.person);
-                                        },
-                                      ),
-                                    );
-                                  } else {
-                                    profileIcon = const Icon(Icons.person);
-                                  }
-
-                                  return IconButton(
-                                    icon: profileIcon,
+                              ]
+                            : [
+                                // Search icon (only on searchable tabs — not Playlists tab index 2)
+                                if (_tabController.index != 2)
+                                  IconButton(
+                                    icon: const Icon(Icons.search),
+                                    onPressed: () => setState(() => _isSearchingMobile = true),
+                                  ),
+                                // Notification settings button (Android only)
+                                if (Platform.isAndroid)
+                                  IconButton(
+                                    icon: const Icon(Icons.notifications),
                                     onPressed: () {
                                       Navigator.of(context).push(
                                         MaterialPageRoute(
-                                          builder: (_) => const ProfileManagerPage(),
+                                          builder: (_) => const NotificationSettingsPage(),
                                         ),
                                       );
                                     },
-                                    tooltip: currentProfile?.name ?? AppLocalizations.of(context)!.profileManager,
-                                  );
-                                },
-                              );
-                            },
+                                    tooltip: AppLocalizations.of(context)!.notificationSettings,
+                                  ),
+                                // Profile button
+                                Consumer(
+                                  builder: (context, ref, child) {
+                                    final currentProfileAsync = ref.watch(currentProfileProvider);
+                                    return currentProfileAsync.when(
+                                      loading: () => IconButton(
+                                        icon: const Icon(Icons.person),
+                                        onPressed: () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (_) => const ProfileManagerPage(),
+                                            ),
+                                          );
+                                        },
+                                        tooltip: AppLocalizations.of(context)!.profileManager,
+                                      ),
+                                      error: (_, _) => IconButton(
+                                        icon: const Icon(Icons.person),
+                                        onPressed: () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (_) => const ProfileManagerPage(),
+                                            ),
+                                          );
+                                        },
+                                        tooltip: AppLocalizations.of(context)!.profileManager,
+                                      ),
+                                      data: (currentProfile) {
+                                        Widget profileIcon;
+                                        if (currentProfile?.photoPath != null &&
+                                            File(currentProfile!.photoPath!).existsSync()) {
+                                          profileIcon = ClipRRect(
+                                            borderRadius: BorderRadius.circular(16),
+                                            child: Image.file(
+                                              File(currentProfile.photoPath!),
+                                              width: 32,
+                                              height: 32,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (context, error, stackTrace) {
+                                                return const Icon(Icons.person);
+                                              },
+                                            ),
+                                          );
+                                        } else {
+                                          profileIcon = const Icon(Icons.person);
+                                        }
+                                        return IconButton(
+                                          icon: profileIcon,
+                                          onPressed: () {
+                                            Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                builder: (_) => const ProfileManagerPage(),
+                                              ),
+                                            );
+                                          },
+                                          tooltip: currentProfile?.name ?? AppLocalizations.of(context)!.profileManager,
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
+                              ],
+                      )
+                    : null,
+                bottomNavigationBar: MobileUtils.isMobile()
+                    ? NavigationBar(
+                        selectedIndex: _tabController.index,
+                        onDestinationSelected: (i) {
+                          _tabController.animateTo(i);
+                          setState(() {});
+                        },
+                        destinations: [
+                          NavigationDestination(
+                            icon: const Icon(Icons.library_music_outlined),
+                            selectedIcon: const Icon(Icons.library_music),
+                            label: AppLocalizations.of(context)!.projects,
+                          ),
+                          NavigationDestination(
+                            icon: const Icon(Icons.album_outlined),
+                            selectedIcon: const Icon(Icons.album),
+                            label: AppLocalizations.of(context)!.releasesTab,
+                          ),
+                          NavigationDestination(
+                            icon: const Icon(Icons.playlist_play),
+                            selectedIcon: const Icon(Icons.playlist_play),
+                            label: AppLocalizations.of(context)!.playlists,
+                          ),
+                          NavigationDestination(
+                            icon: const Icon(Icons.bar_chart_outlined),
+                            selectedIcon: const Icon(Icons.bar_chart_rounded),
+                            label: AppLocalizations.of(context)!.statisticsTab,
                           ),
                         ],
-                        bottom: TabBar(
-                          controller: _tabController,
-                          tabs: [
-                            Tab(text: AppLocalizations.of(context)!.projects),
-                            Tab(text: AppLocalizations.of(context)!.releasesTab),
-                            if (MobileUtils.isMobile())
-                              Tab(text: AppLocalizations.of(context)!.playlists),
-                            Tab(text: AppLocalizations.of(context)!.statisticsTab),
-                          ],
-                        ),
                       )
                     : null,
                 body: Column(
@@ -737,6 +823,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
             Builder(
               builder: (context) {
                 final isMobile = MobileUtils.isMobile();
+                if (isMobile) return const SizedBox.shrink();
                 return Padding(
                   padding: MobileUtils.getResponsivePadding(context),
                   child: isMobile
@@ -2455,7 +2542,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             child: Row(
               children: [
                 Expanded(child: Text(rendererContext.cell.value.toString())),
-                if (!fileExists)
+                if (!fileExists && !MobileUtils.isMobile())
                   Tooltip(
                     message: AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
                     child: Icon(Icons.cloud_off, size: 14,
@@ -2818,7 +2905,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               ),
               // Launch button
               Tooltip(
-                message: sourceFileExists ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
+                message: sourceFileExists || MobileUtils.isMobile() ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
                 child: IconButton(
                   icon: const Icon(Icons.open_in_new),
                   tooltip: sourceFileExists ? AppLocalizations.of(context)!.tooltipLaunchInDaw : null,
@@ -2841,7 +2928,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               ),
               // Open Folder button
               Tooltip(
-                message: sourceFileExists ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
+                message: sourceFileExists || MobileUtils.isMobile() ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
                 child: IconButton(
                   icon: const Icon(Icons.folder_open),
                   tooltip: sourceFileExists ? AppLocalizations.of(context)!.openFolder : null,

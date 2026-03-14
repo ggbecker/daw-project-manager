@@ -1119,7 +1119,7 @@ updatedProject.lastModifiedAt.toString(),
 
                                       // NOVO: BOTÃO OPEN FOLDER
                                       Tooltip(
-                                        message: sourceFileExists ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
+                                        message: sourceFileExists || MobileUtils.isMobile() ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
                                         child: ElevatedButton.icon(
                                           onPressed: sourceFileExists
                                               ? () => _openProjectFolder(updatedProject.filePath)
@@ -1134,7 +1134,7 @@ updatedProject.lastModifiedAt.toString(),
 
                                       // BOTÃO OPEN IN DAW (Existente)
                                       Tooltip(
-                                        message: sourceFileExists ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
+                                        message: sourceFileExists || MobileUtils.isMobile() ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
                                         child: ElevatedButton.icon(
                                           onPressed: sourceFileExists
                                               ? () async {

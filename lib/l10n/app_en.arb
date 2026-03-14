@@ -194,6 +194,7 @@
   "status": "Status",
   "phase": "Phase",
   "filterByPhase": "Filter by Phase",
+  "filters": "Filters",
   "allPhases": "All Phases",
   "daw": "DAW",
   "lastModifiedColumn": "Last Modified",

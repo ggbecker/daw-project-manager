@@ -193,6 +193,7 @@
   "name": "名前",
   "status": "ステータス",
   "phase": "フェーズ",
+  "filters": "フィルター",
   "filterByPhase": "フェーズでフィルター",
   "allPhases": "すべてのフェーズ",
   "daw": "DAW",

@@ -343,6 +343,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get filterByPhase => 'Filtra per Fase';
 
   @override
+  String get filters => 'Filtri';
+
+  @override
   String get allPhases => 'Tutte le Fasi';
 
   @override

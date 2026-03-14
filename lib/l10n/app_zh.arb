@@ -193,6 +193,7 @@
   "name": "名称",
   "status": "状态",
   "phase": "阶段",
+  "filters": "筛选器",
   "filterByPhase": "按阶段筛选",
   "allPhases": "所有阶段",
   "daw": "DAW",

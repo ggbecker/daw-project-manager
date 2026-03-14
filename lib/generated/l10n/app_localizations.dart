@@ -706,6 +706,12 @@ abstract class AppLocalizations {
   /// **'Filter by Phase'**
   String get filterByPhase;
 
+  /// No description provided for @filters.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get filters;
+
   /// No description provided for @allPhases.
   ///
   /// In en, this message translates to:

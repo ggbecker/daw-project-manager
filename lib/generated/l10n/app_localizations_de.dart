@@ -345,6 +345,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get filterByPhase => 'Nach Phase filtern';
 
   @override
+  String get filters => 'Filter';
+
+  @override
   String get allPhases => 'Alle Phasen';
 
   @override

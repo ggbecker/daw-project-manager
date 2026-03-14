@@ -1076,6 +1076,66 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
                               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 16),
+                            // Project Filters section
+                            Text(
+                              AppLocalizations.of(context)!.filters,
+                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                            ),
+                            Consumer(
+                              builder: (context, ref, _) {
+                                final finishedMode = ref.watch(showFinishedProjectsProvider);
+                                final finishedNotifier = ref.read(showFinishedProjectsProvider.notifier);
+                                return SwitchListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  title: Text(AppLocalizations.of(context)!.hideFinished),
+                                  value: finishedMode == 1,
+                                  onChanged: (v) => v
+                                      ? finishedNotifier.setHideFinished(true)
+                                      : finishedNotifier.setHideFinished(false),
+                                );
+                              },
+                            ),
+                            Consumer(
+                              builder: (context, ref, _) {
+                                final showDeadlines = ref.watch(showOnlyWithDeadlineProvider);
+                                return SwitchListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  title: Text(AppLocalizations.of(context)!.showOnlyDeadlines),
+                                  value: showDeadlines,
+                                  onChanged: (v) => ref
+                                      .read(showOnlyWithDeadlineProvider.notifier)
+                                      .setShowOnlyWithDeadline(v),
+                                );
+                              },
+                            ),
+                            Consumer(
+                              builder: (context, ref, _) {
+                                final phaseFilter = ref.watch(phaseFilterProvider);
+                                final l10n = AppLocalizations.of(context)!;
+                                return Row(
+                                  children: [
+                                    const Icon(Icons.filter_list, size: 20),
+                                    const SizedBox(width: 12),
+                                    Expanded(child: Text(l10n.filterByPhase)),
+                                    DropdownButton<String?>(
+                                      value: phaseFilter,
+                                      underline: const SizedBox.shrink(),
+                                      hint: Text(l10n.allPhases),
+                                      items: [
+                                        DropdownMenuItem(value: null, child: Text(l10n.allPhases)),
+                                        DropdownMenuItem(value: 'Idea', child: Text(l10n.projectPhaseIdea)),
+                                        DropdownMenuItem(value: 'Arranging', child: Text(l10n.projectPhaseArranging)),
+                                        DropdownMenuItem(value: 'Mixing', child: Text(l10n.projectPhaseMixing)),
+                                        DropdownMenuItem(value: 'Mastering', child: Text(l10n.projectPhaseMastering)),
+                                        DropdownMenuItem(value: 'Finished', child: Text(l10n.projectPhaseFinished)),
+                                      ],
+                                      onChanged: (v) => ref.read(phaseFilterProvider.notifier).setPhase(v),
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+                            const Divider(height: 32),
                             // Language selector
                             Row(
                               children: [

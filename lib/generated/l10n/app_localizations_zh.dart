@@ -334,6 +334,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get filterByPhase => '按阶段筛选';
 
   @override
+  String get filters => '筛选器';
+
+  @override
   String get allPhases => '所有阶段';
 
   @override
