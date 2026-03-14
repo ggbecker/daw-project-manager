@@ -1452,5 +1452,10 @@
     }
   },
   "statsNoProjectsFound": "未找到项目",
-  "statsNotTouchedDays": "{days}天未修改"
+  "statsNotTouchedDays": "{days}天未修改",
+  "sortByLastModified": "最后修改",
+  "sortByName": "名称",
+  "sortByPhase": "阶段",
+  "sortByCreatedAt": "添加日期",
+  "sortByBpm": "BPM"
 }

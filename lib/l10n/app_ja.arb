@@ -1452,5 +1452,10 @@
     }
   },
   "statsNoProjectsFound": "プロジェクトが見つかりません",
-  "statsNotTouchedDays": "{days}日間変更なし"
+  "statsNotTouchedDays": "{days}日間変更なし",
+  "sortByLastModified": "最終更新",
+  "sortByName": "名前",
+  "sortByPhase": "フェーズ",
+  "sortByCreatedAt": "追加日",
+  "sortByBpm": "BPM"
 }

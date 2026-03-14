@@ -1,4 +1,5 @@
 import 'dart:io';
+import '../utils/mobile_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -19,8 +20,8 @@ class PlaylistsPage extends ConsumerStatefulWidget {
 class _PlaylistsPageState extends ConsumerState<PlaylistsPage> {
   @override
   Widget build(BuildContext context) {
-    if (!Platform.isAndroid) {
-      // Desktop: show message that playlists are Android-only
+    if (!MobileUtils.isMobile()) {
+      // Desktop: show message that playlists are mobile-only
       return Scaffold(
         appBar: AppBar(
           title: Text(AppLocalizations.of(context)!.playlists),
@@ -48,7 +49,7 @@ class _PlaylistsPageState extends ConsumerState<PlaylistsPage> {
           child: Text(AppLocalizations.of(context)!.errorLoadingPlaylists),
         ),
       ),
-      floatingActionButton: Platform.isAndroid
+      floatingActionButton: MobileUtils.isMobile()
           ? FloatingActionButton(
               onPressed: () => _showCreatePlaylistDialog(context, ref),
               child: const Icon(Icons.add),

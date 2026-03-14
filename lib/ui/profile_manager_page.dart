@@ -1009,8 +1009,8 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Backup/Restore section - Desktop only (Android uses Google Drive only)
-                  if (!Platform.isAndroid) ...[
+                  // Backup/Restore section - Desktop only (mobile uses Google Drive only)
+                  if (!MobileUtils.isMobile()) ...[
                     Card(
                     color: Theme.of(context).cardColor,
                     child: Padding(
@@ -1061,8 +1061,8 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
                     ),
                   ),
                   ],
-                  // Settings section (Language, Theme, Support) - Android only
-                  if (Platform.isAndroid) ...[
+                  // Settings section (Language, Theme, Support) - Mobile only
+                  if (MobileUtils.isMobile()) ...[
                     const SizedBox(height: 24),
                     Card(
                       color: Theme.of(context).cardColor,

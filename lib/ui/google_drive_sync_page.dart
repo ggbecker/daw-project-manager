@@ -61,7 +61,7 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
     try {
       // Initialize GoogleSignIn (required in 7.x)
       // This will attempt lightweight auth only once per app session
-      if (Platform.isAndroid) {
+      if (MobileUtils.isMobile()) {
         await _syncService.initialize();
       }
       
@@ -70,7 +70,7 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
       
       // On desktop, try to restore session silently first (using saved credentials)
       // This avoids redirecting to browser if we already have valid tokens
-      if (!Platform.isAndroid && !Platform.isIOS) {
+      if (!MobileUtils.isMobile() && !Platform.isIOS) {
         try {
           final restored = await _syncService.restoreSession();
           if (mounted) {
@@ -93,7 +93,7 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
       
       // Check if already signed in (without prompting)
       // Wait a bit for lightweight authentication to complete (if it happens on first init)
-      if (Platform.isAndroid) {
+      if (MobileUtils.isMobile()) {
         await Future.delayed(const Duration(milliseconds: 1500));
       }
       
@@ -171,7 +171,7 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
       }
       
       // Check if newer backup is available (only if signed in and on mobile)
-      if (_isSignedIn && (Platform.isAndroid || Platform.isIOS)) {
+      if (_isSignedIn && (MobileUtils.isMobile() || Platform.isIOS)) {
         await _checkForNewerBackup();
       }
     } catch (e) {
@@ -207,7 +207,7 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
         _syncStatus = null;
       });
 
-      if (Platform.isAndroid || Platform.isIOS) {
+      if (MobileUtils.isMobile() || Platform.isIOS) {
         // Mobile sign-in
         await _syncService.initialize();
         final success = await _syncService.signIn();
@@ -609,7 +609,7 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
       
       // On mobile, allow download even without active profile (will activate first profile after download)
       // On desktop, require active profile
-      if (!Platform.isAndroid && !Platform.isIOS) {
+      if (!MobileUtils.isMobile() && !Platform.isIOS) {
         final currentProfileId = profileRepo.getCurrentProfileId();
         if (currentProfileId == null) {
           setState(() {
@@ -695,7 +695,7 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
       }
 
       // On mobile, if no profile is active, activate the first profile from backup
-      if (Platform.isAndroid || Platform.isIOS) {
+      if (MobileUtils.isMobile() || Platform.isIOS) {
         final currentProfileId = profileRepo.getCurrentProfileId();
         if (currentProfileId == null) {
           final allProfiles = profileRepo.getAllProfiles();
@@ -726,7 +726,7 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
       });
       
       // Re-check for newer backup after download (in case another backup was uploaded)
-      if (Platform.isAndroid || Platform.isIOS) {
+      if (MobileUtils.isMobile() || Platform.isIOS) {
         await _checkForNewerBackup();
       }
 
@@ -834,7 +834,7 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Always reserve space for backup notification on mobile (prevent UI shift)
-                        if (_isSignedIn && (Platform.isAndroid || Platform.isIOS))
+                        if (_isSignedIn && (MobileUtils.isMobile() || Platform.isIOS))
                           AnimatedContainer(
                             duration: const Duration(milliseconds: 300),
                             margin: const EdgeInsets.only(bottom: 8.0),

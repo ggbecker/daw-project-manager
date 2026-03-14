@@ -1452,5 +1452,10 @@
     }
   },
   "statsNoProjectsFound": "Nessun progetto trovato",
-  "statsNotTouchedDays": "Invariato da {days} giorni"
+  "statsNotTouchedDays": "Invariato da {days} giorni",
+  "sortByLastModified": "Ultima modifica",
+  "sortByName": "Nome",
+  "sortByPhase": "Fase",
+  "sortByCreatedAt": "Data aggiunta",
+  "sortByBpm": "BPM"
 }

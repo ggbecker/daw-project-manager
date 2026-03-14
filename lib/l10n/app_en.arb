@@ -2234,5 +2234,10 @@
         "type": "int"
       }
     }
-  }
+  },
+  "sortByLastModified": "Last modified",
+  "sortByName": "Name",
+  "sortByPhase": "Phase",
+  "sortByCreatedAt": "Date added",
+  "sortByBpm": "BPM"
 }

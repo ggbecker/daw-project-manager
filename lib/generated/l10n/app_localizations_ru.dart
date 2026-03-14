@@ -2147,4 +2147,19 @@ class AppLocalizationsRu extends AppLocalizations {
   String statsNotTouchedDays(int days) {
     return 'Не изменялся $days дн.';
   }
+
+  @override
+  String get sortByLastModified => 'Дата изменения';
+
+  @override
+  String get sortByName => 'Имя';
+
+  @override
+  String get sortByPhase => 'Фаза';
+
+  @override
+  String get sortByCreatedAt => 'Дата добавления';
+
+  @override
+  String get sortByBpm => 'BPM';
 }

@@ -1450,8 +1450,8 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
         originalFileName = '$originalFileName$ext';
       }
 
-      // On Android, copy to cache directory with original name for sharing
-      if (Platform.isAndroid) {
+      // On mobile, copy to cache directory with original name for sharing
+      if (MobileUtils.isMobile()) {
         final cacheDir = await getTemporaryDirectory();
         final shareFile = File(p.join(cacheDir.path, originalFileName));
         if (kDebugMode) {
@@ -1500,7 +1500,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
   }
 
   Future<void> _sharePreviewSongAsZip() async {
-    if (!Platform.isAndroid) return;
+    if (!MobileUtils.isMobile()) return;
 
     if (widget.project.previewSongPath == null || widget.project.previewSongPath!.isEmpty) {
       if (mounted) {
@@ -2114,7 +2114,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                               ),
                             );
 
-                            if (Platform.isAndroid) {
+                            if (MobileUtils.isMobile()) {
                               buttons.add(
                                 ElevatedButton.icon(
                                   onPressed: _sharePreviewSongAsZip,

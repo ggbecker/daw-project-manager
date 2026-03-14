@@ -53,19 +53,11 @@ class StatisticsPage extends ConsumerStatefulWidget {
 
 class _StatisticsPageState extends ConsumerState<StatisticsPage> {
   MusicProject? _selectedProject;
-  final _searchController = TextEditingController();
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final stats = ref.watch(globalStatsProvider);
-    final searchText = ref.watch(statisticsSearchProvider);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -80,8 +72,6 @@ class _StatisticsPageState extends ConsumerState<StatisticsPage> {
                   selectedProject: _selectedProject,
                   onProjectSelected: (p) =>
                       setState(() => _selectedProject = p),
-                  searchText: searchText,
-                  searchController: _searchController,
                   l10n: l10n,
                 ),
               ),
@@ -105,8 +95,6 @@ class _StatisticsPageState extends ConsumerState<StatisticsPage> {
                 selectedProject: _selectedProject,
                 onProjectSelected: (p) =>
                     setState(() => _selectedProject = p),
-                searchText: searchText,
-                searchController: _searchController,
                 l10n: l10n,
                 compact: true,
               ),
@@ -933,16 +921,12 @@ class _SmallBarChart extends StatelessWidget {
 class _HistoryPanel extends ConsumerWidget {
   final MusicProject? selectedProject;
   final void Function(MusicProject?) onProjectSelected;
-  final String searchText;
-  final TextEditingController searchController;
   final AppLocalizations l10n;
   final bool compact;
 
   const _HistoryPanel({
     required this.selectedProject,
     required this.onProjectSelected,
-    required this.searchText,
-    required this.searchController,
     required this.l10n,
     this.compact = false,
   });
@@ -952,6 +936,7 @@ class _HistoryPanel extends ConsumerWidget {
     final projects = ref.watch(projectsWithRecentActivityProvider);
     final eventsAsync = ref.watch(allEventsStreamProvider);
     final allEvents = eventsAsync.asData?.value ?? [];
+    final searchText = ref.watch(statisticsSearchProvider);
 
     // Build map of projectId → event count
     final eventCount = <String, int>{};
@@ -988,28 +973,8 @@ class _HistoryPanel extends ConsumerWidget {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(l10n.statsProjectActivity,
-                  style: Theme.of(context).textTheme.titleSmall),
-              const SizedBox(height: 8),
-              TextField(
-                controller: searchController,
-                decoration: InputDecoration(
-                  hintText: l10n.statsSearchProjects,
-                  prefixIcon: const Icon(Icons.search, size: 18),
-                  isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 10),
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8)),
-                ),
-                onChanged: (v) =>
-                    ref.read(statisticsSearchProvider.notifier).set(v),
-              ),
-            ],
-          ),
+          child: Text(l10n.statsProjectActivity,
+              style: Theme.of(context).textTheme.titleSmall),
         ),
         if (selectedProject != null) ...[
           _EventHistorySection(

@@ -101,8 +101,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
   @override
   void initState() {
     super.initState();
-    // Android has 4 tabs (Projects, Releases, Playlists, Statistics), desktop has 3
-    final tabCount = Platform.isAndroid ? 4 : 3;
+    // Mobile has 4 tabs (Projects, Releases, Playlists, Statistics), desktop has 3
+    final tabCount = MobileUtils.isMobile() ? 4 : 3;
     _tabController = TabController(length: tabCount, vsync: this);
     _searchController = TextEditingController();
     
@@ -144,6 +144,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
     if (!_tabController.indexIsChanging && mounted) {
       // Sync search controller with the appropriate tab's search state
       final currentTabIndex = _tabController.index;
+      final statsTabIndex = MobileUtils.isMobile() ? 3 : 2;
       if (currentTabIndex == 0) {
         // Projects tab
         final projectsSearch = ref.read(projectsSearchProvider);
@@ -156,8 +157,14 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
         if (_searchController.text != releasesSearch) {
           _searchController.text = releasesSearch;
         }
+      } else if (currentTabIndex == statsTabIndex) {
+        // Statistics tab
+        final statsSearch = ref.read(statisticsSearchProvider);
+        if (_searchController.text != statsSearch) {
+          _searchController.text = statsSearch;
+        }
       } else {
-        // Playlists / Statistics tab — clear search bar
+        // Playlists tab — clear search bar
         _searchController.clear();
       }
       setState(() {}); // Rebuild to update search placeholder when tab animation completes
@@ -486,11 +493,14 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
     final repoAsync = ref.watch(repositoryProvider);
     final roots = ref.watch(scanRootsProvider);
     // Get current search text based on active tab
+    final statsTabIndex = MobileUtils.isMobile() ? 3 : 2;
     final currentSearch = _tabController.index == 0
         ? ref.watch(projectsSearchProvider)
         : _tabController.index == 1
             ? ref.watch(releasesSearchProvider)
-            : '';
+            : _tabController.index == statsTabIndex
+                ? ref.watch(statisticsSearchProvider)
+                : '';
     final projects = ref.watch(projectsProvider);
     final hiddenMode = ref.watch(showHiddenProjectsProvider);
     final hiddenNotifier = ref.read(showHiddenProjectsProvider.notifier);
@@ -516,11 +526,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
     final scanRoots = ref.watch(scanRootsProvider);
     
     // Filter out preserved projects (in releases but not in any active scan root)
-    // On Android, we're only syncing metadata, so show ALL projects (both in releases and not)
+    // On mobile, we're only syncing metadata, so show ALL projects (both in releases and not)
     // On desktop, filter preserved projects that aren't in active scan roots
     final List<MusicProject> filteredProjects;
-    if (Platform.isAndroid) {
-      // Android: show all projects (metadata-only mode, no file system checks)
+    if (MobileUtils.isMobile()) {
+      // Mobile: show all projects (metadata-only mode, no file system checks)
       filteredProjects = allProjects;
     } else {
       // Desktop: filter preserved projects that aren't in active scan roots
@@ -679,7 +689,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                           tabs: [
                             Tab(text: AppLocalizations.of(context)!.projects),
                             Tab(text: AppLocalizations.of(context)!.releasesTab),
-                            if (Platform.isAndroid)
+                            if (MobileUtils.isMobile())
                               Tab(text: AppLocalizations.of(context)!.playlists),
                             Tab(text: AppLocalizations.of(context)!.statisticsTab),
                           ],
@@ -733,8 +743,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                       ? Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Search bar on top for mobile (hidden on Statistics tab)
-                            if (_tabController.index != (Platform.isAndroid ? 3 : 2)) TextField(
+                            // Search bar on top for mobile (hidden on Playlists tab)
+                            if (_tabController.index != 2) TextField(
                               focusNode: _searchFocusNode,
                               controller: _searchController,
                               decoration: InputDecoration(
@@ -742,17 +752,17 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                     ? AppLocalizations.of(context)!.searchProjects
                                     : _tabController.index == 1
                                         ? AppLocalizations.of(context)!.searchReleases
-                                        : AppLocalizations.of(context)!.searchPlaylists,
+                                        : AppLocalizations.of(context)!.statsSearchProjects,
                                 isDense: true,
                                 border: const OutlineInputBorder(),
                                 prefixIcon: const Icon(Icons.search),
                                 suffixIcon: () {
-                                  final currentSearch = _tabController.index == 0
+                                  final cs = _tabController.index == 0
                                       ? ref.read(projectsSearchProvider)
                                       : _tabController.index == 1
                                           ? ref.read(releasesSearchProvider)
-                                          : ref.read(playlistsSearchProvider);
-                                  return currentSearch.isNotEmpty
+                                          : ref.read(statisticsSearchProvider);
+                                  return cs.isNotEmpty
                                       ? IconButton(
                                           icon: const Icon(Icons.close),
                                           onPressed: () {
@@ -762,7 +772,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                             } else if (_tabController.index == 1) {
                                               ref.read(releasesSearchProvider.notifier).clear();
                                             } else {
-                                              ref.read(playlistsSearchProvider.notifier).clear();
+                                              ref.read(statisticsSearchProvider.notifier).set('');
                                             }
                                           },
                                         )
@@ -775,11 +785,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                 } else if (_tabController.index == 1) {
                                   ref.read(releasesSearchProvider.notifier).setSearchText(text);
                                 } else {
-                                  ref.read(playlistsSearchProvider.notifier).setSearchText(text);
+                                  ref.read(statisticsSearchProvider.notifier).set(text);
                                 }
                               },
                             ),
-                            if (_tabController.index != (Platform.isAndroid ? 3 : 2))
+                            if (_tabController.index != 2)
                               const SizedBox(height: 12),
                             // Filters and info row (only show on Projects tab)
                             if (_tabController.index == 0) ...[
@@ -968,7 +978,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                           },
                         ),
                         // Deadline Filter dropdown (Desktop only)
-                        if (!Platform.isAndroid)
+                        if (!MobileUtils.isMobile())
                           DropdownButton<DeadlineFilter>(
                             value: deadlineFilter,
                             hint: Text(
@@ -1213,8 +1223,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                       ],
                     ),
                   ),
-                  // Área de Pesquisa e Filtro (desktop only — hidden on Statistics tab)
-                  if (_tabController.index != (Platform.isAndroid ? 3 : 2))
+                  // Área de Pesquisa e Filtro (desktop only — hidden on Playlists tab)
+                  if (_tabController.index != 2 || !MobileUtils.isMobile())
                   Flexible(
                     flex: 3,
                     child: Row(
@@ -1222,30 +1232,34 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                         SizedBox(
                           width: 400,
                           child: TextField(
-                              // Associar o FocusNode ao TextField
                               focusNode: _searchFocusNode,
                               controller: _searchController,
                               decoration: InputDecoration(
                                 hintText: _tabController.index == 0
                                     ? '${AppLocalizations.of(context)!.searchProjects} (${Platform.isMacOS ? 'Cmd+F' : 'Ctrl+F'})'
-                                    : '${AppLocalizations.of(context)!.searchReleases} (${Platform.isMacOS ? 'Cmd+F' : 'Ctrl+F'})',
+                                    : _tabController.index == 1
+                                        ? '${AppLocalizations.of(context)!.searchReleases} (${Platform.isMacOS ? 'Cmd+F' : 'Ctrl+F'})'
+                                        : AppLocalizations.of(context)!.statsSearchProjects,
                                 isDense: true,
                                 border: const OutlineInputBorder(),
                                 prefixIcon: const Icon(Icons.search),
                                 suffixIcon: () {
-                                  // Get current search text based on active tab
-                                  final currentSearch = _tabController.index == 0
+                                  final cs = _tabController.index == 0
                                       ? ref.read(projectsSearchProvider)
-                                      : ref.read(releasesSearchProvider);
-                                  return currentSearch.isNotEmpty
+                                      : _tabController.index == 1
+                                          ? ref.read(releasesSearchProvider)
+                                          : ref.read(statisticsSearchProvider);
+                                  return cs.isNotEmpty
                                       ? IconButton(
                                           icon: const Icon(Icons.close),
                                           onPressed: () {
                                             _searchController.clear();
                                             if (_tabController.index == 0) {
                                               ref.read(projectsSearchProvider.notifier).clear();
-                                            } else {
+                                            } else if (_tabController.index == 1) {
                                               ref.read(releasesSearchProvider.notifier).clear();
+                                            } else {
+                                              ref.read(statisticsSearchProvider.notifier).set('');
                                             }
                                           },
                                         )
@@ -1253,13 +1267,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                 }(),
                               ),
                               onChanged: (text) {
-                                // Update the appropriate search provider based on current tab
                                 if (_tabController.index == 0) {
-                                  // Projects tab
                                   ref.read(projectsSearchProvider.notifier).setSearchText(text);
-                                } else {
-                                  // Releases tab
+                                } else if (_tabController.index == 1) {
                                   ref.read(releasesSearchProvider.notifier).setSearchText(text);
+                                } else {
+                                  ref.read(statisticsSearchProvider.notifier).set(text);
                                 }
                               },
                             ),
@@ -1477,7 +1490,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                   tabs: [
                     Tab(icon: Icon(Icons.library_music), text: AppLocalizations.of(context)!.projectsTab),
                     Tab(icon: Icon(Icons.album), text: AppLocalizations.of(context)!.releasesTab),
-                    if (Platform.isAndroid)
+                    if (MobileUtils.isMobile())
                       Tab(icon: Icon(Icons.playlist_play), text: AppLocalizations.of(context)!.playlists),
                     Tab(icon: Icon(Icons.bar_chart_rounded), text: AppLocalizations.of(context)!.statisticsTab),
                   ],
@@ -1491,8 +1504,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  // Use mobile-friendly list view on Android, table on desktop
-                  Platform.isAndroid
+                  // Use mobile-friendly list view on mobile, table on desktop
+                  MobileUtils.isMobile()
                       ? _MobileProjectsList(
                           projects: projects,
                           dateFormat: dateFormat,
@@ -1526,7 +1539,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                           isAnyOperation: isAnyOperation,
                         ),
                   const ReleasesTabPage(),
-                  if (Platform.isAndroid) const PlaylistsPage(),
+                  if (MobileUtils.isMobile()) const PlaylistsPage(),
                   const StatisticsPage(),
                 ],
               ),
@@ -3416,8 +3429,8 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
         originalFileName = '$originalFileName$ext';
       }
 
-      // On Android, copy to cache directory with original name for sharing
-      if (Platform.isAndroid) {
+      // On mobile, copy to cache directory with original name for sharing
+      if (MobileUtils.isMobile()) {
         final cacheDir = await getTemporaryDirectory();
         final shareFile = File(path.join(cacheDir.path, originalFileName));
         if (kDebugMode) {
@@ -3466,7 +3479,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
   }
 
   Future<void> _sharePreviewSongAsZip() async {
-    if (!Platform.isAndroid) return;
+    if (!MobileUtils.isMobile()) return;
 
     if (widget.project.previewSongPath == null || widget.project.previewSongPath!.isEmpty) {
       if (mounted) {
@@ -3587,7 +3600,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                if (Platform.isAndroid &&
+                if (MobileUtils.isMobile() &&
                     widget.project.previewSongPath != null &&
                     widget.project.previewSongPath!.isNotEmpty &&
                     !widget.project.previewSongPath!.startsWith('drive://')) ...[
@@ -3609,8 +3622,8 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
               ],
             ),
             content: SizedBox(
-              width: Platform.isAndroid ? double.infinity : 400,
-              child: Platform.isAndroid
+              width: MobileUtils.isMobile() ? double.infinity : 400,
+              child: MobileUtils.isMobile()
                   ? _buildAndroidPlayerLayout(context)
                   : _buildDesktopPlayerLayout(context),
             ),
@@ -3643,9 +3656,29 @@ class _MobileProjectsList extends ConsumerStatefulWidget {
   ConsumerState<_MobileProjectsList> createState() => _MobileProjectsListState();
 }
 
+enum _MobileSortField { lastModified, name, phase, createdAt, bpm }
+
 class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
   final Set<String> _selectedProjectIds = {};
   bool _isSelectionMode = false;
+  _MobileSortField _sortField = _MobileSortField.lastModified;
+
+  List<MusicProject> _sorted(List<MusicProject> projects) {
+    final list = List<MusicProject>.from(projects);
+    switch (_sortField) {
+      case _MobileSortField.lastModified:
+        list.sort((a, b) => b.lastModifiedAt.compareTo(a.lastModifiedAt));
+      case _MobileSortField.name:
+        list.sort((a, b) => a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase()));
+      case _MobileSortField.phase:
+        list.sort((a, b) => a.status.compareTo(b.status));
+      case _MobileSortField.createdAt:
+        list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      case _MobileSortField.bpm:
+        list.sort((a, b) => (b.bpm ?? 0).compareTo(a.bpm ?? 0));
+    }
+    return list;
+  }
 
   void _toggleProjectSelection(String projectId) {
     setState(() {
@@ -3797,18 +3830,41 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
       );
     }
 
+    final sortedProjects = _sorted(widget.projects);
+
     return Column(
       children: [
+        // Sort bar
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          child: Row(
+            children: [
+              Icon(Icons.sort, size: 16, color: Theme.of(context).textTheme.bodySmall?.color),
+              const SizedBox(width: 4),
+              DropdownButton<_MobileSortField>(
+                value: _sortField,
+                underline: const SizedBox.shrink(),
+                isDense: true,
+                style: Theme.of(context).textTheme.bodySmall,
+                items: [
+                  DropdownMenuItem(value: _MobileSortField.lastModified, child: Text(l10n.sortByLastModified)),
+                  DropdownMenuItem(value: _MobileSortField.name, child: Text(l10n.sortByName)),
+                  DropdownMenuItem(value: _MobileSortField.phase, child: Text(l10n.sortByPhase)),
+                  DropdownMenuItem(value: _MobileSortField.createdAt, child: Text(l10n.sortByCreatedAt)),
+                  DropdownMenuItem(value: _MobileSortField.bpm, child: Text(l10n.sortByBpm)),
+                ],
+                onChanged: (v) { if (v != null) setState(() => _sortField = v); },
+              ),
+            ],
+          ),
+        ),
         Expanded(
           child: ListView.builder(
-            itemCount: widget.projects.length,
+            itemCount: sortedProjects.length,
             itemBuilder: (context, index) {
-              final project = widget.projects[index];
+              final project = sortedProjects[index];
               final isSelected = _selectedProjectIds.contains(project.id);
               
-              final fileExists = File(project.filePath).existsSync() ||
-                  Directory(project.filePath).existsSync();
-
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 child: ListTile(
@@ -3818,21 +3874,9 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                           onChanged: (_) => _toggleProjectSelection(project.id),
                         )
                       : null,
-                  title: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          project.displayName,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      if (!fileExists)
-                        Tooltip(
-                          message: AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
-                          child: Icon(Icons.cloud_off, size: 16,
-                              color: Colors.orange.shade400),
-                        ),
-                    ],
+                  title: Text(
+                    project.displayName,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

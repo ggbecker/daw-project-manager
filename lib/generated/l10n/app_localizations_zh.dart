@@ -2087,4 +2087,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String statsNotTouchedDays(int days) {
     return '$days天未修改';
   }
+
+  @override
+  String get sortByLastModified => '最后修改';
+
+  @override
+  String get sortByName => '名称';
+
+  @override
+  String get sortByPhase => '阶段';
+
+  @override
+  String get sortByCreatedAt => '添加日期';
+
+  @override
+  String get sortByBpm => 'BPM';
 }

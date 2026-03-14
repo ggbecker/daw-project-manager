@@ -10,6 +10,7 @@ import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import '../utils/app_paths.dart';
+import '../utils/mobile_utils.dart';
 
 import '../models/music_project.dart';
 import '../models/scan_root.dart';
@@ -299,7 +300,7 @@ final projectsProvider = Provider<List<MusicProject>>((ref) {
     // source file DOES exist locally but falls outside every active scan root (the
     // user removed the root). Projects whose files are NOT present locally are always
     // shown — they are metadata-only entries restored from a backup on another machine.
-    if (!Platform.isAndroid) {
+    if (!MobileUtils.isMobile()) {
       final releases = releasesAsync.value ?? [];
       final protectedProjectIds = <String>{};
       for (final release in releases) {

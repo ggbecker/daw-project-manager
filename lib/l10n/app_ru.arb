@@ -1452,5 +1452,10 @@
     }
   },
   "statsNoProjectsFound": "Проекты не найдены",
-  "statsNotTouchedDays": "Не изменялся {days} дн."
+  "statsNotTouchedDays": "Не изменялся {days} дн.",
+  "sortByLastModified": "Дата изменения",
+  "sortByName": "Имя",
+  "sortByPhase": "Фаза",
+  "sortByCreatedAt": "Дата добавления",
+  "sortByBpm": "BPM"
 }

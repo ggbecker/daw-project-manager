@@ -3631,6 +3631,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not touched in {days} days'**
   String statsNotTouchedDays(int days);
+
+  /// No description provided for @sortByLastModified.
+  ///
+  /// In en, this message translates to:
+  /// **'Last modified'**
+  String get sortByLastModified;
+
+  /// No description provided for @sortByName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get sortByName;
+
+  /// No description provided for @sortByPhase.
+  ///
+  /// In en, this message translates to:
+  /// **'Phase'**
+  String get sortByPhase;
+
+  /// No description provided for @sortByCreatedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Date added'**
+  String get sortByCreatedAt;
+
+  /// No description provided for @sortByBpm.
+  ///
+  /// In en, this message translates to:
+  /// **'BPM'**
+  String get sortByBpm;
 }
 
 class _AppLocalizationsDelegate

@@ -2162,4 +2162,19 @@ class AppLocalizationsEs extends AppLocalizations {
   String statsNotTouchedDays(int days) {
     return 'Sin cambios en $days días';
   }
+
+  @override
+  String get sortByLastModified => 'Última modificación';
+
+  @override
+  String get sortByName => 'Nombre';
+
+  @override
+  String get sortByPhase => 'Fase';
+
+  @override
+  String get sortByCreatedAt => 'Fecha de creación';
+
+  @override
+  String get sortByBpm => 'BPM';
 }
