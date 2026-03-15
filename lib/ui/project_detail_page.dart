@@ -428,7 +428,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                 key: _formKey,
                 child: ListView(
                   children: [
-                    if (!sourceFileExists)
+                    if (!sourceFileExists && !MobileUtils.isMobile())
                       Container(
                         margin: const EdgeInsets.only(bottom: 12),
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
