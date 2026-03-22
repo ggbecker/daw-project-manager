@@ -64,7 +64,7 @@ class _StatisticsPageState extends ConsumerState<StatisticsPage> {
         final isWide = constraints.maxWidth >= 900;
         if (isWide) {
           return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SizedBox(
                 width: 340,
@@ -918,7 +918,7 @@ class _SmallBarChart extends StatelessWidget {
 // Project History Panel (right / bottom)
 // ---------------------------------------------------------------------------
 
-class _HistoryPanel extends ConsumerWidget {
+class _HistoryPanel extends ConsumerStatefulWidget {
   final MusicProject? selectedProject;
   final void Function(MusicProject?) onProjectSelected;
   final AppLocalizations l10n;
@@ -932,7 +932,23 @@ class _HistoryPanel extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_HistoryPanel> createState() => _HistoryPanelState();
+}
+
+class _HistoryPanelState extends ConsumerState<_HistoryPanel> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = widget.l10n;
+    final selectedProject = widget.selectedProject;
+    final onProjectSelected = widget.onProjectSelected;
     final projects = ref.watch(projectsWithRecentActivityProvider);
     final eventsAsync = ref.watch(allEventsStreamProvider);
     final allEvents = eventsAsync.asData?.value ?? [];
@@ -1015,7 +1031,7 @@ class _HistoryPanel extends ConsumerWidget {
                 child: Text(l10n.statsNoProjectsFound,
                     style: Theme.of(context).textTheme.bodySmall)),
           )
-        else
+        else if (widget.compact)
           ListView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
@@ -1074,7 +1090,65 @@ class _HistoryPanel extends ConsumerWidget {
                           : _PhaseBadge(phase: project.status),
                     );
                   },
-                ),
+                )
+        else
+          Expanded(
+            child: Scrollbar(
+              controller: _scrollController,
+              thumbVisibility: true,
+              child: ListView.builder(
+                controller: _scrollController,
+                itemCount: filtered.length,
+                itemBuilder: (context, index) {
+                  final project = filtered[index];
+                  final count = eventCount[project.id] ?? 0;
+                  final last = lastEvent[project.id];
+
+                  String subtitle;
+                  if (last == null) {
+                    subtitle = l10n.statsNoEvents;
+                  } else {
+                    final days = DateTime.now().difference(last).inDays;
+                    subtitle = days == 0
+                        ? l10n.statsLastActivityToday
+                        : l10n.statsLastActivityDaysAgo(days);
+                  }
+
+                  final isSelected = selectedProject?.id == project.id;
+                  return ListTile(
+                    dense: true,
+                    selected: isSelected,
+                    selectedTileColor: Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.1),
+                    onTap: () => onProjectSelected(isSelected ? null : project),
+                    title: Text(
+                      project.displayName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    subtitle: Text(subtitle,
+                        style: Theme.of(context).textTheme.bodySmall),
+                    trailing: count > 0
+                        ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _PhaseBadge(phase: project.status),
+                              const SizedBox(width: 6),
+                              Text(
+                                l10n.statsEventCount(count),
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            ],
+                          )
+                        : _PhaseBadge(phase: project.status),
+                  );
+                },
+              ),
+            ),
+          ),
       ],
     );
   }
