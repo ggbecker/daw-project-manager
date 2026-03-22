@@ -824,6 +824,8 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
     final folderPath = FileSystemEntity.isDirectorySync(project.filePath)
         ? project.filePath
         : path.dirname(project.filePath);
+    final fileExists = File(project.filePath).existsSync() ||
+        Directory(project.filePath).existsSync();
 
     return Card(
       key: ValueKey(project.id),
@@ -878,7 +880,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
               IconButton(
                 icon: const Icon(Icons.open_in_new),
                 tooltip: AppLocalizations.of(context)!.tooltipLaunchInDaw,
-                onPressed: () => _handleLaunchInDaw(context, project),
+                onPressed: fileExists ? () => _handleLaunchInDaw(context, project) : null,
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -901,7 +903,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
               IconButton(
                 icon: const Icon(Icons.folder_open),
                 tooltip: AppLocalizations.of(context)!.openFolder,
-                onPressed: () => _handleOpenFolder(context, project, folderPath),
+                onPressed: fileExists ? () => _handleOpenFolder(context, project, folderPath) : null,
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
