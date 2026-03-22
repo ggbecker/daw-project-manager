@@ -193,6 +193,7 @@
   "name": "Nome",
   "status": "Status",
   "phase": "Fase",
+  "filters": "Filtros",
   "filterByPhase": "Filtrar por Fase",
   "allPhases": "Todas as Fases",
   "daw": "DAW",
@@ -1476,5 +1477,23 @@
     }
   },
   "statsNoProjectsFound": "Nenhum projeto encontrado",
-  "statsNotTouchedDays": "Sem alterações há {days} dias"
+  "statsNotTouchedDays": "Sem alterações há {days} dias",
+  "sortByLastModified": "Última modificação",
+  "sortByName": "Nome",
+  "sortByPhase": "Fase",
+  "sortByCreatedAt": "Data de criação",
+  "sortByBpm": "BPM",
+  "monoLabel": "Mono",
+  "monoToggleTooltip": "Alternar reprodução mono",
+  "monoRequiresWav": "A mixagem mono requer um ficheiro WAV",
+  "monoUnsupportedFormat": "Não foi possível criar a mistura mono — formato não suportado",
+  "monoSwitchFailed": "Falha na troca para mono: {error}",
+  "@monoSwitchFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "analyzeLabel": "Analisar",
+  "reAnalyzeLabel": "Re-analisar",
+  "analysisRequiresWav": "A análise requer um ficheiro WAV"
 }

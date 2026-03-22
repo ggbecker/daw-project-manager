@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:pluto_grid/pluto_grid.dart';
@@ -14,6 +15,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:archive/archive_io.dart';
 
 import '../services/scanner_service.dart';
+import '../services/audio_analysis_service.dart';
 import '../utils/mobile_utils.dart';
 import '../utils/file_launcher.dart';
 import 'project_detail_page.dart';
@@ -83,6 +85,7 @@ class DashboardPage extends ConsumerStatefulWidget {
 class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTickerProviderStateMixin {
   bool _scanning = false;
   bool _extractingMetadata = false;
+  bool _isSearchingMobile = false;
   late TabController _tabController;
   
   // 1. FocusNode para a barra de pesquisa
@@ -101,8 +104,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
   @override
   void initState() {
     super.initState();
-    // Android has 4 tabs (Projects, Releases, Playlists, Statistics), desktop has 3
-    final tabCount = Platform.isAndroid ? 4 : 3;
+    // Mobile has 4 tabs (Projects, Releases, Playlists, Statistics), desktop has 3
+    final tabCount = MobileUtils.isMobile() ? 4 : 3;
     _tabController = TabController(length: tabCount, vsync: this);
     _searchController = TextEditingController();
     
@@ -144,6 +147,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
     if (!_tabController.indexIsChanging && mounted) {
       // Sync search controller with the appropriate tab's search state
       final currentTabIndex = _tabController.index;
+      final statsTabIndex = MobileUtils.isMobile() ? 3 : 2;
       if (currentTabIndex == 0) {
         // Projects tab
         final projectsSearch = ref.read(projectsSearchProvider);
@@ -156,11 +160,41 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
         if (_searchController.text != releasesSearch) {
           _searchController.text = releasesSearch;
         }
+      } else if (currentTabIndex == statsTabIndex) {
+        // Statistics tab
+        final statsSearch = ref.read(statisticsSearchProvider);
+        if (_searchController.text != statsSearch) {
+          _searchController.text = statsSearch;
+        }
       } else {
-        // Playlists / Statistics tab — clear search bar
+        // Playlists tab — clear search bar
         _searchController.clear();
       }
+      if (MobileUtils.isMobile() && _isSearchingMobile) {
+        _isSearchingMobile = false;
+      }
       setState(() {}); // Rebuild to update search placeholder when tab animation completes
+    }
+  }
+
+  void _clearCurrentTabSearch() {
+    _searchController.clear();
+    if (_tabController.index == 0) {
+      ref.read(projectsSearchProvider.notifier).clear();
+    } else if (_tabController.index == 1) {
+      ref.read(releasesSearchProvider.notifier).clear();
+    } else {
+      ref.read(statisticsSearchProvider.notifier).set('');
+    }
+  }
+
+  void _updateCurrentTabSearch(String text) {
+    if (_tabController.index == 0) {
+      ref.read(projectsSearchProvider.notifier).setSearchText(text);
+    } else if (_tabController.index == 1) {
+      ref.read(releasesSearchProvider.notifier).setSearchText(text);
+    } else {
+      ref.read(statisticsSearchProvider.notifier).set(text);
     }
   }
 
@@ -486,11 +520,14 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
     final repoAsync = ref.watch(repositoryProvider);
     final roots = ref.watch(scanRootsProvider);
     // Get current search text based on active tab
+    final statsTabIndex = MobileUtils.isMobile() ? 3 : 2;
     final currentSearch = _tabController.index == 0
         ? ref.watch(projectsSearchProvider)
         : _tabController.index == 1
             ? ref.watch(releasesSearchProvider)
-            : '';
+            : _tabController.index == statsTabIndex
+                ? ref.watch(statisticsSearchProvider)
+                : '';
     final projects = ref.watch(projectsProvider);
     final hiddenMode = ref.watch(showHiddenProjectsProvider);
     final hiddenNotifier = ref.read(showHiddenProjectsProvider.notifier);
@@ -516,11 +553,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
     final scanRoots = ref.watch(scanRootsProvider);
     
     // Filter out preserved projects (in releases but not in any active scan root)
-    // On Android, we're only syncing metadata, so show ALL projects (both in releases and not)
+    // On mobile, we're only syncing metadata, so show ALL projects (both in releases and not)
     // On desktop, filter preserved projects that aren't in active scan roots
     final List<MusicProject> filteredProjects;
-    if (Platform.isAndroid) {
-      // Android: show all projects (metadata-only mode, no file system checks)
+    if (MobileUtils.isMobile()) {
+      // Mobile: show all projects (metadata-only mode, no file system checks)
       filteredProjects = allProjects;
     } else {
       // Desktop: filter preserved projects that aren't in active scan roots
@@ -596,94 +633,155 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
               Scaffold(
                 appBar: MobileUtils.isMobile()
                     ? AppBar(
-                        title: const Text('DAW Project Manager'),
-                        actions: [
-                          // Notification settings button (Android only)
-                          if (Platform.isAndroid)
-                            IconButton(
-                              icon: const Icon(Icons.notifications),
-                              onPressed: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) => const NotificationSettingsPage(),
+                        leading: _isSearchingMobile
+                            ? IconButton(
+                                icon: const Icon(Icons.arrow_back),
+                                onPressed: () {
+                                  setState(() => _isSearchingMobile = false);
+                                  _clearCurrentTabSearch();
+                                },
+                              )
+                            : null,
+                        title: _isSearchingMobile
+                            ? TextField(
+                                autofocus: true,
+                                controller: _searchController,
+                                decoration: InputDecoration(
+                                  hintText: _tabController.index == 0
+                                      ? AppLocalizations.of(context)!.searchProjects
+                                      : _tabController.index == 1
+                                          ? AppLocalizations.of(context)!.searchReleases
+                                          : AppLocalizations.of(context)!.statsSearchProjects,
+                                  border: InputBorder.none,
+                                  hintStyle: const TextStyle(color: Colors.white54),
+                                ),
+                                style: const TextStyle(color: Colors.white),
+                                onChanged: _updateCurrentTabSearch,
+                              )
+                            : Image.asset('app_icon.png', height: 32),
+                        actions: _isSearchingMobile
+                            ? [
+                                if (currentSearch.isNotEmpty)
+                                  IconButton(
+                                    icon: const Icon(Icons.close),
+                                    onPressed: () {
+                                      _clearCurrentTabSearch();
+                                    },
                                   ),
-                                );
-                              },
-                              tooltip: AppLocalizations.of(context)!.notificationSettings,
-                            ),
-                          // Profile button
-                          Consumer(
-                            builder: (context, ref, child) {
-                              final currentProfileAsync = ref.watch(currentProfileProvider);
-                              return currentProfileAsync.when(
-                                loading: () => IconButton(
-                                  icon: const Icon(Icons.person),
-                                  onPressed: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) => const ProfileManagerPage(),
-                                      ),
-                                    );
-                                  },
-                                  tooltip: AppLocalizations.of(context)!.profileManager,
-                                ),
-                                error: (_, _) => IconButton(
-                                  icon: const Icon(Icons.person),
-                                  onPressed: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) => const ProfileManagerPage(),
-                                      ),
-                                    );
-                                  },
-                                  tooltip: AppLocalizations.of(context)!.profileManager,
-                                ),
-                                data: (currentProfile) {
-                                  Widget profileIcon;
-                                  if (currentProfile?.photoPath != null && 
-                                      File(currentProfile!.photoPath!).existsSync()) {
-                                    profileIcon = ClipRRect(
-                                      borderRadius: BorderRadius.circular(16),
-                                      child: Image.file(
-                                        File(currentProfile.photoPath!),
-                                        width: 32,
-                                        height: 32,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) {
-                                          return const Icon(Icons.person);
-                                        },
-                                      ),
-                                    );
-                                  } else {
-                                    profileIcon = const Icon(Icons.person);
-                                  }
-
-                                  return IconButton(
-                                    icon: profileIcon,
+                              ]
+                            : [
+                                // Search icon (only on searchable tabs — not Playlists tab index 2)
+                                if (_tabController.index != 2)
+                                  IconButton(
+                                    icon: const Icon(Icons.search),
+                                    onPressed: () => setState(() => _isSearchingMobile = true),
+                                  ),
+                                // Notification settings button (Android only)
+                                if (Platform.isAndroid)
+                                  IconButton(
+                                    icon: const Icon(Icons.notifications),
                                     onPressed: () {
                                       Navigator.of(context).push(
                                         MaterialPageRoute(
-                                          builder: (_) => const ProfileManagerPage(),
+                                          builder: (_) => const NotificationSettingsPage(),
                                         ),
                                       );
                                     },
-                                    tooltip: currentProfile?.name ?? AppLocalizations.of(context)!.profileManager,
-                                  );
-                                },
-                              );
-                            },
+                                    tooltip: AppLocalizations.of(context)!.notificationSettings,
+                                  ),
+                                // Profile button
+                                Consumer(
+                                  builder: (context, ref, child) {
+                                    final currentProfileAsync = ref.watch(currentProfileProvider);
+                                    return currentProfileAsync.when(
+                                      loading: () => IconButton(
+                                        icon: const Icon(Icons.person),
+                                        onPressed: () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (_) => const ProfileManagerPage(),
+                                            ),
+                                          );
+                                        },
+                                        tooltip: AppLocalizations.of(context)!.profileManager,
+                                      ),
+                                      error: (_, _) => IconButton(
+                                        icon: const Icon(Icons.person),
+                                        onPressed: () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (_) => const ProfileManagerPage(),
+                                            ),
+                                          );
+                                        },
+                                        tooltip: AppLocalizations.of(context)!.profileManager,
+                                      ),
+                                      data: (currentProfile) {
+                                        Widget profileIcon;
+                                        if (currentProfile?.photoPath != null &&
+                                            File(currentProfile!.photoPath!).existsSync()) {
+                                          profileIcon = ClipRRect(
+                                            borderRadius: BorderRadius.circular(16),
+                                            child: Image.file(
+                                              File(currentProfile.photoPath!),
+                                              width: 32,
+                                              height: 32,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (context, error, stackTrace) {
+                                                return const Icon(Icons.person);
+                                              },
+                                            ),
+                                          );
+                                        } else {
+                                          profileIcon = const Icon(Icons.person);
+                                        }
+                                        return IconButton(
+                                          icon: profileIcon,
+                                          onPressed: () {
+                                            Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                builder: (_) => const ProfileManagerPage(),
+                                              ),
+                                            );
+                                          },
+                                          tooltip: currentProfile?.name ?? AppLocalizations.of(context)!.profileManager,
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
+                              ],
+                      )
+                    : null,
+                bottomNavigationBar: MobileUtils.isMobile()
+                    ? NavigationBar(
+                        selectedIndex: _tabController.index,
+                        onDestinationSelected: (i) {
+                          _tabController.animateTo(i);
+                          setState(() {});
+                        },
+                        destinations: [
+                          NavigationDestination(
+                            icon: const Icon(Icons.library_music_outlined),
+                            selectedIcon: const Icon(Icons.library_music),
+                            label: AppLocalizations.of(context)!.projects,
+                          ),
+                          NavigationDestination(
+                            icon: const Icon(Icons.album_outlined),
+                            selectedIcon: const Icon(Icons.album),
+                            label: AppLocalizations.of(context)!.releasesTab,
+                          ),
+                          NavigationDestination(
+                            icon: const Icon(Icons.playlist_play),
+                            selectedIcon: const Icon(Icons.playlist_play),
+                            label: AppLocalizations.of(context)!.playlists,
+                          ),
+                          NavigationDestination(
+                            icon: const Icon(Icons.bar_chart_outlined),
+                            selectedIcon: const Icon(Icons.bar_chart_rounded),
+                            label: AppLocalizations.of(context)!.statisticsTab,
                           ),
                         ],
-                        bottom: TabBar(
-                          controller: _tabController,
-                          tabs: [
-                            Tab(text: AppLocalizations.of(context)!.projects),
-                            Tab(text: AppLocalizations.of(context)!.releasesTab),
-                            if (Platform.isAndroid)
-                              Tab(text: AppLocalizations.of(context)!.playlists),
-                            Tab(text: AppLocalizations.of(context)!.statisticsTab),
-                          ],
-                        ),
                       )
                     : null,
                 body: Column(
@@ -727,14 +825,15 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
             Builder(
               builder: (context) {
                 final isMobile = MobileUtils.isMobile();
+                if (isMobile) return const SizedBox.shrink();
                 return Padding(
                   padding: MobileUtils.getResponsivePadding(context),
                   child: isMobile
                       ? Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Search bar on top for mobile (hidden on Statistics tab)
-                            if (_tabController.index != (Platform.isAndroid ? 3 : 2)) TextField(
+                            // Search bar on top for mobile (hidden on Playlists tab)
+                            if (_tabController.index != 2) TextField(
                               focusNode: _searchFocusNode,
                               controller: _searchController,
                               decoration: InputDecoration(
@@ -742,17 +841,17 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                     ? AppLocalizations.of(context)!.searchProjects
                                     : _tabController.index == 1
                                         ? AppLocalizations.of(context)!.searchReleases
-                                        : AppLocalizations.of(context)!.searchPlaylists,
+                                        : AppLocalizations.of(context)!.statsSearchProjects,
                                 isDense: true,
                                 border: const OutlineInputBorder(),
                                 prefixIcon: const Icon(Icons.search),
                                 suffixIcon: () {
-                                  final currentSearch = _tabController.index == 0
+                                  final cs = _tabController.index == 0
                                       ? ref.read(projectsSearchProvider)
                                       : _tabController.index == 1
                                           ? ref.read(releasesSearchProvider)
-                                          : ref.read(playlistsSearchProvider);
-                                  return currentSearch.isNotEmpty
+                                          : ref.read(statisticsSearchProvider);
+                                  return cs.isNotEmpty
                                       ? IconButton(
                                           icon: const Icon(Icons.close),
                                           onPressed: () {
@@ -762,7 +861,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                             } else if (_tabController.index == 1) {
                                               ref.read(releasesSearchProvider.notifier).clear();
                                             } else {
-                                              ref.read(playlistsSearchProvider.notifier).clear();
+                                              ref.read(statisticsSearchProvider.notifier).set('');
                                             }
                                           },
                                         )
@@ -775,11 +874,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                 } else if (_tabController.index == 1) {
                                   ref.read(releasesSearchProvider.notifier).setSearchText(text);
                                 } else {
-                                  ref.read(playlistsSearchProvider.notifier).setSearchText(text);
+                                  ref.read(statisticsSearchProvider.notifier).set(text);
                                 }
                               },
                             ),
-                            if (_tabController.index != (Platform.isAndroid ? 3 : 2))
+                            if (_tabController.index != 2)
                               const SizedBox(height: 12),
                             // Filters and info row (only show on Projects tab)
                             if (_tabController.index == 0) ...[
@@ -968,7 +1067,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                           },
                         ),
                         // Deadline Filter dropdown (Desktop only)
-                        if (!Platform.isAndroid)
+                        if (!MobileUtils.isMobile())
                           DropdownButton<DeadlineFilter>(
                             value: deadlineFilter,
                             hint: Text(
@@ -1213,8 +1312,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                       ],
                     ),
                   ),
-                  // Área de Pesquisa e Filtro (desktop only — hidden on Statistics tab)
-                  if (_tabController.index != (Platform.isAndroid ? 3 : 2))
+                  // Área de Pesquisa e Filtro (desktop only — hidden on Playlists tab)
+                  if (_tabController.index != 2 || !MobileUtils.isMobile())
                   Flexible(
                     flex: 3,
                     child: Row(
@@ -1222,30 +1321,34 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                         SizedBox(
                           width: 400,
                           child: TextField(
-                              // Associar o FocusNode ao TextField
                               focusNode: _searchFocusNode,
                               controller: _searchController,
                               decoration: InputDecoration(
                                 hintText: _tabController.index == 0
                                     ? '${AppLocalizations.of(context)!.searchProjects} (${Platform.isMacOS ? 'Cmd+F' : 'Ctrl+F'})'
-                                    : '${AppLocalizations.of(context)!.searchReleases} (${Platform.isMacOS ? 'Cmd+F' : 'Ctrl+F'})',
+                                    : _tabController.index == 1
+                                        ? '${AppLocalizations.of(context)!.searchReleases} (${Platform.isMacOS ? 'Cmd+F' : 'Ctrl+F'})'
+                                        : AppLocalizations.of(context)!.statsSearchProjects,
                                 isDense: true,
                                 border: const OutlineInputBorder(),
                                 prefixIcon: const Icon(Icons.search),
                                 suffixIcon: () {
-                                  // Get current search text based on active tab
-                                  final currentSearch = _tabController.index == 0
+                                  final cs = _tabController.index == 0
                                       ? ref.read(projectsSearchProvider)
-                                      : ref.read(releasesSearchProvider);
-                                  return currentSearch.isNotEmpty
+                                      : _tabController.index == 1
+                                          ? ref.read(releasesSearchProvider)
+                                          : ref.read(statisticsSearchProvider);
+                                  return cs.isNotEmpty
                                       ? IconButton(
                                           icon: const Icon(Icons.close),
                                           onPressed: () {
                                             _searchController.clear();
                                             if (_tabController.index == 0) {
                                               ref.read(projectsSearchProvider.notifier).clear();
-                                            } else {
+                                            } else if (_tabController.index == 1) {
                                               ref.read(releasesSearchProvider.notifier).clear();
+                                            } else {
+                                              ref.read(statisticsSearchProvider.notifier).set('');
                                             }
                                           },
                                         )
@@ -1253,13 +1356,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                 }(),
                               ),
                               onChanged: (text) {
-                                // Update the appropriate search provider based on current tab
                                 if (_tabController.index == 0) {
-                                  // Projects tab
                                   ref.read(projectsSearchProvider.notifier).setSearchText(text);
-                                } else {
-                                  // Releases tab
+                                } else if (_tabController.index == 1) {
                                   ref.read(releasesSearchProvider.notifier).setSearchText(text);
+                                } else {
+                                  ref.read(statisticsSearchProvider.notifier).set(text);
                                 }
                               },
                             ),
@@ -1477,7 +1579,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                   tabs: [
                     Tab(icon: Icon(Icons.library_music), text: AppLocalizations.of(context)!.projectsTab),
                     Tab(icon: Icon(Icons.album), text: AppLocalizations.of(context)!.releasesTab),
-                    if (Platform.isAndroid)
+                    if (MobileUtils.isMobile())
                       Tab(icon: Icon(Icons.playlist_play), text: AppLocalizations.of(context)!.playlists),
                     Tab(icon: Icon(Icons.bar_chart_rounded), text: AppLocalizations.of(context)!.statisticsTab),
                   ],
@@ -1491,8 +1593,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  // Use mobile-friendly list view on Android, table on desktop
-                  Platform.isAndroid
+                  // Use mobile-friendly list view on mobile, table on desktop
+                  MobileUtils.isMobile()
                       ? _MobileProjectsList(
                           projects: projects,
                           dateFormat: dateFormat,
@@ -1526,7 +1628,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                           isAnyOperation: isAnyOperation,
                         ),
                   const ReleasesTabPage(),
-                  if (Platform.isAndroid) const PlaylistsPage(),
+                  if (MobileUtils.isMobile()) const PlaylistsPage(),
                   const StatisticsPage(),
                 ],
               ),
@@ -2442,7 +2544,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             child: Row(
               children: [
                 Expanded(child: Text(rendererContext.cell.value.toString())),
-                if (!fileExists)
+                if (!fileExists && !MobileUtils.isMobile())
                   Tooltip(
                     message: AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
                     child: Icon(Icons.cloud_off, size: 14,
@@ -2805,7 +2907,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               ),
               // Launch button
               Tooltip(
-                message: sourceFileExists ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
+                message: sourceFileExists || MobileUtils.isMobile() ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
                 child: IconButton(
                   icon: const Icon(Icons.open_in_new),
                   tooltip: sourceFileExists ? AppLocalizations.of(context)!.tooltipLaunchInDaw : null,
@@ -2828,7 +2930,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               ),
               // Open Folder button
               Tooltip(
-                message: sourceFileExists ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
+                message: sourceFileExists || MobileUtils.isMobile() ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
                 child: IconButton(
                   icon: const Icon(Icons.folder_open),
                   tooltip: sourceFileExists ? AppLocalizations.of(context)!.openFolder : null,
@@ -3057,39 +3159,189 @@ class _PreviewSongDialog extends StatefulWidget {
 }
 
 class _PreviewSongDialogState extends State<_PreviewSongDialog> {
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  AudioPlayer _audioPlayer = AudioPlayer();
+  AudioPlayer? _warmPlayer;
+  int _playerGen = 0;
   bool _isPlaying = false;
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
   double _volume = 1.0;
+  bool _isMono = false;
+  bool _isGeneratingMono = false;
+  String? _monoFilePath;
+  AudioFileInfo? _fileInfo;
+
+  void _attachListeners(AudioPlayer player, int gen) {
+    player.onPlayerStateChanged.listen((state) {
+      if (gen != _playerGen || !mounted) return;
+      setState(() => _isPlaying = state == PlayerState.playing);
+    });
+    player.onDurationChanged.listen((d) {
+      if (gen != _playerGen || !mounted) return;
+      setState(() => _duration = d);
+    });
+    player.onPositionChanged.listen((p) {
+      if (gen != _playerGen || !mounted) return;
+      setState(() => _position = p);
+    });
+    player.onPlayerComplete.listen((_) {
+      if (gen != _playerGen || !mounted) return;
+      setState(() { _isPlaying = false; _position = Duration.zero; });
+    });
+  }
 
   @override
   void initState() {
     super.initState();
-    _audioPlayer.onPlayerStateChanged.listen((state) {
-      if (mounted) {
-        setState(() {
-          _isPlaying = state == PlayerState.playing;
-        });
-      }
-    });
-    _audioPlayer.onDurationChanged.listen((duration) {
-      if (mounted) {
-        setState(() {
-          _duration = duration;
-        });
-      }
-    });
-    _audioPlayer.onPositionChanged.listen((position) {
-      if (mounted) {
-        setState(() {
-          _position = position;
-        });
-      }
-    });
-    
+    _attachListeners(_audioPlayer, _playerGen);
     // Auto-start playback when dialog opens
     _startPlayback();
+    _startBackgroundPrep();
+  }
+
+  bool _hasAudioFile() {
+    final p2 = widget.project.previewSongPath;
+    return p2 != null && p2.isNotEmpty;
+  }
+
+  bool _supportsMonoMix() {
+    final p2 = widget.project.previewSongPath;
+    if (p2 == null || p2.isEmpty) return false;
+    final ext = p2.toLowerCase().split('.').last;
+    if (ext == 'wav') return true;
+    if (Platform.isMacOS || Platform.isIOS) {
+      return const {'mp3', 'flac', 'aif', 'aiff', 'aac', 'm4a'}.contains(ext);
+    }
+    return const {'mp3', 'flac', 'aif', 'aiff', 'ogg', 'aac', 'm4a'}.contains(ext);
+  }
+
+  Source _currentSource() {
+    if (_isMono && _monoFilePath != null) return DeviceFileSource(_monoFilePath!);
+    return DeviceFileSource(widget.project.previewSongPath!);
+  }
+
+  void _startBackgroundPrep() {
+    if (!_hasAudioFile()) return;
+    final filePath = widget.project.previewSongPath!;
+    AudioAnalysisService.getFileInfo(filePath).then((info) {
+      if (mounted && info != null) setState(() => _fileInfo = info);
+    });
+    if (_supportsMonoMix()) _prepareMonoFile(filePath);
+  }
+
+  Future<void> _prepareMonoFile(String filePath) async {
+    final tmpDir = await getTemporaryDirectory();
+    final outPath = '${tmpDir.path}/mono_${widget.project.id}.wav';
+    final ok = await AudioAnalysisService.writeMonoWavFile(filePath, outPath);
+    if (!mounted) return;
+    if (ok) {
+      setState(() => _monoFilePath = outPath);
+      _preWarmAlt(DeviceFileSource(outPath));
+    } else {
+      final channels = await AudioAnalysisService.getChannelCount(filePath);
+      if (mounted && channels == 1) {
+        setState(() => _monoFilePath = filePath);
+        _preWarmAlt(DeviceFileSource(filePath));
+      }
+    }
+  }
+
+  void _preWarmAlt(Source source) {
+    _warmPlayer?.dispose();
+    _warmPlayer = AudioPlayer();
+    _warmPlayer!.setVolume(_volume);
+    _warmPlayer!.setSource(source);
+  }
+
+  void _fadeIn(AudioPlayer player) {
+    const steps = 12;
+    const stepMs = 10;
+    int step = 0;
+    Timer.periodic(const Duration(milliseconds: stepMs), (timer) {
+      step++;
+      if (!mounted || player != _audioPlayer) {
+        timer.cancel();
+        return;
+      }
+      player.setVolume((_volume * step / steps).clamp(0.0, _volume));
+      if (step >= steps) {
+        timer.cancel();
+        player.setVolume(_volume);
+      }
+    });
+  }
+
+  Future<void> _toggleMono() async {
+    if (!_supportsMonoMix()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Mono mixing is not supported for this format')),
+      );
+      return;
+    }
+    final newMono = !_isMono;
+    if (newMono && _monoFilePath == null) {
+      setState(() => _isGeneratingMono = true);
+      final tmpDir = await getTemporaryDirectory();
+      final outPath = '${tmpDir.path}/mono_${widget.project.id}.wav';
+      final ok = await AudioAnalysisService.writeMonoWavFile(widget.project.previewSongPath!, outPath);
+      if (!mounted) return;
+      if (!ok) {
+        final channels = await AudioAnalysisService.getChannelCount(widget.project.previewSongPath!);
+        if (!mounted) return;
+        if (channels == 1) {
+          setState(() { _monoFilePath = widget.project.previewSongPath!; _isGeneratingMono = false; });
+        } else {
+          setState(() => _isGeneratingMono = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Could not create mono mix — unsupported format')),
+          );
+          return;
+        }
+      } else {
+        setState(() { _monoFilePath = outPath; _isGeneratingMono = false; });
+      }
+    }
+
+    final wasPlaying = _isPlaying;
+    final savedPosition = _position;
+    setState(() => _isMono = newMono);
+
+    final newActive = _warmPlayer ?? AudioPlayer();
+    _warmPlayer = null;
+    final gen = ++_playerGen;
+    final oldActive = _audioPlayer;
+    _audioPlayer = newActive;
+    _attachListeners(newActive, gen);
+
+    try {
+      if (wasPlaying) {
+        await newActive.setVolume(0);
+        await newActive.play(_currentSource(), position: savedPosition);
+        _fadeIn(newActive);
+      } else {
+        await newActive.setVolume(_volume);
+        await newActive.setSource(_currentSource());
+        if (savedPosition > Duration.zero) await newActive.seek(savedPosition);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Mono switch failed: $e')),
+        );
+      }
+    }
+
+    await oldActive.stop();
+    final altSource = _isMono
+        ? DeviceFileSource(widget.project.previewSongPath!)
+        : (_monoFilePath != null ? DeviceFileSource(_monoFilePath!) : null);
+    if (altSource != null) {
+      _warmPlayer = oldActive;
+      _warmPlayer!.setVolume(_volume);
+      _warmPlayer!.setSource(altSource);
+    } else {
+      oldActive.dispose();
+    }
   }
 
   Future<void> _startPlayback() async {
@@ -3109,7 +3361,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
     }
 
     try {
-      await _audioPlayer.play(DeviceFileSource(widget.project.previewSongPath!));
+      await _audioPlayer.play(_currentSource());
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -3123,6 +3375,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
   void dispose() {
     _audioPlayer.stop();
     _audioPlayer.dispose();
+    _warmPlayer?.dispose();
     widget.onClose();
     super.dispose();
   }
@@ -3216,6 +3469,23 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
                 },
               ),
             ),
+            const SizedBox(width: 8),
+            _isGeneratingMono
+                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                : FilterChip(
+                    avatar: Icon(
+                      _isMono ? Icons.check_box : Icons.check_box_outline_blank,
+                      size: 16,
+                      color: _isMono ? Colors.red : null,
+                    ),
+                    label: Text('Mono', style: TextStyle(color: _isMono ? Colors.red : null, fontWeight: _isMono ? FontWeight.bold : null)),
+                    tooltip: 'Toggle mono playback',
+                    selected: _isMono,
+                    showCheckmark: false,
+                    selectedColor: Colors.red.withValues(alpha: 0.15),
+                    onSelected: (_) => _toggleMono(),
+                    visualDensity: VisualDensity.compact,
+                  ),
           ],
         ),
         const SizedBox(height: 16),
@@ -3352,6 +3622,55 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
             ),
           ],
         ),
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            _isGeneratingMono
+                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                : FilterChip(
+                    avatar: Icon(
+                      _isMono ? Icons.check_box : Icons.check_box_outline_blank,
+                      size: 16,
+                      color: _isMono ? Colors.red : null,
+                    ),
+                    label: Text('Mono', style: TextStyle(color: _isMono ? Colors.red : null, fontWeight: _isMono ? FontWeight.bold : null)),
+                    tooltip: 'Toggle mono playback',
+                    selected: _isMono,
+                    showCheckmark: false,
+                    selectedColor: Colors.red.withValues(alpha: 0.15),
+                    onSelected: (_) => _toggleMono(),
+                    visualDensity: VisualDensity.compact,
+                  ),
+            const SizedBox(width: 12),
+            Builder(builder: (ctx) {
+              final dim = Theme.of(ctx).textTheme.bodySmall?.color;
+              final ext = (widget.project.previewSongPath ?? '').toLowerCase().split('.').last;
+              final formatLabel = switch (ext) {
+                'wav'  => 'WAV',
+                'mp3'  => 'MP3',
+                'flac' => 'FLAC',
+                'aif' || 'aiff' => 'AIFF',
+                'ogg'  => 'OGG',
+                'aac'  => 'AAC',
+                'm4a'  => 'M4A',
+                _      => ext.toUpperCase(),
+              };
+              final parts = <String>[];
+              if (_fileInfo != null) {
+                final sr = _fileInfo!.sampleRate;
+                parts.add(sr % 1000 == 0 ? '${sr ~/ 1000} kHz' : '${(sr / 1000).toStringAsFixed(1)} kHz');
+                if (_fileInfo!.bitDepth != null) {
+                  parts.add('${_fileInfo!.bitDepth}-bit');
+                } else if (_fileInfo!.bitrateKbps != null) {
+                  parts.add('${_fileInfo!.bitrateKbps} kbps');
+                }
+                parts.add(_fileInfo!.channels == 1 ? 'Mono' : _fileInfo!.channels == 2 ? 'Stereo' : '${_fileInfo!.channels}ch');
+              }
+              parts.add(formatLabel);
+              return Text(parts.join(' · '), style: TextStyle(fontSize: 11, color: dim));
+            }),
+          ],
+        ),
       ],
     );
   }
@@ -3416,8 +3735,8 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
         originalFileName = '$originalFileName$ext';
       }
 
-      // On Android, copy to cache directory with original name for sharing
-      if (Platform.isAndroid) {
+      // On mobile, copy to cache directory with original name for sharing
+      if (MobileUtils.isMobile()) {
         final cacheDir = await getTemporaryDirectory();
         final shareFile = File(path.join(cacheDir.path, originalFileName));
         if (kDebugMode) {
@@ -3466,7 +3785,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
   }
 
   Future<void> _sharePreviewSongAsZip() async {
-    if (!Platform.isAndroid) return;
+    if (!MobileUtils.isMobile()) return;
 
     if (widget.project.previewSongPath == null || widget.project.previewSongPath!.isEmpty) {
       if (mounted) {
@@ -3587,7 +3906,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                if (Platform.isAndroid &&
+                if (MobileUtils.isMobile() &&
                     widget.project.previewSongPath != null &&
                     widget.project.previewSongPath!.isNotEmpty &&
                     !widget.project.previewSongPath!.startsWith('drive://')) ...[
@@ -3609,8 +3928,8 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
               ],
             ),
             content: SizedBox(
-              width: Platform.isAndroid ? double.infinity : 400,
-              child: Platform.isAndroid
+              width: MobileUtils.isMobile() ? double.infinity : 400,
+              child: MobileUtils.isMobile()
                   ? _buildAndroidPlayerLayout(context)
                   : _buildDesktopPlayerLayout(context),
             ),
@@ -3643,9 +3962,29 @@ class _MobileProjectsList extends ConsumerStatefulWidget {
   ConsumerState<_MobileProjectsList> createState() => _MobileProjectsListState();
 }
 
+enum _MobileSortField { lastModified, name, phase, createdAt, bpm }
+
 class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
   final Set<String> _selectedProjectIds = {};
   bool _isSelectionMode = false;
+  _MobileSortField _sortField = _MobileSortField.lastModified;
+
+  List<MusicProject> _sorted(List<MusicProject> projects) {
+    final list = List<MusicProject>.from(projects);
+    switch (_sortField) {
+      case _MobileSortField.lastModified:
+        list.sort((a, b) => b.lastModifiedAt.compareTo(a.lastModifiedAt));
+      case _MobileSortField.name:
+        list.sort((a, b) => a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase()));
+      case _MobileSortField.phase:
+        list.sort((a, b) => a.status.compareTo(b.status));
+      case _MobileSortField.createdAt:
+        list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      case _MobileSortField.bpm:
+        list.sort((a, b) => (b.bpm ?? 0).compareTo(a.bpm ?? 0));
+    }
+    return list;
+  }
 
   void _toggleProjectSelection(String projectId) {
     setState(() {
@@ -3797,18 +4136,41 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
       );
     }
 
+    final sortedProjects = _sorted(widget.projects);
+
     return Column(
       children: [
+        // Sort bar
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          child: Row(
+            children: [
+              Icon(Icons.sort, size: 16, color: Theme.of(context).textTheme.bodySmall?.color),
+              const SizedBox(width: 4),
+              DropdownButton<_MobileSortField>(
+                value: _sortField,
+                underline: const SizedBox.shrink(),
+                isDense: true,
+                style: Theme.of(context).textTheme.bodySmall,
+                items: [
+                  DropdownMenuItem(value: _MobileSortField.lastModified, child: Text(l10n.sortByLastModified)),
+                  DropdownMenuItem(value: _MobileSortField.name, child: Text(l10n.sortByName)),
+                  DropdownMenuItem(value: _MobileSortField.phase, child: Text(l10n.sortByPhase)),
+                  DropdownMenuItem(value: _MobileSortField.createdAt, child: Text(l10n.sortByCreatedAt)),
+                  DropdownMenuItem(value: _MobileSortField.bpm, child: Text(l10n.sortByBpm)),
+                ],
+                onChanged: (v) { if (v != null) setState(() => _sortField = v); },
+              ),
+            ],
+          ),
+        ),
         Expanded(
           child: ListView.builder(
-            itemCount: widget.projects.length,
+            itemCount: sortedProjects.length,
             itemBuilder: (context, index) {
-              final project = widget.projects[index];
+              final project = sortedProjects[index];
               final isSelected = _selectedProjectIds.contains(project.id);
               
-              final fileExists = File(project.filePath).existsSync() ||
-                  Directory(project.filePath).existsSync();
-
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 child: ListTile(
@@ -3818,21 +4180,9 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                           onChanged: (_) => _toggleProjectSelection(project.id),
                         )
                       : null,
-                  title: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          project.displayName,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      if (!fileExists)
-                        Tooltip(
-                          message: AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
-                          child: Icon(Icons.cloud_off, size: 16,
-                              color: Colors.orange.shade400),
-                        ),
-                    ],
+                  title: Text(
+                    project.displayName,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

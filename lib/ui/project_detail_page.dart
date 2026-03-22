@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -24,6 +25,7 @@ import '../repository/project_repository.dart';
 import '../utils/mobile_utils.dart';
 import '../utils/file_launcher.dart';
 import '../generated/l10n/app_localizations.dart';
+import '../services/audio_analysis_service.dart';
 import 'widgets/desktop_title_bar.dart';
 import 'widgets/todo_list_widget.dart';
 import 'project_statistics_page.dart';
@@ -428,7 +430,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                 key: _formKey,
                 child: ListView(
                   children: [
-                    if (!sourceFileExists)
+                    if (!sourceFileExists && !MobileUtils.isMobile())
                       Container(
                         margin: const EdgeInsets.only(bottom: 12),
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -1119,7 +1121,7 @@ updatedProject.lastModifiedAt.toString(),
 
                                       // NOVO: BOTÃO OPEN FOLDER
                                       Tooltip(
-                                        message: sourceFileExists ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
+                                        message: sourceFileExists || MobileUtils.isMobile() ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
                                         child: ElevatedButton.icon(
                                           onPressed: sourceFileExists
                                               ? () => _openProjectFolder(updatedProject.filePath)
@@ -1134,7 +1136,7 @@ updatedProject.lastModifiedAt.toString(),
 
                                       // BOTÃO OPEN IN DAW (Existente)
                                       Tooltip(
-                                        message: sourceFileExists ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
+                                        message: sourceFileExists || MobileUtils.isMobile() ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
                                         child: ElevatedButton.icon(
                                           onPressed: sourceFileExists
                                               ? () async {
@@ -1224,7 +1226,9 @@ class _TogglePlayPauseIntent extends Intent {
 }
 
 class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  AudioPlayer _audioPlayer = AudioPlayer();
+  AudioPlayer? _warmPlayer; // pre-loaded with the alternate source (mono↔stereo)
+  int _playerGen = 0;       // incremented on each swap; stale listeners self-cancel
   final FocusNode _focusNode = FocusNode();
   bool _isPlaying = false;
   Duration _duration = Duration.zero;
@@ -1232,65 +1236,58 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
   bool _isDraggingOver = false;
   double _volume = 1.0;
 
+  // Mono
+  bool _isMono = false;
+  bool _isGeneratingMono = false;
+  String? _monoFilePath;
+
+  // File metadata (populated for any format)
+  AudioFileInfo? _fileInfo;
+
+  // Real-time level metering
+  AudioLevelData? _levelData;
+  Timer? _levelTimer;
+  double _currentLufs = -100.0;
+
   @override
   void initState() {
     super.initState();
-    _audioPlayer.onPlayerStateChanged.listen((state) {
-      if (mounted) {
-        if (kDebugMode) {
-          print('Audio player state changed: $state');
+    _attachListeners(_audioPlayer, _playerGen);
+    _startBackgroundPrep();
+  }
+
+  void _attachListeners(AudioPlayer player, int gen) {
+    player.onPlayerStateChanged.listen((state) {
+      if (gen != _playerGen || !mounted) return;
+      final playing = state == PlayerState.playing;
+      setState(() => _isPlaying = playing);
+      if (playing) {
+        _startLevelTimer();
+      } else {
+        _levelTimer?.cancel();
+        if (state == PlayerState.stopped || state == PlayerState.completed) {
+          setState(() => _currentLufs = -100.0);
         }
-        setState(() {
-          _isPlaying = state == PlayerState.playing;
-        });
       }
     });
-    _audioPlayer.onDurationChanged.listen((duration) {
-      if (mounted) {
-        if (kDebugMode) {
-          print('Audio duration changed: $duration');
-        }
-        setState(() {
-          _duration = duration;
-        });
-      }
+    player.onDurationChanged.listen((d) {
+      if (gen != _playerGen || !mounted) return;
+      setState(() => _duration = d);
     });
-    _audioPlayer.onPositionChanged.listen((position) {
-      if (mounted) {
-        setState(() {
-          _position = position;
-        });
-      }
+    player.onPositionChanged.listen((p) {
+      if (gen != _playerGen || !mounted) return;
+      setState(() => _position = p);
     });
-    // Listen for player logs (if available)
-    try {
-      _audioPlayer.onLog.listen((message) {
-        if (kDebugMode) {
-          print('Audio player log: $message');
-        }
-      });
-    } catch (e) {
-      // onLog might not be available in all versions
-      if (kDebugMode) {
-        print('onLog not available: $e');
-      }
-    }
-    // Listen for completion
-    _audioPlayer.onPlayerComplete.listen((_) {
-      if (mounted) {
-        if (kDebugMode) {
-          print('Audio playback completed');
-        }
-        setState(() {
-          _isPlaying = false;
-          _position = Duration.zero;
-        });
-      }
+    player.onPlayerComplete.listen((_) {
+      if (gen != _playerGen || !mounted) return;
+      setState(() { _isPlaying = false; _position = Duration.zero; });
     });
   }
 
   @override
   void dispose() {
+    _levelTimer?.cancel();
+    _warmPlayer?.dispose();
     _audioPlayer.dispose();
     _focusNode.dispose();
     super.dispose();
@@ -1299,24 +1296,218 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
   @override
   void didUpdateWidget(_PreviewSongPlayer oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // If preview song was removed, stop playing and reset state
-    if (oldWidget.project.previewSongPath != null &&
-        widget.project.previewSongPath == null) {
+    if (oldWidget.project.previewSongPath != widget.project.previewSongPath) {
       _audioPlayer.stop();
+      _levelTimer?.cancel();
       setState(() {
         _isPlaying = false;
         _position = Duration.zero;
         _duration = Duration.zero;
+        _isMono = false;
+        _isGeneratingMono = false;
+        _monoFilePath = null;
+        _fileInfo = null;
+        _levelData = null;
+        _currentLufs = -100.0;
+      });
+      _startBackgroundPrep();
+    }
+  }
+
+  // ── Background preparation ──────────────────────────────────────────────────
+
+  /// Called when a new WAV file is loaded. Starts two background tasks:
+  /// 1. Compute per-100 ms level data for the real-time meter.
+  /// 2. Generate the mono temp file so toggling mono is instant.
+  void _startBackgroundPrep() {
+    if (!_hasAudioFile()) return;
+    final path = widget.project.previewSongPath!;
+
+    // File metadata — works for any format
+    AudioAnalysisService.getFileInfo(path).then((info) {
+      if (mounted && info != null) setState(() => _fileInfo = info);
+    });
+
+    // WAV-only: streaming level data
+    if (_isWavFile()) {
+      AudioAnalysisService.computeLevelData(path).then((data) {
+        if (mounted && data != null) setState(() => _levelData = data);
       });
     }
-    // If preview song changed, reset position
-    else if (oldWidget.project.previewSongPath != widget.project.previewSongPath) {
-      _audioPlayer.stop();
-      setState(() {
-        _isPlaying = false;
-        _position = Duration.zero;
-        _duration = Duration.zero;
-      });
+
+    // Pre-generate mono file for any supported format
+    if (_supportsMonoMix()) _prepareMonoFile(path);
+  }
+
+  Future<void> _prepareMonoFile(String path) async {
+    final tmpDir = await getTemporaryDirectory();
+    final outPath = '${tmpDir.path}/mono_${widget.project.id}.wav';
+    final ok = await AudioAnalysisService.writeMonoWavFile(path, outPath);
+    if (!mounted) return;
+    if (ok) {
+      setState(() => _monoFilePath = outPath);
+      _preWarmAlt(DeviceFileSource(outPath));
+    } else {
+      // File may already be mono — level data may not be ready yet, so we
+      // resolve the channel count here directly from the service.
+      final channels = await AudioAnalysisService.getChannelCount(path);
+      if (mounted && channels == 1) {
+        setState(() => _monoFilePath = path);
+        _preWarmAlt(DeviceFileSource(path));
+      }
+    }
+  }
+
+  /// Pre-loads [source] into [_warmPlayer] so the next toggle is source-load-free.
+  void _preWarmAlt(Source source) {
+    _warmPlayer?.dispose();
+    _warmPlayer = AudioPlayer();
+    _warmPlayer!.setVolume(_volume);
+    _warmPlayer!.setSource(source); // fire-and-forget; loads into native buffer
+  }
+
+  /// Fades [player] from 0 → [_volume] over ~120 ms.
+  /// Cancels automatically if the player is swapped out before the fade ends.
+  void _fadeIn(AudioPlayer player) {
+    const steps = 12;
+    const stepMs = 10; // 12 × 10 ms = 120 ms total
+    int step = 0;
+    Timer.periodic(const Duration(milliseconds: stepMs), (timer) {
+      step++;
+      if (!mounted || player != _audioPlayer) {
+        timer.cancel();
+        return;
+      }
+      player.setVolume((_volume * step / steps).clamp(0.0, _volume));
+      if (step >= steps) {
+        timer.cancel();
+        player.setVolume(_volume); // land on exact target
+      }
+    });
+  }
+
+  // ── Level timer ─────────────────────────────────────────────────────────────
+
+  void _startLevelTimer() {
+    _levelTimer?.cancel();
+    _levelTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
+      if (!mounted || _levelData == null) return;
+      final (_, _, lufs) = _levelData!.valuesAt(_position);
+      setState(() => _currentLufs = lufs);
+    });
+  }
+
+  // ── Helpers ─────────────────────────────────────────────────────────────────
+
+  bool _hasAudioFile() {
+    final path = widget.project.previewSongPath;
+    return path != null && path.isNotEmpty;
+  }
+
+  bool _isWavFile() {
+    final path = widget.project.previewSongPath;
+    return path != null && path.toLowerCase().endsWith('.wav');
+  }
+
+  bool _supportsMonoMix() {
+    final path = widget.project.previewSongPath;
+    if (path == null || path.isEmpty) return false;
+    final ext = path.toLowerCase().split('.').last;
+    if (ext == 'wav') return true;
+    if (Platform.isMacOS || Platform.isIOS) {
+      return const {'mp3', 'flac', 'aif', 'aiff', 'aac', 'm4a'}.contains(ext);
+    }
+    // Windows/Android/Linux: ffmpeg-dependent formats
+    return const {'mp3', 'flac', 'aif', 'aiff', 'ogg', 'aac', 'm4a'}.contains(ext);
+  }
+
+  Source _currentSource() {
+    if (_isMono && _monoFilePath != null) return DeviceFileSource(_monoFilePath!);
+    return DeviceFileSource(widget.project.previewSongPath!);
+  }
+
+  Future<void> _toggleMono() async {
+    debugPrint('[Mono] _toggleMono called. supportsMonoMix=${_supportsMonoMix()} isMono=$_isMono monoFilePath=$_monoFilePath');
+    if (!_supportsMonoMix()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.monoRequiresWav)),
+      );
+      return;
+    }
+    final newMono = !_isMono;
+
+    // If we're toggling ON and the mono file isn't ready yet, generate it now.
+    if (newMono && _monoFilePath == null) {
+      setState(() => _isGeneratingMono = true);
+      final tmpDir = await getTemporaryDirectory();
+      final outPath = '${tmpDir.path}/mono_${widget.project.id}.wav';
+      debugPrint('[Mono] Generating mono file → $outPath');
+      final ok = await AudioAnalysisService.writeMonoWavFile(
+          widget.project.previewSongPath!, outPath);
+      debugPrint('[Mono] writeMonoWavFile result: $ok channels=${_levelData?.channels}');
+      if (!mounted) return;
+      if (!ok) {
+        // If the file is already mono, use the original as the mono source.
+        final alreadyMono = _levelData?.channels == 1;
+        if (alreadyMono) {
+          debugPrint('[Mono] File is already mono — using original path.');
+          setState(() { _monoFilePath = widget.project.previewSongPath!; _isGeneratingMono = false; });
+        } else {
+          setState(() => _isGeneratingMono = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context)!.monoUnsupportedFormat)),
+          );
+          return;
+        }
+      } else {
+        setState(() { _monoFilePath = outPath; _isGeneratingMono = false; });
+      }
+    }
+
+    final wasPlaying = _isPlaying;
+    final savedPosition = _position;
+    setState(() => _isMono = newMono);
+
+    // Grab (or create) the new active player.
+    final newActive = _warmPlayer ?? AudioPlayer();
+    _warmPlayer = null;
+
+    // Advance generation: listeners on the old player will now self-cancel.
+    final gen = ++_playerGen;
+    final oldActive = _audioPlayer;
+    _audioPlayer = newActive;
+    _attachListeners(newActive, gen);
+
+    try {
+      if (wasPlaying) {
+        await newActive.setVolume(0);
+        await newActive.play(_currentSource(), position: savedPosition);
+        _fadeIn(newActive);
+      } else {
+        await newActive.setVolume(_volume);
+        await newActive.setSource(_currentSource());
+        if (savedPosition > Duration.zero) await newActive.seek(savedPosition);
+      }
+    } catch (e) {
+      debugPrint('[Mono] switch error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.monoSwitchFailed(e.toString()))),
+        );
+      }
+    }
+
+    // Recycle the old player as the warm player for the next toggle.
+    await oldActive.stop();
+    final altSource = _isMono
+        ? DeviceFileSource(widget.project.previewSongPath!)
+        : (_monoFilePath != null ? DeviceFileSource(_monoFilePath!) : null);
+    if (altSource != null) {
+      _warmPlayer = oldActive;
+      _warmPlayer!.setVolume(_volume);
+      _warmPlayer!.setSource(altSource); // fire-and-forget
+    } else {
+      oldActive.dispose();
     }
   }
 
@@ -1362,9 +1553,9 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
             return;
           }
           
-          // Use device file source for local files
+          // Play from current source (stereo or pre-mixed mono)
           if (_position == Duration.zero || _position >= _duration) {
-            await _audioPlayer.play(DeviceFileSource(widget.project.previewSongPath!));
+            await _audioPlayer.play(_currentSource());
           } else {
             await _audioPlayer.resume();
           }
@@ -1450,8 +1641,8 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
         originalFileName = '$originalFileName$ext';
       }
 
-      // On Android, copy to cache directory with original name for sharing
-      if (Platform.isAndroid) {
+      // On mobile, copy to cache directory with original name for sharing
+      if (MobileUtils.isMobile()) {
         final cacheDir = await getTemporaryDirectory();
         final shareFile = File(p.join(cacheDir.path, originalFileName));
         if (kDebugMode) {
@@ -1500,7 +1691,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
   }
 
   Future<void> _sharePreviewSongAsZip() async {
-    if (!Platform.isAndroid) return;
+    if (!MobileUtils.isMobile()) return;
 
     if (widget.project.previewSongPath == null || widget.project.previewSongPath!.isEmpty) {
       if (mounted) {
@@ -1948,7 +2139,12 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 2),
+                      _FileInfoRow(
+                        path: widget.project.previewSongPath!,
+                        fileInfo: _fileInfo,
+                      ),
+                      const SizedBox(height: 10),
                       // Audio player controls with keyboard shortcuts
                       Shortcuts(
                         shortcuts: {
@@ -2014,6 +2210,8 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                                               fontSize: 12,
                                             ),
                                           ),
+                                          if (_isWavFile())
+                                            _LevelMeter(lufsDb: _currentLufs),
                                           Text(
                                             _formatDuration(_duration),
                                             style: TextStyle(
@@ -2054,6 +2252,39 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                           ),
                         ),
                       ),
+                      // Mono toggle + Analyze (any audio file)
+                      if (_hasAudioFile()) ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            _isGeneratingMono
+                                ? const SizedBox(
+                                    width: 18, height: 18,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  )
+                                : FilterChip(
+                                    avatar: Icon(
+                                      _isMono ? Icons.check_box : Icons.check_box_outline_blank,
+                                      size: 16,
+                                      color: _isMono ? Colors.red : null,
+                                    ),
+                                    label: Text(
+                                      AppLocalizations.of(context)!.monoLabel,
+                                      style: TextStyle(
+                                        color: _isMono ? Colors.red : null,
+                                        fontWeight: _isMono ? FontWeight.bold : null,
+                                      ),
+                                    ),
+                                    tooltip: AppLocalizations.of(context)!.monoToggleTooltip,
+                                    selected: _isMono,
+                                    showCheckmark: false,
+                                    selectedColor: Colors.red.withValues(alpha: 0.15),
+                                    onSelected: (_) => _toggleMono(),
+                                    visualDensity: VisualDensity.compact,
+                                  ),
+                          ],
+                        ),
+                      ],
                     ],
                   )
                 else
@@ -2114,7 +2345,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                               ),
                             );
 
-                            if (Platform.isAndroid) {
+                            if (MobileUtils.isMobile()) {
                               buttons.add(
                                 ElevatedButton.icon(
                                   onPressed: _sharePreviewSongAsZip,
@@ -2176,6 +2407,84 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
 // ---------------------------------------------------------------------------
 // Project Stats Button — navigates to the dedicated statistics page
 // ---------------------------------------------------------------------------
+
+// ─── Real-time level meter ────────────────────────────────────────────────────
+
+class _LevelMeter extends StatelessWidget {
+  final double lufsDb;
+
+  const _LevelMeter({required this.lufsDb});
+
+  @override
+  Widget build(BuildContext context) {
+    final dim = Theme.of(context).textTheme.bodySmall?.color;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.baseline,
+      textBaseline: TextBaseline.alphabetic,
+      children: [
+        Text(
+          lufsDb <= -99.5 ? '−∞' : lufsDb.toStringAsFixed(1),
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: dim,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+        const SizedBox(width: 3),
+        Text('LUFS', style: TextStyle(fontSize: 9, color: dim)),
+      ],
+    );
+  }
+}
+
+// ─── File info row ────────────────────────────────────────────────────────────
+
+class _FileInfoRow extends StatelessWidget {
+  final String path;
+  final AudioFileInfo? fileInfo;
+
+  const _FileInfoRow({required this.path, required this.fileInfo});
+
+  String get _formatLabel {
+    final ext = path.toLowerCase().split('.').last;
+    switch (ext) {
+      case 'wav': return 'WAV';
+      case 'mp3': return 'MP3';
+      case 'flac': return 'FLAC';
+      case 'aif': case 'aiff': return 'AIFF';
+      case 'aac': return 'AAC';
+      case 'm4a': return 'M4A';
+      case 'ogg': return 'OGG';
+      default: return ext.toUpperCase();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dim = Theme.of(context).textTheme.bodySmall?.color;
+
+    final parts = <String>[];
+    if (fileInfo != null) {
+      final sr = fileInfo!.sampleRate;
+      parts.add(sr % 1000 == 0 ? '${sr ~/ 1000} kHz' : '${(sr / 1000).toStringAsFixed(1)} kHz');
+      if (fileInfo!.bitDepth != null) {
+        parts.add('${fileInfo!.bitDepth}-bit');
+      } else if (fileInfo!.bitrateKbps != null) {
+        parts.add('${fileInfo!.bitrateKbps} kbps');
+      }
+      final ch = fileInfo!.channels;
+      parts.add(ch == 1 ? 'Mono' : ch == 2 ? 'Stereo' : '${ch}ch');
+    }
+    parts.add(_formatLabel);
+
+    return Text(
+      parts.join(' · '),
+      style: TextStyle(fontSize: 11, color: dim),
+    );
+  }
+}
 
 class _ProjectStatsButton extends ConsumerWidget {
   final String projectId;

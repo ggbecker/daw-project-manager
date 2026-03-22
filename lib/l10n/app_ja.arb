@@ -193,6 +193,7 @@
   "name": "名前",
   "status": "ステータス",
   "phase": "フェーズ",
+  "filters": "フィルター",
   "filterByPhase": "フェーズでフィルター",
   "allPhases": "すべてのフェーズ",
   "daw": "DAW",
@@ -1452,5 +1453,23 @@
     }
   },
   "statsNoProjectsFound": "プロジェクトが見つかりません",
-  "statsNotTouchedDays": "{days}日間変更なし"
+  "statsNotTouchedDays": "{days}日間変更なし",
+  "sortByLastModified": "最終更新",
+  "sortByName": "名前",
+  "sortByPhase": "フェーズ",
+  "sortByCreatedAt": "追加日",
+  "sortByBpm": "BPM",
+  "monoLabel": "モノ",
+  "monoToggleTooltip": "モノラル再生を切り替え",
+  "monoRequiresWav": "モノラルミックスにはWAVファイルが必要です",
+  "monoUnsupportedFormat": "モノラルミックスを作成できません — サポートされていない形式",
+  "monoSwitchFailed": "モノラル切り替えに失敗しました: {error}",
+  "@monoSwitchFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "analyzeLabel": "分析",
+  "reAnalyzeLabel": "再分析",
+  "analysisRequiresWav": "分析にはWAVファイルが必要です"
 }

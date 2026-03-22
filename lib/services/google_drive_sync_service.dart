@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'dart:async';
 import 'package:crypto/crypto.dart';
+import 'package:daw_project_manager/utils/mobile_utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
@@ -127,7 +128,7 @@ class GoogleDriveSyncService {
     // In 7.x, GoogleSignIn is a singleton accessed via GoogleSignIn.instance
     // Configuration is done via initialize() method
     // For now, we'll store the serverClientId for use in initialize()
-    if (Platform.isAndroid) {
+    if (MobileUtils.isMobile()) {
       final webClientId = serverClientId ?? _androidWebClientId;
       if (kDebugMode) {
         print('=== GoogleSignIn Configuration (7.x) ===');
@@ -155,7 +156,7 @@ class GoogleDriveSyncService {
       return;
     }
 
-    if (Platform.isAndroid) {
+    if (MobileUtils.isMobile()) {
       try {
         final webClientId = serverClientId ?? _androidWebClientId;
         
@@ -529,7 +530,7 @@ class GoogleDriveSyncService {
   /// Use the getter `isSignedIn` for synchronous check
   Future<bool> checkSignedInStatus() async {
     try {
-      if (Platform.isAndroid) {
+      if (MobileUtils.isMobile()) {
         if (!_isInitialized) {
           await initialize();
         }
@@ -573,7 +574,7 @@ class GoogleDriveSyncService {
         print('Platform: ${Platform.operatingSystem}');
       }
       
-      if (Platform.isAndroid) {
+      if (MobileUtils.isMobile()) {
         // Ensure GoogleSignIn is initialized
         if (!_isInitialized) {
           await initialize();
@@ -702,7 +703,7 @@ class GoogleDriveSyncService {
   static Uri get _desktopRedirectUri =>
       Uri.parse('http://127.0.0.1:$_desktopLoopbackPort/');
 
-  /// Sign in on desktop using OAuth2 loopback flow (no manual code entry).
+  /// xcodebuild -showBuildSettings -project ios/Runner.xcodeproj | grep PRODUCT_BUNDLE_IDENTIFIERon desktop using OAuth2 loopback flow (no manual code entry).
   /// Opens browser; after user consents, Google redirects to a local server and we exchange the code.
   /// Migrated from deprecated OOB flow (urn:ietf:wg:oauth:2.0:oob) per Google's migration guide.
   Future<auth_io.AutoRefreshingAuthClient?> signInDesktopWithLoopback() async {
@@ -888,7 +889,7 @@ class GoogleDriveSyncService {
   /// Disconnect instead of just signing out, to reset the state as much as possible
   Future<void> signOut() async {
     try {
-      if (Platform.isAndroid) {
+      if (MobileUtils.isMobile()) {
         if (!_isInitialized) {
           await initialize();
         }
@@ -928,7 +929,7 @@ class GoogleDriveSyncService {
   /// On macOS: plain JSON file in app-support dir (avoids Keychain prompts).
   /// On Windows/Linux: flutter_secure_storage.
   Future<void> _saveCredentials(String refreshToken, String accessToken, DateTime expiryTime) async {
-    if (Platform.isAndroid) return;
+    if (MobileUtils.isMobile()) return;
 
     final credentialsData = {
       'refresh_token': refreshToken,
@@ -951,7 +952,7 @@ class GoogleDriveSyncService {
 
   /// Clear saved credentials
   Future<void> _clearCredentials() async {
-    if (Platform.isAndroid) return;
+    if (MobileUtils.isMobile()) return;
 
     try {
       if (Platform.isMacOS) {
@@ -970,7 +971,7 @@ class GoogleDriveSyncService {
   /// Restore session from saved credentials (Desktop only)
   /// Android: authenticationEvents stream handles session restoration automatically
   Future<bool> restoreSession() async {
-    if (Platform.isAndroid) {
+    if (MobileUtils.isMobile()) {
       // Android: attemptLightweightAuthentication is called in initialize()
       // The authenticationEvents stream will handle the result
       // Just check if we're already signed in
@@ -1156,7 +1157,7 @@ class GoogleDriveSyncService {
   /// Uses cached user info if available, otherwise queries Drive API
   Future<String?> getCurrentUserEmail() async {
     try {
-      if (Platform.isAndroid) {
+      if (MobileUtils.isMobile()) {
         // First try to use cached user info from _currentUser
         if (_currentUser != null) {
           return _currentUser!.email;
@@ -2199,7 +2200,7 @@ class GoogleDriveSyncService {
             
             // Check preview song status (only on desktop - mobile doesn't add preview songs)
             // On mobile, we only download preview songs, never upload them
-            if (!Platform.isAndroid && !Platform.isIOS) {
+            if (!MobileUtils.isMobile() && !Platform.isIOS) {
               if (project.previewSongPath != null && project.previewSongPath!.isNotEmpty) {
                 // Skip if it's a Drive reference (already uploaded)
                 if (!project.previewSongPath!.startsWith('drive://')) {
@@ -2296,7 +2297,7 @@ class GoogleDriveSyncService {
             
             // Check release artwork status (only on desktop - mobile doesn't upload artwork)
             // On mobile, we only download artwork, never upload them
-            if (!Platform.isAndroid && !Platform.isIOS) {
+            if (!MobileUtils.isMobile() && !Platform.isIOS) {
               if (release.artworkImagePath != null && release.artworkImagePath!.isNotEmpty) {
                 try {
                   // Calculate current file hash
@@ -2373,7 +2374,7 @@ class GoogleDriveSyncService {
           
           // Check profile photo status (only on desktop - mobile doesn't upload profile photos)
           // On mobile, we only download profile photos, never upload them
-          if (!Platform.isAndroid && !Platform.isIOS) {
+          if (!MobileUtils.isMobile() && !Platform.isIOS) {
             if (profile.photoPath != null && profile.photoPath!.isNotEmpty) {
               try {
                 // Calculate current file hash
@@ -4114,63 +4115,6 @@ class GoogleDriveSyncService {
       print('  Releases: +$releasesAdded ~$releasesUpdated');
     }
 
-    // After restoring: if the CURRENT active profile is empty but a restored profile has
-    // data, switch to that profile and clean up the empty one.
-    // This handles the common case: fresh Mac install downloads a Windows backup.
-    // IMPORTANT: Must complete BEFORE returning so stream invalidations in the caller
-    // pick up the correct profile.
-    try {
-      final currentProfileId = profileRepo.getCurrentProfileId();
-      if (currentProfileId != null) {
-        final currentProjectsBox = await Hive.openBox<MusicProject>('${currentProfileId}_projects');
-        final currentReleasesBox = await Hive.openBox<Release>('${currentProfileId}_releases');
-        final isCurrentEmpty = currentProjectsBox.isEmpty && currentReleasesBox.isEmpty;
-
-        if (kDebugMode) {
-          print('Post-merge profile check:');
-          print('  Current profile: $currentProfileId');
-          print('  Current projects: ${currentProjectsBox.length}');
-          print('  Current releases: ${currentReleasesBox.length}');
-          print('  Is current empty: $isCurrentEmpty');
-        }
-
-        if (isCurrentEmpty) {
-          // Find the first non-current profile that has projects or releases
-          Profile? targetProfile;
-          for (final profile in profileRepo.getAllProfiles()) {
-            if (profile.id == currentProfileId) continue;
-            final box = await Hive.openBox<MusicProject>('${profile.id}_projects');
-            if (box.isNotEmpty) {
-              targetProfile = profile;
-              break;
-            }
-          }
-
-          if (targetProfile != null) {
-            if (kDebugMode) {
-              print('Current profile is empty. Switching to "${targetProfile.name}" (${targetProfile.id})');
-            }
-
-            // Delete the empty current profile and its boxes
-            await currentProjectsBox.close();
-            await currentReleasesBox.close();
-            await profileRepo.profilesBox.delete(currentProfileId);
-            try { await Hive.deleteBoxFromDisk('${currentProfileId}_projects'); } catch (_) {}
-            try { await Hive.deleteBoxFromDisk('${currentProfileId}_releases'); } catch (_) {}
-            try { await Hive.deleteBoxFromDisk('${currentProfileId}_roots'); } catch (_) {}
-            try { await Hive.deleteBoxFromDisk('${currentProfileId}_ignored_paths'); } catch (_) {}
-
-            await profileRepo.setCurrentProfileId(targetProfile.id);
-
-            if (kDebugMode) print('Successfully switched to restored profile: ${targetProfile.name}');
-          }
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) print('Error switching to restored profile: $e');
-      // Non-critical — don't rethrow
-    }
-
     return SyncResult(
       projectsAdded: projectsAdded,
       projectsUpdated: projectsUpdated,
@@ -4179,6 +4123,59 @@ class GoogleDriveSyncService {
       previewSongsDownloaded: previewSongsDownloaded,
       previewSongsUpdated: previewSongsUpdated,
     );
+  }
+
+  /// After a restore, if the currently active profile is empty but a restored
+  /// profile has data, switch to the restored profile and delete the empty one.
+  ///
+  /// Extracted from [mergeData] so it runs AFTER the progress dialog is closed,
+  /// preventing the dialog from getting stuck on iOS due to Hive file I/O.
+  Future<void> cleanupEmptyProfile(ProfileRepository profileRepo) async {
+    try {
+      final currentProfileId = profileRepo.getCurrentProfileId();
+      if (currentProfileId == null) return;
+
+      final currentProjectsBox = await Hive.openBox<MusicProject>('${currentProfileId}_projects');
+      final currentReleasesBox = await Hive.openBox<Release>('${currentProfileId}_releases');
+      final isCurrentEmpty = currentProjectsBox.isEmpty && currentReleasesBox.isEmpty;
+
+      if (kDebugMode) {
+        print('Post-merge profile check:');
+        print('  Current profile: $currentProfileId');
+        print('  Current projects: ${currentProjectsBox.length}');
+        print('  Current releases: ${currentReleasesBox.length}');
+        print('  Is current empty: $isCurrentEmpty');
+      }
+
+      if (!isCurrentEmpty) return;
+
+      // Find the first non-current profile that has projects
+      Profile? targetProfile;
+      for (final profile in profileRepo.getAllProfiles()) {
+        if (profile.id == currentProfileId) continue;
+        final box = await Hive.openBox<MusicProject>('${profile.id}_projects');
+        if (box.isNotEmpty) {
+          targetProfile = profile;
+          break;
+        }
+      }
+
+      if (targetProfile == null) return;
+
+      // Switch the active profile — the critical step.
+      await profileRepo.setCurrentProfileId(targetProfile.id);
+
+      // Remove the empty profile entry so it no longer appears in the list.
+      await profileRepo.profilesBox.delete(currentProfileId);
+
+      // NOTE: We intentionally skip box.close() and Hive.deleteBoxFromDisk().
+      // On iOS with Hive CE, closing a box that has active stream watchers
+      // (allProjectsStreamProvider) deadlocks. The leftover empty box files
+      // are harmless — they are cleaned up when the repository reinitialises.
+    } catch (e) {
+      if (kDebugMode) print('Error switching to restored profile: $e');
+      // Non-critical — don't rethrow
+    }
   }
 
   // Serialization helpers

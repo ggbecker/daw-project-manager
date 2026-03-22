@@ -193,6 +193,7 @@
   "name": "名称",
   "status": "状态",
   "phase": "阶段",
+  "filters": "筛选器",
   "filterByPhase": "按阶段筛选",
   "allPhases": "所有阶段",
   "daw": "DAW",
@@ -1452,5 +1453,23 @@
     }
   },
   "statsNoProjectsFound": "未找到项目",
-  "statsNotTouchedDays": "{days}天未修改"
+  "statsNotTouchedDays": "{days}天未修改",
+  "sortByLastModified": "最后修改",
+  "sortByName": "名称",
+  "sortByPhase": "阶段",
+  "sortByCreatedAt": "添加日期",
+  "sortByBpm": "BPM",
+  "monoLabel": "单声道",
+  "monoToggleTooltip": "切换单声道播放",
+  "monoRequiresWav": "单声道混音需要WAV文件",
+  "monoUnsupportedFormat": "无法创建单声道混音 — 不支持的格式",
+  "monoSwitchFailed": "切换单声道失败：{error}",
+  "@monoSwitchFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "analyzeLabel": "分析",
+  "reAnalyzeLabel": "重新分析",
+  "analysisRequiresWav": "分析需要WAV文件"
 }

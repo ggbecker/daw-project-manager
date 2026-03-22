@@ -334,6 +334,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get filterByPhase => '按阶段筛选';
 
   @override
+  String get filters => '筛选器';
+
+  @override
   String get allPhases => '所有阶段';
 
   @override
@@ -2087,4 +2090,45 @@ class AppLocalizationsZh extends AppLocalizations {
   String statsNotTouchedDays(int days) {
     return '$days天未修改';
   }
+
+  @override
+  String get sortByLastModified => '最后修改';
+
+  @override
+  String get sortByName => '名称';
+
+  @override
+  String get sortByPhase => '阶段';
+
+  @override
+  String get sortByCreatedAt => '添加日期';
+
+  @override
+  String get sortByBpm => 'BPM';
+
+  @override
+  String get monoLabel => '单声道';
+
+  @override
+  String get monoToggleTooltip => '切换单声道播放';
+
+  @override
+  String get monoRequiresWav => '单声道混音需要WAV文件';
+
+  @override
+  String get monoUnsupportedFormat => '无法创建单声道混音 — 不支持的格式';
+
+  @override
+  String monoSwitchFailed(String error) {
+    return '切换单声道失败：$error';
+  }
+
+  @override
+  String get analyzeLabel => '分析';
+
+  @override
+  String get reAnalyzeLabel => '重新分析';
+
+  @override
+  String get analysisRequiresWav => '分析需要WAV文件';
 }

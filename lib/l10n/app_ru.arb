@@ -193,6 +193,7 @@
   "name": "Название",
   "status": "Статус",
   "phase": "Фаза",
+  "filters": "Фильтры",
   "filterByPhase": "Фильтровать по Фазе",
   "allPhases": "Все Фазы",
   "daw": "DAW",
@@ -1452,5 +1453,23 @@
     }
   },
   "statsNoProjectsFound": "Проекты не найдены",
-  "statsNotTouchedDays": "Не изменялся {days} дн."
+  "statsNotTouchedDays": "Не изменялся {days} дн.",
+  "sortByLastModified": "Дата изменения",
+  "sortByName": "Имя",
+  "sortByPhase": "Фаза",
+  "sortByCreatedAt": "Дата добавления",
+  "sortByBpm": "BPM",
+  "monoLabel": "Моно",
+  "monoToggleTooltip": "Переключить моно воспроизведение",
+  "monoRequiresWav": "Для монофонического микса требуется WAV-файл",
+  "monoUnsupportedFormat": "Не удалось создать монофонический микс — неподдерживаемый формат",
+  "monoSwitchFailed": "Ошибка переключения моно: {error}",
+  "@monoSwitchFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "analyzeLabel": "Анализировать",
+  "reAnalyzeLabel": "Повторный анализ",
+  "analysisRequiresWav": "Для анализа требуется WAV-файл"
 }

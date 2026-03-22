@@ -343,6 +343,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filterByPhase => 'Filter by Phase';
 
   @override
+  String get filters => 'Filters';
+
+  @override
   String get allPhases => 'All Phases';
 
   @override
@@ -2147,4 +2150,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String statsNotTouchedDays(int days) {
     return 'Not touched in $days days';
   }
+
+  @override
+  String get sortByLastModified => 'Last modified';
+
+  @override
+  String get sortByName => 'Name';
+
+  @override
+  String get sortByPhase => 'Phase';
+
+  @override
+  String get sortByCreatedAt => 'Date added';
+
+  @override
+  String get sortByBpm => 'BPM';
+
+  @override
+  String get monoLabel => 'Mono';
+
+  @override
+  String get monoToggleTooltip => 'Toggle mono playback';
+
+  @override
+  String get monoRequiresWav => 'Mono mixing requires a WAV file';
+
+  @override
+  String get monoUnsupportedFormat =>
+      'Could not create mono mix — unsupported format';
+
+  @override
+  String monoSwitchFailed(String error) {
+    return 'Mono switch failed: $error';
+  }
+
+  @override
+  String get analyzeLabel => 'Analyze';
+
+  @override
+  String get reAnalyzeLabel => 'Re-analyze';
+
+  @override
+  String get analysisRequiresWav => 'Analysis requires a WAV file';
 }
