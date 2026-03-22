@@ -1458,5 +1458,18 @@
   "sortByName": "Имя",
   "sortByPhase": "Фаза",
   "sortByCreatedAt": "Дата добавления",
-  "sortByBpm": "BPM"
+  "sortByBpm": "BPM",
+  "monoLabel": "Моно",
+  "monoToggleTooltip": "Переключить моно воспроизведение",
+  "monoRequiresWav": "Для монофонического микса требуется WAV-файл",
+  "monoUnsupportedFormat": "Не удалось создать монофонический микс — неподдерживаемый формат",
+  "monoSwitchFailed": "Ошибка переключения моно: {error}",
+  "@monoSwitchFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "analyzeLabel": "Анализировать",
+  "reAnalyzeLabel": "Повторный анализ",
+  "analysisRequiresWav": "Для анализа требуется WAV-файл"
 }

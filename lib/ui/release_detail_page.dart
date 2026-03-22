@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +12,7 @@ import 'package:uuid/uuid.dart';
 import 'package:archive/archive.dart';
 import 'package:audioplayers/audioplayers.dart';
 import '../models/release.dart';
+import '../services/audio_analysis_service.dart';
 import 'widgets/desktop_title_bar.dart';
 import '../models/release_file.dart';
 import '../models/music_project.dart';
@@ -1422,6 +1425,8 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
                         final folderPath = FileSystemEntity.isDirectorySync(project.filePath)
                             ? project.filePath
                             : path.dirname(project.filePath);
+                        final fileExists = File(project.filePath).existsSync() ||
+                            Directory(project.filePath).existsSync();
 
                         return Card(
                           key: ValueKey(project.id),
@@ -1480,19 +1485,8 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
                                           IconButton(
                                             icon: const Icon(Icons.open_in_new),
                                             tooltip: AppLocalizations.of(context)!.tooltipLaunchInDaw,
-                                            onPressed: () async {
-                                              final exists = File(project.filePath).existsSync() || 
-                                                            Directory(project.filePath).existsSync();
-                                              if (!exists) {
-                                                if (context.mounted) {
-                                                  ScaffoldMessenger.of(context).showSnackBar(
-                                                    SnackBar(content: Text(AppLocalizations.of(context)!.fileMissing)),
-                                                  );
-                                                }
-                                                return;
-                                              }
+                                            onPressed: fileExists ? () async {
                                               final success = await FileLauncher.launchProject(project.filePath);
-                                              
                                               if (success) {
                                                 if (context.mounted) {
                                                   ScaffoldMessenger.of(context).showSnackBar(
@@ -1506,7 +1500,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
                                                   );
                                                 }
                                               }
-                                            },
+                                            } : null,
                                           ),
                                         // Separator - only if Launch button is shown
                                         if (!isMobile)
@@ -1533,25 +1527,14 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
                                           IconButton(
                                             icon: const Icon(Icons.folder_open),
                                             tooltip: AppLocalizations.of(context)!.openFolder,
-                                            onPressed: () async {
-                                              final exists = Directory(folderPath).existsSync();
-                                              if (!exists) {
-                                                if (context.mounted) {
-                                                  ScaffoldMessenger.of(context).showSnackBar(
-                                                    SnackBar(content: Text(AppLocalizations.of(context)!.fileMissing)),
-                                                  );
-                                                }
-                                                return;
-                                              }
-                                              
+                                            onPressed: fileExists ? () async {
                                               final success = await FileLauncher.openFolder(folderPath);
-                                              
                                               if (success && context.mounted) {
                                                 ScaffoldMessenger.of(context).showSnackBar(
                                                   SnackBar(content: Text(AppLocalizations.of(context)!.openingFolder(project.displayName))),
                                                 );
                                               }
-                                            },
+                                            } : null,
                                           ),
                                         // Separator - only if Open Folder button is shown
                                         if (!isMobile)
@@ -2111,40 +2094,170 @@ class _AudioFileItem extends ConsumerStatefulWidget {
 }
 
 class _AudioFileItemState extends ConsumerState<_AudioFileItem> {
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  AudioPlayer _audioPlayer = AudioPlayer();
+  AudioPlayer? _warmPlayer;
+  int _playerGen = 0;
   bool _isPlaying = false;
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
   double _volume = 1.0;
+  bool _isMono = false;
+  bool _isGeneratingMono = false;
+  String? _monoFilePath;
+  AudioFileInfo? _fileInfo;
 
-  @override
-  void initState() {
-    super.initState();
-    _audioPlayer.onPlayerStateChanged.listen((state) {
-      if (mounted) {
-        setState(() {
-          _isPlaying = state == PlayerState.playing;
-        });
-      }
+  void _attachListeners(AudioPlayer player, int gen) {
+    player.onPlayerStateChanged.listen((state) {
+      if (gen != _playerGen || !mounted) return;
+      setState(() => _isPlaying = state == PlayerState.playing);
     });
-    _audioPlayer.onDurationChanged.listen((duration) {
-      if (mounted) {
-        setState(() {
-          _duration = duration;
-        });
-      }
+    player.onDurationChanged.listen((d) {
+      if (gen != _playerGen || !mounted) return;
+      setState(() => _duration = d);
     });
-    _audioPlayer.onPositionChanged.listen((position) {
-      if (mounted) {
-        setState(() {
-          _position = position;
-        });
+    player.onPositionChanged.listen((p) {
+      if (gen != _playerGen || !mounted) return;
+      setState(() => _position = p);
+    });
+    player.onPlayerComplete.listen((_) {
+      if (gen != _playerGen || !mounted) return;
+      setState(() { _isPlaying = false; _position = Duration.zero; });
+    });
+  }
+
+  void _preWarmAlt(Source source) {
+    _warmPlayer?.dispose();
+    _warmPlayer = AudioPlayer();
+    _warmPlayer!.setVolume(_volume);
+    _warmPlayer!.setSource(source);
+  }
+
+  void _fadeIn(AudioPlayer player) {
+    const steps = 12;
+    const stepMs = 10;
+    int step = 0;
+    Timer.periodic(const Duration(milliseconds: stepMs), (timer) {
+      step++;
+      if (!mounted || player != _audioPlayer) {
+        timer.cancel();
+        return;
+      }
+      player.setVolume((_volume * step / steps).clamp(0.0, _volume));
+      if (step >= steps) {
+        timer.cancel();
+        player.setVolume(_volume);
       }
     });
   }
 
+  bool _supportsMonoMix() {
+    final ext = widget.file.filePath.toLowerCase().split('.').last;
+    if (ext == 'wav') return true;
+    if (Platform.isMacOS || Platform.isIOS) {
+      return const {'mp3', 'flac', 'aif', 'aiff', 'aac', 'm4a'}.contains(ext);
+    }
+    return const {'mp3', 'flac', 'aif', 'aiff', 'ogg', 'aac', 'm4a'}.contains(ext);
+  }
+
+  Source _currentSource() => DeviceFileSource(_isMono && _monoFilePath != null ? _monoFilePath! : widget.file.filePath);
+
+  @override
+  void initState() {
+    super.initState();
+    _attachListeners(_audioPlayer, _playerGen);
+    _startBackgroundPrep();
+  }
+
+  void _startBackgroundPrep() {
+    final filePath = widget.file.filePath;
+    AudioAnalysisService.getFileInfo(filePath).then((info) {
+      if (mounted && info != null) setState(() => _fileInfo = info);
+    });
+    if (_supportsMonoMix()) _prepareMonoFile(filePath);
+  }
+
+  Future<void> _prepareMonoFile(String filePath) async {
+    if (_fileInfo != null && _fileInfo!.channels == 1) {
+      setState(() => _monoFilePath = filePath);
+      return;
+    }
+    setState(() => _isGeneratingMono = true);
+    final tmpDir = await getTemporaryDirectory();
+    final outPath = '${tmpDir.path}/mono_release_${widget.file.id}.wav';
+    final ok = await AudioAnalysisService.writeMonoWavFile(filePath, outPath);
+    if (!mounted) return;
+    if (ok) {
+      setState(() { _monoFilePath = outPath; _isGeneratingMono = false; });
+      _preWarmAlt(DeviceFileSource(outPath));
+    } else {
+      final channels = await AudioAnalysisService.getChannelCount(filePath);
+      if (mounted && channels == 1) {
+        setState(() { _monoFilePath = filePath; _isGeneratingMono = false; });
+        _preWarmAlt(DeviceFileSource(filePath));
+      } else if (mounted) {
+        setState(() => _isGeneratingMono = false);
+      }
+    }
+  }
+
+  Future<void> _toggleMono(bool newMono) async {
+    if (!_supportsMonoMix()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.monoRequiresWav)),
+      );
+      return;
+    }
+    if (newMono && _monoFilePath == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.monoUnsupportedFormat)),
+      );
+      return;
+    }
+    final wasPlaying = _isPlaying;
+    final savedPosition = _position;
+    setState(() => _isMono = newMono);
+
+    final newActive = _warmPlayer ?? AudioPlayer();
+    _warmPlayer = null;
+    final gen = ++_playerGen;
+    final oldActive = _audioPlayer;
+    _audioPlayer = newActive;
+    _attachListeners(newActive, gen);
+
+    try {
+      if (wasPlaying) {
+        await newActive.setVolume(0);
+        await newActive.play(_currentSource(), position: savedPosition);
+        _fadeIn(newActive);
+      } else {
+        await newActive.setVolume(_volume);
+        await newActive.setSource(_currentSource());
+        if (savedPosition > Duration.zero) await newActive.seek(savedPosition);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.monoSwitchFailed(e.toString()))),
+        );
+      }
+    }
+
+    await oldActive.stop();
+    final altSource = _isMono
+        ? DeviceFileSource(widget.file.filePath)
+        : (_monoFilePath != null ? DeviceFileSource(_monoFilePath!) : null);
+    if (altSource != null) {
+      _warmPlayer = oldActive;
+      _warmPlayer!.setVolume(_volume);
+      _warmPlayer!.setSource(altSource);
+    } else {
+      oldActive.dispose();
+    }
+  }
+
   @override
   void dispose() {
+    _warmPlayer?.dispose();
     _audioPlayer.dispose();
     super.dispose();
   }
@@ -2155,7 +2268,7 @@ class _AudioFileItemState extends ConsumerState<_AudioFileItem> {
         await _audioPlayer.pause();
       } else {
         if (_position == Duration.zero || _position >= _duration) {
-          await _audioPlayer.play(DeviceFileSource(widget.file.filePath));
+          await _audioPlayer.play(_currentSource());
         } else {
           await _audioPlayer.resume();
         }
@@ -2355,6 +2468,29 @@ class _AudioFileItemState extends ConsumerState<_AudioFileItem> {
                 ),
               ],
             ),
+            if (_supportsMonoMix()) ...[
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  FilterChip(
+                    label: Text(AppLocalizations.of(context)!.monoLabel),
+                    avatar: Icon(
+                      Icons.check_box_outlined,
+                      size: 16,
+                      color: _isMono ? Colors.red.shade400 : Theme.of(context).textTheme.bodySmall?.color,
+                    ),
+                    selected: _isMono,
+                    showCheckmark: false,
+                    selectedColor: Colors.red.withValues(alpha: 0.15),
+                    onSelected: _isGeneratingMono ? null : (val) => _toggleMono(val),
+                  ),
+                  if (_isGeneratingMono) ...[
+                    const SizedBox(width: 8),
+                    const SizedBox(width: 12, height: 12, child: CircularProgressIndicator(strokeWidth: 1.5)),
+                  ],
+                ],
+              ),
+            ],
           ],
         ),
       ),

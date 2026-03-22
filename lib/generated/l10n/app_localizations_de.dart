@@ -2179,4 +2179,31 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get sortByBpm => 'BPM';
+
+  @override
+  String get monoLabel => 'Mono';
+
+  @override
+  String get monoToggleTooltip => 'Mono-Wiedergabe umschalten';
+
+  @override
+  String get monoRequiresWav => 'Mono-Mischung erfordert eine WAV-Datei';
+
+  @override
+  String get monoUnsupportedFormat =>
+      'Mono-Mischung konnte nicht erstellt werden — nicht unterstütztes Format';
+
+  @override
+  String monoSwitchFailed(String error) {
+    return 'Mono-Umschaltung fehlgeschlagen: $error';
+  }
+
+  @override
+  String get analyzeLabel => 'Analysieren';
+
+  @override
+  String get reAnalyzeLabel => 'Erneut analysieren';
+
+  @override
+  String get analysisRequiresWav => 'Analyse erfordert eine WAV-Datei';
 }

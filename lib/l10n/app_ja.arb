@@ -1458,5 +1458,18 @@
   "sortByName": "名前",
   "sortByPhase": "フェーズ",
   "sortByCreatedAt": "追加日",
-  "sortByBpm": "BPM"
+  "sortByBpm": "BPM",
+  "monoLabel": "モノ",
+  "monoToggleTooltip": "モノラル再生を切り替え",
+  "monoRequiresWav": "モノラルミックスにはWAVファイルが必要です",
+  "monoUnsupportedFormat": "モノラルミックスを作成できません — サポートされていない形式",
+  "monoSwitchFailed": "モノラル切り替えに失敗しました: {error}",
+  "@monoSwitchFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "analyzeLabel": "分析",
+  "reAnalyzeLabel": "再分析",
+  "analysisRequiresWav": "分析にはWAVファイルが必要です"
 }

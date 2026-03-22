@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:pluto_grid/pluto_grid.dart';
@@ -14,6 +15,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:archive/archive_io.dart';
 
 import '../services/scanner_service.dart';
+import '../services/audio_analysis_service.dart';
 import '../utils/mobile_utils.dart';
 import '../utils/file_launcher.dart';
 import 'project_detail_page.dart';
@@ -3157,39 +3159,189 @@ class _PreviewSongDialog extends StatefulWidget {
 }
 
 class _PreviewSongDialogState extends State<_PreviewSongDialog> {
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  AudioPlayer _audioPlayer = AudioPlayer();
+  AudioPlayer? _warmPlayer;
+  int _playerGen = 0;
   bool _isPlaying = false;
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
   double _volume = 1.0;
+  bool _isMono = false;
+  bool _isGeneratingMono = false;
+  String? _monoFilePath;
+  AudioFileInfo? _fileInfo;
+
+  void _attachListeners(AudioPlayer player, int gen) {
+    player.onPlayerStateChanged.listen((state) {
+      if (gen != _playerGen || !mounted) return;
+      setState(() => _isPlaying = state == PlayerState.playing);
+    });
+    player.onDurationChanged.listen((d) {
+      if (gen != _playerGen || !mounted) return;
+      setState(() => _duration = d);
+    });
+    player.onPositionChanged.listen((p) {
+      if (gen != _playerGen || !mounted) return;
+      setState(() => _position = p);
+    });
+    player.onPlayerComplete.listen((_) {
+      if (gen != _playerGen || !mounted) return;
+      setState(() { _isPlaying = false; _position = Duration.zero; });
+    });
+  }
 
   @override
   void initState() {
     super.initState();
-    _audioPlayer.onPlayerStateChanged.listen((state) {
-      if (mounted) {
-        setState(() {
-          _isPlaying = state == PlayerState.playing;
-        });
-      }
-    });
-    _audioPlayer.onDurationChanged.listen((duration) {
-      if (mounted) {
-        setState(() {
-          _duration = duration;
-        });
-      }
-    });
-    _audioPlayer.onPositionChanged.listen((position) {
-      if (mounted) {
-        setState(() {
-          _position = position;
-        });
-      }
-    });
-    
+    _attachListeners(_audioPlayer, _playerGen);
     // Auto-start playback when dialog opens
     _startPlayback();
+    _startBackgroundPrep();
+  }
+
+  bool _hasAudioFile() {
+    final p2 = widget.project.previewSongPath;
+    return p2 != null && p2.isNotEmpty;
+  }
+
+  bool _supportsMonoMix() {
+    final p2 = widget.project.previewSongPath;
+    if (p2 == null || p2.isEmpty) return false;
+    final ext = p2.toLowerCase().split('.').last;
+    if (ext == 'wav') return true;
+    if (Platform.isMacOS || Platform.isIOS) {
+      return const {'mp3', 'flac', 'aif', 'aiff', 'aac', 'm4a'}.contains(ext);
+    }
+    return const {'mp3', 'flac', 'aif', 'aiff', 'ogg', 'aac', 'm4a'}.contains(ext);
+  }
+
+  Source _currentSource() {
+    if (_isMono && _monoFilePath != null) return DeviceFileSource(_monoFilePath!);
+    return DeviceFileSource(widget.project.previewSongPath!);
+  }
+
+  void _startBackgroundPrep() {
+    if (!_hasAudioFile()) return;
+    final filePath = widget.project.previewSongPath!;
+    AudioAnalysisService.getFileInfo(filePath).then((info) {
+      if (mounted && info != null) setState(() => _fileInfo = info);
+    });
+    if (_supportsMonoMix()) _prepareMonoFile(filePath);
+  }
+
+  Future<void> _prepareMonoFile(String filePath) async {
+    final tmpDir = await getTemporaryDirectory();
+    final outPath = '${tmpDir.path}/mono_${widget.project.id}.wav';
+    final ok = await AudioAnalysisService.writeMonoWavFile(filePath, outPath);
+    if (!mounted) return;
+    if (ok) {
+      setState(() => _monoFilePath = outPath);
+      _preWarmAlt(DeviceFileSource(outPath));
+    } else {
+      final channels = await AudioAnalysisService.getChannelCount(filePath);
+      if (mounted && channels == 1) {
+        setState(() => _monoFilePath = filePath);
+        _preWarmAlt(DeviceFileSource(filePath));
+      }
+    }
+  }
+
+  void _preWarmAlt(Source source) {
+    _warmPlayer?.dispose();
+    _warmPlayer = AudioPlayer();
+    _warmPlayer!.setVolume(_volume);
+    _warmPlayer!.setSource(source);
+  }
+
+  void _fadeIn(AudioPlayer player) {
+    const steps = 12;
+    const stepMs = 10;
+    int step = 0;
+    Timer.periodic(const Duration(milliseconds: stepMs), (timer) {
+      step++;
+      if (!mounted || player != _audioPlayer) {
+        timer.cancel();
+        return;
+      }
+      player.setVolume((_volume * step / steps).clamp(0.0, _volume));
+      if (step >= steps) {
+        timer.cancel();
+        player.setVolume(_volume);
+      }
+    });
+  }
+
+  Future<void> _toggleMono() async {
+    if (!_supportsMonoMix()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Mono mixing is not supported for this format')),
+      );
+      return;
+    }
+    final newMono = !_isMono;
+    if (newMono && _monoFilePath == null) {
+      setState(() => _isGeneratingMono = true);
+      final tmpDir = await getTemporaryDirectory();
+      final outPath = '${tmpDir.path}/mono_${widget.project.id}.wav';
+      final ok = await AudioAnalysisService.writeMonoWavFile(widget.project.previewSongPath!, outPath);
+      if (!mounted) return;
+      if (!ok) {
+        final channels = await AudioAnalysisService.getChannelCount(widget.project.previewSongPath!);
+        if (!mounted) return;
+        if (channels == 1) {
+          setState(() { _monoFilePath = widget.project.previewSongPath!; _isGeneratingMono = false; });
+        } else {
+          setState(() => _isGeneratingMono = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Could not create mono mix — unsupported format')),
+          );
+          return;
+        }
+      } else {
+        setState(() { _monoFilePath = outPath; _isGeneratingMono = false; });
+      }
+    }
+
+    final wasPlaying = _isPlaying;
+    final savedPosition = _position;
+    setState(() => _isMono = newMono);
+
+    final newActive = _warmPlayer ?? AudioPlayer();
+    _warmPlayer = null;
+    final gen = ++_playerGen;
+    final oldActive = _audioPlayer;
+    _audioPlayer = newActive;
+    _attachListeners(newActive, gen);
+
+    try {
+      if (wasPlaying) {
+        await newActive.setVolume(0);
+        await newActive.play(_currentSource(), position: savedPosition);
+        _fadeIn(newActive);
+      } else {
+        await newActive.setVolume(_volume);
+        await newActive.setSource(_currentSource());
+        if (savedPosition > Duration.zero) await newActive.seek(savedPosition);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Mono switch failed: $e')),
+        );
+      }
+    }
+
+    await oldActive.stop();
+    final altSource = _isMono
+        ? DeviceFileSource(widget.project.previewSongPath!)
+        : (_monoFilePath != null ? DeviceFileSource(_monoFilePath!) : null);
+    if (altSource != null) {
+      _warmPlayer = oldActive;
+      _warmPlayer!.setVolume(_volume);
+      _warmPlayer!.setSource(altSource);
+    } else {
+      oldActive.dispose();
+    }
   }
 
   Future<void> _startPlayback() async {
@@ -3209,7 +3361,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
     }
 
     try {
-      await _audioPlayer.play(DeviceFileSource(widget.project.previewSongPath!));
+      await _audioPlayer.play(_currentSource());
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -3223,6 +3375,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
   void dispose() {
     _audioPlayer.stop();
     _audioPlayer.dispose();
+    _warmPlayer?.dispose();
     widget.onClose();
     super.dispose();
   }
@@ -3316,6 +3469,23 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
                 },
               ),
             ),
+            const SizedBox(width: 8),
+            _isGeneratingMono
+                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                : FilterChip(
+                    avatar: Icon(
+                      _isMono ? Icons.check_box : Icons.check_box_outline_blank,
+                      size: 16,
+                      color: _isMono ? Colors.red : null,
+                    ),
+                    label: Text('Mono', style: TextStyle(color: _isMono ? Colors.red : null, fontWeight: _isMono ? FontWeight.bold : null)),
+                    tooltip: 'Toggle mono playback',
+                    selected: _isMono,
+                    showCheckmark: false,
+                    selectedColor: Colors.red.withValues(alpha: 0.15),
+                    onSelected: (_) => _toggleMono(),
+                    visualDensity: VisualDensity.compact,
+                  ),
           ],
         ),
         const SizedBox(height: 16),
@@ -3450,6 +3620,55 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
                 },
               ),
             ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            _isGeneratingMono
+                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                : FilterChip(
+                    avatar: Icon(
+                      _isMono ? Icons.check_box : Icons.check_box_outline_blank,
+                      size: 16,
+                      color: _isMono ? Colors.red : null,
+                    ),
+                    label: Text('Mono', style: TextStyle(color: _isMono ? Colors.red : null, fontWeight: _isMono ? FontWeight.bold : null)),
+                    tooltip: 'Toggle mono playback',
+                    selected: _isMono,
+                    showCheckmark: false,
+                    selectedColor: Colors.red.withValues(alpha: 0.15),
+                    onSelected: (_) => _toggleMono(),
+                    visualDensity: VisualDensity.compact,
+                  ),
+            const SizedBox(width: 12),
+            Builder(builder: (ctx) {
+              final dim = Theme.of(ctx).textTheme.bodySmall?.color;
+              final ext = (widget.project.previewSongPath ?? '').toLowerCase().split('.').last;
+              final formatLabel = switch (ext) {
+                'wav'  => 'WAV',
+                'mp3'  => 'MP3',
+                'flac' => 'FLAC',
+                'aif' || 'aiff' => 'AIFF',
+                'ogg'  => 'OGG',
+                'aac'  => 'AAC',
+                'm4a'  => 'M4A',
+                _      => ext.toUpperCase(),
+              };
+              final parts = <String>[];
+              if (_fileInfo != null) {
+                final sr = _fileInfo!.sampleRate;
+                parts.add(sr % 1000 == 0 ? '${sr ~/ 1000} kHz' : '${(sr / 1000).toStringAsFixed(1)} kHz');
+                if (_fileInfo!.bitDepth != null) {
+                  parts.add('${_fileInfo!.bitDepth}-bit');
+                } else if (_fileInfo!.bitrateKbps != null) {
+                  parts.add('${_fileInfo!.bitrateKbps} kbps');
+                }
+                parts.add(_fileInfo!.channels == 1 ? 'Mono' : _fileInfo!.channels == 2 ? 'Stereo' : '${_fileInfo!.channels}ch');
+              }
+              parts.add(formatLabel);
+              return Text(parts.join(' · '), style: TextStyle(fontSize: 11, color: dim));
+            }),
           ],
         ),
       ],

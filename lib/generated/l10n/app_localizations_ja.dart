@@ -2123,4 +2123,30 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get sortByBpm => 'BPM';
+
+  @override
+  String get monoLabel => 'モノ';
+
+  @override
+  String get monoToggleTooltip => 'モノラル再生を切り替え';
+
+  @override
+  String get monoRequiresWav => 'モノラルミックスにはWAVファイルが必要です';
+
+  @override
+  String get monoUnsupportedFormat => 'モノラルミックスを作成できません — サポートされていない形式';
+
+  @override
+  String monoSwitchFailed(String error) {
+    return 'モノラル切り替えに失敗しました: $error';
+  }
+
+  @override
+  String get analyzeLabel => '分析';
+
+  @override
+  String get reAnalyzeLabel => '再分析';
+
+  @override
+  String get analysisRequiresWav => '分析にはWAVファイルが必要です';
 }

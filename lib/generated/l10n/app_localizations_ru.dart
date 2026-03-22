@@ -2165,4 +2165,31 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get sortByBpm => 'BPM';
+
+  @override
+  String get monoLabel => 'Моно';
+
+  @override
+  String get monoToggleTooltip => 'Переключить моно воспроизведение';
+
+  @override
+  String get monoRequiresWav => 'Для монофонического микса требуется WAV-файл';
+
+  @override
+  String get monoUnsupportedFormat =>
+      'Не удалось создать монофонический микс — неподдерживаемый формат';
+
+  @override
+  String monoSwitchFailed(String error) {
+    return 'Ошибка переключения моно: $error';
+  }
+
+  @override
+  String get analyzeLabel => 'Анализировать';
+
+  @override
+  String get reAnalyzeLabel => 'Повторный анализ';
+
+  @override
+  String get analysisRequiresWav => 'Для анализа требуется WAV-файл';
 }

@@ -3667,6 +3667,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'BPM'**
   String get sortByBpm;
+
+  /// No description provided for @monoLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Mono'**
+  String get monoLabel;
+
+  /// No description provided for @monoToggleTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle mono playback'**
+  String get monoToggleTooltip;
+
+  /// No description provided for @monoRequiresWav.
+  ///
+  /// In en, this message translates to:
+  /// **'Mono mixing requires a WAV file'**
+  String get monoRequiresWav;
+
+  /// No description provided for @monoUnsupportedFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create mono mix — unsupported format'**
+  String get monoUnsupportedFormat;
+
+  /// No description provided for @monoSwitchFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Mono switch failed: {error}'**
+  String monoSwitchFailed(String error);
+
+  /// No description provided for @analyzeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyze'**
+  String get analyzeLabel;
+
+  /// No description provided for @reAnalyzeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-analyze'**
+  String get reAnalyzeLabel;
+
+  /// No description provided for @analysisRequiresWav.
+  ///
+  /// In en, this message translates to:
+  /// **'Analysis requires a WAV file'**
+  String get analysisRequiresWav;
 }
 
 class _AppLocalizationsDelegate

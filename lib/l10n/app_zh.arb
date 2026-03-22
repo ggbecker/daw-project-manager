@@ -1458,5 +1458,18 @@
   "sortByName": "名称",
   "sortByPhase": "阶段",
   "sortByCreatedAt": "添加日期",
-  "sortByBpm": "BPM"
+  "sortByBpm": "BPM",
+  "monoLabel": "单声道",
+  "monoToggleTooltip": "切换单声道播放",
+  "monoRequiresWav": "单声道混音需要WAV文件",
+  "monoUnsupportedFormat": "无法创建单声道混音 — 不支持的格式",
+  "monoSwitchFailed": "切换单声道失败：{error}",
+  "@monoSwitchFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "analyzeLabel": "分析",
+  "reAnalyzeLabel": "重新分析",
+  "analysisRequiresWav": "分析需要WAV文件"
 }

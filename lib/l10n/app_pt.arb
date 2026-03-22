@@ -1482,5 +1482,18 @@
   "sortByName": "Nome",
   "sortByPhase": "Fase",
   "sortByCreatedAt": "Data de criação",
-  "sortByBpm": "BPM"
+  "sortByBpm": "BPM",
+  "monoLabel": "Mono",
+  "monoToggleTooltip": "Alternar reprodução mono",
+  "monoRequiresWav": "A mixagem mono requer um ficheiro WAV",
+  "monoUnsupportedFormat": "Não foi possível criar a mistura mono — formato não suportado",
+  "monoSwitchFailed": "Falha na troca para mono: {error}",
+  "@monoSwitchFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "analyzeLabel": "Analisar",
+  "reAnalyzeLabel": "Re-analisar",
+  "analysisRequiresWav": "A análise requer um ficheiro WAV"
 }

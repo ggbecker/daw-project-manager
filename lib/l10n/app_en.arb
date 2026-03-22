@@ -2240,5 +2240,18 @@
   "sortByName": "Name",
   "sortByPhase": "Phase",
   "sortByCreatedAt": "Date added",
-  "sortByBpm": "BPM"
+  "sortByBpm": "BPM",
+  "monoLabel": "Mono",
+  "monoToggleTooltip": "Toggle mono playback",
+  "monoRequiresWav": "Mono mixing requires a WAV file",
+  "monoUnsupportedFormat": "Could not create mono mix — unsupported format",
+  "monoSwitchFailed": "Mono switch failed: {error}",
+  "@monoSwitchFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "analyzeLabel": "Analyze",
+  "reAnalyzeLabel": "Re-analyze",
+  "analysisRequiresWav": "Analysis requires a WAV file"
 }
