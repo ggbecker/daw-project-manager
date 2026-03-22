@@ -606,7 +606,7 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
 
     try {
       final profileRepo = await ref.read(profileRepositoryProvider.future);
-      
+
       // On mobile, allow download even without active profile (will activate first profile after download)
       // On desktop, require active profile
       if (!MobileUtils.isMobile() && !Platform.isIOS) {
@@ -631,13 +631,14 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
         );
       }
 
-      // Download remote data
       Map<String, dynamic> remoteData;
       try {
         remoteData = await _syncService.downloadDatabase();
       } catch (e) {
         if (e.toString().contains('Database file not found')) {
-          // No backup file exists yet - this is normal for first-time setup
+          if (MobileUtils.isMobile() && mounted) {
+            Navigator.of(context, rootNavigator: true).pop();
+          }
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -655,13 +656,14 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
         }
         rethrow;
       }
-      
-      // Ask user for confirmation if local data exists
+
       final projectRepo = await ref.read(repositoryProvider.future);
       final hasLocalData = projectRepo.projectsBox.isNotEmpty || projectRepo.releasesBox.isNotEmpty;
-      
-      bool downloadPreviewSongs = true; // Default to true
-      
+
+      bool downloadPreviewSongs = true;
+
+      if (!mounted) return;
+
       if (hasLocalData) {
         final dialogResult = await showDialog<Map<String, dynamic>>(
           context: context,
@@ -669,19 +671,21 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
             downloadPreviewSongs: downloadPreviewSongs,
           ),
         );
-        
+
         if (dialogResult == null || dialogResult['confirm'] != true) {
+          if (MobileUtils.isMobile() && mounted) {
+            Navigator.of(context, rootNavigator: true).pop();
+          }
           setState(() {
             _isSyncing = false;
             _syncStatus = AppLocalizations.of(context)!.downloadCancelled;
           });
           return;
         }
-        
+
         downloadPreviewSongs = dialogResult['downloadPreviewSongs'] as bool? ?? true;
       }
 
-      // Merge remote data with local (this will overwrite local with remote)
       final result = await _syncService.mergeData(
         remoteData: remoteData,
         projectRepo: projectRepo,
@@ -694,58 +698,52 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
         Navigator.of(context, rootNavigator: true).pop();
       }
 
+      await _syncService.cleanupEmptyProfile(profileRepo);
+
       // On mobile, if no profile is active, activate the first profile from backup
       if (MobileUtils.isMobile() || Platform.isIOS) {
         final currentProfileId = profileRepo.getCurrentProfileId();
         if (currentProfileId == null) {
           final allProfiles = profileRepo.getAllProfiles();
           if (allProfiles.isNotEmpty) {
-            final firstProfile = allProfiles.first;
-            await profileRepo.setCurrentProfileId(firstProfile.id);
-            if (kDebugMode) {
-              print('Mobile: Activated first profile from backup: ${firstProfile.name} (${firstProfile.id})');
-            }
+            await profileRepo.setCurrentProfileId(allProfiles.first.id);
           }
         }
       }
 
-      // Reset syncing state IMMEDIATELY after download completes
-      // This unlocks the UI while we do the provider invalidations below
-      setState(() {
-        _isSyncing = false;
-        _syncStatus = AppLocalizations.of(context)!.backupDownloadedDetailed(
-          result.projectsAdded,
-          result.projectsUpdated,
-          result.releasesAdded,
-          result.releasesUpdated,
-          result.previewSongsDownloaded,
-          result.previewSongsUpdated,
-        );
-        _lastSyncTime = DateTime.now();
-        _hasNewerBackupAvailable = false; // Reset after successful download
-      });
-      
-      // Re-check for newer backup after download (in case another backup was uploaded)
-      if (MobileUtils.isMobile() || Platform.isIOS) {
+      if (mounted) {
+        setState(() {
+          _isSyncing = false;
+          _syncStatus = AppLocalizations.of(context)!.backupDownloadedDetailed(
+            result.projectsAdded,
+            result.projectsUpdated,
+            result.releasesAdded,
+            result.releasesUpdated,
+            result.previewSongsDownloaded,
+            result.previewSongsUpdated,
+          );
+          _lastSyncTime = DateTime.now();
+          _hasNewerBackupAvailable = false;
+        });
+      }
+
+      if (mounted) {
+        ref.invalidate(repositoryProvider);
+        ref.invalidate(allProjectsStreamProvider);
+        ref.invalidate(releasesProvider);
+        ref.invalidate(scanRootsProvider);
+        ref.invalidate(currentProfileProvider);
+      }
+
+      if (mounted && (MobileUtils.isMobile() || Platform.isIOS)) {
         await _checkForNewerBackup();
       }
 
-      // The mergeData call above already performed any profile switch synchronously,
-      // so we can now safely invalidate all providers including repositoryProvider.
-      ref.invalidate(repositoryProvider);
-      ref.invalidate(allProjectsStreamProvider);
-      ref.invalidate(releasesProvider);
-      ref.invalidate(scanRootsProvider);
-      ref.invalidate(currentProfileProvider);
-      
-      // Wait a bit for stream to restart
-      await Future.delayed(const Duration(milliseconds: 500));
-      
-      // Force a read from the repository to ensure data is loaded
-      try {
-        await ref.read(repositoryProvider.future);
-      } catch (e) {
-        if (kDebugMode) print('Error reading repository after download: $e');
+      if (mounted) {
+        await Future.delayed(const Duration(milliseconds: 500));
+        try {
+          await ref.read(repositoryProvider.future);
+        } catch (_) {}
       }
 
       if (mounted) {
@@ -766,12 +764,11 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
       if (MobileUtils.isMobile() && mounted) {
         Navigator.of(context, rootNavigator: true).pop();
       }
-      
-      setState(() {
-        _syncStatus = AppLocalizations.of(context)!.errorDownloadingBackup(e.toString());
-      });
 
       if (mounted) {
+        setState(() {
+          _syncStatus = AppLocalizations.of(context)!.errorDownloadingBackup(e.toString());
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(AppLocalizations.of(context)!.errorDownloadingBackup(e.toString())),
@@ -780,9 +777,11 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
         );
       }
     } finally {
-      setState(() {
-        _isSyncing = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isSyncing = false;
+        });
+      }
     }
   }
 

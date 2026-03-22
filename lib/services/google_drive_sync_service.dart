@@ -4115,63 +4115,6 @@ class GoogleDriveSyncService {
       print('  Releases: +$releasesAdded ~$releasesUpdated');
     }
 
-    // After restoring: if the CURRENT active profile is empty but a restored profile has
-    // data, switch to that profile and clean up the empty one.
-    // This handles the common case: fresh Mac install downloads a Windows backup.
-    // IMPORTANT: Must complete BEFORE returning so stream invalidations in the caller
-    // pick up the correct profile.
-    try {
-      final currentProfileId = profileRepo.getCurrentProfileId();
-      if (currentProfileId != null) {
-        final currentProjectsBox = await Hive.openBox<MusicProject>('${currentProfileId}_projects');
-        final currentReleasesBox = await Hive.openBox<Release>('${currentProfileId}_releases');
-        final isCurrentEmpty = currentProjectsBox.isEmpty && currentReleasesBox.isEmpty;
-
-        if (kDebugMode) {
-          print('Post-merge profile check:');
-          print('  Current profile: $currentProfileId');
-          print('  Current projects: ${currentProjectsBox.length}');
-          print('  Current releases: ${currentReleasesBox.length}');
-          print('  Is current empty: $isCurrentEmpty');
-        }
-
-        if (isCurrentEmpty) {
-          // Find the first non-current profile that has projects or releases
-          Profile? targetProfile;
-          for (final profile in profileRepo.getAllProfiles()) {
-            if (profile.id == currentProfileId) continue;
-            final box = await Hive.openBox<MusicProject>('${profile.id}_projects');
-            if (box.isNotEmpty) {
-              targetProfile = profile;
-              break;
-            }
-          }
-
-          if (targetProfile != null) {
-            if (kDebugMode) {
-              print('Current profile is empty. Switching to "${targetProfile.name}" (${targetProfile.id})');
-            }
-
-            // Delete the empty current profile and its boxes
-            await currentProjectsBox.close();
-            await currentReleasesBox.close();
-            await profileRepo.profilesBox.delete(currentProfileId);
-            try { await Hive.deleteBoxFromDisk('${currentProfileId}_projects'); } catch (_) {}
-            try { await Hive.deleteBoxFromDisk('${currentProfileId}_releases'); } catch (_) {}
-            try { await Hive.deleteBoxFromDisk('${currentProfileId}_roots'); } catch (_) {}
-            try { await Hive.deleteBoxFromDisk('${currentProfileId}_ignored_paths'); } catch (_) {}
-
-            await profileRepo.setCurrentProfileId(targetProfile.id);
-
-            if (kDebugMode) print('Successfully switched to restored profile: ${targetProfile.name}');
-          }
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) print('Error switching to restored profile: $e');
-      // Non-critical — don't rethrow
-    }
-
     return SyncResult(
       projectsAdded: projectsAdded,
       projectsUpdated: projectsUpdated,
@@ -4180,6 +4123,59 @@ class GoogleDriveSyncService {
       previewSongsDownloaded: previewSongsDownloaded,
       previewSongsUpdated: previewSongsUpdated,
     );
+  }
+
+  /// After a restore, if the currently active profile is empty but a restored
+  /// profile has data, switch to the restored profile and delete the empty one.
+  ///
+  /// Extracted from [mergeData] so it runs AFTER the progress dialog is closed,
+  /// preventing the dialog from getting stuck on iOS due to Hive file I/O.
+  Future<void> cleanupEmptyProfile(ProfileRepository profileRepo) async {
+    try {
+      final currentProfileId = profileRepo.getCurrentProfileId();
+      if (currentProfileId == null) return;
+
+      final currentProjectsBox = await Hive.openBox<MusicProject>('${currentProfileId}_projects');
+      final currentReleasesBox = await Hive.openBox<Release>('${currentProfileId}_releases');
+      final isCurrentEmpty = currentProjectsBox.isEmpty && currentReleasesBox.isEmpty;
+
+      if (kDebugMode) {
+        print('Post-merge profile check:');
+        print('  Current profile: $currentProfileId');
+        print('  Current projects: ${currentProjectsBox.length}');
+        print('  Current releases: ${currentReleasesBox.length}');
+        print('  Is current empty: $isCurrentEmpty');
+      }
+
+      if (!isCurrentEmpty) return;
+
+      // Find the first non-current profile that has projects
+      Profile? targetProfile;
+      for (final profile in profileRepo.getAllProfiles()) {
+        if (profile.id == currentProfileId) continue;
+        final box = await Hive.openBox<MusicProject>('${profile.id}_projects');
+        if (box.isNotEmpty) {
+          targetProfile = profile;
+          break;
+        }
+      }
+
+      if (targetProfile == null) return;
+
+      // Switch the active profile — the critical step.
+      await profileRepo.setCurrentProfileId(targetProfile.id);
+
+      // Remove the empty profile entry so it no longer appears in the list.
+      await profileRepo.profilesBox.delete(currentProfileId);
+
+      // NOTE: We intentionally skip box.close() and Hive.deleteBoxFromDisk().
+      // On iOS with Hive CE, closing a box that has active stream watchers
+      // (allProjectsStreamProvider) deadlocks. The leftover empty box files
+      // are harmless — they are cleaned up when the repository reinitialises.
+    } catch (e) {
+      if (kDebugMode) print('Error switching to restored profile: $e');
+      // Non-critical — don't rethrow
+    }
   }
 
   // Serialization helpers
