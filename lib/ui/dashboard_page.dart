@@ -1873,36 +1873,27 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
             onToggleSelection: _toggleProjectSelection,
             onHideProjects: widget.onHideProjects,
             onUnhideProjects: widget.onUnhideProjects,
+            areAllSelected: _areAllSelected,
+            onToggleSelectAll: () {
+              if (_areAllSelected) {
+                _clearSelection();
+              } else {
+                _selectAll();
+              }
+            },
           ),
         ),
         // Selection action bar
+        if (_selectedProjectIds.isNotEmpty)
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           color: Theme.of(context).cardColor,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Checkbox(
-                    value: _areAllSelected,
-                    onChanged: (value) {
-                      if (value == true) {
-                        _selectAll();
-                      } else {
-                        _clearSelection();
-                      }
-                    },
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    _selectedProjectIds.isEmpty
-                        ? AppLocalizations.of(context)!.selectAllProjects
-                        : AppLocalizations.of(context)!.projectsSelected(_selectedProjectIds.length, _selectedProjectIds.length == 1 ? '' : 's'),
-                    style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
-                  ),
-                ],
+              Text(
+                AppLocalizations.of(context)!.projectsSelected(_selectedProjectIds.length, _selectedProjectIds.length == 1 ? '' : 's'),
+                style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
               ),
               if (_selectedProjectIds.isNotEmpty)
                 Row(
@@ -2061,6 +2052,8 @@ class _PlutoProjectsTable extends ConsumerStatefulWidget {
   final Function(String) onToggleSelection;
   final Function(List<String>) onHideProjects;
   final Function(List<String>) onUnhideProjects;
+  final bool areAllSelected;
+  final VoidCallback onToggleSelectAll;
   const _PlutoProjectsTable({
     required this.projects,
     required this.dateFormat,
@@ -2068,6 +2061,8 @@ class _PlutoProjectsTable extends ConsumerStatefulWidget {
     required this.onToggleSelection,
     required this.onHideProjects,
     required this.onUnhideProjects,
+    required this.areAllSelected,
+    required this.onToggleSelectAll,
   });
 
   @override
@@ -2478,6 +2473,13 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         enableFilterMenuItem: false,
         enableSorting: false,
         enableEditingMode: false,
+        titleRenderer: (_) => Center(
+          child: Checkbox(
+            value: widget.areAllSelected,
+            tristate: widget.selectedIds.isNotEmpty && !widget.areAllSelected,
+            onChanged: (_) => widget.onToggleSelectAll(),
+          ),
+        ),
         renderer: (rendererContext) {
           final project = rendererContext.row.cells['data']?.value as MusicProject?;
           if (project == null) return const SizedBox.shrink();
