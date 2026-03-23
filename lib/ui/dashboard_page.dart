@@ -2473,13 +2473,26 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         enableFilterMenuItem: false,
         enableSorting: false,
         enableEditingMode: false,
-        titleRenderer: (_) => Center(
-          child: Checkbox(
-            value: widget.areAllSelected,
-            tristate: widget.selectedIds.isNotEmpty && !widget.areAllSelected,
-            onChanged: (_) => widget.onToggleSelectAll(),
-          ),
-        ),
+        titleRenderer: (rendererContext) {
+          final style = rendererContext.stateManager.configuration.style;
+          return DecoratedBox(
+            decoration: BoxDecoration(
+              color: rendererContext.column.backgroundColor,
+              border: BorderDirectional(
+                end: style.enableColumnBorderVertical
+                    ? BorderSide(color: style.borderColor)
+                    : BorderSide.none,
+              ),
+            ),
+            child: Center(
+              child: Checkbox(
+                value: widget.areAllSelected,
+                tristate: widget.selectedIds.isNotEmpty && !widget.areAllSelected,
+                onChanged: (_) => widget.onToggleSelectAll(),
+              ),
+            ),
+          );
+        },
         renderer: (rendererContext) {
           final project = rendererContext.row.cells['data']?.value as MusicProject?;
           if (project == null) return const SizedBox.shrink();
