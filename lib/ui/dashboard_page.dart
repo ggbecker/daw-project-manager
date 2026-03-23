@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:pluto_grid/pluto_grid.dart';
+import 'package:trina_grid/trina_grid.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -86,6 +86,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
   bool _scanning = false;
   bool _extractingMetadata = false;
   bool _isSearchingMobile = false;
+  bool _isSearchingDesktop = false;
   late TabController _tabController;
   
   // 1. FocusNode para a barra de pesquisa
@@ -262,8 +263,16 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
   }
 
 
+  void _collapseDesktopSearch() {
+    _clearCurrentTabSearch();
+    setState(() => _isSearchingDesktop = false);
+  }
+
   // Método para focar na busca e selecionar texto
   void _focusSearchAndSelectAll() {
+    if (!MobileUtils.isMobile() && !_isSearchingDesktop) {
+      setState(() => _isSearchingDesktop = true);
+    }
     // Set flag to maintain focus for the next 1 second (only when Ctrl+F is pressed)
     _shouldMaintainSearchFocus = true;
     _lastCtrlFPressTime = DateTime.now();
@@ -1312,48 +1321,43 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                       ],
                     ),
                   ),
-                  // Área de Pesquisa e Filtro (desktop only — hidden on Playlists tab)
-                  if (_tabController.index != 2 || !MobileUtils.isMobile())
+                  // Search bar (desktop only — hidden on Playlists tab)
+                  if (!MobileUtils.isMobile() && (_tabController.index != 2 || !MobileUtils.isMobile()))
                   Flexible(
                     flex: 3,
                     child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        SizedBox(
-                          width: 400,
-                          child: TextField(
+                        ClipRect(
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            curve: Curves.easeInOut,
+                            width: _isSearchingDesktop ? 400 : 0,
+                            child: Focus(
+                              onKeyEvent: (node, event) {
+                                if (event is KeyDownEvent &&
+                                    event.logicalKey == LogicalKeyboardKey.escape) {
+                                  _collapseDesktopSearch();
+                                  return KeyEventResult.handled;
+                                }
+                                return KeyEventResult.ignored;
+                              },
+                              child: TextField(
                               focusNode: _searchFocusNode,
                               controller: _searchController,
                               decoration: InputDecoration(
                                 hintText: _tabController.index == 0
-                                    ? '${AppLocalizations.of(context)!.searchProjects} (${Platform.isMacOS ? 'Cmd+F' : 'Ctrl+F'})'
+                                    ? AppLocalizations.of(context)!.searchProjects
                                     : _tabController.index == 1
-                                        ? '${AppLocalizations.of(context)!.searchReleases} (${Platform.isMacOS ? 'Cmd+F' : 'Ctrl+F'})'
+                                        ? AppLocalizations.of(context)!.searchReleases
                                         : AppLocalizations.of(context)!.statsSearchProjects,
                                 isDense: true,
                                 border: const OutlineInputBorder(),
                                 prefixIcon: const Icon(Icons.search),
-                                suffixIcon: () {
-                                  final cs = _tabController.index == 0
-                                      ? ref.read(projectsSearchProvider)
-                                      : _tabController.index == 1
-                                          ? ref.read(releasesSearchProvider)
-                                          : ref.read(statisticsSearchProvider);
-                                  return cs.isNotEmpty
-                                      ? IconButton(
-                                          icon: const Icon(Icons.close),
-                                          onPressed: () {
-                                            _searchController.clear();
-                                            if (_tabController.index == 0) {
-                                              ref.read(projectsSearchProvider.notifier).clear();
-                                            } else if (_tabController.index == 1) {
-                                              ref.read(releasesSearchProvider.notifier).clear();
-                                            } else {
-                                              ref.read(statisticsSearchProvider.notifier).set('');
-                                            }
-                                          },
-                                        )
-                                      : null;
-                                }(),
+                                suffixIcon: IconButton(
+                                  icon: const Icon(Icons.close, size: 18),
+                                  onPressed: _collapseDesktopSearch,
+                                ),
                               ),
                               onChanged: (text) {
                                 if (_tabController.index == 0) {
@@ -1365,202 +1369,17 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                 }
                               },
                             ),
-                        ),
-                        const SizedBox(width: 8),
-                        const Spacer(),
-                        // Filters (only show on Projects tab)
-                        if (_tabController.index == 0) ...[
-                          // Exibe o contador de projetos
-                          Flexible(
-                            child: repoAsync.when(
-                              loading: () => const SizedBox.shrink(),
-                              error: (_, _) => const SizedBox.shrink(),
-                              data: (repo) {
-                                String projectText;
-                                final l10n = AppLocalizations.of(context)!;
-                                if (hiddenMode == 2) {
-                                  // Showing only hidden
-                                  projectText = '${l10n.projectsCount(hiddenCount)} ${l10n.hiddenOnly}';
-                                } else {
-                                  // Showing visible or all
-                                  projectText = l10n.projectsCount(visibleCount);
-                                  if (hiddenCount > 0 && hiddenMode == 0) {
-                                    projectText += ' ${l10n.hiddenCount(hiddenCount)}';
-                                  }
-                                }
-                                return Text(
-                                  projectText,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: hiddenMode == 2 ? Colors.orange.shade300 : null,
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          // Show Hidden Projects checkbox - only show if there are hidden projects
-                        if (hiddenCount > 0)
-                          InkWell(
-                            onTap: () {
-                              final currentValue = hiddenMode == 1;
-                              if (!currentValue) {
-                                hiddenNotifier.setShowAll(true);
-                              } else {
-                                hiddenNotifier.setShowAll(false);
-                              }
-                            },
-                            borderRadius: BorderRadius.circular(4),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Checkbox(
-                                  value: hiddenMode == 1, // Show all mode
-                                  onChanged: (value) {
-                                    if (value == true) {
-                                      hiddenNotifier.setShowAll(true);
-                                    } else {
-                                      // If unchecking, go back to show only visible (mode 0)
-                                      hiddenNotifier.setShowAll(false);
-                                    }
-                                  },
-                                ),
-                                Text(
-                                  AppLocalizations.of(context)!.showHidden,
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                              ],
-                            ),
-                          ),
-                        if (hiddenCount > 0)
-                          const SizedBox(width: 8),
-                        // Show Only Hidden button
-                        if (hiddenCount > 0)
-                          TextButton.icon(
-                            icon: Icon(
-                              hiddenMode == 2 ? Icons.visibility : Icons.visibility_off_outlined,
-                              size: 16,
-                            ),
-                            label: Text(
-                              hiddenMode == 2 ? AppLocalizations.of(context)!.showAll : AppLocalizations.of(context)!.showOnlyHidden,
-                              style: const TextStyle(fontSize: 12),
-                            ),
-                            style: TextButton.styleFrom(
-                          backgroundColor: hiddenMode == 2 ? Colors.orange.shade700 : null,
-                          foregroundColor: hiddenMode == 2 ? Colors.white : Theme.of(context).textTheme.bodyMedium?.color,
-                            ),
-                            onPressed: () {
-                              if (hiddenMode == 2) {
-                                // Currently showing only hidden, switch back to visible (mode 0)
-                                hiddenNotifier.setShowOnlyHidden(false);
-                              } else {
-                                // Switch to show only hidden (mode 2)
-                                // Also uncheck the "Show Hidden" checkbox
-                                hiddenNotifier.setShowOnlyHidden(true);
-                              }
-                            },
-                          ),
-                        const SizedBox(width: 8),
-                        // Hide Finished Projects checkbox
-                        InkWell(
-                          onTap: () {
-                            final currentValue = finishedMode == 1;
-                            if (!currentValue) {
-                              finishedNotifier.setHideFinished(true);
-                            } else {
-                              finishedNotifier.setHideFinished(false);
-                            }
-                          },
-                          borderRadius: BorderRadius.circular(4),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Checkbox(
-                                value: finishedMode == 1,
-                                onChanged: (value) {
-                                  if (value == true) {
-                                    finishedNotifier.setHideFinished(true);
-                                  } else {
-                                    finishedNotifier.setHideFinished(false);
-                                  }
-                                },
-                              ),
-                              Text(
-                                AppLocalizations.of(context)!.hideFinished,
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                            ],
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        // Show Deadline checkbox (Desktop)
-                        InkWell(
-                          onTap: () {
-                            final currentValue = ref.read(showOnlyWithDeadlineProvider);
-                            ref.read(showOnlyWithDeadlineProvider.notifier).setShowOnlyWithDeadline(!currentValue);
-                          },
-                          borderRadius: BorderRadius.circular(4),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Checkbox(
-                                value: ref.watch(showOnlyWithDeadlineProvider),
-                                onChanged: (value) {
-                                  ref.read(showOnlyWithDeadlineProvider.notifier).setShowOnlyWithDeadline(value == true);
-                                },
-                              ),
-                              Text(
-                                AppLocalizations.of(context)!.showOnlyDeadlines,
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                            ],
+                        ),
+                        Tooltip(
+                          message: '${AppLocalizations.of(context)!.searchProjects} (${Platform.isMacOS ? 'Cmd+F' : 'Ctrl+F'})',
+                          child: IconButton(
+                            icon: const Icon(Icons.search),
+                            onPressed: _focusSearchAndSelectAll,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        // Phase Filter dropdown
-                        DropdownButton<String>(
-                          value: phaseFilter,
-                          hint: Text(
-                            AppLocalizations.of(context)!.filterByPhase,
-                            style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
-                          ),
-                          underline: const SizedBox.shrink(),
-                          style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color),
-                          icon: Icon(Icons.filter_list, size: 16, color: Theme.of(context).textTheme.bodyMedium?.color),
-                          items: [
-                            DropdownMenuItem<String>(
-                              value: null,
-                              child: Text(AppLocalizations.of(context)!.allPhases),
-                            ),
-                            DropdownMenuItem<String>(
-                              value: 'Idea',
-                              child: Text(AppLocalizations.of(context)!.projectPhaseIdea),
-                            ),
-                            DropdownMenuItem<String>(
-                              value: 'Arranging',
-                              child: Text(AppLocalizations.of(context)!.projectPhaseArranging),
-                            ),
-                            DropdownMenuItem<String>(
-                              value: 'Mixing',
-                              child: Text(AppLocalizations.of(context)!.projectPhaseMixing),
-                            ),
-                            DropdownMenuItem<String>(
-                              value: 'Mastering',
-                              child: Text(AppLocalizations.of(context)!.projectPhaseMastering),
-                            ),
-                            DropdownMenuItem<String>(
-                              value: 'Finished',
-                              child: Text(AppLocalizations.of(context)!.projectPhaseFinished),
-                            ),
-                          ],
-                          onChanged: (String? value) {
-                            ref.read(phaseFilterProvider.notifier).setPhase(value);
-                          },
-                        ),
-                          const SizedBox(width: 8),
-                          const SizedBox.shrink(),
-                        ],
+                        const SizedBox(width: 4),
                       ],
                     ),
                   ),
@@ -1626,6 +1445,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                             setState(() => _extractingMetadata = extracting);
                           },
                           isAnyOperation: isAnyOperation,
+                          visibleCount: visibleCount,
+                          hiddenCount: hiddenCount,
                         ),
                   const ReleasesTabPage(),
                   if (MobileUtils.isMobile()) const PlaylistsPage(),
@@ -1679,6 +1500,8 @@ class _PlutoProjectsTableWithSelection extends ConsumerStatefulWidget {
   final bool showHidden;
   final Function(bool) onExtractingMetadataChanged;
   final bool isAnyOperation;
+  final int visibleCount;
+  final int hiddenCount;
 
   const _PlutoProjectsTableWithSelection({
     required this.projects,
@@ -1689,6 +1512,8 @@ class _PlutoProjectsTableWithSelection extends ConsumerStatefulWidget {
     required this.showHidden,
     required this.onExtractingMetadataChanged,
     required this.isAnyOperation,
+    required this.visibleCount,
+    required this.hiddenCount,
   });
 
   @override
@@ -1890,8 +1715,163 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
 
   @override
   Widget build(BuildContext context) {
+    final hiddenMode = ref.watch(showHiddenProjectsProvider);
+    final hiddenNotifier = ref.read(showHiddenProjectsProvider.notifier);
+    final finishedMode = ref.watch(showFinishedProjectsProvider);
+    final finishedNotifier = ref.read(showFinishedProjectsProvider.notifier);
+    final phaseFilter = ref.watch(phaseFilterProvider);
+    final l10n = AppLocalizations.of(context)!;
+
     return Column(
       children: [
+        // Filter bar
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          color: Theme.of(context).cardColor,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+                // Project count
+                Text(
+                  () {
+                    if (hiddenMode == 2) {
+                      return '${l10n.projectsCount(widget.hiddenCount)} ${l10n.hiddenOnly}';
+                    } else {
+                      var text = l10n.projectsCount(widget.visibleCount);
+                      if (widget.hiddenCount > 0 && hiddenMode == 0) {
+                        text += ' ${l10n.hiddenCount(widget.hiddenCount)}';
+                      }
+                      return text;
+                    }
+                  }(),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: hiddenMode == 2 ? Colors.orange.shade300 : null,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                if (widget.hiddenCount > 0) ...[
+                  InkWell(
+                    onTap: () {
+                      if (hiddenMode == 1) {
+                        hiddenNotifier.setShowAll(false);
+                      } else {
+                        hiddenNotifier.setShowAll(true);
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(4),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Checkbox(
+                          value: hiddenMode == 1,
+                          onChanged: (value) {
+                            if (value == true) {
+                              hiddenNotifier.setShowAll(true);
+                            } else {
+                              hiddenNotifier.setShowAll(false);
+                            }
+                          },
+                        ),
+                        Text(l10n.showHidden, style: const TextStyle(fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  TextButton.icon(
+                    icon: Icon(
+                      hiddenMode == 2 ? Icons.visibility : Icons.visibility_off_outlined,
+                      size: 16,
+                    ),
+                    label: Text(
+                      hiddenMode == 2 ? l10n.showAll : l10n.showOnlyHidden,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    style: TextButton.styleFrom(
+                      backgroundColor: hiddenMode == 2 ? Colors.orange.shade700 : null,
+                      foregroundColor: hiddenMode == 2 ? Colors.white : Theme.of(context).textTheme.bodyMedium?.color,
+                    ),
+                    onPressed: () {
+                      if (hiddenMode == 2) {
+                        hiddenNotifier.setShowOnlyHidden(false);
+                      } else {
+                        hiddenNotifier.setShowOnlyHidden(true);
+                      }
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                InkWell(
+                  onTap: () {
+                    if (finishedMode == 1) {
+                      finishedNotifier.setHideFinished(false);
+                    } else {
+                      finishedNotifier.setHideFinished(true);
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(4),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Checkbox(
+                        value: finishedMode == 1,
+                        onChanged: (value) {
+                          if (value == true) {
+                            finishedNotifier.setHideFinished(true);
+                          } else {
+                            finishedNotifier.setHideFinished(false);
+                          }
+                        },
+                      ),
+                      Text(l10n.hideFinished, style: const TextStyle(fontSize: 12)),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                InkWell(
+                  onTap: () {
+                    final currentValue = ref.read(showOnlyWithDeadlineProvider);
+                    ref.read(showOnlyWithDeadlineProvider.notifier).setShowOnlyWithDeadline(!currentValue);
+                  },
+                  borderRadius: BorderRadius.circular(4),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Checkbox(
+                        value: ref.watch(showOnlyWithDeadlineProvider),
+                        onChanged: (value) {
+                          ref.read(showOnlyWithDeadlineProvider.notifier).setShowOnlyWithDeadline(value == true);
+                        },
+                      ),
+                      Text(l10n.showOnlyDeadlines, style: const TextStyle(fontSize: 12)),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                DropdownButton<String>(
+                  value: phaseFilter,
+                  hint: Text(
+                    l10n.filterByPhase,
+                    style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
+                  ),
+                  underline: const SizedBox.shrink(),
+                  style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color),
+                  icon: Icon(Icons.filter_list, size: 16, color: Theme.of(context).textTheme.bodyMedium?.color),
+                  items: [
+                    DropdownMenuItem<String>(value: null, child: Text(l10n.allPhases)),
+                    DropdownMenuItem<String>(value: 'Idea', child: Text(l10n.projectPhaseIdea)),
+                    DropdownMenuItem<String>(value: 'Arranging', child: Text(l10n.projectPhaseArranging)),
+                    DropdownMenuItem<String>(value: 'Mixing', child: Text(l10n.projectPhaseMixing)),
+                    DropdownMenuItem<String>(value: 'Mastering', child: Text(l10n.projectPhaseMastering)),
+                    DropdownMenuItem<String>(value: 'Finished', child: Text(l10n.projectPhaseFinished)),
+                  ],
+                  onChanged: (String? value) {
+                    ref.read(phaseFilterProvider.notifier).setPhase(value);
+                  },
+                ),
+              ],
+          ),
+        ),
         Expanded(
           child: _PlutoProjectsTable(
             projects: widget.projects,
@@ -2102,7 +2082,7 @@ class _PlutoProjectsTable extends ConsumerStatefulWidget {
 }
 
 class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
-  PlutoGridStateManager? stateManager;
+  TrinaGridStateManager? stateManager;
   
   Future<void> _playPreviewSong(MusicProject project) async {
     if (project.previewSongPath == null || project.previewSongPath!.isEmpty) {
@@ -2423,7 +2403,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     }
   }
 
-  List<PlutoRow> _mapProjectsToRows(List<MusicProject> projects) {
+  List<TrinaRow> _mapProjectsToRows(List<MusicProject> projects) {
     return projects.map((p) {
       // Combine DAW type and version into a single string
       final dawDisplay = p.dawType != null
@@ -2432,18 +2412,18 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               : p.dawType!)
           : '';
       
-      return PlutoRow(
+      return TrinaRow(
         cells: {
-          'checkbox': PlutoCell(value: ''), // Placeholder for checkbox column
-          'name': PlutoCell(value: p.displayName),
-          'status': PlutoCell(value: p.status),
-          'dawType': PlutoCell(value: dawDisplay),
-          'bpm': PlutoCell(value: p.bpm?.toString() ?? ''),
-          'key': PlutoCell(value: p.musicalKey ?? ''),
-          'lastModified': PlutoCell(value: widget.dateFormat.format(p.lastModifiedAt)),
-          'deadline': PlutoCell(value: p.deadlineStatus ?? ''),
-          'launch': PlutoCell(value: ''),
-          'data': PlutoCell(value: p),
+          'checkbox': TrinaCell(value: ''), // Placeholder for checkbox column
+          'name': TrinaCell(value: p.displayName),
+          'status': TrinaCell(value: p.status),
+          'dawType': TrinaCell(value: dawDisplay),
+          'bpm': TrinaCell(value: p.bpm?.toString() ?? ''),
+          'key': TrinaCell(value: p.musicalKey ?? ''),
+          'lastModified': TrinaCell(value: widget.dateFormat.format(p.lastModifiedAt)),
+          'deadline': TrinaCell(value: p.deadlineStatus ?? ''),
+          'launch': TrinaCell(value: ''),
+          'data': TrinaCell(value: p),
         },
       );
     }).toList();
@@ -2493,13 +2473,13 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final columns = [
-      PlutoColumn(
+      TrinaColumn(
         title: '',
         field: 'checkbox',
-        type: PlutoColumnType.text(),
+        type: TrinaColumnType.text(),
         width: 50,
         minWidth: 50,
-        frozen: PlutoColumnFrozen.start,
+        frozen: TrinaColumnFrozen.start,
         enableColumnDrag: false,
         enableContextMenu: false,
         enableFilterMenuItem: false,
@@ -2518,16 +2498,16 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           );
         },
       ),
-      PlutoColumn(
+      TrinaColumn(
         title: AppLocalizations.of(context)!.name,
         field: 'name',
-        type: PlutoColumnType.text(),
+        type: TrinaColumnType.text(),
         enableColumnDrag: true,
         enableContextMenu: false,
         enableEditingMode: false,
         width: 600,
         minWidth: 200,
-        frozen: PlutoColumnFrozen.start,
+        frozen: TrinaColumnFrozen.start,
         renderer: (rendererContext) {
           final project = rendererContext.row.cells['data']?.value as MusicProject?;
           if (project == null) {
@@ -2555,10 +2535,10 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           );
         },
       ),
-      PlutoColumn(
+      TrinaColumn(
         title: l10n.phase,
         field: 'status',
-        type: PlutoColumnType.text(),
+        type: TrinaColumnType.text(),
         enableEditingMode: false,
         width: 140,
         minWidth: 120,
@@ -2584,10 +2564,10 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           );
         },
       ),
-      PlutoColumn(
+      TrinaColumn(
         title: AppLocalizations.of(context)!.daw,
         field: 'dawType',
-        type: PlutoColumnType.text(),
+        type: TrinaColumnType.text(),
         enableEditingMode: false,
         width: 140,
         minWidth: 100,
@@ -2628,10 +2608,10 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           );
         },
       ),
-      PlutoColumn(
+      TrinaColumn(
         title: AppLocalizations.of(context)!.bpm,
         field: 'bpm',
-        type: PlutoColumnType.text(),
+        type: TrinaColumnType.text(),
         width: 80,
         minWidth: 70,
         enableEditingMode: true,
@@ -2649,10 +2629,10 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           );
         },
       ),
-      PlutoColumn(
+      TrinaColumn(
         title: AppLocalizations.of(context)!.key.split(' ').first, // Get just "Key" from "Key (e.g., C#m, F major)"
         field: 'key',
-        type: PlutoColumnType.text(),
+        type: TrinaColumnType.text(),
         width: 160,
         minWidth: 140,
         enableEditingMode: true,
@@ -2723,10 +2703,10 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           );
         },
       ),
-      PlutoColumn(
+      TrinaColumn(
         title: AppLocalizations.of(context)!.lastModifiedColumn,
         field: 'lastModified',
-        type: PlutoColumnType.text(),
+        type: TrinaColumnType.text(),
         enableEditingMode: false,
         width: 200,
         minWidth: 160,
@@ -2784,10 +2764,10 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           );
         },
       ),
-      PlutoColumn(
+      TrinaColumn(
         title: AppLocalizations.of(context)!.deadline,
         field: 'deadline',
-        type: PlutoColumnType.text(),
+        type: TrinaColumnType.text(),
         enableEditingMode: false,
         width: 120,
         minWidth: 100,
@@ -2860,10 +2840,10 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           );
         },
       ),
-      PlutoColumn(
+      TrinaColumn(
         title: AppLocalizations.of(context)!.actions,
         field: 'launch',
-        type: PlutoColumnType.text(),
+        type: TrinaColumnType.text(),
         enableEditingMode: false,
         width: 290, // Increased width to accommodate all action buttons
         minWidth: 250,
@@ -2991,10 +2971,10 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         },
       ),
       // Hidden backing column for passing the model instance
-      PlutoColumn(
+      TrinaColumn(
         title: 'data',
         field: 'data',
-        type: PlutoColumnType.text(),
+        type: TrinaColumnType.text(),
         enableEditingMode: false,
         width: 0,
         hide: true,
@@ -3003,14 +2983,14 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
 
     final initialRows = _mapProjectsToRows(widget.projects);
 
-    return PlutoGrid(
-          key: ValueKey('pluto_grid_${l10n.localeName}'), // Force rebuild when locale changes
+    return TrinaGrid(
+          key: ValueKey('trina_grid_${l10n.localeName}'), // Force rebuild when locale changes
           columns: columns,
           rows: initialRows,
-          onLoaded: (PlutoGridOnLoadedEvent event) {
+          onLoaded: (TrinaGridOnLoadedEvent event) {
             stateManager = event.stateManager;
           },
-      onChanged: (PlutoGridOnChangedEvent event) async {
+      onChanged: (TrinaGridOnChangedEvent event) async {
         final project = event.row.cells['data']?.value as MusicProject?;
         if (project == null) return;
         
@@ -3039,9 +3019,9 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           await repo.updateProject(updated);
         }
       },
-      configuration: PlutoGridConfiguration(
-        style: PlutoGridStyleConfig(
-          gridBackgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      configuration: TrinaGridConfiguration(
+        style: TrinaGridStyleConfig(
+          gridBackgroundColor: Theme.of(context).cardColor,
           gridBorderColor: Theme.of(context).dividerColor,
           gridBorderRadius: BorderRadius.zero,
           rowColor: Theme.of(context).cardColor,
@@ -3057,21 +3037,22 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           columnHeight: 44,
           rowHeight: 48,
           activatedBorderColor: Theme.of(context).colorScheme.primary,
-          activatedColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+          activatedColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
           iconColor: Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey,
           menuBackgroundColor: Theme.of(context).cardColor,
+          oddRowColor: Theme.of(context).cardColor,
           evenRowColor: Theme.of(context).brightness == Brightness.dark
-              ? Theme.of(context).cardColor.withOpacity(0.5)
-              : Theme.of(context).cardColor.withOpacity(0.7),
+              ? Color.alphaBlend(Colors.white.withValues(alpha: 0.05), Theme.of(context).cardColor)
+              : Color.alphaBlend(Colors.black.withValues(alpha: 0.04), Theme.of(context).cardColor),
         ),
-        columnSize: const PlutoGridColumnSizeConfig(
-          autoSizeMode: PlutoAutoSizeMode.scale,
-          resizeMode: PlutoResizeMode.normal,
+        columnSize: const TrinaGridColumnSizeConfig(
+          autoSizeMode: TrinaAutoSizeMode.scale,
+          resizeMode: TrinaResizeMode.normal,
         ),
       ),
       onRowChecked: null,
       onSelected: null,
-      onRowDoubleTap: (PlutoGridOnRowDoubleTapEvent event) async {
+      onRowDoubleTap: (TrinaGridOnRowDoubleTapEvent event) async {
         final project = event.row.cells['data']?.value as MusicProject?;
         if (project == null) return;
         
@@ -4087,51 +4068,82 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
     final l10n = AppLocalizations.of(context)!;
     
     if (widget.projects.isEmpty) {
+      final allProjectsAsync = ref.watch(allProjectsStreamProvider);
+      final totalProjects = allProjectsAsync.value?.length ?? 0;
+      final hasProjectsButFiltered = totalProjects > 0;
+
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.cloud_sync,
-                size: 80,
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.6),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                l10n.firstTimeSyncTitle,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                l10n.firstTimeSyncMessage,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Colors.grey[600],
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-              FilledButton.icon(
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const GoogleDriveSyncPage(),
+          child: hasProjectsButFiltered
+              ? Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.search_off,
+                      size: 64,
+                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
                     ),
-                  );
-                },
-                icon: const Icon(Icons.cloud_upload),
-                label: Text(l10n.syncWithGoogleDrive),
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                  textStyle: const TextStyle(fontSize: 16),
+                    const SizedBox(height: 16),
+                    Text(
+                      l10n.noResultsForFilter,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.noResultsForFilterHint,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                )
+              : Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.cloud_sync,
+                      size: 80,
+                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.6),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      l10n.firstTimeSyncTitle,
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      l10n.firstTimeSyncMessage,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 32),
+                    FilledButton.icon(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const GoogleDriveSyncPage(),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.cloud_upload),
+                      label: Text(l10n.syncWithGoogleDrive),
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                        textStyle: const TextStyle(fontSize: 16),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
-          ),
         ),
       );
     }

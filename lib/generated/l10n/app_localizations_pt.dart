@@ -2192,4 +2192,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get analysisRequiresWav => 'A análise requer um ficheiro WAV';
+
+  @override
+  String get noResultsForFilter => 'Nenhum resultado para o filtro atual';
+
+  @override
+  String get noResultsForFilterHint =>
+      'Tente ajustar a pesquisa ou os filtros.';
 }

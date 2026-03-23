@@ -2212,4 +2212,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get analysisRequiresWav => 'L\'analyse nécessite un fichier WAV';
+
+  @override
+  String get noResultsForFilter => 'Aucun résultat pour le filtre actuel';
+
+  @override
+  String get noResultsForFilterHint =>
+      'Essayez d\'ajuster votre recherche ou vos filtres.';
 }

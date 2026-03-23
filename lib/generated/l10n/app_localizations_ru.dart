@@ -2192,4 +2192,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get analysisRequiresWav => 'Для анализа требуется WAV-файл';
+
+  @override
+  String get noResultsForFilter => 'Нет результатов для текущего фильтра';
+
+  @override
+  String get noResultsForFilterHint => 'Попробуйте изменить поиск или фильтры.';
 }

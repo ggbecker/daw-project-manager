@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
-import 'package:pluto_grid/pluto_grid.dart';
+import 'package:trina_grid/trina_grid.dart';
 
 import '../models/release.dart';
 import '../models/music_project.dart';
@@ -263,7 +263,7 @@ class _ReleasesTable extends ConsumerStatefulWidget {
 }
 
 class _ReleasesTableState extends ConsumerState<_ReleasesTable> {
-  PlutoGridStateManager? stateManager;
+  TrinaGridStateManager? stateManager;
 
   @override
   void didUpdateWidget(_ReleasesTable oldWidget) {
@@ -276,24 +276,24 @@ class _ReleasesTableState extends ConsumerState<_ReleasesTable> {
     }
   }
 
-  List<PlutoRow> _mapReleasesToRows(List<Release> releases) {
+  List<TrinaRow> _mapReleasesToRows(List<Release> releases) {
     return releases.map((release) {
       final releaseProjects = widget.projects
           .where((p) => release.trackIds.contains(p.id))
           .toList();
       
-      return PlutoRow(cells: {
-        'artwork': PlutoCell(value: release.artworkImagePath),
-        'title': PlutoCell(value: release.title),
-        'tracks': PlutoCell(value: releaseProjects.length),
-        'releaseDate': PlutoCell(
+      return TrinaRow(cells: {
+        'artwork': TrinaCell(value: release.artworkImagePath),
+        'title': TrinaCell(value: release.title),
+        'tracks': TrinaCell(value: releaseProjects.length),
+        'releaseDate': TrinaCell(
           value: release.releaseDate != null
               ? widget.dateFormat.format(release.releaseDate!)
               : '',
         ),
-        'description': PlutoCell(value: release.description ?? ''),
-        'actions': PlutoCell(value: ''),
-        'data': PlutoCell(value: release),
+        'description': TrinaCell(value: release.description ?? ''),
+        'actions': TrinaCell(value: ''),
+        'data': TrinaCell(value: release),
       });
     }).toList();
   }
@@ -394,14 +394,14 @@ class _ReleasesTableState extends ConsumerState<_ReleasesTable> {
   @override
   Widget build(BuildContext context) {
     final columns = [
-      PlutoColumn(
+      TrinaColumn(
         title: AppLocalizations.of(context)!.artwork,
         field: 'artwork',
-        type: PlutoColumnType.text(),
+        type: TrinaColumnType.text(),
         enableEditingMode: false,
         width: 100,
         minWidth: 80,
-        frozen: PlutoColumnFrozen.start,
+        frozen: TrinaColumnFrozen.start,
         renderer: (ctx) {
           final release = ctx.row.cells['data']?.value as Release?;
           final imagePath = ctx.cell.value as String?;
@@ -445,16 +445,16 @@ class _ReleasesTableState extends ConsumerState<_ReleasesTable> {
           );
         },
       ),
-      PlutoColumn(
+      TrinaColumn(
         title: AppLocalizations.of(context)!.title,
         field: 'title',
-        type: PlutoColumnType.text(),
+        type: TrinaColumnType.text(),
         enableColumnDrag: true,
         enableContextMenu: false,
         enableEditingMode: false,
         width: 300,
         minWidth: 200,
-        frozen: PlutoColumnFrozen.start,
+        frozen: TrinaColumnFrozen.start,
         renderer: (rendererContext) {
           final release = rendererContext.row.cells['data']?.value as Release?;
           if (release == null) {
@@ -469,10 +469,10 @@ class _ReleasesTableState extends ConsumerState<_ReleasesTable> {
           );
         },
       ),
-      PlutoColumn(
+      TrinaColumn(
         title: AppLocalizations.of(context)!.tracks,
         field: 'tracks',
-        type: PlutoColumnType.number(),
+        type: TrinaColumnType.number(),
         enableEditingMode: false,
         width: 100,
         minWidth: 80,
@@ -490,10 +490,10 @@ class _ReleasesTableState extends ConsumerState<_ReleasesTable> {
           );
         },
       ),
-      PlutoColumn(
+      TrinaColumn(
         title: AppLocalizations.of(context)!.releaseDate,
         field: 'releaseDate',
-        type: PlutoColumnType.text(),
+        type: TrinaColumnType.text(),
         enableEditingMode: false,
         width: 180,
         minWidth: 150,
@@ -511,10 +511,10 @@ class _ReleasesTableState extends ConsumerState<_ReleasesTable> {
           );
         },
       ),
-      PlutoColumn(
+      TrinaColumn(
         title: AppLocalizations.of(context)!.description,
         field: 'description',
-        type: PlutoColumnType.text(),
+        type: TrinaColumnType.text(),
         enableEditingMode: false,
         width: 300,
         minWidth: 200,
@@ -532,10 +532,10 @@ class _ReleasesTableState extends ConsumerState<_ReleasesTable> {
           );
         },
       ),
-      PlutoColumn(
+      TrinaColumn(
         title: AppLocalizations.of(context)!.actions,
         field: 'actions',
-        type: PlutoColumnType.text(),
+        type: TrinaColumnType.text(),
         width: 200,
         minWidth: 180,
         renderer: (ctx) {
@@ -566,10 +566,10 @@ class _ReleasesTableState extends ConsumerState<_ReleasesTable> {
         },
       ),
       // Hidden backing column for passing the model instance
-      PlutoColumn(
+      TrinaColumn(
         title: 'data',
         field: 'data',
-        type: PlutoColumnType.text(),
+        type: TrinaColumnType.text(),
         width: 0,
         hide: true,
       ),
@@ -577,14 +577,14 @@ class _ReleasesTableState extends ConsumerState<_ReleasesTable> {
 
     final initialRows = _mapReleasesToRows(widget.releases);
 
-    return PlutoGrid(
+    return TrinaGrid(
       columns: columns,
       rows: initialRows,
-      onLoaded: (PlutoGridOnLoadedEvent event) {
+      onLoaded: (TrinaGridOnLoadedEvent event) {
         stateManager = event.stateManager;
       },
-      configuration: PlutoGridConfiguration(
-        style: PlutoGridStyleConfig(
+      configuration: TrinaGridConfiguration(
+        style: TrinaGridStyleConfig(
           gridBackgroundColor: Theme.of(context).scaffoldBackgroundColor,
           gridBorderColor: Theme.of(context).dividerColor,
           gridBorderRadius: BorderRadius.zero,
@@ -601,21 +601,22 @@ class _ReleasesTableState extends ConsumerState<_ReleasesTable> {
           columnHeight: 44,
           rowHeight: 70, // Taller rows to accommodate thumbnails
           activatedBorderColor: Theme.of(context).colorScheme.primary,
-          activatedColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+          activatedColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
           iconColor: Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey,
           menuBackgroundColor: Theme.of(context).cardColor,
+          oddRowColor: Theme.of(context).cardColor,
           evenRowColor: Theme.of(context).brightness == Brightness.dark
-              ? Theme.of(context).cardColor.withOpacity(0.5)
-              : Theme.of(context).cardColor.withOpacity(0.7),
+              ? Color.alphaBlend(Colors.white.withValues(alpha: 0.05), Theme.of(context).cardColor)
+              : Color.alphaBlend(Colors.black.withValues(alpha: 0.04), Theme.of(context).cardColor),
         ),
-        columnSize: const PlutoGridColumnSizeConfig(
-          autoSizeMode: PlutoAutoSizeMode.scale,
-          resizeMode: PlutoResizeMode.normal,
+        columnSize: const TrinaGridColumnSizeConfig(
+          autoSizeMode: TrinaAutoSizeMode.scale,
+          resizeMode: TrinaResizeMode.normal,
         ),
       ),
       onRowChecked: null,
       onSelected: null,
-      onRowDoubleTap: (PlutoGridOnRowDoubleTapEvent event) async {
+      onRowDoubleTap: (TrinaGridOnRowDoubleTapEvent event) async {
         final release = event.row.cells['data']?.value as Release?;
         if (release == null) return;
         

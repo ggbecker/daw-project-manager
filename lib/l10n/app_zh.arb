@@ -32,16 +32,20 @@
     "placeholders": {
       "projectName": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToLaunchProject": "无法打开{projectName}",
   "@failedToLaunchProject": {
     "placeholders": {
       "projectName": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "clearLibrary": "清空库",
   "clearLibraryMessage": "这将删除所有保存的项目和源文件夹。继续吗？",
@@ -59,8 +63,10 @@
     "placeholders": {
       "date": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "excludedFoldersSectionTitle": "排除的文件夹",
   "excludedFoldersSectionSubtitle": "扫描时将跳过这些文件夹，即使它们位于项目文件夹内。",
@@ -74,8 +80,10 @@
     "placeholders": {
       "path": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "removeExcludedFolderMessageNoPath": "该文件夹将不再被排除。",
   "desktopOnlyPathsSettings": "此页面仅在桌面应用中可用。",
@@ -85,8 +93,10 @@
     "placeholders": {
       "path": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "projects": "项目",
   "hidden": "隐藏",
@@ -114,8 +124,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "saved": "已保存",
   "failedToLaunchDaw": "无法打开DAW",
@@ -129,8 +141,10 @@
     "placeholders": {
       "profileName": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "editProfile": "编辑配置文件",
   "changePhoto": "更改照片",
@@ -141,8 +155,10 @@
     "placeholders": {
       "trackName": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "saveName": "保存名称",
   "profilePhotoUpdated": "配置文件照片已更新。",
@@ -152,24 +168,30 @@
     "placeholders": {
       "newName": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "profileCreated": "配置文件「{name}」创建成功",
   "@profileCreated": {
     "placeholders": {
       "name": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "profileDeleted": "配置文件「{name}」已删除",
   "@profileDeleted": {
     "placeholders": {
       "name": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "pleaseEnterProfileName": "请输入配置文件名称",
   "failedToCreateProfile": "创建配置文件失败: {error}",
@@ -177,8 +199,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "noProfilesFound": "未找到配置文件。请在上面创建一个。",
   "clearLibraryTooltip": "清空库（项目和项目文件夹）",
@@ -187,8 +211,10 @@
     "placeholders": {
       "date": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "name": "名称",
   "status": "状态",
@@ -219,24 +245,30 @@
     "placeholders": {
       "path": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "rootsCount": "项目文件夹: {count}",
   "@rootsCount": {
     "placeholders": {
       "count": {
         "type": "int"
-      }
-    }
+      
+}
+    
+}
   },
   "projectsCount": "项目: {count}",
   "@projectsCount": {
     "placeholders": {
       "count": {
         "type": "int"
-      }
-    }
+      
+}
+    
+}
   },
   "hiddenOnly": "（仅隐藏）",
   "hiddenCount": "（{count}个隐藏）",
@@ -244,8 +276,10 @@
     "placeholders": {
       "count": {
         "type": "int"
-      }
-    }
+      
+}
+    
+}
   },
   "projectsHidden": "{count}个项目{plural}已隐藏。",
   "@projectsHidden": {
@@ -255,8 +289,10 @@
       },
       "plural": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "projectsUnhidden": "{count}个项目{plural}已显示。",
   "@projectsUnhidden": {
@@ -266,24 +302,30 @@
       },
       "plural": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToHideProjects": "隐藏项目失败: {error}",
   "@failedToHideProjects": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToUnhideProjects": "显示项目失败: {error}",
   "@failedToUnhideProjects": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "hideProjectMessage": "您确定要隐藏「{projectName}」吗？",
   "@hideProjectMessage": {
@@ -291,32 +333,40 @@
     "placeholders": {
       "projectName": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "releaseCreated": "发布「{title}」创建成功。",
   "@releaseCreated": {
     "placeholders": {
       "title": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToCreateRelease": "创建发布失败: {error}",
   "@failedToCreateRelease": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "errorAddingFolder": "添加文件夹错误: {error}",
   "@errorAddingFolder": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "noProjectsFoundInRoots": "在选定的项目文件夹中未找到项目。",
   "selectProjectsFolder": "选择项目文件夹",
@@ -334,40 +384,50 @@
       },
       "failures": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "extractionFailures": "{count}个失败。",
   "@extractionFailures": {
     "placeholders": {
       "count": {
         "type": "int"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToWriteBpmFile": "写入BPM文件失败: {error}",
   "@failedToWriteBpmFile": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToWriteKeyFile": "写入调性文件失败: {error}",
   "@failedToWriteKeyFile": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToLaunch": "启动失败: {error}",
   "@failedToLaunch": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "libraryCleared": "库已清空。",
   "scanType": "{type}扫描",
@@ -375,8 +435,10 @@
     "placeholders": {
       "type": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "scanComplete": "{type}完成: {count}个项目{plural}已添加/更新。",
   "@scanComplete": {
@@ -389,8 +451,10 @@
       },
       "plural": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "projectsSelected": "{count}个项目{plural}已选择",
   "@projectsSelected": {
@@ -400,24 +464,30 @@
       },
       "plural": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "openingFolder": "正在为{projectName}打开文件夹…",
   "@openingFolder": {
     "placeholders": {
       "projectName": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToOpenFolder": "打开文件夹失败: {error}",
   "@failedToOpenFolder": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "osNotSupportedForOpeningFolder": "不支持打开文件夹的操作系统。",
   "noProjectsAvailable": "没有可用的项目。请先添加项目。",
@@ -428,16 +498,20 @@
     "placeholders": {
       "title": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "releaseDeleted": "发布「{title}」已删除。",
   "@releaseDeleted": {
     "placeholders": {
       "title": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "selectTracks": "选择曲目",
   "continueButton": "继续",
@@ -448,24 +522,30 @@
     "placeholders": {
       "count": {
         "type": "int"
-      }
-    }
+      
+}
+    
+}
   },
   "errorLoadingReleases": "加载发布错误: {error}",
   "@errorLoadingReleases": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "tracksCount": "曲目（{count}）",
   "@tracksCount": {
     "placeholders": {
       "count": {
         "type": "int"
-      }
-    }
+      
+}
+    
+}
   },
   "addTracks": "添加曲目",
   "allProjectsAlreadyInRelease": "所有项目已在此发布中。",
@@ -477,16 +557,20 @@
       },
       "plural": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "releaseFilesCount": "发布文件（{count}）",
   "@releaseFilesCount": {
     "placeholders": {
       "count": {
         "type": "int"
-      }
-    }
+      
+}
+    
+}
   },
   "addFiles": "添加文件",
   "addedFilesToRelease": "已向发布添加{count}个文件{plural}。",
@@ -497,16 +581,20 @@
       },
       "plural": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToAddFiles": "添加文件失败: {error}",
   "@failedToAddFiles": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "noFilesToDownload": "没有要下载的文件。",
   "zipFileSaved": "ZIP文件已保存到: {path}",
@@ -514,8 +602,10 @@
     "placeholders": {
       "path": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "creatingZipFile": "正在创建ZIP文件...",
   "failedToCreateZip": "创建ZIP失败: {error}",
@@ -523,8 +613,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "selectedFileDoesNotExist": "所选文件不存在。",
   "imageSavedSuccessfully": "图像保存成功！",
@@ -533,24 +625,30 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "errorLoadingRelease": "加载发布错误: {error}",
   "@errorLoadingRelease": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "errorLoadingProjects": "加载项目错误: {error}",
   "@errorLoadingProjects": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "releaseSaved": "发布已保存。",
   "releaseDate": "发布日期",
@@ -559,8 +657,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "releaseDateSaved": "发布日期已保存。",
   "releaseDateCleared": "发布日期已清除。",
@@ -574,8 +674,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "renameFile": "重命名文件",
   "selectTracksToAdd": "选择要添加的曲目",
@@ -585,8 +687,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "deleteFile": "删除文件",
   "deleteFileMessage": "您确定要删除「{fileName}」吗？",
@@ -594,32 +698,40 @@
     "placeholders": {
       "fileName": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "fileDeleted": "文件「{fileName}」已删除。",
   "@fileDeleted": {
     "placeholders": {
       "fileName": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToDeleteFile": "删除文件失败: {error}",
   "@failedToDeleteFile": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "couldNotOpenFolder": "无法打开文件夹: {error}",
   "@couldNotOpenFolder": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "artwork": "封面",
   "title": "标题",
@@ -630,8 +742,10 @@
     "placeholders": {
       "count": {
         "type": "int"
-      }
-    }
+      
+}
+    
+}
   },
   "searchTracks": "搜索曲目",
   "searchTracksHint": "按名称或DAW类型搜索",
@@ -684,40 +798,50 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToRemoveProfilePhoto": "删除配置文件照片失败: {error}",
   "@failedToRemoveProfilePhoto": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToRenameProfile": "重命名配置文件失败: {error}",
   "@failedToRenameProfile": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToDeleteProfile": "删除配置文件失败: {error}",
   "@failedToDeleteProfile": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "errorLoadingProfiles": "加载配置文件错误: {error}",
   "@errorLoadingProfiles": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "projectPhaseIdea": "想法",
   "projectPhaseArranging": "编曲",
@@ -738,8 +862,10 @@
       },
       "status": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "statusChangedForProjectsWithErrors": "{successCount} 个项目{successPlural}的阶段已更改为「{status}」，{failCount} 个失败{failPlural}",
   "@statusChangedForProjectsWithErrors": {
@@ -759,8 +885,10 @@
       },
       "status": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToChangeStatus": "更改阶段失败: {error}",
   "@failedToChangeStatus": {
@@ -768,8 +896,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "tooltipEditProfileName": "编辑配置文件名称",
   "tooltipAddTodo": "添加待办事项",
@@ -795,8 +925,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "backupImportedSuccessfully": "备份导入成功: {projectsCount} 个项目，{rootsCount} 个项目文件夹，{releasesCount} 个发布",
   "@backupImportedSuccessfully": {
@@ -810,8 +942,10 @@
       },
       "releasesCount": {
         "type": "int"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToImportBackup": "导入备份失败: {error}",
   "@failedToImportBackup": {
@@ -819,8 +953,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "importBackupMessage": "选择如何导入备份:",
   "mergeWithCurrentProfile": "与当前活动配置文件合并",
@@ -841,8 +977,10 @@
       },
       "releasesCount": {
         "type": "int"
-      }
-    }
+      
+}
+    
+}
   },
   "noProfileSelected": "未选择配置文件",
   "exportBackupDialogTitle": "导出备份",
@@ -859,8 +997,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "removePreviewSong": "删除预览歌曲",
   "removePreviewSongConfirm": "您确定要删除预览歌曲吗？此操作无法撤销。",
@@ -977,16 +1117,20 @@
     "placeholders": {
       "url": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "errorOpeningBrowser": "打开浏览器时出错: {error}",
   "@errorOpeningBrowser": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "generateTestingDatabase": "生成测试数据库",
   "generateTestingDatabaseMessage": "这将用示例项目和发布填充数据库以进行测试。继续吗？",
@@ -996,8 +1140,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "playlists": "播放列表",
   "playlistsDesktopOnly": "播放列表仅在Android上可用。",
@@ -1101,8 +1247,10 @@
     "placeholders": {
       "path": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "@shareZip": {
     "description": "Label for the share as ZIP button"
@@ -1113,8 +1261,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToSharePreviewSongAsZip": "无法以ZIP格式分享预览歌曲：{error}",
   "@failedToSharePreviewSongAsZip": {
@@ -1122,8 +1272,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "biographySaved": "简介已保存",
   "@biographySaved": {
@@ -1135,8 +1287,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "fileSavedTo": "文件已保存至 {filename}",
   "@fileSavedTo": {
@@ -1144,8 +1298,10 @@
     "placeholders": {
       "filename": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToDownloadFile": "无法下载文件：{error}",
   "@failedToDownloadFile": {
@@ -1153,8 +1309,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "allFilesSavedTo": "所有文件已保存至 {filename}",
   "@allFilesSavedTo": {
@@ -1162,8 +1320,10 @@
     "placeholders": {
       "filename": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "artworkAdded": "封面已添加",
   "@artworkAdded": {
@@ -1175,8 +1335,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "artworkRemoved": "封面已删除",
   "@artworkRemoved": {
@@ -1188,8 +1350,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "pressKitFileAdded": "新闻资料袋文件已添加",
   "@pressKitFileAdded": {
@@ -1201,8 +1365,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "pressKitFileRemoved": "新闻资料袋文件已删除",
   "@pressKitFileRemoved": {
@@ -1214,8 +1380,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "selectFilesToDownload": "选择要下载的文件",
   "@selectFilesToDownload": {
@@ -1250,8 +1418,10 @@
       },
       "plural": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "nFilesSavedTo": "{count} 个文件{plural}已保存至 {filename}",
   "@nFilesSavedTo": {
@@ -1265,8 +1435,10 @@
       },
       "filename": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "addAsset": "添加资源",
   "@addAsset": {
@@ -1286,8 +1458,10 @@
     "placeholders": {
       "assetName": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToAddAsset": "无法添加资源：{error}",
   "@failedToAddAsset": {
@@ -1295,8 +1469,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "assetRemoved": "{assetName} 已删除",
   "@assetRemoved": {
@@ -1304,8 +1480,10 @@
     "placeholders": {
       "assetName": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToRemoveAsset": "无法删除资源：{error}",
   "@failedToRemoveAsset": {
@@ -1313,8 +1491,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "profileNotFound": "找不到个人资料",
   "@profileNotFound": {
@@ -1449,8 +1629,10 @@
     "placeholders": {
       "days": {
         "type": "int"
-      }
-    }
+      
+}
+    
+}
   },
   "statsNoProjectsFound": "未找到项目",
   "statsNotTouchedDays": "{days}天未修改",
@@ -1466,10 +1648,14 @@
   "monoSwitchFailed": "切换单声道失败：{error}",
   "@monoSwitchFailed": {
     "placeholders": {
-      "error": { "type": "String" }
-    }
+      "error": { "type": "String" 
+}
+    
+}
   },
   "analyzeLabel": "分析",
   "reAnalyzeLabel": "重新分析",
-  "analysisRequiresWav": "分析需要WAV文件"
+  "analysisRequiresWav": "分析需要WAV文件",
+  "noResultsForFilter": "当前筛选条件无结果",
+  "noResultsForFilterHint": "请尝试调整搜索或筛选条件。"
 }
