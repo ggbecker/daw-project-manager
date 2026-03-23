@@ -1144,7 +1144,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                   Flexible(
                     flex: 2,
                     child: Row(
-                      mainAxisSize: MainAxisSize.min,
                       children: [
                         // Profile button - always visible
                         Consumer(
@@ -1236,43 +1235,38 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                         ),
                         const SizedBox(width: 8),
                         if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) ...[
-                          Flexible(
-                            child: OutlinedButton.icon(
-                              onPressed: isAnyOperation
-                                  ? null
-                                  : () async {
-                                      await Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (_) => const ProjectFoldersSettingsPage(),
-                                        ),
-                                      );
-                                    },
-                              icon: const Icon(Icons.tune),
-                              label: Text(AppLocalizations.of(context)!.roots),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                        ],
-                        Flexible(
-                          child: ElevatedButton.icon(
+                          OutlinedButton.icon(
                             onPressed: isAnyOperation
                                 ? null
                                 : () async {
-                                      await _scanAll();
-                                    },
-                            icon: isAnyOperation
-                                ? const SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
-                                    )
-                                : const Icon(Icons.refresh),
-                            label: Text(isAnyOperation ? AppLocalizations.of(context)!.scanning : AppLocalizations.of(context)!.rescan),
+                                    await Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => const ProjectFoldersSettingsPage(),
+                                      ),
+                                    );
+                                  },
+                            icon: const Icon(Icons.tune),
+                            label: Text(AppLocalizations.of(context)!.roots),
                           ),
+                          const SizedBox(width: 12),
+                        ],
+                        ElevatedButton.icon(
+                          onPressed: isAnyOperation
+                              ? null
+                              : () async {
+                                    await _scanAll();
+                                  },
+                          icon: isAnyOperation
+                              ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  )
+                              : const Icon(Icons.refresh),
+                          label: Text(isAnyOperation ? AppLocalizations.of(context)!.scanning : AppLocalizations.of(context)!.rescan),
                         ),
                         const SizedBox(width: 12),
-                        Flexible(
-                          child: Tooltip(
+                        Tooltip(
                             message: AppLocalizations.of(context)!.deepScanTooltip,
                             waitDuration: const Duration(milliseconds: 500),
                             child: ElevatedButton.icon(
@@ -1314,7 +1308,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                               label: Text(isAnyOperation ? AppLocalizations.of(context)!.scanning : AppLocalizations.of(context)!.deepScan),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Theme.of(context).colorScheme.primary,
-                              ),
                               ),
                             ),
                           ),
