@@ -125,6 +125,7 @@ class _PlaylistsPageState extends ConsumerState<PlaylistsPage> {
         return Card(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: ListTile(
+            titleAlignment: ListTileTitleAlignment.top,
             leading: const Icon(Icons.playlist_play),
             title: Text(playlist.name),
             subtitle: Text(

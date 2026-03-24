@@ -1581,6 +1581,14 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
     });
   }
 
+  Future<void> _seek(int seconds) async {
+    final target = _position + Duration(seconds: seconds);
+    final clamped = target.isNegative
+        ? Duration.zero
+        : (_duration > Duration.zero && target > _duration ? _duration : target);
+    await _audioPlayer.seek(clamped);
+  }
+
   Future<void> _sharePreviewSong() async {
     if (widget.project.previewSongPath == null || widget.project.previewSongPath!.isEmpty) {
       if (kDebugMode) {
@@ -2146,39 +2154,54 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                       ),
                       const SizedBox(height: 10),
                       // Audio player controls with keyboard shortcuts
-                      Shortcuts(
-                        shortcuts: {
-                          SingleActivator(LogicalKeyboardKey.space): const _TogglePlayPauseIntent(),
+                      Focus(
+                        focusNode: _focusNode,
+                        onKeyEvent: (node, event) {
+                          if (event is! KeyDownEvent && event is! KeyRepeatEvent) return KeyEventResult.ignored;
+                          final isModified = HardwareKeyboard.instance.isControlPressed ||
+                              HardwareKeyboard.instance.isMetaPressed;
+                          if (event.logicalKey == LogicalKeyboardKey.space) {
+                            _togglePlayPause();
+                            return KeyEventResult.handled;
+                          }
+                          if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+                            _seek(isModified ? -30 : -5);
+                            return KeyEventResult.handled;
+                          }
+                          if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+                            _seek(isModified ? 30 : 5);
+                            return KeyEventResult.handled;
+                          }
+                          return KeyEventResult.ignored;
                         },
-                        child: Actions(
-                          actions: {
-                            _TogglePlayPauseIntent: CallbackAction<_TogglePlayPauseIntent>(
-                              onInvoke: (_) {
-                                _togglePlayPause();
-                                return null;
-                              },
+                        child: Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.replay_5),
+                              tooltip: '← −5s  •  Ctrl+← −30s',
+                              onPressed: () => _seek(-5),
                             ),
-                          },
-                          child: Focus(
-                            focusNode: _focusNode,
-                              child: Row(
-                              children: [
-                                IconButton(
-                                  icon: Icon(
-                                    _isPlaying ? Icons.pause : Icons.play_arrow,
-                                  ),
-                                  onPressed: () {
-                                    _focusNode.requestFocus();
-                                    _togglePlayPause();
-                                  },
-                                  iconSize: 32,
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.stop),
-                                  onPressed: _isPlaying || _position > Duration.zero
-                                      ? _stop
-                                      : null,
-                                ),
+                            IconButton(
+                              icon: Icon(
+                                _isPlaying ? Icons.pause : Icons.play_arrow,
+                              ),
+                              onPressed: () {
+                                _focusNode.requestFocus();
+                                _togglePlayPause();
+                              },
+                              iconSize: 32,
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.stop),
+                              onPressed: _isPlaying || _position > Duration.zero
+                                  ? _stop
+                                  : null,
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.forward_5),
+                              tooltip: '→ +5s  •  Ctrl+→ +30s',
+                              onPressed: () => _seek(5),
+                            ),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Column(
@@ -2250,8 +2273,6 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                               ],
                             ),
                           ),
-                        ),
-                      ),
                       // Mono toggle + Analyze (any audio file)
                       if (_hasAudioFile()) ...[
                         const SizedBox(height: 8),

@@ -1138,12 +1138,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                           ],
                         )
                       : Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                   // Ações de Root e Scan
-                  Flexible(
-                    flex: 2,
-                    child: Row(
+                  Row(
                       children: [
                         // Profile button - always visible
                         Consumer(
@@ -1313,12 +1310,16 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                           ),
                       ],
                     ),
+                  // Bounded spacer: grows with window but capped so search stays close
+                  Flexible(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 80),
+                      child: const SizedBox(width: double.infinity),
+                    ),
                   ),
                   // Search bar (desktop only — hidden on Playlists tab)
                   if (!MobileUtils.isMobile() && (_tabController.index != 2 || !MobileUtils.isMobile()))
-                  Flexible(
-                    flex: 3,
-                    child: Row(
+                  Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         ClipRect(
@@ -1375,7 +1376,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                         const SizedBox(width: 4),
                       ],
                     ),
-                  ),
                 ],
               ),
             );
@@ -2287,9 +2287,56 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     }
   }
 
+  Future<void> _showPhaseMenu(
+    BuildContext context,
+    MusicProject project,
+    Offset position,
+    TrinaColumnRendererContext rendererContext,
+  ) async {
+    const phases = ['Idea', 'Arranging', 'Mixing', 'Mastering', 'Finished'];
+    final selected = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(position.dx, position.dy, position.dx, position.dy),
+      color: Theme.of(context).cardColor,
+      items: phases.map((phase) {
+        final isCurrent = project.status == phase;
+        return PopupMenuItem<String>(
+          value: phase,
+          child: Row(
+            children: [
+              Icon(
+                isCurrent ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                size: 16,
+                color: _getStatusColor(phase),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                _translateStatus(context, phase),
+                style: TextStyle(
+                  color: _getStatusColor(phase),
+                  fontWeight: isCurrent ? FontWeight.w600 : FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+
+    if (selected != null && selected != project.status && mounted) {
+      final repo = await ref.read(repositoryProvider.future);
+      final updated = project.copyWith(status: selected);
+      await repo.updateProject(updated);
+      // Update cells in-place so the row reflects the change immediately
+      rendererContext.row.cells['status']?.value = selected;
+      rendererContext.row.cells['data']?.value = updated;
+      rendererContext.stateManager.notifyListeners();
+    }
+  }
+
   Future<void> _showContextMenu(BuildContext context, MusicProject project, Offset position) async {
     final l10n = AppLocalizations.of(context)!;
-    
+
     final result = await showMenu<String>(
       context: context,
       position: RelativeRect.fromLTRB(
@@ -2554,17 +2601,26 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           final project = rendererContext.row.cells['data']?.value as MusicProject?;
           final status = rendererContext.cell.value as String? ?? '';
           final translatedStatus = _translateStatus(context, status);
-          final textWidget = Text(
-            translatedStatus,
-            style: TextStyle(
-              color: _getStatusColor(status),
-              fontWeight: FontWeight.w500,
-            ),
+          final textWidget = Row(
+            children: [
+              Text(
+                translatedStatus,
+                style: TextStyle(
+                  color: _getStatusColor(status),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(Icons.arrow_drop_down, size: 16, color: _getStatusColor(status).withValues(alpha: 0.7)),
+            ],
           );
-          
+
           if (project == null) return textWidget;
-          
+
           return GestureDetector(
+            onTapDown: (TapDownDetails details) {
+              _showPhaseMenu(context, project, details.globalPosition, rendererContext);
+            },
             onSecondaryTapDown: (TapDownDetails details) {
               _showContextMenu(context, project, details.globalPosition);
             },
@@ -2875,8 +2931,11 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               // Play Preview Song button (always show, but disabled if no preview)
               IconButton(
                 icon: const Icon(Icons.play_arrow),
+                iconSize: 20,
+                padding: const EdgeInsets.all(4),
+                constraints: const BoxConstraints(),
                 tooltip: project.previewSongPath != null && project.previewSongPath!.isNotEmpty
-                    ? AppLocalizations.of(context)!.playPreview
+                    ? '${AppLocalizations.of(context)!.playPreview} (P)'
                     : AppLocalizations.of(context)!.noPreviewSong,
                 onPressed: project.previewSongPath != null && project.previewSongPath!.isNotEmpty
                     ? () => _playPreviewSong(project)
@@ -2887,10 +2946,10 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               ),
               // Separator (always show)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                padding: const EdgeInsets.symmetric(horizontal: 3.0),
                 child: Text(
                   '|',
-                  style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5), fontSize: 18),
+                  style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5), fontSize: 16),
                 ),
               ),
               // Launch button
@@ -2898,22 +2957,28 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                 message: sourceFileExists || MobileUtils.isMobile() ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
                 child: IconButton(
                   icon: const Icon(Icons.open_in_new),
-                  tooltip: sourceFileExists ? AppLocalizations.of(context)!.tooltipLaunchInDaw : null,
+                  iconSize: 20,
+                  padding: const EdgeInsets.all(4),
+                  constraints: const BoxConstraints(),
+                  tooltip: sourceFileExists ? '${AppLocalizations.of(context)!.tooltipLaunchInDaw} (O)' : null,
                   onPressed: sourceFileExists ? () => _launchProject(project) : null,
                 ),
               ),
               // Separator
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                padding: const EdgeInsets.symmetric(horizontal: 3.0),
                 child: Text(
                   '|',
-                  style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5), fontSize: 18),
+                  style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5), fontSize: 16),
                 ),
               ),
               // View button
               IconButton(
                 icon: const Icon(Icons.assignment),
-                tooltip: AppLocalizations.of(context)!.tooltipViewDetails,
+                iconSize: 20,
+                padding: const EdgeInsets.all(4),
+                constraints: const BoxConstraints(),
+                tooltip: '${AppLocalizations.of(context)!.tooltipViewDetails} (D)',
                 onPressed: () => _viewProjectDetails(project),
               ),
               // Open Folder button
@@ -2921,24 +2986,30 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                 message: sourceFileExists || MobileUtils.isMobile() ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
                 child: IconButton(
                   icon: const Icon(Icons.folder_open),
-                  tooltip: sourceFileExists ? AppLocalizations.of(context)!.openFolder : null,
+                  iconSize: 20,
+                  padding: const EdgeInsets.all(4),
+                  constraints: const BoxConstraints(),
+                  tooltip: sourceFileExists ? '${AppLocalizations.of(context)!.openFolder} (F)' : null,
                   onPressed: sourceFileExists ? () => _openProjectFolder(project) : null,
                 ),
               ),
               // Separator
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                padding: const EdgeInsets.symmetric(horizontal: 3.0),
                 child: Text(
                   '|',
-                  style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5), fontSize: 18),
+                  style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5), fontSize: 16),
                 ),
               ),
               // Hidden button
               IconButton(
                 icon: Icon(project.hidden ? Icons.visibility : Icons.visibility_off),
+                iconSize: 20,
+                padding: const EdgeInsets.all(4),
+                constraints: const BoxConstraints(),
                 color: project.hidden ? Colors.green.shade300 : Colors.red.shade300,
-                tooltip: project.hidden 
-                    ? AppLocalizations.of(context)!.unhide 
+                tooltip: project.hidden
+                    ? AppLocalizations.of(context)!.unhide
                     : AppLocalizations.of(context)!.hide,
                 onPressed: () async {
                   if (project.hidden) {
@@ -2991,6 +3062,40 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
 
     final initialRows = _mapProjectsToRows(widget.projects);
 
+    if (widget.projects.isEmpty) {
+      final allProjectsAsync = ref.watch(allProjectsStreamProvider);
+      final hasProjects = (allProjectsAsync.value?.isNotEmpty) ?? false;
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              hasProjects ? Icons.search_off : Icons.library_music_outlined,
+              size: 64,
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.4),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              hasProjects
+                  ? l10n.noResultsForFilter
+                  : l10n.noProjectsFound,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              hasProjects
+                  ? l10n.noResultsForFilterHint
+                  : l10n.noProjectsFoundHint,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).textTheme.bodySmall?.color,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
     return TrinaGrid(
           key: ValueKey('trina_grid_${l10n.localeName}'), // Force rebuild when locale changes
           columns: columns,
@@ -3017,10 +3122,10 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           await repo.updateProject(updated);
         } else if (field == 'key') {
           final key = newValue.isEmpty ? null : newValue;
-          
+
           // Write to key.txt file
           await _writeKeyToFile(project, key);
-          
+
           // Update project in repository
           final repo = await ref.read(repositoryProvider.future);
           final updated = project.copyWith(musicalKey: key);
@@ -3045,7 +3150,9 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           columnHeight: 44,
           rowHeight: 48,
           activatedBorderColor: Theme.of(context).colorScheme.primary,
-          activatedColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+          activatedColor: Theme.of(context).brightness == Brightness.dark
+              ? Colors.white.withValues(alpha: 0.15)
+              : Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
           iconColor: Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey,
           menuBackgroundColor: Theme.of(context).cardColor,
           oddRowColor: Theme.of(context).cardColor,
@@ -3056,6 +3163,15 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         columnSize: const TrinaGridColumnSizeConfig(
           autoSizeMode: TrinaAutoSizeMode.scale,
           resizeMode: TrinaResizeMode.normal,
+        ),
+        shortcut: TrinaGridShortcut(
+          actions: {
+            ...TrinaGridShortcut.defaultActions,
+            LogicalKeySet(LogicalKeyboardKey.keyP): _TrinaProjectAction(_playPreviewSong),
+            LogicalKeySet(LogicalKeyboardKey.keyO): _TrinaProjectAction(_launchProject),
+            LogicalKeySet(LogicalKeyboardKey.keyD): _TrinaProjectAction(_viewProjectDetails),
+            LogicalKeySet(LogicalKeyboardKey.keyF): _TrinaProjectAction(_openProjectFolder),
+          },
         ),
       ),
       onRowChecked: null,
@@ -3070,6 +3186,23 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       },
       createFooter: (stateManager) => const SizedBox.shrink(),
     );
+  }
+}
+
+/// Custom TrinaGrid shortcut action that operates on the focused project row.
+class _TrinaProjectAction extends TrinaGridShortcutAction {
+  final Future<void> Function(MusicProject project) onProject;
+
+  const _TrinaProjectAction(this.onProject);
+
+  @override
+  void execute({
+    required TrinaKeyManagerEvent keyEvent,
+    required TrinaGridStateManager stateManager,
+  }) {
+    if (stateManager.isEditing) return;
+    final project = stateManager.currentRow?.cells['data']?.value;
+    if (project is MusicProject) unawaited(onProject(project));
   }
 }
 
@@ -3131,6 +3264,11 @@ class _ReleaseTitleDialogState extends State<_ReleaseTitleDialog> {
 
 class _TogglePlayPauseIntent extends Intent {
   const _TogglePlayPauseIntent();
+}
+
+class _SeekIntent extends Intent {
+  final int seconds;
+  const _SeekIntent(this.seconds);
 }
 
 
@@ -3396,6 +3534,12 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
     });
   }
 
+  Future<void> _seek(int seconds) async {
+    final target = _position + Duration(seconds: seconds);
+    final clamped = target.isNegative ? Duration.zero : (_duration > Duration.zero && target > _duration ? _duration : target);
+    await _audioPlayer.seek(clamped);
+  }
+
   String _formatDuration(Duration duration) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
     final minutes = twoDigits(duration.inMinutes.remainder(60));
@@ -3427,6 +3571,11 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             IconButton(
+              icon: const Icon(Icons.replay_5),
+              onPressed: () => _seek(-5),
+              iconSize: 32,
+            ),
+            IconButton(
               icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
               onPressed: _togglePlayPause,
               iconSize: 48,
@@ -3435,6 +3584,11 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
             IconButton(
               icon: const Icon(Icons.stop),
               onPressed: _isPlaying || _position > Duration.zero ? _stop : null,
+              iconSize: 32,
+            ),
+            IconButton(
+              icon: const Icon(Icons.forward_5),
+              onPressed: () => _seek(5),
               iconSize: 32,
             ),
             const SizedBox(width: 16),
@@ -3547,6 +3701,13 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
         // Audio player controls
         Row(
           children: [
+            Tooltip(
+              message: '← −5s',
+              child: IconButton(
+                icon: const Icon(Icons.replay_5),
+                onPressed: () => _seek(-5),
+              ),
+            ),
             IconButton(
               icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
               onPressed: _togglePlayPause,
@@ -3555,6 +3716,13 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
             IconButton(
               icon: const Icon(Icons.stop),
               onPressed: _isPlaying || _position > Duration.zero ? _stop : null,
+            ),
+            Tooltip(
+              message: '→ +5s',
+              child: IconButton(
+                icon: const Icon(Icons.forward_5),
+                onPressed: () => _seek(5),
+              ),
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -3867,22 +4035,27 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Shortcuts(
-      shortcuts: {
-        SingleActivator(LogicalKeyboardKey.space): const _TogglePlayPauseIntent(),
+    return Focus(
+      autofocus: true,
+      onKeyEvent: (node, event) {
+        if (event is! KeyDownEvent && event is! KeyRepeatEvent) return KeyEventResult.ignored;
+        final isModified = HardwareKeyboard.instance.isControlPressed ||
+            HardwareKeyboard.instance.isMetaPressed;
+        if (event.logicalKey == LogicalKeyboardKey.space) {
+          _togglePlayPause();
+          return KeyEventResult.handled;
+        }
+        if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+          _seek(isModified ? -30 : -5);
+          return KeyEventResult.handled;
+        }
+        if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+          _seek(isModified ? 30 : 5);
+          return KeyEventResult.handled;
+        }
+        return KeyEventResult.ignored;
       },
-      child: Actions(
-        actions: {
-          _TogglePlayPauseIntent: CallbackAction<_TogglePlayPauseIntent>(
-            onInvoke: (_) {
-              _togglePlayPause();
-              return null;
-            },
-          ),
-        },
-        child: Focus(
-          autofocus: true,
-          child: AlertDialog(
+      child: AlertDialog(
             backgroundColor: Theme.of(context).cardColor,
             title: Row(
               children: [
@@ -3923,8 +4096,6 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
                   : _buildDesktopPlayerLayout(context),
             ),
           ),
-        ),
-      ),
     );
   }
 }

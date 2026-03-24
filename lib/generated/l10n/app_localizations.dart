@@ -3727,6 +3727,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Try adjusting your search or filters to find projects.'**
   String get noResultsForFilterHint;
+
+  /// No description provided for @noProjectsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No projects found'**
+  String get noProjectsFound;
+
+  /// No description provided for @noProjectsFoundHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a scan root folder in settings to get started.'**
+  String get noProjectsFoundHint;
 }
 
 class _AppLocalizationsDelegate

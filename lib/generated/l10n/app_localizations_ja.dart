@@ -2155,4 +2155,10 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get noResultsForFilterHint => '検索条件やフィルターを調整してみてください。';
+
+  @override
+  String get noProjectsFound => 'プロジェクトが見つかりません';
+
+  @override
+  String get noProjectsFoundHint => '設定でルートフォルダを追加してください。';
 }

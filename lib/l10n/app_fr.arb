@@ -1657,5 +1657,7 @@
   "reAnalyzeLabel": "Ré-analyser",
   "analysisRequiresWav": "L'analyse nécessite un fichier WAV",
   "noResultsForFilter": "Aucun résultat pour le filtre actuel",
-  "noResultsForFilterHint": "Essayez d'ajuster votre recherche ou vos filtres."
+  "noResultsForFilterHint": "Essayez d'ajuster votre recherche ou vos filtres.",
+  "noProjectsFound": "Aucun projet trouvé",
+  "noProjectsFoundHint": "Ajoutez un dossier racine dans les paramètres pour commencer."
 }

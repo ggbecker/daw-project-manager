@@ -1657,5 +1657,7 @@
   "reAnalyzeLabel": "Повторный анализ",
   "analysisRequiresWav": "Для анализа требуется WAV-файл",
   "noResultsForFilter": "Нет результатов для текущего фильтра",
-  "noResultsForFilterHint": "Попробуйте изменить поиск или фильтры."
+  "noResultsForFilterHint": "Попробуйте изменить поиск или фильтры.",
+  "noProjectsFound": "Проекты не найдены",
+  "noProjectsFoundHint": "Добавьте корневую папку в настройках, чтобы начать."
 }

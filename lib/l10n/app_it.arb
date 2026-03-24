@@ -1657,5 +1657,7 @@
   "reAnalyzeLabel": "Ri-analizza",
   "analysisRequiresWav": "L'analisi richiede un file WAV",
   "noResultsForFilter": "Nessun risultato per il filtro corrente",
-  "noResultsForFilterHint": "Prova a modificare la ricerca o i filtri."
+  "noResultsForFilterHint": "Prova a modificare la ricerca o i filtri.",
+  "noProjectsFound": "Nessun progetto trovato",
+  "noProjectsFoundHint": "Aggiungi una cartella radice nelle impostazioni per iniziare."
 }

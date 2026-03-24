@@ -2198,4 +2198,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get noResultsForFilterHint => 'Попробуйте изменить поиск или фильтры.';
+
+  @override
+  String get noProjectsFound => 'Проекты не найдены';
+
+  @override
+  String get noProjectsFoundHint =>
+      'Добавьте корневую папку в настройках, чтобы начать.';
 }

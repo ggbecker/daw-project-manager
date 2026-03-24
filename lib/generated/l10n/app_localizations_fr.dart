@@ -2219,4 +2219,11 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get noResultsForFilterHint =>
       'Essayez d\'ajuster votre recherche ou vos filtres.';
+
+  @override
+  String get noProjectsFound => 'Aucun projet trouvé';
+
+  @override
+  String get noProjectsFoundHint =>
+      'Ajoutez un dossier racine dans les paramètres pour commencer.';
 }

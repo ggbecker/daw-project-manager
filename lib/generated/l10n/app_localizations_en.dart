@@ -2199,4 +2199,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get noResultsForFilterHint =>
       'Try adjusting your search or filters to find projects.';
+
+  @override
+  String get noProjectsFound => 'No projects found';
+
+  @override
+  String get noProjectsFoundHint =>
+      'Add a scan root folder in settings to get started.';
 }

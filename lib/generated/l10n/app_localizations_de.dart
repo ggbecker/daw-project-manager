@@ -2213,4 +2213,11 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get noResultsForFilterHint =>
       'Versuche, die Suche oder Filter anzupassen.';
+
+  @override
+  String get noProjectsFound => 'Keine Projekte gefunden';
+
+  @override
+  String get noProjectsFoundHint =>
+      'Füge einen Stammordner in den Einstellungen hinzu, um zu beginnen.';
 }
