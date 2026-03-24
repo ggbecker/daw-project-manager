@@ -2198,4 +2198,18 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get analysisRequiresWav => 'L\'analisi richiede un file WAV';
+
+  @override
+  String get noResultsForFilter => 'Nessun risultato per il filtro corrente';
+
+  @override
+  String get noResultsForFilterHint =>
+      'Prova a modificare la ricerca o i filtri.';
+
+  @override
+  String get noProjectsFound => 'Nessun progetto trovato';
+
+  @override
+  String get noProjectsFoundHint =>
+      'Aggiungi una cartella radice nelle impostazioni per iniziare.';
 }

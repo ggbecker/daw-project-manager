@@ -3715,6 +3715,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Analysis requires a WAV file'**
   String get analysisRequiresWav;
+
+  /// No description provided for @noResultsForFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'No results for current filter'**
+  String get noResultsForFilter;
+
+  /// No description provided for @noResultsForFilterHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Try adjusting your search or filters to find projects.'**
+  String get noResultsForFilterHint;
+
+  /// No description provided for @noProjectsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No projects found'**
+  String get noProjectsFound;
+
+  /// No description provided for @noProjectsFoundHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a scan root folder in settings to get started.'**
+  String get noProjectsFoundHint;
 }
 
 class _AppLocalizationsDelegate

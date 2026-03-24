@@ -2149,4 +2149,16 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get analysisRequiresWav => '分析にはWAVファイルが必要です';
+
+  @override
+  String get noResultsForFilter => '現在のフィルターに一致する結果がありません';
+
+  @override
+  String get noResultsForFilterHint => '検索条件やフィルターを調整してみてください。';
+
+  @override
+  String get noProjectsFound => 'プロジェクトが見つかりません';
+
+  @override
+  String get noProjectsFoundHint => '設定でルートフォルダを追加してください。';
 }

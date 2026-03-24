@@ -32,16 +32,20 @@
     "placeholders": {
       "projectName": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToLaunchProject": "Échec de l'ouverture de {projectName}",
   "@failedToLaunchProject": {
     "placeholders": {
       "projectName": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "clearLibrary": "Vider la Bibliothèque",
   "clearLibraryMessage": "Cela supprimera tous les projets enregistrés et dossiers sources. Continuer?",
@@ -59,8 +63,10 @@
     "placeholders": {
       "date": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "excludedFoldersSectionTitle": "Dossiers exclus",
   "excludedFoldersSectionSubtitle": "Ces dossiers seront ignorés pendant le scan, même s'ils se trouvent dans un dossier de projets.",
@@ -74,8 +80,10 @@
     "placeholders": {
       "path": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "removeExcludedFolderMessageNoPath": "Ce dossier ne sera plus exclu.",
   "desktopOnlyPathsSettings": "Cette page est disponible uniquement dans l’application de bureau.",
@@ -85,8 +93,10 @@
     "placeholders": {
       "path": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "projects": "Projets",
   "hidden": "masqués",
@@ -114,8 +124,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "saved": "Enregistré",
   "failedToLaunchDaw": "Échec de l'ouverture du DAW",
@@ -129,8 +141,10 @@
     "placeholders": {
       "profileName": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "editProfile": "Modifier le Profil",
   "changePhoto": "Changer la Photo",
@@ -141,8 +155,10 @@
     "placeholders": {
       "trackName": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "saveName": "Enregistrer le Nom",
   "profilePhotoUpdated": "Photo de profil mise à jour.",
@@ -152,24 +168,30 @@
     "placeholders": {
       "newName": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "profileCreated": "Profil \"{name}\" créé avec succès",
   "@profileCreated": {
     "placeholders": {
       "name": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "profileDeleted": "Profil \"{name}\" supprimé",
   "@profileDeleted": {
     "placeholders": {
       "name": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "pleaseEnterProfileName": "Veuillez entrer un nom de profil",
   "failedToCreateProfile": "Échec de la création du profil: {error}",
@@ -177,8 +199,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "noProfilesFound": "Aucun profil trouvé. Créez-en un ci-dessus.",
   "clearLibraryTooltip": "Vider la Bibliothèque (projets et dossiers de projets)",
@@ -187,8 +211,10 @@
     "placeholders": {
       "date": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "name": "Nom",
   "status": "Statut",
@@ -219,24 +245,30 @@
     "placeholders": {
       "path": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "rootsCount": "Dossiers de Projets: {count}",
   "@rootsCount": {
     "placeholders": {
       "count": {
         "type": "int"
-      }
-    }
+      
+}
+    
+}
   },
   "projectsCount": "Projets: {count}",
   "@projectsCount": {
     "placeholders": {
       "count": {
         "type": "int"
-      }
-    }
+      
+}
+    
+}
   },
   "hiddenOnly": "(masqués uniquement)",
   "hiddenCount": "({count} masqués)",
@@ -244,8 +276,10 @@
     "placeholders": {
       "count": {
         "type": "int"
-      }
-    }
+      
+}
+    
+}
   },
   "projectsHidden": "{count} projet{plural} masqué{plural}.",
   "@projectsHidden": {
@@ -255,8 +289,10 @@
       },
       "plural": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "projectsUnhidden": "{count} projet{plural} affiché{plural}.",
   "@projectsUnhidden": {
@@ -266,24 +302,30 @@
       },
       "plural": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToHideProjects": "Échec du masquage des projets: {error}",
   "@failedToHideProjects": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToUnhideProjects": "Échec de l'affichage des projets: {error}",
   "@failedToUnhideProjects": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "hideProjectMessage": "Êtes-vous sûr de vouloir masquer \"{projectName}\" ?",
   "@hideProjectMessage": {
@@ -291,32 +333,40 @@
     "placeholders": {
       "projectName": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "releaseCreated": "Sortie \"{title}\" créée avec succès.",
   "@releaseCreated": {
     "placeholders": {
       "title": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToCreateRelease": "Échec de la création de la sortie: {error}",
   "@failedToCreateRelease": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "errorAddingFolder": "Erreur lors de l'ajout du dossier: {error}",
   "@errorAddingFolder": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "noProjectsFoundInRoots": "Aucun projet trouvé dans les dossiers de projets sélectionnés.",
   "selectProjectsFolder": "Sélectionnez un dossier de projets",
@@ -334,40 +384,50 @@
       },
       "failures": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "extractionFailures": "{count} échoué{plural}.",
   "@extractionFailures": {
     "placeholders": {
       "count": {
         "type": "int"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToWriteBpmFile": "Échec de l'écriture du fichier BPM: {error}",
   "@failedToWriteBpmFile": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToWriteKeyFile": "Échec de l'écriture du fichier de tonalité: {error}",
   "@failedToWriteKeyFile": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToLaunch": "Échec de l'ouverture: {error}",
   "@failedToLaunch": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "libraryCleared": "Bibliothèque vidée.",
   "scanType": "Scan {type}",
@@ -375,8 +435,10 @@
     "placeholders": {
       "type": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "scanComplete": "{type} terminé: {count} projet{plural} ajouté{plural}/mis à jour{plural}.",
   "@scanComplete": {
@@ -389,8 +451,10 @@
       },
       "plural": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "projectsSelected": "{count} projet{plural} sélectionné{plural}",
   "@projectsSelected": {
@@ -400,24 +464,30 @@
       },
       "plural": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "openingFolder": "Ouverture du dossier pour {projectName}…",
   "@openingFolder": {
     "placeholders": {
       "projectName": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToOpenFolder": "Échec de l'ouverture du dossier: {error}",
   "@failedToOpenFolder": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "osNotSupportedForOpeningFolder": "Système d'exploitation non pris en charge pour ouvrir le dossier.",
   "noProjectsAvailable": "Aucun projet disponible. Veuillez d'abord ajouter des projets.",
@@ -428,16 +498,20 @@
     "placeholders": {
       "title": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "releaseDeleted": "Sortie \"{title}\" supprimée.",
   "@releaseDeleted": {
     "placeholders": {
       "title": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "selectTracks": "Sélectionner les Pistes",
   "continueButton": "Continuer",
@@ -448,24 +522,30 @@
     "placeholders": {
       "count": {
         "type": "int"
-      }
-    }
+      
+}
+    
+}
   },
   "errorLoadingReleases": "Erreur lors du chargement des sorties: {error}",
   "@errorLoadingReleases": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "tracksCount": "Pistes ({count})",
   "@tracksCount": {
     "placeholders": {
       "count": {
         "type": "int"
-      }
-    }
+      
+}
+    
+}
   },
   "addTracks": "Ajouter des Pistes",
   "allProjectsAlreadyInRelease": "Tous les projets sont déjà dans cette sortie.",
@@ -477,16 +557,20 @@
       },
       "plural": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "releaseFilesCount": "Fichiers de la Sortie ({count})",
   "@releaseFilesCount": {
     "placeholders": {
       "count": {
         "type": "int"
-      }
-    }
+      
+}
+    
+}
   },
   "addFiles": "Ajouter des Fichiers",
   "addedFilesToRelease": "Ajouté{plural} {count} fichier{plural} à la sortie.",
@@ -497,16 +581,20 @@
       },
       "plural": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToAddFiles": "Échec de l'ajout des fichiers: {error}",
   "@failedToAddFiles": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "noFilesToDownload": "Aucun fichier à télécharger.",
   "zipFileSaved": "Fichier ZIP enregistré dans: {path}",
@@ -514,8 +602,10 @@
     "placeholders": {
       "path": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "creatingZipFile": "Création du fichier ZIP...",
   "failedToCreateZip": "Échec de la création du ZIP: {error}",
@@ -523,8 +613,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "selectedFileDoesNotExist": "Le fichier sélectionné n'existe pas.",
   "imageSavedSuccessfully": "Image enregistrée avec succès!",
@@ -533,24 +625,30 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "errorLoadingRelease": "Erreur lors du chargement de la sortie: {error}",
   "@errorLoadingRelease": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "errorLoadingProjects": "Erreur lors du chargement des projets: {error}",
   "@errorLoadingProjects": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "releaseSaved": "Sortie enregistrée.",
   "releaseDate": "Date de Sortie",
@@ -559,8 +657,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "releaseDateSaved": "Date de sortie enregistrée.",
   "releaseDateCleared": "Date de sortie effacée.",
@@ -574,8 +674,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "renameFile": "Renommer le Fichier",
   "selectTracksToAdd": "Sélectionner les Pistes à Ajouter",
@@ -585,8 +687,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "deleteFile": "Supprimer le Fichier",
   "deleteFileMessage": "Êtes-vous sûr de vouloir supprimer \"{fileName}\"?",
@@ -594,32 +698,40 @@
     "placeholders": {
       "fileName": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "fileDeleted": "Fichier \"{fileName}\" supprimé.",
   "@fileDeleted": {
     "placeholders": {
       "fileName": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToDeleteFile": "Échec de la suppression du fichier: {error}",
   "@failedToDeleteFile": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "couldNotOpenFolder": "Impossible d'ouvrir le dossier: {error}",
   "@couldNotOpenFolder": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "artwork": "Artwork",
   "title": "Titre",
@@ -630,8 +742,10 @@
     "placeholders": {
       "count": {
         "type": "int"
-      }
-    }
+      
+}
+    
+}
   },
   "searchTracks": "Rechercher des pistes",
   "searchTracksHint": "Rechercher par nom ou type de DAW",
@@ -684,40 +798,50 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToRemoveProfilePhoto": "Échec de la suppression de la photo de profil: {error}",
   "@failedToRemoveProfilePhoto": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToRenameProfile": "Échec du renommage du profil: {error}",
   "@failedToRenameProfile": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToDeleteProfile": "Échec de la suppression du profil: {error}",
   "@failedToDeleteProfile": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "errorLoadingProfiles": "Erreur lors du chargement des profils: {error}",
   "@errorLoadingProfiles": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "projectPhaseIdea": "Idée",
   "projectPhaseArranging": "Arrangement",
@@ -738,8 +862,10 @@
       },
       "status": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "statusChangedForProjectsWithErrors": "Phase changée en \"{status}\" pour {successCount} projet{successPlural}, {failCount} a échoué{failPlural}",
   "@statusChangedForProjectsWithErrors": {
@@ -759,8 +885,10 @@
       },
       "status": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToChangeStatus": "Échec du changement de phase: {error}",
   "@failedToChangeStatus": {
@@ -768,8 +896,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "tooltipEditProfileName": "Modifier le nom du profil",
   "tooltipAddTodo": "Ajouter une tâche",
@@ -795,8 +925,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "backupImportedSuccessfully": "Sauvegarde importée avec succès : {projectsCount} projets, {rootsCount} dossiers de projets, {releasesCount} sorties",
   "@backupImportedSuccessfully": {
@@ -810,8 +942,10 @@
       },
       "releasesCount": {
         "type": "int"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToImportBackup": "Échec de l'importation de la sauvegarde : {error}",
   "@failedToImportBackup": {
@@ -819,8 +953,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "importBackupMessage": "Choisissez comment importer la sauvegarde :",
   "mergeWithCurrentProfile": "Fusionner avec le profil actif actuel",
@@ -841,8 +977,10 @@
       },
       "releasesCount": {
         "type": "int"
-      }
-    }
+      
+}
+    
+}
   },
   "noProfileSelected": "Aucun profil sélectionné",
   "exportBackupDialogTitle": "Exporter la Sauvegarde",
@@ -859,8 +997,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "removePreviewSong": "Supprimer la chanson d'aperçu",
   "removePreviewSongConfirm": "Êtes-vous sûr de vouloir supprimer la chanson d'aperçu ? Cette action ne peut pas être annulée.",
@@ -977,16 +1117,20 @@
     "placeholders": {
       "url": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "errorOpeningBrowser": "Erreur lors de l'ouverture du navigateur: {error}",
   "@errorOpeningBrowser": {
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "generateTestingDatabase": "Générer Base de Données de Test",
   "generateTestingDatabaseMessage": "Cela remplira la base de données avec des projets et des sorties d'exemple pour les tests. Continuer?",
@@ -996,8 +1140,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "playlists": "Listes de Lecture",
   "playlistsDesktopOnly": "Les listes de lecture ne sont disponibles que sur Android.",
@@ -1101,8 +1247,10 @@
     "placeholders": {
       "path": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "@shareZip": {
     "description": "Label for the share as ZIP button"
@@ -1113,8 +1261,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToSharePreviewSongAsZip": "Échec du partage de la chanson d'aperçu en ZIP : {error}",
   "@failedToSharePreviewSongAsZip": {
@@ -1122,8 +1272,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "biographySaved": "Biographie enregistrée",
   "@biographySaved": {
@@ -1135,8 +1287,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "fileSavedTo": "Fichier enregistré dans {filename}",
   "@fileSavedTo": {
@@ -1144,8 +1298,10 @@
     "placeholders": {
       "filename": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToDownloadFile": "Échec du téléchargement du fichier : {error}",
   "@failedToDownloadFile": {
@@ -1153,8 +1309,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "allFilesSavedTo": "Tous les fichiers enregistrés dans {filename}",
   "@allFilesSavedTo": {
@@ -1162,8 +1320,10 @@
     "placeholders": {
       "filename": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "artworkAdded": "Artwork ajouté",
   "@artworkAdded": {
@@ -1175,8 +1335,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "artworkRemoved": "Artwork supprimé",
   "@artworkRemoved": {
@@ -1188,8 +1350,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "pressKitFileAdded": "Fichier de presse ajouté",
   "@pressKitFileAdded": {
@@ -1201,8 +1365,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "pressKitFileRemoved": "Fichier de presse supprimé",
   "@pressKitFileRemoved": {
@@ -1214,8 +1380,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "selectFilesToDownload": "Sélectionner les Fichiers à Télécharger",
   "@selectFilesToDownload": {
@@ -1250,8 +1418,10 @@
       },
       "plural": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "nFilesSavedTo": "{count} fichier{plural} enregistré dans {filename}",
   "@nFilesSavedTo": {
@@ -1265,8 +1435,10 @@
       },
       "filename": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "addAsset": "Ajouter une Ressource",
   "@addAsset": {
@@ -1286,8 +1458,10 @@
     "placeholders": {
       "assetName": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToAddAsset": "Échec de l'ajout de la ressource : {error}",
   "@failedToAddAsset": {
@@ -1295,8 +1469,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "assetRemoved": "{assetName} supprimé",
   "@assetRemoved": {
@@ -1304,8 +1480,10 @@
     "placeholders": {
       "assetName": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "failedToRemoveAsset": "Échec de la suppression de la ressource : {error}",
   "@failedToRemoveAsset": {
@@ -1313,8 +1491,10 @@
     "placeholders": {
       "error": {
         "type": "String"
-      }
-    }
+      
+}
+    
+}
   },
   "profileNotFound": "Profil introuvable",
   "@profileNotFound": {
@@ -1449,8 +1629,10 @@
     "placeholders": {
       "days": {
         "type": "int"
-      }
-    }
+      
+}
+    
+}
   },
   "statsNoProjectsFound": "Aucun projet trouvé",
   "statsNotTouchedDays": "Inchangé depuis {days} jours",
@@ -1466,10 +1648,16 @@
   "monoSwitchFailed": "Échec du passage en mono : {error}",
   "@monoSwitchFailed": {
     "placeholders": {
-      "error": { "type": "String" }
-    }
+      "error": { "type": "String" 
+}
+    
+}
   },
   "analyzeLabel": "Analyser",
   "reAnalyzeLabel": "Ré-analyser",
-  "analysisRequiresWav": "L'analyse nécessite un fichier WAV"
+  "analysisRequiresWav": "L'analyse nécessite un fichier WAV",
+  "noResultsForFilter": "Aucun résultat pour le filtre actuel",
+  "noResultsForFilterHint": "Essayez d'ajuster votre recherche ou vos filtres.",
+  "noProjectsFound": "Aucun projet trouvé",
+  "noProjectsFoundHint": "Ajoutez un dossier racine dans les paramètres pour commencer."
 }

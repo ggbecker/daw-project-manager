@@ -2131,4 +2131,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get analysisRequiresWav => '分析需要WAV文件';
+
+  @override
+  String get noResultsForFilter => '当前筛选条件无结果';
+
+  @override
+  String get noResultsForFilterHint => '请尝试调整搜索或筛选条件。';
+
+  @override
+  String get noProjectsFound => '未找到项目';
+
+  @override
+  String get noProjectsFoundHint => '请在设置中添加根文件夹以开始使用。';
 }

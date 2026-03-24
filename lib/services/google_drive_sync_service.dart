@@ -3150,7 +3150,8 @@ class GoogleDriveSyncService {
         remote.musicalKey != local.musicalKey ||
         remote.status != local.status ||
         remote.customDisplayName != local.customDisplayName ||
-        remote.hidden != local.hidden;
+        remote.hidden != local.hidden ||
+        remote.deadline != local.deadline;
   }
 
   /// Merge remote data with local data
@@ -3628,11 +3629,14 @@ class GoogleDriveSyncService {
                     status: remoteProject.status,
                     customDisplayName: remoteProject.customDisplayName,
                     hidden: remoteProject.hidden,
+                    deadline: remoteProject.deadline,
+                    clearDeadline: remoteProject.deadline == null,
+                    statusChangedAt: remoteProject.statusChangedAt,
                     previewSongPath: previewSongPath,
                     previewSongFileName: previewSongFileName ?? remoteProject.previewSongFileName,
                     uploadedPreviewSongHash: uploadedPreviewSongHash ?? remoteProject.uploadedPreviewSongHash,
-                    // Force update timestamp to ensure Hive detects the change
-                    updatedAt: DateTime.now(),
+                    // Use remote updatedAt so the UI shows the actual modification time, not download time
+                    updatedAt: remoteProject.updatedAt,
                     // Keep file system fields from local (file-based)
                     // filePath, fileName, fileSizeBytes, lastModifiedAt, fileExtension stay from local
                   );

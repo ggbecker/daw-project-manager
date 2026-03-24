@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -20,6 +21,10 @@ import 'providers/theme_provider.dart';
 
 // Global navigator key for deep linking
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+class _BackIntent extends Intent {
+  const _BackIntent();
+}
 
 // Handle notification tap - navigate to project details
 Future<void> _handleNotificationTap(String projectId) async {
@@ -280,7 +285,25 @@ class _DawProjectManagerAppState extends ConsumerState<DawProjectManagerApp> wit
       locale: currentLocale,
       // MacOSMenuBar must build with a context that has localizations — placing
       // it in builder ensures it runs after MaterialApp installs its delegates.
-      builder: (context, child) => MacOSMenuBar(child: child ?? const SizedBox()),
+      builder: (context, child) => Shortcuts(
+        shortcuts: const {
+          // macOS: Cmd+← (standard back in macOS apps)
+          SingleActivator(LogicalKeyboardKey.arrowLeft, meta: true): _BackIntent(),
+          // Windows / Linux: Alt+← (standard back in browsers and file managers)
+          SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true): _BackIntent(),
+        },
+        child: Actions(
+          actions: {
+            _BackIntent: CallbackAction<_BackIntent>(
+              onInvoke: (_) {
+                navigatorKey.currentState?.maybePop();
+                return null;
+              },
+            ),
+          },
+          child: MacOSMenuBar(child: child ?? const SizedBox()),
+        ),
+      ),
       home: const DashboardPage(),
     );
   }

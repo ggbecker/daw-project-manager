@@ -1282,9 +1282,19 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
                   const SizedBox(height: 24),
                   // Profiles list
                   if (profilesAsync.hasValue)
-                    Text(
-                      AppLocalizations.of(context)!.profiles,
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          AppLocalizations.of(context)!.profiles,
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.add),
+                          label: Text(AppLocalizations.of(context)!.createNewProfile),
+                          onPressed: _showCreateProfileDialog,
+                        ),
+                      ],
                     ),
                   const SizedBox(height: 16),
                   if (profilesAsync.hasValue)

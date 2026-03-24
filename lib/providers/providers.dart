@@ -401,8 +401,11 @@ final projectsProvider = Provider<List<MusicProject>>((ref) {
     // Use projects search provider instead of queryParams
     final projectsSearch = ref.watch(projectsSearchProvider);
     if (projectsSearch.trim().isNotEmpty) {
-      final needle = projectsSearch.toLowerCase();
-      projects = projects.where((p) => p.displayName.toLowerCase().contains(needle)).toList();
+      final words = projectsSearch.toLowerCase().trim().split(RegExp(r'\s+'));
+      projects = projects.where((p) {
+        final name = p.displayName.toLowerCase();
+        return words.every((word) => name.contains(word));
+      }).toList();
     }
     
     // --- Ordenação ---

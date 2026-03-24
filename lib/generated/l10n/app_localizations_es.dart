@@ -2207,4 +2207,18 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get analysisRequiresWav => 'El análisis requiere un archivo WAV';
+
+  @override
+  String get noResultsForFilter => 'Sin resultados para el filtro actual';
+
+  @override
+  String get noResultsForFilterHint =>
+      'Intenta ajustar la búsqueda o los filtros.';
+
+  @override
+  String get noProjectsFound => 'No se encontraron proyectos';
+
+  @override
+  String get noProjectsFoundHint =>
+      'Añade una carpeta raíz en la configuración para empezar.';
 }
