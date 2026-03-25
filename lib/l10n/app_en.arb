@@ -2529,5 +2529,17 @@
   "noResultsForFilter": "No results for current filter",
   "noResultsForFilterHint": "Try adjusting your search or filters to find projects.",
   "noProjectsFound": "No projects found",
-  "noProjectsFoundHint": "Add a scan root folder in settings to get started."
+  "noProjectsFoundHint": "Add a scan root folder in settings to get started.",
+  "queueTab": "Tasks",
+  "queueSearchHint": "Search tasks...",
+  "queueNoPendingTasks": "All caught up!",
+  "queueNoPendingTasksHint": "No pending tasks across your projects.",
+  "queueNoMatchingTasks": "No matching tasks",
+  "queuePendingSummary": "{tasks} pending tasks in {projects} projects",
+  "@queuePendingSummary": {
+    "placeholders": {
+      "tasks": { "type": "int" },
+      "projects": { "type": "int" }
+    }
+  }
 }

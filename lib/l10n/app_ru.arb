@@ -1659,5 +1659,17 @@
   "noResultsForFilter": "Нет результатов для текущего фильтра",
   "noResultsForFilterHint": "Попробуйте изменить поиск или фильтры.",
   "noProjectsFound": "Проекты не найдены",
-  "noProjectsFoundHint": "Добавьте корневую папку в настройках, чтобы начать."
+  "noProjectsFoundHint": "Добавьте корневую папку в настройках, чтобы начать.",
+  "queueTab": "Задачи",
+  "queueSearchHint": "Поиск задач...",
+  "queueNoPendingTasks": "Всё готово!",
+  "queueNoPendingTasksHint": "Нет незавершённых задач в ваших проектах.",
+  "queueNoMatchingTasks": "Задачи не найдены",
+  "queuePendingSummary": "{tasks} незавершённых задач в {projects} проектах",
+  "@queuePendingSummary": {
+    "placeholders": {
+      "tasks": { "type": "int" },
+      "projects": { "type": "int" }
+    }
+  }
 }

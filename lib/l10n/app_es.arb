@@ -1659,5 +1659,17 @@
   "noResultsForFilter": "Sin resultados para el filtro actual",
   "noResultsForFilterHint": "Intenta ajustar la búsqueda o los filtros.",
   "noProjectsFound": "No se encontraron proyectos",
-  "noProjectsFoundHint": "Añade una carpeta raíz en la configuración para empezar."
+  "noProjectsFoundHint": "Añade una carpeta raíz en la configuración para empezar.",
+  "queueTab": "Tareas",
+  "queueSearchHint": "Buscar tareas...",
+  "queueNoPendingTasks": "¡Todo al día!",
+  "queueNoPendingTasksHint": "Sin tareas pendientes en tus proyectos.",
+  "queueNoMatchingTasks": "No se encontraron tareas",
+  "queuePendingSummary": "{tasks} tareas pendientes en {projects} proyectos",
+  "@queuePendingSummary": {
+    "placeholders": {
+      "tasks": { "type": "int" },
+      "projects": { "type": "int" }
+    }
+  }
 }

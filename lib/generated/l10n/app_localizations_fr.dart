@@ -2226,4 +2226,25 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get noProjectsFoundHint =>
       'Ajoutez un dossier racine dans les paramètres pour commencer.';
+
+  @override
+  String get queueTab => 'Tâches';
+
+  @override
+  String get queueSearchHint => 'Rechercher des tâches...';
+
+  @override
+  String get queueNoPendingTasks => 'Tout est à jour !';
+
+  @override
+  String get queueNoPendingTasksHint =>
+      'Aucune tâche en attente dans vos projets.';
+
+  @override
+  String get queueNoMatchingTasks => 'Aucune tâche correspondante';
+
+  @override
+  String queuePendingSummary(int tasks, int projects) {
+    return '$tasks tâches en attente dans $projects projets';
+  }
 }

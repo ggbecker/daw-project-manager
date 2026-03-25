@@ -2143,4 +2143,24 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get noProjectsFoundHint => '请在设置中添加根文件夹以开始使用。';
+
+  @override
+  String get queueTab => '任务';
+
+  @override
+  String get queueSearchHint => '搜索任务...';
+
+  @override
+  String get queueNoPendingTasks => '全部完成！';
+
+  @override
+  String get queueNoPendingTasksHint => '您的项目中没有待处理的任务。';
+
+  @override
+  String get queueNoMatchingTasks => '未找到匹配的任务';
+
+  @override
+  String queuePendingSummary(int tasks, int projects) {
+    return '$projects个项目中有$tasks个待处理任务';
+  }
 }

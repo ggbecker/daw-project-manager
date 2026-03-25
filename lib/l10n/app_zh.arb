@@ -1659,5 +1659,17 @@
   "noResultsForFilter": "当前筛选条件无结果",
   "noResultsForFilterHint": "请尝试调整搜索或筛选条件。",
   "noProjectsFound": "未找到项目",
-  "noProjectsFoundHint": "请在设置中添加根文件夹以开始使用。"
+  "noProjectsFoundHint": "请在设置中添加根文件夹以开始使用。",
+  "queueTab": "任务",
+  "queueSearchHint": "搜索任务...",
+  "queueNoPendingTasks": "全部完成！",
+  "queueNoPendingTasksHint": "您的项目中没有待处理的任务。",
+  "queueNoMatchingTasks": "未找到匹配的任务",
+  "queuePendingSummary": "{projects}个项目中有{tasks}个待处理任务",
+  "@queuePendingSummary": {
+    "placeholders": {
+      "tasks": { "type": "int" },
+      "projects": { "type": "int" }
+    }
+  }
 }

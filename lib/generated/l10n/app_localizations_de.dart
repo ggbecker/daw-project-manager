@@ -2220,4 +2220,25 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get noProjectsFoundHint =>
       'Füge einen Stammordner in den Einstellungen hinzu, um zu beginnen.';
+
+  @override
+  String get queueTab => 'Aufgaben';
+
+  @override
+  String get queueSearchHint => 'Aufgaben suchen...';
+
+  @override
+  String get queueNoPendingTasks => 'Alles erledigt!';
+
+  @override
+  String get queueNoPendingTasksHint =>
+      'Keine ausstehenden Aufgaben in deinen Projekten.';
+
+  @override
+  String get queueNoMatchingTasks => 'Keine passenden Aufgaben';
+
+  @override
+  String queuePendingSummary(int tasks, int projects) {
+    return '$tasks ausstehende Aufgaben in $projects Projekten';
+  }
 }

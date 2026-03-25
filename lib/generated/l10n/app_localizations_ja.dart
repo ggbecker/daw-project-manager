@@ -2161,4 +2161,24 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get noProjectsFoundHint => '設定でルートフォルダを追加してください。';
+
+  @override
+  String get queueTab => 'タスク';
+
+  @override
+  String get queueSearchHint => 'タスクを検索...';
+
+  @override
+  String get queueNoPendingTasks => '全部完了！';
+
+  @override
+  String get queueNoPendingTasksHint => 'プロジェクトに未完了のタスクはありません。';
+
+  @override
+  String get queueNoMatchingTasks => '一致するタスクが見つかりません';
+
+  @override
+  String queuePendingSummary(int tasks, int projects) {
+    return '$projects個のプロジェクトに$tasks件の未完了タスク';
+  }
 }

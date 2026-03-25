@@ -1110,3 +1110,13 @@ class StatisticsSearchNotifier extends Notifier<String> {
 final statisticsSearchProvider =
     NotifierProvider<StatisticsSearchNotifier, String>(
         StatisticsSearchNotifier.new);
+
+class QueueSearchNotifier extends Notifier<String> {
+  @override
+  String build() => '';
+  void set(String text) => state = text;
+  void clear() => state = '';
+}
+
+final queueSearchProvider =
+    NotifierProvider<QueueSearchNotifier, String>(QueueSearchNotifier.new);

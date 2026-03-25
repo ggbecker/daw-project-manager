@@ -1689,5 +1689,17 @@
   "noResultsForFilter": "Nenhum resultado para o filtro atual",
   "noResultsForFilterHint": "Tente ajustar a pesquisa ou os filtros.",
   "noProjectsFound": "Nenhum projeto encontrado",
-  "noProjectsFoundHint": "Adicione uma pasta raiz nas configurações para começar."
+  "noProjectsFoundHint": "Adicione uma pasta raiz nas configurações para começar.",
+  "queueTab": "Tarefas",
+  "queueSearchHint": "Buscar tarefas...",
+  "queueNoPendingTasks": "Tudo em dia!",
+  "queueNoPendingTasksHint": "Sem tarefas pendentes nos seus projetos.",
+  "queueNoMatchingTasks": "Nenhuma tarefa encontrada",
+  "queuePendingSummary": "{tasks} tarefas pendentes em {projects} projetos",
+  "@queuePendingSummary": {
+    "placeholders": {
+      "tasks": { "type": "int" },
+      "projects": { "type": "int" }
+    }
+  }
 }

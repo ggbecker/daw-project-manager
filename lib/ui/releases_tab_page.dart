@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
@@ -117,10 +119,11 @@ class _ReleasesTabPageState extends ConsumerState<ReleasesTabPage> {
         // Filter releases by search text if provided
         var filteredReleases = releases;
         if (releasesSearch.trim().isNotEmpty) {
-          final searchLower = releasesSearch.toLowerCase().trim();
+          final words = releasesSearch.toLowerCase().trim().split(RegExp(r'\s+'));
           filteredReleases = releases.where((release) {
-            return release.title.toLowerCase().contains(searchLower) ||
-                   (release.description?.toLowerCase().contains(searchLower) ?? false);
+            final title = release.title.toLowerCase();
+            final desc = release.description?.toLowerCase() ?? '';
+            return words.every((w) => title.contains(w) || desc.contains(w));
           }).toList();
         }
         

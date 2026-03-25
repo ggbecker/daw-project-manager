@@ -66,8 +66,11 @@ class _PlaylistsPageState extends ConsumerState<PlaylistsPage> {
     // Apply search filter
     final searchQuery = ref.watch(playlistsSearchProvider);
     if (searchQuery.trim().isNotEmpty) {
-      final needle = searchQuery.toLowerCase();
-      playlists = playlists.where((p) => p.name.toLowerCase().contains(needle)).toList();
+      final words = searchQuery.toLowerCase().trim().split(RegExp(r'\s+'));
+      playlists = playlists.where((p) {
+        final name = p.name.toLowerCase();
+        return words.every((w) => name.contains(w));
+      }).toList();
     }
 
     if (playlists.isEmpty) {
@@ -434,7 +437,8 @@ class _PlaylistsPageState extends ConsumerState<PlaylistsPage> {
               !project.previewSongPath!.startsWith('drive://') &&
               !existingProjectIds.contains(project.id) &&
               (searchQuery.isEmpty ||
-                  project.displayName.toLowerCase().contains(searchQuery.toLowerCase())))
+                  searchQuery.toLowerCase().trim().split(RegExp(r'\s+')).every(
+                      (w) => project.displayName.toLowerCase().contains(w))))
           .toList();
     }
 
@@ -1424,7 +1428,8 @@ class _EditPlaylistFormState extends ConsumerState<_EditPlaylistForm> {
               !project.previewSongPath!.startsWith('drive://') &&
               !existingProjectIds.contains(project.id) &&
               (searchQuery.isEmpty ||
-                  project.displayName.toLowerCase().contains(searchQuery.toLowerCase())))
+                  searchQuery.toLowerCase().trim().split(RegExp(r'\s+')).every(
+                      (w) => project.displayName.toLowerCase().contains(w))))
           .toList();
     }
 

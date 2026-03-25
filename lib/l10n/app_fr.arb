@@ -1659,5 +1659,17 @@
   "noResultsForFilter": "Aucun résultat pour le filtre actuel",
   "noResultsForFilterHint": "Essayez d'ajuster votre recherche ou vos filtres.",
   "noProjectsFound": "Aucun projet trouvé",
-  "noProjectsFoundHint": "Ajoutez un dossier racine dans les paramètres pour commencer."
+  "noProjectsFoundHint": "Ajoutez un dossier racine dans les paramètres pour commencer.",
+  "queueTab": "Tâches",
+  "queueSearchHint": "Rechercher des tâches...",
+  "queueNoPendingTasks": "Tout est à jour !",
+  "queueNoPendingTasksHint": "Aucune tâche en attente dans vos projets.",
+  "queueNoMatchingTasks": "Aucune tâche correspondante",
+  "queuePendingSummary": "{tasks} tâches en attente dans {projects} projets",
+  "@queuePendingSummary": {
+    "placeholders": {
+      "tasks": { "type": "int" },
+      "projects": { "type": "int" }
+    }
+  }
 }

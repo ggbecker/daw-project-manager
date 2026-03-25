@@ -2206,4 +2206,25 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get noProjectsFoundHint =>
       'Add a scan root folder in settings to get started.';
+
+  @override
+  String get queueTab => 'Tasks';
+
+  @override
+  String get queueSearchHint => 'Search tasks...';
+
+  @override
+  String get queueNoPendingTasks => 'All caught up!';
+
+  @override
+  String get queueNoPendingTasksHint =>
+      'No pending tasks across your projects.';
+
+  @override
+  String get queueNoMatchingTasks => 'No matching tasks';
+
+  @override
+  String queuePendingSummary(int tasks, int projects) {
+    return '$tasks pending tasks in $projects projects';
+  }
 }
