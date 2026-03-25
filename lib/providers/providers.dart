@@ -21,6 +21,7 @@ import '../models/playlist.dart';
 import '../models/todo_template.dart';
 import '../models/project_event.dart';
 import '../repository/project_repository.dart';
+import '../utils/search_utils.dart';
 import '../repository/profile_repository.dart';
 import '../services/google_drive_sync_service.dart';
 
@@ -401,11 +402,9 @@ final projectsProvider = Provider<List<MusicProject>>((ref) {
     // Use projects search provider instead of queryParams
     final projectsSearch = ref.watch(projectsSearchProvider);
     if (projectsSearch.trim().isNotEmpty) {
-      final words = projectsSearch.toLowerCase().trim().split(RegExp(r'\s+'));
-      projects = projects.where((p) {
-        final name = p.displayName.toLowerCase();
-        return words.every((word) => name.contains(word));
-      }).toList();
+      projects = projects
+          .where((p) => fuzzyMatchAll(p.displayName, projectsSearch))
+          .toList();
     }
     
     // --- Ordenação ---

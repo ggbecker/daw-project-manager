@@ -1334,10 +1334,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                           ),
                       ],
                     ),
-                  const Spacer(),
+                  const SizedBox(width: 16),
                   // Search bar (desktop only — hidden on Playlists tab)
                   if (!MobileUtils.isMobile() && (_tabController.index != 2 || !MobileUtils.isMobile()))
-                  Row(
+                  Expanded(
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         ClipRect(
@@ -1398,6 +1399,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                         const SizedBox(width: 4),
                       ],
                     ),
+                  ),
                 ],
               ),
             );
@@ -1997,13 +1999,23 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
                       },
                     ),
                     const SizedBox(width: 8),
-                    ElevatedButton.icon(
+                    Builder(builder: (context) {
+                      final anyFileFound = widget.projects
+                          .where((p) => _selectedProjectIds.contains(p.id))
+                          .any((p) =>
+                              File(p.filePath).existsSync() ||
+                              Directory(p.filePath).existsSync());
+                      return Tooltip(
+                        message: anyFileFound
+                            ? ''
+                            : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
+                        child: ElevatedButton.icon(
                       icon: const Icon(Icons.search),
                       label: Text(AppLocalizations.of(context)!.extractMetadata),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Theme.of(context).colorScheme.primary,
                       ),
-                      onPressed: widget.isAnyOperation
+                      onPressed: widget.isAnyOperation || !anyFileFound
                           ? null
                           : () async {
                                 widget.onExtractingMetadataChanged(true);
@@ -2035,7 +2047,9 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
                                 widget.onExtractingMetadataChanged(false);
                                 _clearSelection();
                               },
-                    ),
+                        ),
+                      );
+                    }),
                     const SizedBox(width: 8),
                     ElevatedButton.icon(
                       icon: const Icon(Icons.edit),
@@ -2955,7 +2969,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               // Play Preview Song button (always show, but disabled if no preview)
               IconButton(
                 icon: const Icon(Icons.play_arrow),
-                iconSize: 20,
+                iconSize: 24,
                 padding: const EdgeInsets.all(4),
                 constraints: const BoxConstraints(),
                 tooltip: project.previewSongPath != null && project.previewSongPath!.isNotEmpty
@@ -2981,7 +2995,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                 message: sourceFileExists || MobileUtils.isMobile() ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
                 child: IconButton(
                   icon: const Icon(Icons.open_in_new),
-                  iconSize: 20,
+                  iconSize: 24,
                   padding: const EdgeInsets.all(4),
                   constraints: const BoxConstraints(),
                   tooltip: sourceFileExists ? '${AppLocalizations.of(context)!.tooltipLaunchInDaw} (O)' : null,
@@ -2999,7 +3013,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               // View button
               IconButton(
                 icon: const Icon(Icons.assignment),
-                iconSize: 20,
+                iconSize: 24,
                 padding: const EdgeInsets.all(4),
                 constraints: const BoxConstraints(),
                 tooltip: '${AppLocalizations.of(context)!.tooltipViewDetails} (D)',
@@ -3010,7 +3024,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                 message: sourceFileExists || MobileUtils.isMobile() ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
                 child: IconButton(
                   icon: const Icon(Icons.folder_open),
-                  iconSize: 20,
+                  iconSize: 24,
                   padding: const EdgeInsets.all(4),
                   constraints: const BoxConstraints(),
                   tooltip: sourceFileExists ? '${AppLocalizations.of(context)!.openFolder} (F)' : null,
@@ -3028,7 +3042,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               // Hidden button
               IconButton(
                 icon: Icon(project.hidden ? Icons.visibility : Icons.visibility_off),
-                iconSize: 20,
+                iconSize: 24,
                 padding: const EdgeInsets.all(4),
                 constraints: const BoxConstraints(),
                 color: project.hidden ? Colors.green.shade300 : Colors.red.shade300,
@@ -3159,7 +3173,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       configuration: TrinaGridConfiguration(
         style: TrinaGridStyleConfig(
           gridBackgroundColor: Theme.of(context).cardColor,
-          gridBorderColor: Theme.of(context).dividerColor,
+          gridBorderColor: Theme.of(context).dividerColor.withValues(alpha: 0.4),
           gridBorderRadius: BorderRadius.zero,
           rowColor: Theme.of(context).cardColor,
           cellColorInEditState: Theme.of(context).cardColor,

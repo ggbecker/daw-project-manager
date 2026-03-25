@@ -12,6 +12,7 @@ import '../models/release.dart';
 import '../models/music_project.dart';
 import '../providers/providers.dart';
 import '../utils/mobile_utils.dart';
+import '../utils/search_utils.dart';
 import '../generated/l10n/app_localizations.dart';
 import 'release_detail_page.dart';
 
@@ -119,11 +120,9 @@ class _ReleasesTabPageState extends ConsumerState<ReleasesTabPage> {
         // Filter releases by search text if provided
         var filteredReleases = releases;
         if (releasesSearch.trim().isNotEmpty) {
-          final words = releasesSearch.toLowerCase().trim().split(RegExp(r'\s+'));
           filteredReleases = releases.where((release) {
-            final title = release.title.toLowerCase();
-            final desc = release.description?.toLowerCase() ?? '';
-            return words.every((w) => title.contains(w) || desc.contains(w));
+            return fuzzyMatchAll(release.title, releasesSearch) ||
+                fuzzyMatchAll(release.description ?? '', releasesSearch);
           }).toList();
         }
         
@@ -422,7 +421,7 @@ class _ReleasesTableState extends ConsumerState<_ReleasesTable> {
                   return Icon(
                     Icons.broken_image,
                     size: 40,
-                    color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5),
+                    color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.5),
                   );
                 },
               ),
@@ -433,7 +432,7 @@ class _ReleasesTableState extends ConsumerState<_ReleasesTable> {
               child: Icon(
                 Icons.album,
                 size: 40,
-                color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5),
+                color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.5),
               ),
             );
           }
@@ -589,7 +588,7 @@ class _ReleasesTableState extends ConsumerState<_ReleasesTable> {
       configuration: TrinaGridConfiguration(
         style: TrinaGridStyleConfig(
           gridBackgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          gridBorderColor: Theme.of(context).dividerColor,
+          gridBorderColor: Theme.of(context).dividerColor.withValues(alpha: 0.4),
           gridBorderRadius: BorderRadius.zero,
           rowColor: Theme.of(context).cardColor,
           cellColorInEditState: Theme.of(context).cardColor,
@@ -604,7 +603,9 @@ class _ReleasesTableState extends ConsumerState<_ReleasesTable> {
           columnHeight: 44,
           rowHeight: 70, // Taller rows to accommodate thumbnails
           activatedBorderColor: Theme.of(context).colorScheme.primary,
-          activatedColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+          activatedColor: Theme.of(context).brightness == Brightness.dark
+              ? Colors.white.withValues(alpha: 0.15)
+              : Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
           iconColor: Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey,
           menuBackgroundColor: Theme.of(context).cardColor,
           oddRowColor: Theme.of(context).cardColor,
@@ -615,6 +616,13 @@ class _ReleasesTableState extends ConsumerState<_ReleasesTable> {
         columnSize: const TrinaGridColumnSizeConfig(
           autoSizeMode: TrinaAutoSizeMode.scale,
           resizeMode: TrinaResizeMode.normal,
+        ),
+        shortcut: TrinaGridShortcut(
+          actions: {
+            ...TrinaGridShortcut.defaultActions,
+            LogicalKeySet(LogicalKeyboardKey.enter): _TrinaReleaseAction(_viewRelease),
+            LogicalKeySet(LogicalKeyboardKey.keyD): _TrinaReleaseAction(_viewRelease),
+          },
         ),
       ),
       onRowChecked: null,
@@ -635,6 +643,21 @@ class _ReleasesTableState extends ConsumerState<_ReleasesTable> {
       },
       createFooter: (stateManager) => const SizedBox.shrink(),
     );
+  }
+}
+
+class _TrinaReleaseAction extends TrinaGridShortcutAction {
+  final Future<void> Function(Release release) onRelease;
+  const _TrinaReleaseAction(this.onRelease);
+
+  @override
+  void execute({
+    required TrinaKeyManagerEvent keyEvent,
+    required TrinaGridStateManager stateManager,
+  }) {
+    if (stateManager.isEditing) return;
+    final release = stateManager.currentRow?.cells['data']?.value;
+    if (release is Release) unawaited(onRelease(release));
   }
 }
 
@@ -849,7 +872,7 @@ class _MobileReleasesList extends ConsumerWidget {
                                 child: Icon(
                                   Icons.broken_image,
                                   size: 40,
-                                  color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5),
+                                  color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.5),
                                 ),
                               );
                             },
@@ -861,7 +884,7 @@ class _MobileReleasesList extends ConsumerWidget {
                             child: Icon(
                               Icons.album,
                               size: 40,
-                              color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5),
+                              color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.5),
                             ),
                           ),
                   ),

@@ -1,5 +1,6 @@
 import 'dart:io';
 import '../utils/mobile_utils.dart';
+import '../utils/search_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -66,11 +67,9 @@ class _PlaylistsPageState extends ConsumerState<PlaylistsPage> {
     // Apply search filter
     final searchQuery = ref.watch(playlistsSearchProvider);
     if (searchQuery.trim().isNotEmpty) {
-      final words = searchQuery.toLowerCase().trim().split(RegExp(r'\s+'));
-      playlists = playlists.where((p) {
-        final name = p.name.toLowerCase();
-        return words.every((w) => name.contains(w));
-      }).toList();
+      playlists = playlists
+          .where((p) => fuzzyMatchAll(p.name, searchQuery))
+          .toList();
     }
 
     if (playlists.isEmpty) {
@@ -127,55 +126,76 @@ class _PlaylistsPageState extends ConsumerState<PlaylistsPage> {
 
         return Card(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: ListTile(
-            titleAlignment: ListTileTitleAlignment.top,
-            leading: const Icon(Icons.playlist_play),
-            title: Text(playlist.name),
-            subtitle: Text(
-              AppLocalizations.of(context)!.playlistSongCount(playlistProjects.length),
-            ),
-            trailing: PopupMenuButton<String>(
-              onSelected: (value) {
-                if (value == 'edit') {
-                  _showEditPlaylistDialog(context, ref, playlist, allProjects);
-                } else if (value == 'delete') {
-                  _showDeletePlaylistDialog(context, ref, playlist);
-                }
-              },
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: 'edit',
-                  child: Row(
-                    children: [
-                      const Icon(Icons.edit),
-                      const SizedBox(width: 8),
-                      Text(AppLocalizations.of(context)!.edit),
-                    ],
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'delete',
-                  child: Row(
-                    children: [
-                      const Icon(Icons.delete, color: Colors.red),
-                      const SizedBox(width: 8),
-                      Text(
-                        AppLocalizations.of(context)!.delete,
-                        style: const TextStyle(color: Colors.red),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
             onTap: () {
-              // Open playlist player
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => PlaylistPlayerPage(playlist: playlist),
                 ),
               );
             },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(top: 2),
+                    child: Icon(Icons.playlist_play),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(playlist.name,
+                            style: Theme.of(context).textTheme.titleMedium),
+                        const SizedBox(height: 2),
+                        Text(
+                          AppLocalizations.of(context)!.playlistSongCount(playlistProjects.length),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                  PopupMenuButton<String>(
+                    onSelected: (value) {
+                      if (value == 'edit') {
+                        _showEditPlaylistDialog(context, ref, playlist, allProjects);
+                      } else if (value == 'delete') {
+                        _showDeletePlaylistDialog(context, ref, playlist);
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            const Icon(Icons.edit),
+                            const SizedBox(width: 8),
+                            Text(AppLocalizations.of(context)!.edit),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            const Icon(Icons.delete, color: Colors.red),
+                            const SizedBox(width: 8),
+                            Text(
+                              AppLocalizations.of(context)!.delete,
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
         );
       },

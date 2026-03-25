@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/music_project.dart';
 import '../models/todo_item.dart';
 import '../providers/providers.dart';
+import '../utils/search_utils.dart';
 import '../generated/l10n/app_localizations.dart';
 import 'project_detail_page.dart';
 
@@ -37,22 +38,17 @@ class QueuePage extends ConsumerWidget {
       error: (_, _) => Center(child: Text(l10n.errorLoadingProjects)),
       data: (allProjects) {
         // Build list of (project, pendingTodos) pairs, filtering by search
-        final words = searchText.isEmpty
-            ? <String>[]
-            : searchText.split(RegExp(r'\s+'));
         final entries = <MapEntry<MusicProject, List<TodoItem>>>[];
         for (final project in allProjects) {
-          if (words.isEmpty) {
+          if (searchText.isEmpty) {
             final pending = project.todos.where((t) => !t.completed).toList();
             if (pending.isNotEmpty) entries.add(MapEntry(project, pending));
           } else {
-            final name = project.displayName.toLowerCase();
-            final matchProject = words.every((w) => name.contains(w));
+            final matchProject = fuzzyMatchAll(project.displayName, searchText);
             final matchingTodos = project.todos
                 .where((t) =>
                     !t.completed &&
-                    (matchProject ||
-                        words.every((w) => t.text.toLowerCase().contains(w))))
+                    (matchProject || fuzzyMatchAll(t.text, searchText)))
                 .toList();
             if (matchingTodos.isNotEmpty) {
               entries.add(MapEntry(project, matchingTodos));
