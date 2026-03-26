@@ -667,8 +667,12 @@ updatedProject.lastModifiedAt.toString(),
                                         ),
                                       ],
                                       const SizedBox(width: 8),
-                                      ElevatedButton.icon(
-                                        onPressed: _extractingMetadata
+                                      Tooltip(
+                                        message: sourceFileExists
+                                            ? ''
+                                            : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
+                                        child: ElevatedButton.icon(
+                                        onPressed: _extractingMetadata || !sourceFileExists
                                             ? null
                                             : () async {
                                                 setState(
@@ -742,6 +746,7 @@ updatedProject.lastModifiedAt.toString(),
                                             context,
                                           ).colorScheme.primary,
                                         ),
+                                      ),
                                       ),
                                     ],
                                   ),

@@ -1659,5 +1659,17 @@
   "noResultsForFilter": "Keine Ergebnisse für den aktuellen Filter",
   "noResultsForFilterHint": "Versuche, die Suche oder Filter anzupassen.",
   "noProjectsFound": "Keine Projekte gefunden",
-  "noProjectsFoundHint": "Füge einen Stammordner in den Einstellungen hinzu, um zu beginnen."
+  "noProjectsFoundHint": "Füge einen Stammordner in den Einstellungen hinzu, um zu beginnen.",
+  "queueTab": "Aufgaben",
+  "queueSearchHint": "Aufgaben suchen...",
+  "queueNoPendingTasks": "Alles erledigt!",
+  "queueNoPendingTasksHint": "Keine ausstehenden Aufgaben in deinen Projekten.",
+  "queueNoMatchingTasks": "Keine passenden Aufgaben",
+  "queuePendingSummary": "{tasks} ausstehende Aufgaben in {projects} Projekten",
+  "@queuePendingSummary": {
+    "placeholders": {
+      "tasks": { "type": "int" },
+      "projects": { "type": "int" }
+    }
+  }
 }

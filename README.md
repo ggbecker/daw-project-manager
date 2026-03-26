@@ -1,326 +1,200 @@
 # DAW Project Manager
 
-A cross-platform desktop application built with Flutter for managing and organizing Digital Audio Workstation (DAW) project files. Track your music production projects, manage metadata, organize releases, and keep your creative workflow organized.
+A cross-platform app built with Flutter for organizing and tracking music production projects across multiple DAWs. Scan your drives, manage metadata, track tasks, group projects into releases, and keep your creative workflow under control.
+
+**Primary target:** macOS desktop. Also supports Windows, Android, and iOS (with some features limited to desktop).
+
+---
 
 ## Features
 
-### Project Management
-- **Multi-DAW Support**: Automatically detects and manages projects from 13+ popular DAWs
-- **Lightweight Scanning**: Fast initial scan that only extracts DAW type information
-- **Deep Metadata Extraction**: Optional full metadata extraction (BPM, key, DAW version) on-demand
-- **Project Organization**: Organize projects by status (Idea, Arranging, Mixing, Mastering, Finished)
-- **Custom Metadata**: Add custom display names, BPM, musical key, and notes to each project
-- **Todo Lists**: Track tasks and todos for each project
-- **Project Hiding**: Hide projects from the main list without deleting them
-- **Quick Launch**: Launch projects directly in their respective DAWs
+### Projects
+- Scan one or more root directories and detect project files automatically
+- Two-phase scanning: fast initial scan (DAW type + path), optional deep scan for full metadata (BPM, key, DAW version)
+- Edit project metadata: display name, BPM, musical key, phase/status, notes, custom tags
+- Per-project todo lists with templates
+- Preview song playback with seek controls (←/→ = ±5s, Ctrl+←/→ = ±30s)
+- Quick actions: open in DAW, open folder, play preview, view details
+- Hide/unhide projects without deleting them
+- Keyboard shortcuts in the project table (P/O/D/F for preview/open/details/folder)
+- Fuzzy search across all projects
 
-### Release Management
-- **Release Organization**: Group projects into releases with metadata
-- **Release Files**: Attach files (stems, mixes, artwork) to releases
-- **Release Status Tracking**: Track release status and completion
+### Releases
+- Group projects into releases with title, description, artwork, and release date
+- Attach files to releases (stems, mixes, exports)
+- Keyboard shortcut (Enter / D) to open release details
 
-### Profile System
-- **Multiple Profiles**: Create and switch between multiple user profiles
-- **Profile-Specific Roots**: Each profile can have its own set of scan root directories
-- **Profile Persistence**: All data is stored per-profile using Hive database
+### Tasks (Queue)
+- Cross-project view of all unfinished todo items
+- Grouped by project with phase indicator and pending count badge
+- Check off tasks directly from the queue without navigating to each project
+- Fuzzy search across project names and task text
 
-### User Interface
-- **Custom Window Controls**: Native-feeling window controls for Windows and macOS
-- **Dark Theme**: Modern dark theme optimized for long production sessions
-- **Advanced Table View**: Sortable, filterable project table with PlutoGrid
-- **Search Functionality**: Quick search across all projects
-- **Responsive Layout**: Adapts to different window sizes
+### Profiles
+- Multiple user profiles, each with its own scan roots and project data
+- Profile photo support
+- Switch profiles from the toolbar
 
-### Internationalization
-- **9 Languages Supported**: English, Portuguese, Spanish, French, Italian, German, Russian, Japanese, Chinese
-- **Language Switcher**: Easy language switching from the UI
-- **Localized Interface**: All UI elements are translated
+### Statistics
+- Charts and summaries of your project library (phases, DAWs, activity)
+- Searchable project stats
+
+### Playlists *(Android/iOS only)*
+- Create playlists from projects that have preview songs
+- Playback in sequence with a built-in audio player
+
+### Other
+- Google Drive sync (backup/restore)
+- Deadline tracking with notifications (Android)
+- 9 UI languages: English, Portuguese, Spanish, French, Italian, German, Russian, Japanese, Chinese
+
+---
 
 ## Supported DAWs
 
-The application supports projects from the following Digital Audio Workstations:
+| DAW | Extension |
+|-----|-----------|
+| Ableton Live | `.als` |
+| Bitwig Studio | `.bwproject` |
+| Cubase | `.cpr` |
+| FL Studio | `.flp` |
+| Logic Pro | `.logicx` |
+| Maschine / Maschine 2 | `.maschine`, `.maschine2` |
+| Nuendo | `.npr` |
+| Pro Tools | `.ptx` |
+| Reaper | `.rpp` |
+| Studio One | `.song` |
 
-- **Ableton Live** (`.als`, `.alp`)
-- **Bitwig Studio** (`.bwproject`)
-- **Cubase** (`.cpr`)
-- **FL Studio** (`.flp`)
-- **Logic Pro** (`.logicx`)
-- **Maschine** (`.maschine`, `.maschine2`)
-- **Nuendo** (`.npr`)
-- **Pro Tools** (`.ptx`, `.pts`)
-- **Reaper** (`.rpp`)
-- **Studio One** (`.song`)
+---
 
-## Requirements
+## Development Guide
 
-### Development
-- **Flutter SDK**: 3.24.x or higher
-- **Dart SDK**: 3.9.2 or higher (included with Flutter)
-- **Platform Support**:
-  - Windows 10/11 (x64)
-  - macOS 10.14+ (Intel/Apple Silicon)
-  - Linux (experimental)
+### Prerequisites
 
-### Runtime
-- **Windows**: Windows 10 or later (64-bit)
-- **macOS**: macOS 10.14 or later
-- **Disk Space**: ~100 MB for application + storage for project database
+| Tool | Version |
+|------|---------|
+| Flutter | 3.41.3 (stable) |
+| Dart | 3.11.1 |
+| Xcode | Latest (for macOS/iOS builds) |
+| Android Studio | Latest (for Android builds) |
 
-## Installation
+Install Flutter: https://docs.flutter.dev/get-started/install
 
-### Pre-built Releases
+### Setup
 
-Download the latest release from the [Releases page](https://github.com/yourusername/daw_project_manager/releases):
+```bash
+# Clone the repo
+git clone <repo-url>
+cd daw-project-manager
 
-- **Windows**: Download `DAW_Project_Manager_Installer_vX.X.X.exe` and run the installer
-- **macOS**: Download `DAW_Project_Manager_macOS_vX.X.X.zip`, extract, and move the app to Applications
+# Install dependencies
+flutter pub get
 
-### Building from Source
+# Generate code (Hive adapters + l10n)
+dart run build_runner build --delete-conflicting-outputs
+flutter gen-l10n
+```
 
-#### Prerequisites
+> **Google Drive credentials** — the app expects OAuth secrets injected at build time via `scripts/inject_secret.ps1`. For local development without Drive sync you can skip this; Drive features will simply not authenticate.
 
-1. Install Flutter SDK:
-   ```bash
-   # Follow official Flutter installation guide
-   # https://docs.flutter.dev/get-started/install
-   ```
+### Running
 
-2. Verify Flutter installation:
-   ```bash
-   flutter doctor
-   ```
+```bash
+# macOS (primary target)
+flutter run -d macos
 
-#### Build Steps
+# Android
+flutter run -d <device-id>
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/yourusername/daw_project_manager.git
-   cd daw_project_manager
-   ```
-
-2. **Install dependencies**:
-   ```bash
-   flutter pub get
-   ```
-
-3. **Generate localization files**:
-   ```bash
-   flutter gen-l10n
-   ```
-
-4. **Generate Hive adapters** (for data models):
-   ```bash
-   dart run build_runner build --delete-conflicting-outputs
-   ```
-
-5. **Build for your platform**:
-
-   **Windows**:
-   ```bash
-   flutter build windows --release
-   ```
-   The executable will be in `build\windows\x64\runner\Release\`
-
-   **macOS**:
-   ```bash
-   flutter build macos --release
-   ```
-   The app bundle will be in `build\macos\Build\Products\Release\`
-
-   **Linux**:
-   ```bash
-   flutter build linux --release
-   ```
-
-## Development
+# Windows
+flutter run -d windows
+```
 
 ### Project Structure
 
 ```
 lib/
-├── generated/          # Generated files (localizations, Hive adapters)
-│   └── l10n/          # Localization files
-├── l10n/              # ARB translation files
-├── main.dart          # Application entry point
-├── models/            # Data models (MusicProject, Release, Profile, etc.)
-├── providers/         # Riverpod state management
-├── repository/        # Data persistence layer (Hive)
-├── services/          # Business logic (Scanner, MetadataExtractor)
-├── ui/                # UI components
-│   ├── dashboard_page.dart
-│   ├── project_detail_page.dart
-│   ├── release_detail_page.dart
-│   ├── profile_manager_page.dart
-│   └── widgets/       # Reusable widgets
-└── utils/             # Utility functions
+├── main.dart                  # App entry point, theme, global shortcuts
+├── models/                    # Hive data models (MusicProject, Release, etc.)
+├── providers/                 # Riverpod providers and state
+├── repository/                # Hive box management and data access
+├── services/
+│   ├── scanner_service.dart       # File system scanning
+│   ├── metadata_extractor.dart    # DAW file parsing (BPM, key, version)
+│   ├── google_drive_sync_service.dart
+│   ├── deadline_notification_service.dart
+│   └── playlist_audio_service.dart
+├── ui/
+│   ├── dashboard_page.dart        # Main screen (projects table + tabs)
+│   ├── project_detail_page.dart   # Project editor, metadata, todos, player
+│   ├── releases_tab_page.dart     # Releases table
+│   ├── queue_page.dart            # Cross-project pending tasks view
+│   ├── statistics_page.dart       # Charts and library stats
+│   ├── playlists_page.dart        # Playlist player (mobile only)
+│   ├── profile_manager_page.dart  # Profile management
+│   └── ...
+└── utils/
+    ├── search_utils.dart          # Fuzzy search (fuzzyMatchAll)
+    ├── mobile_utils.dart          # Platform detection helpers
+    └── file_launcher.dart         # Cross-platform file/app launching
 ```
-
-### Development Setup
-
-1. **Fork and clone the repository**
-
-2. **Install dependencies**:
-   ```bash
-   flutter pub get
-   ```
-
-3. **Generate required files**:
-   ```bash
-   # Generate localizations
-   flutter gen-l10n
-   
-   # Generate Hive adapters
-   dart run build_runner build --delete-conflicting-outputs
-   ```
-
-4. **Run in development mode**:
-   ```bash
-   flutter run -d windows    # Windows
-   flutter run -d macos       # macOS
-   flutter run -d linux       # Linux
-   ```
-
-### Code Generation
-
-The project uses code generation for:
-- **Hive Adapters**: Run `dart run build_runner build` after modifying models
-- **Localizations**: Run `flutter gen-l10n` after modifying `.arb` files
-
-### Adding Translations
-
-1. Edit the appropriate `.arb` file in `lib/l10n/`:
-   - `app_en.arb` - English (template)
-   - `app_pt.arb` - Portuguese
-   - `app_es.arb` - Spanish
-   - etc.
-
-2. Regenerate localization files:
-   ```bash
-   flutter gen-l10n
-   ```
-
-3. Use in code:
-   ```dart
-   final l10n = AppLocalizations.of(context);
-   Text(l10n.someKey);
-   ```
 
 ### State Management
 
-The project uses **Riverpod** for state management:
-- Providers are defined in `lib/providers/providers.dart`
-- Use `ConsumerWidget` or `ConsumerStatefulWidget` to access providers
-- Example:
-  ```dart
-  class MyWidget extends ConsumerWidget {
-    @override
-    Widget build(BuildContext context, WidgetRef ref) {
-      final projects = ref.watch(projectsProvider);
-      // ...
-    }
-  }
-  ```
+The app uses **Riverpod** throughout.
+
+- All providers live in `lib/providers/providers.dart`
+- Main data flow: `repositoryProvider` → `allProjectsStreamProvider` → `projectsProvider` (filtered/sorted) → UI
+- Search state is kept in per-tab notifiers: `projectsSearchProvider`, `releasesSearchProvider`, `queueSearchProvider`, etc.
 
 ### Data Persistence
 
-Data is stored using **Hive** (NoSQL database):
-- Each profile has its own Hive box
-- Data is stored in the platform's app data directory
-- Models are annotated with `@HiveType` and `@HiveField`
+**Hive CE** (community edition drop-in for Hive 2.x) is used for all local storage.
 
-### Testing
+- Models with code-generated adapters have a `.g.dart` file and a `part` directive (`Release`, `TodoTemplate`)
+- All other models have manually written `TypeAdapter`s inline in their model file — `build_runner` skips them intentionally
+- Adapters are registered in `ProjectRepository` with `isAdapterRegistered` guards to avoid double-registration
+- The generated `hive_registrar.g.dart` extension registers all code-generated adapters on startup
 
-Run tests with:
+After adding or changing a model field, re-run codegen:
+
 ```bash
-flutter test
+dart run build_runner build --delete-conflicting-outputs
 ```
 
-### Debugging
+### Localization
 
-Enable debug mode for additional logging:
-- The app automatically uses debug mode when running `flutter run`
-- Window title bar is visible in debug mode
-- Check console output for debug messages
+Strings live in `lib/l10n/app_<locale>.arb`. The source of truth is `app_en.arb`.
 
-## Configuration
+After adding or editing strings:
 
-### Scan Roots
+```bash
+flutter gen-l10n
+```
 
-Add directories to scan for projects:
-1. Click "Add Folder" in the dashboard
-2. Select a directory containing DAW project files
-3. The app will automatically scan for supported project files
+Generated code lands in `lib/generated/l10n/`. Import `AppLocalizations` from there — never edit generated files directly.
 
-### Profiles
+### Adding a New DAW
 
-Create and manage profiles:
-1. Click the profile button in the top bar
-2. Create a new profile or switch between existing ones
-3. Each profile maintains its own projects and scan roots
+1. Add the file extension to `ScannerService.supportedExtensions` in `lib/services/scanner_service.dart`
+2. Map the extension to a display name in `MetadataExtractor` (`lib/services/metadata_extractor.dart`)
+3. Optionally add a logo asset and register it in the logo map in `dashboard_page.dart`
 
-## Troubleshooting
+### CI / CD
 
-### Build Issues
+The GitHub Actions workflow (`.github/workflows/release.yml`) runs three jobs:
 
-**Error: Couldn't resolve package 'flutter_gen'**
-- Run `flutter clean` and `flutter pub get`
-- Ensure `flutter gen-l10n` has been run
+| Job | Trigger | Output |
+|-----|---------|--------|
+| `test_pr_build` | Pull request → `main` | Build check on Windows |
+| `release_build_upload` | Push to `main` or version tag | macOS `.dmg` + Windows `.msix` as release assets |
+| `build-android` | Push to `main` or version tag | Android `.apk` |
 
-**Error: Hive adapter not found**
-- Run `dart run build_runner build --delete-conflicting-outputs`
+To cut a release, push a version tag:
 
-**Error: Localization files not found**
-- Run `flutter gen-l10n` to generate localization files
-- Check that `l10n.yaml` is properly configured
+```bash
+git tag v1.2.3
+git push origin v1.2.3
+```
 
-### Runtime Issues
-
-**Projects not appearing after scan**
-- Check that the file extensions are supported
-- Verify the scan root directory is accessible
-- Check console for error messages
-
-**Metadata not extracting**
-- Use "Deep Scan" or "Extract Metadata" for full metadata extraction
-- Some DAWs may not store metadata in accessible formats
-- Check file permissions
-
-## Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes
-4. Run tests and ensure code quality:
-   ```bash
-   flutter analyze
-   flutter test
-   ```
-5. Commit your changes (`git commit -m 'Add amazing feature'`)
-6. Push to the branch (`git push origin feature/amazing-feature`)
-7. Open a Pull Request
-
-### Code Style
-
-- Follow Dart/Flutter style guidelines
-- Use meaningful variable and function names
-- Add comments for complex logic
-- Keep functions focused and small
-- Write tests for new features
-
-## License
-
-[Add your license information here]
-
-## Acknowledgments
-
-- Built with [Flutter](https://flutter.dev/)
-- State management with [Riverpod](https://riverpod.dev/)
-- Data persistence with [Hive](https://pub.dev/packages/hive)
-- Table component with [PlutoGrid](https://pub.dev/packages/pluto_grid)
-- Window management with [window_manager](https://pub.dev/packages/window_manager)
-
----
-
-For questions, issues, or feature requests, please open an issue on GitHub.
+Required GitHub secrets: `DESKTOP_CLIENT_ID`, `DESKTOP_CLIENT_SECRET`, `ANDROID_WEB_CLIENT_ID` (Google OAuth for Drive sync).

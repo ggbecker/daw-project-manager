@@ -1659,5 +1659,17 @@
   "noResultsForFilter": "現在のフィルターに一致する結果がありません",
   "noResultsForFilterHint": "検索条件やフィルターを調整してみてください。",
   "noProjectsFound": "プロジェクトが見つかりません",
-  "noProjectsFoundHint": "設定でルートフォルダを追加してください。"
+  "noProjectsFoundHint": "設定でルートフォルダを追加してください。",
+  "queueTab": "タスク",
+  "queueSearchHint": "タスクを検索...",
+  "queueNoPendingTasks": "全部完了！",
+  "queueNoPendingTasksHint": "プロジェクトに未完了のタスクはありません。",
+  "queueNoMatchingTasks": "一致するタスクが見つかりません",
+  "queuePendingSummary": "{projects}個のプロジェクトに{tasks}件の未完了タスク",
+  "@queuePendingSummary": {
+    "placeholders": {
+      "tasks": { "type": "int" },
+      "projects": { "type": "int" }
+    }
+  }
 }

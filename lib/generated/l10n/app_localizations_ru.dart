@@ -2205,4 +2205,25 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get noProjectsFoundHint =>
       'Добавьте корневую папку в настройках, чтобы начать.';
+
+  @override
+  String get queueTab => 'Задачи';
+
+  @override
+  String get queueSearchHint => 'Поиск задач...';
+
+  @override
+  String get queueNoPendingTasks => 'Всё готово!';
+
+  @override
+  String get queueNoPendingTasksHint =>
+      'Нет незавершённых задач в ваших проектах.';
+
+  @override
+  String get queueNoMatchingTasks => 'Задачи не найдены';
+
+  @override
+  String queuePendingSummary(int tasks, int projects) {
+    return '$tasks незавершённых задач в $projects проектах';
+  }
 }

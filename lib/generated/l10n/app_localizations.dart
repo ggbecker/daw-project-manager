@@ -3739,6 +3739,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add a scan root folder in settings to get started.'**
   String get noProjectsFoundHint;
+
+  /// No description provided for @queueTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks'**
+  String get queueTab;
+
+  /// No description provided for @queueSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search tasks...'**
+  String get queueSearchHint;
+
+  /// No description provided for @queueNoPendingTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'All caught up!'**
+  String get queueNoPendingTasks;
+
+  /// No description provided for @queueNoPendingTasksHint.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending tasks across your projects.'**
+  String get queueNoPendingTasksHint;
+
+  /// No description provided for @queueNoMatchingTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching tasks'**
+  String get queueNoMatchingTasks;
+
+  /// No description provided for @queuePendingSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{tasks} pending tasks in {projects} projects'**
+  String queuePendingSummary(int tasks, int projects);
 }
 
 class _AppLocalizationsDelegate

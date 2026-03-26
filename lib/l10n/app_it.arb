@@ -1659,5 +1659,17 @@
   "noResultsForFilter": "Nessun risultato per il filtro corrente",
   "noResultsForFilterHint": "Prova a modificare la ricerca o i filtri.",
   "noProjectsFound": "Nessun progetto trovato",
-  "noProjectsFoundHint": "Aggiungi una cartella radice nelle impostazioni per iniziare."
+  "noProjectsFoundHint": "Aggiungi una cartella radice nelle impostazioni per iniziare.",
+  "queueTab": "Attività",
+  "queueSearchHint": "Cerca attività...",
+  "queueNoPendingTasks": "Tutto in ordine!",
+  "queueNoPendingTasksHint": "Nessuna attività in sospeso nei tuoi progetti.",
+  "queueNoMatchingTasks": "Nessuna attività corrispondente",
+  "queuePendingSummary": "{tasks} attività in sospeso in {projects} progetti",
+  "@queuePendingSummary": {
+    "placeholders": {
+      "tasks": { "type": "int" },
+      "projects": { "type": "int" }
+    }
+  }
 }

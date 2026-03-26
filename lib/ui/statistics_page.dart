@@ -972,10 +972,11 @@ class _HistoryPanelState extends ConsumerState<_HistoryPanel> {
     // Filter by search
     final filtered = searchText.trim().isEmpty
         ? projects
-        : projects
-            .where((p) =>
-                p.displayName.toLowerCase().contains(searchText.toLowerCase()))
-            .toList();
+        : projects.where((p) {
+            final name = p.displayName.toLowerCase();
+            final words = searchText.toLowerCase().trim().split(RegExp(r'\s+'));
+            return words.every((w) => name.contains(w));
+          }).toList();
 
     final selectedEvents = selectedProject != null
         ? (allEvents

@@ -2206,4 +2206,25 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get noProjectsFoundHint =>
       'Adicione uma pasta raiz nas configurações para começar.';
+
+  @override
+  String get queueTab => 'Tarefas';
+
+  @override
+  String get queueSearchHint => 'Buscar tarefas...';
+
+  @override
+  String get queueNoPendingTasks => 'Tudo em dia!';
+
+  @override
+  String get queueNoPendingTasksHint =>
+      'Sem tarefas pendentes nos seus projetos.';
+
+  @override
+  String get queueNoMatchingTasks => 'Nenhuma tarefa encontrada';
+
+  @override
+  String queuePendingSummary(int tasks, int projects) {
+    return '$tasks tarefas pendentes em $projects projetos';
+  }
 }

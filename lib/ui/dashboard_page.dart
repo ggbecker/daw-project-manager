@@ -26,6 +26,7 @@ import 'project_folders_settings_page.dart';
 import 'playlists_page.dart';
 import 'google_drive_sync_page.dart';
 import 'statistics_page.dart';
+import 'queue_page.dart';
 import 'notification_settings_page.dart';
 import 'widgets/desktop_title_bar.dart';
 import 'widgets/language_switcher.dart';
@@ -105,8 +106,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
   @override
   void initState() {
     super.initState();
-    // Mobile has 4 tabs (Projects, Releases, Playlists, Statistics), desktop has 3
-    final tabCount = MobileUtils.isMobile() ? 4 : 3;
+    // Mobile has 5 tabs (Projects, Releases, Playlists, Tasks, Statistics), desktop has 4
+    final tabCount = MobileUtils.isMobile() ? 5 : 4;
     _tabController = TabController(length: tabCount, vsync: this);
     _searchController = TextEditingController();
     
@@ -148,7 +149,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
     if (!_tabController.indexIsChanging && mounted) {
       // Sync search controller with the appropriate tab's search state
       final currentTabIndex = _tabController.index;
-      final statsTabIndex = MobileUtils.isMobile() ? 3 : 2;
+      final queueTabIndex = MobileUtils.isMobile() ? 3 : 2;
+      final statsTabIndex = MobileUtils.isMobile() ? 4 : 3;
       if (currentTabIndex == 0) {
         // Projects tab
         final projectsSearch = ref.read(projectsSearchProvider);
@@ -160,6 +162,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
         final releasesSearch = ref.read(releasesSearchProvider);
         if (_searchController.text != releasesSearch) {
           _searchController.text = releasesSearch;
+        }
+      } else if (currentTabIndex == queueTabIndex) {
+        // Tasks tab
+        final queueSearch = ref.read(queueSearchProvider);
+        if (_searchController.text != queueSearch) {
+          _searchController.text = queueSearch;
         }
       } else if (currentTabIndex == statsTabIndex) {
         // Statistics tab
@@ -180,20 +188,26 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
 
   void _clearCurrentTabSearch() {
     _searchController.clear();
+    final queueTabIndex = MobileUtils.isMobile() ? 3 : 2;
     if (_tabController.index == 0) {
       ref.read(projectsSearchProvider.notifier).clear();
     } else if (_tabController.index == 1) {
       ref.read(releasesSearchProvider.notifier).clear();
+    } else if (_tabController.index == queueTabIndex) {
+      ref.read(queueSearchProvider.notifier).clear();
     } else {
       ref.read(statisticsSearchProvider.notifier).set('');
     }
   }
 
   void _updateCurrentTabSearch(String text) {
+    final queueTabIndex = MobileUtils.isMobile() ? 3 : 2;
     if (_tabController.index == 0) {
       ref.read(projectsSearchProvider.notifier).setSearchText(text);
     } else if (_tabController.index == 1) {
       ref.read(releasesSearchProvider.notifier).setSearchText(text);
+    } else if (_tabController.index == queueTabIndex) {
+      ref.read(queueSearchProvider.notifier).set(text);
     } else {
       ref.read(statisticsSearchProvider.notifier).set(text);
     }
@@ -529,14 +543,17 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
     final repoAsync = ref.watch(repositoryProvider);
     final roots = ref.watch(scanRootsProvider);
     // Get current search text based on active tab
-    final statsTabIndex = MobileUtils.isMobile() ? 3 : 2;
+    final queueTabIndex = MobileUtils.isMobile() ? 3 : 2;
+    final statsTabIndex = MobileUtils.isMobile() ? 4 : 3;
     final currentSearch = _tabController.index == 0
         ? ref.watch(projectsSearchProvider)
         : _tabController.index == 1
             ? ref.watch(releasesSearchProvider)
-            : _tabController.index == statsTabIndex
-                ? ref.watch(statisticsSearchProvider)
-                : '';
+            : _tabController.index == queueTabIndex
+                ? ref.watch(queueSearchProvider)
+                : _tabController.index == statsTabIndex
+                    ? ref.watch(statisticsSearchProvider)
+                    : '';
     final projects = ref.watch(projectsProvider);
     final hiddenMode = ref.watch(showHiddenProjectsProvider);
     final hiddenNotifier = ref.read(showHiddenProjectsProvider.notifier);
@@ -660,7 +677,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                       ? AppLocalizations.of(context)!.searchProjects
                                       : _tabController.index == 1
                                           ? AppLocalizations.of(context)!.searchReleases
-                                          : AppLocalizations.of(context)!.statsSearchProjects,
+                                          : _tabController.index == 3
+                                              ? AppLocalizations.of(context)!.queueSearchHint
+                                              : AppLocalizations.of(context)!.statsSearchProjects,
                                   border: InputBorder.none,
                                   hintStyle: const TextStyle(color: Colors.white54),
                                 ),
@@ -680,7 +699,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                               ]
                             : [
                                 // Search icon (only on searchable tabs — not Playlists tab index 2)
-                                if (_tabController.index != 2)
+                                if (_tabController.index != 2)  // 2 = Playlists on mobile
                                   IconButton(
                                     icon: const Icon(Icons.search),
                                     onPressed: () => setState(() => _isSearchingMobile = true),
@@ -784,6 +803,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                             icon: const Icon(Icons.playlist_play),
                             selectedIcon: const Icon(Icons.playlist_play),
                             label: AppLocalizations.of(context)!.playlists,
+                          ),
+                          NavigationDestination(
+                            icon: const Icon(Icons.checklist_outlined),
+                            selectedIcon: const Icon(Icons.checklist),
+                            label: AppLocalizations.of(context)!.queueTab,
                           ),
                           NavigationDestination(
                             icon: const Icon(Icons.bar_chart_outlined),
@@ -1310,16 +1334,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                           ),
                       ],
                     ),
-                  // Bounded spacer: grows with window but capped so search stays close
-                  Flexible(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 80),
-                      child: const SizedBox(width: double.infinity),
-                    ),
-                  ),
+                  const SizedBox(width: 16),
                   // Search bar (desktop only — hidden on Playlists tab)
                   if (!MobileUtils.isMobile() && (_tabController.index != 2 || !MobileUtils.isMobile()))
-                  Row(
+                  Expanded(
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         ClipRect(
@@ -1344,7 +1363,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                     ? AppLocalizations.of(context)!.searchProjects
                                     : _tabController.index == 1
                                         ? AppLocalizations.of(context)!.searchReleases
-                                        : AppLocalizations.of(context)!.statsSearchProjects,
+                                        : _tabController.index == 2  // Queue on desktop
+                                            ? AppLocalizations.of(context)!.queueSearchHint
+                                            : AppLocalizations.of(context)!.statsSearchProjects,
                                 isDense: true,
                                 border: const OutlineInputBorder(),
                                 prefixIcon: const Icon(Icons.search),
@@ -1358,6 +1379,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                   ref.read(projectsSearchProvider.notifier).setSearchText(text);
                                 } else if (_tabController.index == 1) {
                                   ref.read(releasesSearchProvider.notifier).setSearchText(text);
+                                } else if (_tabController.index == 2) {  // Queue on desktop
+                                  ref.read(queueSearchProvider.notifier).set(text);
                                 } else {
                                   ref.read(statisticsSearchProvider.notifier).set(text);
                                 }
@@ -1376,6 +1399,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                         const SizedBox(width: 4),
                       ],
                     ),
+                  ),
                 ],
               ),
             );
@@ -1393,6 +1417,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                     Tab(icon: Icon(Icons.album), text: AppLocalizations.of(context)!.releasesTab),
                     if (MobileUtils.isMobile())
                       Tab(icon: Icon(Icons.playlist_play), text: AppLocalizations.of(context)!.playlists),
+                    Tab(icon: Icon(Icons.checklist), text: AppLocalizations.of(context)!.queueTab),
                     Tab(icon: Icon(Icons.bar_chart_rounded), text: AppLocalizations.of(context)!.statisticsTab),
                   ],
                   labelColor: Theme.of(context).textTheme.titleMedium?.color,
@@ -1443,6 +1468,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                         ),
                   const ReleasesTabPage(),
                   if (MobileUtils.isMobile()) const PlaylistsPage(),
+                  const QueuePage(),
                   const StatisticsPage(),
                 ],
               ),
@@ -1973,13 +1999,23 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
                       },
                     ),
                     const SizedBox(width: 8),
-                    ElevatedButton.icon(
+                    Builder(builder: (context) {
+                      final anyFileFound = widget.projects
+                          .where((p) => _selectedProjectIds.contains(p.id))
+                          .any((p) =>
+                              File(p.filePath).existsSync() ||
+                              Directory(p.filePath).existsSync());
+                      return Tooltip(
+                        message: anyFileFound
+                            ? ''
+                            : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
+                        child: ElevatedButton.icon(
                       icon: const Icon(Icons.search),
                       label: Text(AppLocalizations.of(context)!.extractMetadata),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Theme.of(context).colorScheme.primary,
                       ),
-                      onPressed: widget.isAnyOperation
+                      onPressed: widget.isAnyOperation || !anyFileFound
                           ? null
                           : () async {
                                 widget.onExtractingMetadataChanged(true);
@@ -2011,7 +2047,9 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
                                 widget.onExtractingMetadataChanged(false);
                                 _clearSelection();
                               },
-                    ),
+                        ),
+                      );
+                    }),
                     const SizedBox(width: 8),
                     ElevatedButton.icon(
                       icon: const Icon(Icons.edit),
@@ -2242,9 +2280,9 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       
       // On desktop, automatically open project details for context
       // This helps users return to the app with the project context loaded
-      if (mounted && !MobileUtils.isMobile()) {
-        await _viewProjectDetails(project);
-      }
+      // if (mounted && !MobileUtils.isMobile()) {
+      //   await _viewProjectDetails(project);
+      // }
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -2931,7 +2969,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               // Play Preview Song button (always show, but disabled if no preview)
               IconButton(
                 icon: const Icon(Icons.play_arrow),
-                iconSize: 20,
+                iconSize: 24,
                 padding: const EdgeInsets.all(4),
                 constraints: const BoxConstraints(),
                 tooltip: project.previewSongPath != null && project.previewSongPath!.isNotEmpty
@@ -2957,7 +2995,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                 message: sourceFileExists || MobileUtils.isMobile() ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
                 child: IconButton(
                   icon: const Icon(Icons.open_in_new),
-                  iconSize: 20,
+                  iconSize: 24,
                   padding: const EdgeInsets.all(4),
                   constraints: const BoxConstraints(),
                   tooltip: sourceFileExists ? '${AppLocalizations.of(context)!.tooltipLaunchInDaw} (O)' : null,
@@ -2975,7 +3013,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               // View button
               IconButton(
                 icon: const Icon(Icons.assignment),
-                iconSize: 20,
+                iconSize: 24,
                 padding: const EdgeInsets.all(4),
                 constraints: const BoxConstraints(),
                 tooltip: '${AppLocalizations.of(context)!.tooltipViewDetails} (D)',
@@ -2986,7 +3024,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                 message: sourceFileExists || MobileUtils.isMobile() ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
                 child: IconButton(
                   icon: const Icon(Icons.folder_open),
-                  iconSize: 20,
+                  iconSize: 24,
                   padding: const EdgeInsets.all(4),
                   constraints: const BoxConstraints(),
                   tooltip: sourceFileExists ? '${AppLocalizations.of(context)!.openFolder} (F)' : null,
@@ -3004,7 +3042,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               // Hidden button
               IconButton(
                 icon: Icon(project.hidden ? Icons.visibility : Icons.visibility_off),
-                iconSize: 20,
+                iconSize: 24,
                 padding: const EdgeInsets.all(4),
                 constraints: const BoxConstraints(),
                 color: project.hidden ? Colors.green.shade300 : Colors.red.shade300,
@@ -3135,7 +3173,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       configuration: TrinaGridConfiguration(
         style: TrinaGridStyleConfig(
           gridBackgroundColor: Theme.of(context).cardColor,
-          gridBorderColor: Theme.of(context).dividerColor,
+          gridBorderColor: Theme.of(context).dividerColor.withValues(alpha: 0.4),
           gridBorderRadius: BorderRadius.zero,
           rowColor: Theme.of(context).cardColor,
           cellColorInEditState: Theme.of(context).cardColor,

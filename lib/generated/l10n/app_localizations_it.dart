@@ -2212,4 +2212,25 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get noProjectsFoundHint =>
       'Aggiungi una cartella radice nelle impostazioni per iniziare.';
+
+  @override
+  String get queueTab => 'Attività';
+
+  @override
+  String get queueSearchHint => 'Cerca attività...';
+
+  @override
+  String get queueNoPendingTasks => 'Tutto in ordine!';
+
+  @override
+  String get queueNoPendingTasksHint =>
+      'Nessuna attività in sospeso nei tuoi progetti.';
+
+  @override
+  String get queueNoMatchingTasks => 'Nessuna attività corrispondente';
+
+  @override
+  String queuePendingSummary(int tasks, int projects) {
+    return '$tasks attività in sospeso in $projects progetti';
+  }
 }
