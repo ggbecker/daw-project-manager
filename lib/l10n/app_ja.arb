@@ -1220,6 +1220,10 @@
   "@sourceFileNotFoundOnThisMachine": {
     "description": "Tooltip shown when the project source file does not exist on the current machine"
   },
+  "sourceFileNotFoundMetadataOnly": "このマシンにソースファイルが見つかりません — メタデータのみモード。メタデータの編集とエクスポートは引き続き可能です。",
+  "@sourceFileNotFoundMetadataOnly": {
+    "description": "Banner shown in project detail when the source file is missing; user can still edit metadata"
+  },
   "previewSongNotAvailableDownloadFirst": "プレビュー曲が利用できません。先にバックアップをダウンロードしてください。",
   "@previewSongNotAvailableDownloadFirst": {
     "description": "Message shown when preview song is not available locally and needs to be downloaded"

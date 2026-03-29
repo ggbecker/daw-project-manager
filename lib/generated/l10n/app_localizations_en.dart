@@ -1815,6 +1815,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Source file not found on this machine';
 
   @override
+  String get sourceFileNotFoundMetadataOnly =>
+      'Source file not found on this machine — metadata-only mode. You can still edit and export metadata.';
+
+  @override
   String get previewSongNotAvailableDownloadFirst =>
       'Preview song not available. Please download backup first.';
 

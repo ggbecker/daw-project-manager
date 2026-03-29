@@ -337,6 +337,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
       builder: (context, ref, child) {
         // Re-read the project from the stream to get the latest value
         final currentProjectsAsync = ref.watch(allProjectsStreamProvider);
+        final dateFormat = ref.watch(dateFormatProvider);
         final currentProjects = currentProjectsAsync.value ?? [project];
         final currentProject = currentProjects.firstWhere(
           (p) => p.id == widget.projectId,
@@ -443,11 +444,10 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                           children: [
                             Icon(Icons.cloud_off, size: 16, color: Colors.orange.shade400),
                             const SizedBox(width: 8),
-                            const Expanded(
+                            Expanded(
                               child: Text(
-                                'Source file not found on this machine — metadata-only mode. '
-                                'You can still edit and export metadata.',
-                                style: TextStyle(fontSize: 12),
+                                AppLocalizations.of(context)!.sourceFileNotFoundMetadataOnly,
+                                style: const TextStyle(fontSize: 12),
                               ),
                             ),
                           ],
@@ -475,7 +475,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                     if (isMobile) const SizedBox(height: 8),
                     Text(
                       AppLocalizations.of(context)!.lastModified(
-                        DateFormat('MMM dd, yyyy HH:mm').format(updatedProject.lastModifiedAt),
+                        dateFormat.format(updatedProject.lastModifiedAt),
                       ),
                     ),
                     const SizedBox(height: 8),

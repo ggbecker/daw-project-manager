@@ -1776,6 +1776,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get sourceFileNotFoundOnThisMachine => 'このマシンにソースファイルが見つかりません';
 
   @override
+  String get sourceFileNotFoundMetadataOnly =>
+      'このマシンにソースファイルが見つかりません — メタデータのみモード。メタデータの編集とエクスポートは引き続き可能です。';
+
+  @override
   String get previewSongNotAvailableDownloadFirst =>
       'プレビュー曲が利用できません。先にバックアップをダウンロードしてください。';
 

@@ -1835,6 +1835,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Fichier source introuvable sur cette machine';
 
   @override
+  String get sourceFileNotFoundMetadataOnly =>
+      'Fichier source introuvable sur cette machine — mode métadonnées uniquement. Vous pouvez toujours modifier et exporter les métadonnées.';
+
+  @override
   String get previewSongNotAvailableDownloadFirst =>
       'Chanson d\'aperçu non disponible. Veuillez d\'abord télécharger la sauvegarde.';
 

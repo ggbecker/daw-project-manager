@@ -1250,6 +1250,10 @@
   "@sourceFileNotFoundOnThisMachine": {
     "description": "Tooltip shown when the project source file does not exist on the current machine"
   },
+  "sourceFileNotFoundMetadataOnly": "Arquivo fonte não encontrado nesta máquina — modo somente metadados. Você ainda pode editar e exportar metadados.",
+  "@sourceFileNotFoundMetadataOnly": {
+    "description": "Banner shown in project detail when the source file is missing; user can still edit metadata"
+  },
   "previewSongNotAvailableDownloadFirst": "Música de prévia não disponível. Por favor, baixe o backup primeiro.",
   "@previewSongNotAvailableDownloadFirst": {
     "description": "Message shown when preview song is not available locally and needs to be downloaded"
@@ -1267,7 +1271,7 @@
     "description": "Label for the share button"
   },
   "shareZip": "Compartilhar ZIP",
-  "saveCopy": "Guardar cópia",
+  "saveCopy": "Baixar cópia",
   "@saveCopy": {
     "description": "Desktop save a copy: saveCopy"
   },

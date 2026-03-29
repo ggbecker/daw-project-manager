@@ -1815,6 +1815,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Arquivo fonte não encontrado nesta máquina';
 
   @override
+  String get sourceFileNotFoundMetadataOnly =>
+      'Arquivo fonte não encontrado nesta máquina — modo somente metadados. Você ainda pode editar e exportar metadados.';
+
+  @override
   String get previewSongNotAvailableDownloadFirst =>
       'Música de prévia não disponível. Por favor, baixe o backup primeiro.';
 
@@ -1831,7 +1835,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get shareZip => 'Compartilhar ZIP';
 
   @override
-  String get saveCopy => 'Guardar cópia';
+  String get saveCopy => 'Baixar cópia';
 
   @override
   String savedCopyTo(String path) {

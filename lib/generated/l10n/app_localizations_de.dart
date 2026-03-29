@@ -1829,6 +1829,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Quelldatei nicht auf diesem Gerät gefunden';
 
   @override
+  String get sourceFileNotFoundMetadataOnly =>
+      'Quelldatei nicht auf diesem Gerät gefunden — nur Metadaten-Modus. Sie können Metadaten weiterhin bearbeiten und exportieren.';
+
+  @override
   String get previewSongNotAvailableDownloadFirst =>
       'Vorschaulied nicht verfügbar. Bitte zuerst Backup herunterladen.';
 

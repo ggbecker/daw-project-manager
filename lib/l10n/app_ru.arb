@@ -1220,6 +1220,10 @@
   "@sourceFileNotFoundOnThisMachine": {
     "description": "Tooltip shown when the project source file does not exist on the current machine"
   },
+  "sourceFileNotFoundMetadataOnly": "Исходный файл не найден на этом устройстве — режим только метаданных. Вы всё равно можете редактировать и экспортировать метаданные.",
+  "@sourceFileNotFoundMetadataOnly": {
+    "description": "Banner shown in project detail when the source file is missing; user can still edit metadata"
+  },
   "previewSongNotAvailableDownloadFirst": "Превью недоступно. Пожалуйста, сначала загрузите резервную копию.",
   "@previewSongNotAvailableDownloadFirst": {
     "description": "Message shown when preview song is not available locally and needs to be downloaded"

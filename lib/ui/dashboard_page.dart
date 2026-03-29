@@ -4469,7 +4469,7 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                         children: [
                           Expanded(
                             child: Text(
-                              'Modified: ${DateFormat('MMM dd, yyyy').format(project.lastModifiedAt)}',
+                              'Modified: ${widget.dateFormat.format(project.lastModifiedAt)}',
                               style: TextStyle(
                                 color: Theme.of(context).textTheme.bodySmall?.color,
                                 fontSize: 11,

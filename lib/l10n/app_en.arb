@@ -2024,6 +2024,10 @@
   "@sourceFileNotFoundOnThisMachine": {
     "description": "Tooltip shown when the project source file does not exist on the current machine"
   },
+  "sourceFileNotFoundMetadataOnly": "Source file not found on this machine — metadata-only mode. You can still edit and export metadata.",
+  "@sourceFileNotFoundMetadataOnly": {
+    "description": "Banner shown in project detail when the source file is missing; user can still edit metadata"
+  },
   "previewSongNotAvailableDownloadFirst": "Preview song not available. Please download backup first.",
   "@previewSongNotAvailableDownloadFirst": {
     "description": "Message shown when preview song is not available locally and needs to be downloaded"

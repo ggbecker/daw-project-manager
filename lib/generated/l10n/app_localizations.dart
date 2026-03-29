@@ -3068,6 +3068,12 @@ abstract class AppLocalizations {
   /// **'Source file not found on this machine'**
   String get sourceFileNotFoundOnThisMachine;
 
+  /// Banner shown in project detail when the source file is missing; user can still edit metadata
+  ///
+  /// In en, this message translates to:
+  /// **'Source file not found on this machine — metadata-only mode. You can still edit and export metadata.'**
+  String get sourceFileNotFoundMetadataOnly;
+
   /// Message shown when preview song is not available locally and needs to be downloaded
   ///
   /// In en, this message translates to:
