@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as p;
 import '../models/music_project.dart';
@@ -193,8 +194,9 @@ class BackupService {
       }
       
       // Import data into target repository
+      // Use restoreProject to preserve the original lastModifiedAt from the backup
       for (final project in importedProjects) {
-        await targetRepo.updateProject(project);
+        await targetRepo.restoreProject(project);
       }
       for (final root in importedRoots) {
         // Check if root already exists (only in merge mode)
@@ -258,7 +260,15 @@ class BackupService {
     }
   }
 
-  // JSON serialization helpers
+  // JSON serialization helpers — exposed for testing via the public wrappers below.
+  @visibleForTesting
+  static Map<String, dynamic> projectToJson(MusicProject project) =>
+      _projectToJson(project);
+
+  @visibleForTesting
+  static MusicProject projectFromJson(Map<String, dynamic> json) =>
+      _projectFromJson(json);
+
   static Map<String, dynamic> _projectToJson(MusicProject project) {
     return {
       'id': project.id,

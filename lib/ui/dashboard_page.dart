@@ -4168,6 +4168,16 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
   _MobileSortField _sortField = _MobileSortField.lastModified;
 
   List<MusicProject> _sorted(List<MusicProject> projects) {
+    // DEBUG: log date fields for all projects
+    for (final p in projects) {
+      debugPrint(
+        '[DEBUG DATE] "${p.displayName}" | '
+        'lastModifiedAt=${p.lastModifiedAt.toIso8601String()} | '
+        'fileCreatedAt=${p.fileCreatedAt?.toIso8601String() ?? "null"} | '
+        'createdAt=${p.createdAt.toIso8601String()} | '
+        'same=${p.fileCreatedAt == p.lastModifiedAt}',
+      );
+    }
     final list = List<MusicProject>.from(projects);
     switch (_sortField) {
       case _MobileSortField.lastModified:
