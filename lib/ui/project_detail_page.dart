@@ -150,7 +150,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
       final weeks = diff.inDays ~/ 7;
       return l10n.dateWeeksAgo(weeks);
     } else if (diff.inDays < 365) {
-      final months = diff.inDays ~/ 7;
+      final months = diff.inDays ~/ 30;
       return l10n.dateMonthsAgo(months);
     } else {
       final years = diff.inDays ~/ 365;
@@ -475,7 +475,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                     if (isMobile) const SizedBox(height: 8),
                     Text(
                       AppLocalizations.of(context)!.lastModified(
-updatedProject.lastModifiedAt.toString(),
+                        DateFormat('MMM dd, yyyy HH:mm').format(updatedProject.lastModifiedAt),
                       ),
                     ),
                     const SizedBox(height: 8),

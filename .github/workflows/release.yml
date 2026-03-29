@@ -21,9 +21,37 @@ env:
 
 # 2. Jobs
 jobs:
+  # Unit Tests — runs on PRs, push to main, and tag releases
+  unit_tests:
+    name: Unit Tests
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter ${{ env.FLUTTER_BASE_VERSION }} (Stable)
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_BASE_VERSION }}
+          channel: 'stable'
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Generate Hive Adapters
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Generate Localizations
+        run: flutter gen-l10n
+
+      - name: Run unit tests
+        run: flutter test test/models/ test/services/ test/repository/
+
   # Job de Teste de Integração (para Pull Requests)
   test_pr_build:
     name: Test PR Build (Windows)
+    needs: unit_tests
     if: github.event_name == 'pull_request'
     runs-on: windows-latest
 
@@ -72,6 +100,7 @@ jobs:
   # Job UNIFICADO de Release/Upload (usando Matrix para Windows e macOS)
   release_build_upload:
     name: Build & Upload (${{ matrix.os_name }})
+    needs: unit_tests
     if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'pull_request'
     runs-on: ${{ matrix.os }}
     
@@ -462,6 +491,7 @@ jobs:
   # Android Build Job (for both PRs and Releases)
   build-android:
     name: Build Android (${{ github.event_name == 'pull_request' && 'PR Test' || 'Release' }})
+    needs: unit_tests
     if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     

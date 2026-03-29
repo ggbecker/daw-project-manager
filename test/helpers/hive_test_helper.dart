@@ -1,0 +1,77 @@
+import 'dart:io';
+import 'package:hive_ce/hive.dart';
+import 'package:daw_project_manager/models/ignored_path.dart';
+import 'package:daw_project_manager/models/music_project.dart';
+import 'package:daw_project_manager/models/playlist.dart';
+import 'package:daw_project_manager/models/project_event.dart';
+import 'package:daw_project_manager/models/release.dart';
+import 'package:daw_project_manager/models/release_file.dart';
+import 'package:daw_project_manager/models/scan_root.dart';
+import 'package:daw_project_manager/models/todo_item.dart';
+import 'package:daw_project_manager/models/todo_template.dart';
+import 'package:daw_project_manager/repository/project_repository.dart';
+
+/// Manages Hive lifecycle for unit tests.
+///
+/// Usage:
+/// ```dart
+/// late Directory tempDir;
+/// late ProjectRepository repo;
+///
+/// setUp(() async {
+///   tempDir = await HiveTestHelper.setUp();
+///   repo = await HiveTestHelper.createRepository();
+/// });
+///
+/// tearDown(() async {
+///   await HiveTestHelper.tearDown(tempDir);
+/// });
+/// ```
+class HiveTestHelper {
+  static Future<Directory> setUp() async {
+    final tempDir = await Directory.systemTemp.createTemp('hive_test_');
+    Hive.init(tempDir.path);
+    _registerAdapters();
+    return tempDir;
+  }
+
+  static Future<void> tearDown(Directory tempDir) async {
+    await Hive.close();
+    if (await tempDir.exists()) {
+      await tempDir.delete(recursive: true);
+    }
+  }
+
+  static void _registerAdapters() {
+    if (!Hive.isAdapterRegistered(1)) Hive.registerAdapter(MusicProjectAdapter());
+    if (!Hive.isAdapterRegistered(2)) Hive.registerAdapter(ScanRootAdapter());
+    if (!Hive.isAdapterRegistered(3)) Hive.registerAdapter(ReleaseAdapter());
+    if (!Hive.isAdapterRegistered(4)) Hive.registerAdapter(ReleaseFileAdapter());
+    if (!Hive.isAdapterRegistered(6)) Hive.registerAdapter(TodoItemAdapter());
+    if (!Hive.isAdapterRegistered(7)) Hive.registerAdapter(IgnoredPathAdapter());
+    if (!Hive.isAdapterRegistered(8)) Hive.registerAdapter(PlaylistAdapter());
+    if (!Hive.isAdapterRegistered(9)) Hive.registerAdapter(TodoTemplateAdapter());
+    if (!Hive.isAdapterRegistered(11)) Hive.registerAdapter(ProjectEventAdapter());
+  }
+
+  static Future<ProjectRepository> createRepository({
+    String profileId = 'test-profile',
+  }) async {
+    final projectsBox = await Hive.openBox<MusicProject>('${profileId}_projects');
+    final rootsBox = await Hive.openBox<ScanRoot>('${profileId}_roots');
+    final ignoredPathsBox = await Hive.openBox<IgnoredPath>('${profileId}_ignored_paths');
+    final releasesBox = await Hive.openBox<Release>('${profileId}_releases');
+    final playlistsBox = await Hive.openBox<Playlist>('${profileId}_playlists');
+    final eventsBox = await Hive.openBox<ProjectEvent>('${profileId}_events');
+
+    return ProjectRepository(
+      profileId: profileId,
+      projectsBox: projectsBox,
+      rootsBox: rootsBox,
+      ignoredPathsBox: ignoredPathsBox,
+      releasesBox: releasesBox,
+      playlistsBox: playlistsBox,
+      eventsBox: eventsBox,
+    );
+  }
+}

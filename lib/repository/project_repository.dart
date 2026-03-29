@@ -249,6 +249,8 @@ class ProjectRepository {
   }
 
   // Projects
+  MusicProject? getById(String id) => projectsBox.get(id);
+
   MusicProject? getByPath(String path) {
     try {
       return projectsBox.values.firstWhere((p) => p.filePath == path);
@@ -378,6 +380,12 @@ class ProjectRepository {
         if (kDebugMode) print('Error rescheduling notifications: $e');
       }
     }
+  }
+
+  /// Saves a project exactly as-is, preserving all dates.
+  /// Use this for backup/sync restore, NOT for user-initiated edits.
+  Future<void> restoreProject(MusicProject project) async {
+    await projectsBox.put(project.id, project);
   }
 
   /// Extracts full metadata for a single project and updates it
