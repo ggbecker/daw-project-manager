@@ -717,6 +717,14 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                     },
                                     tooltip: AppLocalizations.of(context)!.notificationSettings,
                                   ),
+                                // Google Drive sync
+                                IconButton(
+                                  icon: const Icon(Icons.cloud_outlined),
+                                  tooltip: AppLocalizations.of(context)!.syncWithGoogleDrive,
+                                  onPressed: () => Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (_) => const GoogleDriveSyncPage()),
+                                  ),
+                                ),
                                 // Profile button
                                 Consumer(
                                   builder: (context, ref, child) {
@@ -1334,7 +1342,19 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                           ),
                       ],
                     ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 8),
+                  // Google Drive sync
+                  if (!MobileUtils.isMobile())
+                    Tooltip(
+                      message: AppLocalizations.of(context)!.syncWithGoogleDrive,
+                      child: IconButton(
+                        icon: const Icon(Icons.cloud_outlined),
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const GoogleDriveSyncPage()),
+                        ),
+                      ),
+                    ),
+                  const SizedBox(width: 8),
                   // Search bar (desktop only — hidden on Playlists tab)
                   if (!MobileUtils.isMobile() && (_tabController.index != 2 || !MobileUtils.isMobile()))
                   Expanded(
