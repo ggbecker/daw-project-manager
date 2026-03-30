@@ -763,18 +763,7 @@ class ShowOnlyWithDeadlineNotifier extends Notifier<bool> {
 
 // Provider for GoogleDriveSyncService (singleton instance)
 final googleDriveSyncServiceProvider = Provider<GoogleDriveSyncService>((ref) {
-  // Note: service.dispose() is intentionally NOT called on provider dispose.
-  // dispose() closes _authStateController which would break googleDriveAuthStateProvider
-  // if the provider is re-created (e.g. after backup import triggers repository re-init).
   return GoogleDriveSyncService();
-});
-
-// Reactive auth state — emits whenever the user signs in or out.
-// Widgets can watch this instead of polling, so they update the moment
-// lightweight authentication completes (no fixed-delay race condition).
-final googleDriveAuthStateProvider = StreamProvider<bool>((ref) {
-  final service = ref.watch(googleDriveSyncServiceProvider);
-  return service.authStateStream;
 });
 
 // Playlists Provider

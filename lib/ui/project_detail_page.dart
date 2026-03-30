@@ -2179,82 +2179,38 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                           }
                           return KeyEventResult.ignored;
                         },
-                        child: Row(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            IconButton(
-                              icon: const Icon(Icons.replay_5),
-                              tooltip: '← −5s  •  Ctrl+← −30s',
-                              onPressed: () => _seek(-5),
-                            ),
-                            IconButton(
-                              icon: Icon(
-                                _isPlaying ? Icons.pause : Icons.play_arrow,
-                              ),
-                              onPressed: () {
-                                _focusNode.requestFocus();
-                                _togglePlayPause();
-                              },
-                              iconSize: 32,
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.stop),
-                              onPressed: _isPlaying || _position > Duration.zero
-                                  ? _stop
-                                  : null,
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.forward_5),
-                              tooltip: '→ +5s  •  Ctrl+→ +30s',
-                              onPressed: () => _seek(5),
-                            ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Column(
-                                    children: [
-                                      Slider(
-                                        value: _duration.inMilliseconds > 0
-                                            ? _position.inMilliseconds.toDouble()
-                                            : 0.0,
-                                        max: _duration.inMilliseconds > 0
-                                            ? _duration.inMilliseconds.toDouble()
-                                            : 100.0,
-                                        onChanged: (value) async {
-                                          final position = Duration(
-                                            milliseconds: value.toInt(),
-                                          );
-                                          await _audioPlayer.seek(position);
-                                        },
-                                      ),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            _formatDuration(_position),
-                                            style: TextStyle(
-                                              color: Theme.of(
-                                                context,
-                                              ).textTheme.bodySmall?.color,
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                          if (_isWavFile())
-                                            _LevelMeter(lufsDb: _currentLufs),
-                                          Text(
-                                            _formatDuration(_duration),
-                                            style: TextStyle(
-                                              color: Theme.of(
-                                                context,
-                                              ).textTheme.bodySmall?.color,
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
+                            // Transport + volume row
+                            Row(
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.replay_5),
+                                  tooltip: '← −5s  •  Ctrl+← −30s',
+                                  onPressed: () => _seek(-5),
                                 ),
-                                // Volume control
+                                IconButton(
+                                  icon: Icon(
+                                    _isPlaying ? Icons.pause : Icons.play_arrow,
+                                  ),
+                                  onPressed: () {
+                                    _focusNode.requestFocus();
+                                    _togglePlayPause();
+                                  },
+                                  iconSize: 32,
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.stop),
+                                  onPressed: _isPlaying || _position > Duration.zero
+                                      ? _stop
+                                      : null,
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.forward_5),
+                                  tooltip: '→ +5s  •  Ctrl+→ +30s',
+                                  onPressed: () => _seek(5),
+                                ),
                                 const SizedBox(width: 8),
                                 Icon(
                                   _volume == 0 ? Icons.volume_off : (_volume < 0.5 ? Icons.volume_down : Icons.volume_up),
@@ -2268,16 +2224,61 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                                     min: 0.0,
                                     max: 1.0,
                                     onChanged: (value) async {
-                                      setState(() {
-                                        _volume = value;
-                                      });
+                                      setState(() { _volume = value; });
                                       await _audioPlayer.setVolume(value);
                                     },
                                   ),
                                 ),
                               ],
                             ),
-                          ),
+                            // Seek bar on its own line
+                            SliderTheme(
+                              data: SliderTheme.of(context).copyWith(
+                                activeTrackColor: Theme.of(context).colorScheme.primary,
+                                thumbColor: Theme.of(context).colorScheme.primary,
+                                inactiveTrackColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.25),
+                                overlayColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+                                trackHeight: 3.0,
+                              ),
+                              child: Slider(
+                                value: _duration.inMilliseconds > 0
+                                    ? _position.inMilliseconds.toDouble()
+                                    : 0.0,
+                                max: _duration.inMilliseconds > 0
+                                    ? _duration.inMilliseconds.toDouble()
+                                    : 100.0,
+                                onChanged: (value) async {
+                                  final position = Duration(
+                                    milliseconds: value.toInt(),
+                                  );
+                                  await _audioPlayer.seek(position);
+                                },
+                              ),
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  _formatDuration(_position),
+                                  style: TextStyle(
+                                    color: Theme.of(context).textTheme.bodySmall?.color,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                if (_isWavFile())
+                                  _LevelMeter(lufsDb: _currentLufs),
+                                Text(
+                                  _formatDuration(_duration),
+                                  style: TextStyle(
+                                    color: Theme.of(context).textTheme.bodySmall?.color,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
                       // Mono toggle + Analyze (any audio file)
                       if (_hasAudioFile()) ...[
                         const SizedBox(height: 8),

@@ -56,12 +56,6 @@ class GoogleDriveSyncService {
   // Stream controller for backup progress
   final _progressController = StreamController<BackupProgress>.broadcast();
   Stream<BackupProgress> get progressStream => _progressController.stream;
-
-  // Stream controller for auth state — emits true/false whenever sign-in state changes.
-  // The UI subscribes to this so it updates the moment lightweight auth completes,
-  // instead of relying on a fixed delay.
-  final _authStateController = StreamController<bool>.broadcast();
-  Stream<bool> get authStateStream => _authStateController.stream;
   
   // Cancellation flag for backup uploads
   bool _isCancelled = false;
@@ -240,11 +234,6 @@ class GoogleDriveSyncService {
     } else {
       _driveApi = null;
     }
-
-    // Notify listeners of the new auth state
-    if (!_authStateController.isClosed) {
-      _authStateController.add(isSignedIn);
-    }
   }
 
   /// Handle authentication errors (following official example pattern)
@@ -259,9 +248,6 @@ class GoogleDriveSyncService {
     _currentUser = null;
     _isAuthenticated = false;
     _driveApi = null;
-    if (!_authStateController.isClosed) {
-      _authStateController.add(false);
-    }
   }
 
   /// Initialize Drive API with user's authorization
@@ -297,7 +283,6 @@ class GoogleDriveSyncService {
     _authEventsSubscription?.cancel();
     _authEventsSubscription = null;
     _progressController.close();
-    _authStateController.close();
   }
 
   /// Initialize credentials storage (call this before using the service)
@@ -923,8 +908,7 @@ class GoogleDriveSyncService {
       }
       _driveApi = null;
       _appDataFolderId = null;
-      if (!_authStateController.isClosed) _authStateController.add(false);
-
+      
       if (kDebugMode) print('✓ Signed out successfully');
     } catch (e) {
       if (kDebugMode) print('Error signing out: $e');
@@ -1095,7 +1079,6 @@ class GoogleDriveSyncService {
       }
       
       if (kDebugMode) print('Desktop session restored successfully');
-      if (!_authStateController.isClosed) _authStateController.add(true);
       return true;
     } catch (e, stackTrace) {
       if (kDebugMode) {
