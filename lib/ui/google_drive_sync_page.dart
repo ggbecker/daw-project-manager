@@ -14,15 +14,21 @@ import '../utils/mobile_utils.dart';
 import '../generated/l10n/app_localizations.dart';
 import 'google_drive_sync_page_download_dialog.dart';
 
+/// Optional action to auto-trigger when the page opens and the user is already authenticated.
+enum DriveAutoAction { none, upload, download }
+
 class GoogleDriveSyncPage extends ConsumerStatefulWidget {
-  const GoogleDriveSyncPage({super.key});
+  final DriveAutoAction autoAction;
+  const GoogleDriveSyncPage({super.key, this.autoAction = DriveAutoAction.none});
 
   @override
   ConsumerState<GoogleDriveSyncPage> createState() => _GoogleDriveSyncPageState();
 }
 
 class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
-  final GoogleDriveSyncService _syncService = GoogleDriveSyncService();
+  // Use the Riverpod singleton so auth events are shared with the dashboard
+  GoogleDriveSyncService get _syncService => ref.read(googleDriveSyncServiceProvider);
+
   bool _isSyncing = false;
   String? _syncStatus;
   DateTime? _lastSyncTime;
@@ -33,20 +39,45 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
   DateTime? _remoteBackupTime;
   DateTime? _lastDownloadTime;
   DateTime? _lastUploadTime;
+  bool _autoActionTriggered = false;
 
   @override
   void initState() {
     super.initState();
-    // Only check session status once when page is first created
-    // The session state persists for the entire app session
     _checkSessionStatusOnce();
     _loadSyncStatus();
+    // Subscribe to auth state stream so the UI updates the moment lightweight
+    // authentication completes — no fixed-delay race condition.
+    _syncService.authStateStream.listen((signedIn) {
+      if (!mounted) return;
+      setState(() {
+        _isSignedIn = signedIn;
+        _isCheckingSession = false;
+        _syncStatus = signedIn ? AppLocalizations.of(context)!.sessionActive : null;
+      });
+      if (signedIn) _maybeRunAutoAction();
+    });
   }
 
   @override
   void dispose() {
-    _syncService.dispose();
+    // Do NOT call _syncService.dispose() — the service is owned by the Riverpod provider
     super.dispose();
+  }
+
+  /// Triggers the autoAction once the user is confirmed as signed in.
+  void _maybeRunAutoAction() {
+    if (_autoActionTriggered) return;
+    if (widget.autoAction == DriveAutoAction.none) return;
+    _autoActionTriggered = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (widget.autoAction == DriveAutoAction.upload) {
+        _uploadBackupToDrive();
+      } else if (widget.autoAction == DriveAutoAction.download) {
+        _downloadBackupFromDrive();
+      }
+    });
   }
 
   /// Check session status once when page is created
@@ -77,12 +108,9 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
             setState(() {
               _isSignedIn = restored;
               _isCheckingSession = false;
-              if (restored) {
-                _syncStatus = AppLocalizations.of(context)!.sessionActive;
-              } else {
-                _syncStatus = null;
-              }
+              _syncStatus = restored ? AppLocalizations.of(context)!.sessionActive : null;
             });
+            if (restored) _maybeRunAutoAction();
           }
           return; // Exit early if we restored (or failed to restore) on desktop
         } catch (e) {
@@ -103,26 +131,9 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
         setState(() {
           _isSignedIn = isSignedIn;
           _isCheckingSession = false;
-          if (isSignedIn) {
-            _syncStatus = AppLocalizations.of(context)!.signedIn;
-            // Try to restore session silently
-            _syncService.restoreSession().then((restored) {
-              if (mounted) {
-                setState(() {
-                  if (restored) {
-                    _syncStatus = AppLocalizations.of(context)!.sessionActive;
-                  } else {
-                    _syncStatus = AppLocalizations.of(context)!.signedIn;
-                  }
-                });
-              }
-            }).catchError((e) {
-              if (kDebugMode) print('Error restoring session: $e');
-            });
-          } else {
-            _syncStatus = null;
-          }
+          _syncStatus = isSignedIn ? AppLocalizations.of(context)!.signedIn : null;
         });
+        if (isSignedIn) _maybeRunAutoAction();
       }
     } catch (e) {
       if (kDebugMode) print('Error checking session status: $e');

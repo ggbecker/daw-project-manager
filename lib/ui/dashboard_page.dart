@@ -717,6 +717,33 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                     },
                                     tooltip: AppLocalizations.of(context)!.notificationSettings,
                                   ),
+                                // Drive upload / download quick-access
+                                Consumer(
+                                  builder: (context, ref, _) {
+                                    final authState = ref.watch(googleDriveAuthStateProvider);
+                                    final isSignedIn = authState.asData?.value ?? false;
+                                    void openSync(DriveAutoAction action) {
+                                      Navigator.of(context).push(MaterialPageRoute(
+                                        builder: (_) => GoogleDriveSyncPage(autoAction: isSignedIn ? action : DriveAutoAction.none),
+                                      ));
+                                    }
+                                    return Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          icon: const Icon(Icons.cloud_upload_outlined),
+                                          tooltip: AppLocalizations.of(context)!.uploadBackup,
+                                          onPressed: () => openSync(DriveAutoAction.upload),
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(Icons.cloud_download_outlined),
+                                          tooltip: AppLocalizations.of(context)!.downloadBackup,
+                                          onPressed: () => openSync(DriveAutoAction.download),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                ),
                                 // Profile button
                                 Consumer(
                                   builder: (context, ref, child) {
@@ -1333,6 +1360,39 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                             ),
                           ),
                       ],
+                    ),
+                  const SizedBox(width: 12),
+                  // Drive upload / download quick-access (desktop)
+                  if (!MobileUtils.isMobile())
+                    Consumer(
+                      builder: (context, ref, _) {
+                        final authState = ref.watch(googleDriveAuthStateProvider);
+                        final isSignedIn = authState.asData?.value ?? false;
+                        void openSync(DriveAutoAction action) {
+                          Navigator.of(context).push(MaterialPageRoute(
+                            builder: (_) => GoogleDriveSyncPage(autoAction: isSignedIn ? action : DriveAutoAction.none),
+                          ));
+                        }
+                        return Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Tooltip(
+                              message: AppLocalizations.of(context)!.uploadBackup,
+                              child: IconButton(
+                                icon: const Icon(Icons.cloud_upload_outlined),
+                                onPressed: () => openSync(DriveAutoAction.upload),
+                              ),
+                            ),
+                            Tooltip(
+                              message: AppLocalizations.of(context)!.downloadBackup,
+                              child: IconButton(
+                                icon: const Icon(Icons.cloud_download_outlined),
+                                onPressed: () => openSync(DriveAutoAction.download),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   const SizedBox(width: 16),
                   // Search bar (desktop only — hidden on Playlists tab)

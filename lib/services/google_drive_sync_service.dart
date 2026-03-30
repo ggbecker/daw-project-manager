@@ -56,6 +56,12 @@ class GoogleDriveSyncService {
   // Stream controller for backup progress
   final _progressController = StreamController<BackupProgress>.broadcast();
   Stream<BackupProgress> get progressStream => _progressController.stream;
+
+  // Stream controller for auth state — emits true/false whenever sign-in state changes.
+  // The UI subscribes to this so it updates the moment lightweight auth completes,
+  // instead of relying on a fixed delay.
+  final _authStateController = StreamController<bool>.broadcast();
+  Stream<bool> get authStateStream => _authStateController.stream;
   
   // Cancellation flag for backup uploads
   bool _isCancelled = false;
@@ -234,6 +240,11 @@ class GoogleDriveSyncService {
     } else {
       _driveApi = null;
     }
+
+    // Notify listeners of the new auth state
+    if (!_authStateController.isClosed) {
+      _authStateController.add(isSignedIn);
+    }
   }
 
   /// Handle authentication errors (following official example pattern)
@@ -248,6 +259,9 @@ class GoogleDriveSyncService {
     _currentUser = null;
     _isAuthenticated = false;
     _driveApi = null;
+    if (!_authStateController.isClosed) {
+      _authStateController.add(false);
+    }
   }
 
   /// Initialize Drive API with user's authorization
@@ -283,6 +297,7 @@ class GoogleDriveSyncService {
     _authEventsSubscription?.cancel();
     _authEventsSubscription = null;
     _progressController.close();
+    _authStateController.close();
   }
 
   /// Initialize credentials storage (call this before using the service)
@@ -908,7 +923,8 @@ class GoogleDriveSyncService {
       }
       _driveApi = null;
       _appDataFolderId = null;
-      
+      if (!_authStateController.isClosed) _authStateController.add(false);
+
       if (kDebugMode) print('✓ Signed out successfully');
     } catch (e) {
       if (kDebugMode) print('Error signing out: $e');
@@ -1079,6 +1095,7 @@ class GoogleDriveSyncService {
       }
       
       if (kDebugMode) print('Desktop session restored successfully');
+      if (!_authStateController.isClosed) _authStateController.add(true);
       return true;
     } catch (e, stackTrace) {
       if (kDebugMode) {
@@ -3141,9 +3158,14 @@ class GoogleDriveSyncService {
   /// Check if metadata fields changed (user-editable fields, not file system fields)
   /// Android only modifies metadata (todos, notes, bpm, key, status, etc.)
   /// We don't use updatedAt because it can change when file is modified on disk
+  @visibleForTesting
+  bool hasMetadataChangedForTesting(MusicProject remote, MusicProject local) =>
+      _hasMetadataChanged(remote, local);
+
   bool _hasMetadataChanged(MusicProject remote, MusicProject local) {
-    // Compare only metadata fields (what Android can modify)
-    // NOT file system fields (filePath, fileName, fileSizeBytes, lastModifiedAt, etc.)
+    // Compare metadata fields (user-editable) AND date fields from the DAW file.
+    // lastModifiedAt and fileCreatedAt come from the desktop filesystem via the backup
+    // and must be propagated to mobile — they are NOT derived from the Android filesystem.
     return remote.notes != local.notes ||
         !_todosEqual(remote.todos, local.todos) ||
         remote.bpm != local.bpm ||
@@ -3151,7 +3173,9 @@ class GoogleDriveSyncService {
         remote.status != local.status ||
         remote.customDisplayName != local.customDisplayName ||
         remote.hidden != local.hidden ||
-        remote.deadline != local.deadline;
+        remote.deadline != local.deadline ||
+        remote.lastModifiedAt != local.lastModifiedAt ||
+        remote.fileCreatedAt != local.fileCreatedAt;
   }
 
   /// Merge remote data with local data
@@ -3637,8 +3661,12 @@ class GoogleDriveSyncService {
                     uploadedPreviewSongHash: uploadedPreviewSongHash ?? remoteProject.uploadedPreviewSongHash,
                     // Use remote updatedAt so the UI shows the actual modification time, not download time
                     updatedAt: remoteProject.updatedAt,
-                    // Keep file system fields from local (file-based)
-                    // filePath, fileName, fileSizeBytes, lastModifiedAt, fileExtension stay from local
+                    // Use remote lastModifiedAt — this is the desktop DAW modification time from the backup,
+                    // which is the authoritative source for when the project was last worked on.
+                    lastModifiedAt: remoteProject.lastModifiedAt,
+                    fileCreatedAt: remoteProject.fileCreatedAt,
+                    // Keep other file system fields from local (file-based)
+                    // filePath, fileName, fileSizeBytes, fileExtension stay from local
                   );
                   
                   // Save the merged project
