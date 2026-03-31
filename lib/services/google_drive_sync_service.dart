@@ -3141,10 +3141,6 @@ class GoogleDriveSyncService {
   /// Check if metadata fields changed (user-editable fields, not file system fields)
   /// Android only modifies metadata (todos, notes, bpm, key, status, etc.)
   /// We don't use updatedAt because it can change when file is modified on disk
-  @visibleForTesting
-  bool hasMetadataChangedForTesting(MusicProject remote, MusicProject local) =>
-      _hasMetadataChanged(remote, local);
-
   bool _hasMetadataChanged(MusicProject remote, MusicProject local) {
     // Compare metadata fields (user-editable) AND date fields from the DAW file.
     // lastModifiedAt and fileCreatedAt come from the desktop filesystem via the backup
