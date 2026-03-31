@@ -717,6 +717,14 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                     },
                                     tooltip: AppLocalizations.of(context)!.notificationSettings,
                                   ),
+                                // Google Drive sync
+                                IconButton(
+                                  icon: const Icon(Icons.cloud_outlined),
+                                  tooltip: AppLocalizations.of(context)!.syncWithGoogleDrive,
+                                  onPressed: () => Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (_) => const GoogleDriveSyncPage()),
+                                  ),
+                                ),
                                 // Profile button
                                 Consumer(
                                   builder: (context, ref, child) {
@@ -1334,7 +1342,19 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                           ),
                       ],
                     ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 8),
+                  // Google Drive sync
+                  if (!MobileUtils.isMobile())
+                    Tooltip(
+                      message: AppLocalizations.of(context)!.syncWithGoogleDrive,
+                      child: IconButton(
+                        icon: const Icon(Icons.cloud_outlined),
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const GoogleDriveSyncPage()),
+                        ),
+                      ),
+                    ),
+                  const SizedBox(width: 8),
                   // Search bar (desktop only — hidden on Playlists tab)
                   if (!MobileUtils.isMobile() && (_tabController.index != 2 || !MobileUtils.isMobile()))
                   Expanded(
@@ -3604,7 +3624,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
           overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: 16),
-        // Playback controls (top row)
+        // Transport controls
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -3629,65 +3649,32 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
               onPressed: () => _seek(5),
               iconSize: 32,
             ),
-            const SizedBox(width: 16),
-            // Volume control
-            Icon(
-              _volume == 0 ? Icons.volume_off : (_volume < 0.5 ? Icons.volume_down : Icons.volume_up),
-              size: 24,
-              color: Theme.of(context).textTheme.bodySmall?.color,
-            ),
-            SizedBox(
-              width: 100,
-              child: Slider(
-                value: _volume,
-                min: 0.0,
-                max: 1.0,
-                onChanged: (value) async {
-                  setState(() {
-                    _volume = value;
-                  });
-                  await _audioPlayer.setVolume(value);
-                },
-              ),
-            ),
-            const SizedBox(width: 8),
-            _isGeneratingMono
-                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                : FilterChip(
-                    avatar: Icon(
-                      _isMono ? Icons.check_box : Icons.check_box_outline_blank,
-                      size: 16,
-                      color: _isMono ? Colors.red : null,
-                    ),
-                    label: Text('Mono', style: TextStyle(color: _isMono ? Colors.red : null, fontWeight: _isMono ? FontWeight.bold : null)),
-                    tooltip: 'Toggle mono playback',
-                    selected: _isMono,
-                    showCheckmark: false,
-                    selectedColor: Colors.red.withValues(alpha: 0.15),
-                    onSelected: (_) => _toggleMono(),
-                    visualDensity: VisualDensity.compact,
-                  ),
           ],
         ),
-        const SizedBox(height: 16),
-        // Large seek bar (bottom, separated from controls)
+        const SizedBox(height: 8),
+        // Seek bar
         Column(
           children: [
-            Slider(
-              value: _duration.inMilliseconds > 0
-                  ? _position.inMilliseconds.toDouble()
-                  : 0.0,
-              max: _duration.inMilliseconds > 0
-                  ? _duration.inMilliseconds.toDouble()
-                  : 100.0,
-              onChanged: (value) async {
-                final position = Duration(milliseconds: value.toInt());
-                await _audioPlayer.seek(position);
-              },
-              // Make the slider larger and more touch-friendly
-              thumbColor: Theme.of(context).colorScheme.primary,
-              activeColor: Theme.of(context).colorScheme.primary,
-              inactiveColor: Theme.of(context).colorScheme.surface,
+            SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                activeTrackColor: Theme.of(context).colorScheme.primary,
+                thumbColor: Theme.of(context).colorScheme.primary,
+                inactiveTrackColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.25),
+                overlayColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+                trackHeight: 4.0,
+              ),
+              child: Slider(
+                value: _duration.inMilliseconds > 0
+                    ? _position.inMilliseconds.toDouble()
+                    : 0.0,
+                max: _duration.inMilliseconds > 0
+                    ? _duration.inMilliseconds.toDouble()
+                    : 100.0,
+                onChanged: (value) async {
+                  final position = Duration(milliseconds: value.toInt());
+                  await _audioPlayer.seek(position);
+                },
+              ),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -3713,6 +3700,45 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
                 ],
               ),
             ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        // Volume + mono on a single row
+        Row(
+          children: [
+            Icon(
+              _volume == 0 ? Icons.volume_off : (_volume < 0.5 ? Icons.volume_down : Icons.volume_up),
+              size: 24,
+              color: Theme.of(context).textTheme.bodySmall?.color,
+            ),
+            Expanded(
+              child: Slider(
+                value: _volume,
+                min: 0.0,
+                max: 1.0,
+                onChanged: (value) async {
+                  setState(() { _volume = value; });
+                  await _audioPlayer.setVolume(value);
+                },
+              ),
+            ),
+            const SizedBox(width: 8),
+            _isGeneratingMono
+                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                : FilterChip(
+                    avatar: Icon(
+                      _isMono ? Icons.check_box : Icons.check_box_outline_blank,
+                      size: 16,
+                      color: _isMono ? Colors.red : null,
+                    ),
+                    label: Text('Mono', style: TextStyle(color: _isMono ? Colors.red : null, fontWeight: _isMono ? FontWeight.bold : null)),
+                    tooltip: 'Toggle mono playback',
+                    selected: _isMono,
+                    showCheckmark: false,
+                    selectedColor: Colors.red.withValues(alpha: 0.15),
+                    onSelected: (_) => _toggleMono(),
+                    visualDensity: VisualDensity.compact,
+                  ),
           ],
         ),
       ],
@@ -3766,17 +3792,26 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
             Expanded(
               child: Column(
                 children: [
-                  Slider(
-                    value: _duration.inMilliseconds > 0
-                        ? _position.inMilliseconds.toDouble()
-                        : 0.0,
-                    max: _duration.inMilliseconds > 0
-                        ? _duration.inMilliseconds.toDouble()
-                        : 100.0,
-                    onChanged: (value) async {
-                      final position = Duration(milliseconds: value.toInt());
-                      await _audioPlayer.seek(position);
-                    },
+                  SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      activeTrackColor: Theme.of(context).colorScheme.primary,
+                      thumbColor: Theme.of(context).colorScheme.primary,
+                      inactiveTrackColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.25),
+                      overlayColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+                      trackHeight: 3.0,
+                    ),
+                    child: Slider(
+                      value: _duration.inMilliseconds > 0
+                          ? _position.inMilliseconds.toDouble()
+                          : 0.0,
+                      max: _duration.inMilliseconds > 0
+                          ? _duration.inMilliseconds.toDouble()
+                          : 100.0,
+                      onChanged: (value) async {
+                        final position = Duration(milliseconds: value.toInt());
+                        await _audioPlayer.seek(position);
+                      },
+                    ),
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,

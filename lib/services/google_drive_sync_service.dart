@@ -3142,8 +3142,9 @@ class GoogleDriveSyncService {
   /// Android only modifies metadata (todos, notes, bpm, key, status, etc.)
   /// We don't use updatedAt because it can change when file is modified on disk
   bool _hasMetadataChanged(MusicProject remote, MusicProject local) {
-    // Compare only metadata fields (what Android can modify)
-    // NOT file system fields (filePath, fileName, fileSizeBytes, lastModifiedAt, etc.)
+    // Compare metadata fields (user-editable) AND date fields from the DAW file.
+    // lastModifiedAt and fileCreatedAt come from the desktop filesystem via the backup
+    // and must be propagated to mobile — they are NOT derived from the Android filesystem.
     return remote.notes != local.notes ||
         !_todosEqual(remote.todos, local.todos) ||
         remote.bpm != local.bpm ||
@@ -3151,7 +3152,9 @@ class GoogleDriveSyncService {
         remote.status != local.status ||
         remote.customDisplayName != local.customDisplayName ||
         remote.hidden != local.hidden ||
-        remote.deadline != local.deadline;
+        remote.deadline != local.deadline ||
+        remote.lastModifiedAt != local.lastModifiedAt ||
+        remote.fileCreatedAt != local.fileCreatedAt;
   }
 
   /// Merge remote data with local data
@@ -3637,8 +3640,12 @@ class GoogleDriveSyncService {
                     uploadedPreviewSongHash: uploadedPreviewSongHash ?? remoteProject.uploadedPreviewSongHash,
                     // Use remote updatedAt so the UI shows the actual modification time, not download time
                     updatedAt: remoteProject.updatedAt,
-                    // Keep file system fields from local (file-based)
-                    // filePath, fileName, fileSizeBytes, lastModifiedAt, fileExtension stay from local
+                    // Use remote lastModifiedAt — this is the desktop DAW modification time from the backup,
+                    // which is the authoritative source for when the project was last worked on.
+                    lastModifiedAt: remoteProject.lastModifiedAt,
+                    fileCreatedAt: remoteProject.fileCreatedAt,
+                    // Keep other file system fields from local (file-based)
+                    // filePath, fileName, fileSizeBytes, fileExtension stay from local
                   );
                   
                   // Save the merged project
