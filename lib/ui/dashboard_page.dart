@@ -3049,7 +3049,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               // Play Preview Song button (always show, but disabled if no preview)
               IconButton(
                 icon: Icon(
-                  project.previewSongPath != null && project.previewSongPath!.isNotEmpty
+                  project.previewSongPath?.isNotEmpty == true || project.previewSongAutoPath != null
                       ? Icons.play_circle
                       : Icons.play_circle_outline,
                 ),
@@ -3058,9 +3058,11 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                 constraints: const BoxConstraints(),
                 tooltip: '${AppLocalizations.of(context)!.playPreview} (P)',
                 onPressed: () => _playPreviewSong(project),
-                color: project.previewSongPath != null && project.previewSongPath!.isNotEmpty
+                color: project.previewSongPath?.isNotEmpty == true
                     ? Colors.green
-                    : Colors.grey,
+                    : project.previewSongAutoPath != null
+                        ? Colors.amber
+                        : Colors.grey,
               ),
               // Separator (always show)
               Padding(
@@ -4760,12 +4762,14 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                   ),
                   trailing: _isSelectionMode
                       ? null
-                      : project.previewSongPath != null && project.previewSongPath!.isNotEmpty
+                      : project.previewSongPath?.isNotEmpty == true || project.previewSongAutoPath != null
                           ? IconButton(
                               icon: const Icon(Icons.play_arrow),
                               tooltip: AppLocalizations.of(context)!.playPreview,
                               onPressed: () => _playPreviewSong(project),
-                              color: Colors.green,
+                              color: project.previewSongPath?.isNotEmpty == true
+                                  ? Colors.green
+                                  : Colors.amber,
                             )
                           : null,
                   onTap: () {

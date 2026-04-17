@@ -359,6 +359,7 @@ class ProjectRepository {
       previewSongPath: existing?.previewSongPath,     // <--- PRESERVA PREVIEW SONG
       previewSongFileName: existing?.previewSongFileName, // <--- PRESERVA PREVIEW SONG FILENAME
       uploadedPreviewSongHash: existing?.uploadedPreviewSongHash, // <--- PRESERVA PREVIEW SONG HASH
+      previewSongAutoPath: existing?.previewSongAutoPath, // <--- PRESERVA AUTO-DETECTED PATH
       fileCreatedAt: fileCreatedAt,                   // <--- FILE CREATION DATE (never override once set)
       statusChangedAt: existing?.statusChangedAt,     // <--- PRESERVA STATUS CHANGE DATE
       deadline: existing?.deadline,                   // <--- PRESERVA DEADLINE
