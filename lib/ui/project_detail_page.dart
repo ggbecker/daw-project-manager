@@ -26,6 +26,7 @@ import '../utils/mobile_utils.dart';
 import '../utils/file_launcher.dart';
 import '../generated/l10n/app_localizations.dart';
 import '../services/audio_analysis_service.dart';
+import '../services/mixdown_detector_service.dart';
 import 'widgets/desktop_title_bar.dart';
 import 'widgets/todo_list_widget.dart';
 import 'project_statistics_page.dart';
@@ -1254,11 +1255,31 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
   Timer? _levelTimer;
   double _currentLufs = -100.0;
 
+  // Auto-detected mixdown path (used when no preview song is set manually)
+  String? _autoDetectedPath;
+
+  String? get _effectivePreviewPath =>
+      widget.project.previewSongPath?.isNotEmpty == true
+          ? widget.project.previewSongPath
+          : _autoDetectedPath;
+
   @override
   void initState() {
     super.initState();
     _attachListeners(_audioPlayer, _playerGen);
+    _detectMixdown();
     _startBackgroundPrep();
+  }
+
+  void _detectMixdown() {
+    if (widget.project.previewSongPath?.isNotEmpty == true) return;
+    Future.microtask(() {
+      final file = MixdownDetectorService.findLatestMixdown(widget.project);
+      if (mounted && file != null) {
+        setState(() => _autoDetectedPath = file.path);
+        _startBackgroundPrep();
+      }
+    });
   }
 
   void _attachListeners(AudioPlayer player, int gen) {
@@ -1301,7 +1322,8 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
   @override
   void didUpdateWidget(_PreviewSongPlayer oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.project.previewSongPath != widget.project.previewSongPath) {
+    if (oldWidget.project.previewSongPath != widget.project.previewSongPath ||
+        oldWidget.project.id != widget.project.id) {
       _audioPlayer.stop();
       _levelTimer?.cancel();
       setState(() {
@@ -1314,7 +1336,9 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
         _fileInfo = null;
         _levelData = null;
         _currentLufs = -100.0;
+        _autoDetectedPath = null;
       });
+      _detectMixdown();
       _startBackgroundPrep();
     }
   }
@@ -1326,7 +1350,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
   /// 2. Generate the mono temp file so toggling mono is instant.
   void _startBackgroundPrep() {
     if (!_hasAudioFile()) return;
-    final path = widget.project.previewSongPath!;
+    final path = _effectivePreviewPath!;
 
     // File metadata — works for any format
     AudioAnalysisService.getFileInfo(path).then((info) {
@@ -1405,30 +1429,29 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
   // ── Helpers ─────────────────────────────────────────────────────────────────
 
   bool _hasAudioFile() {
-    final path = widget.project.previewSongPath;
+    final path = _effectivePreviewPath;
     return path != null && path.isNotEmpty;
   }
 
   bool _isWavFile() {
-    final path = widget.project.previewSongPath;
+    final path = _effectivePreviewPath;
     return path != null && path.toLowerCase().endsWith('.wav');
   }
 
   bool _supportsMonoMix() {
-    final path = widget.project.previewSongPath;
+    final path = _effectivePreviewPath;
     if (path == null || path.isEmpty) return false;
     final ext = path.toLowerCase().split('.').last;
     if (ext == 'wav') return true;
     if (Platform.isMacOS || Platform.isIOS) {
       return const {'mp3', 'flac', 'aif', 'aiff', 'aac', 'm4a'}.contains(ext);
     }
-    // Windows/Android/Linux: ffmpeg-dependent formats
     return const {'mp3', 'flac', 'aif', 'aiff', 'ogg', 'aac', 'm4a'}.contains(ext);
   }
 
   Source _currentSource() {
     if (_isMono && _monoFilePath != null) return DeviceFileSource(_monoFilePath!);
-    return DeviceFileSource(widget.project.previewSongPath!);
+    return DeviceFileSource(_effectivePreviewPath!);
   }
 
   Future<void> _toggleMono() async {
@@ -1448,7 +1471,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
       final outPath = '${tmpDir.path}/mono_${widget.project.id}.wav';
       debugPrint('[Mono] Generating mono file → $outPath');
       final ok = await AudioAnalysisService.writeMonoWavFile(
-          widget.project.previewSongPath!, outPath);
+          _effectivePreviewPath!, outPath);
       debugPrint('[Mono] writeMonoWavFile result: $ok channels=${_levelData?.channels}');
       if (!mounted) return;
       if (!ok) {
@@ -1456,7 +1479,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
         final alreadyMono = _levelData?.channels == 1;
         if (alreadyMono) {
           debugPrint('[Mono] File is already mono — using original path.');
-          setState(() { _monoFilePath = widget.project.previewSongPath!; _isGeneratingMono = false; });
+          setState(() { _monoFilePath = _effectivePreviewPath!; _isGeneratingMono = false; });
         } else {
           setState(() => _isGeneratingMono = false);
           ScaffoldMessenger.of(context).showSnackBar(
@@ -1505,7 +1528,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
     // Recycle the old player as the warm player for the next toggle.
     await oldActive.stop();
     final altSource = _isMono
-        ? DeviceFileSource(widget.project.previewSongPath!)
+        ? DeviceFileSource(_effectivePreviewPath!)
         : (_monoFilePath != null ? DeviceFileSource(_monoFilePath!) : null);
     if (altSource != null) {
       _warmPlayer = oldActive;
@@ -1517,19 +1540,13 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
   }
 
   Future<void> _togglePlayPause() async {
-    if (widget.project.previewSongPath == null ||
-        widget.project.previewSongPath!.isEmpty) {
-      return;
-    }
+    if (!_hasAudioFile()) return;
 
     try {
       if (_isPlaying) {
         await _audioPlayer.pause();
       } else {
-        // Check if it's a Drive file reference (format: "drive://fileId")
-        // Preview songs should already be downloaded during backup merge
-        // If it's still a Drive reference, it means download failed or file doesn't exist
-        if (widget.project.previewSongPath!.startsWith('drive://')) {
+        if (_effectivePreviewPath!.startsWith('drive://')) {
           // If we still have a Drive reference, the file wasn't downloaded
           // This shouldn't happen if backup was downloaded correctly, but handle gracefully
           if (mounted) {
@@ -1544,7 +1561,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
           return;
         } else {
           // Local file - check if it exists
-          final file = File(widget.project.previewSongPath!);
+          final file = File(_effectivePreviewPath!);
           if (!await file.exists()) {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -2083,8 +2100,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                if (widget.project.previewSongPath != null &&
-                    widget.project.previewSongPath!.isNotEmpty)
+                if (_hasAudioFile())
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -2092,11 +2108,8 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                         children: [
                           Expanded(
                             child: Text(
-                              // Use previewSongFileName if available (original filename), otherwise use basename
-                              widget.project.previewSongFileName ?? 
-                              (widget.project.previewSongPath != null 
-                                ? p.basename(widget.project.previewSongPath!)
-                                : ''),
+                              widget.project.previewSongFileName ??
+                              p.basename(_effectivePreviewPath!),
                               style: TextStyle(
                                 color: Theme.of(
                                   context,
@@ -2152,9 +2165,26 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                           ),
                         ],
                       ),
+                      if (_autoDetectedPath != null &&
+                          widget.project.previewSongPath?.isNotEmpty != true)
+                        const Padding(
+                          padding: EdgeInsets.only(bottom: 4),
+                          child: Row(
+                            children: [
+                              Icon(Icons.folder_open,
+                                  size: 12, color: Colors.amber),
+                              SizedBox(width: 4),
+                              Text(
+                                'Auto-detected from mixdown folder',
+                                style: TextStyle(
+                                    fontSize: 11, color: Colors.amber),
+                              ),
+                            ],
+                          ),
+                        ),
                       const SizedBox(height: 2),
                       _FileInfoRow(
-                        path: widget.project.previewSongPath!,
+                        path: _effectivePreviewPath!,
                         fileInfo: _fileInfo,
                       ),
                       const SizedBox(height: 10),
@@ -2199,6 +2229,12 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                                     _togglePlayPause();
                                   },
                                   iconSize: 32,
+                                  color: _autoDetectedPath != null &&
+                                          widget.project.previewSongPath
+                                                  ?.isNotEmpty !=
+                                              true
+                                      ? Colors.amber
+                                      : null,
                                 ),
                                 IconButton(
                                   icon: const Icon(Icons.stop),

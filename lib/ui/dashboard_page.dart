@@ -16,6 +16,7 @@ import 'package:archive/archive_io.dart';
 
 import '../services/scanner_service.dart';
 import '../services/audio_analysis_service.dart';
+import '../services/mixdown_detector_service.dart';
 import '../utils/mobile_utils.dart';
 import '../utils/file_launcher.dart';
 import 'project_detail_page.dart';
@@ -2131,11 +2132,13 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   TrinaGridStateManager? stateManager;
   
   Future<void> _playPreviewSong(MusicProject project) async {
-    if (project.previewSongPath == null || project.previewSongPath!.isEmpty) {
-      return;
-    }
-    
-    final file = File(project.previewSongPath!);
+    final effectivePath = project.previewSongPath?.isNotEmpty == true
+        ? project.previewSongPath!
+        : MixdownDetectorService.findLatestMixdown(project)?.path;
+
+    if (effectivePath == null) return;
+
+    final file = File(effectivePath);
     if (!await file.exists()) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -2144,13 +2147,17 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       }
       return;
     }
-    
+
+    final playProject = project.previewSongPath?.isNotEmpty == true
+        ? project
+        : project.copyWith(previewSongPath: effectivePath);
+
     // Show popup dialog with audio player
     if (mounted) {
       await showDialog(
         context: context,
         builder: (dialogContext) => _PreviewSongDialog(
-          project: project,
+          project: playProject,
           onClose: () {
             // Callback when dialog closes - can be used for cleanup if needed
           },
@@ -2988,16 +2995,16 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             children: [
               // Play Preview Song button (always show, but disabled if no preview)
               IconButton(
-                icon: const Icon(Icons.play_arrow),
+                icon: Icon(
+                  project.previewSongPath != null && project.previewSongPath!.isNotEmpty
+                      ? Icons.play_circle
+                      : Icons.play_circle_outline,
+                ),
                 iconSize: 24,
                 padding: const EdgeInsets.all(4),
                 constraints: const BoxConstraints(),
-                tooltip: project.previewSongPath != null && project.previewSongPath!.isNotEmpty
-                    ? '${AppLocalizations.of(context)!.playPreview} (P)'
-                    : AppLocalizations.of(context)!.noPreviewSong,
-                onPressed: project.previewSongPath != null && project.previewSongPath!.isNotEmpty
-                    ? () => _playPreviewSong(project)
-                    : null,
+                tooltip: '${AppLocalizations.of(context)!.playPreview} (P)',
+                onPressed: () => _playPreviewSong(project),
                 color: project.previewSongPath != null && project.previewSongPath!.isNotEmpty
                     ? Colors.green
                     : Colors.grey,
@@ -3355,6 +3362,12 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
   bool _isGeneratingMono = false;
   String? _monoFilePath;
   AudioFileInfo? _fileInfo;
+  String? _autoDetectedPath;
+
+  String? get _effectivePreviewPath =>
+      widget.project.previewSongPath?.isNotEmpty == true
+          ? widget.project.previewSongPath
+          : _autoDetectedPath;
 
   void _attachListeners(AudioPlayer player, int gen) {
     player.onPlayerStateChanged.listen((state) {
@@ -3379,18 +3392,28 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
   void initState() {
     super.initState();
     _attachListeners(_audioPlayer, _playerGen);
-    // Auto-start playback when dialog opens
-    _startPlayback();
-    _startBackgroundPrep();
+    if (widget.project.previewSongPath?.isNotEmpty == true) {
+      _startPlayback();
+      _startBackgroundPrep();
+    } else {
+      Future.microtask(() {
+        final file = MixdownDetectorService.findLatestMixdown(widget.project);
+        if (mounted && file != null) {
+          setState(() => _autoDetectedPath = file.path);
+          _startPlayback();
+          _startBackgroundPrep();
+        }
+      });
+    }
   }
 
   bool _hasAudioFile() {
-    final p2 = widget.project.previewSongPath;
+    final p2 = _effectivePreviewPath;
     return p2 != null && p2.isNotEmpty;
   }
 
   bool _supportsMonoMix() {
-    final p2 = widget.project.previewSongPath;
+    final p2 = _effectivePreviewPath;
     if (p2 == null || p2.isEmpty) return false;
     final ext = p2.toLowerCase().split('.').last;
     if (ext == 'wav') return true;
@@ -3402,12 +3425,12 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
 
   Source _currentSource() {
     if (_isMono && _monoFilePath != null) return DeviceFileSource(_monoFilePath!);
-    return DeviceFileSource(widget.project.previewSongPath!);
+    return DeviceFileSource(_effectivePreviewPath!);
   }
 
   void _startBackgroundPrep() {
     if (!_hasAudioFile()) return;
-    final filePath = widget.project.previewSongPath!;
+    final filePath = _effectivePreviewPath!;
     AudioAnalysisService.getFileInfo(filePath).then((info) {
       if (mounted && info != null) setState(() => _fileInfo = info);
     });
@@ -3468,13 +3491,13 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
       setState(() => _isGeneratingMono = true);
       final tmpDir = await getTemporaryDirectory();
       final outPath = '${tmpDir.path}/mono_${widget.project.id}.wav';
-      final ok = await AudioAnalysisService.writeMonoWavFile(widget.project.previewSongPath!, outPath);
+      final ok = await AudioAnalysisService.writeMonoWavFile(_effectivePreviewPath!, outPath);
       if (!mounted) return;
       if (!ok) {
-        final channels = await AudioAnalysisService.getChannelCount(widget.project.previewSongPath!);
+        final channels = await AudioAnalysisService.getChannelCount(_effectivePreviewPath!);
         if (!mounted) return;
         if (channels == 1) {
-          setState(() { _monoFilePath = widget.project.previewSongPath!; _isGeneratingMono = false; });
+          setState(() { _monoFilePath = _effectivePreviewPath!; _isGeneratingMono = false; });
         } else {
           setState(() => _isGeneratingMono = false);
           ScaffoldMessenger.of(context).showSnackBar(
@@ -3518,7 +3541,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
 
     await oldActive.stop();
     final altSource = _isMono
-        ? DeviceFileSource(widget.project.previewSongPath!)
+        ? DeviceFileSource(_effectivePreviewPath!)
         : (_monoFilePath != null ? DeviceFileSource(_monoFilePath!) : null);
     if (altSource != null) {
       _warmPlayer = oldActive;
@@ -3530,11 +3553,9 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
   }
 
   Future<void> _startPlayback() async {
-    if (widget.project.previewSongPath == null || widget.project.previewSongPath!.isEmpty) {
-      return;
-    }
+    if (!_hasAudioFile()) return;
 
-    final file = File(widget.project.previewSongPath!);
+    final file = File(_effectivePreviewPath!);
     if (!await file.exists()) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -3571,7 +3592,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
         await _audioPlayer.pause();
       } else {
         if (_position == Duration.zero || _position >= _duration) {
-          await _audioPlayer.play(DeviceFileSource(widget.project.previewSongPath!));
+          await _audioPlayer.play(DeviceFileSource(_effectivePreviewPath!));
         } else {
           await _audioPlayer.resume();
         }
@@ -3612,11 +3633,24 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // File name
+        if (_autoDetectedPath != null &&
+            widget.project.previewSongPath?.isNotEmpty != true)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Row(
+              children: [
+                const Icon(Icons.folder_open, size: 12, color: Colors.amber),
+                const SizedBox(width: 4),
+                const Text(
+                  'Auto-detected from mixdown folder',
+                  style: TextStyle(fontSize: 11, color: Colors.amber),
+                ),
+              ],
+            ),
+          ),
         Text(
-          widget.project.previewSongFileName ?? 
-          (widget.project.previewSongPath != null 
-            ? path.basename(widget.project.previewSongPath!)
-            : ''),
+          widget.project.previewSongFileName ??
+          path.basename(_effectivePreviewPath ?? ''),
           style: TextStyle(
             color: Theme.of(context).textTheme.bodyMedium?.color,
             fontSize: 14,
@@ -3637,7 +3671,10 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
               icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
               onPressed: _togglePlayPause,
               iconSize: 48,
-              color: Theme.of(context).colorScheme.primary,
+              color: _autoDetectedPath != null &&
+                      widget.project.previewSongPath?.isNotEmpty != true
+                  ? Colors.amber
+                  : Theme.of(context).colorScheme.primary,
             ),
             IconButton(
               icon: const Icon(Icons.stop),
@@ -3751,10 +3788,8 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          widget.project.previewSongFileName ?? 
-          (widget.project.previewSongPath != null 
-            ? path.basename(widget.project.previewSongPath!)
-            : ''),
+          widget.project.previewSongFileName ??
+          path.basename(_effectivePreviewPath ?? ''),
           style: TextStyle(
             color: Theme.of(context).textTheme.bodyMedium?.color,
             fontSize: 14,
@@ -3776,6 +3811,10 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
               icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
               onPressed: _togglePlayPause,
               iconSize: 32,
+              color: _autoDetectedPath != null &&
+                      widget.project.previewSongPath?.isNotEmpty != true
+                  ? Colors.amber
+                  : null,
             ),
             IconButton(
               icon: const Icon(Icons.stop),
@@ -4262,11 +4301,13 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
   }
 
   Future<void> _playPreviewSong(MusicProject project) async {
-    if (project.previewSongPath == null || project.previewSongPath!.isEmpty) {
-      return;
-    }
-    
-    final file = File(project.previewSongPath!);
+    final effectivePath = project.previewSongPath?.isNotEmpty == true
+        ? project.previewSongPath!
+        : MixdownDetectorService.findLatestMixdown(project)?.path;
+
+    if (effectivePath == null) return;
+
+    final file = File(effectivePath);
     if (!await file.exists()) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -4275,13 +4316,17 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
       }
       return;
     }
-    
+
+    final playProject = project.previewSongPath?.isNotEmpty == true
+        ? project
+        : project.copyWith(previewSongPath: effectivePath);
+
     // Show popup dialog with audio player
     if (mounted) {
       await showDialog(
         context: context,
         builder: (dialogContext) => _PreviewSongDialog(
-          project: project,
+          project: playProject,
           onClose: () {
             // Callback when dialog closes - can be used for cleanup if needed
           },
