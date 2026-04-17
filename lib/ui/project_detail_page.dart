@@ -258,6 +258,85 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
     }
   }
 
+  Future<void> _renameProjectFile(MusicProject project) async {
+    final ext = p.extension(project.filePath);
+    final currentBaseName = p.basenameWithoutExtension(project.filePath);
+    final projectDir = p.dirname(project.filePath);
+    final folderName = p.basename(projectDir);
+    final folderMatchesProject = folderName == currentBaseName;
+
+    final result = await showDialog<({String newName, bool renameFolder})>(
+      context: context,
+      builder: (ctx) => _RenameProjectDialog(
+        currentName: currentBaseName,
+        canRenameFolder: folderMatchesProject,
+      ),
+    );
+    if (result == null || result.newName.trim() == currentBaseName) return;
+
+    final newBaseName = result.newName.trim();
+    final newFilePath = p.join(projectDir, '$newBaseName$ext');
+
+    if (File(newFilePath).existsSync() || Directory(newFilePath).existsSync()) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('A file named "$newBaseName$ext" already exists.')),
+        );
+      }
+      return;
+    }
+
+    try {
+      // Rename the project file or bundle directory
+      if (Directory(project.filePath).existsSync()) {
+        await Directory(project.filePath).rename(newFilePath);
+      } else {
+        await File(project.filePath).rename(newFilePath);
+      }
+
+      String finalFilePath = newFilePath;
+      String? newPreviewSongPath = project.previewSongPath;
+      String? newAutoPath = project.previewSongAutoPath;
+
+      // Rename containing folder if requested
+      if (result.renameFolder && folderMatchesProject) {
+        final newFolderPath = p.join(p.dirname(projectDir), newBaseName);
+        if (!Directory(newFolderPath).existsSync()) {
+          await Directory(projectDir).rename(newFolderPath);
+          finalFilePath = p.join(newFolderPath, '$newBaseName$ext');
+          // Fix any stored paths that were inside the old folder
+          if (newPreviewSongPath != null && newPreviewSongPath.startsWith(projectDir)) {
+            newPreviewSongPath = newFolderPath + newPreviewSongPath.substring(projectDir.length);
+          }
+          if (newAutoPath != null && newAutoPath.startsWith(projectDir)) {
+            newAutoPath = newFolderPath + newAutoPath.substring(projectDir.length);
+          }
+        }
+      }
+
+      final repo = await ref.read(repositoryProvider.future);
+      await repo.updateProject(project.copyWith(
+        filePath: finalFilePath,
+        fileName: '$newBaseName$ext',
+        previewSongPath: newPreviewSongPath,
+        previewSongAutoPath: newAutoPath,
+      ));
+      ref.invalidate(allProjectsStreamProvider);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Renamed to "$newBaseName$ext"')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to rename: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final repoAsync = ref.watch(repositoryProvider);
@@ -1139,6 +1218,20 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                         ),
                                       ),
                                       const SizedBox(width: 12),
+
+                                      // Rename file button (desktop only)
+                                      if (!isMobile)
+                                        Tooltip(
+                                          message: sourceFileExists ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
+                                          child: ElevatedButton.icon(
+                                            onPressed: sourceFileExists
+                                                ? () => _renameProjectFile(updatedProject)
+                                                : null,
+                                            icon: const Icon(Icons.drive_file_rename_outline, size: 18),
+                                            label: const Text('Rename File'),
+                                          ),
+                                        ),
+                                      if (!isMobile) const SizedBox(width: 12),
 
                                       // BOTÃO OPEN IN DAW (Existente)
                                       Tooltip(
@@ -2586,5 +2679,97 @@ class _ProjectStatsButton extends ConsumerWidget {
         ),
       ),
     );
+  }
+}
+
+class _RenameProjectDialog extends StatefulWidget {
+  final String currentName;
+  final bool canRenameFolder;
+
+  const _RenameProjectDialog({
+    required this.currentName,
+    required this.canRenameFolder,
+  });
+
+  @override
+  State<_RenameProjectDialog> createState() => _RenameProjectDialogState();
+}
+
+class _RenameProjectDialogState extends State<_RenameProjectDialog> {
+  late final TextEditingController _ctrl;
+  bool _renameFolder = true;
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = TextEditingController(text: widget.currentName);
+    _ctrl.selection = TextSelection(baseOffset: 0, extentOffset: widget.currentName.length);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Rename Project File'),
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextFormField(
+              controller: _ctrl,
+              autofocus: true,
+              decoration: const InputDecoration(
+                labelText: 'New file name (without extension)',
+                border: OutlineInputBorder(),
+              ),
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return 'Name cannot be empty';
+                if (v.contains('/') || v.contains('\\') || v.contains(':')) {
+                  return 'Name cannot contain / \\ :';
+                }
+                return null;
+              },
+              onFieldSubmitted: (_) => _submit(),
+            ),
+            if (widget.canRenameFolder) ...[
+              const SizedBox(height: 12),
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                value: _renameFolder,
+                onChanged: (v) => setState(() => _renameFolder = v ?? true),
+                title: const Text('Also rename containing folder'),
+                controlAffinity: ListTileControlAffinity.leading,
+              ),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: _submit,
+          child: const Text('Rename'),
+        ),
+      ],
+    );
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) return;
+    Navigator.pop(context, (
+      newName: _ctrl.text.trim(),
+      renameFolder: widget.canRenameFolder && _renameFolder,
+    ));
   }
 }
