@@ -13,6 +13,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:archive/archive_io.dart';
+import 'package:desktop_drop/desktop_drop.dart';
 
 import '../services/scanner_service.dart';
 import '../services/audio_analysis_service.dart';
@@ -2130,6 +2131,57 @@ class _PlutoProjectsTable extends ConsumerStatefulWidget {
 
 class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   TrinaGridStateManager? stateManager;
+
+  // Drag-and-drop preview assignment
+  double? _dragOverRowTop; // top Y of the highlighted row in local coords
+
+  static const double _gridHeaderHeight = 45.0;
+  static const double _gridRowHeight = 48.0;
+
+  static const Set<String> _audioExtensions = {
+    '.mp3', '.wav', '.m4a', '.aac', '.ogg', '.flac', '.aif', '.aiff',
+  };
+
+  void _updateDragTarget(Offset localPos) {
+    final sm = stateManager;
+    if (sm == null) return;
+    final scrollOffset = sm.scroll.bodyRowsVertical?.offset ?? 0;
+    final rowIndex =
+        ((localPos.dy - _gridHeaderHeight + scrollOffset) / _gridRowHeight)
+            .floor();
+    if (rowIndex >= 0 && rowIndex < sm.rows.length) {
+      final rowTop =
+          _gridHeaderHeight + rowIndex * _gridRowHeight - scrollOffset;
+      setState(() {
+        _dragOverRowTop = rowTop;
+      });
+    } else {
+      setState(() {
+        _dragOverRowTop = null;
+      });
+    }
+  }
+
+  Future<void> _setPreviewSong(MusicProject project, String filePath) async {
+    final ext = filePath.split('.').last.toLowerCase();
+    if (!_audioExtensions.contains('.$ext')) return;
+    final repo = await ref.read(repositoryProvider.future);
+    final updated = project.copyWith(
+      previewSongPath: filePath,
+      previewSongFileName: filePath.split('/').last,
+    );
+    await repo.updateProject(updated);
+    ref.invalidate(allProjectsStreamProvider);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${updated.previewSongFileName} set as preview for ${updated.displayName}',
+          ),
+        ),
+      );
+    }
+  }
   
   Future<void> _playPreviewSong(MusicProject project) async {
     final effectivePath = project.previewSongPath?.isNotEmpty == true
@@ -3161,7 +3213,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       );
     }
 
-    return TrinaGrid(
+    final grid = TrinaGrid(
           key: ValueKey('trina_grid_${l10n.localeName}'), // Force rebuild when locale changes
           columns: columns,
           rows: initialRows,
@@ -3250,6 +3302,80 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         );
       },
       createFooter: (stateManager) => const SizedBox.shrink(),
+    );
+
+    return DropTarget(
+      onDragUpdated: (detail) => _updateDragTarget(detail.localPosition),
+      onDragExited: (_) => setState(() {
+        _dragOverRowTop = null;
+      }),
+      onDragDone: (detail) {
+        final sm = stateManager;
+        MusicProject? targetProject;
+        if (sm != null) {
+          final scrollOffset = sm.scroll.bodyRowsVertical?.offset ?? 0;
+          final rowIndex = ((detail.localPosition.dy - _gridHeaderHeight + scrollOffset) / _gridRowHeight).floor();
+          if (rowIndex >= 0 && rowIndex < sm.rows.length) {
+            targetProject = sm.rows[rowIndex].cells['data']?.value as MusicProject?;
+          }
+        }
+        setState(() {
+          _dragOverRowTop = null;
+        });
+        if (targetProject == null) return;
+        for (final xFile in detail.files) {
+          final path = xFile.path;
+          final ext = '.${path.split('.').last.toLowerCase()}';
+          if (_audioExtensions.contains(ext)) {
+            _setPreviewSong(targetProject, path);
+            return;
+          }
+        }
+      },
+      child: Stack(
+        children: [
+          grid,
+          if (_dragOverRowTop != null)
+            Positioned(
+              top: _dragOverRowTop!,
+              left: 0,
+              right: 0,
+              height: _gridRowHeight,
+              child: IgnorePointer(
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 2,
+                    ),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primaryContainer
+                        .withValues(alpha: 0.35),
+                  ),
+                  alignment: Alignment.center,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.audio_file,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.primary),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Drop to set as preview',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
