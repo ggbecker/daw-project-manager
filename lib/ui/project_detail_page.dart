@@ -1261,7 +1261,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
   String? get _effectivePreviewPath =>
       widget.project.previewSongPath?.isNotEmpty == true
           ? widget.project.previewSongPath
-          : _autoDetectedPath;
+          : (_autoDetectedPath ?? widget.project.previewSongAutoPath);
 
   @override
   void initState() {
@@ -1273,10 +1273,17 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
 
   void _detectMixdown() {
     if (widget.project.previewSongPath?.isNotEmpty == true) return;
-    Future.microtask(() {
-      final file = MixdownDetectorService.findLatestMixdown(widget.project);
+    if (widget.project.previewSongAutoPath != null) {
+      _autoDetectedPath = widget.project.previewSongAutoPath;
+      return;
+    }
+    Future.microtask(() async {
+      final customFolder = ref.read(customMixdownFolderProvider).value;
+      final file = MixdownDetectorService.findLatestMixdown(widget.project, customFolder: customFolder);
       if (mounted && file != null) {
         setState(() => _autoDetectedPath = file.path);
+        final repo = await ref.read(repositoryProvider.future);
+        await repo.updateProject(widget.project.copyWith(previewSongAutoPath: file.path));
         _startBackgroundPrep();
       }
     });

@@ -2184,9 +2184,10 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   }
   
   Future<void> _playPreviewSong(MusicProject project) async {
+    final customFolder = ref.read(customMixdownFolderProvider).value;
     final effectivePath = project.previewSongPath?.isNotEmpty == true
         ? project.previewSongPath!
-        : MixdownDetectorService.findLatestMixdown(project)?.path;
+        : (project.previewSongAutoPath ?? MixdownDetectorService.findLatestMixdown(project, customFolder: customFolder)?.path);
 
     if (effectivePath == null) return;
 
@@ -3463,7 +3464,7 @@ class _SeekIntent extends Intent {
 }
 
 
-class _PreviewSongDialog extends StatefulWidget {
+class _PreviewSongDialog extends ConsumerStatefulWidget {
   final MusicProject project;
   final VoidCallback onClose;
 
@@ -3473,10 +3474,10 @@ class _PreviewSongDialog extends StatefulWidget {
   });
 
   @override
-  State<_PreviewSongDialog> createState() => _PreviewSongDialogState();
+  ConsumerState<_PreviewSongDialog> createState() => _PreviewSongDialogState();
 }
 
-class _PreviewSongDialogState extends State<_PreviewSongDialog> {
+class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
   AudioPlayer _audioPlayer = AudioPlayer();
   AudioPlayer? _warmPlayer;
   int _playerGen = 0;
@@ -3493,7 +3494,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
   String? get _effectivePreviewPath =>
       widget.project.previewSongPath?.isNotEmpty == true
           ? widget.project.previewSongPath
-          : _autoDetectedPath;
+          : (_autoDetectedPath ?? widget.project.previewSongAutoPath);
 
   void _attachListeners(AudioPlayer player, int gen) {
     player.onPlayerStateChanged.listen((state) {
@@ -3521,11 +3522,18 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
     if (widget.project.previewSongPath?.isNotEmpty == true) {
       _startPlayback();
       _startBackgroundPrep();
+    } else if (widget.project.previewSongAutoPath != null) {
+      _autoDetectedPath = widget.project.previewSongAutoPath;
+      _startPlayback();
+      _startBackgroundPrep();
     } else {
-      Future.microtask(() {
-        final file = MixdownDetectorService.findLatestMixdown(widget.project);
+      Future.microtask(() async {
+        final customFolder = ref.read(customMixdownFolderProvider).value;
+        final file = MixdownDetectorService.findLatestMixdown(widget.project, customFolder: customFolder);
         if (mounted && file != null) {
           setState(() => _autoDetectedPath = file.path);
+          final repo = await ref.read(repositoryProvider.future);
+          await repo.updateProject(widget.project.copyWith(previewSongAutoPath: file.path));
           _startPlayback();
           _startBackgroundPrep();
         }
@@ -4427,9 +4435,10 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
   }
 
   Future<void> _playPreviewSong(MusicProject project) async {
+    final customFolder = ref.read(customMixdownFolderProvider).value;
     final effectivePath = project.previewSongPath?.isNotEmpty == true
         ? project.previewSongPath!
-        : MixdownDetectorService.findLatestMixdown(project)?.path;
+        : (project.previewSongAutoPath ?? MixdownDetectorService.findLatestMixdown(project, customFolder: customFolder)?.path);
 
     if (effectivePath == null) return;
 
