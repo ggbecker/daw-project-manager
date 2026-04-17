@@ -18,6 +18,7 @@ import 'package:desktop_drop/desktop_drop.dart';
 import '../services/scanner_service.dart';
 import '../services/audio_analysis_service.dart';
 import '../services/mixdown_detector_service.dart';
+import '../services/dock_menu_service.dart';
 import '../utils/mobile_utils.dart';
 import '../utils/file_launcher.dart';
 import 'project_detail_page.dart';
@@ -557,6 +558,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                     ? ref.watch(statisticsSearchProvider)
                     : '';
     final projects = ref.watch(projectsProvider);
+    // Keep macOS dock menu (and Windows jump list) in sync with latest projects
+    ref.listen(projectsProvider, (_, next) => DockMenuService.updateRecentProjects(next));
     final hiddenMode = ref.watch(showHiddenProjectsProvider);
     final hiddenNotifier = ref.read(showHiddenProjectsProvider.notifier);
     final finishedMode = ref.watch(showFinishedProjectsProvider);
