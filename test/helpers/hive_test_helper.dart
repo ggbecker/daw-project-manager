@@ -63,6 +63,7 @@ class HiveTestHelper {
     final releasesBox = await Hive.openBox<Release>('${profileId}_releases');
     final playlistsBox = await Hive.openBox<Playlist>('${profileId}_playlists');
     final eventsBox = await Hive.openBox<ProjectEvent>('${profileId}_events');
+    final appSettingsBox = await Hive.openBox<String>('app_settings');
 
     return ProjectRepository(
       profileId: profileId,
@@ -72,6 +73,7 @@ class HiveTestHelper {
       releasesBox: releasesBox,
       playlistsBox: playlistsBox,
       eventsBox: eventsBox,
+      appSettingsBox: appSettingsBox,
     );
   }
 }
