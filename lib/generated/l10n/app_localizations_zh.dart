@@ -2167,4 +2167,112 @@ class AppLocalizationsZh extends AppLocalizations {
   String queuePendingSummary(int tasks, int projects) {
     return '$projects个项目中有$tasks个待处理任务';
   }
+
+  @override
+  String appTitleWithVersion(String version) {
+    return 'DAW Project Manager v$version';
+  }
+
+  @override
+  String versionLabel(String version) {
+    return '版本 $version';
+  }
+
+  @override
+  String get renameProjectFileTitle => '重命名项目文件';
+
+  @override
+  String get renameFileButtonLabel => '重命名文件';
+
+  @override
+  String get newFileNameLabel => '新文件名（不含扩展名）';
+
+  @override
+  String renameAlreadyExists(String name) {
+    return '名为“$name”的文件已存在。';
+  }
+
+  @override
+  String renameSuccess(String name) {
+    return '已重命名为“$name”';
+  }
+
+  @override
+  String renameFailed(String error) {
+    return '重命名失败：$error';
+  }
+
+  @override
+  String get nameCannotBeEmpty => '名称不能为空';
+
+  @override
+  String get nameInvalidCharacters => '名称不能包含 / \\ :';
+
+  @override
+  String get alsoRenameContainingFolder => '同时重命名所在文件夹';
+
+  @override
+  String get renameButton => '重命名';
+
+  @override
+  String get previewMixdownFolderTitle => '预览混音文件夹';
+
+  @override
+  String get previewMixdownFolderSubtitle =>
+      '每个项目文件夹内的子文件夹名称，自动检测预览歌曲时优先检查该文件夹。留空则使用DAW默认值。';
+
+  @override
+  String get previewMixdownFolderHint => '例如：Mixdowns';
+
+  @override
+  String dawInfoLabel(String daw) {
+    return 'DAW：$daw';
+  }
+
+  @override
+  String bpmInfoLabel(String bpm) {
+    return 'BPM：$bpm';
+  }
+
+  @override
+  String keyInfoLabel(String key) {
+    return '调性：$key';
+  }
+
+  @override
+  String get audioFileNotFound => '找不到音频文件';
+
+  @override
+  String errorPlayingAudio(String error) {
+    return '播放音频时出错：$error';
+  }
+
+  @override
+  String get notificationTestTitle => '测试通知以验证时区和计划：';
+
+  @override
+  String get notificationSendNow => '立即发送';
+
+  @override
+  String get notificationSchedule30s => '计划 +30秒';
+
+  @override
+  String get notificationShowDebugInfo => '显示调试信息';
+
+  @override
+  String get notificationRescheduleAll => '重新计划全部';
+
+  @override
+  String get notificationTestSent => '✅ 测试通知已发送！';
+
+  @override
+  String get notificationTestScheduled => '✅ 测试通知已计划在 30 秒后发送！请查看控制台日志。';
+
+  @override
+  String notificationTestError(String error) {
+    return '❌ 错误：$error';
+  }
+
+  @override
+  String get notificationDebugTitle => '🐛 调试信息';
 }

@@ -2231,4 +2231,114 @@ class AppLocalizationsEn extends AppLocalizations {
   String queuePendingSummary(int tasks, int projects) {
     return '$tasks pending tasks in $projects projects';
   }
+
+  @override
+  String appTitleWithVersion(String version) {
+    return 'DAW Project Manager v$version';
+  }
+
+  @override
+  String versionLabel(String version) {
+    return 'Version $version';
+  }
+
+  @override
+  String get renameProjectFileTitle => 'Rename Project File';
+
+  @override
+  String get renameFileButtonLabel => 'Rename File';
+
+  @override
+  String get newFileNameLabel => 'New file name (without extension)';
+
+  @override
+  String renameAlreadyExists(String name) {
+    return 'A file named \"$name\" already exists.';
+  }
+
+  @override
+  String renameSuccess(String name) {
+    return 'Renamed to \"$name\"';
+  }
+
+  @override
+  String renameFailed(String error) {
+    return 'Failed to rename: $error';
+  }
+
+  @override
+  String get nameCannotBeEmpty => 'Name cannot be empty';
+
+  @override
+  String get nameInvalidCharacters => 'Name cannot contain / \\ :';
+
+  @override
+  String get alsoRenameContainingFolder => 'Also rename containing folder';
+
+  @override
+  String get renameButton => 'Rename';
+
+  @override
+  String get previewMixdownFolderTitle => 'Preview Mixdown Folder';
+
+  @override
+  String get previewMixdownFolderSubtitle =>
+      'Subfolder name inside each project folder to check first when auto-detecting preview songs. Leave empty to use DAW defaults.';
+
+  @override
+  String get previewMixdownFolderHint => 'e.g. Mixdowns';
+
+  @override
+  String dawInfoLabel(String daw) {
+    return 'DAW: $daw';
+  }
+
+  @override
+  String bpmInfoLabel(String bpm) {
+    return 'BPM: $bpm';
+  }
+
+  @override
+  String keyInfoLabel(String key) {
+    return 'Key: $key';
+  }
+
+  @override
+  String get audioFileNotFound => 'Audio file not found';
+
+  @override
+  String errorPlayingAudio(String error) {
+    return 'Error playing audio: $error';
+  }
+
+  @override
+  String get notificationTestTitle =>
+      'Test notifications to verify timezone and scheduling:';
+
+  @override
+  String get notificationSendNow => 'Send Now';
+
+  @override
+  String get notificationSchedule30s => 'Schedule +30s';
+
+  @override
+  String get notificationShowDebugInfo => 'Show Debug Info';
+
+  @override
+  String get notificationRescheduleAll => 'Re-schedule All';
+
+  @override
+  String get notificationTestSent => '✅ Test notification sent!';
+
+  @override
+  String get notificationTestScheduled =>
+      '✅ Test notification scheduled for 30 seconds! Check console logs.';
+
+  @override
+  String notificationTestError(String error) {
+    return '❌ Error: $error';
+  }
+
+  @override
+  String get notificationDebugTitle => '🐛 Debug Information';
 }

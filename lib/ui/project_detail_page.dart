@@ -280,7 +280,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
     if (File(newFilePath).existsSync() || Directory(newFilePath).existsSync()) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('A file named "$newBaseName$ext" already exists.')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.renameAlreadyExists('$newBaseName$ext'))),
         );
       }
       return;
@@ -325,13 +325,13 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Renamed to "$newBaseName$ext"')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.renameSuccess('$newBaseName$ext'))),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to rename: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.renameFailed(e.toString()))),
         );
       }
     }
@@ -1228,7 +1228,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                                 ? () => _renameProjectFile(updatedProject)
                                                 : null,
                                             icon: const Icon(Icons.drive_file_rename_outline, size: 18),
-                                            label: const Text('Rename File'),
+                                            label: Text(AppLocalizations.of(context)!.renameFileButtonLabel),
                                           ),
                                         ),
                                       if (!isMobile) const SizedBox(width: 12),
@@ -2716,7 +2716,7 @@ class _RenameProjectDialogState extends State<_RenameProjectDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Rename Project File'),
+      title: Text(AppLocalizations.of(context)!.renameProjectFileTitle),
       content: Form(
         key: _formKey,
         child: Column(
@@ -2726,14 +2726,15 @@ class _RenameProjectDialogState extends State<_RenameProjectDialog> {
             TextFormField(
               controller: _ctrl,
               autofocus: true,
-              decoration: const InputDecoration(
-                labelText: 'New file name (without extension)',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.newFileNameLabel,
+                border: const OutlineInputBorder(),
               ),
               validator: (v) {
-                if (v == null || v.trim().isEmpty) return 'Name cannot be empty';
+                final l10n = AppLocalizations.of(context)!;
+                if (v == null || v.trim().isEmpty) return l10n.nameCannotBeEmpty;
                 if (v.contains('/') || v.contains('\\') || v.contains(':')) {
-                  return 'Name cannot contain / \\ :';
+                  return l10n.nameInvalidCharacters;
                 }
                 return null;
               },
@@ -2745,7 +2746,7 @@ class _RenameProjectDialogState extends State<_RenameProjectDialog> {
                 contentPadding: EdgeInsets.zero,
                 value: _renameFolder,
                 onChanged: (v) => setState(() => _renameFolder = v ?? true),
-                title: const Text('Also rename containing folder'),
+                title: Text(AppLocalizations.of(context)!.alsoRenameContainingFolder),
                 controlAffinity: ListTileControlAffinity.leading,
               ),
             ],
@@ -2755,11 +2756,11 @@ class _RenameProjectDialogState extends State<_RenameProjectDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(AppLocalizations.of(context)!.cancel),
         ),
         FilledButton(
           onPressed: _submit,
-          child: const Text('Rename'),
+          child: Text(AppLocalizations.of(context)!.renameButton),
         ),
       ],
     );

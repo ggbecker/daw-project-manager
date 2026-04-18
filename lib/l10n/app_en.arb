@@ -2545,5 +2545,91 @@
       "tasks": { "type": "int" },
       "projects": { "type": "int" }
     }
-  }
+  },
+
+  "appTitleWithVersion": "DAW Project Manager v{version}",
+  "@appTitleWithVersion": {
+    "placeholders": {
+      "version": { "type": "String" }
+    }
+  },
+  "versionLabel": "Version {version}",
+  "@versionLabel": {
+    "placeholders": {
+      "version": { "type": "String" }
+    }
+  },
+
+  "renameProjectFileTitle": "Rename Project File",
+  "renameFileButtonLabel": "Rename File",
+  "newFileNameLabel": "New file name (without extension)",
+  "renameAlreadyExists": "A file named \"{name}\" already exists.",
+  "@renameAlreadyExists": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "renameSuccess": "Renamed to \"{name}\"",
+  "@renameSuccess": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "renameFailed": "Failed to rename: {error}",
+  "@renameFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "nameCannotBeEmpty": "Name cannot be empty",
+  "nameInvalidCharacters": "Name cannot contain / \\ :",
+  "alsoRenameContainingFolder": "Also rename containing folder",
+  "renameButton": "Rename",
+
+  "previewMixdownFolderTitle": "Preview Mixdown Folder",
+  "previewMixdownFolderSubtitle": "Subfolder name inside each project folder to check first when auto-detecting preview songs. Leave empty to use DAW defaults.",
+  "previewMixdownFolderHint": "e.g. Mixdowns",
+
+  "dawInfoLabel": "DAW: {daw}",
+  "@dawInfoLabel": {
+    "placeholders": {
+      "daw": { "type": "String" }
+    }
+  },
+  "bpmInfoLabel": "BPM: {bpm}",
+  "@bpmInfoLabel": {
+    "placeholders": {
+      "bpm": { "type": "String" }
+    }
+  },
+  "keyInfoLabel": "Key: {key}",
+  "@keyInfoLabel": {
+    "placeholders": {
+      "key": { "type": "String" }
+    }
+  },
+
+  "audioFileNotFound": "Audio file not found",
+  "errorPlayingAudio": "Error playing audio: {error}",
+  "@errorPlayingAudio": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "notificationTestTitle": "Test notifications to verify timezone and scheduling:",
+  "notificationSendNow": "Send Now",
+  "notificationSchedule30s": "Schedule +30s",
+  "notificationShowDebugInfo": "Show Debug Info",
+  "notificationRescheduleAll": "Re-schedule All",
+  "notificationTestSent": "✅ Test notification sent!",
+  "notificationTestScheduled": "✅ Test notification scheduled for 30 seconds! Check console logs.",
+  "notificationTestError": "❌ Error: {error}",
+  "@notificationTestError": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "notificationDebugTitle": "🐛 Debug Information",
+  "close": "Close"
 }

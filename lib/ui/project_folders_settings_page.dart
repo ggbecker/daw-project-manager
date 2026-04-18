@@ -385,10 +385,10 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Preview Mixdown Folder', style: Theme.of(context).textTheme.titleMedium),
+                          Text(AppLocalizations.of(context)!.previewMixdownFolderTitle, style: Theme.of(context).textTheme.titleMedium),
                           const SizedBox(height: 2),
                           Text(
-                            'Subfolder name inside each project folder to check first when auto-detecting preview songs. Leave empty to use DAW defaults.',
+                            AppLocalizations.of(context)!.previewMixdownFolderSubtitle,
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ],
@@ -402,8 +402,8 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
                     Expanded(
                       child: TextField(
                         controller: _customMixdownCtrl,
-                        decoration: const InputDecoration(
-                          hintText: 'e.g. Mixdowns',
+                        decoration: InputDecoration(
+                          hintText: AppLocalizations.of(context)!.previewMixdownFolderHint,
                           prefixIcon: Icon(Icons.folder_open),
                           border: OutlineInputBorder(),
                           isDense: true,
@@ -414,7 +414,7 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
                     const SizedBox(width: 8),
                     FilledButton.tonal(
                       onPressed: () => _saveCustomMixdownFolder(_customMixdownCtrl.text),
-                      child: const Text('Save'),
+                      child: Text(AppLocalizations.of(context)!.save),
                     ),
                   ],
                 ),

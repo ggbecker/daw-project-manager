@@ -835,7 +835,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
             // Custom title bar – Windows/Linux only.
             // macOS uses the native title bar + MacOSMenuBar for Theme/Language/Support.
             DesktopTitleBar(
-              title: 'DAW Project Manager v$appVersion',
+              title: AppLocalizations.of(context)!.appTitleWithVersion(appVersion),
               actions: [
                 // Donate button
                 Consumer(
@@ -4662,7 +4662,7 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                           if (project.dawType != null) ...[
                             const SizedBox(width: 16),
                             Expanded(
-                              child: Text('DAW: ${project.dawType}${project.dawVersion != null ? ' ${project.dawVersion}' : ''}'),
+                              child: Text(AppLocalizations.of(context)!.dawInfoLabel('${project.dawType}${project.dawVersion != null ? ' ${project.dawVersion}' : ''}')),
                             ),
                           ],
                         ],
@@ -4673,13 +4673,13 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                           children: [
                             if (project.bpm != null)
                               Expanded(
-                                child: Text('BPM: ${project.bpm}'),
+                                child: Text(AppLocalizations.of(context)!.bpmInfoLabel('${project.bpm}')),
                               ),
                             if (project.bpm != null && project.musicalKey != null)
                               const SizedBox(width: 16),
                             if (project.musicalKey != null)
                               Expanded(
-                                child: Text('Key: ${project.musicalKey}'),
+                                child: Text(AppLocalizations.of(context)!.keyInfoLabel(project.musicalKey!)),
                               ),
                           ],
                         ),

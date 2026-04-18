@@ -32,20 +32,16 @@
     "placeholders": {
       "projectName": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToLaunchProject": "Fehler beim Öffnen von {projectName}",
   "@failedToLaunchProject": {
     "placeholders": {
       "projectName": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "clearLibrary": "Bibliothek leeren",
   "clearLibraryMessage": "Dies entfernt alle gespeicherten Projekte und Quellordner. Fortfahren?",
@@ -63,10 +59,8 @@
     "placeholders": {
       "date": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "excludedFoldersSectionTitle": "Ausgeschlossene Ordner",
   "excludedFoldersSectionSubtitle": "Diese Ordner werden beim Scannen übersprungen, auch wenn sie in einem Projektordner liegen.",
@@ -80,10 +74,8 @@
     "placeholders": {
       "path": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "removeExcludedFolderMessageNoPath": "Dieser Ordner wird nicht mehr ausgeschlossen.",
   "desktopOnlyPathsSettings": "Diese Seite ist nur in der Desktop-App verfügbar.",
@@ -93,10 +85,8 @@
     "placeholders": {
       "path": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "projects": "Projekte",
   "hidden": "versteckt",
@@ -124,10 +114,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "saved": "Gespeichert",
   "failedToLaunchDaw": "DAW konnte nicht geöffnet werden",
@@ -141,10 +129,8 @@
     "placeholders": {
       "profileName": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "editProfile": "Profil bearbeiten",
   "changePhoto": "Foto ändern",
@@ -155,10 +141,8 @@
     "placeholders": {
       "trackName": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "saveName": "Namen speichern",
   "profilePhotoUpdated": "Profilfoto aktualisiert.",
@@ -168,30 +152,24 @@
     "placeholders": {
       "newName": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "profileCreated": "Profil \"{name}\" erfolgreich erstellt",
   "@profileCreated": {
     "placeholders": {
       "name": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "profileDeleted": "Profil \"{name}\" gelöscht",
   "@profileDeleted": {
     "placeholders": {
       "name": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "pleaseEnterProfileName": "Bitte geben Sie einen Profilnamen ein",
   "failedToCreateProfile": "Profil konnte nicht erstellt werden: {error}",
@@ -199,10 +177,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "noProfilesFound": "Keine Profile gefunden. Erstellen Sie eines oben.",
   "clearLibraryTooltip": "Bibliothek leeren (Projekte und Projektordner)",
@@ -211,10 +187,8 @@
     "placeholders": {
       "date": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "name": "Name",
   "status": "Status",
@@ -245,30 +219,24 @@
     "placeholders": {
       "path": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "rootsCount": "Projektordner: {count}",
   "@rootsCount": {
     "placeholders": {
       "count": {
         "type": "int"
-      
-}
-    
-}
+      }
+    }
   },
   "projectsCount": "Projekte: {count}",
   "@projectsCount": {
     "placeholders": {
       "count": {
         "type": "int"
-      
-}
-    
-}
+      }
+    }
   },
   "hiddenOnly": "(nur versteckt)",
   "hiddenCount": "({count} versteckt)",
@@ -276,10 +244,8 @@
     "placeholders": {
       "count": {
         "type": "int"
-      
-}
-    
-}
+      }
+    }
   },
   "projectsHidden": "{count} Projekt{plural} versteckt.",
   "@projectsHidden": {
@@ -289,10 +255,8 @@
       },
       "plural": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "projectsUnhidden": "{count} Projekt{plural} angezeigt.",
   "@projectsUnhidden": {
@@ -302,30 +266,24 @@
       },
       "plural": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToHideProjects": "Projekte konnten nicht versteckt werden: {error}",
   "@failedToHideProjects": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToUnhideProjects": "Projekte konnten nicht angezeigt werden: {error}",
   "@failedToUnhideProjects": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "hideProjectMessage": "Sind Sie sicher, dass Sie \"{projectName}\" ausblenden möchten?",
   "@hideProjectMessage": {
@@ -333,40 +291,32 @@
     "placeholders": {
       "projectName": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "releaseCreated": "Veröffentlichung \"{title}\" erfolgreich erstellt.",
   "@releaseCreated": {
     "placeholders": {
       "title": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToCreateRelease": "Veröffentlichung konnte nicht erstellt werden: {error}",
   "@failedToCreateRelease": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "errorAddingFolder": "Fehler beim Hinzufügen des Ordners: {error}",
   "@errorAddingFolder": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "noProjectsFoundInRoots": "Keine Projekte in den ausgewählten Projektordnern gefunden.",
   "selectProjectsFolder": "Wählen Sie einen Projektordner",
@@ -384,50 +334,40 @@
       },
       "failures": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "extractionFailures": "{count} fehlgeschlagen.",
   "@extractionFailures": {
     "placeholders": {
       "count": {
         "type": "int"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToWriteBpmFile": "BPM-Datei konnte nicht geschrieben werden: {error}",
   "@failedToWriteBpmFile": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToWriteKeyFile": "Tonart-Datei konnte nicht geschrieben werden: {error}",
   "@failedToWriteKeyFile": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToLaunch": "Öffnen fehlgeschlagen: {error}",
   "@failedToLaunch": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "libraryCleared": "Bibliothek geleert.",
   "scanType": "{type} Scan",
@@ -435,10 +375,8 @@
     "placeholders": {
       "type": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "scanComplete": "{type} abgeschlossen: {count} Projekt{plural} hinzugefügt/aktualisiert.",
   "@scanComplete": {
@@ -451,10 +389,8 @@
       },
       "plural": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "projectsSelected": "{count} Projekt{plural} ausgewählt",
   "@projectsSelected": {
@@ -464,30 +400,24 @@
       },
       "plural": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "openingFolder": "Öffne Ordner für {projectName}…",
   "@openingFolder": {
     "placeholders": {
       "projectName": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToOpenFolder": "Ordner konnte nicht geöffnet werden: {error}",
   "@failedToOpenFolder": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "osNotSupportedForOpeningFolder": "Betriebssystem wird zum Öffnen von Ordnern nicht unterstützt.",
   "noProjectsAvailable": "Keine Projekte verfügbar. Bitte fügen Sie zuerst Projekte hinzu.",
@@ -498,20 +428,16 @@
     "placeholders": {
       "title": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "releaseDeleted": "Veröffentlichung \"{title}\" gelöscht.",
   "@releaseDeleted": {
     "placeholders": {
       "title": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "selectTracks": "Titel Auswählen",
   "continueButton": "Fortfahren",
@@ -522,30 +448,24 @@
     "placeholders": {
       "count": {
         "type": "int"
-      
-}
-    
-}
+      }
+    }
   },
   "errorLoadingReleases": "Fehler beim Laden der Veröffentlichungen: {error}",
   "@errorLoadingReleases": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "tracksCount": "Titel ({count})",
   "@tracksCount": {
     "placeholders": {
       "count": {
         "type": "int"
-      
-}
-    
-}
+      }
+    }
   },
   "addTracks": "Titel Hinzufügen",
   "allProjectsAlreadyInRelease": "Alle Projekte sind bereits in dieser Veröffentlichung.",
@@ -557,20 +477,16 @@
       },
       "plural": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "releaseFilesCount": "Veröffentlichungsdateien ({count})",
   "@releaseFilesCount": {
     "placeholders": {
       "count": {
         "type": "int"
-      
-}
-    
-}
+      }
+    }
   },
   "addFiles": "Dateien Hinzufügen",
   "addedFilesToRelease": "{count} Datei{plural} zur Veröffentlichung hinzugefügt.",
@@ -581,20 +497,16 @@
       },
       "plural": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToAddFiles": "Dateien konnten nicht hinzugefügt werden: {error}",
   "@failedToAddFiles": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "noFilesToDownload": "Keine Dateien zum Herunterladen.",
   "zipFileSaved": "ZIP-Datei gespeichert in: {path}",
@@ -602,10 +514,8 @@
     "placeholders": {
       "path": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "creatingZipFile": "ZIP-Datei wird erstellt...",
   "failedToCreateZip": "ZIP konnte nicht erstellt werden: {error}",
@@ -613,10 +523,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "selectedFileDoesNotExist": "Ausgewählte Datei existiert nicht.",
   "imageSavedSuccessfully": "Bild erfolgreich gespeichert!",
@@ -625,30 +533,24 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "errorLoadingRelease": "Fehler beim Laden der Veröffentlichung: {error}",
   "@errorLoadingRelease": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "errorLoadingProjects": "Fehler beim Laden der Projekte: {error}",
   "@errorLoadingProjects": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "releaseSaved": "Veröffentlichung gespeichert.",
   "releaseDate": "Veröffentlichungsdatum",
@@ -657,10 +559,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "releaseDateSaved": "Veröffentlichungsdatum gespeichert.",
   "releaseDateCleared": "Veröffentlichungsdatum gelöscht.",
@@ -674,10 +574,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "renameFile": "Datei Umbenennen",
   "selectTracksToAdd": "Titel zum Hinzufügen Auswählen",
@@ -687,10 +585,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "deleteFile": "Datei Löschen",
   "deleteFileMessage": "Möchten Sie \"{fileName}\" wirklich löschen?",
@@ -698,40 +594,32 @@
     "placeholders": {
       "fileName": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "fileDeleted": "Datei \"{fileName}\" gelöscht.",
   "@fileDeleted": {
     "placeholders": {
       "fileName": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToDeleteFile": "Datei konnte nicht gelöscht werden: {error}",
   "@failedToDeleteFile": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "couldNotOpenFolder": "Ordner konnte nicht geöffnet werden: {error}",
   "@couldNotOpenFolder": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "artwork": "Cover",
   "title": "Titel",
@@ -742,10 +630,8 @@
     "placeholders": {
       "count": {
         "type": "int"
-      
-}
-    
-}
+      }
+    }
   },
   "searchTracks": "Titel suchen",
   "searchTracksHint": "Suche nach Name oder DAW-Typ",
@@ -798,50 +684,40 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToRemoveProfilePhoto": "Profilfoto konnte nicht entfernt werden: {error}",
   "@failedToRemoveProfilePhoto": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToRenameProfile": "Profil konnte nicht umbenannt werden: {error}",
   "@failedToRenameProfile": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToDeleteProfile": "Profil konnte nicht gelöscht werden: {error}",
   "@failedToDeleteProfile": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "errorLoadingProfiles": "Fehler beim Laden der Profile: {error}",
   "@errorLoadingProfiles": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "projectPhaseIdea": "Idee",
   "projectPhaseArranging": "Arrangement",
@@ -862,10 +738,8 @@
       },
       "status": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "statusChangedForProjectsWithErrors": "Phase für {successCount} Projekt{successPlural} auf \"{status}\" geändert, {failCount} fehlgeschlagen{failPlural}",
   "@statusChangedForProjectsWithErrors": {
@@ -885,10 +759,8 @@
       },
       "status": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToChangeStatus": "Fehler beim Ändern der Phase: {error}",
   "@failedToChangeStatus": {
@@ -896,10 +768,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "tooltipEditProfileName": "Profilname bearbeiten",
   "tooltipAddTodo": "Aufgabe hinzufügen",
@@ -925,10 +795,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "backupImportedSuccessfully": "Sicherung erfolgreich importiert: {projectsCount} Projekte, {rootsCount} Projektordner, {releasesCount} Veröffentlichungen",
   "@backupImportedSuccessfully": {
@@ -942,10 +810,8 @@
       },
       "releasesCount": {
         "type": "int"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToImportBackup": "Fehler beim Importieren der Sicherung: {error}",
   "@failedToImportBackup": {
@@ -953,10 +819,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "importBackupMessage": "Wählen Sie, wie die Sicherung importiert werden soll:",
   "mergeWithCurrentProfile": "Mit dem aktuellen aktiven Profil zusammenführen",
@@ -977,10 +841,8 @@
       },
       "releasesCount": {
         "type": "int"
-      
-}
-    
-}
+      }
+    }
   },
   "noProfileSelected": "Kein Profil ausgewählt",
   "exportBackupDialogTitle": "Sicherung Exportieren",
@@ -997,10 +859,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "removePreviewSong": "Vorschau-Song entfernen",
   "removePreviewSongConfirm": "Sind Sie sicher, dass Sie den Vorschau-Song entfernen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
@@ -1117,20 +977,16 @@
     "placeholders": {
       "url": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "errorOpeningBrowser": "Fehler beim Öffnen des Browsers: {error}",
   "@errorOpeningBrowser": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "generateTestingDatabase": "Testdatenbank generieren",
   "generateTestingDatabaseMessage": "Dies wird die Datenbank mit Beispielprojekten und Veröffentlichungen für Tests füllen. Fortfahren?",
@@ -1140,10 +996,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "playlists": "Playlists",
   "playlistsDesktopOnly": "Playlists sind nur auf Android verfügbar.",
@@ -1251,10 +1105,8 @@
     "placeholders": {
       "path": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "@shareZip": {
     "description": "Label for the share as ZIP button"
@@ -1265,10 +1117,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToSharePreviewSongAsZip": "Vorschaulied konnte nicht als ZIP geteilt werden: {error}",
   "@failedToSharePreviewSongAsZip": {
@@ -1276,10 +1126,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "biographySaved": "Biografie gespeichert",
   "@biographySaved": {
@@ -1291,10 +1139,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "fileSavedTo": "Datei gespeichert unter {filename}",
   "@fileSavedTo": {
@@ -1302,10 +1148,8 @@
     "placeholders": {
       "filename": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToDownloadFile": "Datei konnte nicht heruntergeladen werden: {error}",
   "@failedToDownloadFile": {
@@ -1313,10 +1157,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "allFilesSavedTo": "Alle Dateien gespeichert unter {filename}",
   "@allFilesSavedTo": {
@@ -1324,10 +1166,8 @@
     "placeholders": {
       "filename": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "artworkAdded": "Artwork hinzugefügt",
   "@artworkAdded": {
@@ -1339,10 +1179,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "artworkRemoved": "Artwork entfernt",
   "@artworkRemoved": {
@@ -1354,10 +1192,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "pressKitFileAdded": "Pressemappe-Datei hinzugefügt",
   "@pressKitFileAdded": {
@@ -1369,10 +1205,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "pressKitFileRemoved": "Pressemappe-Datei entfernt",
   "@pressKitFileRemoved": {
@@ -1384,10 +1218,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "selectFilesToDownload": "Dateien zum Herunterladen auswählen",
   "@selectFilesToDownload": {
@@ -1422,10 +1254,8 @@
       },
       "plural": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "nFilesSavedTo": "{count} Datei{plural} gespeichert unter {filename}",
   "@nFilesSavedTo": {
@@ -1439,10 +1269,8 @@
       },
       "filename": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "addAsset": "Asset hinzufügen",
   "@addAsset": {
@@ -1462,10 +1290,8 @@
     "placeholders": {
       "assetName": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToAddAsset": "Asset konnte nicht hinzugefügt werden: {error}",
   "@failedToAddAsset": {
@@ -1473,10 +1299,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "assetRemoved": "{assetName} entfernt",
   "@assetRemoved": {
@@ -1484,10 +1308,8 @@
     "placeholders": {
       "assetName": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToRemoveAsset": "Asset konnte nicht entfernt werden: {error}",
   "@failedToRemoveAsset": {
@@ -1495,10 +1317,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "profileNotFound": "Profil nicht gefunden",
   "@profileNotFound": {
@@ -1633,10 +1453,8 @@
     "placeholders": {
       "days": {
         "type": "int"
-      
-}
-    
-}
+      }
+    }
   },
   "statsNoProjectsFound": "Keine Projekte gefunden",
   "statsNotTouchedDays": "Seit {days} Tagen unverändert",
@@ -1652,10 +1470,10 @@
   "monoSwitchFailed": "Mono-Umschaltung fehlgeschlagen: {error}",
   "@monoSwitchFailed": {
     "placeholders": {
-      "error": { "type": "String" 
-}
-    
-}
+      "error": {
+        "type": "String"
+      }
+    }
   },
   "analyzeLabel": "Analysieren",
   "reAnalyzeLabel": "Erneut analysieren",
@@ -1672,8 +1490,111 @@
   "queuePendingSummary": "{tasks} ausstehende Aufgaben in {projects} Projekten",
   "@queuePendingSummary": {
     "placeholders": {
-      "tasks": { "type": "int" },
-      "projects": { "type": "int" }
+      "tasks": {
+        "type": "int"
+      },
+      "projects": {
+        "type": "int"
+      }
     }
-  }
+  },
+  "appTitleWithVersion": "DAW Project Manager v{version}",
+  "@appTitleWithVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "versionLabel": "Version {version}",
+  "@versionLabel": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "renameProjectFileTitle": "Projektdatei umbenennen",
+  "renameFileButtonLabel": "Datei umbenennen",
+  "newFileNameLabel": "Neuer Dateiname (ohne Erweiterung)",
+  "renameAlreadyExists": "Eine Datei namens \"{name}\" existiert bereits.",
+  "@renameAlreadyExists": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "renameSuccess": "Umbenannt in \"{name}\"",
+  "@renameSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "renameFailed": "Umbenennen fehlgeschlagen: {error}",
+  "@renameFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "nameCannotBeEmpty": "Name darf nicht leer sein",
+  "nameInvalidCharacters": "Name darf / \\ : nicht enthalten",
+  "alsoRenameContainingFolder": "Auch übergeordneten Ordner umbenennen",
+  "renameButton": "Umbenennen",
+  "previewMixdownFolderTitle": "Vorschau-Mixdown-Ordner",
+  "previewMixdownFolderSubtitle": "Unterordnername in jedem Projektordner, der zuerst bei der automatischen Erkennung von Vorschau-Songs geprüft wird. Leer lassen für DAW-Standardwerte.",
+  "previewMixdownFolderHint": "z.B. Mixdowns",
+  "dawInfoLabel": "DAW: {daw}",
+  "@dawInfoLabel": {
+    "placeholders": {
+      "daw": {
+        "type": "String"
+      }
+    }
+  },
+  "bpmInfoLabel": "BPM: {bpm}",
+  "@bpmInfoLabel": {
+    "placeholders": {
+      "bpm": {
+        "type": "String"
+      }
+    }
+  },
+  "keyInfoLabel": "Tonart: {key}",
+  "@keyInfoLabel": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "audioFileNotFound": "Audiodatei nicht gefunden",
+  "errorPlayingAudio": "Fehler beim Abspielen: {error}",
+  "@errorPlayingAudio": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationTestTitle": "Benachrichtigungen testen (Zeitzone und Planung):",
+  "notificationSendNow": "Jetzt senden",
+  "notificationSchedule30s": "In 30s planen",
+  "notificationShowDebugInfo": "Debug-Info anzeigen",
+  "notificationRescheduleAll": "Alle neu planen",
+  "notificationTestSent": "✅ Test-Benachrichtigung gesendet!",
+  "notificationTestScheduled": "✅ Test-Benachrichtigung in 30 Sekunden geplant! Konsole prüfen.",
+  "notificationTestError": "❌ Fehler: {error}",
+  "@notificationTestError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationDebugTitle": "🐛 Debug-Informationen"
 }

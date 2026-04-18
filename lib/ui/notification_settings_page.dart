@@ -302,7 +302,7 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Test notifications to verify timezone and scheduling:',
+                      AppLocalizations.of(context)!.notificationTestTitle,
                       style: TextStyle(color: Colors.orange.shade900),
                     ),
                     const SizedBox(height: 16),
@@ -311,7 +311,7 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
                         Expanded(
                           child: ElevatedButton.icon(
                             icon: const Icon(Icons.notifications_active),
-                            label: const Text('Send Now'),
+                            label: Text(AppLocalizations.of(context)!.notificationSendNow),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.orange.shade700,
                               foregroundColor: Colors.white,
@@ -322,9 +322,9 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
                                       await _notificationService.sendTestNotification();
                                       if (mounted) {
                                         ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(
-                                            content: Text('✅ Test notification sent!'),
-                                            duration: Duration(seconds: 2),
+                                          SnackBar(
+                                            content: Text(AppLocalizations.of(context)!.notificationTestSent),
+                                            duration: const Duration(seconds: 2),
                                           ),
                                         );
                                       }
@@ -332,7 +332,7 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
                                       if (mounted) {
                                         ScaffoldMessenger.of(context).showSnackBar(
                                           SnackBar(
-                                            content: Text('❌ Error: $e'),
+                                            content: Text(AppLocalizations.of(context)!.notificationTestError(e.toString())),
                                             backgroundColor: Colors.red,
                                           ),
                                         );
@@ -346,7 +346,7 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
                         Expanded(
                           child: ElevatedButton.icon(
                             icon: const Icon(Icons.schedule),
-                            label: const Text('Schedule +30s'),
+                            label: Text(AppLocalizations.of(context)!.notificationSchedule30s),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.orange.shade600,
                               foregroundColor: Colors.white,
@@ -357,9 +357,9 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
                                       await _notificationService.scheduleTestNotification(secondsFromNow: 30);
                                       if (mounted) {
                                         ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(
-                                            content: Text('✅ Test notification scheduled for 30 seconds! Check console logs.'),
-                                            duration: Duration(seconds: 3),
+                                          SnackBar(
+                                            content: Text(AppLocalizations.of(context)!.notificationTestScheduled),
+                                            duration: const Duration(seconds: 3),
                                           ),
                                         );
                                       }
@@ -367,7 +367,7 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
                                       if (mounted) {
                                         ScaffoldMessenger.of(context).showSnackBar(
                                           SnackBar(
-                                            content: Text('❌ Error: $e'),
+                                            content: Text(AppLocalizations.of(context)!.notificationTestError(e.toString())),
                                             backgroundColor: Colors.red,
                                           ),
                                         );
@@ -385,7 +385,7 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
                         Expanded(
                           child: ElevatedButton.icon(
                             icon: const Icon(Icons.info_outline),
-                            label: const Text('Show Debug Info'),
+                            label: Text(AppLocalizations.of(context)!.notificationShowDebugInfo),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.orange.shade500,
                               foregroundColor: Colors.white,
@@ -398,7 +398,7 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
                                 showDialog(
                                   context: context,
                                   builder: (context) => AlertDialog(
-                                    title: const Text('🐛 Debug Information'),
+                                    title: Text(AppLocalizations.of(context)!.notificationDebugTitle),
                                     content: SingleChildScrollView(
                                       child: SelectableText(
                                         '📊 Notification System Status\n'
@@ -416,7 +416,7 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
                                     actions: [
                                       TextButton(
                                         onPressed: () => Navigator.pop(context),
-                                        child: const Text('Close'),
+                                        child: Text(AppLocalizations.of(context)!.close),
                                       ),
                                     ],
                                   ),
@@ -429,7 +429,7 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
                         Expanded(
                           child: ElevatedButton.icon(
                             icon: const Icon(Icons.refresh),
-                            label: const Text('Re-schedule All'),
+                            label: Text(AppLocalizations.of(context)!.notificationRescheduleAll),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.blue.shade600,
                               foregroundColor: Colors.white,
@@ -469,7 +469,7 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
                                       if (mounted) {
                                         ScaffoldMessenger.of(context).showSnackBar(
                                           SnackBar(
-                                            content: Text('❌ Error: $e'),
+                                            content: Text(AppLocalizations.of(context)!.notificationTestError(e.toString())),
                                             backgroundColor: Colors.red,
                                           ),
                                         );

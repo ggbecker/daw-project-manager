@@ -2237,4 +2237,115 @@ class AppLocalizationsIt extends AppLocalizations {
   String queuePendingSummary(int tasks, int projects) {
     return '$tasks attività in sospeso in $projects progetti';
   }
+
+  @override
+  String appTitleWithVersion(String version) {
+    return 'DAW Project Manager v$version';
+  }
+
+  @override
+  String versionLabel(String version) {
+    return 'Versione $version';
+  }
+
+  @override
+  String get renameProjectFileTitle => 'Rinomina file di progetto';
+
+  @override
+  String get renameFileButtonLabel => 'Rinomina file';
+
+  @override
+  String get newFileNameLabel => 'Nuovo nome file (senza estensione)';
+
+  @override
+  String renameAlreadyExists(String name) {
+    return 'Un file chiamato \"$name\" esiste già.';
+  }
+
+  @override
+  String renameSuccess(String name) {
+    return 'Rinominato in \"$name\"';
+  }
+
+  @override
+  String renameFailed(String error) {
+    return 'Rinomina fallita: $error';
+  }
+
+  @override
+  String get nameCannotBeEmpty => 'Il nome non può essere vuoto';
+
+  @override
+  String get nameInvalidCharacters => 'Il nome non può contenere / \\ :';
+
+  @override
+  String get alsoRenameContainingFolder =>
+      'Rinomina anche la cartella contenitore';
+
+  @override
+  String get renameButton => 'Rinomina';
+
+  @override
+  String get previewMixdownFolderTitle => 'Cartella mixdown anteprima';
+
+  @override
+  String get previewMixdownFolderSubtitle =>
+      'Nome della sottocartella in ogni cartella di progetto da controllare prima durante il rilevamento automatico dei brani di anteprima. Lascia vuoto per usare i valori predefiniti del DAW.';
+
+  @override
+  String get previewMixdownFolderHint => 'es. Mixdown';
+
+  @override
+  String dawInfoLabel(String daw) {
+    return 'DAW: $daw';
+  }
+
+  @override
+  String bpmInfoLabel(String bpm) {
+    return 'BPM: $bpm';
+  }
+
+  @override
+  String keyInfoLabel(String key) {
+    return 'Tonalità: $key';
+  }
+
+  @override
+  String get audioFileNotFound => 'File audio non trovato';
+
+  @override
+  String errorPlayingAudio(String error) {
+    return 'Errore durante la riproduzione audio: $error';
+  }
+
+  @override
+  String get notificationTestTitle =>
+      'Testa le notifiche per verificare fuso orario e pianificazione:';
+
+  @override
+  String get notificationSendNow => 'Invia ora';
+
+  @override
+  String get notificationSchedule30s => 'Pianifica +30s';
+
+  @override
+  String get notificationShowDebugInfo => 'Mostra informazioni di debug';
+
+  @override
+  String get notificationRescheduleAll => 'Ripianifica tutto';
+
+  @override
+  String get notificationTestSent => '✅ Notifica di test inviata!';
+
+  @override
+  String get notificationTestScheduled =>
+      '✅ Notifica di test pianificata per 30 secondi! Controlla i log.';
+
+  @override
+  String notificationTestError(String error) {
+    return '❌ Errore: $error';
+  }
+
+  @override
+  String get notificationDebugTitle => '🐛 Informazioni di debug';
 }

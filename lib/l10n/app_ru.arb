@@ -32,20 +32,16 @@
     "placeholders": {
       "projectName": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToLaunchProject": "Не удалось открыть {projectName}",
   "@failedToLaunchProject": {
     "placeholders": {
       "projectName": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "clearLibrary": "Очистить библиотеку",
   "clearLibraryMessage": "Это удалит все сохраненные проекты и исходные папки. Продолжить?",
@@ -63,10 +59,8 @@
     "placeholders": {
       "date": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "excludedFoldersSectionTitle": "Исключённые папки",
   "excludedFoldersSectionSubtitle": "Эти папки будут пропускаться при сканировании, даже если они находятся внутри папки проектов.",
@@ -80,10 +74,8 @@
     "placeholders": {
       "path": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "removeExcludedFolderMessageNoPath": "Эта папка больше не будет исключаться.",
   "desktopOnlyPathsSettings": "Эта страница доступна только в настольном приложении.",
@@ -93,10 +85,8 @@
     "placeholders": {
       "path": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "projects": "Проекты",
   "hidden": "скрытые",
@@ -124,10 +114,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "saved": "Сохранено",
   "failedToLaunchDaw": "Не удалось открыть DAW",
@@ -141,10 +129,8 @@
     "placeholders": {
       "profileName": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "editProfile": "Редактировать профиль",
   "changePhoto": "Изменить фото",
@@ -155,10 +141,8 @@
     "placeholders": {
       "trackName": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "saveName": "Сохранить имя",
   "profilePhotoUpdated": "Фото профиля обновлено.",
@@ -168,30 +152,24 @@
     "placeholders": {
       "newName": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "profileCreated": "Профиль \"{name}\" успешно создан",
   "@profileCreated": {
     "placeholders": {
       "name": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "profileDeleted": "Профиль \"{name}\" удален",
   "@profileDeleted": {
     "placeholders": {
       "name": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "pleaseEnterProfileName": "Пожалуйста, введите имя профиля",
   "failedToCreateProfile": "Ошибка создания профиля: {error}",
@@ -199,10 +177,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "noProfilesFound": "Профили не найдены. Создайте один выше.",
   "clearLibraryTooltip": "Очистить библиотеку (проекты и папки проектов)",
@@ -211,10 +187,8 @@
     "placeholders": {
       "date": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "name": "Название",
   "status": "Статус",
@@ -245,30 +219,24 @@
     "placeholders": {
       "path": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "rootsCount": "Папки Проектов: {count}",
   "@rootsCount": {
     "placeholders": {
       "count": {
         "type": "int"
-      
-}
-    
-}
+      }
+    }
   },
   "projectsCount": "Проекты: {count}",
   "@projectsCount": {
     "placeholders": {
       "count": {
         "type": "int"
-      
-}
-    
-}
+      }
+    }
   },
   "hiddenOnly": "(только скрытые)",
   "hiddenCount": "({count} скрытых)",
@@ -276,10 +244,8 @@
     "placeholders": {
       "count": {
         "type": "int"
-      
-}
-    
-}
+      }
+    }
   },
   "projectsHidden": "{count} проект{plural} скрыт{plural}.",
   "@projectsHidden": {
@@ -289,10 +255,8 @@
       },
       "plural": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "projectsUnhidden": "{count} проект{plural} показан{plural}.",
   "@projectsUnhidden": {
@@ -302,30 +266,24 @@
       },
       "plural": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToHideProjects": "Ошибка скрытия проектов: {error}",
   "@failedToHideProjects": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToUnhideProjects": "Ошибка показа проектов: {error}",
   "@failedToUnhideProjects": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "hideProjectMessage": "Вы уверены, что хотите скрыть \"{projectName}\"?",
   "@hideProjectMessage": {
@@ -333,40 +291,32 @@
     "placeholders": {
       "projectName": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "releaseCreated": "Релиз \"{title}\" успешно создан.",
   "@releaseCreated": {
     "placeholders": {
       "title": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToCreateRelease": "Ошибка создания релиза: {error}",
   "@failedToCreateRelease": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "errorAddingFolder": "Ошибка добавления папки: {error}",
   "@errorAddingFolder": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "noProjectsFoundInRoots": "Проекты не найдены в выбранных папках проектов.",
   "selectProjectsFolder": "Выберите папку проектов",
@@ -384,50 +334,40 @@
       },
       "failures": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "extractionFailures": "{count} не удалось{plural}.",
   "@extractionFailures": {
     "placeholders": {
       "count": {
         "type": "int"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToWriteBpmFile": "Ошибка записи файла BPM: {error}",
   "@failedToWriteBpmFile": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToWriteKeyFile": "Ошибка записи файла тональности: {error}",
   "@failedToWriteKeyFile": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToLaunch": "Ошибка открытия: {error}",
   "@failedToLaunch": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "libraryCleared": "Библиотека очищена.",
   "scanType": "Сканирование {type}",
@@ -435,10 +375,8 @@
     "placeholders": {
       "type": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "scanComplete": "{type} завершено: {count} проект{plural} добавлен{plural}/обновлен{plural}.",
   "@scanComplete": {
@@ -451,10 +389,8 @@
       },
       "plural": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "projectsSelected": "{count} проект{plural} выбран{plural}",
   "@projectsSelected": {
@@ -464,30 +400,24 @@
       },
       "plural": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "openingFolder": "Открытие папки для {projectName}…",
   "@openingFolder": {
     "placeholders": {
       "projectName": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToOpenFolder": "Ошибка открытия папки: {error}",
   "@failedToOpenFolder": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "osNotSupportedForOpeningFolder": "Операционная система не поддерживается для открытия папки.",
   "noProjectsAvailable": "Проекты недоступны. Пожалуйста, сначала добавьте проекты.",
@@ -498,20 +428,16 @@
     "placeholders": {
       "title": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "releaseDeleted": "Релиз \"{title}\" удален.",
   "@releaseDeleted": {
     "placeholders": {
       "title": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "selectTracks": "Выбрать Треки",
   "continueButton": "Продолжить",
@@ -522,30 +448,24 @@
     "placeholders": {
       "count": {
         "type": "int"
-      
-}
-    
-}
+      }
+    }
   },
   "errorLoadingReleases": "Ошибка загрузки релизов: {error}",
   "@errorLoadingReleases": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "tracksCount": "Треки ({count})",
   "@tracksCount": {
     "placeholders": {
       "count": {
         "type": "int"
-      
-}
-    
-}
+      }
+    }
   },
   "addTracks": "Добавить Треки",
   "allProjectsAlreadyInRelease": "Все проекты уже в этом релизе.",
@@ -557,20 +477,16 @@
       },
       "plural": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "releaseFilesCount": "Файлы Релиза ({count})",
   "@releaseFilesCount": {
     "placeholders": {
       "count": {
         "type": "int"
-      
-}
-    
-}
+      }
+    }
   },
   "addFiles": "Добавить Файлы",
   "addedFilesToRelease": "Добавлен{plural} {count} файл{plural} в релиз.",
@@ -581,20 +497,16 @@
       },
       "plural": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToAddFiles": "Ошибка добавления файлов: {error}",
   "@failedToAddFiles": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "noFilesToDownload": "Нет файлов для загрузки.",
   "zipFileSaved": "ZIP файл сохранен в: {path}",
@@ -602,10 +514,8 @@
     "placeholders": {
       "path": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "creatingZipFile": "Создание ZIP-файла...",
   "failedToCreateZip": "Ошибка создания ZIP: {error}",
@@ -613,10 +523,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "selectedFileDoesNotExist": "Выбранный файл не существует.",
   "imageSavedSuccessfully": "Изображение успешно сохранено!",
@@ -625,30 +533,24 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "errorLoadingRelease": "Ошибка загрузки релиза: {error}",
   "@errorLoadingRelease": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "errorLoadingProjects": "Ошибка загрузки проектов: {error}",
   "@errorLoadingProjects": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "releaseSaved": "Релиз сохранен.",
   "releaseDate": "Дата Релиза",
@@ -657,10 +559,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "releaseDateSaved": "Дата релиза сохранена.",
   "releaseDateCleared": "Дата релиза очищена.",
@@ -674,10 +574,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "renameFile": "Переименовать Файл",
   "selectTracksToAdd": "Выбрать Треки для Добавления",
@@ -687,10 +585,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "deleteFile": "Удалить Файл",
   "deleteFileMessage": "Вы уверены, что хотите удалить \"{fileName}\"?",
@@ -698,40 +594,32 @@
     "placeholders": {
       "fileName": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "fileDeleted": "Файл \"{fileName}\" удален.",
   "@fileDeleted": {
     "placeholders": {
       "fileName": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToDeleteFile": "Ошибка удаления файла: {error}",
   "@failedToDeleteFile": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "couldNotOpenFolder": "Не удалось открыть папку: {error}",
   "@couldNotOpenFolder": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "artwork": "Обложка",
   "title": "Название",
@@ -742,10 +630,8 @@
     "placeholders": {
       "count": {
         "type": "int"
-      
-}
-    
-}
+      }
+    }
   },
   "searchTracks": "Поиск треков",
   "searchTracksHint": "Поиск по названию или типу DAW",
@@ -798,50 +684,40 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToRemoveProfilePhoto": "Ошибка удаления фото профиля: {error}",
   "@failedToRemoveProfilePhoto": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToRenameProfile": "Ошибка переименования профиля: {error}",
   "@failedToRenameProfile": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToDeleteProfile": "Ошибка удаления профиля: {error}",
   "@failedToDeleteProfile": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "errorLoadingProfiles": "Ошибка загрузки профилей: {error}",
   "@errorLoadingProfiles": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "projectPhaseIdea": "Идея",
   "projectPhaseArranging": "Аранжировка",
@@ -862,10 +738,8 @@
       },
       "status": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "statusChangedForProjectsWithErrors": "Фаза изменена на \"{status}\" для {successCount} проект{successPlural}, {failCount} не удалось{failPlural}",
   "@statusChangedForProjectsWithErrors": {
@@ -885,10 +759,8 @@
       },
       "status": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToChangeStatus": "Ошибка при изменении фазы: {error}",
   "@failedToChangeStatus": {
@@ -896,10 +768,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "tooltipEditProfileName": "Редактировать имя профиля",
   "tooltipAddTodo": "Добавить задачу",
@@ -925,10 +795,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "backupImportedSuccessfully": "Резервная копия успешно импортирована: {projectsCount} проектов, {rootsCount} папок проектов, {releasesCount} релизов",
   "@backupImportedSuccessfully": {
@@ -942,10 +810,8 @@
       },
       "releasesCount": {
         "type": "int"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToImportBackup": "Ошибка при импорте резервной копии: {error}",
   "@failedToImportBackup": {
@@ -953,10 +819,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "importBackupMessage": "Выберите способ импорта резервной копии:",
   "mergeWithCurrentProfile": "Объединить с текущим активным профилем",
@@ -977,10 +841,8 @@
       },
       "releasesCount": {
         "type": "int"
-      
-}
-    
-}
+      }
+    }
   },
   "noProfileSelected": "Профиль не выбран",
   "exportBackupDialogTitle": "Экспорт резервной копии",
@@ -997,10 +859,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "removePreviewSong": "Удалить превью трека",
   "removePreviewSongConfirm": "Вы уверены, что хотите удалить превью трека? Это действие нельзя отменить.",
@@ -1117,20 +977,16 @@
     "placeholders": {
       "url": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "errorOpeningBrowser": "Ошибка при открытии браузера: {error}",
   "@errorOpeningBrowser": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "generateTestingDatabase": "Создать тестовую базу данных",
   "generateTestingDatabaseMessage": "Это заполнит базу данных примерами проектов и релизов для тестирования. Продолжить?",
@@ -1140,10 +996,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "playlists": "Плейлисты",
   "playlistsDesktopOnly": "Плейлисты доступны только на Android.",
@@ -1251,10 +1105,8 @@
     "placeholders": {
       "path": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "@shareZip": {
     "description": "Label for the share as ZIP button"
@@ -1265,10 +1117,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToSharePreviewSongAsZip": "Не удалось поделиться превью как ZIP: {error}",
   "@failedToSharePreviewSongAsZip": {
@@ -1276,10 +1126,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "biographySaved": "Биография сохранена",
   "@biographySaved": {
@@ -1291,10 +1139,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "fileSavedTo": "Файл сохранён в {filename}",
   "@fileSavedTo": {
@@ -1302,10 +1148,8 @@
     "placeholders": {
       "filename": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToDownloadFile": "Не удалось скачать файл: {error}",
   "@failedToDownloadFile": {
@@ -1313,10 +1157,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "allFilesSavedTo": "Все файлы сохранены в {filename}",
   "@allFilesSavedTo": {
@@ -1324,10 +1166,8 @@
     "placeholders": {
       "filename": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "artworkAdded": "Обложка добавлена",
   "@artworkAdded": {
@@ -1339,10 +1179,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "artworkRemoved": "Обложка удалена",
   "@artworkRemoved": {
@@ -1354,10 +1192,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "pressKitFileAdded": "Файл пресс-кита добавлен",
   "@pressKitFileAdded": {
@@ -1369,10 +1205,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "pressKitFileRemoved": "Файл пресс-кита удалён",
   "@pressKitFileRemoved": {
@@ -1384,10 +1218,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "selectFilesToDownload": "Выберите файлы для загрузки",
   "@selectFilesToDownload": {
@@ -1422,10 +1254,8 @@
       },
       "plural": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "nFilesSavedTo": "{count} файл{plural} сохранено в {filename}",
   "@nFilesSavedTo": {
@@ -1439,10 +1269,8 @@
       },
       "filename": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "addAsset": "Добавить ресурс",
   "@addAsset": {
@@ -1462,10 +1290,8 @@
     "placeholders": {
       "assetName": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToAddAsset": "Не удалось добавить ресурс: {error}",
   "@failedToAddAsset": {
@@ -1473,10 +1299,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "assetRemoved": "{assetName} удалён",
   "@assetRemoved": {
@@ -1484,10 +1308,8 @@
     "placeholders": {
       "assetName": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToRemoveAsset": "Не удалось удалить ресурс: {error}",
   "@failedToRemoveAsset": {
@@ -1495,10 +1317,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "profileNotFound": "Профиль не найден",
   "@profileNotFound": {
@@ -1633,10 +1453,8 @@
     "placeholders": {
       "days": {
         "type": "int"
-      
-}
-    
-}
+      }
+    }
   },
   "statsNoProjectsFound": "Проекты не найдены",
   "statsNotTouchedDays": "Не изменялся {days} дн.",
@@ -1652,10 +1470,10 @@
   "monoSwitchFailed": "Ошибка переключения моно: {error}",
   "@monoSwitchFailed": {
     "placeholders": {
-      "error": { "type": "String" 
-}
-    
-}
+      "error": {
+        "type": "String"
+      }
+    }
   },
   "analyzeLabel": "Анализировать",
   "reAnalyzeLabel": "Повторный анализ",
@@ -1672,8 +1490,111 @@
   "queuePendingSummary": "{tasks} незавершённых задач в {projects} проектах",
   "@queuePendingSummary": {
     "placeholders": {
-      "tasks": { "type": "int" },
-      "projects": { "type": "int" }
+      "tasks": {
+        "type": "int"
+      },
+      "projects": {
+        "type": "int"
+      }
     }
-  }
+  },
+  "appTitleWithVersion": "DAW Project Manager v{version}",
+  "@appTitleWithVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "versionLabel": "Версия {version}",
+  "@versionLabel": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "renameProjectFileTitle": "Переименовать файл проекта",
+  "renameFileButtonLabel": "Переименовать файл",
+  "newFileNameLabel": "Новое имя файла (без расширения)",
+  "renameAlreadyExists": "Файл с именем \"{name}\" уже существует.",
+  "@renameAlreadyExists": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "renameSuccess": "Переименовано в \"{name}\"",
+  "@renameSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "renameFailed": "Не удалось переименовать: {error}",
+  "@renameFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "nameCannotBeEmpty": "Имя не может быть пустым",
+  "nameInvalidCharacters": "Имя не может содержать / \\ :",
+  "alsoRenameContainingFolder": "Также переименовать содержащую папку",
+  "renameButton": "Переименовать",
+  "previewMixdownFolderTitle": "Папка миксов для предпросмотра",
+  "previewMixdownFolderSubtitle": "Имя подпапки в каждой папке проекта, которую нужно проверять в первую очередь при автоматическом обнаружении песен для предпросмотра. Оставьте пустым для использования настроек DAW по умолчанию.",
+  "previewMixdownFolderHint": "например, Миксы",
+  "dawInfoLabel": "DAW: {daw}",
+  "@dawInfoLabel": {
+    "placeholders": {
+      "daw": {
+        "type": "String"
+      }
+    }
+  },
+  "bpmInfoLabel": "BPM: {bpm}",
+  "@bpmInfoLabel": {
+    "placeholders": {
+      "bpm": {
+        "type": "String"
+      }
+    }
+  },
+  "keyInfoLabel": "Тональность: {key}",
+  "@keyInfoLabel": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "audioFileNotFound": "Аудиофайл не найден",
+  "errorPlayingAudio": "Ошибка воспроизведения аудио: {error}",
+  "@errorPlayingAudio": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationTestTitle": "Тестирование уведомлений для проверки часового пояса и планирования:",
+  "notificationSendNow": "Отправить сейчас",
+  "notificationSchedule30s": "Запланировать +30с",
+  "notificationShowDebugInfo": "Показать отладочную информацию",
+  "notificationRescheduleAll": "Перепланировать все",
+  "notificationTestSent": "✅ Тестовое уведомление отправлено!",
+  "notificationTestScheduled": "✅ Тестовое уведомление запланировано на 30 секунд! Проверьте журналы консоли.",
+  "notificationTestError": "❌ Ошибка: {error}",
+  "@notificationTestError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationDebugTitle": "🐛 Отладочная информация"
 }
