@@ -2185,4 +2185,113 @@ class AppLocalizationsJa extends AppLocalizations {
   String queuePendingSummary(int tasks, int projects) {
     return '$projects個のプロジェクトに$tasks件の未完了タスク';
   }
+
+  @override
+  String appTitleWithVersion(String version) {
+    return 'DAW Project Manager v$version';
+  }
+
+  @override
+  String versionLabel(String version) {
+    return 'バージョン $version';
+  }
+
+  @override
+  String get renameProjectFileTitle => 'プロジェクトファイルの名前変更';
+
+  @override
+  String get renameFileButtonLabel => 'ファイルを名前変更';
+
+  @override
+  String get newFileNameLabel => '新しいファイル名（拡張子なし）';
+
+  @override
+  String renameAlreadyExists(String name) {
+    return '「$name」という名前のファイルが既に存在します。';
+  }
+
+  @override
+  String renameSuccess(String name) {
+    return '「$name」に名前を変更しました';
+  }
+
+  @override
+  String renameFailed(String error) {
+    return '名前の変更に失敗しました: $error';
+  }
+
+  @override
+  String get nameCannotBeEmpty => '名前を空にすることはできません';
+
+  @override
+  String get nameInvalidCharacters => '名前に / \\ : を含めることはできません';
+
+  @override
+  String get alsoRenameContainingFolder => '含まれるフォルダも名前変更する';
+
+  @override
+  String get renameButton => '名前変更';
+
+  @override
+  String get previewMixdownFolderTitle => 'プレビューミックスダウンフォルダ';
+
+  @override
+  String get previewMixdownFolderSubtitle =>
+      'プレビュー曲の自動検出時に最初に確認する各プロジェクトフォルダ内のサブフォルダ名。空にするとDAWのデフォルトを使用します。';
+
+  @override
+  String get previewMixdownFolderHint => '例：Mixdowns';
+
+  @override
+  String dawInfoLabel(String daw) {
+    return 'DAW: $daw';
+  }
+
+  @override
+  String bpmInfoLabel(String bpm) {
+    return 'BPM: $bpm';
+  }
+
+  @override
+  String keyInfoLabel(String key) {
+    return 'キー: $key';
+  }
+
+  @override
+  String get audioFileNotFound => 'オーディオファイルが見つかりません';
+
+  @override
+  String errorPlayingAudio(String error) {
+    return 'オーディオ再生エラー: $error';
+  }
+
+  @override
+  String get notificationTestTitle => 'タイムゾーンとスケジュールを確認するための通知テスト:';
+
+  @override
+  String get notificationSendNow => '今すぐ送信';
+
+  @override
+  String get notificationSchedule30s => '+30秒後にスケジュール';
+
+  @override
+  String get notificationShowDebugInfo => 'デバッグ情報を表示';
+
+  @override
+  String get notificationRescheduleAll => 'すべて再スケジュール';
+
+  @override
+  String get notificationTestSent => '✅ テスト通知を送信しました！';
+
+  @override
+  String get notificationTestScheduled =>
+      '✅ テスト通知をス30秒後にスケジュールしました！コンソールログを確認してください。';
+
+  @override
+  String notificationTestError(String error) {
+    return '❌ エラー: $error';
+  }
+
+  @override
+  String get notificationDebugTitle => '🐛 デバッグ情報';
 }

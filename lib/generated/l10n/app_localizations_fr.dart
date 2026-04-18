@@ -2251,4 +2251,115 @@ class AppLocalizationsFr extends AppLocalizations {
   String queuePendingSummary(int tasks, int projects) {
     return '$tasks tâches en attente dans $projects projets';
   }
+
+  @override
+  String appTitleWithVersion(String version) {
+    return 'DAW Project Manager v$version';
+  }
+
+  @override
+  String versionLabel(String version) {
+    return 'Version $version';
+  }
+
+  @override
+  String get renameProjectFileTitle => 'Renommer le fichier de projet';
+
+  @override
+  String get renameFileButtonLabel => 'Renommer le fichier';
+
+  @override
+  String get newFileNameLabel => 'Nouveau nom de fichier (sans extension)';
+
+  @override
+  String renameAlreadyExists(String name) {
+    return 'Un fichier nommé \"$name\" existe déjà.';
+  }
+
+  @override
+  String renameSuccess(String name) {
+    return 'Renommé en \"$name\"';
+  }
+
+  @override
+  String renameFailed(String error) {
+    return 'Échec du renommage : $error';
+  }
+
+  @override
+  String get nameCannotBeEmpty => 'Le nom ne peut pas être vide';
+
+  @override
+  String get nameInvalidCharacters => 'Le nom ne peut pas contenir / \\ :';
+
+  @override
+  String get alsoRenameContainingFolder => 'Renommer aussi le dossier parent';
+
+  @override
+  String get renameButton => 'Renommer';
+
+  @override
+  String get previewMixdownFolderTitle =>
+      'Dossier de mixage de prévisualisation';
+
+  @override
+  String get previewMixdownFolderSubtitle =>
+      'Nom du sous-dossier dans chaque dossier de projet à vérifier en premier lors de la détection automatique des morceaux de prévisualisation. Laisser vide pour utiliser les valeurs par défaut du DAW.';
+
+  @override
+  String get previewMixdownFolderHint => 'ex. Mixages';
+
+  @override
+  String dawInfoLabel(String daw) {
+    return 'DAW : $daw';
+  }
+
+  @override
+  String bpmInfoLabel(String bpm) {
+    return 'BPM : $bpm';
+  }
+
+  @override
+  String keyInfoLabel(String key) {
+    return 'Tonalité : $key';
+  }
+
+  @override
+  String get audioFileNotFound => 'Fichier audio introuvable';
+
+  @override
+  String errorPlayingAudio(String error) {
+    return 'Erreur de lecture audio : $error';
+  }
+
+  @override
+  String get notificationTestTitle =>
+      'Tester les notifications pour vérifier le fuseau horaire et la planification :';
+
+  @override
+  String get notificationSendNow => 'Envoyer maintenant';
+
+  @override
+  String get notificationSchedule30s => 'Planifier +30s';
+
+  @override
+  String get notificationShowDebugInfo => 'Afficher les infos de débogage';
+
+  @override
+  String get notificationRescheduleAll => 'Replanifier tout';
+
+  @override
+  String get notificationTestSent => '✅ Notification de test envoyée !';
+
+  @override
+  String get notificationTestScheduled =>
+      '✅ Notification de test planifiée dans 30 secondes ! Vérifiez les journaux.';
+
+  @override
+  String notificationTestError(String error) {
+    return '❌ Erreur : $error';
+  }
+
+  @override
+  String get notificationDebugTitle => '🐛 Informations de débogage';
 }

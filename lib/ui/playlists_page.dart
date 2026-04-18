@@ -834,7 +834,7 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
     if (!await file.exists()) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Audio file not found')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.audioFileNotFound)),
         );
       }
       return;
@@ -845,7 +845,7 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error playing audio: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.errorPlayingAudio(e.toString()))),
         );
       }
     }

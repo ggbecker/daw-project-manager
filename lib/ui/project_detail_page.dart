@@ -26,6 +26,7 @@ import '../utils/mobile_utils.dart';
 import '../utils/file_launcher.dart';
 import '../generated/l10n/app_localizations.dart';
 import '../services/audio_analysis_service.dart';
+import '../services/mixdown_detector_service.dart';
 import 'widgets/desktop_title_bar.dart';
 import 'widgets/todo_list_widget.dart';
 import 'project_statistics_page.dart';
@@ -254,6 +255,85 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
           ),
         ),
       );
+    }
+  }
+
+  Future<void> _renameProjectFile(MusicProject project) async {
+    final ext = p.extension(project.filePath);
+    final currentBaseName = p.basenameWithoutExtension(project.filePath);
+    final projectDir = p.dirname(project.filePath);
+    final folderName = p.basename(projectDir);
+    final folderMatchesProject = folderName == currentBaseName;
+
+    final result = await showDialog<({String newName, bool renameFolder})>(
+      context: context,
+      builder: (ctx) => _RenameProjectDialog(
+        currentName: currentBaseName,
+        canRenameFolder: folderMatchesProject,
+      ),
+    );
+    if (result == null || result.newName.trim() == currentBaseName) return;
+
+    final newBaseName = result.newName.trim();
+    final newFilePath = p.join(projectDir, '$newBaseName$ext');
+
+    if (File(newFilePath).existsSync() || Directory(newFilePath).existsSync()) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.renameAlreadyExists('$newBaseName$ext'))),
+        );
+      }
+      return;
+    }
+
+    try {
+      // Rename the project file or bundle directory
+      if (Directory(project.filePath).existsSync()) {
+        await Directory(project.filePath).rename(newFilePath);
+      } else {
+        await File(project.filePath).rename(newFilePath);
+      }
+
+      String finalFilePath = newFilePath;
+      String? newPreviewSongPath = project.previewSongPath;
+      String? newAutoPath = project.previewSongAutoPath;
+
+      // Rename containing folder if requested
+      if (result.renameFolder && folderMatchesProject) {
+        final newFolderPath = p.join(p.dirname(projectDir), newBaseName);
+        if (!Directory(newFolderPath).existsSync()) {
+          await Directory(projectDir).rename(newFolderPath);
+          finalFilePath = p.join(newFolderPath, '$newBaseName$ext');
+          // Fix any stored paths that were inside the old folder
+          if (newPreviewSongPath != null && newPreviewSongPath.startsWith(projectDir)) {
+            newPreviewSongPath = newFolderPath + newPreviewSongPath.substring(projectDir.length);
+          }
+          if (newAutoPath != null && newAutoPath.startsWith(projectDir)) {
+            newAutoPath = newFolderPath + newAutoPath.substring(projectDir.length);
+          }
+        }
+      }
+
+      final repo = await ref.read(repositoryProvider.future);
+      await repo.updateProject(project.copyWith(
+        filePath: finalFilePath,
+        fileName: '$newBaseName$ext',
+        previewSongPath: newPreviewSongPath,
+        previewSongAutoPath: newAutoPath,
+      ));
+      ref.invalidate(allProjectsStreamProvider);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.renameSuccess('$newBaseName$ext'))),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.renameFailed(e.toString()))),
+        );
+      }
     }
   }
 
@@ -1139,6 +1219,20 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                       ),
                                       const SizedBox(width: 12),
 
+                                      // Rename file button (desktop only)
+                                      if (!isMobile)
+                                        Tooltip(
+                                          message: sourceFileExists ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
+                                          child: ElevatedButton.icon(
+                                            onPressed: sourceFileExists
+                                                ? () => _renameProjectFile(updatedProject)
+                                                : null,
+                                            icon: const Icon(Icons.drive_file_rename_outline, size: 18),
+                                            label: Text(AppLocalizations.of(context)!.renameFileButtonLabel),
+                                          ),
+                                        ),
+                                      if (!isMobile) const SizedBox(width: 12),
+
                                       // BOTÃO OPEN IN DAW (Existente)
                                       Tooltip(
                                         message: sourceFileExists || MobileUtils.isMobile() ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
@@ -1254,11 +1348,38 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
   Timer? _levelTimer;
   double _currentLufs = -100.0;
 
+  // Auto-detected mixdown path (used when no preview song is set manually)
+  String? _autoDetectedPath;
+
+  String? get _effectivePreviewPath =>
+      widget.project.previewSongPath?.isNotEmpty == true
+          ? widget.project.previewSongPath
+          : (_autoDetectedPath ?? widget.project.previewSongAutoPath);
+
   @override
   void initState() {
     super.initState();
     _attachListeners(_audioPlayer, _playerGen);
+    _detectMixdown();
     _startBackgroundPrep();
+  }
+
+  void _detectMixdown() {
+    if (widget.project.previewSongPath?.isNotEmpty == true) return;
+    if (widget.project.previewSongAutoPath != null) {
+      _autoDetectedPath = widget.project.previewSongAutoPath;
+      return;
+    }
+    Future.microtask(() async {
+      final customFolder = ref.read(customMixdownFolderProvider).value;
+      final file = MixdownDetectorService.findLatestMixdown(widget.project, customFolder: customFolder);
+      if (mounted && file != null) {
+        setState(() => _autoDetectedPath = file.path);
+        final repo = await ref.read(repositoryProvider.future);
+        await repo.updateProject(widget.project.copyWith(previewSongAutoPath: file.path));
+        _startBackgroundPrep();
+      }
+    });
   }
 
   void _attachListeners(AudioPlayer player, int gen) {
@@ -1301,7 +1422,8 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
   @override
   void didUpdateWidget(_PreviewSongPlayer oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.project.previewSongPath != widget.project.previewSongPath) {
+    if (oldWidget.project.previewSongPath != widget.project.previewSongPath ||
+        oldWidget.project.id != widget.project.id) {
       _audioPlayer.stop();
       _levelTimer?.cancel();
       setState(() {
@@ -1314,7 +1436,9 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
         _fileInfo = null;
         _levelData = null;
         _currentLufs = -100.0;
+        _autoDetectedPath = null;
       });
+      _detectMixdown();
       _startBackgroundPrep();
     }
   }
@@ -1326,7 +1450,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
   /// 2. Generate the mono temp file so toggling mono is instant.
   void _startBackgroundPrep() {
     if (!_hasAudioFile()) return;
-    final path = widget.project.previewSongPath!;
+    final path = _effectivePreviewPath!;
 
     // File metadata — works for any format
     AudioAnalysisService.getFileInfo(path).then((info) {
@@ -1405,30 +1529,29 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
   // ── Helpers ─────────────────────────────────────────────────────────────────
 
   bool _hasAudioFile() {
-    final path = widget.project.previewSongPath;
+    final path = _effectivePreviewPath;
     return path != null && path.isNotEmpty;
   }
 
   bool _isWavFile() {
-    final path = widget.project.previewSongPath;
+    final path = _effectivePreviewPath;
     return path != null && path.toLowerCase().endsWith('.wav');
   }
 
   bool _supportsMonoMix() {
-    final path = widget.project.previewSongPath;
+    final path = _effectivePreviewPath;
     if (path == null || path.isEmpty) return false;
     final ext = path.toLowerCase().split('.').last;
     if (ext == 'wav') return true;
     if (Platform.isMacOS || Platform.isIOS) {
       return const {'mp3', 'flac', 'aif', 'aiff', 'aac', 'm4a'}.contains(ext);
     }
-    // Windows/Android/Linux: ffmpeg-dependent formats
     return const {'mp3', 'flac', 'aif', 'aiff', 'ogg', 'aac', 'm4a'}.contains(ext);
   }
 
   Source _currentSource() {
     if (_isMono && _monoFilePath != null) return DeviceFileSource(_monoFilePath!);
-    return DeviceFileSource(widget.project.previewSongPath!);
+    return DeviceFileSource(_effectivePreviewPath!);
   }
 
   Future<void> _toggleMono() async {
@@ -1448,7 +1571,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
       final outPath = '${tmpDir.path}/mono_${widget.project.id}.wav';
       debugPrint('[Mono] Generating mono file → $outPath');
       final ok = await AudioAnalysisService.writeMonoWavFile(
-          widget.project.previewSongPath!, outPath);
+          _effectivePreviewPath!, outPath);
       debugPrint('[Mono] writeMonoWavFile result: $ok channels=${_levelData?.channels}');
       if (!mounted) return;
       if (!ok) {
@@ -1456,7 +1579,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
         final alreadyMono = _levelData?.channels == 1;
         if (alreadyMono) {
           debugPrint('[Mono] File is already mono — using original path.');
-          setState(() { _monoFilePath = widget.project.previewSongPath!; _isGeneratingMono = false; });
+          setState(() { _monoFilePath = _effectivePreviewPath!; _isGeneratingMono = false; });
         } else {
           setState(() => _isGeneratingMono = false);
           ScaffoldMessenger.of(context).showSnackBar(
@@ -1505,7 +1628,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
     // Recycle the old player as the warm player for the next toggle.
     await oldActive.stop();
     final altSource = _isMono
-        ? DeviceFileSource(widget.project.previewSongPath!)
+        ? DeviceFileSource(_effectivePreviewPath!)
         : (_monoFilePath != null ? DeviceFileSource(_monoFilePath!) : null);
     if (altSource != null) {
       _warmPlayer = oldActive;
@@ -1517,19 +1640,13 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
   }
 
   Future<void> _togglePlayPause() async {
-    if (widget.project.previewSongPath == null ||
-        widget.project.previewSongPath!.isEmpty) {
-      return;
-    }
+    if (!_hasAudioFile()) return;
 
     try {
       if (_isPlaying) {
         await _audioPlayer.pause();
       } else {
-        // Check if it's a Drive file reference (format: "drive://fileId")
-        // Preview songs should already be downloaded during backup merge
-        // If it's still a Drive reference, it means download failed or file doesn't exist
-        if (widget.project.previewSongPath!.startsWith('drive://')) {
+        if (_effectivePreviewPath!.startsWith('drive://')) {
           // If we still have a Drive reference, the file wasn't downloaded
           // This shouldn't happen if backup was downloaded correctly, but handle gracefully
           if (mounted) {
@@ -1544,7 +1661,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
           return;
         } else {
           // Local file - check if it exists
-          final file = File(widget.project.previewSongPath!);
+          final file = File(_effectivePreviewPath!);
           if (!await file.exists()) {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -2083,8 +2200,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                if (widget.project.previewSongPath != null &&
-                    widget.project.previewSongPath!.isNotEmpty)
+                if (_hasAudioFile())
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -2092,11 +2208,8 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                         children: [
                           Expanded(
                             child: Text(
-                              // Use previewSongFileName if available (original filename), otherwise use basename
-                              widget.project.previewSongFileName ?? 
-                              (widget.project.previewSongPath != null 
-                                ? p.basename(widget.project.previewSongPath!)
-                                : ''),
+                              widget.project.previewSongFileName ??
+                              p.basename(_effectivePreviewPath!),
                               style: TextStyle(
                                 color: Theme.of(
                                   context,
@@ -2152,9 +2265,26 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                           ),
                         ],
                       ),
+                      if (_autoDetectedPath != null &&
+                          widget.project.previewSongPath?.isNotEmpty != true)
+                        const Padding(
+                          padding: EdgeInsets.only(bottom: 4),
+                          child: Row(
+                            children: [
+                              Icon(Icons.folder_open,
+                                  size: 12, color: Colors.amber),
+                              SizedBox(width: 4),
+                              Text(
+                                'Auto-detected from mixdown folder',
+                                style: TextStyle(
+                                    fontSize: 11, color: Colors.amber),
+                              ),
+                            ],
+                          ),
+                        ),
                       const SizedBox(height: 2),
                       _FileInfoRow(
-                        path: widget.project.previewSongPath!,
+                        path: _effectivePreviewPath!,
                         fileInfo: _fileInfo,
                       ),
                       const SizedBox(height: 10),
@@ -2199,6 +2329,12 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                                     _togglePlayPause();
                                   },
                                   iconSize: 32,
+                                  color: _autoDetectedPath != null &&
+                                          widget.project.previewSongPath
+                                                  ?.isNotEmpty !=
+                                              true
+                                      ? Colors.amber
+                                      : null,
                                 ),
                                 IconButton(
                                   icon: const Icon(Icons.stop),
@@ -2543,5 +2679,98 @@ class _ProjectStatsButton extends ConsumerWidget {
         ),
       ),
     );
+  }
+}
+
+class _RenameProjectDialog extends StatefulWidget {
+  final String currentName;
+  final bool canRenameFolder;
+
+  const _RenameProjectDialog({
+    required this.currentName,
+    required this.canRenameFolder,
+  });
+
+  @override
+  State<_RenameProjectDialog> createState() => _RenameProjectDialogState();
+}
+
+class _RenameProjectDialogState extends State<_RenameProjectDialog> {
+  late final TextEditingController _ctrl;
+  bool _renameFolder = true;
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = TextEditingController(text: widget.currentName);
+    _ctrl.selection = TextSelection(baseOffset: 0, extentOffset: widget.currentName.length);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(AppLocalizations.of(context)!.renameProjectFileTitle),
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextFormField(
+              controller: _ctrl,
+              autofocus: true,
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.newFileNameLabel,
+                border: const OutlineInputBorder(),
+              ),
+              validator: (v) {
+                final l10n = AppLocalizations.of(context)!;
+                if (v == null || v.trim().isEmpty) return l10n.nameCannotBeEmpty;
+                if (v.contains('/') || v.contains('\\') || v.contains(':')) {
+                  return l10n.nameInvalidCharacters;
+                }
+                return null;
+              },
+              onFieldSubmitted: (_) => _submit(),
+            ),
+            if (widget.canRenameFolder) ...[
+              const SizedBox(height: 12),
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                value: _renameFolder,
+                onChanged: (v) => setState(() => _renameFolder = v ?? true),
+                title: Text(AppLocalizations.of(context)!.alsoRenameContainingFolder),
+                controlAffinity: ListTileControlAffinity.leading,
+              ),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(AppLocalizations.of(context)!.cancel),
+        ),
+        FilledButton(
+          onPressed: _submit,
+          child: Text(AppLocalizations.of(context)!.renameButton),
+        ),
+      ],
+    );
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) return;
+    Navigator.pop(context, (
+      newName: _ctrl.text.trim(),
+      renameFolder: widget.canRenameFolder && _renameFolder,
+    ));
   }
 }

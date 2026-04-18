@@ -77,6 +77,9 @@ class MusicProject {
   @HiveField(23)
   final DateTime? deadline; // Project deadline date
 
+  @HiveField(24)
+  final String? previewSongAutoPath; // Auto-detected mixdown path (not manually set by user)
+
   const MusicProject({
     required this.id,
     required this.filePath,
@@ -102,6 +105,7 @@ class MusicProject {
     this.previewSongFileName,
     this.uploadedPreviewSongHash,
     this.deadline,
+    this.previewSongAutoPath,
   });
 
   String get displayName => (customDisplayName != null && customDisplayName!.trim().isNotEmpty)
@@ -356,6 +360,8 @@ class MusicProject {
     bool clearUploadedPreviewSongHash = false,
     DateTime? deadline,
     bool clearDeadline = false,
+    String? previewSongAutoPath,
+    bool clearPreviewSongAutoPath = false,
   }) {
     return MusicProject(
       id: id ?? this.id,
@@ -382,6 +388,7 @@ class MusicProject {
       previewSongFileName: clearPreviewSongFileName ? null : (previewSongFileName ?? this.previewSongFileName),
       uploadedPreviewSongHash: clearUploadedPreviewSongHash ? null : (uploadedPreviewSongHash ?? this.uploadedPreviewSongHash),
       deadline: clearDeadline ? null : (deadline ?? this.deadline),
+      previewSongAutoPath: clearPreviewSongAutoPath ? null : (previewSongAutoPath ?? this.previewSongAutoPath),
     );
   }
 }
@@ -425,13 +432,14 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
       previewSongFileName: fields.containsKey(21) ? fields[21] as String? : null,
       uploadedPreviewSongHash: fields.containsKey(22) ? fields[22] as String? : null,
       deadline: fields.containsKey(23) ? fields[23] as DateTime? : null,
+      previewSongAutoPath: fields.containsKey(24) ? fields[24] as String? : null,
     );
   }
 
   @override
   void write(BinaryWriter writer, MusicProject obj) {
     writer
-      ..writeByte(24) // Now 24 fields (0-23)
+      ..writeByte(25) // 25 fields (0-24)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -479,6 +487,8 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
       ..writeByte(22)
       ..write(obj.uploadedPreviewSongHash)
       ..writeByte(23)
-      ..write(obj.deadline);
+      ..write(obj.deadline)
+      ..writeByte(24)
+      ..write(obj.previewSongAutoPath);
   }
 }

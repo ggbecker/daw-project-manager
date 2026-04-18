@@ -3781,6 +3781,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{tasks} pending tasks in {projects} projects'**
   String queuePendingSummary(int tasks, int projects);
+
+  /// No description provided for @appTitleWithVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'DAW Project Manager v{version}'**
+  String appTitleWithVersion(String version);
+
+  /// No description provided for @versionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version}'**
+  String versionLabel(String version);
+
+  /// No description provided for @renameProjectFileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename Project File'**
+  String get renameProjectFileTitle;
+
+  /// No description provided for @renameFileButtonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename File'**
+  String get renameFileButtonLabel;
+
+  /// No description provided for @newFileNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'New file name (without extension)'**
+  String get newFileNameLabel;
+
+  /// No description provided for @renameAlreadyExists.
+  ///
+  /// In en, this message translates to:
+  /// **'A file named \"{name}\" already exists.'**
+  String renameAlreadyExists(String name);
+
+  /// No description provided for @renameSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Renamed to \"{name}\"'**
+  String renameSuccess(String name);
+
+  /// No description provided for @renameFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to rename: {error}'**
+  String renameFailed(String error);
+
+  /// No description provided for @nameCannotBeEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Name cannot be empty'**
+  String get nameCannotBeEmpty;
+
+  /// No description provided for @nameInvalidCharacters.
+  ///
+  /// In en, this message translates to:
+  /// **'Name cannot contain / \\ :'**
+  String get nameInvalidCharacters;
+
+  /// No description provided for @alsoRenameContainingFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Also rename containing folder'**
+  String get alsoRenameContainingFolder;
+
+  /// No description provided for @renameButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get renameButton;
+
+  /// No description provided for @previewMixdownFolderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview Mixdown Folder'**
+  String get previewMixdownFolderTitle;
+
+  /// No description provided for @previewMixdownFolderSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Subfolder name inside each project folder to check first when auto-detecting preview songs. Leave empty to use DAW defaults.'**
+  String get previewMixdownFolderSubtitle;
+
+  /// No description provided for @previewMixdownFolderHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Mixdowns'**
+  String get previewMixdownFolderHint;
+
+  /// No description provided for @dawInfoLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'DAW: {daw}'**
+  String dawInfoLabel(String daw);
+
+  /// No description provided for @bpmInfoLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'BPM: {bpm}'**
+  String bpmInfoLabel(String bpm);
+
+  /// No description provided for @keyInfoLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Key: {key}'**
+  String keyInfoLabel(String key);
+
+  /// No description provided for @audioFileNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio file not found'**
+  String get audioFileNotFound;
+
+  /// No description provided for @errorPlayingAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Error playing audio: {error}'**
+  String errorPlayingAudio(String error);
+
+  /// No description provided for @notificationTestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Test notifications to verify timezone and scheduling:'**
+  String get notificationTestTitle;
+
+  /// No description provided for @notificationSendNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Now'**
+  String get notificationSendNow;
+
+  /// No description provided for @notificationSchedule30s.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule +30s'**
+  String get notificationSchedule30s;
+
+  /// No description provided for @notificationShowDebugInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Debug Info'**
+  String get notificationShowDebugInfo;
+
+  /// No description provided for @notificationRescheduleAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-schedule All'**
+  String get notificationRescheduleAll;
+
+  /// No description provided for @notificationTestSent.
+  ///
+  /// In en, this message translates to:
+  /// **'✅ Test notification sent!'**
+  String get notificationTestSent;
+
+  /// No description provided for @notificationTestScheduled.
+  ///
+  /// In en, this message translates to:
+  /// **'✅ Test notification scheduled for 30 seconds! Check console logs.'**
+  String get notificationTestScheduled;
+
+  /// No description provided for @notificationTestError.
+  ///
+  /// In en, this message translates to:
+  /// **'❌ Error: {error}'**
+  String notificationTestError(String error);
+
+  /// No description provided for @notificationDebugTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'🐛 Debug Information'**
+  String get notificationDebugTitle;
 }
 
 class _AppLocalizationsDelegate

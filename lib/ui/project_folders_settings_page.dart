@@ -22,6 +22,29 @@ class ProjectFoldersSettingsPage extends ConsumerStatefulWidget {
 
 class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSettingsPage> {
   bool _busy = false;
+  late final TextEditingController _customMixdownCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _customMixdownCtrl = TextEditingController();
+    // Populate once the provider resolves
+    ref.read(customMixdownFolderProvider.future).then((val) {
+      if (mounted) _customMixdownCtrl.text = val ?? '';
+    });
+  }
+
+  @override
+  void dispose() {
+    _customMixdownCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveCustomMixdownFolder(String value) async {
+    final repo = await ref.read(repositoryProvider.future);
+    await repo.setCustomMixdownFolder(value.isEmpty ? null : value);
+    ref.invalidate(customMixdownFolderProvider);
+  }
 
   bool get _isDesktop => !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux);
 
@@ -339,6 +362,62 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
                       ),
                     );
                   }),
+              ],
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        // Custom mixdown folder
+        Card(
+          clipBehavior: Clip.antiAlias,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.audio_file_outlined),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(AppLocalizations.of(context)!.previewMixdownFolderTitle, style: Theme.of(context).textTheme.titleMedium),
+                          const SizedBox(height: 2),
+                          Text(
+                            AppLocalizations.of(context)!.previewMixdownFolderSubtitle,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _customMixdownCtrl,
+                        decoration: InputDecoration(
+                          hintText: AppLocalizations.of(context)!.previewMixdownFolderHint,
+                          prefixIcon: Icon(Icons.folder_open),
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        onSubmitted: _saveCustomMixdownFolder,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    FilledButton.tonal(
+                      onPressed: () => _saveCustomMixdownFolder(_customMixdownCtrl.text),
+                      child: Text(AppLocalizations.of(context)!.save),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),

@@ -32,20 +32,16 @@
     "placeholders": {
       "projectName": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToLaunchProject": "{projectName}を開けませんでした",
   "@failedToLaunchProject": {
     "placeholders": {
       "projectName": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "clearLibrary": "ライブラリをクリア",
   "clearLibraryMessage": "これにより、保存されたすべてのプロジェクトとソースフォルダが削除されます。続行しますか？",
@@ -63,10 +59,8 @@
     "placeholders": {
       "date": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "excludedFoldersSectionTitle": "除外フォルダー",
   "excludedFoldersSectionSubtitle": "これらのフォルダーは、プロジェクトフォルダー内にあってもスキャン時にスキップされます。",
@@ -80,10 +74,8 @@
     "placeholders": {
       "path": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "removeExcludedFolderMessageNoPath": "このフォルダーは除外されなくなります。",
   "desktopOnlyPathsSettings": "このページはデスクトップアプリでのみ利用できます。",
@@ -93,10 +85,8 @@
     "placeholders": {
       "path": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "projects": "プロジェクト",
   "hidden": "非表示",
@@ -124,10 +114,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "saved": "保存しました",
   "failedToLaunchDaw": "DAWを開けませんでした",
@@ -141,10 +129,8 @@
     "placeholders": {
       "profileName": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "editProfile": "プロファイルを編集",
   "changePhoto": "写真を変更",
@@ -155,10 +141,8 @@
     "placeholders": {
       "trackName": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "saveName": "名前を保存",
   "profilePhotoUpdated": "プロファイル写真を更新しました。",
@@ -168,30 +152,24 @@
     "placeholders": {
       "newName": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "profileCreated": "プロファイル「{name}」を作成しました",
   "@profileCreated": {
     "placeholders": {
       "name": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "profileDeleted": "プロファイル「{name}」を削除しました",
   "@profileDeleted": {
     "placeholders": {
       "name": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "pleaseEnterProfileName": "プロファイル名を入力してください",
   "failedToCreateProfile": "プロファイルの作成に失敗しました: {error}",
@@ -199,10 +177,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "noProfilesFound": "プロファイルが見つかりません。上で作成してください。",
   "clearLibraryTooltip": "ライブラリをクリア（プロジェクトとプロジェクトフォルダ）",
@@ -211,10 +187,8 @@
     "placeholders": {
       "date": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "name": "名前",
   "status": "ステータス",
@@ -245,30 +219,24 @@
     "placeholders": {
       "path": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "rootsCount": "プロジェクトフォルダ: {count}",
   "@rootsCount": {
     "placeholders": {
       "count": {
         "type": "int"
-      
-}
-    
-}
+      }
+    }
   },
   "projectsCount": "プロジェクト: {count}",
   "@projectsCount": {
     "placeholders": {
       "count": {
         "type": "int"
-      
-}
-    
-}
+      }
+    }
   },
   "hiddenOnly": "（非表示のみ）",
   "hiddenCount": "（{count}非表示）",
@@ -276,10 +244,8 @@
     "placeholders": {
       "count": {
         "type": "int"
-      
-}
-    
-}
+      }
+    }
   },
   "projectsHidden": "{count}プロジェクト{plural}を非表示にしました。",
   "@projectsHidden": {
@@ -289,10 +255,8 @@
       },
       "plural": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "projectsUnhidden": "{count}プロジェクト{plural}を表示しました。",
   "@projectsUnhidden": {
@@ -302,30 +266,24 @@
       },
       "plural": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToHideProjects": "プロジェクトの非表示に失敗しました: {error}",
   "@failedToHideProjects": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToUnhideProjects": "プロジェクトの表示に失敗しました: {error}",
   "@failedToUnhideProjects": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "hideProjectMessage": "「{projectName}」を非表示にしてもよろしいですか？",
   "@hideProjectMessage": {
@@ -333,40 +291,32 @@
     "placeholders": {
       "projectName": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "releaseCreated": "リリース「{title}」を作成しました。",
   "@releaseCreated": {
     "placeholders": {
       "title": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToCreateRelease": "リリースの作成に失敗しました: {error}",
   "@failedToCreateRelease": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "errorAddingFolder": "フォルダの追加エラー: {error}",
   "@errorAddingFolder": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "noProjectsFoundInRoots": "選択したプロジェクトフォルダにプロジェクトが見つかりませんでした。",
   "selectProjectsFolder": "プロジェクトフォルダを選択",
@@ -384,50 +334,40 @@
       },
       "failures": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "extractionFailures": "{count}失敗しました。",
   "@extractionFailures": {
     "placeholders": {
       "count": {
         "type": "int"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToWriteBpmFile": "BPMファイルの書き込みに失敗しました: {error}",
   "@failedToWriteBpmFile": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToWriteKeyFile": "キーファイルの書き込みに失敗しました: {error}",
   "@failedToWriteKeyFile": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToLaunch": "起動に失敗しました: {error}",
   "@failedToLaunch": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "libraryCleared": "ライブラリをクリアしました。",
   "scanType": "{type}スキャン",
@@ -435,10 +375,8 @@
     "placeholders": {
       "type": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "scanComplete": "{type}完了: {count}プロジェクト{plural}を追加/更新しました。",
   "@scanComplete": {
@@ -451,10 +389,8 @@
       },
       "plural": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "projectsSelected": "{count}プロジェクト{plural}を選択しました",
   "@projectsSelected": {
@@ -464,30 +400,24 @@
       },
       "plural": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "openingFolder": "{projectName}のフォルダを開いています…",
   "@openingFolder": {
     "placeholders": {
       "projectName": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToOpenFolder": "フォルダを開けませんでした: {error}",
   "@failedToOpenFolder": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "osNotSupportedForOpeningFolder": "フォルダを開くためのOSがサポートされていません。",
   "noProjectsAvailable": "プロジェクトがありません。まずプロジェクトを追加してください。",
@@ -498,20 +428,16 @@
     "placeholders": {
       "title": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "releaseDeleted": "リリース「{title}」を削除しました。",
   "@releaseDeleted": {
     "placeholders": {
       "title": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "selectTracks": "トラックを選択",
   "continueButton": "続行",
@@ -522,30 +448,24 @@
     "placeholders": {
       "count": {
         "type": "int"
-      
-}
-    
-}
+      }
+    }
   },
   "errorLoadingReleases": "リリースの読み込みエラー: {error}",
   "@errorLoadingReleases": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "tracksCount": "トラック（{count}）",
   "@tracksCount": {
     "placeholders": {
       "count": {
         "type": "int"
-      
-}
-    
-}
+      }
+    }
   },
   "addTracks": "トラックを追加",
   "allProjectsAlreadyInRelease": "すべてのプロジェクトがすでにこのリリースに含まれています。",
@@ -557,20 +477,16 @@
       },
       "plural": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "releaseFilesCount": "リリースファイル（{count}）",
   "@releaseFilesCount": {
     "placeholders": {
       "count": {
         "type": "int"
-      
-}
-    
-}
+      }
+    }
   },
   "addFiles": "ファイルを追加",
   "addedFilesToRelease": "リリースに{count}ファイル{plural}を追加しました。",
@@ -581,20 +497,16 @@
       },
       "plural": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToAddFiles": "ファイルの追加に失敗しました: {error}",
   "@failedToAddFiles": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "noFilesToDownload": "ダウンロードするファイルがありません。",
   "zipFileSaved": "ZIPファイルを保存しました: {path}",
@@ -602,10 +514,8 @@
     "placeholders": {
       "path": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "creatingZipFile": "ZIPファイルを作成中...",
   "failedToCreateZip": "ZIPの作成に失敗しました: {error}",
@@ -613,10 +523,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "selectedFileDoesNotExist": "選択したファイルが存在しません。",
   "imageSavedSuccessfully": "画像を正常に保存しました！",
@@ -625,30 +533,24 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "errorLoadingRelease": "リリースの読み込みエラー: {error}",
   "@errorLoadingRelease": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "errorLoadingProjects": "プロジェクトの読み込みエラー: {error}",
   "@errorLoadingProjects": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "releaseSaved": "リリースを保存しました。",
   "releaseDate": "リリース日",
@@ -657,10 +559,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "releaseDateSaved": "リリース日を保存しました。",
   "releaseDateCleared": "リリース日をクリアしました。",
@@ -674,10 +574,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "renameFile": "ファイル名を変更",
   "selectTracksToAdd": "追加するトラックを選択",
@@ -687,10 +585,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "deleteFile": "ファイルを削除",
   "deleteFileMessage": "「{fileName}」を削除してもよろしいですか？",
@@ -698,40 +594,32 @@
     "placeholders": {
       "fileName": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "fileDeleted": "ファイル「{fileName}」を削除しました。",
   "@fileDeleted": {
     "placeholders": {
       "fileName": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToDeleteFile": "ファイルの削除に失敗しました: {error}",
   "@failedToDeleteFile": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "couldNotOpenFolder": "フォルダを開けませんでした: {error}",
   "@couldNotOpenFolder": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "artwork": "アートワーク",
   "title": "タイトル",
@@ -742,10 +630,8 @@
     "placeholders": {
       "count": {
         "type": "int"
-      
-}
-    
-}
+      }
+    }
   },
   "searchTracks": "トラックを検索",
   "searchTracksHint": "名前またはDAWタイプで検索",
@@ -798,50 +684,40 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToRemoveProfilePhoto": "プロファイル写真の削除に失敗しました: {error}",
   "@failedToRemoveProfilePhoto": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToRenameProfile": "プロファイルの名前変更に失敗しました: {error}",
   "@failedToRenameProfile": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToDeleteProfile": "プロファイルの削除に失敗しました: {error}",
   "@failedToDeleteProfile": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "errorLoadingProfiles": "プロファイルの読み込みエラー: {error}",
   "@errorLoadingProfiles": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "projectPhaseIdea": "アイデア",
   "projectPhaseArranging": "アレンジ",
@@ -862,10 +738,8 @@
       },
       "status": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "statusChangedForProjectsWithErrors": "{successCount} プロジェクト{successPlural}のフェーズを「{status}」に変更しましたが、{failCount} が失敗{failPlural}しました",
   "@statusChangedForProjectsWithErrors": {
@@ -885,10 +759,8 @@
       },
       "status": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToChangeStatus": "フェーズの変更に失敗しました: {error}",
   "@failedToChangeStatus": {
@@ -896,10 +768,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "tooltipEditProfileName": "プロファイル名を編集",
   "tooltipAddTodo": "タスクを追加",
@@ -925,10 +795,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "backupImportedSuccessfully": "バックアップのインポートに成功しました: {projectsCount} プロジェクト、{rootsCount} プロジェクトフォルダ、{releasesCount} リリース",
   "@backupImportedSuccessfully": {
@@ -942,10 +810,8 @@
       },
       "releasesCount": {
         "type": "int"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToImportBackup": "バックアップのインポートに失敗しました: {error}",
   "@failedToImportBackup": {
@@ -953,10 +819,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "importBackupMessage": "バックアップのインポート方法を選択してください:",
   "mergeWithCurrentProfile": "現在のアクティブなプロフィールとマージ",
@@ -977,10 +841,8 @@
       },
       "releasesCount": {
         "type": "int"
-      
-}
-    
-}
+      }
+    }
   },
   "noProfileSelected": "プロフィールが選択されていません",
   "exportBackupDialogTitle": "バックアップをエクスポート",
@@ -997,10 +859,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "removePreviewSong": "プレビュー曲を削除",
   "removePreviewSongConfirm": "プレビュー曲を削除してもよろしいですか？この操作は元に戻せません。",
@@ -1117,20 +977,16 @@
     "placeholders": {
       "url": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "errorOpeningBrowser": "ブラウザを開く際にエラーが発生しました: {error}",
   "@errorOpeningBrowser": {
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "generateTestingDatabase": "テストデータベースを生成",
   "generateTestingDatabaseMessage": "これにより、テスト用のサンプルプロジェクトとリリースでデータベースが入力されます。続行しますか？",
@@ -1140,10 +996,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "playlists": "プレイリスト",
   "playlistsDesktopOnly": "プレイリストはAndroidでのみ利用可能です。",
@@ -1251,10 +1105,8 @@
     "placeholders": {
       "path": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "@shareZip": {
     "description": "Label for the share as ZIP button"
@@ -1265,10 +1117,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToSharePreviewSongAsZip": "プレビュー曲をZIPとして共有できませんでした: {error}",
   "@failedToSharePreviewSongAsZip": {
@@ -1276,10 +1126,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "biographySaved": "プロフィールが保存されました",
   "@biographySaved": {
@@ -1291,10 +1139,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "fileSavedTo": "ファイルを {filename} に保存しました",
   "@fileSavedTo": {
@@ -1302,10 +1148,8 @@
     "placeholders": {
       "filename": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToDownloadFile": "ファイルをダウンロードできませんでした: {error}",
   "@failedToDownloadFile": {
@@ -1313,10 +1157,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "allFilesSavedTo": "すべてのファイルを {filename} に保存しました",
   "@allFilesSavedTo": {
@@ -1324,10 +1166,8 @@
     "placeholders": {
       "filename": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "artworkAdded": "アートワークを追加しました",
   "@artworkAdded": {
@@ -1339,10 +1179,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "artworkRemoved": "アートワークを削除しました",
   "@artworkRemoved": {
@@ -1354,10 +1192,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "pressKitFileAdded": "プレスキットファイルを追加しました",
   "@pressKitFileAdded": {
@@ -1369,10 +1205,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "pressKitFileRemoved": "プレスキットファイルを削除しました",
   "@pressKitFileRemoved": {
@@ -1384,10 +1218,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "selectFilesToDownload": "ダウンロードするファイルを選択",
   "@selectFilesToDownload": {
@@ -1422,10 +1254,8 @@
       },
       "plural": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "nFilesSavedTo": "{count}個のファイル{plural}を {filename} に保存しました",
   "@nFilesSavedTo": {
@@ -1439,10 +1269,8 @@
       },
       "filename": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "addAsset": "アセットを追加",
   "@addAsset": {
@@ -1462,10 +1290,8 @@
     "placeholders": {
       "assetName": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToAddAsset": "アセットを追加できませんでした: {error}",
   "@failedToAddAsset": {
@@ -1473,10 +1299,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "assetRemoved": "{assetName} を削除しました",
   "@assetRemoved": {
@@ -1484,10 +1308,8 @@
     "placeholders": {
       "assetName": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "failedToRemoveAsset": "アセットを削除できませんでした: {error}",
   "@failedToRemoveAsset": {
@@ -1495,10 +1317,8 @@
     "placeholders": {
       "error": {
         "type": "String"
-      
-}
-    
-}
+      }
+    }
   },
   "profileNotFound": "プロフィールが見つかりません",
   "@profileNotFound": {
@@ -1633,10 +1453,8 @@
     "placeholders": {
       "days": {
         "type": "int"
-      
-}
-    
-}
+      }
+    }
   },
   "statsNoProjectsFound": "プロジェクトが見つかりません",
   "statsNotTouchedDays": "{days}日間変更なし",
@@ -1652,10 +1470,10 @@
   "monoSwitchFailed": "モノラル切り替えに失敗しました: {error}",
   "@monoSwitchFailed": {
     "placeholders": {
-      "error": { "type": "String" 
-}
-    
-}
+      "error": {
+        "type": "String"
+      }
+    }
   },
   "analyzeLabel": "分析",
   "reAnalyzeLabel": "再分析",
@@ -1672,8 +1490,111 @@
   "queuePendingSummary": "{projects}個のプロジェクトに{tasks}件の未完了タスク",
   "@queuePendingSummary": {
     "placeholders": {
-      "tasks": { "type": "int" },
-      "projects": { "type": "int" }
+      "tasks": {
+        "type": "int"
+      },
+      "projects": {
+        "type": "int"
+      }
     }
-  }
+  },
+  "appTitleWithVersion": "DAW Project Manager v{version}",
+  "@appTitleWithVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "versionLabel": "バージョン {version}",
+  "@versionLabel": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "renameProjectFileTitle": "プロジェクトファイルの名前変更",
+  "renameFileButtonLabel": "ファイルを名前変更",
+  "newFileNameLabel": "新しいファイル名（拡張子なし）",
+  "renameAlreadyExists": "「{name}」という名前のファイルが既に存在します。",
+  "@renameAlreadyExists": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "renameSuccess": "「{name}」に名前を変更しました",
+  "@renameSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "renameFailed": "名前の変更に失敗しました: {error}",
+  "@renameFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "nameCannotBeEmpty": "名前を空にすることはできません",
+  "nameInvalidCharacters": "名前に / \\ : を含めることはできません",
+  "alsoRenameContainingFolder": "含まれるフォルダも名前変更する",
+  "renameButton": "名前変更",
+  "previewMixdownFolderTitle": "プレビューミックスダウンフォルダ",
+  "previewMixdownFolderSubtitle": "プレビュー曲の自動検出時に最初に確認する各プロジェクトフォルダ内のサブフォルダ名。空にするとDAWのデフォルトを使用します。",
+  "previewMixdownFolderHint": "例：Mixdowns",
+  "dawInfoLabel": "DAW: {daw}",
+  "@dawInfoLabel": {
+    "placeholders": {
+      "daw": {
+        "type": "String"
+      }
+    }
+  },
+  "bpmInfoLabel": "BPM: {bpm}",
+  "@bpmInfoLabel": {
+    "placeholders": {
+      "bpm": {
+        "type": "String"
+      }
+    }
+  },
+  "keyInfoLabel": "キー: {key}",
+  "@keyInfoLabel": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "audioFileNotFound": "オーディオファイルが見つかりません",
+  "errorPlayingAudio": "オーディオ再生エラー: {error}",
+  "@errorPlayingAudio": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationTestTitle": "タイムゾーンとスケジュールを確認するための通知テスト:",
+  "notificationSendNow": "今すぐ送信",
+  "notificationSchedule30s": "+30秒後にスケジュール",
+  "notificationShowDebugInfo": "デバッグ情報を表示",
+  "notificationRescheduleAll": "すべて再スケジュール",
+  "notificationTestSent": "✅ テスト通知を送信しました！",
+  "notificationTestScheduled": "✅ テスト通知をス30秒後にスケジュールしました！コンソールログを確認してください。",
+  "notificationTestError": "❌ エラー: {error}",
+  "@notificationTestError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationDebugTitle": "🐛 デバッグ情報"
 }

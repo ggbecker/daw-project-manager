@@ -2230,4 +2230,115 @@ class AppLocalizationsRu extends AppLocalizations {
   String queuePendingSummary(int tasks, int projects) {
     return '$tasks незавершённых задач в $projects проектах';
   }
+
+  @override
+  String appTitleWithVersion(String version) {
+    return 'DAW Project Manager v$version';
+  }
+
+  @override
+  String versionLabel(String version) {
+    return 'Версия $version';
+  }
+
+  @override
+  String get renameProjectFileTitle => 'Переименовать файл проекта';
+
+  @override
+  String get renameFileButtonLabel => 'Переименовать файл';
+
+  @override
+  String get newFileNameLabel => 'Новое имя файла (без расширения)';
+
+  @override
+  String renameAlreadyExists(String name) {
+    return 'Файл с именем \"$name\" уже существует.';
+  }
+
+  @override
+  String renameSuccess(String name) {
+    return 'Переименовано в \"$name\"';
+  }
+
+  @override
+  String renameFailed(String error) {
+    return 'Не удалось переименовать: $error';
+  }
+
+  @override
+  String get nameCannotBeEmpty => 'Имя не может быть пустым';
+
+  @override
+  String get nameInvalidCharacters => 'Имя не может содержать / \\ :';
+
+  @override
+  String get alsoRenameContainingFolder =>
+      'Также переименовать содержащую папку';
+
+  @override
+  String get renameButton => 'Переименовать';
+
+  @override
+  String get previewMixdownFolderTitle => 'Папка миксов для предпросмотра';
+
+  @override
+  String get previewMixdownFolderSubtitle =>
+      'Имя подпапки в каждой папке проекта, которую нужно проверять в первую очередь при автоматическом обнаружении песен для предпросмотра. Оставьте пустым для использования настроек DAW по умолчанию.';
+
+  @override
+  String get previewMixdownFolderHint => 'например, Миксы';
+
+  @override
+  String dawInfoLabel(String daw) {
+    return 'DAW: $daw';
+  }
+
+  @override
+  String bpmInfoLabel(String bpm) {
+    return 'BPM: $bpm';
+  }
+
+  @override
+  String keyInfoLabel(String key) {
+    return 'Тональность: $key';
+  }
+
+  @override
+  String get audioFileNotFound => 'Аудиофайл не найден';
+
+  @override
+  String errorPlayingAudio(String error) {
+    return 'Ошибка воспроизведения аудио: $error';
+  }
+
+  @override
+  String get notificationTestTitle =>
+      'Тестирование уведомлений для проверки часового пояса и планирования:';
+
+  @override
+  String get notificationSendNow => 'Отправить сейчас';
+
+  @override
+  String get notificationSchedule30s => 'Запланировать +30с';
+
+  @override
+  String get notificationShowDebugInfo => 'Показать отладочную информацию';
+
+  @override
+  String get notificationRescheduleAll => 'Перепланировать все';
+
+  @override
+  String get notificationTestSent => '✅ Тестовое уведомление отправлено!';
+
+  @override
+  String get notificationTestScheduled =>
+      '✅ Тестовое уведомление запланировано на 30 секунд! Проверьте журналы консоли.';
+
+  @override
+  String notificationTestError(String error) {
+    return '❌ Ошибка: $error';
+  }
+
+  @override
+  String get notificationDebugTitle => '🐛 Отладочная информация';
 }

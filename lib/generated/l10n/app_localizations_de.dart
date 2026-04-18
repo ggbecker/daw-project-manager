@@ -2245,4 +2245,115 @@ class AppLocalizationsDe extends AppLocalizations {
   String queuePendingSummary(int tasks, int projects) {
     return '$tasks ausstehende Aufgaben in $projects Projekten';
   }
+
+  @override
+  String appTitleWithVersion(String version) {
+    return 'DAW Project Manager v$version';
+  }
+
+  @override
+  String versionLabel(String version) {
+    return 'Version $version';
+  }
+
+  @override
+  String get renameProjectFileTitle => 'Projektdatei umbenennen';
+
+  @override
+  String get renameFileButtonLabel => 'Datei umbenennen';
+
+  @override
+  String get newFileNameLabel => 'Neuer Dateiname (ohne Erweiterung)';
+
+  @override
+  String renameAlreadyExists(String name) {
+    return 'Eine Datei namens \"$name\" existiert bereits.';
+  }
+
+  @override
+  String renameSuccess(String name) {
+    return 'Umbenannt in \"$name\"';
+  }
+
+  @override
+  String renameFailed(String error) {
+    return 'Umbenennen fehlgeschlagen: $error';
+  }
+
+  @override
+  String get nameCannotBeEmpty => 'Name darf nicht leer sein';
+
+  @override
+  String get nameInvalidCharacters => 'Name darf / \\ : nicht enthalten';
+
+  @override
+  String get alsoRenameContainingFolder =>
+      'Auch übergeordneten Ordner umbenennen';
+
+  @override
+  String get renameButton => 'Umbenennen';
+
+  @override
+  String get previewMixdownFolderTitle => 'Vorschau-Mixdown-Ordner';
+
+  @override
+  String get previewMixdownFolderSubtitle =>
+      'Unterordnername in jedem Projektordner, der zuerst bei der automatischen Erkennung von Vorschau-Songs geprüft wird. Leer lassen für DAW-Standardwerte.';
+
+  @override
+  String get previewMixdownFolderHint => 'z.B. Mixdowns';
+
+  @override
+  String dawInfoLabel(String daw) {
+    return 'DAW: $daw';
+  }
+
+  @override
+  String bpmInfoLabel(String bpm) {
+    return 'BPM: $bpm';
+  }
+
+  @override
+  String keyInfoLabel(String key) {
+    return 'Tonart: $key';
+  }
+
+  @override
+  String get audioFileNotFound => 'Audiodatei nicht gefunden';
+
+  @override
+  String errorPlayingAudio(String error) {
+    return 'Fehler beim Abspielen: $error';
+  }
+
+  @override
+  String get notificationTestTitle =>
+      'Benachrichtigungen testen (Zeitzone und Planung):';
+
+  @override
+  String get notificationSendNow => 'Jetzt senden';
+
+  @override
+  String get notificationSchedule30s => 'In 30s planen';
+
+  @override
+  String get notificationShowDebugInfo => 'Debug-Info anzeigen';
+
+  @override
+  String get notificationRescheduleAll => 'Alle neu planen';
+
+  @override
+  String get notificationTestSent => '✅ Test-Benachrichtigung gesendet!';
+
+  @override
+  String get notificationTestScheduled =>
+      '✅ Test-Benachrichtigung in 30 Sekunden geplant! Konsole prüfen.';
+
+  @override
+  String notificationTestError(String error) {
+    return '❌ Fehler: $error';
+  }
+
+  @override
+  String get notificationDebugTitle => '🐛 Debug-Informationen';
 }

@@ -122,7 +122,7 @@ class _AboutDialog extends StatelessWidget {
           if (appVersion.isNotEmpty) ...[
             const SizedBox(height: 4),
             Text(
-              'Version $appVersion',
+              AppLocalizations.of(context)!.versionLabel(appVersion),
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],

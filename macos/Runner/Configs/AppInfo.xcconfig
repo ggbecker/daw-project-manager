@@ -9,6 +9,10 @@
 PRODUCT_NAME = DAWProjectManager
 PRODUCT_DISPLAY_NAME = "DAW Project Manager"
 
+// Override the generated CFBundleName so the Dock shows the spaced name
+// (PRODUCT_NAME cannot have spaces — it would break the Metal shader compiler)
+INFOPLIST_KEY_CFBundleName = "DAW Project Manager"
+
 // The application's bundle identifier
 PRODUCT_BUNDLE_IDENTIFIER = com.bandpassrecords.dpm
 

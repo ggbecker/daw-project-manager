@@ -64,6 +64,11 @@ final repositoryProvider = FutureProvider<ProjectRepository>((ref) async {
   return ProjectRepository.init(profileRepo);
 });
 
+final customMixdownFolderProvider = FutureProvider<String?>((ref) async {
+  final repo = await ref.watch(repositoryProvider.future);
+  return repo.getCustomMixdownFolder();
+});
+
 final rootsWatchProvider = StreamProvider<void>((ref) async* {
   final repo = await ref.watch(repositoryProvider.future);
   yield* repo.watchRoots().map((_) {});

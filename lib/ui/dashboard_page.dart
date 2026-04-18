@@ -13,9 +13,12 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:archive/archive_io.dart';
+import 'package:desktop_drop/desktop_drop.dart';
 
 import '../services/scanner_service.dart';
 import '../services/audio_analysis_service.dart';
+import '../services/mixdown_detector_service.dart';
+import '../services/dock_menu_service.dart';
 import '../utils/mobile_utils.dart';
 import '../utils/file_launcher.dart';
 import 'project_detail_page.dart';
@@ -555,6 +558,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                     ? ref.watch(statisticsSearchProvider)
                     : '';
     final projects = ref.watch(projectsProvider);
+    // Keep macOS dock menu (and Windows jump list) in sync with latest projects
+    ref.listen(projectsProvider, (_, next) => DockMenuService.updateRecentProjects(next));
     final hiddenMode = ref.watch(showHiddenProjectsProvider);
     final hiddenNotifier = ref.read(showHiddenProjectsProvider.notifier);
     final finishedMode = ref.watch(showFinishedProjectsProvider);
@@ -830,7 +835,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
             // Custom title bar – Windows/Linux only.
             // macOS uses the native title bar + MacOSMenuBar for Theme/Language/Support.
             DesktopTitleBar(
-              title: 'DAW Project Manager v$appVersion',
+              title: AppLocalizations.of(context)!.appTitleWithVersion(appVersion),
               actions: [
                 // Donate button
                 Consumer(
@@ -2129,13 +2134,67 @@ class _PlutoProjectsTable extends ConsumerStatefulWidget {
 
 class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   TrinaGridStateManager? stateManager;
+
+  // Drag-and-drop preview assignment
+  double? _dragOverRowTop; // top Y of the highlighted row in local coords
+
+  static const double _gridHeaderHeight = 45.0;
+  static const double _gridRowHeight = 48.0;
+
+  static const Set<String> _audioExtensions = {
+    '.mp3', '.wav', '.m4a', '.aac', '.ogg', '.flac', '.aif', '.aiff',
+  };
+
+  void _updateDragTarget(Offset localPos) {
+    final sm = stateManager;
+    if (sm == null) return;
+    final scrollOffset = sm.scroll.bodyRowsVertical?.offset ?? 0;
+    final rowIndex =
+        ((localPos.dy - _gridHeaderHeight + scrollOffset) / _gridRowHeight)
+            .floor();
+    if (rowIndex >= 0 && rowIndex < sm.rows.length) {
+      final rowTop =
+          _gridHeaderHeight + rowIndex * _gridRowHeight - scrollOffset;
+      setState(() {
+        _dragOverRowTop = rowTop;
+      });
+    } else {
+      setState(() {
+        _dragOverRowTop = null;
+      });
+    }
+  }
+
+  Future<void> _setPreviewSong(MusicProject project, String filePath) async {
+    final ext = filePath.split('.').last.toLowerCase();
+    if (!_audioExtensions.contains('.$ext')) return;
+    final repo = await ref.read(repositoryProvider.future);
+    final updated = project.copyWith(
+      previewSongPath: filePath,
+      previewSongFileName: filePath.split('/').last,
+    );
+    await repo.updateProject(updated);
+    ref.invalidate(allProjectsStreamProvider);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${updated.previewSongFileName} set as preview for ${updated.displayName}',
+          ),
+        ),
+      );
+    }
+  }
   
   Future<void> _playPreviewSong(MusicProject project) async {
-    if (project.previewSongPath == null || project.previewSongPath!.isEmpty) {
-      return;
-    }
-    
-    final file = File(project.previewSongPath!);
+    final customFolder = ref.read(customMixdownFolderProvider).value;
+    final effectivePath = project.previewSongPath?.isNotEmpty == true
+        ? project.previewSongPath!
+        : (project.previewSongAutoPath ?? MixdownDetectorService.findLatestMixdown(project, customFolder: customFolder)?.path);
+
+    if (effectivePath == null) return;
+
+    final file = File(effectivePath);
     if (!await file.exists()) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -2144,13 +2203,17 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       }
       return;
     }
-    
+
+    final playProject = project.previewSongPath?.isNotEmpty == true
+        ? project
+        : project.copyWith(previewSongPath: effectivePath);
+
     // Show popup dialog with audio player
     if (mounted) {
       await showDialog(
         context: context,
         builder: (dialogContext) => _PreviewSongDialog(
-          project: project,
+          project: playProject,
           onClose: () {
             // Callback when dialog closes - can be used for cleanup if needed
           },
@@ -2988,19 +3051,21 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             children: [
               // Play Preview Song button (always show, but disabled if no preview)
               IconButton(
-                icon: const Icon(Icons.play_arrow),
+                icon: Icon(
+                  project.previewSongPath?.isNotEmpty == true || project.previewSongAutoPath != null
+                      ? Icons.play_circle
+                      : Icons.play_circle_outline,
+                ),
                 iconSize: 24,
                 padding: const EdgeInsets.all(4),
                 constraints: const BoxConstraints(),
-                tooltip: project.previewSongPath != null && project.previewSongPath!.isNotEmpty
-                    ? '${AppLocalizations.of(context)!.playPreview} (P)'
-                    : AppLocalizations.of(context)!.noPreviewSong,
-                onPressed: project.previewSongPath != null && project.previewSongPath!.isNotEmpty
-                    ? () => _playPreviewSong(project)
-                    : null,
-                color: project.previewSongPath != null && project.previewSongPath!.isNotEmpty
+                tooltip: '${AppLocalizations.of(context)!.playPreview} (P)',
+                onPressed: () => _playPreviewSong(project),
+                color: project.previewSongPath?.isNotEmpty == true
                     ? Colors.green
-                    : Colors.grey,
+                    : project.previewSongAutoPath != null
+                        ? Colors.amber
+                        : Colors.grey,
               ),
               // Separator (always show)
               Padding(
@@ -3154,7 +3219,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       );
     }
 
-    return TrinaGrid(
+    final grid = TrinaGrid(
           key: ValueKey('trina_grid_${l10n.localeName}'), // Force rebuild when locale changes
           columns: columns,
           rows: initialRows,
@@ -3244,6 +3309,80 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       },
       createFooter: (stateManager) => const SizedBox.shrink(),
     );
+
+    return DropTarget(
+      onDragUpdated: (detail) => _updateDragTarget(detail.localPosition),
+      onDragExited: (_) => setState(() {
+        _dragOverRowTop = null;
+      }),
+      onDragDone: (detail) {
+        final sm = stateManager;
+        MusicProject? targetProject;
+        if (sm != null) {
+          final scrollOffset = sm.scroll.bodyRowsVertical?.offset ?? 0;
+          final rowIndex = ((detail.localPosition.dy - _gridHeaderHeight + scrollOffset) / _gridRowHeight).floor();
+          if (rowIndex >= 0 && rowIndex < sm.rows.length) {
+            targetProject = sm.rows[rowIndex].cells['data']?.value as MusicProject?;
+          }
+        }
+        setState(() {
+          _dragOverRowTop = null;
+        });
+        if (targetProject == null) return;
+        for (final xFile in detail.files) {
+          final path = xFile.path;
+          final ext = '.${path.split('.').last.toLowerCase()}';
+          if (_audioExtensions.contains(ext)) {
+            _setPreviewSong(targetProject, path);
+            return;
+          }
+        }
+      },
+      child: Stack(
+        children: [
+          grid,
+          if (_dragOverRowTop != null)
+            Positioned(
+              top: _dragOverRowTop!,
+              left: 0,
+              right: 0,
+              height: _gridRowHeight,
+              child: IgnorePointer(
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 2,
+                    ),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primaryContainer
+                        .withValues(alpha: 0.35),
+                  ),
+                  alignment: Alignment.center,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.audio_file,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.primary),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Drop to set as preview',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
   }
 }
 
@@ -3330,7 +3469,7 @@ class _SeekIntent extends Intent {
 }
 
 
-class _PreviewSongDialog extends StatefulWidget {
+class _PreviewSongDialog extends ConsumerStatefulWidget {
   final MusicProject project;
   final VoidCallback onClose;
 
@@ -3340,10 +3479,10 @@ class _PreviewSongDialog extends StatefulWidget {
   });
 
   @override
-  State<_PreviewSongDialog> createState() => _PreviewSongDialogState();
+  ConsumerState<_PreviewSongDialog> createState() => _PreviewSongDialogState();
 }
 
-class _PreviewSongDialogState extends State<_PreviewSongDialog> {
+class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
   AudioPlayer _audioPlayer = AudioPlayer();
   AudioPlayer? _warmPlayer;
   int _playerGen = 0;
@@ -3355,6 +3494,12 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
   bool _isGeneratingMono = false;
   String? _monoFilePath;
   AudioFileInfo? _fileInfo;
+  String? _autoDetectedPath;
+
+  String? get _effectivePreviewPath =>
+      widget.project.previewSongPath?.isNotEmpty == true
+          ? widget.project.previewSongPath
+          : (_autoDetectedPath ?? widget.project.previewSongAutoPath);
 
   void _attachListeners(AudioPlayer player, int gen) {
     player.onPlayerStateChanged.listen((state) {
@@ -3379,18 +3524,35 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
   void initState() {
     super.initState();
     _attachListeners(_audioPlayer, _playerGen);
-    // Auto-start playback when dialog opens
-    _startPlayback();
-    _startBackgroundPrep();
+    if (widget.project.previewSongPath?.isNotEmpty == true) {
+      _startPlayback();
+      _startBackgroundPrep();
+    } else if (widget.project.previewSongAutoPath != null) {
+      _autoDetectedPath = widget.project.previewSongAutoPath;
+      _startPlayback();
+      _startBackgroundPrep();
+    } else {
+      Future.microtask(() async {
+        final customFolder = ref.read(customMixdownFolderProvider).value;
+        final file = MixdownDetectorService.findLatestMixdown(widget.project, customFolder: customFolder);
+        if (mounted && file != null) {
+          setState(() => _autoDetectedPath = file.path);
+          final repo = await ref.read(repositoryProvider.future);
+          await repo.updateProject(widget.project.copyWith(previewSongAutoPath: file.path));
+          _startPlayback();
+          _startBackgroundPrep();
+        }
+      });
+    }
   }
 
   bool _hasAudioFile() {
-    final p2 = widget.project.previewSongPath;
+    final p2 = _effectivePreviewPath;
     return p2 != null && p2.isNotEmpty;
   }
 
   bool _supportsMonoMix() {
-    final p2 = widget.project.previewSongPath;
+    final p2 = _effectivePreviewPath;
     if (p2 == null || p2.isEmpty) return false;
     final ext = p2.toLowerCase().split('.').last;
     if (ext == 'wav') return true;
@@ -3402,12 +3564,12 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
 
   Source _currentSource() {
     if (_isMono && _monoFilePath != null) return DeviceFileSource(_monoFilePath!);
-    return DeviceFileSource(widget.project.previewSongPath!);
+    return DeviceFileSource(_effectivePreviewPath!);
   }
 
   void _startBackgroundPrep() {
     if (!_hasAudioFile()) return;
-    final filePath = widget.project.previewSongPath!;
+    final filePath = _effectivePreviewPath!;
     AudioAnalysisService.getFileInfo(filePath).then((info) {
       if (mounted && info != null) setState(() => _fileInfo = info);
     });
@@ -3468,13 +3630,13 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
       setState(() => _isGeneratingMono = true);
       final tmpDir = await getTemporaryDirectory();
       final outPath = '${tmpDir.path}/mono_${widget.project.id}.wav';
-      final ok = await AudioAnalysisService.writeMonoWavFile(widget.project.previewSongPath!, outPath);
+      final ok = await AudioAnalysisService.writeMonoWavFile(_effectivePreviewPath!, outPath);
       if (!mounted) return;
       if (!ok) {
-        final channels = await AudioAnalysisService.getChannelCount(widget.project.previewSongPath!);
+        final channels = await AudioAnalysisService.getChannelCount(_effectivePreviewPath!);
         if (!mounted) return;
         if (channels == 1) {
-          setState(() { _monoFilePath = widget.project.previewSongPath!; _isGeneratingMono = false; });
+          setState(() { _monoFilePath = _effectivePreviewPath!; _isGeneratingMono = false; });
         } else {
           setState(() => _isGeneratingMono = false);
           ScaffoldMessenger.of(context).showSnackBar(
@@ -3518,7 +3680,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
 
     await oldActive.stop();
     final altSource = _isMono
-        ? DeviceFileSource(widget.project.previewSongPath!)
+        ? DeviceFileSource(_effectivePreviewPath!)
         : (_monoFilePath != null ? DeviceFileSource(_monoFilePath!) : null);
     if (altSource != null) {
       _warmPlayer = oldActive;
@@ -3530,11 +3692,9 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
   }
 
   Future<void> _startPlayback() async {
-    if (widget.project.previewSongPath == null || widget.project.previewSongPath!.isEmpty) {
-      return;
-    }
+    if (!_hasAudioFile()) return;
 
-    final file = File(widget.project.previewSongPath!);
+    final file = File(_effectivePreviewPath!);
     if (!await file.exists()) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -3571,7 +3731,7 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
         await _audioPlayer.pause();
       } else {
         if (_position == Duration.zero || _position >= _duration) {
-          await _audioPlayer.play(DeviceFileSource(widget.project.previewSongPath!));
+          await _audioPlayer.play(DeviceFileSource(_effectivePreviewPath!));
         } else {
           await _audioPlayer.resume();
         }
@@ -3612,11 +3772,24 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // File name
+        if (_autoDetectedPath != null &&
+            widget.project.previewSongPath?.isNotEmpty != true)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Row(
+              children: [
+                const Icon(Icons.folder_open, size: 12, color: Colors.amber),
+                const SizedBox(width: 4),
+                const Text(
+                  'Auto-detected from mixdown folder',
+                  style: TextStyle(fontSize: 11, color: Colors.amber),
+                ),
+              ],
+            ),
+          ),
         Text(
-          widget.project.previewSongFileName ?? 
-          (widget.project.previewSongPath != null 
-            ? path.basename(widget.project.previewSongPath!)
-            : ''),
+          widget.project.previewSongFileName ??
+          path.basename(_effectivePreviewPath ?? ''),
           style: TextStyle(
             color: Theme.of(context).textTheme.bodyMedium?.color,
             fontSize: 14,
@@ -3637,7 +3810,10 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
               icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
               onPressed: _togglePlayPause,
               iconSize: 48,
-              color: Theme.of(context).colorScheme.primary,
+              color: _autoDetectedPath != null &&
+                      widget.project.previewSongPath?.isNotEmpty != true
+                  ? Colors.amber
+                  : Theme.of(context).colorScheme.primary,
             ),
             IconButton(
               icon: const Icon(Icons.stop),
@@ -3751,10 +3927,8 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          widget.project.previewSongFileName ?? 
-          (widget.project.previewSongPath != null 
-            ? path.basename(widget.project.previewSongPath!)
-            : ''),
+          widget.project.previewSongFileName ??
+          path.basename(_effectivePreviewPath ?? ''),
           style: TextStyle(
             color: Theme.of(context).textTheme.bodyMedium?.color,
             fontSize: 14,
@@ -3776,6 +3950,10 @@ class _PreviewSongDialogState extends State<_PreviewSongDialog> {
               icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
               onPressed: _togglePlayPause,
               iconSize: 32,
+              color: _autoDetectedPath != null &&
+                      widget.project.previewSongPath?.isNotEmpty != true
+                  ? Colors.amber
+                  : null,
             ),
             IconButton(
               icon: const Icon(Icons.stop),
@@ -4262,11 +4440,14 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
   }
 
   Future<void> _playPreviewSong(MusicProject project) async {
-    if (project.previewSongPath == null || project.previewSongPath!.isEmpty) {
-      return;
-    }
-    
-    final file = File(project.previewSongPath!);
+    final customFolder = ref.read(customMixdownFolderProvider).value;
+    final effectivePath = project.previewSongPath?.isNotEmpty == true
+        ? project.previewSongPath!
+        : (project.previewSongAutoPath ?? MixdownDetectorService.findLatestMixdown(project, customFolder: customFolder)?.path);
+
+    if (effectivePath == null) return;
+
+    final file = File(effectivePath);
     if (!await file.exists()) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -4275,13 +4456,17 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
       }
       return;
     }
-    
+
+    final playProject = project.previewSongPath?.isNotEmpty == true
+        ? project
+        : project.copyWith(previewSongPath: effectivePath);
+
     // Show popup dialog with audio player
     if (mounted) {
       await showDialog(
         context: context,
         builder: (dialogContext) => _PreviewSongDialog(
-          project: project,
+          project: playProject,
           onClose: () {
             // Callback when dialog closes - can be used for cleanup if needed
           },
@@ -4477,7 +4662,7 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                           if (project.dawType != null) ...[
                             const SizedBox(width: 16),
                             Expanded(
-                              child: Text('DAW: ${project.dawType}${project.dawVersion != null ? ' ${project.dawVersion}' : ''}'),
+                              child: Text(AppLocalizations.of(context)!.dawInfoLabel('${project.dawType}${project.dawVersion != null ? ' ${project.dawVersion}' : ''}')),
                             ),
                           ],
                         ],
@@ -4488,13 +4673,13 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                           children: [
                             if (project.bpm != null)
                               Expanded(
-                                child: Text('BPM: ${project.bpm}'),
+                                child: Text(AppLocalizations.of(context)!.bpmInfoLabel('${project.bpm}')),
                               ),
                             if (project.bpm != null && project.musicalKey != null)
                               const SizedBox(width: 16),
                             if (project.musicalKey != null)
                               Expanded(
-                                child: Text('Key: ${project.musicalKey}'),
+                                child: Text(AppLocalizations.of(context)!.keyInfoLabel(project.musicalKey!)),
                               ),
                           ],
                         ),
@@ -4580,12 +4765,14 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                   ),
                   trailing: _isSelectionMode
                       ? null
-                      : project.previewSongPath != null && project.previewSongPath!.isNotEmpty
+                      : project.previewSongPath?.isNotEmpty == true || project.previewSongAutoPath != null
                           ? IconButton(
                               icon: const Icon(Icons.play_arrow),
                               tooltip: AppLocalizations.of(context)!.playPreview,
                               onPressed: () => _playPreviewSong(project),
-                              color: Colors.green,
+                              color: project.previewSongPath?.isNotEmpty == true
+                                  ? Colors.green
+                                  : Colors.amber,
                             )
                           : null,
                   onTap: () {

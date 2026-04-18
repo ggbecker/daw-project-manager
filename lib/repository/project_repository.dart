@@ -28,7 +28,11 @@ class ProjectRepository {
   final Box<Release> releasesBox;
   final Box<Playlist> playlistsBox;
   final Box<ProjectEvent> eventsBox;
+  // Global (profile-agnostic) key-value settings box
+  final Box<String> appSettingsBox;
   final _uuid = const Uuid();
+
+  static const _keyCustomMixdownFolder = 'customMixdownFolder';
 
   ProjectRepository({
     required this.profileId,
@@ -38,7 +42,18 @@ class ProjectRepository {
     required this.releasesBox,
     required this.playlistsBox,
     required this.eventsBox,
+    required this.appSettingsBox,
   });
+
+  String? getCustomMixdownFolder() => appSettingsBox.get(_keyCustomMixdownFolder);
+
+  Future<void> setCustomMixdownFolder(String? value) async {
+    if (value == null || value.trim().isEmpty) {
+      await appSettingsBox.delete(_keyCustomMixdownFolder);
+    } else {
+      await appSettingsBox.put(_keyCustomMixdownFolder, value.trim());
+    }
+  }
 
   static Future<ProjectRepository> init(ProfileRepository profileRepo) async {
     // Initialize Hive with LocalAppData directory (only once)
@@ -87,6 +102,7 @@ class ProjectRepository {
     final releases = await Hive.openBox<Release>('${profileId}_releases');
     final playlists = await Hive.openBox<Playlist>('${profileId}_playlists');
     final events = await Hive.openBox<ProjectEvent>('${profileId}_events');
+    final appSettings = await Hive.openBox<String>('app_settings');
 
     if (kDebugMode) {
       print('ProjectRepository.init: Opened boxes for profile $profileId');
@@ -101,6 +117,7 @@ class ProjectRepository {
       releasesBox: releases,
       playlistsBox: playlists,
       eventsBox: events,
+      appSettingsBox: appSettings,
     );
   }
 
@@ -120,6 +137,7 @@ class ProjectRepository {
     final releases = await Hive.openBox<Release>('${profileId}_releases');
     final playlists = await Hive.openBox<Playlist>('${profileId}_playlists');
     final events = await Hive.openBox<ProjectEvent>('${profileId}_events');
+    final appSettings = await Hive.openBox<String>('app_settings');
 
     return ProjectRepository(
       profileId: profileId,
@@ -129,6 +147,7 @@ class ProjectRepository {
       releasesBox: releases,
       playlistsBox: playlists,
       eventsBox: events,
+      appSettingsBox: appSettings,
     );
   }
 
@@ -340,6 +359,7 @@ class ProjectRepository {
       previewSongPath: existing?.previewSongPath,     // <--- PRESERVA PREVIEW SONG
       previewSongFileName: existing?.previewSongFileName, // <--- PRESERVA PREVIEW SONG FILENAME
       uploadedPreviewSongHash: existing?.uploadedPreviewSongHash, // <--- PRESERVA PREVIEW SONG HASH
+      previewSongAutoPath: existing?.previewSongAutoPath, // <--- PRESERVA AUTO-DETECTED PATH
       fileCreatedAt: fileCreatedAt,                   // <--- FILE CREATION DATE (never override once set)
       statusChangedAt: existing?.statusChangedAt,     // <--- PRESERVA STATUS CHANGE DATE
       deadline: existing?.deadline,                   // <--- PRESERVA DEADLINE
