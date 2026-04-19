@@ -3962,6 +3962,12 @@ abstract class AppLocalizations {
   /// **'Auto-detected'**
   String get autoDetected;
 
+  /// No description provided for @matchedInDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Matched in description'**
+  String get matchedInDescription;
+
   /// No description provided for @relocateFolderDialogTitle.
   ///
   /// In en, this message translates to:

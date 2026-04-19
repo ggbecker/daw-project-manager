@@ -2346,6 +2346,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get autoDetected => 'Определено автоматически';
 
   @override
+  String get matchedInDescription => 'Совпадение в описании';
+
+  @override
   String get relocateFolderDialogTitle => 'Переместить папку';
 
   @override

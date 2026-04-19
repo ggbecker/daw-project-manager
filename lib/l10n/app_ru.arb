@@ -1606,5 +1606,6 @@
         "type": "int"
       }
     }
-  }
+  },
+  "matchedInDescription": "Совпадение в описании"
 }

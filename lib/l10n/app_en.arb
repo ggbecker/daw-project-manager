@@ -2633,6 +2633,7 @@
   "notificationDebugTitle": "🐛 Debug Information",
   "close": "Close",
   "autoDetected": "Auto-detected",
+  "matchedInDescription": "Matched in description",
   "relocateFolderDialogTitle": "Relocate Folder",
   "relocateFolderSuccess": "{count, plural, =1{1 project path updated} other{{count} project paths updated}}",
   "@relocateFolderSuccess": {

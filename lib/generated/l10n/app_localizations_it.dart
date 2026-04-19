@@ -2353,6 +2353,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get autoDetected => 'Rilevato automaticamente';
 
   @override
+  String get matchedInDescription => 'Trovato nella descrizione';
+
+  @override
   String get relocateFolderDialogTitle => 'Riposiziona cartella';
 
   @override

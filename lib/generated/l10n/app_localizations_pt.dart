@@ -2347,6 +2347,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get autoDetected => 'Detectado automaticamente';
 
   @override
+  String get matchedInDescription => 'Encontrado na descrição';
+
+  @override
   String get relocateFolderDialogTitle => 'Realocar pasta';
 
   @override

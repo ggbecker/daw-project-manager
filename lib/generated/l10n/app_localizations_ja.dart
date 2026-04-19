@@ -2299,6 +2299,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get autoDetected => '自動検出';
 
   @override
+  String get matchedInDescription => '説明文でマッチ';
+
+  @override
   String get relocateFolderDialogTitle => 'フォルダを移動';
 
   @override

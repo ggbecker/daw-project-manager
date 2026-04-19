@@ -2367,6 +2367,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get autoDetected => 'Détecté automatiquement';
 
   @override
+  String get matchedInDescription => 'Correspondance dans la description';
+
+  @override
   String get relocateFolderDialogTitle => 'Déplacer le dossier';
 
   @override

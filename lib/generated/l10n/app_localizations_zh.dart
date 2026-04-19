@@ -2280,6 +2280,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get autoDetected => '自动检测';
 
   @override
+  String get matchedInDescription => '在描述中匹配';
+
+  @override
   String get relocateFolderDialogTitle => '重新定位文件夹';
 
   @override
