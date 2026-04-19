@@ -2348,4 +2348,21 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get notificationDebugTitle => '🐛 Informazioni di debug';
+
+  @override
+  String get autoDetected => 'Rilevato automaticamente';
+
+  @override
+  String get relocateFolderDialogTitle => 'Riposiziona cartella';
+
+  @override
+  String relocateFolderSuccess(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count percorsi progetto aggiornati',
+      one: '1 percorso progetto aggiornato',
+    );
+    return '$_temp0';
+  }
 }

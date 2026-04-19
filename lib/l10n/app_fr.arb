@@ -1596,5 +1596,15 @@
       }
     }
   },
-  "notificationDebugTitle": "🐛 Informations de débogage"
+  "notificationDebugTitle": "🐛 Informations de débogage",
+  "autoDetected": "Détecté automatiquement",
+  "relocateFolderDialogTitle": "Déplacer le dossier",
+  "relocateFolderSuccess": "{count, plural, =1{1 chemin de projet mis à jour} other{{count} chemins de projet mis à jour}}",
+  "@relocateFolderSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -2341,4 +2341,21 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get notificationDebugTitle => '🐛 Отладочная информация';
+
+  @override
+  String get autoDetected => 'Определено автоматически';
+
+  @override
+  String get relocateFolderDialogTitle => 'Переместить папку';
+
+  @override
+  String relocateFolderSuccess(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Обновлено $count путей проектов',
+      one: 'Обновлён 1 путь проекта',
+    );
+    return '$_temp0';
+  }
 }

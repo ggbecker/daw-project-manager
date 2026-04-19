@@ -2357,4 +2357,21 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get notificationDebugTitle => '🐛 Información de depuración';
+
+  @override
+  String get autoDetected => 'Detectado automáticamente';
+
+  @override
+  String get relocateFolderDialogTitle => 'Reubicar carpeta';
+
+  @override
+  String relocateFolderSuccess(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count rutas de proyecto actualizadas',
+      one: '1 ruta de proyecto actualizada',
+    );
+    return '$_temp0';
+  }
 }

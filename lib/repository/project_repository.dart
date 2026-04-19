@@ -217,6 +217,46 @@ class ProjectRepository {
 
   List<ScanRoot> getRoots() => rootsBox.values.toList(growable: false);
 
+  /// Updates the stored path for a scan root and rewrites the `filePath`,
+  /// `previewSongPath`, and `previewSongAutoPath` of every project whose path
+  /// starts with the old root path. No files are moved on disk.
+  /// Returns the number of projects whose paths were updated.
+  Future<int> relocateRoot(String rootId, String newPath) async {
+    final root = rootsBox.get(rootId);
+    if (root == null) return 0;
+
+    final oldPath = p.normalize(root.path);
+    final newNorm = p.normalize(newPath);
+    final oldPrefix = oldPath.endsWith(p.separator) ? oldPath : oldPath + p.separator;
+    final newPrefix = newNorm.endsWith(p.separator) ? newNorm : newNorm + p.separator;
+
+    String repath(String src) {
+      final norm = p.normalize(src);
+      if (norm.startsWith(oldPrefix)) { return newPrefix + norm.substring(oldPrefix.length); }
+      if (norm == oldPath) { return newNorm; }
+      return src;
+    }
+
+    // Update the root itself
+    await rootsBox.put(rootId, root.copyWith(path: newNorm));
+
+    int count = 0;
+    for (final project in projectsBox.values.toList()) {
+      if (!p.normalize(project.filePath).startsWith(oldPrefix) &&
+          p.normalize(project.filePath) != oldPath) { continue; }
+
+      final updated = project.copyWith(
+        filePath: repath(project.filePath),
+        fileName: p.basename(repath(project.filePath)),
+        previewSongPath: project.previewSongPath != null ? repath(project.previewSongPath!) : null,
+        previewSongAutoPath: project.previewSongAutoPath != null ? repath(project.previewSongAutoPath!) : null,
+      );
+      await projectsBox.put(updated.id, updated);
+      count++;
+    }
+    return count;
+  }
+
   // Ignored paths (directories under roots that should not be scanned)
   Future<void> addIgnoredPath(String path) async {
     final id = _uuid.v4();

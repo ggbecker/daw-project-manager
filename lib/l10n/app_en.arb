@@ -2631,5 +2631,13 @@
     }
   },
   "notificationDebugTitle": "🐛 Debug Information",
-  "close": "Close"
+  "close": "Close",
+  "autoDetected": "Auto-detected",
+  "relocateFolderDialogTitle": "Relocate Folder",
+  "relocateFolderSuccess": "{count, plural, =1{1 project path updated} other{{count} project paths updated}}",
+  "@relocateFolderSuccess": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  }
 }

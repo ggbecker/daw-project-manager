@@ -1596,5 +1596,15 @@
       }
     }
   },
-  "notificationDebugTitle": "🐛 调试信息"
+  "notificationDebugTitle": "🐛 调试信息",
+  "autoDetected": "自动检测",
+  "relocateFolderDialogTitle": "重新定位文件夹",
+  "relocateFolderSuccess": "{count, plural, =1{已更新1个项目路径} other{已更新{count}个项目路径}}",
+  "@relocateFolderSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

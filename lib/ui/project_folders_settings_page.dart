@@ -101,6 +101,39 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
     }
   }
 
+  Future<void> _relocateProjectFolder(String folderId, String oldPath) async {
+    if (_busy || !_isDesktop) return;
+    final l10n = AppLocalizations.of(context)!;
+
+    final picked = await FilePicker.platform.getDirectoryPath(
+      dialogTitle: l10n.relocateFolderDialogTitle,
+    );
+    if (picked == null) return;
+    if (!mounted) return;
+
+    setState(() => _busy = true);
+    try {
+      final repo = await ref.read(repositoryProvider.future);
+      final count = await repo.relocateRoot(folderId, picked);
+      ref.invalidate(rootsWatchProvider);
+      ref.invalidate(scanRootsProvider);
+      ref.invalidate(allProjectsStreamProvider);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.relocateFolderSuccess(count))),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.errorAddingFolder(e.toString()))),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   Future<void> _removeProjectFolder(String folderId) async {
     if (_busy || !_isDesktop) return;
 
@@ -296,10 +329,20 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
                       subtitle: f.lastScanAt == null
                           ? Text(l10n.notScannedYet)
                           : Text(l10n.lastScan(f.lastScanAt.toString())),
-                      trailing: IconButton(
-                        tooltip: l10n.remove,
-                        onPressed: _busy ? null : () => _removeProjectFolder(f.id),
-                        icon: const Icon(Icons.delete_outline),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            tooltip: l10n.relocateFolderDialogTitle,
+                            onPressed: _busy ? null : () => _relocateProjectFolder(f.id, f.path),
+                            icon: const Icon(Icons.drive_file_move_outline),
+                          ),
+                          IconButton(
+                            tooltip: l10n.remove,
+                            onPressed: _busy ? null : () => _removeProjectFolder(f.id),
+                            icon: const Icon(Icons.delete_outline),
+                          ),
+                        ],
                       ),
                     );
                   }),

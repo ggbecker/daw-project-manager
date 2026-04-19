@@ -383,6 +383,19 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
         // Update lastScanAt timestamp for this root
         await repo.updateRootLastScanAt(root.id, scanTime);
       }
+
+      // Auto-detect preview songs for projects that have neither a manual nor
+      // a previously auto-detected path. Runs after the full scan so all upserts
+      // are committed before we read back the project list.
+      final customFolder = ref.read(customMixdownFolderProvider).value;
+      for (final project in repo.getAllProjects()) {
+        if (project.previewSongPath != null || project.previewSongAutoPath != null) continue;
+        final detected = MixdownDetectorService.findLatestMixdown(project, customFolder: customFolder);
+        if (detected != null) {
+          await repo.updateProject(project.copyWith(previewSongAutoPath: detected.path));
+        }
+      }
+
       if (mounted) {
         final scanType = fullMetadata ? AppLocalizations.of(context)!.deepScan : AppLocalizations.of(context)!.rescan;
         final msg = foundCount == 0
@@ -3059,7 +3072,9 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                 iconSize: 24,
                 padding: const EdgeInsets.all(4),
                 constraints: const BoxConstraints(),
-                tooltip: '${AppLocalizations.of(context)!.playPreview} (P)',
+                tooltip: project.previewSongAutoPath != null && project.previewSongPath?.isNotEmpty != true
+                    ? '${AppLocalizations.of(context)!.playPreview} (P)\n⚡ ${AppLocalizations.of(context)!.autoDetected}: ${path.basename(project.previewSongAutoPath!)}'
+                    : '${AppLocalizations.of(context)!.playPreview} (P)',
                 onPressed: () => _playPreviewSong(project),
                 color: project.previewSongPath?.isNotEmpty == true
                     ? Colors.green
@@ -4768,7 +4783,9 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                       : project.previewSongPath?.isNotEmpty == true || project.previewSongAutoPath != null
                           ? IconButton(
                               icon: const Icon(Icons.play_arrow),
-                              tooltip: AppLocalizations.of(context)!.playPreview,
+                              tooltip: project.previewSongAutoPath != null && project.previewSongPath?.isNotEmpty != true
+                                  ? '${AppLocalizations.of(context)!.playPreview}\n⚡ ${AppLocalizations.of(context)!.autoDetected}: ${path.basename(project.previewSongAutoPath!)}'
+                                  : AppLocalizations.of(context)!.playPreview,
                               onPressed: () => _playPreviewSong(project),
                               color: project.previewSongPath?.isNotEmpty == true
                                   ? Colors.green

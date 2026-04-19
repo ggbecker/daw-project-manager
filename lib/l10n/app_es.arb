@@ -1596,5 +1596,15 @@
       }
     }
   },
-  "notificationDebugTitle": "🐛 Información de depuración"
+  "notificationDebugTitle": "🐛 Información de depuración",
+  "autoDetected": "Detectado automáticamente",
+  "relocateFolderDialogTitle": "Reubicar carpeta",
+  "relocateFolderSuccess": "{count, plural, =1{1 ruta de proyecto actualizada} other{{count} rutas de proyecto actualizadas}}",
+  "@relocateFolderSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

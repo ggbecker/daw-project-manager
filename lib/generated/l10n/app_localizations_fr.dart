@@ -2362,4 +2362,21 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get notificationDebugTitle => '🐛 Informations de débogage';
+
+  @override
+  String get autoDetected => 'Détecté automatiquement';
+
+  @override
+  String get relocateFolderDialogTitle => 'Déplacer le dossier';
+
+  @override
+  String relocateFolderSuccess(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count chemins de projet mis à jour',
+      one: '1 chemin de projet mis à jour',
+    );
+    return '$_temp0';
+  }
 }

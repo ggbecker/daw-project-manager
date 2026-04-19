@@ -1596,5 +1596,15 @@
       }
     }
   },
-  "notificationDebugTitle": "🐛 Informazioni di debug"
+  "notificationDebugTitle": "🐛 Informazioni di debug",
+  "autoDetected": "Rilevato automaticamente",
+  "relocateFolderDialogTitle": "Riposiziona cartella",
+  "relocateFolderSuccess": "{count, plural, =1{1 percorso progetto aggiornato} other{{count} percorsi progetto aggiornati}}",
+  "@relocateFolderSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

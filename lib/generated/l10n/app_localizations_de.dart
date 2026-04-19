@@ -2356,4 +2356,21 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get notificationDebugTitle => '🐛 Debug-Informationen';
+
+  @override
+  String get autoDetected => 'Automatisch erkannt';
+
+  @override
+  String get relocateFolderDialogTitle => 'Ordner verschieben';
+
+  @override
+  String relocateFolderSuccess(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Projektpfade aktualisiert',
+      one: '1 Projektpfad aktualisiert',
+    );
+    return '$_temp0';
+  }
 }

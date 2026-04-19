@@ -1596,5 +1596,15 @@
       }
     }
   },
-  "notificationDebugTitle": "🐛 Отладочная информация"
+  "notificationDebugTitle": "🐛 Отладочная информация",
+  "autoDetected": "Определено автоматически",
+  "relocateFolderDialogTitle": "Переместить папку",
+  "relocateFolderSuccess": "{count, plural, =1{Обновлён 1 путь проекта} other{Обновлено {count} путей проектов}}",
+  "@relocateFolderSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }
