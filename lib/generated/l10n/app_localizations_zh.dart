@@ -2275,4 +2275,24 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get notificationDebugTitle => '🐛 调试信息';
+
+  @override
+  String get autoDetected => '自动检测';
+
+  @override
+  String get matchedInDescription => '在描述中匹配';
+
+  @override
+  String get relocateFolderDialogTitle => '重新定位文件夹';
+
+  @override
+  String relocateFolderSuccess(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '已更新$count个项目路径',
+      one: '已更新1个项目路径',
+    );
+    return '$_temp0';
+  }
 }

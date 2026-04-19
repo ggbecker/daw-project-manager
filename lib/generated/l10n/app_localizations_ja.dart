@@ -2294,4 +2294,24 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get notificationDebugTitle => '🐛 デバッグ情報';
+
+  @override
+  String get autoDetected => '自動検出';
+
+  @override
+  String get matchedInDescription => '説明文でマッチ';
+
+  @override
+  String get relocateFolderDialogTitle => 'フォルダを移動';
+
+  @override
+  String relocateFolderSuccess(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count件のプロジェクトパスを更新しました',
+      one: '1件のプロジェクトパスを更新しました',
+    );
+    return '$_temp0';
+  }
 }

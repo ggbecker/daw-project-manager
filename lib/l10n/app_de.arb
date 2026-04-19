@@ -1596,5 +1596,16 @@
       }
     }
   },
-  "notificationDebugTitle": "🐛 Debug-Informationen"
+  "notificationDebugTitle": "🐛 Debug-Informationen",
+  "autoDetected": "Automatisch erkannt",
+  "relocateFolderDialogTitle": "Ordner verschieben",
+  "relocateFolderSuccess": "{count, plural, =1{1 Projektpfad aktualisiert} other{{count} Projektpfade aktualisiert}}",
+  "@relocateFolderSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "matchedInDescription": "In Beschreibung gefunden"
 }

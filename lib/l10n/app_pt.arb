@@ -1620,5 +1620,16 @@
       }
     }
   },
-  "notificationDebugTitle": "🐛 Informações de depuração"
+  "notificationDebugTitle": "🐛 Informações de depuração",
+  "autoDetected": "Detectado automaticamente",
+  "relocateFolderDialogTitle": "Realocar pasta",
+  "relocateFolderSuccess": "{count, plural, =1{1 caminho de projeto atualizado} other{{count} caminhos de projeto atualizados}}",
+  "@relocateFolderSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "matchedInDescription": "Encontrado na descrição"
 }

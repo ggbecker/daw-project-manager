@@ -2342,4 +2342,24 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get notificationDebugTitle => '🐛 Informações de depuração';
+
+  @override
+  String get autoDetected => 'Detectado automaticamente';
+
+  @override
+  String get matchedInDescription => 'Encontrado na descrição';
+
+  @override
+  String get relocateFolderDialogTitle => 'Realocar pasta';
+
+  @override
+  String relocateFolderSuccess(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count caminhos de projeto atualizados',
+      one: '1 caminho de projeto atualizado',
+    );
+    return '$_temp0';
+  }
 }

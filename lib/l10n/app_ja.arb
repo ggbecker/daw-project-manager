@@ -1596,5 +1596,16 @@
       }
     }
   },
-  "notificationDebugTitle": "🐛 デバッグ情報"
+  "notificationDebugTitle": "🐛 デバッグ情報",
+  "autoDetected": "自動検出",
+  "relocateFolderDialogTitle": "フォルダを移動",
+  "relocateFolderSuccess": "{count, plural, =1{1件のプロジェクトパスを更新しました} other{{count}件のプロジェクトパスを更新しました}}",
+  "@relocateFolderSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "matchedInDescription": "説明文でマッチ"
 }

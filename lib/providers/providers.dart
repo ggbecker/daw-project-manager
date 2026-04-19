@@ -408,7 +408,9 @@ final projectsProvider = Provider<List<MusicProject>>((ref) {
     final projectsSearch = ref.watch(projectsSearchProvider);
     if (projectsSearch.trim().isNotEmpty) {
       projects = projects
-          .where((p) => fuzzyMatchAll(p.displayName, projectsSearch))
+          .where((p) =>
+              fuzzyMatchAll(p.displayName, projectsSearch) ||
+              (p.notes != null && fuzzyMatchAll(p.notes!, projectsSearch)))
           .toList();
     }
     

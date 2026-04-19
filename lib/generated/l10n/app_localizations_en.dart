@@ -2341,4 +2341,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationDebugTitle => '🐛 Debug Information';
+
+  @override
+  String get autoDetected => 'Auto-detected';
+
+  @override
+  String get matchedInDescription => 'Matched in description';
+
+  @override
+  String get relocateFolderDialogTitle => 'Relocate Folder';
+
+  @override
+  String relocateFolderSuccess(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count project paths updated',
+      one: '1 project path updated',
+    );
+    return '$_temp0';
+  }
 }

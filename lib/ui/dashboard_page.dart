@@ -21,6 +21,7 @@ import '../services/mixdown_detector_service.dart';
 import '../services/dock_menu_service.dart';
 import '../utils/mobile_utils.dart';
 import '../utils/file_launcher.dart';
+import '../utils/search_utils.dart';
 import 'project_detail_page.dart';
 import 'releases_tab_page.dart';
 import 'release_detail_page.dart';
@@ -383,6 +384,19 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
         // Update lastScanAt timestamp for this root
         await repo.updateRootLastScanAt(root.id, scanTime);
       }
+
+      // Auto-detect preview songs for projects that have neither a manual nor
+      // a previously auto-detected path. Runs after the full scan so all upserts
+      // are committed before we read back the project list.
+      final customFolder = ref.read(customMixdownFolderProvider).value;
+      for (final project in repo.getAllProjects()) {
+        if (project.previewSongPath != null || project.previewSongAutoPath != null) continue;
+        final detected = MixdownDetectorService.findLatestMixdown(project, customFolder: customFolder);
+        if (detected != null) {
+          await repo.updateProject(project.copyWith(previewSongAutoPath: detected.path));
+        }
+      }
+
       if (mounted) {
         final scanType = fullMetadata ? AppLocalizations.of(context)!.deepScan : AppLocalizations.of(context)!.rescan;
         final msg = foundCount == 0
@@ -2628,6 +2642,13 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    // When the search query changes, ask TrinaGrid to repaint so the
+    // "matched in description" icon in the name renderer reflects the new query.
+    ref.listen(projectsSearchProvider, (prev, next) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        stateManager?.notifyListeners();
+      });
+    });
     final columns = [
       TrinaColumn(
         title: '',
@@ -2693,6 +2714,12 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           final fileExists = File(project.filePath).existsSync() ||
               Directory(project.filePath).existsSync();
 
+          final currentQuery = ref.read(projectsSearchProvider);
+          final isNotesMatch = currentQuery.trim().isNotEmpty &&
+              !fuzzyMatchAll(project.displayName, currentQuery) &&
+              project.notes != null &&
+              fuzzyMatchAll(project.notes!, currentQuery);
+
           return GestureDetector(
             onSecondaryTapDown: (TapDownDetails details) {
               _showContextMenu(context, project, details.globalPosition);
@@ -2700,6 +2727,14 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             child: Row(
               children: [
                 Expanded(child: Text(rendererContext.cell.value.toString())),
+                if (isNotesMatch)
+                  Tooltip(
+                    message: AppLocalizations.of(context)!.matchedInDescription,
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 6),
+                      child: Icon(Icons.notes, size: 14, color: Colors.amber.shade600),
+                    ),
+                  ),
                 if (!fileExists && !MobileUtils.isMobile())
                   Tooltip(
                     message: AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
@@ -3059,7 +3094,9 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                 iconSize: 24,
                 padding: const EdgeInsets.all(4),
                 constraints: const BoxConstraints(),
-                tooltip: '${AppLocalizations.of(context)!.playPreview} (P)',
+                tooltip: project.previewSongAutoPath != null && project.previewSongPath?.isNotEmpty != true
+                    ? '${AppLocalizations.of(context)!.playPreview} (P)\n⚡ ${AppLocalizations.of(context)!.autoDetected}: ${path.basename(project.previewSongAutoPath!)}'
+                    : '${AppLocalizations.of(context)!.playPreview} (P)',
                 onPressed: () => _playPreviewSong(project),
                 color: project.previewSongPath?.isNotEmpty == true
                     ? Colors.green
@@ -4629,7 +4666,12 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
             itemBuilder: (context, index) {
               final project = sortedProjects[index];
               final isSelected = _selectedProjectIds.contains(project.id);
-              
+              final searchQuery = ref.read(projectsSearchProvider);
+              final isNotesMatch = searchQuery.trim().isNotEmpty &&
+                  !fuzzyMatchAll(project.displayName, searchQuery) &&
+                  project.notes != null &&
+                  fuzzyMatchAll(project.notes!, searchQuery);
+
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 child: ListTile(
@@ -4639,9 +4681,21 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                           onChanged: (_) => _toggleProjectSelection(project.id),
                         )
                       : null,
-                  title: Text(
-                    project.displayName,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  title: Row(
+                    children: [
+                      Expanded(child: Text(
+                        project.displayName,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      )),
+                      if (isNotesMatch)
+                        Tooltip(
+                          message: AppLocalizations.of(context)!.matchedInDescription,
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 4),
+                            child: Icon(Icons.notes, size: 14, color: Colors.amber.shade600),
+                          ),
+                        ),
+                    ],
                   ),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -4768,7 +4822,9 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                       : project.previewSongPath?.isNotEmpty == true || project.previewSongAutoPath != null
                           ? IconButton(
                               icon: const Icon(Icons.play_arrow),
-                              tooltip: AppLocalizations.of(context)!.playPreview,
+                              tooltip: project.previewSongAutoPath != null && project.previewSongPath?.isNotEmpty != true
+                                  ? '${AppLocalizations.of(context)!.playPreview}\n⚡ ${AppLocalizations.of(context)!.autoDetected}: ${path.basename(project.previewSongAutoPath!)}'
+                                  : AppLocalizations.of(context)!.playPreview,
                               onPressed: () => _playPreviewSong(project),
                               color: project.previewSongPath?.isNotEmpty == true
                                   ? Colors.green

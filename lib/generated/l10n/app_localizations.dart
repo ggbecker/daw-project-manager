@@ -3955,6 +3955,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'🐛 Debug Information'**
   String get notificationDebugTitle;
+
+  /// No description provided for @autoDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-detected'**
+  String get autoDetected;
+
+  /// No description provided for @matchedInDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Matched in description'**
+  String get matchedInDescription;
+
+  /// No description provided for @relocateFolderDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Relocate Folder'**
+  String get relocateFolderDialogTitle;
+
+  /// No description provided for @relocateFolderSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 project path updated} other{{count} project paths updated}}'**
+  String relocateFolderSuccess(int count);
 }
 
 class _AppLocalizationsDelegate
