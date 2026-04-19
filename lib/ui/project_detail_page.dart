@@ -136,29 +136,6 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
     }
   }
 
-  String _formatDate(DateTime date) {
-    final l10n = AppLocalizations.of(context)!;
-    final now = DateTime.now();
-    final diff = now.difference(date);
-    
-    if (diff.inDays == 0) {
-      return l10n.dateToday;
-    } else if (diff.inDays == 1) {
-      return l10n.dateYesterday;
-    } else if (diff.inDays < 7) {
-      return l10n.dateDaysAgo(diff.inDays);
-    } else if (diff.inDays < 30) {
-      final weeks = diff.inDays ~/ 7;
-      return l10n.dateWeeksAgo(weeks);
-    } else if (diff.inDays < 365) {
-      final months = diff.inDays ~/ 30;
-      return l10n.dateMonthsAgo(months);
-    } else {
-      final years = diff.inDays ~/ 365;
-      return l10n.dateYearsAgo(years, '');
-    }
-  }
-
   String _formatDuration(Duration duration) {
     final l10n = AppLocalizations.of(context)!;
     final years = duration.inDays ~/ 365;
@@ -254,6 +231,41 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
             AppLocalizations.of(context)!.couldNotOpenFolder('Unable to open folder'),
           ),
         ),
+      );
+    }
+  }
+
+  Future<void> _doSave(
+    ProjectRepository repo,
+    MusicProject project,
+    MusicProject updatedProject,
+  ) async {
+    final nameText = _nameCtrl.text.trim();
+    final newCustomDisplayName =
+        (nameText.isEmpty || nameText == updatedProject.fileName) ? null : nameText;
+    final notesText = _notesCtrl.text.trim();
+    final newNotes = notesText.isEmpty ? null : notesText;
+    final newStatus =
+        _selectedPhase != null ? _translateStatusToEnglish(_selectedPhase!) : 'Idea';
+    final statusChanged = project.status != newStatus;
+    final updated = project.copyWith(
+      customDisplayName: newCustomDisplayName,
+      bpm: _bpmCtrl.text.trim().isEmpty ? null : double.tryParse(_bpmCtrl.text.trim()),
+      musicalKey: _keyCtrl.text.trim().isEmpty ? null : _keyCtrl.text.trim(),
+      notes: newNotes,
+      clearNotes: newNotes == null,
+      status: newStatus,
+      statusChangedAt: statusChanged ? DateTime.now() : null,
+    );
+    await repo.updateProject(updated);
+    await _recordSaveEvents(repo, project, updated, newStatus, statusChanged);
+    _lastSavedName = newCustomDisplayName ?? updatedProject.fileName;
+    _lastSavedBpm = _bpmCtrl.text.trim();
+    _lastSavedKey = _keyCtrl.text.trim();
+    _lastSavedNotes = newNotes ?? '';
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.saved)),
       );
     }
   }
@@ -505,12 +517,43 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
             Directory(updatedProject.filePath).existsSync();
         return Stack(
           children: [
-            Padding(
-              padding: MobileUtils.getResponsivePadding(context),
-              child: Form(
-                key: _formKey,
-                child: ListView(
-                  children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _ProjectDetailHeader(
+                  project: updatedProject,
+                  isMobile: isMobile,
+                  dateFormat: dateFormat,
+                  formatDuration: _formatDuration,
+                  formatCompletionDuration: _formatCompletionDuration,
+                ),
+                _ProjectDetailActionBar(
+                  project: updatedProject,
+                  isMobile: isMobile,
+                  sourceFileExists: sourceFileExists,
+                  onSave: () => _doSave(repo, project, updatedProject),
+                  onOpenFolder: () => _openProjectFolder(updatedProject.filePath),
+                  onRename: () => _renameProjectFile(updatedProject),
+                  onOpenInDaw: () async {
+                    final success = await FileLauncher.launchProject(updatedProject.filePath);
+                    if (!success && mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(AppLocalizations.of(context)!.failedToLaunchProject(updatedProject.displayName))),
+                      );
+                    }
+                  },
+                  onStats: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => ProjectStatisticsPage(projectId: updatedProject.id)),
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: MobileUtils.getResponsivePadding(context),
+                    child: Form(
+                      key: _formKey,
+                      child: ListView(
+                        children: [
                     if (!sourceFileExists && !MobileUtils.isMobile())
                       Container(
                         margin: const EdgeInsets.only(bottom: 12),
@@ -533,92 +576,9 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                           ],
                         ),
                       ),
-                    Text(
-                      updatedProject.displayName,
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                    const SizedBox(height: 8),
-                    // Only show full path on desktop, not on mobile
-                    if (!isMobile)
-                      Text(
-                        updatedProject.filePath,
-                                style: TextStyle(
-                                  color: Theme.of(
-                                    context,
-                                  ).textTheme.bodyMedium?.color,
-                                ),
-                              ),
-                    if (!isMobile) const SizedBox(height: 16),
-                    if (isMobile) const SizedBox(height: 8),
-                    Text(
-                      AppLocalizations.of(context)!.lastModified(
-                        dateFormat.format(updatedProject.lastModifiedAt),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    // Project age display
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.access_time,
-                          size: 16,
-                          color: Theme.of(context).textTheme.bodySmall?.color,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          AppLocalizations.of(context)!.projectAge(_formatDuration(updatedProject.projectAge)),
-                          style: TextStyle(
-                            color: Theme.of(context).textTheme.bodySmall?.color,
-                          ),
-                        ),
-                        if (updatedProject.fileCreatedAt != null) ...[
-                          const SizedBox(width: 8),
-                          Text(
-                            '(${AppLocalizations.of(context)!.createdDate(_formatDate(updatedProject.fileCreatedAt!))})',
-                            style: TextStyle(
-                              color: Theme.of(context).textTheme.bodySmall?.color,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                    // Time to completion (only show for finished projects)
-                    if (updatedProject.timeToCompletion != null) ...[
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.emoji_events,
-                            size: 16,
-                            color: Colors.amber,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            AppLocalizations.of(context)!.completedIn(_formatCompletionDuration(updatedProject.timeToCompletion)!),
-                            style: TextStyle(
-                              color: Theme.of(context).textTheme.bodySmall?.color,
-                            ),
-                          ),
-                          if (updatedProject.statusChangedAt != null) ...[
-                            const SizedBox(width: 8),
-                            Text(
-                              '(${AppLocalizations.of(context)!.finishedDate(_formatDate(updatedProject.statusChangedAt!))})',
-                              style: TextStyle(
-                                color: Theme.of(context).textTheme.bodySmall?.color,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ],
-                            const SizedBox(height: 24),
+                        const SizedBox(height: 16),
 
-                            // Campo para editar o nome de exibição customizado
+                        // Campo para editar o nome de exibição customizado
                             TextFormField(
                               controller: _nameCtrl,
                               focusNode: _nameFocusNode,
@@ -1066,208 +1026,14 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                             ),
 
                             const SizedBox(height: 24),
-                            // Use Wrap on mobile, Row on desktop
-                            isMobile
-                                ? Wrap(
-                                    spacing: 8,
-                                    runSpacing: 8,
-                                    children: [
-                                      SizedBox(
-                                        width: double.infinity,
-                                        child: ElevatedButton.icon(
-                                          onPressed: () async {
-                                            // O campo name atualiza customDisplayName. Se o texto for vazio ou igual ao nome do arquivo original, ele deve ser null.
-                                            final nameText = _nameCtrl.text.trim();
-                                            final newCustomDisplayName =
-                                                (nameText.isEmpty ||
-                                                    nameText == updatedProject.fileName)
-                                                ? null
-                                                : nameText;
-
-                                            final notesText = _notesCtrl.text.trim();
-                                            final newNotes = notesText.isEmpty
-                                                ? null
-                                                : notesText;
-
-                                            // Determine new status and check if it changed
-                                            final newStatus = _selectedPhase != null
-                                                ? _translateStatusToEnglish(_selectedPhase!)
-                                                : 'Idea';
-                                            final statusChanged = project.status != newStatus;
-
-                                            final updated = project.copyWith(
-                                              customDisplayName: newCustomDisplayName,
-                                              bpm: _bpmCtrl.text.trim().isEmpty
-                                                  ? null
-                                                  : double.tryParse(
-                                                      _bpmCtrl.text.trim(),
-                                                    ),
-                                              musicalKey: _keyCtrl.text.trim().isEmpty
-                                                  ? null
-                                                  : _keyCtrl.text.trim(),
-                                              notes: newNotes,
-                                              clearNotes: newNotes == null,
-                                              status: newStatus,
-                                              statusChangedAt: statusChanged ? DateTime.now() : null,
-                                            );
-
-                                            await repo.updateProject(updated);
-                                            await _recordSaveEvents(repo, project, updated, newStatus, statusChanged);
-                                            // Atualiza os valores salvos para preservar o texto na próxima reconstrução
-                                            _lastSavedName = newCustomDisplayName ?? updatedProject.fileName;
-                                            _lastSavedBpm = _bpmCtrl.text.trim();
-                                            _lastSavedKey = _keyCtrl.text.trim();
-                                            _lastSavedNotes = newNotes ?? '';
-                                            if (mounted) {
-                                              ScaffoldMessenger.of(
-                                                context,
-                                              ).showSnackBar(
-                                                SnackBar(
-                                                  content: Text(
-                                                    AppLocalizations.of(context)!.saved,
-                                                  ),
-                                                ),
-                                              );
-                                            }
-                                          },
-                                          icon: const Icon(Icons.save),
-                                          label: Text(
-                                            AppLocalizations.of(context)!.save,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  )
-                                : Row(
-                                    children: [
-                                      // BOTÃO: SAVE (LÓGICA ATUALIZADA)
-                                      ElevatedButton.icon(
-                                        onPressed: () async {
-                                          // O campo name atualiza customDisplayName. Se o texto for vazio ou igual ao nome do arquivo original, ele deve ser null.
-                                          final nameText = _nameCtrl.text.trim();
-                                          final newCustomDisplayName =
-                                              (nameText.isEmpty ||
-                                                  nameText == updatedProject.fileName)
-                                              ? null
-                                              : nameText;
-
-                                          final notesText = _notesCtrl.text.trim();
-                                          final newNotes = notesText.isEmpty
-                                              ? null
-                                              : notesText;
-
-                                          // Determine new status and check if it changed
-                                          final newStatus = _selectedPhase != null
-                                              ? _translateStatusToEnglish(_selectedPhase!)
-                                              : 'Idea';
-                                          final statusChanged = project.status != newStatus;
-
-                                          final updated = project.copyWith(
-                                            customDisplayName: newCustomDisplayName,
-                                            bpm: _bpmCtrl.text.trim().isEmpty
-                                                ? null
-                                                : double.tryParse(
-                                                    _bpmCtrl.text.trim(),
-                                                  ),
-                                            musicalKey: _keyCtrl.text.trim().isEmpty
-                                                ? null
-                                                : _keyCtrl.text.trim(),
-                                            notes: newNotes,
-                                            clearNotes: newNotes == null,
-                                            status: newStatus,
-                                            statusChangedAt: statusChanged ? DateTime.now() : null,
-                                          );
-
-                                          await repo.updateProject(updated);
-                                          await _recordSaveEvents(repo, project, updated, newStatus, statusChanged);
-                                          // Atualiza os valores salvos para preservar o texto na próxima reconstrução
-                                          _lastSavedName = newCustomDisplayName ?? updatedProject.fileName;
-                                          _lastSavedBpm = _bpmCtrl.text.trim();
-                                          _lastSavedKey = _keyCtrl.text.trim();
-                                          _lastSavedNotes = newNotes ?? '';
-                                          if (mounted) {
-                                            ScaffoldMessenger.of(
-                                              context,
-                                            ).showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                  AppLocalizations.of(context)!.saved,
-                                                ),
-                                              ),
-                                            );
-                                          }
-                                        },
-                                        icon: const Icon(Icons.save),
-                                        label: Text(
-                                          AppLocalizations.of(context)!.save,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-
-                                      // NOVO: BOTÃO OPEN FOLDER
-                                      Tooltip(
-                                        message: sourceFileExists || MobileUtils.isMobile() ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
-                                        child: ElevatedButton.icon(
-                                          onPressed: sourceFileExists
-                                              ? () => _openProjectFolder(updatedProject.filePath)
-                                              : null,
-                                          icon: const Icon(Icons.folder_open),
-                                          label: Text(
-                                            AppLocalizations.of(context)!.openFolder,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-
-                                      // Rename file button (desktop only)
-                                      if (!isMobile)
-                                        Tooltip(
-                                          message: sourceFileExists ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
-                                          child: ElevatedButton.icon(
-                                            onPressed: sourceFileExists
-                                                ? () => _renameProjectFile(updatedProject)
-                                                : null,
-                                            icon: const Icon(Icons.drive_file_rename_outline, size: 18),
-                                            label: Text(AppLocalizations.of(context)!.renameFileButtonLabel),
-                                          ),
-                                        ),
-                                      if (!isMobile) const SizedBox(width: 12),
-
-                                      // BOTÃO OPEN IN DAW (Existente)
-                                      Tooltip(
-                                        message: sourceFileExists || MobileUtils.isMobile() ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
-                                        child: ElevatedButton.icon(
-                                          onPressed: sourceFileExists
-                                              ? () async {
-                                                  final success = await FileLauncher.launchProject(updatedProject.filePath);
-                                                  if (!success && mounted) {
-                                                    ScaffoldMessenger.of(context).showSnackBar(
-                                                      SnackBar(content: Text(AppLocalizations.of(context)!.failedToLaunchProject(updatedProject.displayName))),
-                                                    );
-                                                  }
-                                                  if (success) {
-                                                    if (mounted) {
-                                                      ScaffoldMessenger.of(context).showSnackBar(
-                                                        SnackBar(content: Text(AppLocalizations.of(context)!.failedToLaunchDaw)),
-                                                      );
-                                                    }
-                                                  }
-                                                }
-                                              : null,
-                                          icon: const Icon(Icons.open_in_new),
-                                          label: Text(
-                                            AppLocalizations.of(context)!.openInDaw,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                    // ── Project Statistics button ─────────────────────────
-                    const SizedBox(height: 16),
-                    _ProjectStatsButton(projectId: updatedProject.id),
-                  ],
+                            _ProjectStatsButton(projectId: updatedProject.id),
+                            const SizedBox(height: 16),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
             // Loading overlay
             if (_extractingMetadata)
@@ -1303,6 +1069,246 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
     );
   }
 }
+
+// ─── Project Detail Header ────────────────────────────────────────────────────
+
+class _ProjectDetailHeader extends StatelessWidget {
+  final MusicProject project;
+  final bool isMobile;
+  final DateFormat dateFormat;
+  final String Function(Duration) formatDuration;
+  final String? Function(Duration?) formatCompletionDuration;
+
+  const _ProjectDetailHeader({
+    required this.project,
+    required this.isMobile,
+    required this.dateFormat,
+    required this.formatDuration,
+    required this.formatCompletionDuration,
+  });
+
+  String _relativeDate(BuildContext context, DateTime date) {
+    final l10n = AppLocalizations.of(context)!;
+    final diff = DateTime.now().difference(date);
+    if (diff.inDays == 0) return l10n.dateToday;
+    if (diff.inDays == 1) return l10n.dateYesterday;
+    if (diff.inDays < 7) return l10n.dateDaysAgo(diff.inDays);
+    if (diff.inDays < 30) return l10n.dateWeeksAgo(diff.inDays ~/ 7);
+    if (diff.inDays < 365) return l10n.dateMonthsAgo(diff.inDays ~/ 30);
+    return l10n.dateYearsAgo(diff.inDays ~/ 365, '');
+  }
+
+  Color _phaseColor(String status) {
+    switch (status) {
+      case 'Finished': return Colors.green;
+      case 'Mastering': return Colors.purple;
+      case 'Mixing': return Colors.blue;
+      case 'Arranging': return Colors.orange;
+      default: return Colors.grey;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final phaseColor = _phaseColor(project.status);
+    final surfaceColor = theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4);
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+      decoration: BoxDecoration(
+        color: surfaceColor,
+        border: Border(bottom: BorderSide(color: theme.dividerColor)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  project.displayName,
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: phaseColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: phaseColor.withValues(alpha: 0.4)),
+                ),
+                child: Text(
+                  project.status,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: phaseColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (!isMobile) ...[
+            const SizedBox(height: 4),
+            Text(
+              project.filePath,
+              style: TextStyle(fontSize: 11, color: theme.textTheme.bodySmall?.color),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            children: [
+              _InfoChip(
+                icon: Icons.access_time,
+                label: formatDuration(project.projectAge),
+              ),
+              _InfoChip(
+                icon: Icons.edit_calendar_outlined,
+                label: l10n.lastModified(dateFormat.format(project.lastModifiedAt)),
+              ),
+              if (project.bpm != null)
+                _InfoChip(
+                  icon: Icons.speed,
+                  label: '${project.bpm!.toStringAsFixed(project.bpm! % 1 == 0 ? 0 : 1)} BPM',
+                ),
+              if (project.musicalKey != null)
+                _InfoChip(icon: Icons.music_note, label: project.musicalKey!),
+              if (project.timeToCompletion != null)
+                _InfoChip(
+                  icon: Icons.emoji_events,
+                  label: l10n.completedIn(formatCompletionDuration(project.timeToCompletion)!),
+                  color: Colors.amber,
+                ),
+              if (project.fileCreatedAt != null)
+                _InfoChip(
+                  icon: Icons.calendar_today_outlined,
+                  label: l10n.createdDate(_relativeDate(context, project.fileCreatedAt!)),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color? color;
+
+  const _InfoChip({required this.icon, required this.label, this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final c = color ?? theme.textTheme.bodySmall?.color ?? Colors.grey;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 13, color: c),
+        const SizedBox(width: 4),
+        Text(label, style: TextStyle(fontSize: 12, color: c)),
+      ],
+    );
+  }
+}
+
+// ─── Action Toolbar ───────────────────────────────────────────────────────────
+
+class _ProjectDetailActionBar extends StatelessWidget {
+  final MusicProject project;
+  final bool isMobile;
+  final bool sourceFileExists;
+  final VoidCallback onSave;
+  final VoidCallback onOpenFolder;
+  final VoidCallback onRename;
+  final VoidCallback onOpenInDaw;
+  final VoidCallback onStats;
+
+  const _ProjectDetailActionBar({
+    required this.project,
+    required this.isMobile,
+    required this.sourceFileExists,
+    required this.onSave,
+    required this.onOpenFolder,
+    required this.onRename,
+    required this.onOpenInDaw,
+    required this.onStats,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final notFoundMsg = l10n.sourceFileNotFoundOnThisMachine;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: Theme.of(context).dividerColor)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FilledButton.icon(
+            onPressed: onSave,
+            icon: const Icon(Icons.save, size: 16),
+            label: Text(l10n.save),
+          ),
+          if (!isMobile) ...[
+            const SizedBox(width: 8),
+            Tooltip(
+              message: sourceFileExists ? '' : notFoundMsg,
+              child: OutlinedButton.icon(
+                onPressed: sourceFileExists ? onOpenInDaw : null,
+                icon: const Icon(Icons.open_in_new, size: 16),
+                label: Text(l10n.openInDaw),
+              ),
+            ),
+          ],
+          const SizedBox(width: 8),
+          Tooltip(
+            message: sourceFileExists ? '' : notFoundMsg,
+            child: OutlinedButton.icon(
+              onPressed: sourceFileExists ? onOpenFolder : null,
+              icon: const Icon(Icons.folder_open, size: 16),
+              label: Text(l10n.openFolder),
+            ),
+          ),
+          if (!isMobile) ...[
+            const SizedBox(width: 8),
+            Tooltip(
+              message: sourceFileExists ? '' : notFoundMsg,
+              child: OutlinedButton.icon(
+                onPressed: sourceFileExists ? onRename : null,
+                icon: const Icon(Icons.drive_file_rename_outline, size: 16),
+                label: Text(l10n.renameFileButtonLabel),
+              ),
+            ),
+            const SizedBox(width: 8),
+            OutlinedButton.icon(
+              onPressed: onStats,
+              icon: const Icon(Icons.bar_chart, size: 16),
+              label: Text(l10n.statsProjectActivity),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _PreviewSongPlayer extends ConsumerStatefulWidget {
   final MusicProject project;
