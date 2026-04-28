@@ -2202,7 +2202,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   
   Future<void> _playPreviewSong(MusicProject project) async {
     final customFolder = ref.read(customMixdownFolderProvider).value;
-    final effectivePath = project.previewSongPath?.isNotEmpty == true
+    var effectivePath = project.previewSongPath?.isNotEmpty == true
         ? project.previewSongPath!
         : (project.previewSongAutoPath ?? MixdownDetectorService.findLatestMixdown(project, customFolder: customFolder)?.path);
 
@@ -2218,22 +2218,47 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       return;
     }
 
+    // Check for a newer export in the same folder
+    final newer = MixdownDetectorService.findNewerFileInSameFolder(effectivePath);
+    if (newer != null && mounted) {
+      final l10n = AppLocalizations.of(context)!;
+      final replace = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(l10n.newerExportFound),
+          content: Text(l10n.newerExportFoundMessage(path.basename(newer.path))),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+            OutlinedButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.keepCurrent)),
+            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.replaceAndPlay)),
+          ],
+        ),
+      );
+      if (!mounted) return;
+      if (replace == null) return;
+      if (replace) {
+        final repo = await ref.read(repositoryProvider.future);
+        final isAuto = project.previewSongPath?.isNotEmpty != true;
+        final updated = isAuto
+            ? project.copyWith(previewSongAutoPath: newer.path)
+            : project.copyWith(previewSongPath: newer.path, previewSongFileName: path.basename(newer.path));
+        await repo.updateProject(updated);
+        effectivePath = newer.path;
+      }
+    }
+
+    if (!mounted) return;
     final playProject = project.previewSongPath?.isNotEmpty == true
         ? project
         : project.copyWith(previewSongPath: effectivePath);
 
-    // Show popup dialog with audio player
-    if (mounted) {
-      await showDialog(
-        context: context,
-        builder: (dialogContext) => _PreviewSongDialog(
-          project: playProject,
-          onClose: () {
-            // Callback when dialog closes - can be used for cleanup if needed
-          },
-        ),
-      );
-    }
+    await showDialog(
+      context: context,
+      builder: (dialogContext) => _PreviewSongDialog(
+        project: playProject,
+        onClose: () {},
+      ),
+    );
   }
   
   Future<void> _writeBpmToFile(MusicProject project, double? bpm) async {
@@ -4478,7 +4503,7 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
 
   Future<void> _playPreviewSong(MusicProject project) async {
     final customFolder = ref.read(customMixdownFolderProvider).value;
-    final effectivePath = project.previewSongPath?.isNotEmpty == true
+    var effectivePath = project.previewSongPath?.isNotEmpty == true
         ? project.previewSongPath!
         : (project.previewSongAutoPath ?? MixdownDetectorService.findLatestMixdown(project, customFolder: customFolder)?.path);
 
@@ -4494,22 +4519,47 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
       return;
     }
 
+    // Check for a newer export in the same folder
+    final newer = MixdownDetectorService.findNewerFileInSameFolder(effectivePath);
+    if (newer != null && mounted) {
+      final l10n = AppLocalizations.of(context)!;
+      final replace = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(l10n.newerExportFound),
+          content: Text(l10n.newerExportFoundMessage(path.basename(newer.path))),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+            OutlinedButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.keepCurrent)),
+            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.replaceAndPlay)),
+          ],
+        ),
+      );
+      if (!mounted) return;
+      if (replace == null) return;
+      if (replace) {
+        final repo = await ref.read(repositoryProvider.future);
+        final isAuto = project.previewSongPath?.isNotEmpty != true;
+        final updated = isAuto
+            ? project.copyWith(previewSongAutoPath: newer.path)
+            : project.copyWith(previewSongPath: newer.path, previewSongFileName: path.basename(newer.path));
+        await repo.updateProject(updated);
+        effectivePath = newer.path;
+      }
+    }
+
+    if (!mounted) return;
     final playProject = project.previewSongPath?.isNotEmpty == true
         ? project
         : project.copyWith(previewSongPath: effectivePath);
 
-    // Show popup dialog with audio player
-    if (mounted) {
-      await showDialog(
-        context: context,
-        builder: (dialogContext) => _PreviewSongDialog(
-          project: playProject,
-          onClose: () {
-            // Callback when dialog closes - can be used for cleanup if needed
-          },
-        ),
-      );
-    }
+    await showDialog(
+      context: context,
+      builder: (dialogContext) => _PreviewSongDialog(
+        project: playProject,
+        onClose: () {},
+      ),
+    );
   }
 
   String _getStatusDisplayName(String status, BuildContext context) {

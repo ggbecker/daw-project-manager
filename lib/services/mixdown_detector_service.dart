@@ -66,6 +66,27 @@ class MixdownDetectorService {
     return null;
   }
 
+  /// Returns the newest audio file in the same directory as [currentPath] if it
+  /// is strictly newer than [currentPath] itself and is a different file.
+  /// Returns null if [currentPath] is already the newest, doesn't exist, or on mobile.
+  static File? findNewerFileInSameFolder(String currentPath) {
+    if (MobileUtils.isMobile()) return null;
+    final current = File(currentPath);
+    if (!current.existsSync()) return null;
+    final currentModified = current.lastModifiedSync();
+    final files = current.parent
+        .listSync()
+        .whereType<File>()
+        .where((f) => _audioExtensions.contains(p.extension(f.path).toLowerCase()))
+        .toList();
+    if (files.isEmpty) return null;
+    files.sort((a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));
+    final newest = files.first;
+    if (p.equals(newest.path, current.path)) return null;
+    if (newest.lastModifiedSync().isAfter(currentModified)) return newest;
+    return null;
+  }
+
   static List<Directory> _candidateDirs(MusicProject project, {String? customFolder}) {
     final projectFile = File(project.filePath);
     final projectDir = projectFile.parent.path;
