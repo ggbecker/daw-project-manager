@@ -51,6 +51,10 @@ class _SearchIntent extends Intent {
   const _SearchIntent();
 }
 
+class _FocusTableIntent extends Intent {
+  const _FocusTableIntent();
+}
+
 class _RescanIntent extends Intent {
   const _RescanIntent();
 }
@@ -96,7 +100,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
   
   // 1. FocusNode para a barra de pesquisa
   final FocusNode _searchFocusNode = FocusNode();
-  
+
+  // Key to reach the projects table and request focus on it
+  final _tableKey = GlobalKey<_PlutoProjectsTableWithSelectionState>();
+
   // FocusNode para capturar eventos de teclado globalmente (debug)
   final FocusNode _debugKeyboardFocusNode = FocusNode();
 
@@ -651,7 +658,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
       child: FocusScope(
         child: Shortcuts(
           shortcuts: <LogicalKeySet, Intent>{
-            // Keep Shortcuts as backup (though RawKeyboardListener handles it directly)
             LogicalKeySet(
               Platform.isMacOS ? LogicalKeyboardKey.meta : LogicalKeyboardKey.control,
               LogicalKeyboardKey.keyF,
@@ -660,6 +666,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
               Platform.isMacOS ? LogicalKeyboardKey.meta : LogicalKeyboardKey.control,
               LogicalKeyboardKey.keyR,
             ): const _RescanIntent(),
+            LogicalKeySet(
+              Platform.isMacOS ? LogicalKeyboardKey.meta : LogicalKeyboardKey.control,
+              LogicalKeyboardKey.keyT,
+            ): const _FocusTableIntent(),
           },
           child: Actions(
             actions: <Type, Action<Intent>>{
@@ -669,6 +679,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
               _RescanIntent: _RescanAction(() {
                 _scanAll();
               }),
+              _FocusTableIntent: CallbackAction<_FocusTableIntent>(
+                onInvoke: (_) => _tableKey.currentState?.focusTable(),
+              ),
             },
           child: Focus(
             autofocus: true,
@@ -1486,6 +1499,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                           showHidden: hiddenMode == 1 || hiddenMode == 2,
                         )
                       : _PlutoProjectsTableWithSelection(
+                          key: _tableKey,
                           projects: projects,
                           dateFormat: dateFormat,
                           onCreateRelease: (selectedProjects) {
@@ -1562,6 +1576,7 @@ class _PlutoProjectsTableWithSelection extends ConsumerStatefulWidget {
   final int hiddenCount;
 
   const _PlutoProjectsTableWithSelection({
+    super.key,
     required this.projects,
     required this.dateFormat,
     required this.onCreateRelease,
@@ -1579,6 +1594,10 @@ class _PlutoProjectsTableWithSelection extends ConsumerStatefulWidget {
 }
 
 class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjectsTableWithSelection> {
+  final _innerTableKey = GlobalKey<_PlutoProjectsTableState>();
+
+  void focusTable() => _innerTableKey.currentState?.focusTable();
+
   Set<String> get _selectedProjectIds => ref.watch(selectedProjectsProvider);
 
   void _clearSelection() {
@@ -1932,6 +1951,7 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
         ),
         Expanded(
           child: _PlutoProjectsTable(
+            key: _innerTableKey,
             projects: widget.projects,
             dateFormat: widget.dateFormat,
             selectedIds: _selectedProjectIds,
@@ -2132,6 +2152,7 @@ class _PlutoProjectsTable extends ConsumerStatefulWidget {
   final bool areAllSelected;
   final VoidCallback onToggleSelectAll;
   const _PlutoProjectsTable({
+    super.key,
     required this.projects,
     required this.dateFormat,
     required this.selectedIds,
@@ -2148,6 +2169,15 @@ class _PlutoProjectsTable extends ConsumerStatefulWidget {
 
 class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   TrinaGridStateManager? stateManager;
+
+  void focusTable() {
+    final sm = stateManager;
+    if (sm == null) return;
+    sm.gridFocusNode.requestFocus();
+    if (sm.currentRow == null && sm.rows.isNotEmpty) {
+      sm.setCurrentCell(sm.rows.first.cells.values.first, 0);
+    }
+  }
 
   // Drag-and-drop preview assignment
   double? _dragOverRowTop; // top Y of the highlighted row in local coords
@@ -2248,9 +2278,12 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     }
 
     if (!mounted) return;
-    final playProject = project.previewSongPath?.isNotEmpty == true
-        ? project
-        : project.copyWith(previewSongPath: effectivePath);
+    // Always build playProject from effectivePath so the dialog shows the correct
+    // filename whether we replaced or not.
+    final playProject = project.copyWith(
+      previewSongPath: effectivePath,
+      previewSongFileName: path.basename(effectivePath),
+    );
 
     await showDialog(
       context: context,
@@ -4549,9 +4582,12 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
     }
 
     if (!mounted) return;
-    final playProject = project.previewSongPath?.isNotEmpty == true
-        ? project
-        : project.copyWith(previewSongPath: effectivePath);
+    // Always build playProject from effectivePath so the dialog shows the correct
+    // filename whether we replaced or not.
+    final playProject = project.copyWith(
+      previewSongPath: effectivePath,
+      previewSongFileName: path.basename(effectivePath),
+    );
 
     await showDialog(
       context: context,
