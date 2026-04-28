@@ -2382,4 +2382,18 @@ class AppLocalizationsFr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get newerExportFound => 'Export plus récent trouvé';
+
+  @override
+  String newerExportFoundMessage(String filename) {
+    return 'Un fichier plus récent a été trouvé dans le même dossier :\n$filename\n\nRemplacer la chanson de prévisualisation ?';
+  }
+
+  @override
+  String get replaceAndPlay => 'Remplacer et lire';
+
+  @override
+  String get keepCurrent => 'Garder l\'actuel';
 }

@@ -2314,4 +2314,18 @@ class AppLocalizationsJa extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get newerExportFound => '新しいエクスポートが見つかりました';
+
+  @override
+  String newerExportFoundMessage(String filename) {
+    return '同じフォルダーに新しいファイルが見つかりました：\n$filename\n\nプレビュー曲を置き換えますか？';
+  }
+
+  @override
+  String get replaceAndPlay => '置き換えて再生';
+
+  @override
+  String get keepCurrent => '現在のを保持';
 }

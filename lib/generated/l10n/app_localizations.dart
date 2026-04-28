@@ -3979,6 +3979,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 project path updated} other{{count} project paths updated}}'**
   String relocateFolderSuccess(int count);
+
+  /// No description provided for @newerExportFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Newer Export Found'**
+  String get newerExportFound;
+
+  /// No description provided for @newerExportFoundMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'A newer file was found in the same folder:\n{filename}\n\nReplace the preview song?'**
+  String newerExportFoundMessage(String filename);
+
+  /// No description provided for @replaceAndPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace & Play'**
+  String get replaceAndPlay;
+
+  /// No description provided for @keepCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Current'**
+  String get keepCurrent;
 }
 
 class _AppLocalizationsDelegate

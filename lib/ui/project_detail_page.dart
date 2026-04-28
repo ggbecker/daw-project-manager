@@ -1681,6 +1681,36 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
             return;
           }
           
+          // Check for a newer export in the same folder
+          final newer = MixdownDetectorService.findNewerFileInSameFolder(_effectivePreviewPath!);
+          if (newer != null && mounted) {
+            final l10n = AppLocalizations.of(context)!;
+            final replace = await showDialog<bool>(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                title: Text(l10n.newerExportFound),
+                content: Text(l10n.newerExportFoundMessage(p.basename(newer.path))),
+                actions: [
+                  TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+                  OutlinedButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.keepCurrent)),
+                  FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.replaceAndPlay)),
+                ],
+              ),
+            );
+            if (!mounted) return;
+            if (replace == null) return;
+            if (replace) {
+              // Update local state so _effectivePreviewPath picks up the new file immediately
+              if (widget.project.previewSongPath?.isNotEmpty != true) {
+                setState(() => _autoDetectedPath = newer.path);
+              }
+              // Persist in background; also triggers widget rebuild with new path
+              widget.onSongChanged(newer.path);
+              await _audioPlayer.play(DeviceFileSource(newer.path));
+              return;
+            }
+          }
+
           // Play from current source (stereo or pre-mixed mono)
           if (_position == Duration.zero || _position >= _duration) {
             await _audioPlayer.play(_currentSource());

@@ -1607,5 +1607,9 @@
       }
     }
   },
-  "matchedInDescription": "Encontrado en la descripción"
+  "matchedInDescription": "Encontrado en la descripción",
+  "newerExportFound": "Exportación más reciente encontrada",
+  "newerExportFoundMessage": "Se encontró un archivo más reciente en la misma carpeta:\n{filename}\n\n¿Reemplazar la canción de vista previa?",
+  "replaceAndPlay": "Reemplazar y reproducir",
+  "keepCurrent": "Mantener actual"
 }

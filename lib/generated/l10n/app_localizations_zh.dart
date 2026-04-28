@@ -2295,4 +2295,18 @@ class AppLocalizationsZh extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get newerExportFound => '找到更新的导出文件';
+
+  @override
+  String newerExportFoundMessage(String filename) {
+    return '在同一文件夹中找到了更新的文件：\n$filename\n\n是否替换预览歌曲？';
+  }
+
+  @override
+  String get replaceAndPlay => '替换并播放';
+
+  @override
+  String get keepCurrent => '保留当前';
 }

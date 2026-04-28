@@ -2361,4 +2361,18 @@ class AppLocalizationsRu extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get newerExportFound => 'Найден более новый экспорт';
+
+  @override
+  String newerExportFoundMessage(String filename) {
+    return 'В той же папке найден более новый файл:\n$filename\n\nЗаменить песню для предпросмотра?';
+  }
+
+  @override
+  String get replaceAndPlay => 'Заменить и воспроизвести';
+
+  @override
+  String get keepCurrent => 'Оставить текущую';
 }

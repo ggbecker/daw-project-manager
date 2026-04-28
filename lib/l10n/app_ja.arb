@@ -1607,5 +1607,9 @@
       }
     }
   },
-  "matchedInDescription": "説明文でマッチ"
+  "matchedInDescription": "説明文でマッチ",
+  "newerExportFound": "新しいエクスポートが見つかりました",
+  "newerExportFoundMessage": "同じフォルダーに新しいファイルが見つかりました：\n{filename}\n\nプレビュー曲を置き換えますか？",
+  "replaceAndPlay": "置き換えて再生",
+  "keepCurrent": "現在のを保持"
 }
