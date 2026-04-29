@@ -1611,5 +1611,21 @@
   "newerExportFound": "Exportación más reciente encontrada",
   "newerExportFoundMessage": "Se encontró un archivo más reciente en la misma carpeta:\n{filename}\n\n¿Reemplazar la canción de vista previa?",
   "replaceAndPlay": "Reemplazar y reproducir",
-  "keepCurrent": "Mantener actual"
+  "keepCurrent": "Mantener actual",
+  "keyboardShortcuts": "Atajos de teclado",
+  "shortcutGroupGlobal": "Global",
+  "shortcutGroupProjectsTable": "Tabla de proyectos (la tabla debe estar enfocada)",
+  "shortcutGroupReleasesTable": "Tabla de lanzamientos (la tabla debe estar enfocada)",
+  "shortcutGroupNavigation": "Navegación",
+  "shortcutFocusSearch": "Enfocar barra de búsqueda",
+  "shortcutRescan": "Reescanear carpetas de proyectos",
+  "shortcutFocusTable": "Enfocar tabla de proyectos",
+  "shortcutPlayPause": "Reproducir / pausar canción de vista previa",
+  "shortcutOpenInDaw": "Abrir proyecto en DAW",
+  "shortcutViewDetails": "Ver detalles del proyecto",
+  "shortcutOpenFolder": "Abrir carpeta del proyecto",
+  "shortcutNavigateRows": "Navegar filas",
+  "shortcutEditCell": "Editar celda seleccionada",
+  "shortcutViewRelease": "Ver detalles del lanzamiento",
+  "shortcutGoBack": "Volver"
 }

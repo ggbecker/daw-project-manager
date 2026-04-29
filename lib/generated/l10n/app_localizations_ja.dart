@@ -2316,6 +2316,54 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get keyboardShortcuts => 'キーボードショートカット';
+
+  @override
+  String get shortcutGroupGlobal => 'グローバル';
+
+  @override
+  String get shortcutGroupProjectsTable => 'プロジェクトテーブル（テーブルがフォーカスされている必要があります）';
+
+  @override
+  String get shortcutGroupReleasesTable => 'リリーステーブル（テーブルがフォーカスされている必要があります）';
+
+  @override
+  String get shortcutGroupNavigation => 'ナビゲーション';
+
+  @override
+  String get shortcutFocusSearch => '検索バーにフォーカス';
+
+  @override
+  String get shortcutRescan => 'プロジェクトフォルダを再スキャン';
+
+  @override
+  String get shortcutFocusTable => 'プロジェクトテーブルにフォーカス';
+
+  @override
+  String get shortcutPlayPause => 'プレビュー曲を再生／一時停止';
+
+  @override
+  String get shortcutOpenInDaw => 'DAWでプロジェクトを開く';
+
+  @override
+  String get shortcutViewDetails => 'プロジェクトの詳細を表示';
+
+  @override
+  String get shortcutOpenFolder => 'プロジェクトフォルダを開く';
+
+  @override
+  String get shortcutNavigateRows => '行を移動';
+
+  @override
+  String get shortcutEditCell => '選択したセルを編集';
+
+  @override
+  String get shortcutViewRelease => 'リリースの詳細を表示';
+
+  @override
+  String get shortcutGoBack => '戻る';
+
+  @override
   String get newerExportFound => '新しいエクスポートが見つかりました';
 
   @override

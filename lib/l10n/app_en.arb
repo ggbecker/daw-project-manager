@@ -2641,6 +2641,22 @@
       "count": { "type": "int" }
     }
   },
+  "keyboardShortcuts": "Keyboard Shortcuts",
+  "shortcutGroupGlobal": "Global",
+  "shortcutGroupProjectsTable": "Projects Table (table must be focused)",
+  "shortcutGroupReleasesTable": "Releases Table (table must be focused)",
+  "shortcutGroupNavigation": "Navigation",
+  "shortcutFocusSearch": "Focus search bar",
+  "shortcutRescan": "Rescan project folders",
+  "shortcutFocusTable": "Focus projects table",
+  "shortcutPlayPause": "Play / pause preview song",
+  "shortcutOpenInDaw": "Open project in DAW",
+  "shortcutViewDetails": "View project details",
+  "shortcutOpenFolder": "Open project folder",
+  "shortcutNavigateRows": "Navigate rows",
+  "shortcutEditCell": "Edit selected cell",
+  "shortcutViewRelease": "View release details",
+  "shortcutGoBack": "Go back",
   "newerExportFound": "Newer Export Found",
   "newerExportFoundMessage": "A newer file was found in the same folder:\n{filename}\n\nReplace the preview song?",
   "@newerExportFoundMessage": {

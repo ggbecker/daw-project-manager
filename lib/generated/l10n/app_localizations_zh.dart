@@ -2297,6 +2297,54 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get keyboardShortcuts => '键盘快捷键';
+
+  @override
+  String get shortcutGroupGlobal => '全局';
+
+  @override
+  String get shortcutGroupProjectsTable => '项目表格（表格必须处于焦点状态）';
+
+  @override
+  String get shortcutGroupReleasesTable => '发行表格（表格必须处于焦点状态）';
+
+  @override
+  String get shortcutGroupNavigation => '导航';
+
+  @override
+  String get shortcutFocusSearch => '聚焦搜索栏';
+
+  @override
+  String get shortcutRescan => '重新扫描项目文件夹';
+
+  @override
+  String get shortcutFocusTable => '聚焦项目表格';
+
+  @override
+  String get shortcutPlayPause => '播放 / 暂停预览歌曲';
+
+  @override
+  String get shortcutOpenInDaw => '在DAW中打开项目';
+
+  @override
+  String get shortcutViewDetails => '查看项目详情';
+
+  @override
+  String get shortcutOpenFolder => '打开项目文件夹';
+
+  @override
+  String get shortcutNavigateRows => '导航行';
+
+  @override
+  String get shortcutEditCell => '编辑所选单元格';
+
+  @override
+  String get shortcutViewRelease => '查看发行详情';
+
+  @override
+  String get shortcutGoBack => '返回';
+
+  @override
   String get newerExportFound => '找到更新的导出文件';
 
   @override

@@ -1611,5 +1611,21 @@
   "newerExportFound": "找到更新的导出文件",
   "newerExportFoundMessage": "在同一文件夹中找到了更新的文件：\n{filename}\n\n是否替换预览歌曲？",
   "replaceAndPlay": "替换并播放",
-  "keepCurrent": "保留当前"
+  "keepCurrent": "保留当前",
+  "keyboardShortcuts": "键盘快捷键",
+  "shortcutGroupGlobal": "全局",
+  "shortcutGroupProjectsTable": "项目表格（表格必须处于焦点状态）",
+  "shortcutGroupReleasesTable": "发行表格（表格必须处于焦点状态）",
+  "shortcutGroupNavigation": "导航",
+  "shortcutFocusSearch": "聚焦搜索栏",
+  "shortcutRescan": "重新扫描项目文件夹",
+  "shortcutFocusTable": "聚焦项目表格",
+  "shortcutPlayPause": "播放 / 暂停预览歌曲",
+  "shortcutOpenInDaw": "在DAW中打开项目",
+  "shortcutViewDetails": "查看项目详情",
+  "shortcutOpenFolder": "打开项目文件夹",
+  "shortcutNavigateRows": "导航行",
+  "shortcutEditCell": "编辑所选单元格",
+  "shortcutViewRelease": "查看发行详情",
+  "shortcutGoBack": "返回"
 }

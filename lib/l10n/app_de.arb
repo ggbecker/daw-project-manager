@@ -1611,5 +1611,21 @@
   "newerExportFound": "Neuerer Export gefunden",
   "newerExportFoundMessage": "Im selben Ordner wurde eine neuere Datei gefunden:\n{filename}\n\nVorschausong ersetzen?",
   "replaceAndPlay": "Ersetzen & Abspielen",
-  "keepCurrent": "Aktuelle behalten"
+  "keepCurrent": "Aktuelle behalten",
+  "keyboardShortcuts": "Tastenkürzel",
+  "shortcutGroupGlobal": "Global",
+  "shortcutGroupProjectsTable": "Projekttabelle (Tabelle muss fokussiert sein)",
+  "shortcutGroupReleasesTable": "Releases-Tabelle (Tabelle muss fokussiert sein)",
+  "shortcutGroupNavigation": "Navigation",
+  "shortcutFocusSearch": "Suchleiste fokussieren",
+  "shortcutRescan": "Projektordner neu scannen",
+  "shortcutFocusTable": "Projekttabelle fokussieren",
+  "shortcutPlayPause": "Vorschau abspielen / pausieren",
+  "shortcutOpenInDaw": "Projekt in DAW öffnen",
+  "shortcutViewDetails": "Projektdetails anzeigen",
+  "shortcutOpenFolder": "Projektordner öffnen",
+  "shortcutNavigateRows": "Zeilen navigieren",
+  "shortcutEditCell": "Ausgewählte Zelle bearbeiten",
+  "shortcutViewRelease": "Release-Details anzeigen",
+  "shortcutGoBack": "Zurück"
 }

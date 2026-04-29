@@ -18,6 +18,7 @@ import 'package:desktop_drop/desktop_drop.dart';
 import '../services/scanner_service.dart';
 import '../services/audio_analysis_service.dart';
 import '../services/mixdown_detector_service.dart';
+import 'widgets/shortcuts_help_dialog.dart';
 import '../services/dock_menu_service.dart';
 import '../utils/mobile_utils.dart';
 import '../utils/file_launcher.dart';
@@ -891,6 +892,14 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                 const SizedBox(width: 8),
                 const LanguageSwitcher(),
                 const SizedBox(width: 8),
+                Tooltip(
+                  message: AppLocalizations.of(context)!.keyboardShortcuts,
+                  child: IconButton(
+                    icon: const Icon(Icons.keyboard_outlined, size: 18, color: Colors.white70),
+                    onPressed: () => showShortcutsHelpDialog(context),
+                  ),
+                ),
+                const SizedBox(width: 4),
               ],
             ),
             

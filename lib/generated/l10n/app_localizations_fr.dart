@@ -2384,6 +2384,56 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get keyboardShortcuts => 'Raccourcis clavier';
+
+  @override
+  String get shortcutGroupGlobal => 'Global';
+
+  @override
+  String get shortcutGroupProjectsTable =>
+      'Tableau des projets (le tableau doit être focalisé)';
+
+  @override
+  String get shortcutGroupReleasesTable =>
+      'Tableau des sorties (le tableau doit être focalisé)';
+
+  @override
+  String get shortcutGroupNavigation => 'Navigation';
+
+  @override
+  String get shortcutFocusSearch => 'Focaliser la barre de recherche';
+
+  @override
+  String get shortcutRescan => 'Rescanner les dossiers de projets';
+
+  @override
+  String get shortcutFocusTable => 'Focaliser le tableau des projets';
+
+  @override
+  String get shortcutPlayPause => 'Lire / mettre en pause la chanson d\'aperçu';
+
+  @override
+  String get shortcutOpenInDaw => 'Ouvrir le projet dans le DAW';
+
+  @override
+  String get shortcutViewDetails => 'Voir les détails du projet';
+
+  @override
+  String get shortcutOpenFolder => 'Ouvrir le dossier du projet';
+
+  @override
+  String get shortcutNavigateRows => 'Naviguer dans les lignes';
+
+  @override
+  String get shortcutEditCell => 'Modifier la cellule sélectionnée';
+
+  @override
+  String get shortcutViewRelease => 'Voir les détails de la sortie';
+
+  @override
+  String get shortcutGoBack => 'Retour';
+
+  @override
   String get newerExportFound => 'Export plus récent trouvé';
 
   @override

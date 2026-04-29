@@ -2363,6 +2363,56 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get keyboardShortcuts => 'Сочетания клавиш';
+
+  @override
+  String get shortcutGroupGlobal => 'Глобальные';
+
+  @override
+  String get shortcutGroupProjectsTable =>
+      'Таблица проектов (таблица должна быть в фокусе)';
+
+  @override
+  String get shortcutGroupReleasesTable =>
+      'Таблица релизов (таблица должна быть в фокусе)';
+
+  @override
+  String get shortcutGroupNavigation => 'Навигация';
+
+  @override
+  String get shortcutFocusSearch => 'Перейти к строке поиска';
+
+  @override
+  String get shortcutRescan => 'Повторно сканировать папки';
+
+  @override
+  String get shortcutFocusTable => 'Перейти к таблице проектов';
+
+  @override
+  String get shortcutPlayPause => 'Воспроизвести / пауза превью';
+
+  @override
+  String get shortcutOpenInDaw => 'Открыть проект в DAW';
+
+  @override
+  String get shortcutViewDetails => 'Просмотр деталей проекта';
+
+  @override
+  String get shortcutOpenFolder => 'Открыть папку проекта';
+
+  @override
+  String get shortcutNavigateRows => 'Навигация по строкам';
+
+  @override
+  String get shortcutEditCell => 'Редактировать выбранную ячейку';
+
+  @override
+  String get shortcutViewRelease => 'Просмотр деталей релиза';
+
+  @override
+  String get shortcutGoBack => 'Назад';
+
+  @override
   String get newerExportFound => 'Найден более новый экспорт';
 
   @override

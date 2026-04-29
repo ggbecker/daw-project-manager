@@ -1611,5 +1611,21 @@
   "newerExportFound": "新しいエクスポートが見つかりました",
   "newerExportFoundMessage": "同じフォルダーに新しいファイルが見つかりました：\n{filename}\n\nプレビュー曲を置き換えますか？",
   "replaceAndPlay": "置き換えて再生",
-  "keepCurrent": "現在のを保持"
+  "keepCurrent": "現在のを保持",
+  "keyboardShortcuts": "キーボードショートカット",
+  "shortcutGroupGlobal": "グローバル",
+  "shortcutGroupProjectsTable": "プロジェクトテーブル（テーブルがフォーカスされている必要があります）",
+  "shortcutGroupReleasesTable": "リリーステーブル（テーブルがフォーカスされている必要があります）",
+  "shortcutGroupNavigation": "ナビゲーション",
+  "shortcutFocusSearch": "検索バーにフォーカス",
+  "shortcutRescan": "プロジェクトフォルダを再スキャン",
+  "shortcutFocusTable": "プロジェクトテーブルにフォーカス",
+  "shortcutPlayPause": "プレビュー曲を再生／一時停止",
+  "shortcutOpenInDaw": "DAWでプロジェクトを開く",
+  "shortcutViewDetails": "プロジェクトの詳細を表示",
+  "shortcutOpenFolder": "プロジェクトフォルダを開く",
+  "shortcutNavigateRows": "行を移動",
+  "shortcutEditCell": "選択したセルを編集",
+  "shortcutViewRelease": "リリースの詳細を表示",
+  "shortcutGoBack": "戻る"
 }
