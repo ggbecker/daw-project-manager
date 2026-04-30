@@ -120,21 +120,46 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
           .where((t) => MobileUtils.isMobile() || t != AppTab.playlists)
           .toList();
 
-  // Recreate the TabController when the visible tab set changes.
+  // Generation counter — incremented each time we schedule a tab update so that
+  // stale post-frame callbacks (from rapid toggles) are silently dropped.
+  int _tabUpdateGen = 0;
+
+  // Schedule a safe, deferred swap of the TabController + visible-tab list.
+  // Using addPostFrameCallback avoids running inside build or inside a setState
+  // callback, which caused double-dispose and length-mismatch errors.
   void _updateVisibleTabs(Set<AppTab> newVisible) {
     final ordered = _orderedFrom(newVisible);
     if (listEquals(_currentVisibleTabs, ordered)) return;
-    final previousTab = _currentTab;
-    _tabController.removeListener(_onTabChanged);
-    _tabController.dispose();
-    _currentVisibleTabs = ordered;
-    final newIndex = ordered.contains(previousTab) ? ordered.indexOf(previousTab) : 0;
-    _tabController = TabController(
-      length: ordered.length,
-      vsync: this,
-      initialIndex: newIndex,
-    );
-    _tabController.addListener(_onTabChanged);
+    final gen = ++_tabUpdateGen;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || gen != _tabUpdateGen) return;
+      final reordered = _orderedFrom(newVisible);
+      if (listEquals(_currentVisibleTabs, reordered)) return;
+
+      final previousTab = _currentTab;
+      final newIndex = (reordered.contains(previousTab)
+              ? reordered.indexOf(previousTab)
+              : 0)
+          .clamp(0, reordered.length - 1);
+
+      // Create new controller BEFORE disposing the old one.
+      final newCtrl = TabController(
+        length: reordered.length,
+        vsync: this,
+        initialIndex: newIndex,
+      );
+      newCtrl.addListener(_onTabChanged);
+
+      // Atomic swap so _tabController and _currentVisibleTabs are always in sync.
+      final oldCtrl = _tabController;
+      _tabController = newCtrl;
+      _currentVisibleTabs = reordered;
+
+      oldCtrl.removeListener(_onTabChanged);
+      oldCtrl.dispose();
+
+      setState(() {});
+    });
   }
 
   // 1. FocusNode para a barra de pesquisa
