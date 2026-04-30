@@ -2431,8 +2431,14 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       }
     }
 
-    // Check for a newer export in the same folder
-    final newer = MixdownDetectorService.findNewerFileInSameFolder(effectivePath);
+    // Only look for a newer export when using an auto-detected path.
+    // When previewSongPath is set (manual pick or Drive backup download), the
+    // file is intentionally chosen — skip the folder scan so we don't
+    // accidentally pick up another project's file from the same download folder.
+    final isAutoPath = project.previewSongPath?.isNotEmpty != true;
+    final newer = isAutoPath
+        ? MixdownDetectorService.findNewerFileInSameFolder(effectivePath)
+        : null;
     if (newer != null && mounted) {
       final l10n = AppLocalizations.of(context)!;
       final replace = await showDialog<bool>(
@@ -2451,10 +2457,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       if (replace == null) return;
       if (replace) {
         final repo = await ref.read(repositoryProvider.future);
-        final isAuto = project.previewSongPath?.isNotEmpty != true;
-        final updated = isAuto
-            ? project.copyWith(previewSongAutoPath: newer.path)
-            : project.copyWith(previewSongPath: newer.path, previewSongFileName: path.basename(newer.path));
+        final updated = project.copyWith(previewSongAutoPath: newer.path);
         await repo.updateProject(updated);
         effectivePath = newer.path;
       }
@@ -4887,8 +4890,14 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
       }
     }
 
-    // Check for a newer export in the same folder
-    final newer = MixdownDetectorService.findNewerFileInSameFolder(effectivePath);
+    // Only look for a newer export when using an auto-detected path.
+    // When previewSongPath is set (manual pick or Drive backup download), the
+    // file is intentionally chosen — skip the folder scan so we don't
+    // accidentally pick up another project's file from the same download folder.
+    final isAutoPath = project.previewSongPath?.isNotEmpty != true;
+    final newer = isAutoPath
+        ? MixdownDetectorService.findNewerFileInSameFolder(effectivePath)
+        : null;
     if (newer != null && mounted) {
       final l10n = AppLocalizations.of(context)!;
       final replace = await showDialog<bool>(
@@ -4907,10 +4916,7 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
       if (replace == null) return;
       if (replace) {
         final repo = await ref.read(repositoryProvider.future);
-        final isAuto = project.previewSongPath?.isNotEmpty != true;
-        final updated = isAuto
-            ? project.copyWith(previewSongAutoPath: newer.path)
-            : project.copyWith(previewSongPath: newer.path, previewSongFileName: path.basename(newer.path));
+        final updated = project.copyWith(previewSongAutoPath: newer.path);
         await repo.updateProject(updated);
         effectivePath = newer.path;
       }
