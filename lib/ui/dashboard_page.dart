@@ -274,17 +274,33 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
     if (logicalKey == LogicalKeyboardKey.keyR && (isControl || isMeta)) {
       // Prevent duplicate processing
       final now = DateTime.now();
-      if (_lastProcessedKey == logicalKey && 
-          _lastProcessedTime != null && 
+      if (_lastProcessedKey == logicalKey &&
+          _lastProcessedTime != null &&
           now.difference(_lastProcessedTime!).inMilliseconds < 100) {
         return;
       }
-      
+
       _lastProcessedKey = logicalKey;
       _lastProcessedTime = now;
-      
+
       // Execute the action directly
       _scanAll();
+      return;
+    }
+
+    // Handle Ctrl+T / Cmd+T directly in RawKeyboardListener
+    if (logicalKey == LogicalKeyboardKey.keyT && (isControl || isMeta)) {
+      final now = DateTime.now();
+      if (_lastProcessedKey == logicalKey &&
+          _lastProcessedTime != null &&
+          now.difference(_lastProcessedTime!).inMilliseconds < 100) {
+        return;
+      }
+
+      _lastProcessedKey = logicalKey;
+      _lastProcessedTime = now;
+
+      _tableKey.currentState?.focusTable();
       return;
     }
   }
