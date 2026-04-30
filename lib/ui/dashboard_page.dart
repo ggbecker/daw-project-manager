@@ -3598,6 +3598,9 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         shortcut: TrinaGridShortcut(
           actions: {
             ...TrinaGridShortcut.defaultActions,
+            LogicalKeySet(LogicalKeyboardKey.enter): _TrinaProjectAction(_viewProjectDetails),
+            LogicalKeySet(LogicalKeyboardKey.numpadEnter): _TrinaProjectAction(_viewProjectDetails),
+            LogicalKeySet(LogicalKeyboardKey.shift, LogicalKeyboardKey.enter): _TrinaProjectAction(_viewProjectDetails),
             LogicalKeySet(LogicalKeyboardKey.keyP): _TrinaProjectAction(_playPreviewSong),
             LogicalKeySet(LogicalKeyboardKey.keyO): _TrinaProjectAction(_launchProject),
             LogicalKeySet(LogicalKeyboardKey.keyD): _TrinaProjectAction(_viewProjectDetails),
