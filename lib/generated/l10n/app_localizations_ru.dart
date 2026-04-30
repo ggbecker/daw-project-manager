@@ -1086,6 +1086,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get previewSongFileNotFound => 'Файл превью трека не найден';
 
   @override
+  String get previewSongFileNotFoundMessage =>
+      'Файл песни для предварительного прослушивания не найден на диске. Хотите выбрать новый файл или удалить запись?';
+
+  @override
+  String get selectNewFile => 'Выбрать новый файл';
+
+  @override
   String failedToPlayPreview(String error) {
     return 'Не удалось воспроизвести превью: $error';
   }

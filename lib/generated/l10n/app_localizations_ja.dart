@@ -1071,6 +1071,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get previewSongFileNotFound => 'プレビュー曲のファイルが見つかりません';
 
   @override
+  String get previewSongFileNotFoundMessage =>
+      'プレビュー曲のファイルがディスク上に見つかりませんでした。新しいファイルを選択するか、エントリを削除しますか？';
+
+  @override
+  String get selectNewFile => '新しいファイルを選択';
+
+  @override
   String failedToPlayPreview(String error) {
     return 'プレビューの再生に失敗しました: $error';
   }

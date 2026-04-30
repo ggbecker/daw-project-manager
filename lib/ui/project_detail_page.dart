@@ -1330,6 +1330,8 @@ class _TogglePlayPauseIntent extends Intent {
   const _TogglePlayPauseIntent();
 }
 
+enum _FileNotFoundAction { selectNew, remove }
+
 class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
   AudioPlayer _audioPlayer = AudioPlayer();
   AudioPlayer? _warmPlayer; // pre-loaded with the alternate source (mono↔stereo)
@@ -1680,14 +1682,42 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
           // Local file - check if it exists
           final file = File(_effectivePreviewPath!);
           if (!await file.exists()) {
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    AppLocalizations.of(context)!.previewSongFileNotFound,
+            if (!mounted) return;
+            final l10n = AppLocalizations.of(context)!;
+            final action = await showDialog<_FileNotFoundAction>(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                title: Text(l10n.previewSongFileNotFound),
+                content: Text(l10n.previewSongFileNotFoundMessage),
+                actions: [
+                  TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+                  OutlinedButton(
+                    onPressed: () => Navigator.pop(ctx, _FileNotFoundAction.remove),
+                    child: Text(l10n.removePreviewSong),
                   ),
-                ),
+                  FilledButton(
+                    onPressed: () => Navigator.pop(ctx, _FileNotFoundAction.selectNew),
+                    child: Text(l10n.selectNewFile),
+                  ),
+                ],
+              ),
+            );
+            if (!mounted) return;
+            if (action == _FileNotFoundAction.remove) {
+              await widget.onSongRemoved();
+            } else if (action == _FileNotFoundAction.selectNew) {
+              final result = await FilePicker.platform.pickFiles(
+                type: FileType.custom,
+                allowedExtensions: const ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'],
+                dialogTitle: l10n.selectPreviewSong,
               );
+              if (!mounted) return;
+              if (result != null && result.files.single.path != null) {
+                final newPath = result.files.single.path!;
+                setState(() => _replacedPreviewPath = newPath);
+                await widget.onSongChanged(newPath);
+                await _audioPlayer.play(DeviceFileSource(newPath));
+              }
             }
             return;
           }

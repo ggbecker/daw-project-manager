@@ -1627,5 +1627,9 @@
   "shortcutNavigateRows": "行を移動",
   "shortcutEditCell": "選択したセルを編集",
   "shortcutViewRelease": "リリースの詳細を表示",
-  "shortcutGoBack": "戻る"
+  "shortcutGoBack": "戻る",
+  "previewSongFileNotFoundMessage": "プレビュー曲のファイルがディスク上に見つかりませんでした。新しいファイルを選択するか、エントリを削除しますか？",
+  "@previewSongFileNotFoundMessage": {},
+  "selectNewFile": "新しいファイルを選択",
+  "@selectNewFile": {}
 }

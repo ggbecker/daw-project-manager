@@ -1651,5 +1651,9 @@
   "shortcutNavigateRows": "Navegar nas linhas",
   "shortcutEditCell": "Editar célula selecionada",
   "shortcutViewRelease": "Ver detalhes do lançamento",
-  "shortcutGoBack": "Voltar"
+  "shortcutGoBack": "Voltar",
+  "previewSongFileNotFoundMessage": "O arquivo da música de visualização não foi encontrado no disco. Deseja selecionar um novo arquivo ou remover a entrada?",
+  "@previewSongFileNotFoundMessage": {},
+  "selectNewFile": "Selecionar novo arquivo",
+  "@selectNewFile": {}
 }

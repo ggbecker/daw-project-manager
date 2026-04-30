@@ -14,6 +14,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:archive/archive_io.dart';
 import 'package:desktop_drop/desktop_drop.dart';
+import 'package:file_picker/file_picker.dart';
 
 import '../services/scanner_service.dart';
 import '../services/audio_analysis_service.dart';
@@ -291,6 +292,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
 
   void _collapseDesktopSearch() {
     _clearCurrentTabSearch();
+    _shouldMaintainSearchFocus = false;
+    _searchFocusNode.unfocus();
     setState(() => _isSearchingDesktop = false);
   }
 
@@ -2151,6 +2154,8 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
   }
 }
 
+enum _FileNotFoundAction { selectNew, remove }
+
 class _PlutoProjectsTable extends ConsumerStatefulWidget {
   final List<MusicProject> projects;
   final DateFormat dateFormat;
@@ -2249,12 +2254,57 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
 
     final file = File(effectivePath);
     if (!await file.exists()) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      final action = await showDialog<_FileNotFoundAction>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(l10n.previewSongFileNotFound),
+          content: Text(l10n.previewSongFileNotFoundMessage),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+            OutlinedButton(
+              onPressed: () => Navigator.pop(ctx, _FileNotFoundAction.remove),
+              child: Text(l10n.removePreviewSong),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, _FileNotFoundAction.selectNew),
+              child: Text(l10n.selectNewFile),
+            ),
+          ],
+        ),
+      );
+      if (!mounted) return;
+      if (action == _FileNotFoundAction.remove) {
+        final repo = await ref.read(repositoryProvider.future);
+        final isAuto = project.previewSongPath?.isNotEmpty != true;
+        final updated = isAuto
+            ? project.copyWith(clearPreviewSongAutoPath: true)
+            : project.copyWith(clearPreviewSongPath: true, clearPreviewSongFileName: true);
+        await repo.updateProject(updated);
+        return;
+      } else if (action == _FileNotFoundAction.selectNew) {
+        final result = await FilePicker.platform.pickFiles(
+          type: FileType.custom,
+          allowedExtensions: const ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'],
+          dialogTitle: l10n.selectPreviewSong,
         );
+        if (!mounted) return;
+        if (result != null && result.files.single.path != null) {
+          final newPath = result.files.single.path!;
+          final repo = await ref.read(repositoryProvider.future);
+          final isAuto = project.previewSongPath?.isNotEmpty != true;
+          final updated = isAuto
+              ? project.copyWith(previewSongAutoPath: newPath)
+              : project.copyWith(previewSongPath: newPath, previewSongFileName: path.basename(newPath));
+          await repo.updateProject(updated);
+          effectivePath = newPath;
+        } else {
+          return;
+        }
+      } else {
+        return;
       }
-      return;
     }
 
     // Check for a newer export in the same folder
@@ -4553,12 +4603,57 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
 
     final file = File(effectivePath);
     if (!await file.exists()) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      final action = await showDialog<_FileNotFoundAction>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(l10n.previewSongFileNotFound),
+          content: Text(l10n.previewSongFileNotFoundMessage),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+            OutlinedButton(
+              onPressed: () => Navigator.pop(ctx, _FileNotFoundAction.remove),
+              child: Text(l10n.removePreviewSong),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, _FileNotFoundAction.selectNew),
+              child: Text(l10n.selectNewFile),
+            ),
+          ],
+        ),
+      );
+      if (!mounted) return;
+      if (action == _FileNotFoundAction.remove) {
+        final repo = await ref.read(repositoryProvider.future);
+        final isAuto = project.previewSongPath?.isNotEmpty != true;
+        final updated = isAuto
+            ? project.copyWith(clearPreviewSongAutoPath: true)
+            : project.copyWith(clearPreviewSongPath: true, clearPreviewSongFileName: true);
+        await repo.updateProject(updated);
+        return;
+      } else if (action == _FileNotFoundAction.selectNew) {
+        final result = await FilePicker.platform.pickFiles(
+          type: FileType.custom,
+          allowedExtensions: const ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'],
+          dialogTitle: l10n.selectPreviewSong,
         );
+        if (!mounted) return;
+        if (result != null && result.files.single.path != null) {
+          final newPath = result.files.single.path!;
+          final repo = await ref.read(repositoryProvider.future);
+          final isAuto = project.previewSongPath?.isNotEmpty != true;
+          final updated = isAuto
+              ? project.copyWith(previewSongAutoPath: newPath)
+              : project.copyWith(previewSongPath: newPath, previewSongFileName: path.basename(newPath));
+          await repo.updateProject(updated);
+          effectivePath = newPath;
+        } else {
+          return;
+        }
+      } else {
+        return;
       }
-      return;
     }
 
     // Check for a newer export in the same folder

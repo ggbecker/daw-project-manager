@@ -1093,6 +1093,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Fichier de chanson d\'aperçu introuvable';
 
   @override
+  String get previewSongFileNotFoundMessage =>
+      'Le fichier de chanson d\'aperçu est introuvable sur le disque. Voulez-vous sélectionner un nouveau fichier ou supprimer l\'entrée ?';
+
+  @override
+  String get selectNewFile => 'Sélectionner un nouveau fichier';
+
+  @override
   String failedToPlayPreview(String error) {
     return 'Échec de la lecture de l\'aperçu : $error';
   }

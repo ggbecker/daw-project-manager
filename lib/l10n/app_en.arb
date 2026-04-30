@@ -1034,6 +1034,10 @@
   "previewSongRemoved": "Preview song removed",
   "previewSongAdded": "Preview song added",
   "previewSongFileNotFound": "Preview song file not found",
+  "previewSongFileNotFoundMessage": "The preview song file could not be found on disk. Would you like to select a new file or remove the entry?",
+  "@previewSongFileNotFoundMessage": {},
+  "selectNewFile": "Select New File",
+  "@selectNewFile": {},
   "failedToPlayPreview": "Failed to play preview: {error}",
   "@failedToPlayPreview": {
     "placeholders": {

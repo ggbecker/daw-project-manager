@@ -1907,6 +1907,18 @@ abstract class AppLocalizations {
   /// **'Preview song file not found'**
   String get previewSongFileNotFound;
 
+  /// No description provided for @previewSongFileNotFoundMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The preview song file could not be found on disk. Would you like to select a new file or remove the entry?'**
+  String get previewSongFileNotFoundMessage;
+
+  /// No description provided for @selectNewFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Select New File'**
+  String get selectNewFile;
+
   /// No description provided for @failedToPlayPreview.
   ///
   /// In en, this message translates to:

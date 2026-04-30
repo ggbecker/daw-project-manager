@@ -1088,6 +1088,13 @@ class AppLocalizationsPt extends AppLocalizations {
       'Arquivo de música de prévia não encontrado';
 
   @override
+  String get previewSongFileNotFoundMessage =>
+      'O arquivo da música de visualização não foi encontrado no disco. Deseja selecionar um novo arquivo ou remover a entrada?';
+
+  @override
+  String get selectNewFile => 'Selecionar novo arquivo';
+
+  @override
   String failedToPlayPreview(String error) {
     return 'Falha ao reproduzir prévia: $error';
   }

@@ -1627,5 +1627,9 @@
   "shortcutNavigateRows": "Naviga tra le righe",
   "shortcutEditCell": "Modifica la cella selezionata",
   "shortcutViewRelease": "Visualizza dettagli della release",
-  "shortcutGoBack": "Indietro"
+  "shortcutGoBack": "Indietro",
+  "previewSongFileNotFoundMessage": "Il file della canzone di anteprima non è stato trovato sul disco. Vuoi selezionare un nuovo file o rimuovere la voce?",
+  "@previewSongFileNotFoundMessage": {},
+  "selectNewFile": "Seleziona nuovo file",
+  "@selectNewFile": {}
 }

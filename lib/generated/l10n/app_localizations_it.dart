@@ -1088,6 +1088,13 @@ class AppLocalizationsIt extends AppLocalizations {
       'File del brano di anteprima non trovato';
 
   @override
+  String get previewSongFileNotFoundMessage =>
+      'Il file della canzone di anteprima non è stato trovato sul disco. Vuoi selezionare un nuovo file o rimuovere la voce?';
+
+  @override
+  String get selectNewFile => 'Seleziona nuovo file';
+
+  @override
   String failedToPlayPreview(String error) {
     return 'Impossibile riprodurre l\'anteprima: $error';
   }

@@ -1627,5 +1627,9 @@
   "shortcutNavigateRows": "导航行",
   "shortcutEditCell": "编辑所选单元格",
   "shortcutViewRelease": "查看发行详情",
-  "shortcutGoBack": "返回"
+  "shortcutGoBack": "返回",
+  "previewSongFileNotFoundMessage": "在磁盘上找不到预览歌曲文件。您想选择新文件还是删除该条目？",
+  "@previewSongFileNotFoundMessage": {},
+  "selectNewFile": "选择新文件",
+  "@selectNewFile": {}
 }

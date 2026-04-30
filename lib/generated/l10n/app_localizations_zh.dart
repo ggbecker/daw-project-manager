@@ -1064,6 +1064,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get previewSongFileNotFound => '未找到预览歌曲文件';
 
   @override
+  String get previewSongFileNotFoundMessage => '在磁盘上找不到预览歌曲文件。您想选择新文件还是删除该条目？';
+
+  @override
+  String get selectNewFile => '选择新文件';
+
+  @override
   String failedToPlayPreview(String error) {
     return '播放预览失败: $error';
   }

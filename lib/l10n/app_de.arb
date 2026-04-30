@@ -1627,5 +1627,9 @@
   "shortcutNavigateRows": "Zeilen navigieren",
   "shortcutEditCell": "Ausgewählte Zelle bearbeiten",
   "shortcutViewRelease": "Release-Details anzeigen",
-  "shortcutGoBack": "Zurück"
+  "shortcutGoBack": "Zurück",
+  "previewSongFileNotFoundMessage": "Die Vorschau-Songdatei wurde nicht auf dem Laufwerk gefunden. Möchten Sie eine neue Datei auswählen oder den Eintrag entfernen?",
+  "@previewSongFileNotFoundMessage": {},
+  "selectNewFile": "Neue Datei auswählen",
+  "@selectNewFile": {}
 }

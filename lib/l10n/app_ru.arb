@@ -1627,5 +1627,9 @@
   "shortcutNavigateRows": "Навигация по строкам",
   "shortcutEditCell": "Редактировать выбранную ячейку",
   "shortcutViewRelease": "Просмотр деталей релиза",
-  "shortcutGoBack": "Назад"
+  "shortcutGoBack": "Назад",
+  "previewSongFileNotFoundMessage": "Файл песни для предварительного прослушивания не найден на диске. Хотите выбрать новый файл или удалить запись?",
+  "@previewSongFileNotFoundMessage": {},
+  "selectNewFile": "Выбрать новый файл",
+  "@selectNewFile": {}
 }

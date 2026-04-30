@@ -1090,6 +1090,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'Archivo de canción de vista previa no encontrado';
 
   @override
+  String get previewSongFileNotFoundMessage =>
+      'No se encontró el archivo de canción de vista previa en el disco. ¿Desea seleccionar un nuevo archivo o eliminar la entrada?';
+
+  @override
+  String get selectNewFile => 'Seleccionar nuevo archivo';
+
+  @override
   String failedToPlayPreview(String error) {
     return 'Error al reproducir vista previa: $error';
   }
