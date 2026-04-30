@@ -1631,5 +1631,11 @@
   "previewSongFileNotFoundMessage": "Файл песни для предварительного прослушивания не найден на диске. Хотите выбрать новый файл или удалить запись?",
   "@previewSongFileNotFoundMessage": {},
   "selectNewFile": "Выбрать новый файл",
-  "@selectNewFile": {}
+  "@selectNewFile": {},
+  "noPreviewSongTitle": "Нет песни для предпрослушивания",
+  "@noPreviewSongTitle": {},
+  "noPreviewSongMessage": "Для этого проекта не задана песня для предпрослушивания. Выберите аудиофайл, чтобы загрузить и воспроизвести его.",
+  "@noPreviewSongMessage": {},
+  "noPreviewSongDragHint": "Вы также можете перетащить аудиофайл прямо на строку проекта в таблице.",
+  "@noPreviewSongDragHint": {}
 }

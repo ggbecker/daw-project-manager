@@ -1062,6 +1062,17 @@ class AppLocalizationsJa extends AppLocalizations {
   String get previewSong => 'プレビュー曲';
 
   @override
+  String get noPreviewSongTitle => 'プレビュー曲なし';
+
+  @override
+  String get noPreviewSongMessage =>
+      'このプロジェクトにはプレビュー曲が設定されていません。オーディオファイルを選択して読み込み、再生してください。';
+
+  @override
+  String get noPreviewSongDragHint =>
+      'テーブルのプロジェクト行にオーディオファイルを直接ドラッグ＆ドロップすることもできます。';
+
+  @override
   String get previewSongRemoved => 'プレビュー曲が削除されました';
 
   @override

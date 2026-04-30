@@ -1077,6 +1077,17 @@ class AppLocalizationsRu extends AppLocalizations {
   String get previewSong => 'Превью Трека';
 
   @override
+  String get noPreviewSongTitle => 'Нет песни для предпрослушивания';
+
+  @override
+  String get noPreviewSongMessage =>
+      'Для этого проекта не задана песня для предпрослушивания. Выберите аудиофайл, чтобы загрузить и воспроизвести его.';
+
+  @override
+  String get noPreviewSongDragHint =>
+      'Вы также можете перетащить аудиофайл прямо на строку проекта в таблице.';
+
+  @override
   String get previewSongRemoved => 'Превью трека удалено';
 
   @override

@@ -1080,6 +1080,17 @@ class AppLocalizationsEs extends AppLocalizations {
   String get previewSong => 'Canción de Vista Previa';
 
   @override
+  String get noPreviewSongTitle => 'Sin canción de vista previa';
+
+  @override
+  String get noPreviewSongMessage =>
+      'Este proyecto no tiene una canción de vista previa configurada. Selecciona un archivo de audio para cargarlo y reproducirlo.';
+
+  @override
+  String get noPreviewSongDragHint =>
+      'También puedes arrastrar y soltar un archivo de audio directamente en la fila del proyecto en la tabla.';
+
+  @override
   String get previewSongRemoved => 'Canción de vista previa eliminada';
 
   @override

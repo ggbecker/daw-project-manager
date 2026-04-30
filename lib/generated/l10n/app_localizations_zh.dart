@@ -1055,6 +1055,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get previewSong => '预览歌曲';
 
   @override
+  String get noPreviewSongTitle => '无预览歌曲';
+
+  @override
+  String get noPreviewSongMessage => '此项目未设置预览歌曲。选择一个音频文件以加载并播放它。';
+
+  @override
+  String get noPreviewSongDragHint => '您也可以将音频文件直接拖放到表格中的项目行上。';
+
+  @override
   String get previewSongRemoved => '预览歌曲已删除';
 
   @override

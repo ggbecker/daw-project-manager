@@ -1631,5 +1631,11 @@
   "previewSongFileNotFoundMessage": "在磁盘上找不到预览歌曲文件。您想选择新文件还是删除该条目？",
   "@previewSongFileNotFoundMessage": {},
   "selectNewFile": "选择新文件",
-  "@selectNewFile": {}
+  "@selectNewFile": {},
+  "noPreviewSongTitle": "无预览歌曲",
+  "@noPreviewSongTitle": {},
+  "noPreviewSongMessage": "此项目未设置预览歌曲。选择一个音频文件以加载并播放它。",
+  "@noPreviewSongMessage": {},
+  "noPreviewSongDragHint": "您也可以将音频文件直接拖放到表格中的项目行上。",
+  "@noPreviewSongDragHint": {}
 }

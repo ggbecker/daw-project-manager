@@ -2266,7 +2266,81 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         ? project.previewSongPath!
         : (project.previewSongAutoPath ?? MixdownDetectorService.findLatestMixdown(project, customFolder: customFolder)?.path);
 
-    if (effectivePath == null) return;
+    if (effectivePath == null) {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Row(
+            children: [
+              const Icon(Icons.audio_file_outlined, size: 20),
+              const SizedBox(width: 8),
+              Text(l10n.noPreviewSongTitle),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.noPreviewSongMessage),
+              if (!MobileUtils.isMobile()) ...[
+                const SizedBox(height: 12),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.drag_indicator, size: 16,
+                        color: Theme.of(ctx).colorScheme.primary),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        l10n.noPreviewSongDragHint,
+                        style: Theme.of(ctx).textTheme.bodySmall,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(l10n.selectPreviewSong),
+            ),
+          ],
+        ),
+      );
+      if (!mounted || confirmed != true) return;
+      final picked = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: const ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'],
+        dialogTitle: l10n.selectPreviewSong,
+      );
+      if (!mounted || picked == null || picked.files.single.path == null) return;
+      final newPath = picked.files.single.path!;
+      final repo = await ref.read(repositoryProvider.future);
+      await repo.updateProject(project.copyWith(
+        previewSongPath: newPath,
+        previewSongFileName: path.basename(newPath),
+      ));
+      if (!mounted) return;
+      await showDialog(
+        context: context,
+        builder: (dialogContext) => _PreviewSongDialog(
+          project: project.copyWith(
+            previewSongPath: newPath,
+            previewSongFileName: path.basename(newPath),
+          ),
+          onClose: () {},
+        ),
+      );
+      return;
+    }
 
     final file = File(effectivePath);
     if (!await file.exists()) {
@@ -4615,7 +4689,81 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
         ? project.previewSongPath!
         : (project.previewSongAutoPath ?? MixdownDetectorService.findLatestMixdown(project, customFolder: customFolder)?.path);
 
-    if (effectivePath == null) return;
+    if (effectivePath == null) {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Row(
+            children: [
+              const Icon(Icons.audio_file_outlined, size: 20),
+              const SizedBox(width: 8),
+              Text(l10n.noPreviewSongTitle),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.noPreviewSongMessage),
+              if (!MobileUtils.isMobile()) ...[
+                const SizedBox(height: 12),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.drag_indicator, size: 16,
+                        color: Theme.of(ctx).colorScheme.primary),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        l10n.noPreviewSongDragHint,
+                        style: Theme.of(ctx).textTheme.bodySmall,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(l10n.selectPreviewSong),
+            ),
+          ],
+        ),
+      );
+      if (!mounted || confirmed != true) return;
+      final picked = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: const ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'],
+        dialogTitle: l10n.selectPreviewSong,
+      );
+      if (!mounted || picked == null || picked.files.single.path == null) return;
+      final newPath = picked.files.single.path!;
+      final repo = await ref.read(repositoryProvider.future);
+      await repo.updateProject(project.copyWith(
+        previewSongPath: newPath,
+        previewSongFileName: path.basename(newPath),
+      ));
+      if (!mounted) return;
+      await showDialog(
+        context: context,
+        builder: (dialogContext) => _PreviewSongDialog(
+          project: project.copyWith(
+            previewSongPath: newPath,
+            previewSongFileName: path.basename(newPath),
+          ),
+          onClose: () {},
+        ),
+      );
+      return;
+    }
 
     final file = File(effectivePath);
     if (!await file.exists()) {
@@ -5025,18 +5173,18 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                   ),
                   trailing: _isSelectionMode
                       ? null
-                      : project.previewSongPath?.isNotEmpty == true || project.previewSongAutoPath != null
-                          ? IconButton(
-                              icon: const Icon(Icons.play_arrow),
-                              tooltip: project.previewSongAutoPath != null && project.previewSongPath?.isNotEmpty != true
-                                  ? '${AppLocalizations.of(context)!.playPreview}\n⚡ ${AppLocalizations.of(context)!.autoDetected}: ${path.basename(project.previewSongAutoPath!)}'
-                                  : AppLocalizations.of(context)!.playPreview,
-                              onPressed: () => _playPreviewSong(project),
-                              color: project.previewSongPath?.isNotEmpty == true
-                                  ? Colors.green
-                                  : Colors.amber,
-                            )
-                          : null,
+                      : IconButton(
+                          icon: const Icon(Icons.play_arrow),
+                          tooltip: project.previewSongAutoPath != null && project.previewSongPath?.isNotEmpty != true
+                              ? '${AppLocalizations.of(context)!.playPreview}\n⚡ ${AppLocalizations.of(context)!.autoDetected}: ${path.basename(project.previewSongAutoPath!)}'
+                              : AppLocalizations.of(context)!.playPreview,
+                          onPressed: () => _playPreviewSong(project),
+                          color: project.previewSongPath?.isNotEmpty == true
+                              ? Colors.green
+                              : project.previewSongAutoPath != null
+                                  ? Colors.amber
+                                  : Colors.grey,
+                        ),
                   onTap: () {
                     if (_isSelectionMode) {
                       // In selection mode, tap toggles selection

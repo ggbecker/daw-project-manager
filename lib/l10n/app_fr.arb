@@ -1631,5 +1631,11 @@
   "previewSongFileNotFoundMessage": "Le fichier de chanson d'aperçu est introuvable sur le disque. Voulez-vous sélectionner un nouveau fichier ou supprimer l'entrée ?",
   "@previewSongFileNotFoundMessage": {},
   "selectNewFile": "Sélectionner un nouveau fichier",
-  "@selectNewFile": {}
+  "@selectNewFile": {},
+  "noPreviewSongTitle": "Pas de chanson d'aperçu",
+  "@noPreviewSongTitle": {},
+  "noPreviewSongMessage": "Ce projet n'a pas de chanson d'aperçu définie. Sélectionnez un fichier audio pour le charger et le lire.",
+  "@noPreviewSongMessage": {},
+  "noPreviewSongDragHint": "Vous pouvez également glisser-déposer un fichier audio directement sur la ligne du projet dans le tableau.",
+  "@noPreviewSongDragHint": {}
 }

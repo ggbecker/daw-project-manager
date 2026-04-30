@@ -1655,5 +1655,11 @@
   "previewSongFileNotFoundMessage": "O arquivo da música de visualização não foi encontrado no disco. Deseja selecionar um novo arquivo ou remover a entrada?",
   "@previewSongFileNotFoundMessage": {},
   "selectNewFile": "Selecionar novo arquivo",
-  "@selectNewFile": {}
+  "@selectNewFile": {},
+  "noPreviewSongTitle": "Sem música de visualização",
+  "@noPreviewSongTitle": {},
+  "noPreviewSongMessage": "Este projeto não tem uma música de visualização definida. Selecione um arquivo de áudio para carregá-lo e reproduzi-lo.",
+  "@noPreviewSongMessage": {},
+  "noPreviewSongDragHint": "Você também pode arrastar e soltar um arquivo de áudio diretamente na linha do projeto na tabela.",
+  "@noPreviewSongDragHint": {}
 }

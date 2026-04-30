@@ -1078,6 +1078,17 @@ class AppLocalizationsIt extends AppLocalizations {
   String get previewSong => 'Brano di Anteprima';
 
   @override
+  String get noPreviewSongTitle => 'Nessuna canzone di anteprima';
+
+  @override
+  String get noPreviewSongMessage =>
+      'Questo progetto non ha una canzone di anteprima impostata. Seleziona un file audio per caricarlo e riprodurlo.';
+
+  @override
+  String get noPreviewSongDragHint =>
+      'Puoi anche trascinare e rilasciare un file audio direttamente sulla riga del progetto nella tabella.';
+
+  @override
   String get previewSongRemoved => 'Brano di anteprima rimosso';
 
   @override

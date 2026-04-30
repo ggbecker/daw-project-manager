@@ -1631,5 +1631,11 @@
   "previewSongFileNotFoundMessage": "Die Vorschau-Songdatei wurde nicht auf dem Laufwerk gefunden. Möchten Sie eine neue Datei auswählen oder den Eintrag entfernen?",
   "@previewSongFileNotFoundMessage": {},
   "selectNewFile": "Neue Datei auswählen",
-  "@selectNewFile": {}
+  "@selectNewFile": {},
+  "noPreviewSongTitle": "Kein Vorschau-Song",
+  "@noPreviewSongTitle": {},
+  "noPreviewSongMessage": "Für dieses Projekt ist kein Vorschau-Song festgelegt. Wähle eine Audiodatei aus, um sie zu laden und abzuspielen.",
+  "@noPreviewSongMessage": {},
+  "noPreviewSongDragHint": "Du kannst auch eine Audiodatei direkt auf die Projektzeile in der Tabelle ziehen.",
+  "@noPreviewSongDragHint": {}
 }

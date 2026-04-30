@@ -1078,6 +1078,17 @@ class AppLocalizationsPt extends AppLocalizations {
   String get previewSong => 'Música de Prévia';
 
   @override
+  String get noPreviewSongTitle => 'Sem música de visualização';
+
+  @override
+  String get noPreviewSongMessage =>
+      'Este projeto não tem uma música de visualização definida. Selecione um arquivo de áudio para carregá-lo e reproduzi-lo.';
+
+  @override
+  String get noPreviewSongDragHint =>
+      'Você também pode arrastar e soltar um arquivo de áudio diretamente na linha do projeto na tabela.';
+
+  @override
   String get previewSongRemoved => 'Música de prévia removida';
 
   @override

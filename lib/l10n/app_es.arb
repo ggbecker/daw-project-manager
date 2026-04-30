@@ -1631,5 +1631,11 @@
   "previewSongFileNotFoundMessage": "No se encontró el archivo de canción de vista previa en el disco. ¿Desea seleccionar un nuevo archivo o eliminar la entrada?",
   "@previewSongFileNotFoundMessage": {},
   "selectNewFile": "Seleccionar nuevo archivo",
-  "@selectNewFile": {}
+  "@selectNewFile": {},
+  "noPreviewSongTitle": "Sin canción de vista previa",
+  "@noPreviewSongTitle": {},
+  "noPreviewSongMessage": "Este proyecto no tiene una canción de vista previa configurada. Selecciona un archivo de audio para cargarlo y reproducirlo.",
+  "@noPreviewSongMessage": {},
+  "noPreviewSongDragHint": "También puedes arrastrar y soltar un archivo de audio directamente en la fila del proyecto en la tabla.",
+  "@noPreviewSongDragHint": {}
 }

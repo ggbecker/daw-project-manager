@@ -1631,5 +1631,11 @@
   "previewSongFileNotFoundMessage": "Il file della canzone di anteprima non è stato trovato sul disco. Vuoi selezionare un nuovo file o rimuovere la voce?",
   "@previewSongFileNotFoundMessage": {},
   "selectNewFile": "Seleziona nuovo file",
-  "@selectNewFile": {}
+  "@selectNewFile": {},
+  "noPreviewSongTitle": "Nessuna canzone di anteprima",
+  "@noPreviewSongTitle": {},
+  "noPreviewSongMessage": "Questo progetto non ha una canzone di anteprima impostata. Seleziona un file audio per caricarlo e riprodurlo.",
+  "@noPreviewSongMessage": {},
+  "noPreviewSongDragHint": "Puoi anche trascinare e rilasciare un file audio direttamente sulla riga del progetto nella tabella.",
+  "@noPreviewSongDragHint": {}
 }

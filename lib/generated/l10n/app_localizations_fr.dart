@@ -1083,6 +1083,17 @@ class AppLocalizationsFr extends AppLocalizations {
   String get previewSong => 'Chanson d\'Aperçu';
 
   @override
+  String get noPreviewSongTitle => 'Pas de chanson d\'aperçu';
+
+  @override
+  String get noPreviewSongMessage =>
+      'Ce projet n\'a pas de chanson d\'aperçu définie. Sélectionnez un fichier audio pour le charger et le lire.';
+
+  @override
+  String get noPreviewSongDragHint =>
+      'Vous pouvez également glisser-déposer un fichier audio directement sur la ligne du projet dans le tableau.';
+
+  @override
   String get previewSongRemoved => 'Chanson d\'aperçu supprimée';
 
   @override

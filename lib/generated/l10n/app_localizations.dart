@@ -1889,6 +1889,24 @@ abstract class AppLocalizations {
   /// **'Preview Song'**
   String get previewSong;
 
+  /// No description provided for @noPreviewSongTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No Preview Song'**
+  String get noPreviewSongTitle;
+
+  /// No description provided for @noPreviewSongMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This project has no preview song set. Select an audio file to load and play it.'**
+  String get noPreviewSongMessage;
+
+  /// No description provided for @noPreviewSongDragHint.
+  ///
+  /// In en, this message translates to:
+  /// **'You can also drag and drop an audio file directly onto the project row in the table.'**
+  String get noPreviewSongDragHint;
+
   /// No description provided for @previewSongRemoved.
   ///
   /// In en, this message translates to:

@@ -1083,6 +1083,17 @@ class AppLocalizationsDe extends AppLocalizations {
   String get previewSong => 'Vorschau-Song';
 
   @override
+  String get noPreviewSongTitle => 'Kein Vorschau-Song';
+
+  @override
+  String get noPreviewSongMessage =>
+      'Für dieses Projekt ist kein Vorschau-Song festgelegt. Wähle eine Audiodatei aus, um sie zu laden und abzuspielen.';
+
+  @override
+  String get noPreviewSongDragHint =>
+      'Du kannst auch eine Audiodatei direkt auf die Projektzeile in der Tabelle ziehen.';
+
+  @override
   String get previewSongRemoved => 'Vorschau-Song entfernt';
 
   @override

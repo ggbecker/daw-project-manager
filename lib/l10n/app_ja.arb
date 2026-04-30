@@ -1631,5 +1631,11 @@
   "previewSongFileNotFoundMessage": "プレビュー曲のファイルがディスク上に見つかりませんでした。新しいファイルを選択するか、エントリを削除しますか？",
   "@previewSongFileNotFoundMessage": {},
   "selectNewFile": "新しいファイルを選択",
-  "@selectNewFile": {}
+  "@selectNewFile": {},
+  "noPreviewSongTitle": "プレビュー曲なし",
+  "@noPreviewSongTitle": {},
+  "noPreviewSongMessage": "このプロジェクトにはプレビュー曲が設定されていません。オーディオファイルを選択して読み込み、再生してください。",
+  "@noPreviewSongMessage": {},
+  "noPreviewSongDragHint": "テーブルのプロジェクト行にオーディオファイルを直接ドラッグ＆ドロップすることもできます。",
+  "@noPreviewSongDragHint": {}
 }
