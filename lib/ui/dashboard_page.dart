@@ -5,7 +5,7 @@ import 'package:trina_grid/trina_grid.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
+import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb, listEquals;
 import 'package:flutter/services.dart'; 
 import 'package:path/path.dart' as path; // 🚨 NOVO IMPORT
 import 'package:url_launcher/url_launcher.dart';
@@ -14,10 +14,13 @@ import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:archive/archive_io.dart';
 import 'package:desktop_drop/desktop_drop.dart';
+import 'package:file_picker/file_picker.dart';
 
 import '../services/scanner_service.dart';
 import '../services/audio_analysis_service.dart';
 import '../services/mixdown_detector_service.dart';
+import 'widgets/shortcuts_help_dialog.dart';
+import 'widgets/tab_customization_dialog.dart';
 import '../services/dock_menu_service.dart';
 import '../utils/mobile_utils.dart';
 import '../utils/file_launcher.dart';
@@ -49,6 +52,10 @@ const String appVersion = String.fromEnvironment('APP_VERSION', defaultValue: '0
 // Intent classes for keyboard shortcuts
 class _SearchIntent extends Intent {
   const _SearchIntent();
+}
+
+class _FocusTableIntent extends Intent {
+  const _FocusTableIntent();
 }
 
 class _RescanIntent extends Intent {
@@ -87,16 +94,80 @@ class DashboardPage extends ConsumerStatefulWidget {
   ConsumerState<DashboardPage> createState() => _DashboardPageState();
 }
 
-class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTickerProviderStateMixin {
+class _DashboardPageState extends ConsumerState<DashboardPage> with TickerProviderStateMixin {
   bool _scanning = false;
   bool _extractingMetadata = false;
   bool _isSearchingMobile = false;
   bool _isSearchingDesktop = false;
   late TabController _tabController;
-  
+
+  // Ordered list of currently visible tabs (derived from provider, updated via ref.listen)
+  List<AppTab> _currentVisibleTabs = [
+    AppTab.projects, AppTab.releases, AppTab.queue, AppTab.statistics,
+  ];
+
+  // The tab the user is currently on, by identity (not index).
+  AppTab get _currentTab {
+    final idx = _tabController.index;
+    if (idx < 0 || idx >= _currentVisibleTabs.length) return AppTab.projects;
+    return _currentVisibleTabs[idx];
+  }
+
+  // Compute the ordered list from the provider's Set, filtered for the current platform.
+  List<AppTab> _orderedFrom(Set<AppTab> visible) =>
+      VisibleTabsNotifier.canonicalOrder
+          .where((t) => visible.contains(t))
+          .where((t) => MobileUtils.isMobile() || t != AppTab.playlists)
+          .toList();
+
+  // Generation counter — incremented each time we schedule a tab update so that
+  // stale post-frame callbacks (from rapid toggles) are silently dropped.
+  int _tabUpdateGen = 0;
+
+  // Schedule a safe, deferred swap of the TabController + visible-tab list.
+  // Using addPostFrameCallback avoids running inside build or inside a setState
+  // callback, which caused double-dispose and length-mismatch errors.
+  void _updateVisibleTabs(Set<AppTab> newVisible) {
+    final ordered = _orderedFrom(newVisible);
+    if (listEquals(_currentVisibleTabs, ordered)) return;
+    final gen = ++_tabUpdateGen;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || gen != _tabUpdateGen) return;
+      final reordered = _orderedFrom(newVisible);
+      if (listEquals(_currentVisibleTabs, reordered)) return;
+
+      final previousTab = _currentTab;
+      final newIndex = (reordered.contains(previousTab)
+              ? reordered.indexOf(previousTab)
+              : 0)
+          .clamp(0, reordered.length - 1);
+
+      // Create new controller BEFORE disposing the old one.
+      final newCtrl = TabController(
+        length: reordered.length,
+        vsync: this,
+        initialIndex: newIndex,
+      );
+      newCtrl.addListener(_onTabChanged);
+
+      // Atomic swap so _tabController and _currentVisibleTabs are always in sync.
+      final oldCtrl = _tabController;
+      _tabController = newCtrl;
+      _currentVisibleTabs = reordered;
+
+      oldCtrl.removeListener(_onTabChanged);
+      oldCtrl.dispose();
+
+      setState(() {});
+    });
+  }
+
   // 1. FocusNode para a barra de pesquisa
   final FocusNode _searchFocusNode = FocusNode();
-  
+
+  // Key to reach the projects table and request focus on it
+  final _tableKey = GlobalKey<_PlutoProjectsTableWithSelectionState>();
+
   // FocusNode para capturar eventos de teclado globalmente (debug)
   final FocusNode _debugKeyboardFocusNode = FocusNode();
 
@@ -110,9 +181,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
   @override
   void initState() {
     super.initState();
-    // Mobile has 5 tabs (Projects, Releases, Playlists, Tasks, Statistics), desktop has 4
-    final tabCount = MobileUtils.isMobile() ? 5 : 4;
-    _tabController = TabController(length: tabCount, vsync: this);
+    if (MobileUtils.isMobile()) {
+      _currentVisibleTabs = [...VisibleTabsNotifier.canonicalOrder];
+    }
+    _tabController = TabController(length: _currentVisibleTabs.length, vsync: this);
     _searchController = TextEditingController();
     
     // Add listener to TabController to rebuild when tab changes (for search placeholder update)
@@ -151,69 +223,53 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
 
   void _onTabChanged() {
     if (!_tabController.indexIsChanging && mounted) {
-      // Sync search controller with the appropriate tab's search state
-      final currentTabIndex = _tabController.index;
-      final queueTabIndex = MobileUtils.isMobile() ? 3 : 2;
-      final statsTabIndex = MobileUtils.isMobile() ? 4 : 3;
-      if (currentTabIndex == 0) {
-        // Projects tab
-        final projectsSearch = ref.read(projectsSearchProvider);
-        if (_searchController.text != projectsSearch) {
-          _searchController.text = projectsSearch;
-        }
-      } else if (currentTabIndex == 1) {
-        // Releases tab
-        final releasesSearch = ref.read(releasesSearchProvider);
-        if (_searchController.text != releasesSearch) {
-          _searchController.text = releasesSearch;
-        }
-      } else if (currentTabIndex == queueTabIndex) {
-        // Tasks tab
-        final queueSearch = ref.read(queueSearchProvider);
-        if (_searchController.text != queueSearch) {
-          _searchController.text = queueSearch;
-        }
-      } else if (currentTabIndex == statsTabIndex) {
-        // Statistics tab
-        final statsSearch = ref.read(statisticsSearchProvider);
-        if (_searchController.text != statsSearch) {
-          _searchController.text = statsSearch;
-        }
-      } else {
-        // Playlists tab — clear search bar
-        _searchController.clear();
+      switch (_currentTab) {
+        case AppTab.projects:
+          final projectsSearch = ref.read(projectsSearchProvider);
+          if (_searchController.text != projectsSearch) _searchController.text = projectsSearch;
+        case AppTab.releases:
+          final releasesSearch = ref.read(releasesSearchProvider);
+          if (_searchController.text != releasesSearch) _searchController.text = releasesSearch;
+        case AppTab.queue:
+          final queueSearch = ref.read(queueSearchProvider);
+          if (_searchController.text != queueSearch) _searchController.text = queueSearch;
+        case AppTab.statistics:
+          final statsSearch = ref.read(statisticsSearchProvider);
+          if (_searchController.text != statsSearch) _searchController.text = statsSearch;
+        case AppTab.playlists:
+          _searchController.clear();
       }
-      if (MobileUtils.isMobile() && _isSearchingMobile) {
-        _isSearchingMobile = false;
-      }
-      setState(() {}); // Rebuild to update search placeholder when tab animation completes
+      if (MobileUtils.isMobile() && _isSearchingMobile) _isSearchingMobile = false;
+      setState(() {});
     }
   }
 
   void _clearCurrentTabSearch() {
     _searchController.clear();
-    final queueTabIndex = MobileUtils.isMobile() ? 3 : 2;
-    if (_tabController.index == 0) {
-      ref.read(projectsSearchProvider.notifier).clear();
-    } else if (_tabController.index == 1) {
-      ref.read(releasesSearchProvider.notifier).clear();
-    } else if (_tabController.index == queueTabIndex) {
-      ref.read(queueSearchProvider.notifier).clear();
-    } else {
-      ref.read(statisticsSearchProvider.notifier).set('');
+    switch (_currentTab) {
+      case AppTab.projects:
+        ref.read(projectsSearchProvider.notifier).clear();
+      case AppTab.releases:
+        ref.read(releasesSearchProvider.notifier).clear();
+      case AppTab.queue:
+        ref.read(queueSearchProvider.notifier).clear();
+      case AppTab.statistics:
+      case AppTab.playlists:
+        ref.read(statisticsSearchProvider.notifier).set('');
     }
   }
 
   void _updateCurrentTabSearch(String text) {
-    final queueTabIndex = MobileUtils.isMobile() ? 3 : 2;
-    if (_tabController.index == 0) {
-      ref.read(projectsSearchProvider.notifier).setSearchText(text);
-    } else if (_tabController.index == 1) {
-      ref.read(releasesSearchProvider.notifier).setSearchText(text);
-    } else if (_tabController.index == queueTabIndex) {
-      ref.read(queueSearchProvider.notifier).set(text);
-    } else {
-      ref.read(statisticsSearchProvider.notifier).set(text);
+    switch (_currentTab) {
+      case AppTab.projects:
+        ref.read(projectsSearchProvider.notifier).setSearchText(text);
+      case AppTab.releases:
+        ref.read(releasesSearchProvider.notifier).setSearchText(text);
+      case AppTab.queue:
+        ref.read(queueSearchProvider.notifier).set(text);
+      case AppTab.statistics:
+      case AppTab.playlists:
+        ref.read(statisticsSearchProvider.notifier).set(text);
     }
   }
 
@@ -265,17 +321,33 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
     if (logicalKey == LogicalKeyboardKey.keyR && (isControl || isMeta)) {
       // Prevent duplicate processing
       final now = DateTime.now();
-      if (_lastProcessedKey == logicalKey && 
-          _lastProcessedTime != null && 
+      if (_lastProcessedKey == logicalKey &&
+          _lastProcessedTime != null &&
           now.difference(_lastProcessedTime!).inMilliseconds < 100) {
         return;
       }
-      
+
       _lastProcessedKey = logicalKey;
       _lastProcessedTime = now;
-      
+
       // Execute the action directly
       _scanAll();
+      return;
+    }
+
+    // Handle Ctrl+T / Cmd+T directly in RawKeyboardListener
+    if (logicalKey == LogicalKeyboardKey.keyT && (isControl || isMeta)) {
+      final now = DateTime.now();
+      if (_lastProcessedKey == logicalKey &&
+          _lastProcessedTime != null &&
+          now.difference(_lastProcessedTime!).inMilliseconds < 100) {
+        return;
+      }
+
+      _lastProcessedKey = logicalKey;
+      _lastProcessedTime = now;
+
+      _tableKey.currentState?.focusTable();
       return;
     }
   }
@@ -283,6 +355,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
 
   void _collapseDesktopSearch() {
     _clearCurrentTabSearch();
+    _shouldMaintainSearchFocus = false;
+    _searchFocusNode.unfocus();
     setState(() => _isSearchingDesktop = false);
   }
 
@@ -559,18 +633,19 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
     final dateFormat = ref.watch(dateFormatProvider);
     final repoAsync = ref.watch(repositoryProvider);
     final roots = ref.watch(scanRootsProvider);
+    // Keep visible tabs in sync with the provider.
+    ref.listen(visibleTabsProvider, (_, next) {
+      if (mounted) setState(() => _updateVisibleTabs(next));
+    });
+
     // Get current search text based on active tab
-    final queueTabIndex = MobileUtils.isMobile() ? 3 : 2;
-    final statsTabIndex = MobileUtils.isMobile() ? 4 : 3;
-    final currentSearch = _tabController.index == 0
-        ? ref.watch(projectsSearchProvider)
-        : _tabController.index == 1
-            ? ref.watch(releasesSearchProvider)
-            : _tabController.index == queueTabIndex
-                ? ref.watch(queueSearchProvider)
-                : _tabController.index == statsTabIndex
-                    ? ref.watch(statisticsSearchProvider)
-                    : '';
+    final currentSearch = switch (_currentTab) {
+      AppTab.projects   => ref.watch(projectsSearchProvider),
+      AppTab.releases   => ref.watch(releasesSearchProvider),
+      AppTab.queue      => ref.watch(queueSearchProvider),
+      AppTab.statistics => ref.watch(statisticsSearchProvider),
+      AppTab.playlists  => '',
+    };
     final projects = ref.watch(projectsProvider);
     // Keep macOS dock menu (and Windows jump list) in sync with latest projects
     ref.listen(projectsProvider, (_, next) => DockMenuService.updateRecentProjects(next));
@@ -651,7 +726,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
       child: FocusScope(
         child: Shortcuts(
           shortcuts: <LogicalKeySet, Intent>{
-            // Keep Shortcuts as backup (though RawKeyboardListener handles it directly)
             LogicalKeySet(
               Platform.isMacOS ? LogicalKeyboardKey.meta : LogicalKeyboardKey.control,
               LogicalKeyboardKey.keyF,
@@ -660,6 +734,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
               Platform.isMacOS ? LogicalKeyboardKey.meta : LogicalKeyboardKey.control,
               LogicalKeyboardKey.keyR,
             ): const _RescanIntent(),
+            LogicalKeySet(
+              Platform.isMacOS ? LogicalKeyboardKey.meta : LogicalKeyboardKey.control,
+              LogicalKeyboardKey.keyT,
+            ): const _FocusTableIntent(),
           },
           child: Actions(
             actions: <Type, Action<Intent>>{
@@ -669,6 +747,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
               _RescanIntent: _RescanAction(() {
                 _scanAll();
               }),
+              _FocusTableIntent: CallbackAction<_FocusTableIntent>(
+                onInvoke: (_) => _tableKey.currentState?.focusTable(),
+              ),
             },
           child: Focus(
             autofocus: true,
@@ -692,13 +773,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                 autofocus: true,
                                 controller: _searchController,
                                 decoration: InputDecoration(
-                                  hintText: _tabController.index == 0
-                                      ? AppLocalizations.of(context)!.searchProjects
-                                      : _tabController.index == 1
-                                          ? AppLocalizations.of(context)!.searchReleases
-                                          : _tabController.index == 3
-                                              ? AppLocalizations.of(context)!.queueSearchHint
-                                              : AppLocalizations.of(context)!.statsSearchProjects,
+                                  hintText: switch (_currentTab) {
+                                    AppTab.projects   => AppLocalizations.of(context)!.searchProjects,
+                                    AppTab.releases   => AppLocalizations.of(context)!.searchReleases,
+                                    AppTab.queue      => AppLocalizations.of(context)!.queueSearchHint,
+                                    _                 => AppLocalizations.of(context)!.statsSearchProjects,
+                                  },
                                   border: InputBorder.none,
                                   hintStyle: const TextStyle(color: Colors.white54),
                                 ),
@@ -717,8 +797,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                   ),
                               ]
                             : [
-                                // Search icon (only on searchable tabs — not Playlists tab index 2)
-                                if (_tabController.index != 2)  // 2 = Playlists on mobile
+                                // Search icon (hidden on Playlists tab)
+                                if (_currentTab != AppTab.playlists)
                                   IconButton(
                                     icon: const Icon(Icons.search),
                                     onPressed: () => setState(() => _isSearchingMobile = true),
@@ -816,31 +896,34 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                           setState(() {});
                         },
                         destinations: [
-                          NavigationDestination(
-                            icon: const Icon(Icons.library_music_outlined),
-                            selectedIcon: const Icon(Icons.library_music),
-                            label: AppLocalizations.of(context)!.projects,
-                          ),
-                          NavigationDestination(
-                            icon: const Icon(Icons.album_outlined),
-                            selectedIcon: const Icon(Icons.album),
-                            label: AppLocalizations.of(context)!.releasesTab,
-                          ),
-                          NavigationDestination(
-                            icon: const Icon(Icons.playlist_play),
-                            selectedIcon: const Icon(Icons.playlist_play),
-                            label: AppLocalizations.of(context)!.playlists,
-                          ),
-                          NavigationDestination(
-                            icon: const Icon(Icons.checklist_outlined),
-                            selectedIcon: const Icon(Icons.checklist),
-                            label: AppLocalizations.of(context)!.queueTab,
-                          ),
-                          NavigationDestination(
-                            icon: const Icon(Icons.bar_chart_outlined),
-                            selectedIcon: const Icon(Icons.bar_chart_rounded),
-                            label: AppLocalizations.of(context)!.statisticsTab,
-                          ),
+                          for (final tab in _currentVisibleTabs)
+                            switch (tab) {
+                              AppTab.projects => NavigationDestination(
+                                  icon: const Icon(Icons.library_music_outlined),
+                                  selectedIcon: const Icon(Icons.library_music),
+                                  label: AppLocalizations.of(context)!.projects,
+                                ),
+                              AppTab.releases => NavigationDestination(
+                                  icon: const Icon(Icons.album_outlined),
+                                  selectedIcon: const Icon(Icons.album),
+                                  label: AppLocalizations.of(context)!.releasesTab,
+                                ),
+                              AppTab.playlists => NavigationDestination(
+                                  icon: const Icon(Icons.playlist_play_outlined),
+                                  selectedIcon: const Icon(Icons.playlist_play),
+                                  label: AppLocalizations.of(context)!.playlists,
+                                ),
+                              AppTab.queue => NavigationDestination(
+                                  icon: const Icon(Icons.checklist_outlined),
+                                  selectedIcon: const Icon(Icons.checklist),
+                                  label: AppLocalizations.of(context)!.queueTab,
+                                ),
+                              AppTab.statistics => NavigationDestination(
+                                  icon: const Icon(Icons.bar_chart_outlined),
+                                  selectedIcon: const Icon(Icons.bar_chart_rounded),
+                                  label: AppLocalizations.of(context)!.statisticsTab,
+                                ),
+                            },
                         ],
                       )
                     : null,
@@ -878,6 +961,22 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                 const SizedBox(width: 8),
                 const LanguageSwitcher(),
                 const SizedBox(width: 8),
+                Tooltip(
+                  message: AppLocalizations.of(context)!.keyboardShortcuts,
+                  child: IconButton(
+                    icon: const Icon(Icons.keyboard_outlined, size: 18, color: Colors.white70),
+                    onPressed: () => showShortcutsHelpDialog(context),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Tooltip(
+                  message: AppLocalizations.of(context)!.customizeTabs,
+                  child: IconButton(
+                    icon: const Icon(Icons.tab_outlined, size: 18, color: Colors.white70),
+                    onPressed: () => showTabCustomizationDialog(context),
+                  ),
+                ),
+                const SizedBox(width: 4),
               ],
             ),
             
@@ -893,55 +992,35 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // Search bar on top for mobile (hidden on Playlists tab)
-                            if (_tabController.index != 2) TextField(
+                            if (_currentTab != AppTab.playlists) TextField(
                               focusNode: _searchFocusNode,
                               controller: _searchController,
                               decoration: InputDecoration(
-                                hintText: _tabController.index == 0
-                                    ? AppLocalizations.of(context)!.searchProjects
-                                    : _tabController.index == 1
-                                        ? AppLocalizations.of(context)!.searchReleases
-                                        : AppLocalizations.of(context)!.statsSearchProjects,
+                                hintText: switch (_currentTab) {
+                                  AppTab.projects  => AppLocalizations.of(context)!.searchProjects,
+                                  AppTab.releases  => AppLocalizations.of(context)!.searchReleases,
+                                  AppTab.queue     => AppLocalizations.of(context)!.queueSearchHint,
+                                  _                => AppLocalizations.of(context)!.statsSearchProjects,
+                                },
                                 isDense: true,
                                 border: const OutlineInputBorder(),
                                 prefixIcon: const Icon(Icons.search),
                                 suffixIcon: () {
-                                  final cs = _tabController.index == 0
-                                      ? ref.read(projectsSearchProvider)
-                                      : _tabController.index == 1
-                                          ? ref.read(releasesSearchProvider)
-                                          : ref.read(statisticsSearchProvider);
+                                  final cs = currentSearch;
                                   return cs.isNotEmpty
                                       ? IconButton(
                                           icon: const Icon(Icons.close),
-                                          onPressed: () {
-                                            _searchController.clear();
-                                            if (_tabController.index == 0) {
-                                              ref.read(projectsSearchProvider.notifier).clear();
-                                            } else if (_tabController.index == 1) {
-                                              ref.read(releasesSearchProvider.notifier).clear();
-                                            } else {
-                                              ref.read(statisticsSearchProvider.notifier).set('');
-                                            }
-                                          },
+                                          onPressed: _clearCurrentTabSearch,
                                         )
                                       : null;
                                 }(),
                               ),
-                              onChanged: (text) {
-                                if (_tabController.index == 0) {
-                                  ref.read(projectsSearchProvider.notifier).setSearchText(text);
-                                } else if (_tabController.index == 1) {
-                                  ref.read(releasesSearchProvider.notifier).setSearchText(text);
-                                } else {
-                                  ref.read(statisticsSearchProvider.notifier).set(text);
-                                }
-                              },
+                              onChanged: _updateCurrentTabSearch,
                             ),
-                            if (_tabController.index != 2)
+                            if (_currentTab != AppTab.playlists)
                               const SizedBox(height: 12),
                             // Filters and info row (only show on Projects tab)
-                            if (_tabController.index == 0) ...[
+                            if (_currentTab == AppTab.projects) ...[
                               Row(
                                 children: [
                                   Expanded(
@@ -1375,7 +1454,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                     ),
                   const SizedBox(width: 8),
                   // Search bar (desktop only — hidden on Playlists tab)
-                  if (!MobileUtils.isMobile() && (_tabController.index != 2 || !MobileUtils.isMobile()))
+                  if (!MobileUtils.isMobile())
                   Expanded(
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
@@ -1398,13 +1477,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                               focusNode: _searchFocusNode,
                               controller: _searchController,
                               decoration: InputDecoration(
-                                hintText: _tabController.index == 0
-                                    ? AppLocalizations.of(context)!.searchProjects
-                                    : _tabController.index == 1
-                                        ? AppLocalizations.of(context)!.searchReleases
-                                        : _tabController.index == 2  // Queue on desktop
-                                            ? AppLocalizations.of(context)!.queueSearchHint
-                                            : AppLocalizations.of(context)!.statsSearchProjects,
+                                hintText: switch (_currentTab) {
+                                  AppTab.projects   => AppLocalizations.of(context)!.searchProjects,
+                                  AppTab.releases   => AppLocalizations.of(context)!.searchReleases,
+                                  AppTab.queue      => AppLocalizations.of(context)!.queueSearchHint,
+                                  _                 => AppLocalizations.of(context)!.statsSearchProjects,
+                                },
                                 isDense: true,
                                 border: const OutlineInputBorder(),
                                 prefixIcon: const Icon(Icons.search),
@@ -1413,17 +1491,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                   onPressed: _collapseDesktopSearch,
                                 ),
                               ),
-                              onChanged: (text) {
-                                if (_tabController.index == 0) {
-                                  ref.read(projectsSearchProvider.notifier).setSearchText(text);
-                                } else if (_tabController.index == 1) {
-                                  ref.read(releasesSearchProvider.notifier).setSearchText(text);
-                                } else if (_tabController.index == 2) {  // Queue on desktop
-                                  ref.read(queueSearchProvider.notifier).set(text);
-                                } else {
-                                  ref.read(statisticsSearchProvider.notifier).set(text);
-                                }
-                              },
+                              onChanged: _updateCurrentTabSearch,
                             ),
                           ),
                         ),
@@ -1452,12 +1520,14 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                 builder: (context) => TabBar(
                   controller: _tabController,
                   tabs: [
-                    Tab(icon: Icon(Icons.library_music), text: AppLocalizations.of(context)!.projectsTab),
-                    Tab(icon: Icon(Icons.album), text: AppLocalizations.of(context)!.releasesTab),
-                    if (MobileUtils.isMobile())
-                      Tab(icon: Icon(Icons.playlist_play), text: AppLocalizations.of(context)!.playlists),
-                    Tab(icon: Icon(Icons.checklist), text: AppLocalizations.of(context)!.queueTab),
-                    Tab(icon: Icon(Icons.bar_chart_rounded), text: AppLocalizations.of(context)!.statisticsTab),
+                    for (final tab in _currentVisibleTabs)
+                      switch (tab) {
+                        AppTab.projects   => Tab(icon: const Icon(Icons.library_music), text: AppLocalizations.of(context)!.projectsTab),
+                        AppTab.releases   => Tab(icon: const Icon(Icons.album), text: AppLocalizations.of(context)!.releasesTab),
+                        AppTab.playlists  => Tab(icon: const Icon(Icons.playlist_play), text: AppLocalizations.of(context)!.playlists),
+                        AppTab.queue      => Tab(icon: const Icon(Icons.checklist), text: AppLocalizations.of(context)!.queueTab),
+                        AppTab.statistics => Tab(icon: const Icon(Icons.bar_chart_rounded), text: AppLocalizations.of(context)!.statisticsTab),
+                      },
                   ],
                   labelColor: Theme.of(context).textTheme.titleMedium?.color,
                   unselectedLabelColor: Theme.of(context).textTheme.bodySmall?.color,
@@ -1469,46 +1539,49 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  // Use mobile-friendly list view on mobile, table on desktop
-                  MobileUtils.isMobile()
-                      ? _MobileProjectsList(
-                          projects: projects,
-                          dateFormat: dateFormat,
-                          onCreateRelease: (selectedProjects) {
-                            _createReleaseFromSelectedProjects(context, ref, selectedProjects);
-                          },
-                          onHideProjects: (selectedProjectIds) async {
-                            await _hideProjects(context, ref, selectedProjectIds);
-                          },
-                          onUnhideProjects: (selectedProjectIds) async {
-                            await _unhideProjects(context, ref, selectedProjectIds);
-                          },
-                          showHidden: hiddenMode == 1 || hiddenMode == 2,
-                        )
-                      : _PlutoProjectsTableWithSelection(
-                          projects: projects,
-                          dateFormat: dateFormat,
-                          onCreateRelease: (selectedProjects) {
-                            _createReleaseFromSelectedProjects(context, ref, selectedProjects);
-                          },
-                          onHideProjects: (selectedProjectIds) async {
-                            await _hideProjects(context, ref, selectedProjectIds);
-                          },
-                          onUnhideProjects: (selectedProjectIds) async {
-                            await _unhideProjects(context, ref, selectedProjectIds);
-                          },
-                          showHidden: hiddenMode == 1 || hiddenMode == 2,
-                          onExtractingMetadataChanged: (extracting) {
-                            setState(() => _extractingMetadata = extracting);
-                          },
-                          isAnyOperation: isAnyOperation,
-                          visibleCount: visibleCount,
-                          hiddenCount: hiddenCount,
-                        ),
-                  const ReleasesTabPage(),
-                  if (MobileUtils.isMobile()) const PlaylistsPage(),
-                  const QueuePage(),
-                  const StatisticsPage(),
+                  for (final tab in _currentVisibleTabs)
+                    switch (tab) {
+                      AppTab.projects => MobileUtils.isMobile()
+                          ? _MobileProjectsList(
+                              projects: projects,
+                              dateFormat: dateFormat,
+                              onCreateRelease: (selectedProjects) {
+                                _createReleaseFromSelectedProjects(context, ref, selectedProjects);
+                              },
+                              onHideProjects: (selectedProjectIds) async {
+                                await _hideProjects(context, ref, selectedProjectIds);
+                              },
+                              onUnhideProjects: (selectedProjectIds) async {
+                                await _unhideProjects(context, ref, selectedProjectIds);
+                              },
+                              showHidden: hiddenMode == 1 || hiddenMode == 2,
+                            )
+                          : _PlutoProjectsTableWithSelection(
+                              key: _tableKey,
+                              projects: projects,
+                              dateFormat: dateFormat,
+                              onCreateRelease: (selectedProjects) {
+                                _createReleaseFromSelectedProjects(context, ref, selectedProjects);
+                              },
+                              onHideProjects: (selectedProjectIds) async {
+                                await _hideProjects(context, ref, selectedProjectIds);
+                              },
+                              onUnhideProjects: (selectedProjectIds) async {
+                                await _unhideProjects(context, ref, selectedProjectIds);
+                              },
+                              showHidden: hiddenMode == 1 || hiddenMode == 2,
+                              onExtractingMetadataChanged: (extracting) {
+                                setState(() => _extractingMetadata = extracting);
+                              },
+                              isAnyOperation: isAnyOperation,
+                              visibleCount: visibleCount,
+                              hiddenCount: hiddenCount,
+                            ),
+                      AppTab.releases   => const ReleasesTabPage(),
+                      AppTab.playlists  => const PlaylistsPage(),
+                      AppTab.queue      => const QueuePage(),
+                      AppTab.statistics => const StatisticsPage(),
+                    },
                 ],
               ),
             ),
@@ -1562,6 +1635,7 @@ class _PlutoProjectsTableWithSelection extends ConsumerStatefulWidget {
   final int hiddenCount;
 
   const _PlutoProjectsTableWithSelection({
+    super.key,
     required this.projects,
     required this.dateFormat,
     required this.onCreateRelease,
@@ -1579,6 +1653,10 @@ class _PlutoProjectsTableWithSelection extends ConsumerStatefulWidget {
 }
 
 class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjectsTableWithSelection> {
+  final _innerTableKey = GlobalKey<_PlutoProjectsTableState>();
+
+  void focusTable() => _innerTableKey.currentState?.focusTable();
+
   Set<String> get _selectedProjectIds => ref.watch(selectedProjectsProvider);
 
   void _clearSelection() {
@@ -1932,6 +2010,7 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
         ),
         Expanded(
           child: _PlutoProjectsTable(
+            key: _innerTableKey,
             projects: widget.projects,
             dateFormat: widget.dateFormat,
             selectedIds: _selectedProjectIds,
@@ -1946,6 +2025,7 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
                 _selectAll();
               }
             },
+            onExtractingMetadataChanged: widget.onExtractingMetadataChanged,
           ),
         ),
         // Selection action bar
@@ -2122,6 +2202,8 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
   }
 }
 
+enum _FileNotFoundAction { selectNew, remove }
+
 class _PlutoProjectsTable extends ConsumerStatefulWidget {
   final List<MusicProject> projects;
   final DateFormat dateFormat;
@@ -2131,7 +2213,9 @@ class _PlutoProjectsTable extends ConsumerStatefulWidget {
   final Function(List<String>) onUnhideProjects;
   final bool areAllSelected;
   final VoidCallback onToggleSelectAll;
+  final Function(bool) onExtractingMetadataChanged;
   const _PlutoProjectsTable({
+    super.key,
     required this.projects,
     required this.dateFormat,
     required this.selectedIds,
@@ -2140,6 +2224,7 @@ class _PlutoProjectsTable extends ConsumerStatefulWidget {
     required this.onUnhideProjects,
     required this.areAllSelected,
     required this.onToggleSelectAll,
+    required this.onExtractingMetadataChanged,
   });
 
   @override
@@ -2148,6 +2233,15 @@ class _PlutoProjectsTable extends ConsumerStatefulWidget {
 
 class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   TrinaGridStateManager? stateManager;
+
+  void focusTable() {
+    final sm = stateManager;
+    if (sm == null) return;
+    sm.gridFocusNode.requestFocus();
+    if (sm.currentRow == null && sm.rows.isNotEmpty) {
+      sm.setCurrentCell(sm.rows.first.cells.values.first, 0);
+    }
+  }
 
   // Drag-and-drop preview assignment
   double? _dragOverRowTop; // top Y of the highlighted row in local coords
@@ -2206,20 +2300,145 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         ? project.previewSongPath!
         : (project.previewSongAutoPath ?? MixdownDetectorService.findLatestMixdown(project, customFolder: customFolder)?.path);
 
-    if (effectivePath == null) return;
-
-    final file = File(effectivePath);
-    if (!await file.exists()) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
-        );
-      }
+    if (effectivePath == null) {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Row(
+            children: [
+              const Icon(Icons.audio_file_outlined, size: 20),
+              const SizedBox(width: 8),
+              Text(l10n.noPreviewSongTitle),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.noPreviewSongMessage),
+              if (!MobileUtils.isMobile()) ...[
+                const SizedBox(height: 12),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.drag_indicator, size: 16,
+                        color: Theme.of(ctx).colorScheme.primary),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        l10n.noPreviewSongDragHint,
+                        style: Theme.of(ctx).textTheme.bodySmall,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(l10n.selectPreviewSong),
+            ),
+          ],
+        ),
+      );
+      if (!mounted || confirmed != true) return;
+      final picked = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: const ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'],
+        dialogTitle: l10n.selectPreviewSong,
+      );
+      if (!mounted || picked == null || picked.files.single.path == null) return;
+      final newPath = picked.files.single.path!;
+      final repo = await ref.read(repositoryProvider.future);
+      await repo.updateProject(project.copyWith(
+        previewSongPath: newPath,
+        previewSongFileName: path.basename(newPath),
+      ));
+      if (!mounted) return;
+      await showDialog(
+        context: context,
+        builder: (dialogContext) => _PreviewSongDialog(
+          project: project.copyWith(
+            previewSongPath: newPath,
+            previewSongFileName: path.basename(newPath),
+          ),
+          onClose: () {},
+        ),
+      );
       return;
     }
 
-    // Check for a newer export in the same folder
-    final newer = MixdownDetectorService.findNewerFileInSameFolder(effectivePath);
+    final file = File(effectivePath);
+    if (!await file.exists()) {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      final action = await showDialog<_FileNotFoundAction>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(l10n.previewSongFileNotFound),
+          content: Text(l10n.previewSongFileNotFoundMessage),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+            OutlinedButton(
+              onPressed: () => Navigator.pop(ctx, _FileNotFoundAction.remove),
+              child: Text(l10n.removePreviewSong),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, _FileNotFoundAction.selectNew),
+              child: Text(l10n.selectNewFile),
+            ),
+          ],
+        ),
+      );
+      if (!mounted) return;
+      if (action == _FileNotFoundAction.remove) {
+        final repo = await ref.read(repositoryProvider.future);
+        final isAuto = project.previewSongPath?.isNotEmpty != true;
+        final updated = isAuto
+            ? project.copyWith(clearPreviewSongAutoPath: true)
+            : project.copyWith(clearPreviewSongPath: true, clearPreviewSongFileName: true);
+        await repo.updateProject(updated);
+        return;
+      } else if (action == _FileNotFoundAction.selectNew) {
+        final result = await FilePicker.platform.pickFiles(
+          type: FileType.custom,
+          allowedExtensions: const ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'],
+          dialogTitle: l10n.selectPreviewSong,
+        );
+        if (!mounted) return;
+        if (result != null && result.files.single.path != null) {
+          final newPath = result.files.single.path!;
+          final repo = await ref.read(repositoryProvider.future);
+          final isAuto = project.previewSongPath?.isNotEmpty != true;
+          final updated = isAuto
+              ? project.copyWith(previewSongAutoPath: newPath)
+              : project.copyWith(previewSongPath: newPath, previewSongFileName: path.basename(newPath));
+          await repo.updateProject(updated);
+          effectivePath = newPath;
+        } else {
+          return;
+        }
+      } else {
+        return;
+      }
+    }
+
+    // Only look for a newer export when using an auto-detected path.
+    // When previewSongPath is set (manual pick or Drive backup download), the
+    // file is intentionally chosen — skip the folder scan so we don't
+    // accidentally pick up another project's file from the same download folder.
+    final isAutoPath = project.previewSongPath?.isNotEmpty != true;
+    final newer = isAutoPath
+        ? MixdownDetectorService.findNewerFileInSameFolder(effectivePath)
+        : null;
     if (newer != null && mounted) {
       final l10n = AppLocalizations.of(context)!;
       final replace = await showDialog<bool>(
@@ -2238,19 +2457,19 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       if (replace == null) return;
       if (replace) {
         final repo = await ref.read(repositoryProvider.future);
-        final isAuto = project.previewSongPath?.isNotEmpty != true;
-        final updated = isAuto
-            ? project.copyWith(previewSongAutoPath: newer.path)
-            : project.copyWith(previewSongPath: newer.path, previewSongFileName: path.basename(newer.path));
+        final updated = project.copyWith(previewSongAutoPath: newer.path);
         await repo.updateProject(updated);
         effectivePath = newer.path;
       }
     }
 
     if (!mounted) return;
-    final playProject = project.previewSongPath?.isNotEmpty == true
-        ? project
-        : project.copyWith(previewSongPath: effectivePath);
+    // Always build playProject from effectivePath so the dialog shows the correct
+    // filename whether we replaced or not.
+    final playProject = project.copyWith(
+      previewSongPath: effectivePath,
+      previewSongFileName: path.basename(effectivePath),
+    );
 
     await showDialog(
       context: context,
@@ -2550,6 +2769,17 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             ],
           ),
         ),
+        if (File(project.filePath).existsSync() || Directory(project.filePath).existsSync())
+          PopupMenuItem<String>(
+            value: 'extractMetadata',
+            child: Row(
+              children: [
+                const Icon(Icons.search, size: 20),
+                const SizedBox(width: 8),
+                Text(l10n.extractMetadata),
+              ],
+            ),
+          ),
       ],
       color: Theme.of(context).cardColor,
     );
@@ -2593,6 +2823,25 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           break;
         case 'unhide':
           widget.onUnhideProjects([project.id]);
+          break;
+        case 'extractMetadata':
+          widget.onExtractingMetadataChanged(true);
+          try {
+            final repo = await ref.read(repositoryProvider.future);
+            await repo.extractFullMetadataForProject(project.id);
+            ref.invalidate(allProjectsStreamProvider);
+            if (mounted) {
+              final msg = l10n.metadataExtractedForProjects(1, '', '');
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+            }
+          } catch (e) {
+            if (mounted) {
+              final msg = '${l10n.error}: $e';
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+            }
+          } finally {
+            widget.onExtractingMetadataChanged(false);
+          }
           break;
       }
     }
@@ -3352,6 +3601,9 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         shortcut: TrinaGridShortcut(
           actions: {
             ...TrinaGridShortcut.defaultActions,
+            LogicalKeySet(LogicalKeyboardKey.enter): _TrinaProjectAction(_viewProjectDetails),
+            LogicalKeySet(LogicalKeyboardKey.numpadEnter): _TrinaProjectAction(_viewProjectDetails),
+            LogicalKeySet(LogicalKeyboardKey.shift, LogicalKeyboardKey.enter): _TrinaProjectAction(_viewProjectDetails),
             LogicalKeySet(LogicalKeyboardKey.keyP): _TrinaProjectAction(_playPreviewSong),
             LogicalKeySet(LogicalKeyboardKey.keyO): _TrinaProjectAction(_launchProject),
             LogicalKeySet(LogicalKeyboardKey.keyD): _TrinaProjectAction(_viewProjectDetails),
@@ -4507,20 +4759,145 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
         ? project.previewSongPath!
         : (project.previewSongAutoPath ?? MixdownDetectorService.findLatestMixdown(project, customFolder: customFolder)?.path);
 
-    if (effectivePath == null) return;
-
-    final file = File(effectivePath);
-    if (!await file.exists()) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
-        );
-      }
+    if (effectivePath == null) {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Row(
+            children: [
+              const Icon(Icons.audio_file_outlined, size: 20),
+              const SizedBox(width: 8),
+              Text(l10n.noPreviewSongTitle),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.noPreviewSongMessage),
+              if (!MobileUtils.isMobile()) ...[
+                const SizedBox(height: 12),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.drag_indicator, size: 16,
+                        color: Theme.of(ctx).colorScheme.primary),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        l10n.noPreviewSongDragHint,
+                        style: Theme.of(ctx).textTheme.bodySmall,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(l10n.selectPreviewSong),
+            ),
+          ],
+        ),
+      );
+      if (!mounted || confirmed != true) return;
+      final picked = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: const ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'],
+        dialogTitle: l10n.selectPreviewSong,
+      );
+      if (!mounted || picked == null || picked.files.single.path == null) return;
+      final newPath = picked.files.single.path!;
+      final repo = await ref.read(repositoryProvider.future);
+      await repo.updateProject(project.copyWith(
+        previewSongPath: newPath,
+        previewSongFileName: path.basename(newPath),
+      ));
+      if (!mounted) return;
+      await showDialog(
+        context: context,
+        builder: (dialogContext) => _PreviewSongDialog(
+          project: project.copyWith(
+            previewSongPath: newPath,
+            previewSongFileName: path.basename(newPath),
+          ),
+          onClose: () {},
+        ),
+      );
       return;
     }
 
-    // Check for a newer export in the same folder
-    final newer = MixdownDetectorService.findNewerFileInSameFolder(effectivePath);
+    final file = File(effectivePath);
+    if (!await file.exists()) {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      final action = await showDialog<_FileNotFoundAction>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(l10n.previewSongFileNotFound),
+          content: Text(l10n.previewSongFileNotFoundMessage),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+            OutlinedButton(
+              onPressed: () => Navigator.pop(ctx, _FileNotFoundAction.remove),
+              child: Text(l10n.removePreviewSong),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, _FileNotFoundAction.selectNew),
+              child: Text(l10n.selectNewFile),
+            ),
+          ],
+        ),
+      );
+      if (!mounted) return;
+      if (action == _FileNotFoundAction.remove) {
+        final repo = await ref.read(repositoryProvider.future);
+        final isAuto = project.previewSongPath?.isNotEmpty != true;
+        final updated = isAuto
+            ? project.copyWith(clearPreviewSongAutoPath: true)
+            : project.copyWith(clearPreviewSongPath: true, clearPreviewSongFileName: true);
+        await repo.updateProject(updated);
+        return;
+      } else if (action == _FileNotFoundAction.selectNew) {
+        final result = await FilePicker.platform.pickFiles(
+          type: FileType.custom,
+          allowedExtensions: const ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'],
+          dialogTitle: l10n.selectPreviewSong,
+        );
+        if (!mounted) return;
+        if (result != null && result.files.single.path != null) {
+          final newPath = result.files.single.path!;
+          final repo = await ref.read(repositoryProvider.future);
+          final isAuto = project.previewSongPath?.isNotEmpty != true;
+          final updated = isAuto
+              ? project.copyWith(previewSongAutoPath: newPath)
+              : project.copyWith(previewSongPath: newPath, previewSongFileName: path.basename(newPath));
+          await repo.updateProject(updated);
+          effectivePath = newPath;
+        } else {
+          return;
+        }
+      } else {
+        return;
+      }
+    }
+
+    // Only look for a newer export when using an auto-detected path.
+    // When previewSongPath is set (manual pick or Drive backup download), the
+    // file is intentionally chosen — skip the folder scan so we don't
+    // accidentally pick up another project's file from the same download folder.
+    final isAutoPath = project.previewSongPath?.isNotEmpty != true;
+    final newer = isAutoPath
+        ? MixdownDetectorService.findNewerFileInSameFolder(effectivePath)
+        : null;
     if (newer != null && mounted) {
       final l10n = AppLocalizations.of(context)!;
       final replace = await showDialog<bool>(
@@ -4539,19 +4916,19 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
       if (replace == null) return;
       if (replace) {
         final repo = await ref.read(repositoryProvider.future);
-        final isAuto = project.previewSongPath?.isNotEmpty != true;
-        final updated = isAuto
-            ? project.copyWith(previewSongAutoPath: newer.path)
-            : project.copyWith(previewSongPath: newer.path, previewSongFileName: path.basename(newer.path));
+        final updated = project.copyWith(previewSongAutoPath: newer.path);
         await repo.updateProject(updated);
         effectivePath = newer.path;
       }
     }
 
     if (!mounted) return;
-    final playProject = project.previewSongPath?.isNotEmpty == true
-        ? project
-        : project.copyWith(previewSongPath: effectivePath);
+    // Always build playProject from effectivePath so the dialog shows the correct
+    // filename whether we replaced or not.
+    final playProject = project.copyWith(
+      previewSongPath: effectivePath,
+      previewSongFileName: path.basename(effectivePath),
+    );
 
     await showDialog(
       context: context,
@@ -4869,18 +5246,18 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                   ),
                   trailing: _isSelectionMode
                       ? null
-                      : project.previewSongPath?.isNotEmpty == true || project.previewSongAutoPath != null
-                          ? IconButton(
-                              icon: const Icon(Icons.play_arrow),
-                              tooltip: project.previewSongAutoPath != null && project.previewSongPath?.isNotEmpty != true
-                                  ? '${AppLocalizations.of(context)!.playPreview}\n⚡ ${AppLocalizations.of(context)!.autoDetected}: ${path.basename(project.previewSongAutoPath!)}'
-                                  : AppLocalizations.of(context)!.playPreview,
-                              onPressed: () => _playPreviewSong(project),
-                              color: project.previewSongPath?.isNotEmpty == true
-                                  ? Colors.green
-                                  : Colors.amber,
-                            )
-                          : null,
+                      : IconButton(
+                          icon: const Icon(Icons.play_arrow),
+                          tooltip: project.previewSongAutoPath != null && project.previewSongPath?.isNotEmpty != true
+                              ? '${AppLocalizations.of(context)!.playPreview}\n⚡ ${AppLocalizations.of(context)!.autoDetected}: ${path.basename(project.previewSongAutoPath!)}'
+                              : AppLocalizations.of(context)!.playPreview,
+                          onPressed: () => _playPreviewSong(project),
+                          color: project.previewSongPath?.isNotEmpty == true
+                              ? Colors.green
+                              : project.previewSongAutoPath != null
+                                  ? Colors.amber
+                                  : Colors.grey,
+                        ),
                   onTap: () {
                     if (_isSelectionMode) {
                       // In selection mode, tap toggles selection

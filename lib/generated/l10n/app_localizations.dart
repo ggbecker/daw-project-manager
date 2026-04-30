@@ -1889,6 +1889,24 @@ abstract class AppLocalizations {
   /// **'Preview Song'**
   String get previewSong;
 
+  /// No description provided for @noPreviewSongTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No Preview Song'**
+  String get noPreviewSongTitle;
+
+  /// No description provided for @noPreviewSongMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This project has no preview song set. Select an audio file to load and play it.'**
+  String get noPreviewSongMessage;
+
+  /// No description provided for @noPreviewSongDragHint.
+  ///
+  /// In en, this message translates to:
+  /// **'You can also drag and drop an audio file directly onto the project row in the table.'**
+  String get noPreviewSongDragHint;
+
   /// No description provided for @previewSongRemoved.
   ///
   /// In en, this message translates to:
@@ -1906,6 +1924,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Preview song file not found'**
   String get previewSongFileNotFound;
+
+  /// No description provided for @previewSongFileNotFoundMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The preview song file could not be found on disk. Would you like to select a new file or remove the entry?'**
+  String get previewSongFileNotFoundMessage;
+
+  /// No description provided for @selectNewFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Select New File'**
+  String get selectNewFile;
 
   /// No description provided for @failedToPlayPreview.
   ///
@@ -3979,6 +4009,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 project path updated} other{{count} project paths updated}}'**
   String relocateFolderSuccess(int count);
+
+  /// No description provided for @customizeTabs.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize Tabs'**
+  String get customizeTabs;
+
+  /// No description provided for @customizeTabsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which tabs to show in the navigation bar. The Projects tab is always visible.'**
+  String get customizeTabsDescription;
+
+  /// No description provided for @keyboardShortcuts.
+  ///
+  /// In en, this message translates to:
+  /// **'Keyboard Shortcuts'**
+  String get keyboardShortcuts;
+
+  /// No description provided for @shortcutGroupGlobal.
+  ///
+  /// In en, this message translates to:
+  /// **'Global'**
+  String get shortcutGroupGlobal;
+
+  /// No description provided for @shortcutGroupProjectsTable.
+  ///
+  /// In en, this message translates to:
+  /// **'Projects Table (table must be focused)'**
+  String get shortcutGroupProjectsTable;
+
+  /// No description provided for @shortcutGroupReleasesTable.
+  ///
+  /// In en, this message translates to:
+  /// **'Releases Table (table must be focused)'**
+  String get shortcutGroupReleasesTable;
+
+  /// No description provided for @shortcutGroupNavigation.
+  ///
+  /// In en, this message translates to:
+  /// **'Navigation'**
+  String get shortcutGroupNavigation;
+
+  /// No description provided for @shortcutFocusSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus search bar'**
+  String get shortcutFocusSearch;
+
+  /// No description provided for @shortcutRescan.
+  ///
+  /// In en, this message translates to:
+  /// **'Rescan project folders'**
+  String get shortcutRescan;
+
+  /// No description provided for @shortcutFocusTable.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus projects table'**
+  String get shortcutFocusTable;
+
+  /// No description provided for @shortcutPlayPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Play / pause preview song'**
+  String get shortcutPlayPause;
+
+  /// No description provided for @shortcutOpenInDaw.
+  ///
+  /// In en, this message translates to:
+  /// **'Open project in DAW'**
+  String get shortcutOpenInDaw;
+
+  /// No description provided for @shortcutViewDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'View project details'**
+  String get shortcutViewDetails;
+
+  /// No description provided for @shortcutOpenFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Open project folder'**
+  String get shortcutOpenFolder;
+
+  /// No description provided for @shortcutNavigateRows.
+  ///
+  /// In en, this message translates to:
+  /// **'Navigate rows'**
+  String get shortcutNavigateRows;
+
+  /// No description provided for @shortcutEditCell.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit selected cell'**
+  String get shortcutEditCell;
+
+  /// No description provided for @shortcutViewRelease.
+  ///
+  /// In en, this message translates to:
+  /// **'View release details'**
+  String get shortcutViewRelease;
+
+  /// No description provided for @shortcutGoBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Go back'**
+  String get shortcutGoBack;
 
   /// No description provided for @newerExportFound.
   ///

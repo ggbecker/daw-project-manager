@@ -1076,6 +1076,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get previewSong => 'Preview Song';
 
   @override
+  String get noPreviewSongTitle => 'No Preview Song';
+
+  @override
+  String get noPreviewSongMessage =>
+      'This project has no preview song set. Select an audio file to load and play it.';
+
+  @override
+  String get noPreviewSongDragHint =>
+      'You can also drag and drop an audio file directly onto the project row in the table.';
+
+  @override
   String get previewSongRemoved => 'Preview song removed';
 
   @override
@@ -1083,6 +1094,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get previewSongFileNotFound => 'Preview song file not found';
+
+  @override
+  String get previewSongFileNotFoundMessage =>
+      'The preview song file could not be found on disk. Would you like to select a new file or remove the entry?';
+
+  @override
+  String get selectNewFile => 'Select New File';
 
   @override
   String failedToPlayPreview(String error) {
@@ -2361,6 +2379,63 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get customizeTabs => 'Customize Tabs';
+
+  @override
+  String get customizeTabsDescription =>
+      'Choose which tabs to show in the navigation bar. The Projects tab is always visible.';
+
+  @override
+  String get keyboardShortcuts => 'Keyboard Shortcuts';
+
+  @override
+  String get shortcutGroupGlobal => 'Global';
+
+  @override
+  String get shortcutGroupProjectsTable =>
+      'Projects Table (table must be focused)';
+
+  @override
+  String get shortcutGroupReleasesTable =>
+      'Releases Table (table must be focused)';
+
+  @override
+  String get shortcutGroupNavigation => 'Navigation';
+
+  @override
+  String get shortcutFocusSearch => 'Focus search bar';
+
+  @override
+  String get shortcutRescan => 'Rescan project folders';
+
+  @override
+  String get shortcutFocusTable => 'Focus projects table';
+
+  @override
+  String get shortcutPlayPause => 'Play / pause preview song';
+
+  @override
+  String get shortcutOpenInDaw => 'Open project in DAW';
+
+  @override
+  String get shortcutViewDetails => 'View project details';
+
+  @override
+  String get shortcutOpenFolder => 'Open project folder';
+
+  @override
+  String get shortcutNavigateRows => 'Navigate rows';
+
+  @override
+  String get shortcutEditCell => 'Edit selected cell';
+
+  @override
+  String get shortcutViewRelease => 'View release details';
+
+  @override
+  String get shortcutGoBack => 'Go back';
 
   @override
   String get newerExportFound => 'Newer Export Found';

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../generated/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -12,6 +13,8 @@ import '../../providers/theme_provider.dart';
 import '../../main.dart' show navigatorKey;
 import '../dashboard_page.dart' show appVersion;
 import 'language_switcher.dart';
+import 'shortcuts_help_dialog.dart';
+import 'tab_customization_dialog.dart';
 
 /// Wraps the app with a native macOS menu bar (PlatformMenuBar).
 /// On non-macOS platforms it is a transparent pass-through.
@@ -26,6 +29,18 @@ class MacOSMenuBar extends ConsumerWidget {
       context: context,
       builder: (ctx) => const _AboutDialog(),
     );
+  }
+
+  void _showShortcutsDialog() {
+    final context = navigatorKey.currentContext;
+    if (context == null) return;
+    showShortcutsHelpDialog(context);
+  }
+
+  void _showCustomizeTabsDialog() {
+    final context = navigatorKey.currentContext;
+    if (context == null) return;
+    showTabCustomizationDialog(context);
   }
 
   @override
@@ -51,6 +66,23 @@ class MacOSMenuBar extends ConsumerWidget {
                 PlatformMenuItem(
                   label: l10n.menuAbout,
                   onSelected: _showAboutDialog,
+                ),
+              ],
+            ),
+            PlatformMenuItemGroup(
+              members: [
+                PlatformMenuItem(
+                  label: l10n.customizeTabs,
+                  onSelected: _showCustomizeTabsDialog,
+                ),
+                PlatformMenuItem(
+                  label: l10n.keyboardShortcuts,
+                  shortcut: const SingleActivator(
+                    LogicalKeyboardKey.slash,
+                    meta: true,
+                    shift: true,
+                  ),
+                  onSelected: _showShortcutsDialog,
                 ),
               ],
             ),

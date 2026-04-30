@@ -1330,6 +1330,8 @@ class _TogglePlayPauseIntent extends Intent {
   const _TogglePlayPauseIntent();
 }
 
+enum _FileNotFoundAction { selectNew, remove }
+
 class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
   AudioPlayer _audioPlayer = AudioPlayer();
   AudioPlayer? _warmPlayer; // pre-loaded with the alternate source (mono↔stereo)
@@ -1357,10 +1359,15 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
   // Auto-detected mixdown path (used when no preview song is set manually)
   String? _autoDetectedPath;
 
+  // Set when the user accepts a "Replace & Play" suggestion; overrides everything
+  // until the widget rebuilds with updated project data from the stream.
+  String? _replacedPreviewPath;
+
   String? get _effectivePreviewPath =>
-      widget.project.previewSongPath?.isNotEmpty == true
+      _replacedPreviewPath ??
+      (widget.project.previewSongPath?.isNotEmpty == true
           ? widget.project.previewSongPath
-          : (_autoDetectedPath ?? widget.project.previewSongAutoPath);
+          : (_autoDetectedPath ?? widget.project.previewSongAutoPath));
 
   @override
   void initState() {
@@ -1430,6 +1437,12 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.project.previewSongPath != widget.project.previewSongPath ||
         oldWidget.project.id != widget.project.id) {
+      // If the stream delivered the path we replaced to, clear the local override.
+      if (_replacedPreviewPath != null &&
+          (widget.project.previewSongPath == _replacedPreviewPath ||
+           widget.project.previewSongAutoPath == _replacedPreviewPath)) {
+        _replacedPreviewPath = null;
+      }
       _audioPlayer.stop();
       _levelTimer?.cancel();
       setState(() {
@@ -1669,20 +1682,54 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
           // Local file - check if it exists
           final file = File(_effectivePreviewPath!);
           if (!await file.exists()) {
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    AppLocalizations.of(context)!.previewSongFileNotFound,
+            if (!mounted) return;
+            final l10n = AppLocalizations.of(context)!;
+            final action = await showDialog<_FileNotFoundAction>(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                title: Text(l10n.previewSongFileNotFound),
+                content: Text(l10n.previewSongFileNotFoundMessage),
+                actions: [
+                  TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+                  OutlinedButton(
+                    onPressed: () => Navigator.pop(ctx, _FileNotFoundAction.remove),
+                    child: Text(l10n.removePreviewSong),
                   ),
-                ),
+                  FilledButton(
+                    onPressed: () => Navigator.pop(ctx, _FileNotFoundAction.selectNew),
+                    child: Text(l10n.selectNewFile),
+                  ),
+                ],
+              ),
+            );
+            if (!mounted) return;
+            if (action == _FileNotFoundAction.remove) {
+              await widget.onSongRemoved();
+            } else if (action == _FileNotFoundAction.selectNew) {
+              final result = await FilePicker.platform.pickFiles(
+                type: FileType.custom,
+                allowedExtensions: const ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'],
+                dialogTitle: l10n.selectPreviewSong,
               );
+              if (!mounted) return;
+              if (result != null && result.files.single.path != null) {
+                final newPath = result.files.single.path!;
+                setState(() => _replacedPreviewPath = newPath);
+                await widget.onSongChanged(newPath);
+                await _audioPlayer.play(DeviceFileSource(newPath));
+              }
             }
             return;
           }
           
-          // Check for a newer export in the same folder
-          final newer = MixdownDetectorService.findNewerFileInSameFolder(_effectivePreviewPath!);
+          // Only look for a newer export when using an auto-detected path.
+          // When previewSongPath is set (manual pick or Drive backup download),
+          // skip the folder scan to avoid picking up another project's file
+          // from the same download folder.
+          final isAutoPath = widget.project.previewSongPath?.isNotEmpty != true;
+          final newer = isAutoPath
+              ? MixdownDetectorService.findNewerFileInSameFolder(_effectivePreviewPath!)
+              : null;
           if (newer != null && mounted) {
             final l10n = AppLocalizations.of(context)!;
             final replace = await showDialog<bool>(
@@ -1700,11 +1747,10 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
             if (!mounted) return;
             if (replace == null) return;
             if (replace) {
-              // Update local state so _effectivePreviewPath picks up the new file immediately
-              if (widget.project.previewSongPath?.isNotEmpty != true) {
-                setState(() => _autoDetectedPath = newer.path);
-              }
-              // Persist in background; also triggers widget rebuild with new path
+              // Override _effectivePreviewPath immediately so the filename display
+              // updates before the stream rebuild arrives (covers both manual and auto).
+              setState(() => _replacedPreviewPath = newer.path);
+              // Persist; triggers stream rebuild which will make _replacedPreviewPath redundant.
               widget.onSongChanged(newer.path);
               await _audioPlayer.play(DeviceFileSource(newer.path));
               return;

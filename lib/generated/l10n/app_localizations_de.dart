@@ -1083,6 +1083,17 @@ class AppLocalizationsDe extends AppLocalizations {
   String get previewSong => 'Vorschau-Song';
 
   @override
+  String get noPreviewSongTitle => 'Kein Vorschau-Song';
+
+  @override
+  String get noPreviewSongMessage =>
+      'Für dieses Projekt ist kein Vorschau-Song festgelegt. Wähle eine Audiodatei aus, um sie zu laden und abzuspielen.';
+
+  @override
+  String get noPreviewSongDragHint =>
+      'Du kannst auch eine Audiodatei direkt auf die Projektzeile in der Tabelle ziehen.';
+
+  @override
   String get previewSongRemoved => 'Vorschau-Song entfernt';
 
   @override
@@ -1090,6 +1101,13 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get previewSongFileNotFound => 'Vorschau-Song-Datei nicht gefunden';
+
+  @override
+  String get previewSongFileNotFoundMessage =>
+      'Die Vorschau-Songdatei wurde nicht auf dem Laufwerk gefunden. Möchten Sie eine neue Datei auswählen oder den Eintrag entfernen?';
+
+  @override
+  String get selectNewFile => 'Neue Datei auswählen';
 
   @override
   String failedToPlayPreview(String error) {
@@ -2376,6 +2394,63 @@ class AppLocalizationsDe extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get customizeTabs => 'Tabs anpassen';
+
+  @override
+  String get customizeTabsDescription =>
+      'Waehle, welche Tabs in der Navigationsleiste angezeigt werden sollen. Der Tab Projekte ist immer sichtbar.';
+
+  @override
+  String get keyboardShortcuts => 'Tastenkürzel';
+
+  @override
+  String get shortcutGroupGlobal => 'Global';
+
+  @override
+  String get shortcutGroupProjectsTable =>
+      'Projekttabelle (Tabelle muss fokussiert sein)';
+
+  @override
+  String get shortcutGroupReleasesTable =>
+      'Releases-Tabelle (Tabelle muss fokussiert sein)';
+
+  @override
+  String get shortcutGroupNavigation => 'Navigation';
+
+  @override
+  String get shortcutFocusSearch => 'Suchleiste fokussieren';
+
+  @override
+  String get shortcutRescan => 'Projektordner neu scannen';
+
+  @override
+  String get shortcutFocusTable => 'Projekttabelle fokussieren';
+
+  @override
+  String get shortcutPlayPause => 'Vorschau abspielen / pausieren';
+
+  @override
+  String get shortcutOpenInDaw => 'Projekt in DAW öffnen';
+
+  @override
+  String get shortcutViewDetails => 'Projektdetails anzeigen';
+
+  @override
+  String get shortcutOpenFolder => 'Projektordner öffnen';
+
+  @override
+  String get shortcutNavigateRows => 'Zeilen navigieren';
+
+  @override
+  String get shortcutEditCell => 'Ausgewählte Zelle bearbeiten';
+
+  @override
+  String get shortcutViewRelease => 'Release-Details anzeigen';
+
+  @override
+  String get shortcutGoBack => 'Zurück';
 
   @override
   String get newerExportFound => 'Neuerer Export gefunden';

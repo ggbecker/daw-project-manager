@@ -1077,6 +1077,17 @@ class AppLocalizationsRu extends AppLocalizations {
   String get previewSong => 'Превью Трека';
 
   @override
+  String get noPreviewSongTitle => 'Нет песни для предпрослушивания';
+
+  @override
+  String get noPreviewSongMessage =>
+      'Для этого проекта не задана песня для предпрослушивания. Выберите аудиофайл, чтобы загрузить и воспроизвести его.';
+
+  @override
+  String get noPreviewSongDragHint =>
+      'Вы также можете перетащить аудиофайл прямо на строку проекта в таблице.';
+
+  @override
   String get previewSongRemoved => 'Превью трека удалено';
 
   @override
@@ -1084,6 +1095,13 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get previewSongFileNotFound => 'Файл превью трека не найден';
+
+  @override
+  String get previewSongFileNotFoundMessage =>
+      'Файл песни для предварительного прослушивания не найден на диске. Хотите выбрать новый файл или удалить запись?';
+
+  @override
+  String get selectNewFile => 'Выбрать новый файл';
 
   @override
   String failedToPlayPreview(String error) {
@@ -2361,6 +2379,63 @@ class AppLocalizationsRu extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get customizeTabs => 'Настроить вкладки';
+
+  @override
+  String get customizeTabsDescription =>
+      'Выберите, какие вкладки отображать на панели навигации. Вкладка «Проекты» всегда видима.';
+
+  @override
+  String get keyboardShortcuts => 'Сочетания клавиш';
+
+  @override
+  String get shortcutGroupGlobal => 'Глобальные';
+
+  @override
+  String get shortcutGroupProjectsTable =>
+      'Таблица проектов (таблица должна быть в фокусе)';
+
+  @override
+  String get shortcutGroupReleasesTable =>
+      'Таблица релизов (таблица должна быть в фокусе)';
+
+  @override
+  String get shortcutGroupNavigation => 'Навигация';
+
+  @override
+  String get shortcutFocusSearch => 'Перейти к строке поиска';
+
+  @override
+  String get shortcutRescan => 'Повторно сканировать папки';
+
+  @override
+  String get shortcutFocusTable => 'Перейти к таблице проектов';
+
+  @override
+  String get shortcutPlayPause => 'Воспроизвести / пауза превью';
+
+  @override
+  String get shortcutOpenInDaw => 'Открыть проект в DAW';
+
+  @override
+  String get shortcutViewDetails => 'Просмотр деталей проекта';
+
+  @override
+  String get shortcutOpenFolder => 'Открыть папку проекта';
+
+  @override
+  String get shortcutNavigateRows => 'Навигация по строкам';
+
+  @override
+  String get shortcutEditCell => 'Редактировать выбранную ячейку';
+
+  @override
+  String get shortcutViewRelease => 'Просмотр деталей релиза';
+
+  @override
+  String get shortcutGoBack => 'Назад';
 
   @override
   String get newerExportFound => 'Найден более новый экспорт';
