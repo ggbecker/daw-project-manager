@@ -94,7 +94,7 @@ class DashboardPage extends ConsumerStatefulWidget {
   ConsumerState<DashboardPage> createState() => _DashboardPageState();
 }
 
-class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTickerProviderStateMixin {
+class _DashboardPageState extends ConsumerState<DashboardPage> with TickerProviderStateMixin {
   bool _scanning = false;
   bool _extractingMetadata = false;
   bool _isSearchingMobile = false;
