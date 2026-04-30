@@ -1637,5 +1637,9 @@
   "noPreviewSongMessage": "Для этого проекта не задана песня для предпрослушивания. Выберите аудиофайл, чтобы загрузить и воспроизвести его.",
   "@noPreviewSongMessage": {},
   "noPreviewSongDragHint": "Вы также можете перетащить аудиофайл прямо на строку проекта в таблице.",
-  "@noPreviewSongDragHint": {}
+  "@noPreviewSongDragHint": {},
+  "customizeTabs": "Настроить вкладки",
+  "@customizeTabs": {},
+  "customizeTabsDescription": "Выберите, какие вкладки отображать на панели навигации. Вкладка «Проекты» всегда видима.",
+  "@customizeTabsDescription": {}
 }

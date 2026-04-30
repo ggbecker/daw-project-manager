@@ -2381,6 +2381,13 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get customizeTabs => 'Настроить вкладки';
+
+  @override
+  String get customizeTabsDescription =>
+      'Выберите, какие вкладки отображать на панели навигации. Вкладка «Проекты» всегда видима.';
+
+  @override
   String get keyboardShortcuts => 'Сочетания клавиш';
 
   @override

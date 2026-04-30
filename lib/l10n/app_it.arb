@@ -1637,5 +1637,9 @@
   "noPreviewSongMessage": "Questo progetto non ha una canzone di anteprima impostata. Seleziona un file audio per caricarlo e riprodurlo.",
   "@noPreviewSongMessage": {},
   "noPreviewSongDragHint": "Puoi anche trascinare e rilasciare un file audio direttamente sulla riga del progetto nella tabella.",
-  "@noPreviewSongDragHint": {}
+  "@noPreviewSongDragHint": {},
+  "customizeTabs": "Personalizza le schede",
+  "@customizeTabs": {},
+  "customizeTabsDescription": "Scegli quali schede mostrare nella barra di navigazione. La scheda Progetti e sempre visibile.",
+  "@customizeTabsDescription": {}
 }

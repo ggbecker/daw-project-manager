@@ -4010,6 +4010,18 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 project path updated} other{{count} project paths updated}}'**
   String relocateFolderSuccess(int count);
 
+  /// No description provided for @customizeTabs.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize Tabs'**
+  String get customizeTabs;
+
+  /// No description provided for @customizeTabsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which tabs to show in the navigation bar. The Projects tab is always visible.'**
+  String get customizeTabsDescription;
+
   /// No description provided for @keyboardShortcuts.
   ///
   /// In en, this message translates to:

@@ -2382,6 +2382,13 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get customizeTabs => 'Personalizar abas';
+
+  @override
+  String get customizeTabsDescription =>
+      'Escolha quais abas exibir na barra de navegacao. A aba Projetos e sempre visivel.';
+
+  @override
   String get keyboardShortcuts => 'Atalhos de teclado';
 
   @override

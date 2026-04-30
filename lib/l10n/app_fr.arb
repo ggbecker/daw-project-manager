@@ -1637,5 +1637,9 @@
   "noPreviewSongMessage": "Ce projet n'a pas de chanson d'aperçu définie. Sélectionnez un fichier audio pour le charger et le lire.",
   "@noPreviewSongMessage": {},
   "noPreviewSongDragHint": "Vous pouvez également glisser-déposer un fichier audio directement sur la ligne du projet dans le tableau.",
-  "@noPreviewSongDragHint": {}
+  "@noPreviewSongDragHint": {},
+  "customizeTabs": "Personnaliser les onglets",
+  "@customizeTabs": {},
+  "customizeTabsDescription": "Choisissez les onglets a afficher dans la barre de navigation. L'onglet Projets est toujours visible.",
+  "@customizeTabsDescription": {}
 }

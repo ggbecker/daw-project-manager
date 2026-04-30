@@ -5,7 +5,7 @@ import 'package:trina_grid/trina_grid.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
+import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb, listEquals;
 import 'package:flutter/services.dart'; 
 import 'package:path/path.dart' as path; // 🚨 NOVO IMPORT
 import 'package:url_launcher/url_launcher.dart';
@@ -99,7 +99,43 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
   bool _isSearchingMobile = false;
   bool _isSearchingDesktop = false;
   late TabController _tabController;
-  
+
+  // Ordered list of currently visible tabs (derived from provider, updated via ref.listen)
+  List<AppTab> _currentVisibleTabs = [
+    AppTab.projects, AppTab.releases, AppTab.queue, AppTab.statistics,
+  ];
+
+  // The tab the user is currently on, by identity (not index).
+  AppTab get _currentTab {
+    final idx = _tabController.index;
+    if (idx < 0 || idx >= _currentVisibleTabs.length) return AppTab.projects;
+    return _currentVisibleTabs[idx];
+  }
+
+  // Compute the ordered list from the provider's Set, filtered for the current platform.
+  List<AppTab> _orderedFrom(Set<AppTab> visible) =>
+      VisibleTabsNotifier.canonicalOrder
+          .where((t) => visible.contains(t))
+          .where((t) => MobileUtils.isMobile() || t != AppTab.playlists)
+          .toList();
+
+  // Recreate the TabController when the visible tab set changes.
+  void _updateVisibleTabs(Set<AppTab> newVisible) {
+    final ordered = _orderedFrom(newVisible);
+    if (listEquals(_currentVisibleTabs, ordered)) return;
+    final previousTab = _currentTab;
+    _tabController.removeListener(_onTabChanged);
+    _tabController.dispose();
+    _currentVisibleTabs = ordered;
+    final newIndex = ordered.contains(previousTab) ? ordered.indexOf(previousTab) : 0;
+    _tabController = TabController(
+      length: ordered.length,
+      vsync: this,
+      initialIndex: newIndex,
+    );
+    _tabController.addListener(_onTabChanged);
+  }
+
   // 1. FocusNode para a barra de pesquisa
   final FocusNode _searchFocusNode = FocusNode();
 
@@ -119,9 +155,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
   @override
   void initState() {
     super.initState();
-    // Mobile has 5 tabs (Projects, Releases, Playlists, Tasks, Statistics), desktop has 4
-    final tabCount = MobileUtils.isMobile() ? 5 : 4;
-    _tabController = TabController(length: tabCount, vsync: this);
+    if (MobileUtils.isMobile()) {
+      _currentVisibleTabs = [...VisibleTabsNotifier.canonicalOrder];
+    }
+    _tabController = TabController(length: _currentVisibleTabs.length, vsync: this);
     _searchController = TextEditingController();
     
     // Add listener to TabController to rebuild when tab changes (for search placeholder update)
@@ -160,69 +197,53 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
 
   void _onTabChanged() {
     if (!_tabController.indexIsChanging && mounted) {
-      // Sync search controller with the appropriate tab's search state
-      final currentTabIndex = _tabController.index;
-      final queueTabIndex = MobileUtils.isMobile() ? 3 : 2;
-      final statsTabIndex = MobileUtils.isMobile() ? 4 : 3;
-      if (currentTabIndex == 0) {
-        // Projects tab
-        final projectsSearch = ref.read(projectsSearchProvider);
-        if (_searchController.text != projectsSearch) {
-          _searchController.text = projectsSearch;
-        }
-      } else if (currentTabIndex == 1) {
-        // Releases tab
-        final releasesSearch = ref.read(releasesSearchProvider);
-        if (_searchController.text != releasesSearch) {
-          _searchController.text = releasesSearch;
-        }
-      } else if (currentTabIndex == queueTabIndex) {
-        // Tasks tab
-        final queueSearch = ref.read(queueSearchProvider);
-        if (_searchController.text != queueSearch) {
-          _searchController.text = queueSearch;
-        }
-      } else if (currentTabIndex == statsTabIndex) {
-        // Statistics tab
-        final statsSearch = ref.read(statisticsSearchProvider);
-        if (_searchController.text != statsSearch) {
-          _searchController.text = statsSearch;
-        }
-      } else {
-        // Playlists tab — clear search bar
-        _searchController.clear();
+      switch (_currentTab) {
+        case AppTab.projects:
+          final projectsSearch = ref.read(projectsSearchProvider);
+          if (_searchController.text != projectsSearch) _searchController.text = projectsSearch;
+        case AppTab.releases:
+          final releasesSearch = ref.read(releasesSearchProvider);
+          if (_searchController.text != releasesSearch) _searchController.text = releasesSearch;
+        case AppTab.queue:
+          final queueSearch = ref.read(queueSearchProvider);
+          if (_searchController.text != queueSearch) _searchController.text = queueSearch;
+        case AppTab.statistics:
+          final statsSearch = ref.read(statisticsSearchProvider);
+          if (_searchController.text != statsSearch) _searchController.text = statsSearch;
+        case AppTab.playlists:
+          _searchController.clear();
       }
-      if (MobileUtils.isMobile() && _isSearchingMobile) {
-        _isSearchingMobile = false;
-      }
-      setState(() {}); // Rebuild to update search placeholder when tab animation completes
+      if (MobileUtils.isMobile() && _isSearchingMobile) _isSearchingMobile = false;
+      setState(() {});
     }
   }
 
   void _clearCurrentTabSearch() {
     _searchController.clear();
-    final queueTabIndex = MobileUtils.isMobile() ? 3 : 2;
-    if (_tabController.index == 0) {
-      ref.read(projectsSearchProvider.notifier).clear();
-    } else if (_tabController.index == 1) {
-      ref.read(releasesSearchProvider.notifier).clear();
-    } else if (_tabController.index == queueTabIndex) {
-      ref.read(queueSearchProvider.notifier).clear();
-    } else {
-      ref.read(statisticsSearchProvider.notifier).set('');
+    switch (_currentTab) {
+      case AppTab.projects:
+        ref.read(projectsSearchProvider.notifier).clear();
+      case AppTab.releases:
+        ref.read(releasesSearchProvider.notifier).clear();
+      case AppTab.queue:
+        ref.read(queueSearchProvider.notifier).clear();
+      case AppTab.statistics:
+      case AppTab.playlists:
+        ref.read(statisticsSearchProvider.notifier).set('');
     }
   }
 
   void _updateCurrentTabSearch(String text) {
-    final queueTabIndex = MobileUtils.isMobile() ? 3 : 2;
-    if (_tabController.index == 0) {
-      ref.read(projectsSearchProvider.notifier).setSearchText(text);
-    } else if (_tabController.index == 1) {
-      ref.read(releasesSearchProvider.notifier).setSearchText(text);
-    } else if (_tabController.index == queueTabIndex) {
-      ref.read(queueSearchProvider.notifier).set(text);
-    } else {
-      ref.read(statisticsSearchProvider.notifier).set(text);
+    switch (_currentTab) {
+      case AppTab.projects:
+        ref.read(projectsSearchProvider.notifier).setSearchText(text);
+      case AppTab.releases:
+        ref.read(releasesSearchProvider.notifier).setSearchText(text);
+      case AppTab.queue:
+        ref.read(queueSearchProvider.notifier).set(text);
+      case AppTab.statistics:
+      case AppTab.playlists:
+        ref.read(statisticsSearchProvider.notifier).set(text);
     }
   }
 
@@ -586,18 +607,19 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
     final dateFormat = ref.watch(dateFormatProvider);
     final repoAsync = ref.watch(repositoryProvider);
     final roots = ref.watch(scanRootsProvider);
+    // Keep visible tabs in sync with the provider.
+    ref.listen(visibleTabsProvider, (_, next) {
+      if (mounted) setState(() => _updateVisibleTabs(next));
+    });
+
     // Get current search text based on active tab
-    final queueTabIndex = MobileUtils.isMobile() ? 3 : 2;
-    final statsTabIndex = MobileUtils.isMobile() ? 4 : 3;
-    final currentSearch = _tabController.index == 0
-        ? ref.watch(projectsSearchProvider)
-        : _tabController.index == 1
-            ? ref.watch(releasesSearchProvider)
-            : _tabController.index == queueTabIndex
-                ? ref.watch(queueSearchProvider)
-                : _tabController.index == statsTabIndex
-                    ? ref.watch(statisticsSearchProvider)
-                    : '';
+    final currentSearch = switch (_currentTab) {
+      AppTab.projects   => ref.watch(projectsSearchProvider),
+      AppTab.releases   => ref.watch(releasesSearchProvider),
+      AppTab.queue      => ref.watch(queueSearchProvider),
+      AppTab.statistics => ref.watch(statisticsSearchProvider),
+      AppTab.playlists  => '',
+    };
     final projects = ref.watch(projectsProvider);
     // Keep macOS dock menu (and Windows jump list) in sync with latest projects
     ref.listen(projectsProvider, (_, next) => DockMenuService.updateRecentProjects(next));
@@ -725,13 +747,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                 autofocus: true,
                                 controller: _searchController,
                                 decoration: InputDecoration(
-                                  hintText: _tabController.index == 0
-                                      ? AppLocalizations.of(context)!.searchProjects
-                                      : _tabController.index == 1
-                                          ? AppLocalizations.of(context)!.searchReleases
-                                          : _tabController.index == 3
-                                              ? AppLocalizations.of(context)!.queueSearchHint
-                                              : AppLocalizations.of(context)!.statsSearchProjects,
+                                  hintText: switch (_currentTab) {
+                                    AppTab.projects   => AppLocalizations.of(context)!.searchProjects,
+                                    AppTab.releases   => AppLocalizations.of(context)!.searchReleases,
+                                    AppTab.queue      => AppLocalizations.of(context)!.queueSearchHint,
+                                    _                 => AppLocalizations.of(context)!.statsSearchProjects,
+                                  },
                                   border: InputBorder.none,
                                   hintStyle: const TextStyle(color: Colors.white54),
                                 ),
@@ -750,8 +771,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                   ),
                               ]
                             : [
-                                // Search icon (only on searchable tabs — not Playlists tab index 2)
-                                if (_tabController.index != 2)  // 2 = Playlists on mobile
+                                // Search icon (hidden on Playlists tab)
+                                if (_currentTab != AppTab.playlists)
                                   IconButton(
                                     icon: const Icon(Icons.search),
                                     onPressed: () => setState(() => _isSearchingMobile = true),
@@ -849,31 +870,34 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                           setState(() {});
                         },
                         destinations: [
-                          NavigationDestination(
-                            icon: const Icon(Icons.library_music_outlined),
-                            selectedIcon: const Icon(Icons.library_music),
-                            label: AppLocalizations.of(context)!.projects,
-                          ),
-                          NavigationDestination(
-                            icon: const Icon(Icons.album_outlined),
-                            selectedIcon: const Icon(Icons.album),
-                            label: AppLocalizations.of(context)!.releasesTab,
-                          ),
-                          NavigationDestination(
-                            icon: const Icon(Icons.playlist_play),
-                            selectedIcon: const Icon(Icons.playlist_play),
-                            label: AppLocalizations.of(context)!.playlists,
-                          ),
-                          NavigationDestination(
-                            icon: const Icon(Icons.checklist_outlined),
-                            selectedIcon: const Icon(Icons.checklist),
-                            label: AppLocalizations.of(context)!.queueTab,
-                          ),
-                          NavigationDestination(
-                            icon: const Icon(Icons.bar_chart_outlined),
-                            selectedIcon: const Icon(Icons.bar_chart_rounded),
-                            label: AppLocalizations.of(context)!.statisticsTab,
-                          ),
+                          for (final tab in _currentVisibleTabs)
+                            switch (tab) {
+                              AppTab.projects => NavigationDestination(
+                                  icon: const Icon(Icons.library_music_outlined),
+                                  selectedIcon: const Icon(Icons.library_music),
+                                  label: AppLocalizations.of(context)!.projects,
+                                ),
+                              AppTab.releases => NavigationDestination(
+                                  icon: const Icon(Icons.album_outlined),
+                                  selectedIcon: const Icon(Icons.album),
+                                  label: AppLocalizations.of(context)!.releasesTab,
+                                ),
+                              AppTab.playlists => NavigationDestination(
+                                  icon: const Icon(Icons.playlist_play_outlined),
+                                  selectedIcon: const Icon(Icons.playlist_play),
+                                  label: AppLocalizations.of(context)!.playlists,
+                                ),
+                              AppTab.queue => NavigationDestination(
+                                  icon: const Icon(Icons.checklist_outlined),
+                                  selectedIcon: const Icon(Icons.checklist),
+                                  label: AppLocalizations.of(context)!.queueTab,
+                                ),
+                              AppTab.statistics => NavigationDestination(
+                                  icon: const Icon(Icons.bar_chart_outlined),
+                                  selectedIcon: const Icon(Icons.bar_chart_rounded),
+                                  label: AppLocalizations.of(context)!.statisticsTab,
+                                ),
+                            },
                         ],
                       )
                     : null,
@@ -919,6 +943,17 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                   ),
                 ),
                 const SizedBox(width: 4),
+                Tooltip(
+                  message: AppLocalizations.of(context)!.customizeTabs,
+                  child: IconButton(
+                    icon: const Icon(Icons.tab_outlined, size: 18, color: Colors.white70),
+                    onPressed: () => showDialog(
+                      context: context,
+                      builder: (_) => const _TabCustomizationDialog(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
               ],
             ),
             
@@ -934,55 +969,35 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // Search bar on top for mobile (hidden on Playlists tab)
-                            if (_tabController.index != 2) TextField(
+                            if (_currentTab != AppTab.playlists) TextField(
                               focusNode: _searchFocusNode,
                               controller: _searchController,
                               decoration: InputDecoration(
-                                hintText: _tabController.index == 0
-                                    ? AppLocalizations.of(context)!.searchProjects
-                                    : _tabController.index == 1
-                                        ? AppLocalizations.of(context)!.searchReleases
-                                        : AppLocalizations.of(context)!.statsSearchProjects,
+                                hintText: switch (_currentTab) {
+                                  AppTab.projects  => AppLocalizations.of(context)!.searchProjects,
+                                  AppTab.releases  => AppLocalizations.of(context)!.searchReleases,
+                                  AppTab.queue     => AppLocalizations.of(context)!.queueSearchHint,
+                                  _                => AppLocalizations.of(context)!.statsSearchProjects,
+                                },
                                 isDense: true,
                                 border: const OutlineInputBorder(),
                                 prefixIcon: const Icon(Icons.search),
                                 suffixIcon: () {
-                                  final cs = _tabController.index == 0
-                                      ? ref.read(projectsSearchProvider)
-                                      : _tabController.index == 1
-                                          ? ref.read(releasesSearchProvider)
-                                          : ref.read(statisticsSearchProvider);
+                                  final cs = currentSearch;
                                   return cs.isNotEmpty
                                       ? IconButton(
                                           icon: const Icon(Icons.close),
-                                          onPressed: () {
-                                            _searchController.clear();
-                                            if (_tabController.index == 0) {
-                                              ref.read(projectsSearchProvider.notifier).clear();
-                                            } else if (_tabController.index == 1) {
-                                              ref.read(releasesSearchProvider.notifier).clear();
-                                            } else {
-                                              ref.read(statisticsSearchProvider.notifier).set('');
-                                            }
-                                          },
+                                          onPressed: _clearCurrentTabSearch,
                                         )
                                       : null;
                                 }(),
                               ),
-                              onChanged: (text) {
-                                if (_tabController.index == 0) {
-                                  ref.read(projectsSearchProvider.notifier).setSearchText(text);
-                                } else if (_tabController.index == 1) {
-                                  ref.read(releasesSearchProvider.notifier).setSearchText(text);
-                                } else {
-                                  ref.read(statisticsSearchProvider.notifier).set(text);
-                                }
-                              },
+                              onChanged: _updateCurrentTabSearch,
                             ),
-                            if (_tabController.index != 2)
+                            if (_currentTab != AppTab.playlists)
                               const SizedBox(height: 12),
                             // Filters and info row (only show on Projects tab)
-                            if (_tabController.index == 0) ...[
+                            if (_currentTab == AppTab.projects) ...[
                               Row(
                                 children: [
                                   Expanded(
@@ -1416,7 +1431,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                     ),
                   const SizedBox(width: 8),
                   // Search bar (desktop only — hidden on Playlists tab)
-                  if (!MobileUtils.isMobile() && (_tabController.index != 2 || !MobileUtils.isMobile()))
+                  if (!MobileUtils.isMobile())
                   Expanded(
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
@@ -1439,13 +1454,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                               focusNode: _searchFocusNode,
                               controller: _searchController,
                               decoration: InputDecoration(
-                                hintText: _tabController.index == 0
-                                    ? AppLocalizations.of(context)!.searchProjects
-                                    : _tabController.index == 1
-                                        ? AppLocalizations.of(context)!.searchReleases
-                                        : _tabController.index == 2  // Queue on desktop
-                                            ? AppLocalizations.of(context)!.queueSearchHint
-                                            : AppLocalizations.of(context)!.statsSearchProjects,
+                                hintText: switch (_currentTab) {
+                                  AppTab.projects   => AppLocalizations.of(context)!.searchProjects,
+                                  AppTab.releases   => AppLocalizations.of(context)!.searchReleases,
+                                  AppTab.queue      => AppLocalizations.of(context)!.queueSearchHint,
+                                  _                 => AppLocalizations.of(context)!.statsSearchProjects,
+                                },
                                 isDense: true,
                                 border: const OutlineInputBorder(),
                                 prefixIcon: const Icon(Icons.search),
@@ -1454,17 +1468,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                                   onPressed: _collapseDesktopSearch,
                                 ),
                               ),
-                              onChanged: (text) {
-                                if (_tabController.index == 0) {
-                                  ref.read(projectsSearchProvider.notifier).setSearchText(text);
-                                } else if (_tabController.index == 1) {
-                                  ref.read(releasesSearchProvider.notifier).setSearchText(text);
-                                } else if (_tabController.index == 2) {  // Queue on desktop
-                                  ref.read(queueSearchProvider.notifier).set(text);
-                                } else {
-                                  ref.read(statisticsSearchProvider.notifier).set(text);
-                                }
-                              },
+                              onChanged: _updateCurrentTabSearch,
                             ),
                           ),
                         ),
@@ -1493,12 +1497,14 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                 builder: (context) => TabBar(
                   controller: _tabController,
                   tabs: [
-                    Tab(icon: Icon(Icons.library_music), text: AppLocalizations.of(context)!.projectsTab),
-                    Tab(icon: Icon(Icons.album), text: AppLocalizations.of(context)!.releasesTab),
-                    if (MobileUtils.isMobile())
-                      Tab(icon: Icon(Icons.playlist_play), text: AppLocalizations.of(context)!.playlists),
-                    Tab(icon: Icon(Icons.checklist), text: AppLocalizations.of(context)!.queueTab),
-                    Tab(icon: Icon(Icons.bar_chart_rounded), text: AppLocalizations.of(context)!.statisticsTab),
+                    for (final tab in _currentVisibleTabs)
+                      switch (tab) {
+                        AppTab.projects   => Tab(icon: const Icon(Icons.library_music), text: AppLocalizations.of(context)!.projectsTab),
+                        AppTab.releases   => Tab(icon: const Icon(Icons.album), text: AppLocalizations.of(context)!.releasesTab),
+                        AppTab.playlists  => Tab(icon: const Icon(Icons.playlist_play), text: AppLocalizations.of(context)!.playlists),
+                        AppTab.queue      => Tab(icon: const Icon(Icons.checklist), text: AppLocalizations.of(context)!.queueTab),
+                        AppTab.statistics => Tab(icon: const Icon(Icons.bar_chart_rounded), text: AppLocalizations.of(context)!.statisticsTab),
+                      },
                   ],
                   labelColor: Theme.of(context).textTheme.titleMedium?.color,
                   unselectedLabelColor: Theme.of(context).textTheme.bodySmall?.color,
@@ -1510,47 +1516,49 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  // Use mobile-friendly list view on mobile, table on desktop
-                  MobileUtils.isMobile()
-                      ? _MobileProjectsList(
-                          projects: projects,
-                          dateFormat: dateFormat,
-                          onCreateRelease: (selectedProjects) {
-                            _createReleaseFromSelectedProjects(context, ref, selectedProjects);
-                          },
-                          onHideProjects: (selectedProjectIds) async {
-                            await _hideProjects(context, ref, selectedProjectIds);
-                          },
-                          onUnhideProjects: (selectedProjectIds) async {
-                            await _unhideProjects(context, ref, selectedProjectIds);
-                          },
-                          showHidden: hiddenMode == 1 || hiddenMode == 2,
-                        )
-                      : _PlutoProjectsTableWithSelection(
-                          key: _tableKey,
-                          projects: projects,
-                          dateFormat: dateFormat,
-                          onCreateRelease: (selectedProjects) {
-                            _createReleaseFromSelectedProjects(context, ref, selectedProjects);
-                          },
-                          onHideProjects: (selectedProjectIds) async {
-                            await _hideProjects(context, ref, selectedProjectIds);
-                          },
-                          onUnhideProjects: (selectedProjectIds) async {
-                            await _unhideProjects(context, ref, selectedProjectIds);
-                          },
-                          showHidden: hiddenMode == 1 || hiddenMode == 2,
-                          onExtractingMetadataChanged: (extracting) {
-                            setState(() => _extractingMetadata = extracting);
-                          },
-                          isAnyOperation: isAnyOperation,
-                          visibleCount: visibleCount,
-                          hiddenCount: hiddenCount,
-                        ),
-                  const ReleasesTabPage(),
-                  if (MobileUtils.isMobile()) const PlaylistsPage(),
-                  const QueuePage(),
-                  const StatisticsPage(),
+                  for (final tab in _currentVisibleTabs)
+                    switch (tab) {
+                      AppTab.projects => MobileUtils.isMobile()
+                          ? _MobileProjectsList(
+                              projects: projects,
+                              dateFormat: dateFormat,
+                              onCreateRelease: (selectedProjects) {
+                                _createReleaseFromSelectedProjects(context, ref, selectedProjects);
+                              },
+                              onHideProjects: (selectedProjectIds) async {
+                                await _hideProjects(context, ref, selectedProjectIds);
+                              },
+                              onUnhideProjects: (selectedProjectIds) async {
+                                await _unhideProjects(context, ref, selectedProjectIds);
+                              },
+                              showHidden: hiddenMode == 1 || hiddenMode == 2,
+                            )
+                          : _PlutoProjectsTableWithSelection(
+                              key: _tableKey,
+                              projects: projects,
+                              dateFormat: dateFormat,
+                              onCreateRelease: (selectedProjects) {
+                                _createReleaseFromSelectedProjects(context, ref, selectedProjects);
+                              },
+                              onHideProjects: (selectedProjectIds) async {
+                                await _hideProjects(context, ref, selectedProjectIds);
+                              },
+                              onUnhideProjects: (selectedProjectIds) async {
+                                await _unhideProjects(context, ref, selectedProjectIds);
+                              },
+                              showHidden: hiddenMode == 1 || hiddenMode == 2,
+                              onExtractingMetadataChanged: (extracting) {
+                                setState(() => _extractingMetadata = extracting);
+                              },
+                              isAnyOperation: isAnyOperation,
+                              visibleCount: visibleCount,
+                              hiddenCount: hiddenCount,
+                            ),
+                      AppTab.releases   => const ReleasesTabPage(),
+                      AppTab.playlists  => const PlaylistsPage(),
+                      AppTab.queue      => const QueuePage(),
+                      AppTab.statistics => const StatisticsPage(),
+                    },
                 ],
               ),
             ),
@@ -5308,6 +5316,91 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
               ],
             ),
           ),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Tab Customization Dialog
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _TabCustomizationDialog extends ConsumerWidget {
+  const _TabCustomizationDialog();
+
+  static const _icons = {
+    AppTab.projects:   Icons.library_music,
+    AppTab.releases:   Icons.album,
+    AppTab.playlists:  Icons.playlist_play,
+    AppTab.queue:      Icons.checklist,
+    AppTab.statistics: Icons.bar_chart_rounded,
+  };
+
+  String _label(AppTab tab, AppLocalizations l10n) => switch (tab) {
+    AppTab.projects   => l10n.projectsTab,
+    AppTab.releases   => l10n.releasesTab,
+    AppTab.playlists  => l10n.playlists,
+    AppTab.queue      => l10n.queueTab,
+    AppTab.statistics => l10n.statisticsTab,
+  };
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final visibleSet = ref.watch(visibleTabsProvider);
+    final isMobile = MobileUtils.isMobile();
+
+    final allTabs = VisibleTabsNotifier.canonicalOrder
+        .where((t) => isMobile || t != AppTab.playlists)
+        .toList();
+
+    return AlertDialog(
+      title: Row(
+        children: [
+          const Icon(Icons.tab_outlined, size: 20),
+          const SizedBox(width: 8),
+          Text(l10n.customizeTabs),
+        ],
+      ),
+      content: SizedBox(
+        width: 320,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.customizeTabsDescription,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 12),
+            for (final tab in allTabs)
+              CheckboxListTile(
+                value: visibleSet.contains(tab),
+                onChanged: tab == AppTab.projects
+                    ? null
+                    : (v) => ref
+                        .read(visibleTabsProvider.notifier)
+                        .setTabVisible(tab, v ?? false),
+                secondary: Icon(_icons[tab]),
+                title: Text(_label(tab, l10n)),
+                subtitle: tab == AppTab.projects
+                    ? Text(
+                        '(always visible)',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      )
+                    : null,
+                controlAffinity: ListTileControlAffinity.trailing,
+                contentPadding: EdgeInsets.zero,
+              ),
+          ],
+        ),
+      ),
+      actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.close),
+        ),
       ],
     );
   }

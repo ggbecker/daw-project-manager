@@ -1637,5 +1637,9 @@
   "noPreviewSongMessage": "Für dieses Projekt ist kein Vorschau-Song festgelegt. Wähle eine Audiodatei aus, um sie zu laden und abzuspielen.",
   "@noPreviewSongMessage": {},
   "noPreviewSongDragHint": "Du kannst auch eine Audiodatei direkt auf die Projektzeile in der Tabelle ziehen.",
-  "@noPreviewSongDragHint": {}
+  "@noPreviewSongDragHint": {},
+  "customizeTabs": "Tabs anpassen",
+  "@customizeTabs": {},
+  "customizeTabsDescription": "Waehle, welche Tabs in der Navigationsleiste angezeigt werden sollen. Der Tab Projekte ist immer sichtbar.",
+  "@customizeTabsDescription": {}
 }

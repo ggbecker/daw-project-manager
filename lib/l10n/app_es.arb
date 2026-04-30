@@ -1637,5 +1637,9 @@
   "noPreviewSongMessage": "Este proyecto no tiene una canción de vista previa configurada. Selecciona un archivo de audio para cargarlo y reproducirlo.",
   "@noPreviewSongMessage": {},
   "noPreviewSongDragHint": "También puedes arrastrar y soltar un archivo de audio directamente en la fila del proyecto en la tabla.",
-  "@noPreviewSongDragHint": {}
+  "@noPreviewSongDragHint": {},
+  "customizeTabs": "Personalizar pestanas",
+  "@customizeTabs": {},
+  "customizeTabsDescription": "Elige que pestanas mostrar en la barra de navegacion. La pestana Proyectos siempre es visible.",
+  "@customizeTabsDescription": {}
 }

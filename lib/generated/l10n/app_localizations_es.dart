@@ -2397,6 +2397,13 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get customizeTabs => 'Personalizar pestanas';
+
+  @override
+  String get customizeTabsDescription =>
+      'Elige que pestanas mostrar en la barra de navegacion. La pestana Proyectos siempre es visible.';
+
+  @override
   String get keyboardShortcuts => 'Atajos de teclado';
 
   @override

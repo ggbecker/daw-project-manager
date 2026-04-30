@@ -2381,6 +2381,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get customizeTabs => 'Customize Tabs';
+
+  @override
+  String get customizeTabsDescription =>
+      'Choose which tabs to show in the navigation bar. The Projects tab is always visible.';
+
+  @override
   String get keyboardShortcuts => 'Keyboard Shortcuts';
 
   @override

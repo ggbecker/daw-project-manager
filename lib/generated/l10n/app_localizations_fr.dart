@@ -2402,6 +2402,13 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get customizeTabs => 'Personnaliser les onglets';
+
+  @override
+  String get customizeTabsDescription =>
+      'Choisissez les onglets a afficher dans la barre de navigation. L\'onglet Projets est toujours visible.';
+
+  @override
   String get keyboardShortcuts => 'Raccourcis clavier';
 
   @override

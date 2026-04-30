@@ -857,6 +857,72 @@ final warnBeforeQuitProvider = NotifierProvider<WarnBeforeQuitNotifier, bool>(()
 });
 
 // ---------------------------------------------------------------------------
+// Tab Visibility
+// ---------------------------------------------------------------------------
+
+enum AppTab { projects, releases, playlists, queue, statistics }
+
+class VisibleTabsNotifier extends Notifier<Set<AppTab>> {
+  static const _key = 'visibleTabs';
+
+  // Canonical display order for all tabs.
+  static const List<AppTab> canonicalOrder = [
+    AppTab.projects,
+    AppTab.releases,
+    AppTab.playlists,
+    AppTab.queue,
+    AppTab.statistics,
+  ];
+
+  @override
+  Set<AppTab> build() {
+    SchedulerBinding.instance.addPostFrameCallback((_) => _load());
+    return {AppTab.projects, AppTab.releases, AppTab.playlists, AppTab.queue, AppTab.statistics};
+  }
+
+  Future<void> _load() async {
+    try {
+      await ensureHiveInitialized();
+      final box = await Hive.openBox<String>('settings');
+      final saved = box.get(_key);
+      if (saved != null && saved.isNotEmpty) {
+        final names = saved.split(',');
+        final loaded = names
+            .map((n) => AppTab.values.where((t) => t.name == n).firstOrNull)
+            .whereType<AppTab>()
+            .toSet();
+        loaded.add(AppTab.projects); // always visible
+        state = loaded;
+      }
+    } catch (e) {
+      if (kDebugMode) print('Failed to load visibleTabs: $e');
+    }
+  }
+
+  Future<void> setTabVisible(AppTab tab, bool visible) async {
+    if (tab == AppTab.projects) return;
+    final updated = Set<AppTab>.from(state);
+    if (visible) {
+      updated.add(tab);
+    } else {
+      updated.remove(tab);
+    }
+    state = updated;
+    try {
+      await ensureHiveInitialized();
+      final box = await Hive.openBox<String>('settings');
+      await box.put(_key, updated.map((t) => t.name).join(','));
+    } catch (e) {
+      if (kDebugMode) print('Failed to save visibleTabs: $e');
+    }
+  }
+}
+
+final visibleTabsProvider = NotifierProvider<VisibleTabsNotifier, Set<AppTab>>(() {
+  return VisibleTabsNotifier();
+});
+
+// ---------------------------------------------------------------------------
 // Statistics — Event Providers + GlobalStats
 // ---------------------------------------------------------------------------
 

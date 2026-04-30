@@ -2651,6 +2651,10 @@
       "count": { "type": "int" }
     }
   },
+  "customizeTabs": "Customize Tabs",
+  "@customizeTabs": {},
+  "customizeTabsDescription": "Choose which tabs to show in the navigation bar. The Projects tab is always visible.",
+  "@customizeTabsDescription": {},
   "keyboardShortcuts": "Keyboard Shortcuts",
   "shortcutGroupGlobal": "Global",
   "shortcutGroupProjectsTable": "Projects Table (table must be focused)",

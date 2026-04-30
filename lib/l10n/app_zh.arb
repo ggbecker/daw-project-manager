@@ -1637,5 +1637,9 @@
   "noPreviewSongMessage": "此项目未设置预览歌曲。选择一个音频文件以加载并播放它。",
   "@noPreviewSongMessage": {},
   "noPreviewSongDragHint": "您也可以将音频文件直接拖放到表格中的项目行上。",
-  "@noPreviewSongDragHint": {}
+  "@noPreviewSongDragHint": {},
+  "customizeTabs": "自定义标签页",
+  "@customizeTabs": {},
+  "customizeTabsDescription": "选择在导航栏中显示哪些标签页。项目标签页始终可见。",
+  "@customizeTabsDescription": {}
 }

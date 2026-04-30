@@ -1661,5 +1661,9 @@
   "noPreviewSongMessage": "Este projeto não tem uma música de visualização definida. Selecione um arquivo de áudio para carregá-lo e reproduzi-lo.",
   "@noPreviewSongMessage": {},
   "noPreviewSongDragHint": "Você também pode arrastar e soltar um arquivo de áudio diretamente na linha do projeto na tabela.",
-  "@noPreviewSongDragHint": {}
+  "@noPreviewSongDragHint": {},
+  "customizeTabs": "Personalizar abas",
+  "@customizeTabs": {},
+  "customizeTabsDescription": "Escolha quais abas exibir na barra de navegacao. A aba Projetos e sempre visivel.",
+  "@customizeTabsDescription": {}
 }

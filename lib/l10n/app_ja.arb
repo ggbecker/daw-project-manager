@@ -1637,5 +1637,9 @@
   "noPreviewSongMessage": "このプロジェクトにはプレビュー曲が設定されていません。オーディオファイルを選択して読み込み、再生してください。",
   "@noPreviewSongMessage": {},
   "noPreviewSongDragHint": "テーブルのプロジェクト行にオーディオファイルを直接ドラッグ＆ドロップすることもできます。",
-  "@noPreviewSongDragHint": {}
+  "@noPreviewSongDragHint": {},
+  "customizeTabs": "タブのカスタマイズ",
+  "@customizeTabs": {},
+  "customizeTabsDescription": "ナビゲーションバーに表示するタブを選択します。プロジェクトタブは常に表示されます。",
+  "@customizeTabsDescription": {}
 }

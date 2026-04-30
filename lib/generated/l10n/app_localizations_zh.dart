@@ -2312,6 +2312,12 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get customizeTabs => '自定义标签页';
+
+  @override
+  String get customizeTabsDescription => '选择在导航栏中显示哪些标签页。项目标签页始终可见。';
+
+  @override
   String get keyboardShortcuts => '键盘快捷键';
 
   @override

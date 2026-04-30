@@ -2388,6 +2388,13 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get customizeTabs => 'Personalizza le schede';
+
+  @override
+  String get customizeTabsDescription =>
+      'Scegli quali schede mostrare nella barra di navigazione. La scheda Progetti e sempre visibile.';
+
+  @override
   String get keyboardShortcuts => 'Scorciatoie da tastiera';
 
   @override

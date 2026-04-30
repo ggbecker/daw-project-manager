@@ -2334,6 +2334,13 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get customizeTabs => 'タブのカスタマイズ';
+
+  @override
+  String get customizeTabsDescription =>
+      'ナビゲーションバーに表示するタブを選択します。プロジェクトタブは常に表示されます。';
+
+  @override
   String get keyboardShortcuts => 'キーボードショートカット';
 
   @override

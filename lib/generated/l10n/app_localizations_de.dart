@@ -2396,6 +2396,13 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get customizeTabs => 'Tabs anpassen';
+
+  @override
+  String get customizeTabsDescription =>
+      'Waehle, welche Tabs in der Navigationsleiste angezeigt werden sollen. Der Tab Projekte ist immer sichtbar.';
+
+  @override
   String get keyboardShortcuts => 'Tastenkürzel';
 
   @override
