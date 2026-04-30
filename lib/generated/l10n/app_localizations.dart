@@ -4103,7 +4103,7 @@ abstract class AppLocalizations {
   /// No description provided for @shortcutEditCell.
   ///
   /// In en, this message translates to:
-  /// **'Edit selected cell'**
+  /// **'Open project details'**
   String get shortcutEditCell;
 
   /// No description provided for @shortcutViewRelease.
@@ -4117,6 +4117,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Go back'**
   String get shortcutGoBack;
+
+  /// No description provided for @shortcutGroupPreviewPlayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview Player'**
+  String get shortcutGroupPreviewPlayer;
+
+  /// No description provided for @shortcutPlayerPlayPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Play / pause'**
+  String get shortcutPlayerPlayPause;
+
+  /// No description provided for @shortcutPlayerSeek5.
+  ///
+  /// In en, this message translates to:
+  /// **'Seek ±5 seconds'**
+  String get shortcutPlayerSeek5;
+
+  /// No description provided for @shortcutPlayerSeek30.
+  ///
+  /// In en, this message translates to:
+  /// **'Seek ±30 seconds'**
+  String get shortcutPlayerSeek30;
 
   /// No description provided for @newerExportFound.
   ///

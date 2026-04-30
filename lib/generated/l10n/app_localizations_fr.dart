@@ -2450,13 +2450,25 @@ class AppLocalizationsFr extends AppLocalizations {
   String get shortcutNavigateRows => 'Naviguer dans les lignes';
 
   @override
-  String get shortcutEditCell => 'Modifier la cellule sélectionnée';
+  String get shortcutEditCell => 'Ouvrir les détails du projet';
 
   @override
   String get shortcutViewRelease => 'Voir les détails de la sortie';
 
   @override
   String get shortcutGoBack => 'Retour';
+
+  @override
+  String get shortcutGroupPreviewPlayer => 'Lecteur de prévisualisation';
+
+  @override
+  String get shortcutPlayerPlayPause => 'Lecture / pause';
+
+  @override
+  String get shortcutPlayerSeek5 => 'Avancer/Reculer de ±5 secondes';
+
+  @override
+  String get shortcutPlayerSeek30 => 'Avancer/Reculer de ±30 secondes';
 
   @override
   String get newerExportFound => 'Export plus récent trouvé';

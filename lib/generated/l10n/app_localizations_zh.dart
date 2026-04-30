@@ -2357,13 +2357,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get shortcutNavigateRows => '导航行';
 
   @override
-  String get shortcutEditCell => '编辑所选单元格';
+  String get shortcutEditCell => '打开项目详情';
 
   @override
   String get shortcutViewRelease => '查看发行详情';
 
   @override
   String get shortcutGoBack => '返回';
+
+  @override
+  String get shortcutGroupPreviewPlayer => '预览播放器';
+
+  @override
+  String get shortcutPlayerPlayPause => '播放 / 暂停';
+
+  @override
+  String get shortcutPlayerSeek5 => '快进/快退 ±5 秒';
+
+  @override
+  String get shortcutPlayerSeek30 => '快进/快退 ±30 秒';
 
   @override
   String get newerExportFound => '找到更新的导出文件';

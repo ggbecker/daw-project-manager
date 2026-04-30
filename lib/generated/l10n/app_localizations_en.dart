@@ -2429,13 +2429,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shortcutNavigateRows => 'Navigate rows';
 
   @override
-  String get shortcutEditCell => 'Edit selected cell';
+  String get shortcutEditCell => 'Open project details';
 
   @override
   String get shortcutViewRelease => 'View release details';
 
   @override
   String get shortcutGoBack => 'Go back';
+
+  @override
+  String get shortcutGroupPreviewPlayer => 'Preview Player';
+
+  @override
+  String get shortcutPlayerPlayPause => 'Play / pause';
+
+  @override
+  String get shortcutPlayerSeek5 => 'Seek ±5 seconds';
+
+  @override
+  String get shortcutPlayerSeek30 => 'Seek ±30 seconds';
 
   @override
   String get newerExportFound => 'Newer Export Found';

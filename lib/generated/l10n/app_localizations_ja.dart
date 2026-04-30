@@ -2380,13 +2380,25 @@ class AppLocalizationsJa extends AppLocalizations {
   String get shortcutNavigateRows => '行を移動';
 
   @override
-  String get shortcutEditCell => '選択したセルを編集';
+  String get shortcutEditCell => 'プロジェクト詳細を開く';
 
   @override
   String get shortcutViewRelease => 'リリースの詳細を表示';
 
   @override
   String get shortcutGoBack => '戻る';
+
+  @override
+  String get shortcutGroupPreviewPlayer => 'プレビュープレーヤー';
+
+  @override
+  String get shortcutPlayerPlayPause => '再生 / 一時停止';
+
+  @override
+  String get shortcutPlayerSeek5 => '±5秒シーク';
+
+  @override
+  String get shortcutPlayerSeek30 => '±30秒シーク';
 
   @override
   String get newerExportFound => '新しいエクスポートが見つかりました';

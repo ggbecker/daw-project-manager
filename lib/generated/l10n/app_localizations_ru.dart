@@ -2429,13 +2429,25 @@ class AppLocalizationsRu extends AppLocalizations {
   String get shortcutNavigateRows => 'Навигация по строкам';
 
   @override
-  String get shortcutEditCell => 'Редактировать выбранную ячейку';
+  String get shortcutEditCell => 'Открыть детали проекта';
 
   @override
   String get shortcutViewRelease => 'Просмотр деталей релиза';
 
   @override
   String get shortcutGoBack => 'Назад';
+
+  @override
+  String get shortcutGroupPreviewPlayer => 'Плеер предпросмотра';
+
+  @override
+  String get shortcutPlayerPlayPause => 'Воспроизведение / пауза';
+
+  @override
+  String get shortcutPlayerSeek5 => 'Перемотка ±5 секунд';
+
+  @override
+  String get shortcutPlayerSeek30 => 'Перемотка ±30 секунд';
 
   @override
   String get newerExportFound => 'Найден более новый экспорт';
