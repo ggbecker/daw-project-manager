@@ -75,6 +75,15 @@ class MacOSMenuBar extends ConsumerWidget {
                   label: l10n.customizeTabs,
                   onSelected: _showCustomizeTabsDialog,
                 ),
+                PlatformMenuItem(
+                  label: l10n.keyboardShortcuts,
+                  shortcut: const SingleActivator(
+                    LogicalKeyboardKey.slash,
+                    meta: true,
+                    shift: true,
+                  ),
+                  onSelected: _showShortcutsDialog,
+                ),
               ],
             ),
             PlatformMenuItemGroup(
@@ -115,20 +124,6 @@ class MacOSMenuBar extends ConsumerWidget {
           menus: [
             const PlatformProvidedMenuItem(
               type: PlatformProvidedMenuItemType.toggleFullScreen,
-            ),
-          ],
-        ),
-        PlatformMenu(
-          label: 'Help',
-          menus: [
-            PlatformMenuItem(
-              label: l10n.keyboardShortcuts,
-              shortcut: const SingleActivator(
-                LogicalKeyboardKey.slash,
-                meta: true,
-                shift: true,
-              ),
-              onSelected: _showShortcutsDialog,
             ),
           ],
         ),
