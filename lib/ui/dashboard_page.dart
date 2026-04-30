@@ -20,6 +20,7 @@ import '../services/scanner_service.dart';
 import '../services/audio_analysis_service.dart';
 import '../services/mixdown_detector_service.dart';
 import 'widgets/shortcuts_help_dialog.dart';
+import 'widgets/tab_customization_dialog.dart';
 import '../services/dock_menu_service.dart';
 import '../utils/mobile_utils.dart';
 import '../utils/file_launcher.dart';
@@ -947,10 +948,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with SingleTicker
                   message: AppLocalizations.of(context)!.customizeTabs,
                   child: IconButton(
                     icon: const Icon(Icons.tab_outlined, size: 18, color: Colors.white70),
-                    onPressed: () => showDialog(
-                      context: context,
-                      builder: (_) => const _TabCustomizationDialog(),
-                    ),
+                    onPressed: () => showTabCustomizationDialog(context),
                   ),
                 ),
                 const SizedBox(width: 4),
@@ -2002,6 +2000,7 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
                 _selectAll();
               }
             },
+            onExtractingMetadataChanged: widget.onExtractingMetadataChanged,
           ),
         ),
         // Selection action bar
@@ -2189,6 +2188,7 @@ class _PlutoProjectsTable extends ConsumerStatefulWidget {
   final Function(List<String>) onUnhideProjects;
   final bool areAllSelected;
   final VoidCallback onToggleSelectAll;
+  final Function(bool) onExtractingMetadataChanged;
   const _PlutoProjectsTable({
     super.key,
     required this.projects,
@@ -2199,6 +2199,7 @@ class _PlutoProjectsTable extends ConsumerStatefulWidget {
     required this.onUnhideProjects,
     required this.areAllSelected,
     required this.onToggleSelectAll,
+    required this.onExtractingMetadataChanged,
   });
 
   @override
@@ -2740,6 +2741,17 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             ],
           ),
         ),
+        if (File(project.filePath).existsSync() || Directory(project.filePath).existsSync())
+          PopupMenuItem<String>(
+            value: 'extractMetadata',
+            child: Row(
+              children: [
+                const Icon(Icons.search, size: 20),
+                const SizedBox(width: 8),
+                Text(l10n.extractMetadata),
+              ],
+            ),
+          ),
       ],
       color: Theme.of(context).cardColor,
     );
@@ -2783,6 +2795,25 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           break;
         case 'unhide':
           widget.onUnhideProjects([project.id]);
+          break;
+        case 'extractMetadata':
+          widget.onExtractingMetadataChanged(true);
+          try {
+            final repo = await ref.read(repositoryProvider.future);
+            await repo.extractFullMetadataForProject(project.id);
+            ref.invalidate(allProjectsStreamProvider);
+            if (mounted) {
+              final msg = l10n.metadataExtractedForProjects(1, '', '');
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+            }
+          } catch (e) {
+            if (mounted) {
+              final msg = '${l10n.error}: $e';
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+            }
+          } finally {
+            widget.onExtractingMetadataChanged(false);
+          }
           break;
       }
     }
@@ -5316,91 +5347,6 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
               ],
             ),
           ),
-      ],
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Tab Customization Dialog
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _TabCustomizationDialog extends ConsumerWidget {
-  const _TabCustomizationDialog();
-
-  static const _icons = {
-    AppTab.projects:   Icons.library_music,
-    AppTab.releases:   Icons.album,
-    AppTab.playlists:  Icons.playlist_play,
-    AppTab.queue:      Icons.checklist,
-    AppTab.statistics: Icons.bar_chart_rounded,
-  };
-
-  String _label(AppTab tab, AppLocalizations l10n) => switch (tab) {
-    AppTab.projects   => l10n.projectsTab,
-    AppTab.releases   => l10n.releasesTab,
-    AppTab.playlists  => l10n.playlists,
-    AppTab.queue      => l10n.queueTab,
-    AppTab.statistics => l10n.statisticsTab,
-  };
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-    final visibleSet = ref.watch(visibleTabsProvider);
-    final isMobile = MobileUtils.isMobile();
-
-    final allTabs = VisibleTabsNotifier.canonicalOrder
-        .where((t) => isMobile || t != AppTab.playlists)
-        .toList();
-
-    return AlertDialog(
-      title: Row(
-        children: [
-          const Icon(Icons.tab_outlined, size: 20),
-          const SizedBox(width: 8),
-          Text(l10n.customizeTabs),
-        ],
-      ),
-      content: SizedBox(
-        width: 320,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.customizeTabsDescription,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: 12),
-            for (final tab in allTabs)
-              CheckboxListTile(
-                value: visibleSet.contains(tab),
-                onChanged: tab == AppTab.projects
-                    ? null
-                    : (v) => ref
-                        .read(visibleTabsProvider.notifier)
-                        .setTabVisible(tab, v ?? false),
-                secondary: Icon(_icons[tab]),
-                title: Text(_label(tab, l10n)),
-                subtitle: tab == AppTab.projects
-                    ? Text(
-                        '(always visible)',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      )
-                    : null,
-                controlAffinity: ListTileControlAffinity.trailing,
-                contentPadding: EdgeInsets.zero,
-              ),
-          ],
-        ),
-      ),
-      actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(l10n.close),
-        ),
       ],
     );
   }

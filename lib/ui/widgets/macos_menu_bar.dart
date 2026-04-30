@@ -14,6 +14,7 @@ import '../../main.dart' show navigatorKey;
 import '../dashboard_page.dart' show appVersion;
 import 'language_switcher.dart';
 import 'shortcuts_help_dialog.dart';
+import 'tab_customization_dialog.dart';
 
 /// Wraps the app with a native macOS menu bar (PlatformMenuBar).
 /// On non-macOS platforms it is a transparent pass-through.
@@ -34,6 +35,12 @@ class MacOSMenuBar extends ConsumerWidget {
     final context = navigatorKey.currentContext;
     if (context == null) return;
     showShortcutsHelpDialog(context);
+  }
+
+  void _showCustomizeTabsDialog() {
+    final context = navigatorKey.currentContext;
+    if (context == null) return;
+    showTabCustomizationDialog(context);
   }
 
   @override
@@ -59,6 +66,14 @@ class MacOSMenuBar extends ConsumerWidget {
                 PlatformMenuItem(
                   label: l10n.menuAbout,
                   onSelected: _showAboutDialog,
+                ),
+              ],
+            ),
+            PlatformMenuItemGroup(
+              members: [
+                PlatformMenuItem(
+                  label: l10n.customizeTabs,
+                  onSelected: _showCustomizeTabsDialog,
                 ),
               ],
             ),
