@@ -601,6 +601,13 @@ class ProjectRepository {
       } catch (_) {}
     }
 
+    // Delete locally downloaded preview song files.
+    try {
+      final previewSongsPath = await getPreviewSongsPath();
+      final dir = Directory(previewSongsPath);
+      if (await dir.exists()) await dir.delete(recursive: true);
+    } catch (_) {}
+
     // Re-initialize with a fresh default profile so the app starts cleanly.
     await ProfileRepository.init();
   }
