@@ -1276,15 +1276,17 @@ class _ProjectDetailActionBar extends StatelessWidget {
               ),
             ),
           ],
-          const SizedBox(width: 8),
-          Tooltip(
-            message: sourceFileExists ? '' : notFoundMsg,
-            child: OutlinedButton.icon(
-              onPressed: sourceFileExists ? onOpenFolder : null,
-              icon: const Icon(Icons.folder_open, size: 16),
-              label: Text(l10n.openFolder),
+          if (!isMobile) ...[
+            const SizedBox(width: 8),
+            Tooltip(
+              message: sourceFileExists ? '' : notFoundMsg,
+              child: OutlinedButton.icon(
+                onPressed: sourceFileExists ? onOpenFolder : null,
+                icon: const Icon(Icons.folder_open, size: 16),
+                label: Text(l10n.openFolder),
+              ),
             ),
-          ),
+          ],
           if (!isMobile) ...[
             const SizedBox(width: 8),
             Tooltip(

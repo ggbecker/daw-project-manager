@@ -3415,18 +3415,19 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                 tooltip: '${AppLocalizations.of(context)!.tooltipViewDetails} (D)',
                 onPressed: () => _viewProjectDetails(project),
               ),
-              // Open Folder button
-              Tooltip(
-                message: sourceFileExists || MobileUtils.isMobile() ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
-                child: IconButton(
-                  icon: const Icon(Icons.folder_open),
-                  iconSize: 24,
-                  padding: const EdgeInsets.all(4),
-                  constraints: const BoxConstraints(),
-                  tooltip: sourceFileExists ? '${AppLocalizations.of(context)!.openFolder} (F)' : null,
-                  onPressed: sourceFileExists ? () => _openProjectFolder(project) : null,
+              // Open Folder button (desktop only — no file manager on mobile)
+              if (!MobileUtils.isMobile())
+                Tooltip(
+                  message: sourceFileExists ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
+                  child: IconButton(
+                    icon: const Icon(Icons.folder_open),
+                    iconSize: 24,
+                    padding: const EdgeInsets.all(4),
+                    constraints: const BoxConstraints(),
+                    tooltip: sourceFileExists ? '${AppLocalizations.of(context)!.openFolder} (F)' : null,
+                    onPressed: sourceFileExists ? () => _openProjectFolder(project) : null,
+                  ),
                 ),
-              ),
               // Separator
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 3.0),
