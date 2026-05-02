@@ -985,6 +985,17 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with TickerProvid
                 const LanguageSwitcher(),
                 const SizedBox(width: 8),
                 Tooltip(
+                  message: AppLocalizations.of(context)!.menuDocumentation,
+                  child: IconButton(
+                    icon: const Icon(Icons.menu_book_outlined, size: 18, color: Colors.white70),
+                    onPressed: () => launchUrl(
+                      Uri.parse('https://dpm.bandpassrecords.com/docs.html'),
+                      mode: LaunchMode.externalApplication,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Tooltip(
                   message: AppLocalizations.of(context)!.keyboardShortcuts,
                   child: IconButton(
                     icon: const Icon(Icons.keyboard_outlined, size: 18, color: Colors.white70),
