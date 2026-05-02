@@ -1953,6 +1953,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get menuAbout => '关于 DAW Project Manager';
 
   @override
+  String get menuDocumentation => '文档';
+
+  @override
   String get menuLanguage => '语言';
 
   @override

@@ -31,6 +31,13 @@ class MacOSMenuBar extends ConsumerWidget {
     );
   }
 
+  void _openDocumentation() {
+    launchUrl(
+      Uri.parse('https://dpm.bandpassrecords.com/docs.html'),
+      mode: LaunchMode.externalApplication,
+    );
+  }
+
   void _showShortcutsDialog() {
     final context = navigatorKey.currentContext;
     if (context == null) return;
@@ -66,6 +73,10 @@ class MacOSMenuBar extends ConsumerWidget {
                 PlatformMenuItem(
                   label: l10n.menuAbout,
                   onSelected: _showAboutDialog,
+                ),
+                PlatformMenuItem(
+                  label: l10n.menuDocumentation,
+                  onSelected: _openDocumentation,
                 ),
               ],
             ),

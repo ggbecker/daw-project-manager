@@ -1384,6 +1384,10 @@
   "@menuAbout": {
     "description": "macOS menu item for About dialog"
   },
+  "menuDocumentation": "Documentação",
+  "@menuDocumentation": {
+    "description": "macOS menu item that opens the online documentation"
+  },
   "menuLanguage": "Idioma",
   "@menuLanguage": {
     "description": "macOS menu item for language selection"

@@ -2014,6 +2014,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get menuAbout => 'О программе DAW Project Manager';
 
   @override
+  String get menuDocumentation => 'Документация';
+
+  @override
   String get menuLanguage => 'Язык';
 
   @override

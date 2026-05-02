@@ -1974,6 +1974,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get menuAbout => 'DAW Project Manager について';
 
   @override
+  String get menuDocumentation => 'ドキュメント';
+
+  @override
   String get menuLanguage => '言語';
 
   @override

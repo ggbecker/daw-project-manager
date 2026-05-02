@@ -2013,6 +2013,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get menuAbout => 'About DAW Project Manager';
 
   @override
+  String get menuDocumentation => 'Documentation';
+
+  @override
   String get menuLanguage => 'Language';
 
   @override

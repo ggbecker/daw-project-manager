@@ -3386,6 +3386,12 @@ abstract class AppLocalizations {
   /// **'About DAW Project Manager'**
   String get menuAbout;
 
+  /// macOS menu item that opens the online documentation
+  ///
+  /// In en, this message translates to:
+  /// **'Documentation'**
+  String get menuDocumentation;
+
   /// macOS menu item for language selection
   ///
   /// In en, this message translates to:
