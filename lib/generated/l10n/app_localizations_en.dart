@@ -2474,6 +2474,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get startupDontShowAgain => 'Don\'t show this on startup';
 
   @override
+  String get deleteAllData => 'Delete All Data';
+
+  @override
+  String get deleteAllDataSubtitle =>
+      'Remove all profiles, projects, releases, playlists, and settings from this device.';
+
+  @override
+  String get deleteAllDataConfirm1Title => 'Delete All Data?';
+
+  @override
+  String get deleteAllDataConfirm1Message =>
+      'This will permanently erase all profiles, projects, releases, playlists, and settings from this device. Your Google Drive backup (if any) will not be affected.';
+
+  @override
+  String get deleteAllDataConfirm2Title => 'Are you absolutely sure?';
+
+  @override
+  String get deleteAllDataConfirm2Message =>
+      'This action cannot be undone. The app will return to its initial state.';
+
+  @override
+  String get deleteEverything => 'Delete Everything';
+
+  @override
+  String get allDataDeleted => 'All data has been deleted.';
+
+  @override
   String get newerExportFound => 'Newer Export Found';
 
   @override

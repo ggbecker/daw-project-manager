@@ -554,6 +554,44 @@ class ProjectRepository {
     await eventsBox.clear();
   }
 
+  /// Wipes every Hive box across all profiles and all global settings,
+  /// leaving the app in a clean first-launch state.
+  static Future<void> deleteAllAppData() async {
+    // Collect all profile IDs so we can clear per-profile boxes.
+    final profilesBox = await Hive.openBox<dynamic>(ProfileRepository.profilesBoxName);
+    final profileIds = profilesBox.keys.cast<String>().toList();
+
+    // Per-profile boxes.
+    const perProfileBoxes = [
+      'projects', 'roots', 'ignored_paths', 'releases', 'playlists', 'events',
+    ];
+    for (final profileId in profileIds) {
+      for (final suffix in perProfileBoxes) {
+        final box = await Hive.openBox<dynamic>('${profileId}_$suffix');
+        await box.clear();
+        await box.close();
+      }
+    }
+
+    // Global boxes.
+    const globalBoxNames = [
+      'settings', 'app_settings', 'notification_preferences',
+      'todoTemplates', 'profiles',
+      // Legacy / misc boxes that may or may not exist.
+      'music_projects', 'projects', 'releases', 'roots',
+    ];
+    for (final name in globalBoxNames) {
+      try {
+        final box = await Hive.openBox<dynamic>(name);
+        await box.clear();
+        await box.close();
+      } catch (_) {}
+    }
+
+    // Close the profiles box we opened above.
+    await profilesBox.close();
+  }
+
   Future<void> clearMissingFiles() async {
     // On Android, we're only syncing metadata from desktop, so files don't exist locally
     // Don't delete projects on Android - they're metadata-only

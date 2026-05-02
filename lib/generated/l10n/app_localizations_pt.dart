@@ -2476,6 +2476,33 @@ class AppLocalizationsPt extends AppLocalizations {
   String get startupDontShowAgain => 'Não mostrar isso na inicialização';
 
   @override
+  String get deleteAllData => 'Excluir todos os dados';
+
+  @override
+  String get deleteAllDataSubtitle =>
+      'Remover todos os perfis, projetos, lançamentos, playlists e configurações deste dispositivo.';
+
+  @override
+  String get deleteAllDataConfirm1Title => 'Excluir todos os dados?';
+
+  @override
+  String get deleteAllDataConfirm1Message =>
+      'Isso apagará permanentemente todos os perfis, projetos, lançamentos, playlists e configurações deste dispositivo. Seu backup no Google Drive (se houver) não será afetado.';
+
+  @override
+  String get deleteAllDataConfirm2Title => 'Tem certeza absoluta?';
+
+  @override
+  String get deleteAllDataConfirm2Message =>
+      'Esta ação não pode ser desfeita. O aplicativo voltará ao estado inicial.';
+
+  @override
+  String get deleteEverything => 'Excluir tudo';
+
+  @override
+  String get allDataDeleted => 'Todos os dados foram excluídos.';
+
+  @override
   String get newerExportFound => 'Exportação mais recente encontrada';
 
   @override

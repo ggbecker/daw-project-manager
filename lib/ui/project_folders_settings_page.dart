@@ -548,6 +548,100 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
                     ),
                   ],
                 ),
+                const Divider(height: 24),
+                Row(
+                  children: [
+                    Icon(Icons.delete_sweep_rounded, color: Theme.of(context).colorScheme.error),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(l10n.deleteAllData, style: Theme.of(context).textTheme.titleMedium),
+                          const SizedBox(height: 2),
+                          Text(
+                            l10n.deleteAllDataSubtitle,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
+                    ),
+                    FilledButton.icon(
+                      onPressed: _busy
+                          ? null
+                          : () async {
+                              // First confirmation
+                              final confirm1 = await showDialog<bool>(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  backgroundColor: Theme.of(context).cardColor,
+                                  title: Text(l10n.deleteAllDataConfirm1Title),
+                                  content: Text(l10n.deleteAllDataConfirm1Message),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx, false),
+                                      child: Text(l10n.cancel),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () => Navigator.pop(ctx, true),
+                                      style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+                                      child: Text(l10n.deleteAllData),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (confirm1 != true || !mounted) return;
+
+                              // Second confirmation
+                              final confirm2 = await showDialog<bool>(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  backgroundColor: Theme.of(context).cardColor,
+                                  title: Text(l10n.deleteAllDataConfirm2Title),
+                                  content: Text(l10n.deleteAllDataConfirm2Message),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx, false),
+                                      child: Text(l10n.cancel),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () => Navigator.pop(ctx, true),
+                                      style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+                                      child: Text(l10n.deleteEverything),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (confirm2 != true || !mounted) return;
+
+                              setState(() => _busy = true);
+                              try {
+                                await ProjectRepository.deleteAllAppData();
+                                ref.invalidate(repositoryProvider);
+                                ref.invalidate(rootsWatchProvider);
+                                ref.invalidate(scanRootsProvider);
+                                ref.invalidate(ignoredPathsWatchProvider);
+                                ref.invalidate(ignoredPathsProvider);
+                                ref.invalidate(allProjectsStreamProvider);
+                                await ref.read(repositoryProvider.future);
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(l10n.allDataDeleted)),
+                                  );
+                                }
+                              } finally {
+                                if (mounted) setState(() => _busy = false);
+                              }
+                            },
+                      icon: const Icon(Icons.delete_sweep_rounded),
+                      label: Text(l10n.deleteAllData),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.error,
+                        foregroundColor: Theme.of(context).colorScheme.onError,
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),

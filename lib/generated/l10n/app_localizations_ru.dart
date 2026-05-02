@@ -2475,6 +2475,33 @@ class AppLocalizationsRu extends AppLocalizations {
   String get startupDontShowAgain => 'Не показывать при запуске';
 
   @override
+  String get deleteAllData => 'Удалить все данные';
+
+  @override
+  String get deleteAllDataSubtitle =>
+      'Удалить все профили, проекты, релизы, плейлисты и настройки с этого устройства.';
+
+  @override
+  String get deleteAllDataConfirm1Title => 'Удалить все данные?';
+
+  @override
+  String get deleteAllDataConfirm1Message =>
+      'Это навсегда удалит все профили, проекты, релизы, плейлисты и настройки с этого устройства. Резервная копия на Google Диске (если есть) не пострадает.';
+
+  @override
+  String get deleteAllDataConfirm2Title => 'Вы абсолютно уверены?';
+
+  @override
+  String get deleteAllDataConfirm2Message =>
+      'Это действие необратимо. Приложение вернётся в исходное состояние.';
+
+  @override
+  String get deleteEverything => 'Удалить всё';
+
+  @override
+  String get allDataDeleted => 'Все данные были удалены.';
+
+  @override
   String get newerExportFound => 'Найден более новый экспорт';
 
   @override

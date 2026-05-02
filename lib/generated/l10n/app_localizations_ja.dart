@@ -2423,6 +2423,32 @@ class AppLocalizationsJa extends AppLocalizations {
   String get startupDontShowAgain => '起動時に表示しない';
 
   @override
+  String get deleteAllData => 'すべてのデータを削除';
+
+  @override
+  String get deleteAllDataSubtitle =>
+      'このデバイスからすべてのプロフィール、プロジェクト、リリース、プレイリスト、設定を削除します。';
+
+  @override
+  String get deleteAllDataConfirm1Title => 'すべてのデータを削除しますか？';
+
+  @override
+  String get deleteAllDataConfirm1Message =>
+      'このデバイスからすべてのプロフィール、プロジェクト、リリース、プレイリスト、設定が完全に消去されます。Google ドライブのバックアップ（ある場合）には影響しません。';
+
+  @override
+  String get deleteAllDataConfirm2Title => '本当によろしいですか？';
+
+  @override
+  String get deleteAllDataConfirm2Message => 'この操作は元に戻せません。アプリは初期状態に戻ります。';
+
+  @override
+  String get deleteEverything => 'すべて削除';
+
+  @override
+  String get allDataDeleted => 'すべてのデータが削除されました。';
+
+  @override
   String get newerExportFound => '新しいエクスポートが見つかりました';
 
   @override
