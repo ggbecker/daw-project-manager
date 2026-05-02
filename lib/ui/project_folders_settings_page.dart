@@ -617,12 +617,19 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
                               setState(() => _busy = true);
                               try {
                                 await ProjectRepository.deleteAllAppData();
+                                // Invalidate root provider first so all dependents
+                                // (currentProfileProvider, repositoryProvider, etc.)
+                                // rebuild against fresh Hive boxes.
+                                ref.invalidate(profileRepositoryProvider);
+                                ref.invalidate(currentProfileProvider);
+                                ref.invalidate(allProfilesProvider);
                                 ref.invalidate(repositoryProvider);
                                 ref.invalidate(rootsWatchProvider);
                                 ref.invalidate(scanRootsProvider);
                                 ref.invalidate(ignoredPathsWatchProvider);
                                 ref.invalidate(ignoredPathsProvider);
                                 ref.invalidate(allProjectsStreamProvider);
+                                await ref.read(profileRepositoryProvider.future);
                                 await ref.read(repositoryProvider.future);
                                 if (mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
