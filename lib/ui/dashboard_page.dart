@@ -4103,18 +4103,21 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
     return '$minutes:$seconds';
   }
 
-  // Returns the filename to display, or null if it looks like an internal
-  // backup download name ({uuid}_preview.ext) — those carry no useful info.
   static final _uuidPreviewRe = RegExp(
     r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}_preview\.',
     caseSensitive: false,
   );
 
   String? _displayFileName() {
-    final name = widget.project.previewSongFileName ??
-        path.basename(_effectivePreviewPath ?? '');
-    if (name.isEmpty || _uuidPreviewRe.hasMatch(name)) return null;
-    return name;
+    // Prefer the stored display name, unless it's itself a UUID backup name
+    final storedName = widget.project.previewSongFileName;
+    if (storedName != null && storedName.isNotEmpty && !_uuidPreviewRe.hasMatch(storedName)) {
+      return storedName;
+    }
+    // Fall back to the path basename, suppressing UUID-named backup downloads
+    final fallback = path.basename(_effectivePreviewPath ?? '');
+    if (fallback.isEmpty || _uuidPreviewRe.hasMatch(fallback)) return null;
+    return fallback;
   }
 
 
