@@ -4103,6 +4103,20 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
     return '$minutes:$seconds';
   }
 
+  // Returns the filename to display, or null if it looks like an internal
+  // backup download name ({uuid}_preview.ext) — those carry no useful info.
+  static final _uuidPreviewRe = RegExp(
+    r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}_preview\.',
+    caseSensitive: false,
+  );
+
+  String? _displayFileName() {
+    final name = widget.project.previewSongFileName ??
+        path.basename(_effectivePreviewPath ?? '');
+    if (name.isEmpty || _uuidPreviewRe.hasMatch(name)) return null;
+    return name;
+  }
+
 
   Widget _buildAndroidPlayerLayout(BuildContext context) {
     return Column(
@@ -4125,16 +4139,17 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
               ],
             ),
           ),
-        Text(
-          widget.project.previewSongFileName ??
-          path.basename(_effectivePreviewPath ?? ''),
-          style: TextStyle(
-            color: Theme.of(context).textTheme.bodyMedium?.color,
-            fontSize: 14,
+        if (_displayFileName() != null)
+          Text(
+            _displayFileName()!,
+            style: TextStyle(
+              color: Theme.of(context).textTheme.bodyMedium?.color,
+              fontSize: 14,
+            ),
+            overflow: TextOverflow.ellipsis,
           ),
-          overflow: TextOverflow.ellipsis,
-        ),
-        const SizedBox(height: 16),
+        if (_displayFileName() != null) const SizedBox(height: 8),
+        const SizedBox(height: 8),
         // Transport controls
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -4264,16 +4279,17 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          widget.project.previewSongFileName ??
-          path.basename(_effectivePreviewPath ?? ''),
-          style: TextStyle(
-            color: Theme.of(context).textTheme.bodyMedium?.color,
-            fontSize: 14,
+        if (_displayFileName() != null) ...[
+          Text(
+            _displayFileName()!,
+            style: TextStyle(
+              color: Theme.of(context).textTheme.bodyMedium?.color,
+              fontSize: 14,
+            ),
+            overflow: TextOverflow.ellipsis,
           ),
-          overflow: TextOverflow.ellipsis,
-        ),
-        const SizedBox(height: 16),
+          const SizedBox(height: 16),
+        ],
         // Audio player controls
         Row(
           children: [
