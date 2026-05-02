@@ -2401,6 +2401,54 @@ class AppLocalizationsJa extends AppLocalizations {
   String get shortcutPlayerSeek30 => '±30秒シーク';
 
   @override
+  String get startupDialogTitle => 'DAW Project Manager へようこそ';
+
+  @override
+  String get startupDialogSubtitle =>
+      'プロジェクトフォルダを追加するか、Google ドライブのバックアップを復元して始めましょう。';
+
+  @override
+  String get startupAddFolderTitle => 'プロジェクトフォルダを追加';
+
+  @override
+  String get startupAddFolderSubtitle => 'DAW プロジェクトが入っているフォルダを選択してください。';
+
+  @override
+  String get startupGoogleDriveTitle => 'Google ドライブのバックアップを同期';
+
+  @override
+  String get startupGoogleDriveSubtitle => 'Google ドライブのバックアップからプロジェクトを復元します。';
+
+  @override
+  String get startupDontShowAgain => '起動時に表示しない';
+
+  @override
+  String get deleteAllData => 'すべてのデータを削除';
+
+  @override
+  String get deleteAllDataSubtitle =>
+      'このデバイスからすべてのプロフィール、プロジェクト、リリース、プレイリスト、設定を削除します。';
+
+  @override
+  String get deleteAllDataConfirm1Title => 'すべてのデータを削除しますか？';
+
+  @override
+  String get deleteAllDataConfirm1Message =>
+      'このデバイスからすべてのプロフィール、プロジェクト、リリース、プレイリスト、設定が完全に消去されます。Google ドライブのバックアップ（ある場合）には影響しません。';
+
+  @override
+  String get deleteAllDataConfirm2Title => '本当によろしいですか？';
+
+  @override
+  String get deleteAllDataConfirm2Message => 'この操作は元に戻せません。アプリは初期状態に戻ります。';
+
+  @override
+  String get deleteEverything => 'すべて削除';
+
+  @override
+  String get allDataDeleted => 'すべてのデータが削除されました。';
+
+  @override
   String get newerExportFound => '新しいエクスポートが見つかりました';
 
   @override

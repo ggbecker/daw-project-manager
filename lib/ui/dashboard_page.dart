@@ -20,6 +20,7 @@ import '../services/scanner_service.dart';
 import '../services/audio_analysis_service.dart';
 import '../services/mixdown_detector_service.dart';
 import 'widgets/shortcuts_help_dialog.dart';
+import 'widgets/startup_dialog.dart';
 import 'widgets/tab_customization_dialog.dart';
 import '../services/dock_menu_service.dart';
 import '../utils/mobile_utils.dart';
@@ -100,6 +101,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with TickerProvid
   bool _isSearchingMobile = false;
   bool _isSearchingDesktop = false;
   late TabController _tabController;
+
+  // Startup dialog
+  bool _startupDialogShown = false;
+  bool _hideStartupDialog = false;
 
   // Ordered list of currently visible tabs (derived from provider, updated via ref.listen)
   List<AppTab> _currentVisibleTabs = [
@@ -186,6 +191,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with TickerProvid
     }
     _tabController = TabController(length: _currentVisibleTabs.length, vsync: this);
     _searchController = TextEditingController();
+    if (!MobileUtils.isMobile()) {
+      loadHideStartupDialog().then((v) {
+        if (mounted) setState(() => _hideStartupDialog = v);
+      });
+    }
     
     // Add listener to TabController to rebuild when tab changes (for search placeholder update)
     _tabController.addListener(_onTabChanged);
@@ -633,6 +643,19 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with TickerProvid
     final dateFormat = ref.watch(dateFormatProvider);
     final repoAsync = ref.watch(repositoryProvider);
     final roots = ref.watch(scanRootsProvider);
+
+    // Show first-launch dialog on desktop when there are no scan roots yet.
+    if (!MobileUtils.isMobile() &&
+        !_startupDialogShown &&
+        !_hideStartupDialog &&
+        repoAsync.hasValue &&
+        roots.isEmpty) {
+      _startupDialogShown = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) showStartupDialog(context);
+      });
+    }
+
     // Keep visible tabs in sync with the provider.
     ref.listen(visibleTabsProvider, (_, next) {
       if (mounted) setState(() => _updateVisibleTabs(next));
@@ -3415,18 +3438,19 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                 tooltip: '${AppLocalizations.of(context)!.tooltipViewDetails} (D)',
                 onPressed: () => _viewProjectDetails(project),
               ),
-              // Open Folder button
-              Tooltip(
-                message: sourceFileExists || MobileUtils.isMobile() ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
-                child: IconButton(
-                  icon: const Icon(Icons.folder_open),
-                  iconSize: 24,
-                  padding: const EdgeInsets.all(4),
-                  constraints: const BoxConstraints(),
-                  tooltip: sourceFileExists ? '${AppLocalizations.of(context)!.openFolder} (F)' : null,
-                  onPressed: sourceFileExists ? () => _openProjectFolder(project) : null,
+              // Open Folder button (desktop only — no file manager on mobile)
+              if (!MobileUtils.isMobile())
+                Tooltip(
+                  message: sourceFileExists ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
+                  child: IconButton(
+                    icon: const Icon(Icons.folder_open),
+                    iconSize: 24,
+                    padding: const EdgeInsets.all(4),
+                    constraints: const BoxConstraints(),
+                    tooltip: sourceFileExists ? '${AppLocalizations.of(context)!.openFolder} (F)' : null,
+                    onPressed: sourceFileExists ? () => _openProjectFolder(project) : null,
+                  ),
                 ),
-              ),
               // Separator
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 3.0),
@@ -4079,6 +4103,23 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
     return '$minutes:$seconds';
   }
 
+  static final _uuidPreviewRe = RegExp(
+    r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}_preview\.',
+    caseSensitive: false,
+  );
+
+  String? _displayFileName() {
+    // Prefer the stored display name, unless it's itself a UUID backup name
+    final storedName = widget.project.previewSongFileName;
+    if (storedName != null && storedName.isNotEmpty && !_uuidPreviewRe.hasMatch(storedName)) {
+      return storedName;
+    }
+    // Fall back to the path basename, suppressing UUID-named backup downloads
+    final fallback = path.basename(_effectivePreviewPath ?? '');
+    if (fallback.isEmpty || _uuidPreviewRe.hasMatch(fallback)) return null;
+    return fallback;
+  }
+
 
   Widget _buildAndroidPlayerLayout(BuildContext context) {
     return Column(
@@ -4101,16 +4142,17 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
               ],
             ),
           ),
-        Text(
-          widget.project.previewSongFileName ??
-          path.basename(_effectivePreviewPath ?? ''),
-          style: TextStyle(
-            color: Theme.of(context).textTheme.bodyMedium?.color,
-            fontSize: 14,
+        if (_displayFileName() != null)
+          Text(
+            _displayFileName()!,
+            style: TextStyle(
+              color: Theme.of(context).textTheme.bodyMedium?.color,
+              fontSize: 14,
+            ),
+            overflow: TextOverflow.ellipsis,
           ),
-          overflow: TextOverflow.ellipsis,
-        ),
-        const SizedBox(height: 16),
+        if (_displayFileName() != null) const SizedBox(height: 8),
+        const SizedBox(height: 8),
         // Transport controls
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -4240,16 +4282,17 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          widget.project.previewSongFileName ??
-          path.basename(_effectivePreviewPath ?? ''),
-          style: TextStyle(
-            color: Theme.of(context).textTheme.bodyMedium?.color,
-            fontSize: 14,
+        if (_displayFileName() != null) ...[
+          Text(
+            _displayFileName()!,
+            style: TextStyle(
+              color: Theme.of(context).textTheme.bodyMedium?.color,
+              fontSize: 14,
+            ),
+            overflow: TextOverflow.ellipsis,
           ),
-          overflow: TextOverflow.ellipsis,
-        ),
-        const SizedBox(height: 16),
+          const SizedBox(height: 16),
+        ],
         // Audio player controls
         Row(
           children: [

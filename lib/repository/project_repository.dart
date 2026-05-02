@@ -19,6 +19,7 @@ import '../services/metadata_extractor.dart';
 import '../services/notification_background_service.dart';
 import '../utils/app_paths.dart';
 import 'profile_repository.dart';
+import '../models/profile.dart';
 
 class ProjectRepository {
   final String profileId;
@@ -552,6 +553,63 @@ class ProjectRepository {
 
     // Clear event log
     await eventsBox.clear();
+  }
+
+  /// Wipes every Hive box across all profiles and all global settings,
+  /// leaving the app in a clean first-launch state with a fresh default profile.
+  static Future<void> deleteAllAppData() async {
+    // Collect profile IDs while boxes are still open (avoids type-mismatch
+    // errors from trying to reopen a typed box as Box<dynamic>).
+    final List<String> profileIds;
+    if (Hive.isBoxOpen(ProfileRepository.profilesBoxName)) {
+      profileIds = Hive.box<Profile>(ProfileRepository.profilesBoxName)
+          .keys.cast<String>().toList();
+    } else {
+      final box = await Hive.openBox<Profile>(ProfileRepository.profilesBoxName);
+      profileIds = box.keys.cast<String>().toList();
+    }
+
+    // Close every open box so we can re-open them without type conflicts.
+    await Hive.close();
+
+    // Clear per-profile boxes.
+    const perProfileBoxes = [
+      'projects', 'roots', 'ignored_paths', 'releases', 'playlists', 'events',
+    ];
+    for (final profileId in profileIds) {
+      for (final suffix in perProfileBoxes) {
+        try {
+          final box = await Hive.openBox<dynamic>('${profileId}_$suffix');
+          await box.clear();
+          await box.close();
+        } catch (_) {}
+      }
+    }
+
+    // Clear global boxes.
+    const globalBoxNames = [
+      'settings', 'app_settings', 'notification_preferences',
+      'todoTemplates', 'profiles',
+      // Legacy / misc boxes.
+      'music_projects', 'projects', 'releases', 'roots',
+    ];
+    for (final name in globalBoxNames) {
+      try {
+        final box = await Hive.openBox<dynamic>(name);
+        await box.clear();
+        await box.close();
+      } catch (_) {}
+    }
+
+    // Delete locally downloaded preview song files.
+    try {
+      final previewSongsPath = await getPreviewSongsPath();
+      final dir = Directory(previewSongsPath);
+      if (await dir.exists()) await dir.delete(recursive: true);
+    } catch (_) {}
+
+    // Re-initialize with a fresh default profile so the app starts cleanly.
+    await ProfileRepository.init();
   }
 
   Future<void> clearMissingFiles() async {

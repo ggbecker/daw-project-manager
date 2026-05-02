@@ -56,6 +56,12 @@ class GoogleDriveSyncService {
   // Stream controller for backup progress
   final _progressController = StreamController<BackupProgress>.broadcast();
   Stream<BackupProgress> get progressStream => _progressController.stream;
+
+  // Matches local backup-download filenames like "{uuid}_preview.wav" — not real display names
+  static final _uuidPreviewRe = RegExp(
+    r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}_preview\.',
+    caseSensitive: false,
+  );
   
   // Cancellation flag for backup uploads
   bool _isCancelled = false;
@@ -2241,8 +2247,12 @@ class GoogleDriveSyncService {
                         // File exists in Drive and hash matches - skip upload
                         previewSongFileMap[latestProject.id] = response.files!.first.id!;
                         previewSongHashes[latestProject.id] = currentLocalHash;
-                        if (latestProject.previewSongFileName != null) {
-                          previewSongFileNames[latestProject.id] = latestProject.previewSongFileName!;
+                        // Store display name only if it's a real filename (not a UUID backup name)
+                        final localBasename = path.basename(latestProject.previewSongPath!);
+                        final displayName = latestProject.previewSongFileName ??
+                            (_uuidPreviewRe.hasMatch(localBasename) ? null : localBasename);
+                        if (displayName != null) {
+                          previewSongFileNames[latestProject.id] = displayName;
                         }
                         if (kDebugMode) {
                           print('  Preview song found in Drive, skipping upload');
@@ -2483,7 +2493,12 @@ class GoogleDriveSyncService {
             final newHash = result['hash']!;
             previewSongHashes[project.id] = newHash;
             if (result.containsKey('fileName')) {
-              previewSongFileNames[project.id] = result['fileName']!;
+              final basename = result['fileName']!;
+              final displayName = project.previewSongFileName ??
+                  (_uuidPreviewRe.hasMatch(basename) ? null : basename);
+              if (displayName != null) {
+                previewSongFileNames[project.id] = displayName;
+              }
             }
             
             // Update project with new hash after successful upload
@@ -3394,10 +3409,17 @@ class GoogleDriveSyncService {
                     if (previewSongFileNames != null && previewSongFileNames.containsKey(remoteProject.id)) {
                       originalFileName = previewSongFileNames[remoteProject.id] as String;
                     }
+                    // Fallback for old backups that predate the previewSongFileNames map:
+                    // use the basename of the remote project's path (the real filename on
+                    // the uploading machine) rather than showing a UUID filename.
+                    originalFileName ??= (remoteProject.previewSongPath != null &&
+                            !_isDriveFileReference(remoteProject.previewSongPath!))
+                        ? path.basename(remoteProject.previewSongPath!)
+                        : null;
                     if (previewSongHashes != null && previewSongHashes.containsKey(remoteProject.id)) {
                       expectedHash = previewSongHashes[remoteProject.id] as String;
                     }
-                    
+
                     // Emit progress for preview song download
                     _progressController.add(BackupProgress(
                       stage: BackupProgressStage.downloadingPreviewSongs,
@@ -3480,10 +3502,17 @@ class GoogleDriveSyncService {
                       if (previewSongFileNames != null && previewSongFileNames.containsKey(remoteProject.id)) {
                         previewSongFileName = previewSongFileNames[remoteProject.id] as String;
                       }
+                      // Fallback for old backups: derive display name from the remote
+                      // project's path (real filename on the uploading machine).
+                      if (previewSongFileName == null &&
+                          remoteProject.previewSongPath != null &&
+                          !_isDriveFileReference(remoteProject.previewSongPath!)) {
+                        previewSongFileName = path.basename(remoteProject.previewSongPath!);
+                      }
                       if (previewSongHashes != null && previewSongHashes.containsKey(remoteProject.id)) {
                         uploadedPreviewSongHash = previewSongHashes[remoteProject.id] as String;
                       }
-                      
+
                       if (downloadPreviewSongs) {
                         // On mobile, only download preview songs after backup is downloaded
                         // Check if we need to download (if path is Drive reference or hash changed)
@@ -3700,10 +3729,17 @@ class GoogleDriveSyncService {
                       if (previewSongFileNames != null && previewSongFileNames.containsKey(remoteProject.id)) {
                         originalFileName = previewSongFileNames[remoteProject.id] as String;
                       }
+                      // Fallback for old backups: derive display name from the remote
+                      // project's path (real filename on the uploading machine).
+                      if (originalFileName == null &&
+                          remoteProject.previewSongPath != null &&
+                          !_isDriveFileReference(remoteProject.previewSongPath!)) {
+                        originalFileName = path.basename(remoteProject.previewSongPath!);
+                      }
                       if (previewSongHashes != null && previewSongHashes.containsKey(remoteProject.id)) {
                         expectedHash = previewSongHashes[remoteProject.id] as String;
                       }
-                      
+
                       if (downloadPreviewSongs) {
                         // On mobile, only download preview songs after backup is downloaded
                         // Check if we need to download (if path is Drive reference or hash changed)
@@ -4125,6 +4161,14 @@ class GoogleDriveSyncService {
       print('  Projects: +$projectsAdded ~$projectsUpdated');
       print('  Releases: +$releasesAdded ~$releasesUpdated');
     }
+
+    _progressController.add(BackupProgress(
+      stage: BackupProgressStage.completed,
+      currentItem: 'Download completed successfully!',
+      currentIndex: 0,
+      totalItems: 0,
+      progress: 1.0,
+    ));
 
     return SyncResult(
       projectsAdded: projectsAdded,

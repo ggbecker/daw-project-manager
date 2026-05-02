@@ -2466,6 +2466,57 @@ class AppLocalizationsEs extends AppLocalizations {
   String get shortcutPlayerSeek30 => 'Adelantar/Retroceder ±30 segundos';
 
   @override
+  String get startupDialogTitle => 'Bienvenido a DAW Project Manager';
+
+  @override
+  String get startupDialogSubtitle =>
+      'Comienza añadiendo una carpeta de proyectos o restaurando una copia de Google Drive.';
+
+  @override
+  String get startupAddFolderTitle => 'Añadir carpeta de proyectos';
+
+  @override
+  String get startupAddFolderSubtitle =>
+      'Selecciona una carpeta con tus proyectos DAW.';
+
+  @override
+  String get startupGoogleDriveTitle => 'Sincronizar copia de Google Drive';
+
+  @override
+  String get startupGoogleDriveSubtitle =>
+      'Restaura tus proyectos desde una copia de seguridad en Google Drive.';
+
+  @override
+  String get startupDontShowAgain => 'No mostrar esto al iniciar';
+
+  @override
+  String get deleteAllData => 'Eliminar todos los datos';
+
+  @override
+  String get deleteAllDataSubtitle =>
+      'Eliminar todos los perfiles, proyectos, lanzamientos, listas de reproducción y ajustes de este dispositivo.';
+
+  @override
+  String get deleteAllDataConfirm1Title => '¿Eliminar todos los datos?';
+
+  @override
+  String get deleteAllDataConfirm1Message =>
+      'Esto borrará permanentemente todos los perfiles, proyectos, lanzamientos, listas de reproducción y ajustes de este dispositivo. Tu copia de seguridad en Google Drive (si existe) no se verá afectada.';
+
+  @override
+  String get deleteAllDataConfirm2Title => '¿Estás absolutamente seguro?';
+
+  @override
+  String get deleteAllDataConfirm2Message =>
+      'Esta acción no se puede deshacer. La aplicación volverá a su estado inicial.';
+
+  @override
+  String get deleteEverything => 'Eliminar todo';
+
+  @override
+  String get allDataDeleted => 'Todos los datos han sido eliminados.';
+
+  @override
   String get newerExportFound => 'Exportación más reciente encontrada';
 
   @override
