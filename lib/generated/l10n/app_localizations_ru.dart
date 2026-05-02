@@ -2450,6 +2450,31 @@ class AppLocalizationsRu extends AppLocalizations {
   String get shortcutPlayerSeek30 => 'Перемотка ±30 секунд';
 
   @override
+  String get startupDialogTitle => 'Добро пожаловать в DAW Project Manager';
+
+  @override
+  String get startupDialogSubtitle =>
+      'Добавьте папку с проектами или восстановите резервную копию с Google Диска.';
+
+  @override
+  String get startupAddFolderTitle => 'Добавить папку проектов';
+
+  @override
+  String get startupAddFolderSubtitle =>
+      'Выберите папку с вашими DAW-проектами.';
+
+  @override
+  String get startupGoogleDriveTitle =>
+      'Синхронизировать резервную копию Google Диска';
+
+  @override
+  String get startupGoogleDriveSubtitle =>
+      'Восстановите проекты из резервной копии на Google Диске.';
+
+  @override
+  String get startupDontShowAgain => 'Не показывать при запуске';
+
+  @override
   String get newerExportFound => 'Найден более новый экспорт';
 
   @override

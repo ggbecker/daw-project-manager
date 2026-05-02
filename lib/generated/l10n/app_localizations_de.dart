@@ -2465,6 +2465,30 @@ class AppLocalizationsDe extends AppLocalizations {
   String get shortcutPlayerSeek30 => '±30 Sekunden springen';
 
   @override
+  String get startupDialogTitle => 'Willkommen beim DAW Project Manager';
+
+  @override
+  String get startupDialogSubtitle =>
+      'Füge einen Projektordner hinzu oder stelle ein Google Drive-Backup wieder her.';
+
+  @override
+  String get startupAddFolderTitle => 'Projektordner hinzufügen';
+
+  @override
+  String get startupAddFolderSubtitle =>
+      'Wähle einen Ordner mit deinen DAW-Projekten aus.';
+
+  @override
+  String get startupGoogleDriveTitle => 'Google Drive-Backup synchronisieren';
+
+  @override
+  String get startupGoogleDriveSubtitle =>
+      'Projekte aus einem Google Drive-Backup wiederherstellen.';
+
+  @override
+  String get startupDontShowAgain => 'Beim Start nicht mehr anzeigen';
+
+  @override
   String get newerExportFound => 'Neuerer Export gefunden';
 
   @override

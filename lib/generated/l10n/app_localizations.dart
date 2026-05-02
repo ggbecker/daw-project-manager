@@ -4142,6 +4142,48 @@ abstract class AppLocalizations {
   /// **'Seek ±30 seconds'**
   String get shortcutPlayerSeek30;
 
+  /// No description provided for @startupDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to DAW Project Manager'**
+  String get startupDialogTitle;
+
+  /// No description provided for @startupDialogSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get started by adding your project folder or restoring a backup from Google Drive.'**
+  String get startupDialogSubtitle;
+
+  /// No description provided for @startupAddFolderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Project Folder'**
+  String get startupAddFolderTitle;
+
+  /// No description provided for @startupAddFolderSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a folder containing your DAW projects.'**
+  String get startupAddFolderSubtitle;
+
+  /// No description provided for @startupGoogleDriveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Google Drive Backup'**
+  String get startupGoogleDriveTitle;
+
+  /// No description provided for @startupGoogleDriveSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore your projects from a Google Drive backup.'**
+  String get startupGoogleDriveSubtitle;
+
+  /// No description provided for @startupDontShowAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t show this on startup'**
+  String get startupDontShowAgain;
+
   /// No description provided for @newerExportFound.
   ///
   /// In en, this message translates to:

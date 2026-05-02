@@ -20,6 +20,7 @@ import '../services/scanner_service.dart';
 import '../services/audio_analysis_service.dart';
 import '../services/mixdown_detector_service.dart';
 import 'widgets/shortcuts_help_dialog.dart';
+import 'widgets/startup_dialog.dart';
 import 'widgets/tab_customization_dialog.dart';
 import '../services/dock_menu_service.dart';
 import '../utils/mobile_utils.dart';
@@ -100,6 +101,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with TickerProvid
   bool _isSearchingMobile = false;
   bool _isSearchingDesktop = false;
   late TabController _tabController;
+
+  // Startup dialog
+  bool _startupDialogShown = false;
+  bool _hideStartupDialog = false;
 
   // Ordered list of currently visible tabs (derived from provider, updated via ref.listen)
   List<AppTab> _currentVisibleTabs = [
@@ -186,6 +191,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with TickerProvid
     }
     _tabController = TabController(length: _currentVisibleTabs.length, vsync: this);
     _searchController = TextEditingController();
+    if (!MobileUtils.isMobile()) {
+      loadHideStartupDialog().then((v) {
+        if (mounted) setState(() => _hideStartupDialog = v);
+      });
+    }
     
     // Add listener to TabController to rebuild when tab changes (for search placeholder update)
     _tabController.addListener(_onTabChanged);
@@ -633,6 +643,19 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with TickerProvid
     final dateFormat = ref.watch(dateFormatProvider);
     final repoAsync = ref.watch(repositoryProvider);
     final roots = ref.watch(scanRootsProvider);
+
+    // Show first-launch dialog on desktop when there are no scan roots yet.
+    if (!MobileUtils.isMobile() &&
+        !_startupDialogShown &&
+        !_hideStartupDialog &&
+        repoAsync.hasValue &&
+        roots.isEmpty) {
+      _startupDialogShown = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) showStartupDialog(context);
+      });
+    }
+
     // Keep visible tabs in sync with the provider.
     ref.listen(visibleTabsProvider, (_, next) {
       if (mounted) setState(() => _updateVisibleTabs(next));

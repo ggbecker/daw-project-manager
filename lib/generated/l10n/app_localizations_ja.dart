@@ -2401,6 +2401,28 @@ class AppLocalizationsJa extends AppLocalizations {
   String get shortcutPlayerSeek30 => '±30秒シーク';
 
   @override
+  String get startupDialogTitle => 'DAW Project Manager へようこそ';
+
+  @override
+  String get startupDialogSubtitle =>
+      'プロジェクトフォルダを追加するか、Google ドライブのバックアップを復元して始めましょう。';
+
+  @override
+  String get startupAddFolderTitle => 'プロジェクトフォルダを追加';
+
+  @override
+  String get startupAddFolderSubtitle => 'DAW プロジェクトが入っているフォルダを選択してください。';
+
+  @override
+  String get startupGoogleDriveTitle => 'Google ドライブのバックアップを同期';
+
+  @override
+  String get startupGoogleDriveSubtitle => 'Google ドライブのバックアップからプロジェクトを復元します。';
+
+  @override
+  String get startupDontShowAgain => '起動時に表示しない';
+
+  @override
   String get newerExportFound => '新しいエクスポートが見つかりました';
 
   @override

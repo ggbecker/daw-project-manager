@@ -2378,6 +2378,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String get shortcutPlayerSeek30 => '快进/快退 ±30 秒';
 
   @override
+  String get startupDialogTitle => '欢迎使用 DAW Project Manager';
+
+  @override
+  String get startupDialogSubtitle => '添加项目文件夹或从 Google Drive 备份恢复以开始使用。';
+
+  @override
+  String get startupAddFolderTitle => '添加项目文件夹';
+
+  @override
+  String get startupAddFolderSubtitle => '选择包含您 DAW 项目的文件夹。';
+
+  @override
+  String get startupGoogleDriveTitle => '同步 Google Drive 备份';
+
+  @override
+  String get startupGoogleDriveSubtitle => '从 Google Drive 备份中恢复您的项目。';
+
+  @override
+  String get startupDontShowAgain => '启动时不再显示';
+
+  @override
   String get newerExportFound => '找到更新的导出文件';
 
   @override

@@ -2675,6 +2675,13 @@
   "shortcutPlayerPlayPause": "Play / pause",
   "shortcutPlayerSeek5": "Seek ±5 seconds",
   "shortcutPlayerSeek30": "Seek ±30 seconds",
+  "startupDialogTitle": "Welcome to DAW Project Manager",
+  "startupDialogSubtitle": "Get started by adding your project folder or restoring a backup from Google Drive.",
+  "startupAddFolderTitle": "Add Project Folder",
+  "startupAddFolderSubtitle": "Select a folder containing your DAW projects.",
+  "startupGoogleDriveTitle": "Sync Google Drive Backup",
+  "startupGoogleDriveSubtitle": "Restore your projects from a Google Drive backup.",
+  "startupDontShowAgain": "Don't show this on startup",
   "newerExportFound": "Newer Export Found",
   "newerExportFoundMessage": "A newer file was found in the same folder:\n{filename}\n\nReplace the preview song?",
   "@newerExportFoundMessage": {
