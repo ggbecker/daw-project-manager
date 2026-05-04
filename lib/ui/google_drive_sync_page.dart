@@ -547,12 +547,26 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!.backupUploadedSuccessfullyMessage),
-            backgroundColor: Colors.green,
-          ),
-        );
+        final warnings = _syncService.lastUploadWarnings;
+        if (warnings.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.backupUploadedSuccessfullyMessage),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                '${AppLocalizations.of(context)!.backupUploadedSuccessfullyMessage}'
+                '\n⚠ ${warnings.length} file(s) failed to upload:\n${warnings.join('\n')}',
+              ),
+              backgroundColor: Colors.orange,
+              duration: const Duration(seconds: 8),
+            ),
+          );
+        }
       }
     } on UploadCancelledException catch (_) {
       // User cancelled - close dialog and show info message (no error)
