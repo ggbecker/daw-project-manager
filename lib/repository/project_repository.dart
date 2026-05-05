@@ -589,7 +589,7 @@ class ProjectRepository {
     // Clear global boxes.
     const globalBoxNames = [
       'settings', 'app_settings', 'notification_preferences',
-      'todoTemplates', 'profiles',
+      'todoTemplates', 'profiles', 'backup_timestamps',
       // Legacy / misc boxes.
       'music_projects', 'projects', 'releases', 'roots',
     ];
