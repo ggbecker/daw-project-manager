@@ -2531,4 +2531,34 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get keepCurrent => 'Aktuelle behalten';
+
+  @override
+  String get autoBackup => 'Auto Backup';
+
+  @override
+  String get autoBackupDescription =>
+      'Automatically upload a backup to Google Drive at the selected interval.';
+
+  @override
+  String get autoBackupInterval => 'Backup interval';
+
+  @override
+  String get autoBackupOff => 'Off';
+
+  @override
+  String get autoBackupEvery30Min => 'Every 30 minutes';
+
+  @override
+  String get autoBackupHourly => 'Every hour';
+
+  @override
+  String get autoBackupEvery6Hours => 'Every 6 hours';
+
+  @override
+  String get autoBackupDaily => 'Daily';
+
+  @override
+  String autoBackupNextBackup(String time) {
+    return 'Next backup: $time';
+  }
 }

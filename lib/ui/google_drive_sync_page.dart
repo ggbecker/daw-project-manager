@@ -9,6 +9,7 @@ import 'widgets/desktop_title_bar.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import '../services/google_drive_sync_service.dart' show GoogleDriveSyncService, UploadCancelledException;
 import '../models/backup_progress.dart';
+import '../models/auto_backup_interval.dart';
 import '../providers/providers.dart';
 import '../utils/mobile_utils.dart';
 import '../generated/l10n/app_localizations.dart';
@@ -1079,13 +1080,112 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
                 ),
               ),
             ),
+          // Auto Backup section (only when signed in)
+          if (_isSignedIn) ...[
+            const SizedBox(height: 16),
+            Card(
+              color: Theme.of(context).cardColor,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.schedule, size: 24),
+                        const SizedBox(width: 8),
+                        Text(
+                          AppLocalizations.of(context)!.autoBackup,
+                          style: const TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      AppLocalizations.of(context)!.autoBackupDescription,
+                      style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Text(
+                          AppLocalizations.of(context)!.autoBackupInterval,
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                        const SizedBox(width: 16),
+                        DropdownButton<AutoBackupInterval>(
+                          value: ref.watch(autoBackupIntervalProvider),
+                          items: [
+                            DropdownMenuItem(
+                              value: AutoBackupInterval.off,
+                              child: Text(AppLocalizations.of(context)!.autoBackupOff),
+                            ),
+                            DropdownMenuItem(
+                              value: AutoBackupInterval.every30min,
+                              child: Text(AppLocalizations.of(context)!.autoBackupEvery30Min),
+                            ),
+                            DropdownMenuItem(
+                              value: AutoBackupInterval.hourly,
+                              child: Text(AppLocalizations.of(context)!.autoBackupHourly),
+                            ),
+                            DropdownMenuItem(
+                              value: AutoBackupInterval.every6hours,
+                              child: Text(AppLocalizations.of(context)!.autoBackupEvery6Hours),
+                            ),
+                            DropdownMenuItem(
+                              value: AutoBackupInterval.daily,
+                              child: Text(AppLocalizations.of(context)!.autoBackupDaily),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            if (value != null) {
+                              ref
+                                  .read(autoBackupIntervalProvider.notifier)
+                                  .setInterval(value);
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                    if (ref.watch(autoBackupIntervalProvider) !=
+                            AutoBackupInterval.off &&
+                        _lastUploadTime != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4.0),
+                        child: Text(
+                          AppLocalizations.of(context)!.autoBackupNextBackup(
+                            _nextBackupLabel(
+                              ref.watch(autoBackupIntervalProvider),
+                              _lastUploadTime!,
+                            ),
+                          ),
+                          style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
           ],
+        ],
         ),
             ),
           ),
         ],
       ),
     );
+  }
+
+  String _nextBackupLabel(AutoBackupInterval interval, DateTime lastUpload) {
+    final next = lastUpload.add(interval.duration!);
+    final diff = next.difference(DateTime.now());
+    if (diff.isNegative || diff.inSeconds < 30) return 'soon';
+    if (diff.inMinutes < 60) return 'in ${diff.inMinutes} min';
+    if (diff.inHours == 1) return 'in 1 hour';
+    if (diff.inHours < 24) return 'in ${diff.inHours} hours';
+    if (diff.inDays == 1) return 'in 1 day';
+    return 'in ${diff.inDays} days';
   }
 }
 
