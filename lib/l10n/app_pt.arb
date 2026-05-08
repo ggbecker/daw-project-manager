@@ -1689,4 +1689,19 @@
   "@customizeTabs": {},
   "customizeTabsDescription": "Escolha quais abas exibir na barra de navegacao. A aba Projetos e sempre visivel.",
   "@customizeTabsDescription": {}
+,
+  "autoBackup": "Auto Backup",
+  "autoBackupDescription": "Automatically upload a backup to Google Drive at the selected interval.",
+  "autoBackupInterval": "Backup interval",
+  "autoBackupOff": "Off",
+  "autoBackupEvery30Min": "Every 30 minutes",
+  "autoBackupHourly": "Every hour",
+  "autoBackupEvery6Hours": "Every 6 hours",
+  "autoBackupDaily": "Daily",
+  "autoBackupNextBackup": "Next backup: {time}",
+  "@autoBackupNextBackup": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  }
 }

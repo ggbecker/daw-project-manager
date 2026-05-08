@@ -1665,4 +1665,19 @@
   "@customizeTabs": {},
   "customizeTabsDescription": "ナビゲーションバーに表示するタブを選択します。プロジェクトタブは常に表示されます。",
   "@customizeTabsDescription": {}
+,
+  "autoBackup": "Auto Backup",
+  "autoBackupDescription": "Automatically upload a backup to Google Drive at the selected interval.",
+  "autoBackupInterval": "Backup interval",
+  "autoBackupOff": "Off",
+  "autoBackupEvery30Min": "Every 30 minutes",
+  "autoBackupHourly": "Every hour",
+  "autoBackupEvery6Hours": "Every 6 hours",
+  "autoBackupDaily": "Daily",
+  "autoBackupNextBackup": "Next backup: {time}",
+  "@autoBackupNextBackup": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  }
 }

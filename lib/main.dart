@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +7,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'generated/l10n/app_localizations.dart';
 import 'dart:io' show Platform;
 import 'package:window_manager/window_manager.dart';
+import 'package:hive_ce_flutter/hive_flutter.dart';
 
 // NOVO: Importar providers e serviços para a lógica de auto-scan
 import 'providers/providers.dart';
@@ -13,6 +15,9 @@ import 'repository/project_repository.dart';
 import 'services/scanner_service.dart';
 import 'services/deadline_notification_service.dart';
 import 'services/notification_background_service.dart';
+import 'services/google_drive_sync_service.dart';
+import 'models/auto_backup_interval.dart';
+import 'utils/app_paths.dart';
 
 import 'ui/dashboard_page.dart';
 import 'ui/project_detail_page.dart';
@@ -21,6 +26,64 @@ import 'providers/theme_provider.dart';
 
 // Global navigator key for deep linking
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+// Auto-backup state (top-level so it persists for the app lifetime)
+bool _autoBackupRunning = false;
+
+void _startAutoBackupTimer(
+  ProviderContainer container,
+  GoogleDriveSyncService syncService,
+) {
+  Timer.periodic(const Duration(minutes: 5), (_) async {
+    if (_autoBackupRunning) return;
+    _autoBackupRunning = true;
+    try {
+      // Read saved interval from app_settings box
+      await ensureHiveInitialized();
+      final settingsBox = await Hive.openBox<String>('app_settings');
+      final interval = AutoBackupInterval.fromStorageKey(
+        settingsBox.get('autoBackupInterval'),
+      );
+      final duration = interval.duration;
+      if (duration == null) return; // "off"
+
+      // On desktop, try to silently restore session if not already signed in
+      if (!syncService.isSignedIn) {
+        if (!kIsWeb && !Platform.isAndroid && !Platform.isIOS) {
+          try {
+            final restored = await syncService.restoreSession();
+            if (!restored) return;
+          } catch (_) {
+            return;
+          }
+        } else {
+          return;
+        }
+      }
+
+      // Check if enough time has elapsed since the last upload
+      final lastUpload = await syncService.getLastBackupUploadTimestamp();
+      if (lastUpload != null &&
+          DateTime.now().difference(lastUpload) < duration) {
+        return; // Not due yet
+      }
+
+      // Run backup silently
+      final profileRepo =
+          await container.read(profileRepositoryProvider.future);
+      final projectRepo = await container.read(repositoryProvider.future);
+      await syncService.uploadDatabase(
+        projectRepo: projectRepo,
+        profileRepo: profileRepo,
+      );
+      if (kDebugMode) print('Auto-backup completed successfully');
+    } catch (e) {
+      if (kDebugMode) print('Auto-backup failed: $e');
+    } finally {
+      _autoBackupRunning = false;
+    }
+  });
+}
 
 class _BackIntent extends Intent {
   const _BackIntent();
@@ -135,7 +198,7 @@ void main() async {
   final container = ProviderContainer();
   try {
     // 4a. Pré-carrega o ProfileRepository primeiro
-    final profileRepo = await container.read(profileRepositoryProvider.future);
+    await container.read(profileRepositoryProvider.future);
     
     // 4b. Pré-carrega o ProjectRepository (que depende do ProfileRepository)
     final repo = await container.read(repositoryProvider.future);
@@ -149,12 +212,12 @@ void main() async {
       try {
         final notificationService = DeadlineNotificationService();
         final projects = repo.getAllProjects();
-        
+
         if (kDebugMode) {
           print('\n🔔 Scheduling deadline notifications on app start...');
           print('📦 Total projects loaded: ${projects.length}');
         }
-        
+
         await notificationService.scheduleAllDeadlineNotifications(
           projects: projects,
         );
@@ -162,7 +225,17 @@ void main() async {
         if (kDebugMode) print('❌ Error scheduling notifications on startup: $e');
       }
     }
-    
+
+    // 4e. Start auto-backup timer (desktop: try to restore session silently)
+    final autoBackupService = GoogleDriveSyncService();
+    if (!kIsWeb && !Platform.isAndroid && !Platform.isIOS) {
+      try {
+        await autoBackupService.initializeCredentialsStorage();
+        await autoBackupService.restoreSession();
+      } catch (_) {}
+    }
+    _startAutoBackupTimer(container, autoBackupService);
+
   } catch (e) {
     // Mark as complete even on error
     container.read(initialScanStateProvider.notifier).complete();

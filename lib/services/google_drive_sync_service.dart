@@ -65,6 +65,15 @@ class GoogleDriveSyncService {
   
   // Cancellation flag for backup uploads
   bool _isCancelled = false;
+
+  // Per-merge hash cache: path → MD5 hex. Cleared at the start of each mergeData() call
+  // so the same local file is only read from disk once per sync operation.
+  final Map<String, String> _mergeHashCache = {};
+
+  // Warnings from the most recent upload (files that failed to upload).
+  // Cleared at the start of each uploadDatabase() call.
+  List<String> _lastUploadWarnings = [];
+  List<String> get lastUploadWarnings => List.unmodifiable(_lastUploadWarnings);
   
   // Cancel current upload operation
   void cancelUpload() {
@@ -1752,10 +1761,10 @@ class GoogleDriveSyncService {
       }
       
       // Download file using Drive API
-      final media = await _driveApi!.files.get(
+      final media = await _withRetry(() async => (await _driveApi!.files.get(
         driveFileId,
         downloadOptions: drive.DownloadOptions.fullMedia,
-      ) as drive.Media;
+      )) as drive.Media);
       
       // Read the stream and write to file
       final file = File(localFilePath);
@@ -1852,10 +1861,10 @@ class GoogleDriveSyncService {
       }
       
       // Download file using Drive API
-      final media = await _driveApi!.files.get(
+      final media = await _withRetry(() async => (await _driveApi!.files.get(
         driveFileId,
         downloadOptions: drive.DownloadOptions.fullMedia,
-      ) as drive.Media;
+      )) as drive.Media);
       
       // Read the stream and write to file
       final file = File(localFilePath);
@@ -1952,10 +1961,10 @@ class GoogleDriveSyncService {
       }
       
       // Download file using Drive API
-      final media = await _driveApi!.files.get(
+      final media = await _withRetry(() async => (await _driveApi!.files.get(
         driveFileId,
         downloadOptions: drive.DownloadOptions.fullMedia,
-      ) as drive.Media;
+      )) as drive.Media);
       
       // Read the stream and write to file
       final file = File(localFilePath);
@@ -2024,10 +2033,43 @@ class GoogleDriveSyncService {
     if (!await file.exists()) {
       throw Exception('File not found: $filePath');
     }
-    
+
     // Use streaming to avoid loading large files into memory (important for Android)
     final digest = await md5.bind(file.openRead()).first;
     return digest.toString();
+  }
+
+  /// Like [_calculateFileHash] but memoises the result in [_mergeHashCache] so
+  /// the same file is only read from disk once per merge operation.
+  Future<String> _cachedFileHash(String filePath) async {
+    return _mergeHashCache[filePath] ??= await _calculateFileHash(filePath);
+  }
+
+  /// Retry [fn] up to [maxAttempts] times on transient Drive/network errors using
+  /// exponential backoff (2 s, 4 s, 8 s …) with ±25 % jitter.
+  /// Throws immediately on cancellation or non-retryable errors.
+  Future<T> _withRetry<T>(Future<T> Function() fn, {int maxAttempts = 3}) async {
+    int attempt = 0;
+    while (true) {
+      if (_isCancelled) throw UploadCancelledException('Cancelled by user');
+      try {
+        return await fn();
+      } catch (e) {
+        attempt++;
+        if (attempt >= maxAttempts || !_isRetryableError(e) || _isCancelled) rethrow;
+        final base = Duration(seconds: 1 << attempt); // 2 s, 4 s, 8 s
+        final jitterMs = (base.inMilliseconds * 0.25 * (DateTime.now().millisecondsSinceEpoch % 100) / 100).round();
+        if (kDebugMode) print('Drive retry $attempt/$maxAttempts after ${base.inMilliseconds + jitterMs}ms: $e');
+        await Future.delayed(base + Duration(milliseconds: jitterMs));
+      }
+    }
+  }
+
+  bool _isRetryableError(Object e) {
+    if (e is SocketException || e is HttpException) return true;
+    final s = e.toString();
+    return s.contains('429') || s.contains('500') || s.contains('502') ||
+        s.contains('503') || s.contains('504');
   }
 
   /// Get content type for file extension
@@ -2197,7 +2239,20 @@ class GoogleDriveSyncService {
           }
           
           // Collect projects and track which profile they belong to
-          for (final project in profileProjectsBox.values) {
+          final profileProjectsList = profileProjectsBox.values.toList();
+          int profileProjectIndex = 0;
+          for (final project in profileProjectsList) {
+            profileProjectIndex++;
+            final projectFraction = profileProjectsList.isEmpty
+                ? 1.0
+                : profileProjectIndex / profileProjectsList.length;
+            _progressController.add(BackupProgress(
+              stage: BackupProgressStage.collectingData,
+              currentItem: 'Checking: ${project.displayName}',
+              currentIndex: profileProjectIndex,
+              totalItems: profileProjectsList.length,
+              progress: ((profileIndex - 1) + projectFraction) / allProfiles.length * 0.2,
+            ));
             if (!allProjects.any((p) => p.id == project.id)) {
               allProjects.add(project);
             }
@@ -2460,6 +2515,8 @@ class GoogleDriveSyncService {
         print('Found ${previewSongsToUpload.length} preview songs that need upload');
       }
       
+      _lastUploadWarnings = [];
+
       int uploadedCount = 0;
       for (final uploadInfo in previewSongsToUpload) {
         // Check for cancellation
@@ -2500,7 +2557,7 @@ class GoogleDriveSyncService {
                 previewSongFileNames[project.id] = displayName;
               }
             }
-            
+
             // Update project with new hash after successful upload
             final currentProject = projectBox.get(project.id);
             if (currentProject != null) {
@@ -2511,15 +2568,18 @@ class GoogleDriveSyncService {
                 print('  Updated project ${project.id} with preview song hash: $newHash');
               }
             }
-            
+
             if (kDebugMode) {
               print('  Uploaded preview song for project ${project.id}: ${result['fileId']} (hash: $newHash)');
             }
+          } else {
+            _lastUploadWarnings.add('Preview song failed to upload: ${project.displayName}');
           }
         } catch (e) {
           if (kDebugMode) {
             print('  Error uploading preview song for project ${project.id}: $e');
           }
+          _lastUploadWarnings.add('Preview song error (${project.displayName}): $e');
         }
       }
       
@@ -2559,15 +2619,18 @@ class GoogleDriveSyncService {
             profilePhotoFileMap[profile.id] = result['fileId']!;
             final newHash = result['hash']!;
             profilePhotoHashes[profile.id] = newHash;
-            
+
             if (kDebugMode) {
               print('  Uploaded profile photo for profile ${profile.id}: ${result['fileId']} (hash: $newHash)');
             }
+          } else {
+            _lastUploadWarnings.add('Profile photo failed to upload: ${profile.name}');
           }
         } catch (e) {
           if (kDebugMode) {
             print('  Error uploading profile photo for profile ${profile.id}: $e');
           }
+          _lastUploadWarnings.add('Profile photo error (${profile.name}): $e');
         }
       }
       
@@ -2607,15 +2670,18 @@ class GoogleDriveSyncService {
             releaseArtworkFileMap[release.id] = result['fileId']!;
             final newHash = result['hash']!;
             releaseArtworkHashes[release.id] = newHash;
-            
+
             if (kDebugMode) {
               print('  Uploaded release artwork for release ${release.id}: ${result['fileId']} (hash: $newHash)');
             }
+          } else {
+            _lastUploadWarnings.add('Release artwork failed to upload: ${release.title}');
           }
         } catch (e) {
           if (kDebugMode) {
             print('  Error uploading release artwork for release ${release.id}: $e');
           }
+          _lastUploadWarnings.add('Release artwork error (${release.title}): $e');
         }
       }
       
@@ -2701,29 +2767,21 @@ class GoogleDriveSyncService {
       if (response.files != null && response.files!.isNotEmpty) {
         // Update existing file
         final fileId = response.files!.first.id!;
-        final media = drive.Media(
-          Stream.value(bytes),
-          bytes.length,
-          contentType: 'application/json',
-        );
-        await _driveApi!.files.update(
+        await _withRetry(() => _driveApi!.files.update(
           drive.File()..name = fileName,
           fileId,
-          uploadMedia: media,
-        );
+          uploadMedia: drive.Media(Stream.value(bytes), bytes.length, contentType: 'application/json'),
+        ));
         if (kDebugMode) print('✓ Updated existing backup file');
       } else {
         // Create new file
-        final file = drive.File();
-        file.name = fileName;
-        file.parents = [_appDataFolderId!];
-        
-        final media = drive.Media(
-          Stream.value(bytes),
-          bytes.length,
-          contentType: 'application/json',
-        );
-        await _driveApi!.files.create(file, uploadMedia: media);
+        final driveFile = drive.File()
+          ..name = fileName
+          ..parents = [_appDataFolderId!];
+        await _withRetry(() => _driveApi!.files.create(
+          driveFile,
+          uploadMedia: drive.Media(Stream.value(bytes), bytes.length, contentType: 'application/json'),
+        ));
         if (kDebugMode) print('✓ Created new backup file');
       }
 
@@ -2738,13 +2796,16 @@ class GoogleDriveSyncService {
       // Update last download timestamp to reflect that we're in sync
       await saveLastBackupDownloadTimestamp(uploadTimestamp);
       
-      // Emit progress: completed
+      // Emit progress: completed (include any non-fatal warnings)
       _progressController.add(BackupProgress(
         stage: BackupProgressStage.completed,
-        currentItem: 'Backup completed successfully!',
+        currentItem: _lastUploadWarnings.isEmpty
+            ? 'Backup completed successfully!'
+            : 'Backup completed with ${_lastUploadWarnings.length} warning(s)',
         currentIndex: 1,
         totalItems: 1,
-        progress: 1.0, // 100%
+        progress: 1.0,
+        warnings: List.unmodifiable(_lastUploadWarnings),
       ));
     } catch (e) {
       if (kDebugMode) print('Error uploading database: $e');
@@ -2839,10 +2900,10 @@ class GoogleDriveSyncService {
       }
 
       final fileId = response.files!.first.id!;
-      final media = await _driveApi!.files.get(
+      final media = await _withRetry(() async => (await _driveApi!.files.get(
         fileId,
         downloadOptions: drive.DownloadOptions.fullMedia,
-      ) as drive.Media;
+      )) as drive.Media);
 
       // Read file content
       final bytes = <int>[];
@@ -2970,10 +3031,10 @@ class GoogleDriveSyncService {
       }
 
       final fileId = response.files!.first.id!;
-      final media = await _driveApi!.files.get(
+      final media = await _withRetry(() async => (await _driveApi!.files.get(
         fileId,
         downloadOptions: drive.DownloadOptions.fullMedia,
-      ) as drive.Media;
+      )) as drive.Media);
 
       final bytes = <int>[];
       await for (final chunk in media.stream) {
@@ -3182,6 +3243,8 @@ class GoogleDriveSyncService {
     required ProfileRepository profileRepo,
     bool downloadPreviewSongs = true,
   }) async {
+    _mergeHashCache.clear();
+
     int projectsAdded = 0;
     int projectsUpdated = 0;
     int releasesAdded = 0;
@@ -3220,6 +3283,7 @@ class GoogleDriveSyncService {
       int photoIndex = 0;
       
       for (final remoteProfile in remoteProfiles) {
+        if (_isCancelled) throw UploadCancelledException('Download cancelled by user');
         final localProfile = profileRepo.getProfileById(remoteProfile.id);
         
         // Download profile photo if available and downloadPreviewSongs is true
@@ -3391,6 +3455,7 @@ class GoogleDriveSyncService {
               : remoteProjects.map((p) => p.id).toList(); // All projects if no mapping
           
           for (final remoteProject in remoteProjects) {
+            if (_isCancelled) throw UploadCancelledException('Download cancelled by user');
             // Only process if this project belongs to this profile (or all if no mapping)
             if (profileProjectIds.contains(remoteProject.id)) {
               final localProject = profileProjectsBox.get(remoteProject.id);
@@ -3528,7 +3593,7 @@ class GoogleDriveSyncService {
                             // File exists locally - verify hash if we have expected hash
                             if (uploadedPreviewSongHash != null) {
                               try {
-                                final localHash = await _calculateFileHash(previewSongPath);
+                                final localHash = await _cachedFileHash(previewSongPath);
                                 if (localHash == uploadedPreviewSongHash) {
                                   // Hash matches - no download needed
                                   if (kDebugMode) {
@@ -3552,7 +3617,7 @@ class GoogleDriveSyncService {
                               // No expected hash - check if local hash matches project hash
                               if (localProject.uploadedPreviewSongHash != null) {
                                 try {
-                                  final localHash = await _calculateFileHash(previewSongPath);
+                                  final localHash = await _cachedFileHash(previewSongPath);
                                   if (localHash == localProject.uploadedPreviewSongHash) {
                                     // Local hash matches project hash - no download needed
                                     if (kDebugMode) {
@@ -3753,7 +3818,7 @@ class GoogleDriveSyncService {
                             // File exists locally - verify hash if we have expected hash
                             if (expectedHash != null) {
                               try {
-                                final localHash = await _calculateFileHash(previewSongPath);
+                                final localHash = await _cachedFileHash(previewSongPath);
                                 if (localHash == expectedHash) {
                                   // Hash matches - no download needed
                                   if (kDebugMode) {
@@ -3777,7 +3842,7 @@ class GoogleDriveSyncService {
                               // No expected hash - check if local hash matches project hash
                               if (localProject.uploadedPreviewSongHash != null) {
                                 try {
-                                  final localHash = await _calculateFileHash(previewSongPath);
+                                  final localHash = await _cachedFileHash(previewSongPath);
                                   if (localHash == localProject.uploadedPreviewSongHash) {
                                     // Local hash matches project hash - no download needed
                                     if (kDebugMode) {
@@ -3991,6 +4056,7 @@ class GoogleDriveSyncService {
               : remoteReleases.map((r) => r.id).toList(); // All releases if no mapping
           
           for (final remoteRelease in remoteReleases) {
+            if (_isCancelled) throw UploadCancelledException('Download cancelled by user');
             // Only process if this release belongs to this profile (or all if no mapping)
             if (profileReleaseIds.contains(remoteRelease.id)) {
               final localRelease = profileReleasesBox.get(remoteRelease.id);
@@ -4136,6 +4202,7 @@ class GoogleDriveSyncService {
               : remoteRoots.map((r) => r.id).toList(); // All roots if no mapping
           
           for (final remoteRoot in remoteRoots) {
+            if (_isCancelled) throw UploadCancelledException('Download cancelled by user');
             // Only process if this root belongs to this profile (or all if no mapping)
             if (profileRootIds.contains(remoteRoot.id)) {
               final localRoot = profileRootsBox.get(remoteRoot.id);

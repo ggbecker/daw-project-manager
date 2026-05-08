@@ -4261,6 +4261,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Keep Current'**
   String get keepCurrent;
+
+  /// No description provided for @autoBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto Backup'**
+  String get autoBackup;
+
+  /// No description provided for @autoBackupDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatically upload a backup to Google Drive at the selected interval.'**
+  String get autoBackupDescription;
+
+  /// No description provided for @autoBackupInterval.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup interval'**
+  String get autoBackupInterval;
+
+  /// No description provided for @autoBackupOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get autoBackupOff;
+
+  /// No description provided for @autoBackupEvery30Min.
+  ///
+  /// In en, this message translates to:
+  /// **'Every 30 minutes'**
+  String get autoBackupEvery30Min;
+
+  /// No description provided for @autoBackupHourly.
+  ///
+  /// In en, this message translates to:
+  /// **'Every hour'**
+  String get autoBackupHourly;
+
+  /// No description provided for @autoBackupEvery6Hours.
+  ///
+  /// In en, this message translates to:
+  /// **'Every 6 hours'**
+  String get autoBackupEvery6Hours;
+
+  /// No description provided for @autoBackupDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get autoBackupDaily;
+
+  /// No description provided for @autoBackupNextBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Next backup: {time}'**
+  String autoBackupNextBackup(String time);
 }
 
 class _AppLocalizationsDelegate

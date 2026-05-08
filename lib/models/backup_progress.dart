@@ -5,6 +5,8 @@ class BackupProgress {
   final int currentIndex;
   final int totalItems;
   final double progress; // 0.0 to 1.0
+  /// Non-fatal warnings collected during this operation (e.g. files that failed to upload).
+  final List<String> warnings;
 
   BackupProgress({
     required this.stage,
@@ -12,6 +14,7 @@ class BackupProgress {
     required this.currentIndex,
     required this.totalItems,
     required this.progress,
+    this.warnings = const [],
   });
 
   BackupProgress copyWith({
@@ -20,6 +23,7 @@ class BackupProgress {
     int? currentIndex,
     int? totalItems,
     double? progress,
+    List<String>? warnings,
   }) {
     return BackupProgress(
       stage: stage ?? this.stage,
@@ -27,6 +31,7 @@ class BackupProgress {
       currentIndex: currentIndex ?? this.currentIndex,
       totalItems: totalItems ?? this.totalItems,
       progress: progress ?? this.progress,
+      warnings: warnings ?? this.warnings,
     );
   }
 }

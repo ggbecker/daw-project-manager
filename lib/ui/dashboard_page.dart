@@ -4383,7 +4383,7 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
               color: Theme.of(context).textTheme.bodySmall?.color,
             ),
             SizedBox(
-              width: 80,
+              width: 120,
               child: Slider(
                 value: _volume,
                 min: 0.0,
@@ -4676,6 +4676,10 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
       },
       child: AlertDialog(
             backgroundColor: Theme.of(context).cardColor,
+            constraints: BoxConstraints(
+              minWidth: MobileUtils.isMobile() ? 320 : 780,
+              maxWidth: MobileUtils.isMobile() ? double.infinity : 840,
+            ),
             title: Row(
               children: [
                 Expanded(
@@ -4709,7 +4713,7 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
               ],
             ),
             content: SizedBox(
-              width: MobileUtils.isMobile() ? double.infinity : 400,
+              width: MobileUtils.isMobile() ? double.infinity : 600,
               child: MobileUtils.isMobile()
                   ? _buildAndroidPlayerLayout(context)
                   : _buildDesktopPlayerLayout(context),

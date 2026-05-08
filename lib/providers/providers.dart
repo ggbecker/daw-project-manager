@@ -24,6 +24,7 @@ import '../repository/project_repository.dart';
 import '../utils/search_utils.dart';
 import '../repository/profile_repository.dart';
 import '../services/google_drive_sync_service.dart';
+import '../models/auto_backup_interval.dart';
 
 // Profile Repository Provider
 final profileRepositoryProvider = FutureProvider<ProfileRepository>((ref) async {
@@ -772,6 +773,41 @@ class ShowOnlyWithDeadlineNotifier extends Notifier<bool> {
 final googleDriveSyncServiceProvider = Provider<GoogleDriveSyncService>((ref) {
   return GoogleDriveSyncService();
 });
+
+// ---------------------------------------------------------------------------
+// Auto Backup Interval
+// ---------------------------------------------------------------------------
+
+class AutoBackupIntervalNotifier extends Notifier<AutoBackupInterval> {
+  static const _key = 'autoBackupInterval';
+
+  @override
+  AutoBackupInterval build() {
+    SchedulerBinding.instance.addPostFrameCallback((_) => _load());
+    return AutoBackupInterval.off;
+  }
+
+  Future<void> _load() async {
+    try {
+      await ensureHiveInitialized();
+      final box = await Hive.openBox<String>('app_settings');
+      state = AutoBackupInterval.fromStorageKey(box.get(_key));
+    } catch (_) {}
+  }
+
+  Future<void> setInterval(AutoBackupInterval interval) async {
+    state = interval;
+    try {
+      await ensureHiveInitialized();
+      final box = await Hive.openBox<String>('app_settings');
+      await box.put(_key, interval.name);
+    } catch (_) {}
+  }
+}
+
+final autoBackupIntervalProvider =
+    NotifierProvider<AutoBackupIntervalNotifier, AutoBackupInterval>(
+        AutoBackupIntervalNotifier.new);
 
 // Playlists Provider
 final playlistsProvider = StreamProvider<List<Playlist>>((ref) async* {
