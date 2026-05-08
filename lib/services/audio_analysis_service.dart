@@ -3,6 +3,7 @@ import 'dart:isolate';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
+import 'package:path_provider/path_provider.dart';
 
 /// Results of audio loudness & mastering analysis.
 class AudioAnalysisResult {
@@ -153,6 +154,98 @@ class AudioAnalysisService {
       return null;
     }
   }
+
+  /// Extract min/max peak data for waveform visualization.
+  /// Works on WAV directly; for other formats, converts to a temp mono WAV first.
+  /// Returns null if the file cannot be parsed.
+  static Future<WaveformPeaks?> extractWaveformPeaks(
+    String filePath, {
+    int targetFrames = 2000,
+  }) async {
+    final ext = filePath.toLowerCase().split('.').last;
+    String wavPath = filePath;
+    String? tmpPath;
+
+    if (ext != 'wav') {
+      final tmpDir = await getTemporaryDirectory();
+      tmpPath = '${tmpDir.path}/wfpk_${filePath.hashCode.abs()}.wav';
+      final ok = await writeMonoWavFile(filePath, tmpPath);
+      if (!ok) return null;
+      wavPath = tmpPath;
+    }
+
+    try {
+      return await Isolate.run(() => _extractPeaksIsolate(wavPath, targetFrames));
+    } catch (_) {
+      return null;
+    } finally {
+      if (tmpPath != null) {
+        try { File(tmpPath).deleteSync(); } catch (_) {}
+      }
+    }
+  }
+}
+
+// ─── Waveform peaks ──────────────────────────────────────────────────────────
+
+/// Min/max peak data for each display frame, used to render a waveform.
+class WaveformPeaks {
+  final List<double> minValues; // per-frame minimum sample (-1..0)
+  final List<double> maxValues; // per-frame maximum sample (0..1)
+  final int sampleRate;
+  final double durationSeconds;
+
+  const WaveformPeaks({
+    required this.minValues,
+    required this.maxValues,
+    required this.sampleRate,
+    required this.durationSeconds,
+  });
+
+  int get frameCount => maxValues.length;
+}
+
+WaveformPeaks? _extractPeaksIsolate(String wavPath, int targetFrames) {
+  final bytes = File(wavPath).readAsBytesSync();
+  final info = _parseWavInfo(bytes);
+  if (info == null) return null;
+
+  final channels = _extractSamples(bytes, info);
+  final numSamples = channels[0].length;
+  if (numSamples == 0) return null;
+
+  // Mix to mono
+  final mono = channels.length == 1
+      ? channels[0]
+      : List<double>.generate(numSamples, (i) {
+          double sum = 0;
+          for (final ch in channels) { sum += ch[i]; }
+          return sum / channels.length;
+        });
+
+  final frames = targetFrames.clamp(1, numSamples);
+  final frameSize = numSamples ~/ frames;
+  final minValues = List<double>.filled(frames, 0.0);
+  final maxValues = List<double>.filled(frames, 0.0);
+
+  for (int f = 0; f < frames; f++) {
+    final start = f * frameSize;
+    final end = min(start + frameSize, numSamples);
+    double minV = 0, maxV = 0;
+    for (int i = start; i < end; i++) {
+      if (mono[i] < minV) minV = mono[i];
+      if (mono[i] > maxV) maxV = mono[i];
+    }
+    minValues[f] = minV;
+    maxValues[f] = maxV;
+  }
+
+  return WaveformPeaks(
+    minValues: minValues,
+    maxValues: maxValues,
+    sampleRate: info.sampleRate,
+    durationSeconds: numSamples / info.sampleRate,
+  );
 }
 
 // ─── Per-frame level data ─────────────────────────────────────────────────────

@@ -21,6 +21,7 @@ class TabCustomizationDialog extends ConsumerWidget {
     AppTab.playlists:  Icons.playlist_play,
     AppTab.queue:      Icons.checklist,
     AppTab.statistics: Icons.bar_chart_rounded,
+    AppTab.player:     Icons.headphones,
   };
 
   String _label(AppTab tab, AppLocalizations l10n) => switch (tab) {
@@ -29,6 +30,7 @@ class TabCustomizationDialog extends ConsumerWidget {
     AppTab.playlists  => l10n.playlists,
     AppTab.queue      => l10n.queueTab,
     AppTab.statistics => l10n.statisticsTab,
+    AppTab.player     => 'Music Player',
   };
 
   @override
@@ -39,6 +41,7 @@ class TabCustomizationDialog extends ConsumerWidget {
 
     final allTabs = VisibleTabsNotifier.canonicalOrder
         .where((t) => isMobile || t != AppTab.playlists)
+        .where((t) => !isMobile || t != AppTab.player) // player is desktop-only
         .toList();
 
     return AlertDialog(

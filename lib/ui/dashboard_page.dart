@@ -20,12 +20,15 @@ import '../services/scanner_service.dart';
 import '../services/audio_analysis_service.dart';
 import '../services/mixdown_detector_service.dart';
 import 'widgets/shortcuts_help_dialog.dart';
+import 'widgets/waveform_widget.dart';
+import 'music_player_page.dart';
 import 'widgets/startup_dialog.dart';
 import 'widgets/tab_customization_dialog.dart';
 import '../services/dock_menu_service.dart';
 import '../utils/mobile_utils.dart';
 import '../utils/file_launcher.dart';
 import '../utils/search_utils.dart';
+import '../utils/route_observer.dart';
 import 'project_detail_page.dart';
 import 'releases_tab_page.dart';
 import 'release_detail_page.dart';
@@ -40,6 +43,8 @@ import 'widgets/desktop_title_bar.dart';
 import 'widgets/language_switcher.dart';
 import 'widgets/theme_switcher.dart';
 import '../generated/l10n/app_localizations.dart';
+
+import 'package:hive_ce_flutter/hive_flutter.dart';
 
 import '../models/music_project.dart';
 import '../models/release.dart';
@@ -95,7 +100,8 @@ class DashboardPage extends ConsumerStatefulWidget {
   ConsumerState<DashboardPage> createState() => _DashboardPageState();
 }
 
-class _DashboardPageState extends ConsumerState<DashboardPage> with TickerProviderStateMixin {
+class _DashboardPageState extends ConsumerState<DashboardPage>
+    with TickerProviderStateMixin, RouteAware {
   bool _scanning = false;
   bool _extractingMetadata = false;
   bool _isSearchingMobile = false;
@@ -123,6 +129,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with TickerProvid
       VisibleTabsNotifier.canonicalOrder
           .where((t) => visible.contains(t))
           .where((t) => MobileUtils.isMobile() || t != AppTab.playlists)
+          .where((t) => !MobileUtils.isMobile() || t != AppTab.player)
           .toList();
 
   // Generation counter — incremented each time we schedule a tab update so that
@@ -231,8 +238,22 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with TickerProvid
     });
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    appRouteObserver.subscribe(this, ModalRoute.of(context)!);
+  }
+
+  @override
+  void didPushNext() {
+    // A new route was pushed on top of the dashboard — stop the bottom player.
+    ref.read(desktopPlayerProvider.notifier).close();
+  }
+
   void _onTabChanged() {
     if (!_tabController.indexIsChanging && mounted) {
+      // Stop the bottom player whenever the user switches tabs.
+      ref.read(desktopPlayerProvider.notifier).close();
       switch (_currentTab) {
         case AppTab.projects:
           final projectsSearch = ref.read(projectsSearchProvider);
@@ -247,6 +268,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with TickerProvid
           final statsSearch = ref.read(statisticsSearchProvider);
           if (_searchController.text != statsSearch) _searchController.text = statsSearch;
         case AppTab.playlists:
+        case AppTab.player:
           _searchController.clear();
       }
       if (MobileUtils.isMobile() && _isSearchingMobile) _isSearchingMobile = false;
@@ -265,6 +287,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with TickerProvid
         ref.read(queueSearchProvider.notifier).clear();
       case AppTab.statistics:
       case AppTab.playlists:
+      case AppTab.player:
         ref.read(statisticsSearchProvider.notifier).set('');
     }
   }
@@ -279,12 +302,14 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with TickerProvid
         ref.read(queueSearchProvider.notifier).set(text);
       case AppTab.statistics:
       case AppTab.playlists:
+      case AppTab.player:
         ref.read(statisticsSearchProvider.notifier).set(text);
     }
   }
 
   @override
   void dispose() {
+    appRouteObserver.unsubscribe(this);
     _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     _searchFocusNode.dispose();
@@ -668,6 +693,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with TickerProvid
       AppTab.queue      => ref.watch(queueSearchProvider),
       AppTab.statistics => ref.watch(statisticsSearchProvider),
       AppTab.playlists  => '',
+      AppTab.player     => '',
     };
     final projects = ref.watch(projectsProvider);
     // Keep macOS dock menu (and Windows jump list) in sync with latest projects
@@ -946,10 +972,23 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with TickerProvid
                                   selectedIcon: const Icon(Icons.bar_chart_rounded),
                                   label: AppLocalizations.of(context)!.statisticsTab,
                                 ),
+                              // player is desktop-only; filtered out of _currentVisibleTabs on mobile
+                              AppTab.player => NavigationDestination(
+                                  icon: const Icon(Icons.headphones_outlined),
+                                  selectedIcon: const Icon(Icons.headphones),
+                                  label: 'Music Player',
+                                ),
                             },
                         ],
                       )
-                    : null,
+                    : () {
+                        final playerRequest = ref.watch(desktopPlayerProvider);
+                        if (playerRequest == null) return null;
+                        return _DesktopPlayerBar(
+                          key: ValueKey(playerRequest.generation),
+                          request: playerRequest,
+                        );
+                      }(),
                 body: Column(
           children: [
             // Custom title bar – Windows/Linux only.
@@ -1561,6 +1600,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with TickerProvid
                         AppTab.playlists  => Tab(icon: const Icon(Icons.playlist_play), text: AppLocalizations.of(context)!.playlists),
                         AppTab.queue      => Tab(icon: const Icon(Icons.checklist), text: AppLocalizations.of(context)!.queueTab),
                         AppTab.statistics => Tab(icon: const Icon(Icons.bar_chart_rounded), text: AppLocalizations.of(context)!.statisticsTab),
+                        AppTab.player     => const Tab(icon: Icon(Icons.headphones), text: 'Music Player'),
                       },
                   ],
                   labelColor: Theme.of(context).textTheme.titleMedium?.color,
@@ -1615,6 +1655,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with TickerProvid
                       AppTab.playlists  => const PlaylistsPage(),
                       AppTab.queue      => const QueuePage(),
                       AppTab.statistics => const StatisticsPage(),
+                      AppTab.player     => const MusicPlayerPage(),
                     },
                 ],
               ),
@@ -2498,22 +2539,26 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     }
 
     if (!mounted) return;
-    // Always build playProject from effectivePath so the dialog shows the correct
-    // filename whether we replaced or not.
+    // Always build playProject from effectivePath so the player shows the
+    // correct filename whether we replaced or not.
     final playProject = project.copyWith(
       previewSongPath: effectivePath,
       previewSongFileName: path.basename(effectivePath),
     );
 
-    await showDialog(
-      context: context,
-      builder: (dialogContext) => _PreviewSongDialog(
-        project: playProject,
-        onClose: () {},
-      ),
-    );
+    if (MobileUtils.isMobile()) {
+      await showDialog(
+        context: context,
+        builder: (dialogContext) => _PreviewSongDialog(
+          project: playProject,
+          onClose: () {},
+        ),
+      );
+    } else {
+      ref.read(desktopPlayerProvider.notifier).play(playProject, effectivePath);
+    }
   }
-  
+
   Future<void> _writeBpmToFile(MusicProject project, double? bpm) async {
     try {
       final projectDir = File(project.filePath).parent;
@@ -4723,6 +4768,450 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
   }
 }
 
+// ─── Desktop embedded bottom player ──────────────────────────────────────────
+
+class _DesktopPlayerBar extends ConsumerStatefulWidget {
+  final DesktopPlayerRequest request;
+  const _DesktopPlayerBar({super.key, required this.request});
+
+  @override
+  ConsumerState<_DesktopPlayerBar> createState() => _DesktopPlayerBarState();
+}
+
+class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
+  late AudioPlayer _player;
+  bool _isPlaying = false;
+  Duration _position = Duration.zero;
+  Duration _duration = Duration.zero;
+  double _volume = 1.0;
+  double _preMuteVolume = 1.0;
+  bool _isMono = false;
+  bool _isGeneratingMono = false;
+  String? _monoFilePath;
+  AudioFileInfo? _fileInfo;
+  WaveformPeaks? _peaks;
+  double _barHeight = 200.0;
+  final FocusNode _focusNode = FocusNode();
+
+  static const _kBarHeightKey = 'player_bar_height';
+
+  String get _activePath =>
+      _isMono && _monoFilePath != null ? _monoFilePath! : widget.request.resolvedPath;
+
+  bool _supportsMonoMix() {
+    final ext = widget.request.resolvedPath.toLowerCase().split('.').last;
+    if (ext == 'wav') return true;
+    if (Platform.isMacOS || Platform.isIOS) {
+      return const {'mp3', 'flac', 'aif', 'aiff', 'aac', 'm4a'}.contains(ext);
+    }
+    return const {'mp3', 'flac', 'aif', 'aiff', 'ogg', 'aac', 'm4a'}.contains(ext);
+  }
+
+  Future<void> _loadBarHeight() async {
+    final box = await Hive.openBox<String>('app_settings');
+    final saved = box.get(_kBarHeightKey);
+    if (saved != null && mounted) {
+      setState(() => _barHeight = double.tryParse(saved) ?? 200.0);
+    }
+  }
+
+  Future<void> _saveBarHeight() async {
+    final box = await Hive.openBox<String>('app_settings');
+    await box.put(_kBarHeightKey, _barHeight.toString());
+  }
+
+  bool _handleKeyboard(KeyEvent event) {
+    if (event is! KeyDownEvent && event is! KeyRepeatEvent) return false;
+    // Never steal keys from text inputs.
+    final primaryFocus = FocusManager.instance.primaryFocus;
+    if (primaryFocus?.context?.widget is EditableText) return false;
+
+    final modified = HardwareKeyboard.instance.isControlPressed ||
+        HardwareKeyboard.instance.isMetaPressed;
+
+    if (event.logicalKey == LogicalKeyboardKey.space) {
+      _togglePlayPause();
+      return true;
+    }
+    // Arrow keys only when the player bar has focus — avoids conflicting with
+    // table row navigation when the user has clicked into the projects table.
+    if (!_focusNode.hasFocus) return false;
+    if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+      _seek(modified ? -30 : -5);
+      return true;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+      _seek(modified ? 30 : 5);
+      return true;
+    }
+    return false;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBarHeight();
+    HardwareKeyboard.instance.addHandler(_handleKeyboard);
+    _player = AudioPlayer();
+    _player.onPlayerStateChanged.listen((s) {
+      if (!mounted) return;
+      setState(() => _isPlaying = s == PlayerState.playing);
+    });
+    _player.onDurationChanged.listen((d) {
+      if (!mounted) return;
+      setState(() => _duration = d);
+    });
+    _player.onPositionChanged.listen((p) {
+      if (!mounted) return;
+      setState(() => _position = p);
+    });
+    _player.onPlayerComplete.listen((_) {
+      if (!mounted) return;
+      setState(() { _isPlaying = false; _position = Duration.zero; });
+    });
+    _player.play(DeviceFileSource(widget.request.resolvedPath));
+    _loadBackgroundData();
+    // Auto-focus the player bar so arrow shortcuts work without clicking first.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _focusNode.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    HardwareKeyboard.instance.removeHandler(_handleKeyboard);
+    _focusNode.dispose();
+    _player.stop();
+    _player.dispose();
+    super.dispose();
+  }
+
+  void _loadBackgroundData() {
+    final filePath = widget.request.resolvedPath;
+
+    // Waveform peaks — memory → disk → extraction
+    ref.read(waveformCacheProvider.notifier).getOrExtract(filePath).then((peaks) {
+      if (!mounted || peaks == null) return;
+      setState(() => _peaks = peaks);
+    });
+
+    // File info
+    AudioAnalysisService.getFileInfo(filePath).then((info) {
+      if (mounted && info != null) setState(() => _fileInfo = info);
+    });
+
+    // Pre-generate mono in background
+    if (_supportsMonoMix()) _prepareMonoFile(filePath);
+  }
+
+  Future<void> _prepareMonoFile(String filePath) async {
+    final tmpDir = await getTemporaryDirectory();
+    final outPath = '${tmpDir.path}/mono_bar_${widget.request.project.id}.wav';
+    final ok = await AudioAnalysisService.writeMonoWavFile(filePath, outPath);
+    if (!mounted) return;
+    if (ok) {
+      setState(() => _monoFilePath = outPath);
+    } else {
+      final channels = await AudioAnalysisService.getChannelCount(filePath);
+      if (mounted && channels == 1) setState(() => _monoFilePath = filePath);
+    }
+  }
+
+  Future<void> _toggleMono() async {
+    if (!_supportsMonoMix()) return;
+    final newMono = !_isMono;
+    if (newMono && _monoFilePath == null) {
+      setState(() => _isGeneratingMono = true);
+      final tmpDir = await getTemporaryDirectory();
+      final outPath = '${tmpDir.path}/mono_bar_${widget.request.project.id}.wav';
+      final ok = await AudioAnalysisService.writeMonoWavFile(widget.request.resolvedPath, outPath);
+      if (!mounted) return;
+      if (!ok) {
+        final ch = await AudioAnalysisService.getChannelCount(widget.request.resolvedPath);
+        if (!mounted) return;
+        if (ch == 1) {
+          setState(() { _monoFilePath = widget.request.resolvedPath; _isGeneratingMono = false; });
+        } else {
+          setState(() => _isGeneratingMono = false);
+          return;
+        }
+      } else {
+        setState(() { _monoFilePath = outPath; _isGeneratingMono = false; });
+      }
+    }
+    final wasPlaying = _isPlaying;
+    final savedPos = _position;
+    setState(() => _isMono = newMono);
+    try {
+      if (wasPlaying) {
+        await _player.play(DeviceFileSource(_activePath), position: savedPos);
+      } else {
+        await _player.setSource(DeviceFileSource(_activePath));
+        if (savedPos > Duration.zero) await _player.seek(savedPos);
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _togglePlayPause() async {
+    if (_isPlaying) {
+      await _player.pause();
+    } else {
+      if (_duration > Duration.zero && _position >= _duration) {
+        await _player.play(DeviceFileSource(_activePath));
+      } else {
+        await _player.resume();
+      }
+    }
+  }
+
+  Future<void> _stop() async {
+    await _player.stop();
+    if (mounted) setState(() => _position = Duration.zero);
+  }
+
+  Future<void> _seek(int seconds) async {
+    final target = _position + Duration(seconds: seconds);
+    final clamped = target.isNegative
+        ? Duration.zero
+        : (_duration > Duration.zero && target > _duration ? _duration : target);
+    await _player.seek(clamped);
+  }
+
+  String _fmt(Duration d) {
+    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final progress = _duration.inMilliseconds > 0
+        ? (_position.inMilliseconds / _duration.inMilliseconds).clamp(0.0, 1.0)
+        : 0.0;
+    final project = widget.request.project;
+    final isAutoDetected = (project.previewSongPath?.isEmpty ?? true) &&
+        project.previewSongAutoPath == widget.request.resolvedPath;
+
+    final ext = widget.request.resolvedPath.toLowerCase().split('.').last;
+    final formatLabel = switch (ext) {
+      'wav' => 'WAV', 'mp3' => 'MP3', 'flac' => 'FLAC',
+      'aif' || 'aiff' => 'AIFF', 'ogg' => 'OGG',
+      'aac' => 'AAC', 'm4a' => 'M4A',
+      _ => ext.toUpperCase(),
+    };
+    final infoParts = <String>[];
+    if (_fileInfo != null) {
+      final sr = _fileInfo!.sampleRate;
+      infoParts.add(sr % 1000 == 0 ? '${sr ~/ 1000}kHz' : '${(sr / 1000).toStringAsFixed(1)}kHz');
+      if (_fileInfo!.bitDepth != null) {
+        infoParts.add('${_fileInfo!.bitDepth}-bit');
+      } else if (_fileInfo!.bitrateKbps != null) {
+        infoParts.add('${_fileInfo!.bitrateKbps}kbps');
+      }
+      infoParts.add(_fileInfo!.channels == 1 ? 'Mono' : _fileInfo!.channels == 2 ? 'Stereo' : '${_fileInfo!.channels}ch');
+    }
+    infoParts.add(formatLabel);
+
+    const iconConstraints = BoxConstraints(minWidth: 32, minHeight: 32);
+    const iconPad = EdgeInsets.zero;
+
+    final modKey = Platform.isMacOS ? '⌘' : 'Ctrl';
+
+    return Focus(
+      focusNode: _focusNode,
+      child: GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTapDown: (_) => _focusNode.requestFocus(),
+      child: Material(
+      elevation: 8,
+      color: theme.cardColor,
+      child: SizedBox(
+        height: _barHeight,
+        child: Column(
+          children: [
+            // Resize grip — drag upward to make the player taller (max 300px)
+            MouseRegion(
+              cursor: SystemMouseCursors.resizeUpDown,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onVerticalDragUpdate: (details) {
+                  setState(() {
+                    _barHeight = (_barHeight - details.delta.dy).clamp(100.0, 300.0);
+                  });
+                },
+                onVerticalDragEnd: (_) => _saveBarHeight(),
+                child: SizedBox(
+                  height: 8,
+                  child: Center(
+                    child: Container(
+                      width: 36,
+                      height: 3,
+                      decoration: BoxDecoration(
+                        color: cs.onSurface.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Divider(height: 1, thickness: 1, color: cs.outline.withValues(alpha: 0.18)),
+            // ── Row 1: transport · volume · [centered name] · time · mono · info · close ─
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 6, 10, 2),
+              child: Row(
+                children: [
+                  // Transport controls
+                  Tooltip(
+                    message: '−5s  (←)  •  $modKey+← −30s',
+                    child: IconButton(icon: const Icon(Icons.replay_5), iconSize: 20, padding: iconPad, constraints: iconConstraints, onPressed: () => _seek(-5)),
+                  ),
+                  IconButton(
+                    icon: Icon(_isPlaying ? Icons.pause_circle : Icons.play_circle),
+                    iconSize: 34, color: cs.primary, padding: iconPad,
+                    constraints: const BoxConstraints(minWidth: 38, minHeight: 38),
+                    tooltip: 'Play / Pause  (Space)',
+                    onPressed: _togglePlayPause,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.stop_circle_outlined),
+                    iconSize: 22, padding: iconPad, constraints: iconConstraints,
+                    onPressed: _isPlaying || _position > Duration.zero ? _stop : null,
+                  ),
+                  Tooltip(
+                    message: '+5s  (→)  •  $modKey+→ +30s',
+                    child: IconButton(icon: const Icon(Icons.forward_5), iconSize: 20, padding: iconPad, constraints: iconConstraints, onPressed: () => _seek(5)),
+                  ),
+                  const SizedBox(width: 4),
+                  // Volume (immediately after transport)
+                  IconButton(
+                    icon: Icon(_volume == 0 ? Icons.volume_off : (_volume < 0.5 ? Icons.volume_down : Icons.volume_up)),
+                    iconSize: 18,
+                    color: cs.onSurface.withValues(alpha: 0.6),
+                    padding: iconPad,
+                    constraints: iconConstraints,
+                    tooltip: _volume == 0 ? 'Unmute' : 'Mute',
+                    onPressed: () {
+                      if (_volume > 0) {
+                        _preMuteVolume = _volume;
+                        setState(() => _volume = 0);
+                      } else {
+                        setState(() => _volume = _preMuteVolume > 0 ? _preMuteVolume : 1.0);
+                      }
+                      _player.setVolume(_volume);
+                    },
+                  ),
+                  SizedBox(
+                    width: 90,
+                    child: Slider(
+                      value: _volume, min: 0, max: 1,
+                      onChanged: (v) {
+                        setState(() => _volume = v);
+                        if (v > 0) _preMuteVolume = v;
+                        _player.setVolume(v);
+                      },
+                    ),
+                  ),
+                  // Centered track name + filename
+                  Expanded(
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (isAutoDetected) ...[
+                                const Icon(Icons.folder_open, size: 11, color: Colors.amber),
+                                const SizedBox(width: 3),
+                              ],
+                              Flexible(
+                                child: Text(
+                                  project.displayName,
+                                  style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                                  overflow: TextOverflow.ellipsis, maxLines: 1,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Text(
+                            path.basename(widget.request.resolvedPath),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: cs.onSurface.withValues(alpha: 0.55),
+                            ),
+                            overflow: TextOverflow.ellipsis, maxLines: 1,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Time display (fixed-width to prevent jitter)
+                  SizedBox(
+                    width: 92,
+                    child: Text(
+                      '${_fmt(_position)} / ${_fmt(_duration)}',
+                      style: theme.textTheme.bodySmall,
+                      textAlign: TextAlign.right,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Mono toggle
+                  if (_supportsMonoMix())
+                    _isGeneratingMono
+                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                        : FilterChip(
+                            label: Text('Mono', style: TextStyle(fontSize: 11, color: _isMono ? Colors.red : null, fontWeight: _isMono ? FontWeight.bold : null)),
+                            selected: _isMono, showCheckmark: true,
+                            selectedColor: Colors.red.withValues(alpha: 0.15),
+                            onSelected: (_) => _toggleMono(),
+                            visualDensity: VisualDensity.compact,
+                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                  const SizedBox(width: 8),
+                  // File info
+                  Text(
+                    infoParts.join(' · '),
+                    style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.5)),
+                  ),
+                  const SizedBox(width: 10),
+                  // Close
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    iconSize: 18, padding: iconPad, constraints: iconConstraints,
+                    tooltip: 'Close player',
+                    onPressed: () => ref.read(desktopPlayerProvider.notifier).close(),
+                  ),
+                ],
+              ),
+            ),
+            // ── Row 2: waveform (full width) ──────────────────────────────
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(10, 2, 10, 8),
+                child: WaveformWidget(
+                  peaks: _peaks,
+                  progress: progress,
+                  height: null,
+                  onSeek: (p) {
+                    _focusNode.requestFocus();
+                    if (_duration > Duration.zero) {
+                      _player.seek(Duration(
+                        milliseconds: (p * _duration.inMilliseconds).round(),
+                      ));
+                    }
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      )));
+  }
+}
+
 // Mobile-friendly projects list widget for Android
 class _MobileProjectsList extends ConsumerStatefulWidget {
   final List<MusicProject> projects;
@@ -4981,20 +5470,22 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
     }
 
     if (!mounted) return;
-    // Always build playProject from effectivePath so the dialog shows the correct
-    // filename whether we replaced or not.
     final playProject = project.copyWith(
       previewSongPath: effectivePath,
       previewSongFileName: path.basename(effectivePath),
     );
 
-    await showDialog(
-      context: context,
-      builder: (dialogContext) => _PreviewSongDialog(
-        project: playProject,
-        onClose: () {},
-      ),
-    );
+    if (MobileUtils.isMobile()) {
+      await showDialog(
+        context: context,
+        builder: (dialogContext) => _PreviewSongDialog(
+          project: playProject,
+          onClose: () {},
+        ),
+      );
+    } else {
+      ref.read(desktopPlayerProvider.notifier).play(playProject, effectivePath);
+    }
   }
 
   String _getStatusDisplayName(String status, BuildContext context) {

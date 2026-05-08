@@ -13,6 +13,8 @@ import '../utils/app_paths.dart';
 import '../utils/mobile_utils.dart';
 
 import '../models/music_project.dart';
+import '../services/audio_analysis_service.dart';
+import '../services/waveform_disk_cache.dart';
 import '../models/scan_root.dart';
 import '../models/ignored_path.dart';
 import '../models/release.dart';
@@ -896,7 +898,7 @@ final warnBeforeQuitProvider = NotifierProvider<WarnBeforeQuitNotifier, bool>(()
 // Tab Visibility
 // ---------------------------------------------------------------------------
 
-enum AppTab { projects, releases, playlists, queue, statistics }
+enum AppTab { projects, releases, playlists, queue, statistics, player }
 
 class VisibleTabsNotifier extends Notifier<Set<AppTab>> {
   static const _key = 'visibleTabs';
@@ -908,12 +910,13 @@ class VisibleTabsNotifier extends Notifier<Set<AppTab>> {
     AppTab.playlists,
     AppTab.queue,
     AppTab.statistics,
+    AppTab.player,
   ];
 
   @override
   Set<AppTab> build() {
     SchedulerBinding.instance.addPostFrameCallback((_) => _load());
-    return {AppTab.projects, AppTab.releases, AppTab.playlists, AppTab.queue, AppTab.statistics};
+    return {AppTab.projects, AppTab.releases, AppTab.playlists, AppTab.queue, AppTab.statistics, AppTab.player};
   }
 
   Future<void> _load() async {
@@ -922,13 +925,36 @@ class VisibleTabsNotifier extends Notifier<Set<AppTab>> {
       final box = await Hive.openBox<String>('settings');
       final saved = box.get(_key);
       if (saved != null && saved.isNotEmpty) {
-        final names = saved.split(',');
-        final loaded = names
-            .map((n) => AppTab.values.where((t) => t.name == n).firstOrNull)
-            .whereType<AppTab>()
-            .toSet();
-        loaded.add(AppTab.projects); // always visible
-        state = loaded;
+        // Format: each entry is either "tabName" (visible) or "!tabName" (hidden).
+        // Old format had only visible tab names (no "!" prefix) — those are treated
+        // the same way. Any canonical tab absent from the string is a newly
+        // introduced tab and defaults to visible.
+        final entries = saved.split(',').where((s) => s.isNotEmpty).toList();
+        final explicitlyHidden = <AppTab>{};
+        final explicitlyVisible = <AppTab>{};
+
+        for (final entry in entries) {
+          final hidden = entry.startsWith('!');
+          final name = hidden ? entry.substring(1) : entry;
+          final tab = AppTab.values.where((t) => t.name == name).firstOrNull;
+          if (tab == null) continue;
+          if (hidden) {
+            explicitlyHidden.add(tab);
+          } else {
+            explicitlyVisible.add(tab);
+          }
+        }
+
+        // Build result: explicitly visible, plus any canonical tab not mentioned
+        // at all (newly added tabs inherit default = visible).
+        final result = Set<AppTab>.from(explicitlyVisible);
+        for (final tab in canonicalOrder) {
+          if (!explicitlyHidden.contains(tab) && !explicitlyVisible.contains(tab)) {
+            result.add(tab); // new tab not yet seen → show by default
+          }
+        }
+        result.add(AppTab.projects); // always visible
+        state = result;
       }
     } catch (e) {
       if (kDebugMode) print('Failed to load visibleTabs: $e');
@@ -947,7 +973,12 @@ class VisibleTabsNotifier extends Notifier<Set<AppTab>> {
     try {
       await ensureHiveInitialized();
       final box = await Hive.openBox<String>('settings');
-      await box.put(_key, updated.map((t) => t.name).join(','));
+      // Save all canonical tabs with visibility marker so new future tabs can be
+      // distinguished from explicitly-hidden ones.
+      final entries = canonicalOrder.map((t) {
+        return updated.contains(t) ? t.name : '!${t.name}';
+      }).join(',');
+      await box.put(_key, entries);
     } catch (e) {
       if (kDebugMode) print('Failed to save visibleTabs: $e');
     }
@@ -1228,3 +1259,78 @@ class QueueSearchNotifier extends Notifier<String> {
 
 final queueSearchProvider =
     NotifierProvider<QueueSearchNotifier, String>(QueueSearchNotifier.new);
+
+// ─── Desktop embedded player ──────────────────────────────────────────────────
+
+/// Carries the project and fully-resolved file path to play in the bottom bar.
+/// A new [generation] number is assigned on each play request so that
+/// [ValueKey(request.generation)] forces a fresh widget state per track.
+class DesktopPlayerRequest {
+  final MusicProject project;
+  final String resolvedPath;
+  final int generation;
+
+  const DesktopPlayerRequest({
+    required this.project,
+    required this.resolvedPath,
+    required this.generation,
+  });
+}
+
+class DesktopPlayerNotifier extends Notifier<DesktopPlayerRequest?> {
+  @override
+  DesktopPlayerRequest? build() => null;
+
+  void play(MusicProject project, String resolvedPath) {
+    final gen = (state?.generation ?? 0) + 1;
+    state = DesktopPlayerRequest(
+      project: project,
+      resolvedPath: resolvedPath,
+      generation: gen,
+    );
+  }
+
+  void close() => state = null;
+}
+
+final desktopPlayerProvider =
+    NotifierProvider<DesktopPlayerNotifier, DesktopPlayerRequest?>(
+        DesktopPlayerNotifier.new);
+
+// ─── Waveform peaks cache ─────────────────────────────────────────────────────
+
+/// In-memory cache: resolved file path → extracted [WaveformPeaks].
+/// Survives widget rebuilds and navigation so peaks are never re-extracted for
+/// the same file within a single app session.
+class WaveformCacheNotifier extends Notifier<Map<String, WaveformPeaks>> {
+  @override
+  Map<String, WaveformPeaks> build() => {};
+
+  WaveformPeaks? get(String path) => state[path];
+
+  void put(String path, WaveformPeaks peaks) {
+    state = {...state, path: peaks};
+    WaveformDiskCache.save(path, peaks); // fire-and-forget
+  }
+
+  /// Returns cached peaks (memory → disk → fresh extraction), storing the
+  /// result so subsequent calls for the same path are instant.
+  Future<WaveformPeaks?> getOrExtract(String path) async {
+    final mem = state[path];
+    if (mem != null) return mem;
+
+    final disk = await WaveformDiskCache.load(path);
+    if (disk != null) {
+      state = {...state, path: disk};
+      return disk;
+    }
+
+    final peaks = await AudioAnalysisService.extractWaveformPeaks(path);
+    if (peaks != null) put(path, peaks);
+    return peaks;
+  }
+}
+
+final waveformCacheProvider =
+    NotifierProvider<WaveformCacheNotifier, Map<String, WaveformPeaks>>(
+        WaveformCacheNotifier.new);

@@ -23,6 +23,7 @@ import 'ui/dashboard_page.dart';
 import 'ui/project_detail_page.dart';
 import 'ui/widgets/macos_menu_bar.dart';
 import 'providers/theme_provider.dart';
+import 'utils/route_observer.dart';
 
 // Global navigator key for deep linking
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -377,6 +378,7 @@ class _DawProjectManagerAppState extends ConsumerState<DawProjectManagerApp> wit
           child: MacOSMenuBar(child: child ?? const SizedBox()),
         ),
       ),
+      navigatorObservers: [appRouteObserver],
       home: const DashboardPage(),
     );
   }

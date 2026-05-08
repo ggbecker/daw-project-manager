@@ -29,6 +29,7 @@ import '../services/audio_analysis_service.dart';
 import '../services/mixdown_detector_service.dart';
 import 'widgets/desktop_title_bar.dart';
 import 'widgets/todo_list_widget.dart';
+import 'widgets/waveform_widget.dart';
 import 'project_statistics_page.dart';
 
 class ProjectDetailPage extends ConsumerStatefulWidget {
@@ -1353,10 +1354,8 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
   // File metadata (populated for any format)
   AudioFileInfo? _fileInfo;
 
-  // Real-time level metering
-  AudioLevelData? _levelData;
-  Timer? _levelTimer;
-  double _currentLufs = -100.0;
+  // Waveform peaks for display
+  WaveformPeaks? _peaks;
 
   // Auto-detected mixdown path (used when no preview song is set manually)
   String? _autoDetectedPath;
@@ -1400,16 +1399,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
   void _attachListeners(AudioPlayer player, int gen) {
     player.onPlayerStateChanged.listen((state) {
       if (gen != _playerGen || !mounted) return;
-      final playing = state == PlayerState.playing;
-      setState(() => _isPlaying = playing);
-      if (playing) {
-        _startLevelTimer();
-      } else {
-        _levelTimer?.cancel();
-        if (state == PlayerState.stopped || state == PlayerState.completed) {
-          setState(() => _currentLufs = -100.0);
-        }
-      }
+      setState(() => _isPlaying = state == PlayerState.playing);
     });
     player.onDurationChanged.listen((d) {
       if (gen != _playerGen || !mounted) return;
@@ -1427,7 +1417,6 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
 
   @override
   void dispose() {
-    _levelTimer?.cancel();
     _warmPlayer?.dispose();
     _audioPlayer.dispose();
     _focusNode.dispose();
@@ -1446,7 +1435,6 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
         _replacedPreviewPath = null;
       }
       _audioPlayer.stop();
-      _levelTimer?.cancel();
       setState(() {
         _isPlaying = false;
         _position = Duration.zero;
@@ -1455,8 +1443,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
         _isGeneratingMono = false;
         _monoFilePath = null;
         _fileInfo = null;
-        _levelData = null;
-        _currentLufs = -100.0;
+        _peaks = null;
         _autoDetectedPath = null;
       });
       _detectMixdown();
@@ -1466,9 +1453,6 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
 
   // ── Background preparation ──────────────────────────────────────────────────
 
-  /// Called when a new WAV file is loaded. Starts two background tasks:
-  /// 1. Compute per-100 ms level data for the real-time meter.
-  /// 2. Generate the mono temp file so toggling mono is instant.
   void _startBackgroundPrep() {
     if (!_hasAudioFile()) return;
     final path = _effectivePreviewPath!;
@@ -1478,12 +1462,11 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
       if (mounted && info != null) setState(() => _fileInfo = info);
     });
 
-    // WAV-only: streaming level data
-    if (_isWavFile()) {
-      AudioAnalysisService.computeLevelData(path).then((data) {
-        if (mounted && data != null) setState(() => _levelData = data);
-      });
-    }
+    // Waveform peaks — memory → disk → extraction
+    ref.read(waveformCacheProvider.notifier).getOrExtract(path).then((peaks) {
+      if (!mounted || peaks == null) return;
+      setState(() => _peaks = peaks);
+    });
 
     // Pre-generate mono file for any supported format
     if (_supportsMonoMix()) _prepareMonoFile(path);
@@ -1536,27 +1519,11 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
     });
   }
 
-  // ── Level timer ─────────────────────────────────────────────────────────────
-
-  void _startLevelTimer() {
-    _levelTimer?.cancel();
-    _levelTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
-      if (!mounted || _levelData == null) return;
-      final (_, _, lufs) = _levelData!.valuesAt(_position);
-      setState(() => _currentLufs = lufs);
-    });
-  }
-
   // ── Helpers ─────────────────────────────────────────────────────────────────
 
   bool _hasAudioFile() {
     final path = _effectivePreviewPath;
     return path != null && path.isNotEmpty;
-  }
-
-  bool _isWavFile() {
-    final path = _effectivePreviewPath;
-    return path != null && path.toLowerCase().endsWith('.wav');
   }
 
   bool _supportsMonoMix() {
@@ -1593,11 +1560,11 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
       debugPrint('[Mono] Generating mono file → $outPath');
       final ok = await AudioAnalysisService.writeMonoWavFile(
           _effectivePreviewPath!, outPath);
-      debugPrint('[Mono] writeMonoWavFile result: $ok channels=${_levelData?.channels}');
+      debugPrint('[Mono] writeMonoWavFile result: $ok channels=${_fileInfo?.channels}');
       if (!mounted) return;
       if (!ok) {
         // If the file is already mono, use the original as the mono source.
-        final alreadyMono = _levelData?.channels == 1;
+        final alreadyMono = _fileInfo?.channels == 1;
         if (alreadyMono) {
           debugPrint('[Mono] File is already mono — using original path.');
           setState(() { _monoFilePath = _effectivePreviewPath!; _isGeneratingMono = false; });
@@ -2401,7 +2368,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                               children: [
                                 IconButton(
                                   icon: const Icon(Icons.replay_5),
-                                  tooltip: '← −5s  •  Ctrl+← −30s',
+                                  tooltip: Platform.isMacOS ? '← −5s  •  ⌘+← −30s' : '← −5s  •  Ctrl+← −30s',
                                   onPressed: () => _seek(-5),
                                 ),
                                 IconButton(
@@ -2428,7 +2395,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                                 ),
                                 IconButton(
                                   icon: const Icon(Icons.forward_5),
-                                  tooltip: '→ +5s  •  Ctrl+→ +30s',
+                                  tooltip: Platform.isMacOS ? '→ +5s  •  ⌘+→ +30s' : '→ +5s  •  Ctrl+→ +30s',
                                   onPressed: () => _seek(5),
                                 ),
                                 const SizedBox(width: 8),
@@ -2451,29 +2418,16 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                                 ),
                               ],
                             ),
-                            // Seek bar on its own line
-                            SliderTheme(
-                              data: SliderTheme.of(context).copyWith(
-                                activeTrackColor: Theme.of(context).colorScheme.primary,
-                                thumbColor: Theme.of(context).colorScheme.primary,
-                                inactiveTrackColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.25),
-                                overlayColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
-                                trackHeight: 3.0,
-                              ),
-                              child: Slider(
-                                value: _duration.inMilliseconds > 0
-                                    ? _position.inMilliseconds.toDouble()
-                                    : 0.0,
-                                max: _duration.inMilliseconds > 0
-                                    ? _duration.inMilliseconds.toDouble()
-                                    : 100.0,
-                                onChanged: (value) async {
-                                  final position = Duration(
-                                    milliseconds: value.toInt(),
-                                  );
-                                  await _audioPlayer.seek(position);
-                                },
-                              ),
+                            // Waveform
+                            WaveformWidget(
+                              peaks: _peaks,
+                              progress: _duration.inMilliseconds > 0
+                                  ? _position.inMilliseconds / _duration.inMilliseconds
+                                  : 0.0,
+                              height: 80,
+                              onSeek: (p) => _audioPlayer.seek(Duration(
+                                milliseconds: (p * _duration.inMilliseconds).round(),
+                              )),
                             ),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -2485,8 +2439,6 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                                     fontSize: 12,
                                   ),
                                 ),
-                                if (_isWavFile())
-                                  _LevelMeter(lufsDb: _currentLufs),
                                 Text(
                                   _formatDuration(_duration),
                                   style: TextStyle(
@@ -2654,37 +2606,6 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
 // ---------------------------------------------------------------------------
 // Project Stats Button — navigates to the dedicated statistics page
 // ---------------------------------------------------------------------------
-
-// ─── Real-time level meter ────────────────────────────────────────────────────
-
-class _LevelMeter extends StatelessWidget {
-  final double lufsDb;
-
-  const _LevelMeter({required this.lufsDb});
-
-  @override
-  Widget build(BuildContext context) {
-    final dim = Theme.of(context).textTheme.bodySmall?.color;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.baseline,
-      textBaseline: TextBaseline.alphabetic,
-      children: [
-        Text(
-          lufsDb <= -99.5 ? '−∞' : lufsDb.toStringAsFixed(1),
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: dim,
-            fontFeatures: const [FontFeature.tabularFigures()],
-          ),
-        ),
-        const SizedBox(width: 3),
-        Text('LUFS', style: TextStyle(fontSize: 9, color: dim)),
-      ],
-    );
-  }
-}
 
 // ─── File info row ────────────────────────────────────────────────────────────
 
