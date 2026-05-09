@@ -254,8 +254,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
 
   void _onTabChanged() {
     if (!_tabController.indexIsChanging && mounted) {
-      // Stop the bottom player whenever the user switches tabs.
-      ref.read(desktopPlayerProvider.notifier).close();
       switch (_currentTab) {
         case AppTab.projects:
           final projectsSearch = ref.read(projectsSearchProvider);
