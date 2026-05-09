@@ -183,6 +183,19 @@ final releasesSearchProvider = NotifierProvider<ReleasesSearchNotifier, String>(
   return ReleasesSearchNotifier();
 });
 
+enum ReleasesSort { dateDesc, dateAsc, titleAsc, titleDesc }
+
+class ReleasesSortNotifier extends Notifier<ReleasesSort> {
+  @override
+  ReleasesSort build() => ReleasesSort.dateDesc;
+
+  void setSort(ReleasesSort sort) => state = sort;
+}
+
+final releasesSortProvider = NotifierProvider<ReleasesSortNotifier, ReleasesSort>(() {
+  return ReleasesSortNotifier();
+});
+
 class PlaylistsSearchNotifier extends Notifier<String> {
   @override
   String build() {
