@@ -247,8 +247,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
 
   @override
   void didPushNext() {
-    // A new route was pushed on top of the dashboard — stop the bottom player.
-    ref.read(desktopPlayerProvider.notifier).close();
+    // Don't close the player here — DropdownButton/showMenu also push ModalRoutes,
+    // which would close the player on every filter/combo interaction. Tab changes
+    // are handled in _onTabChanged instead.
   }
 
   void _onTabChanged() {

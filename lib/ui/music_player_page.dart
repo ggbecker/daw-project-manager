@@ -36,6 +36,7 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage> {
   String _searchQuery = '';
   late TextEditingController _searchController;
   double _sidebarWidth = 320.0;
+  bool _switchingSource = false;
 
   MusicProject? get _current =>
       _currentIndex >= 0 && _currentIndex < _tracks.length
@@ -108,10 +109,13 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage> {
     });
     _player.onDurationChanged.listen((d) {
       if (!mounted) return;
+      if (_switchingSource && d == Duration.zero) return;
+      if (d > Duration.zero) _switchingSource = false;
       setState(() => _duration = d);
     });
     _player.onPositionChanged.listen((p) {
       if (!mounted) return;
+      if (_switchingSource && p == Duration.zero) return;
       setState(() => _position = p);
     });
     _player.onPlayerComplete.listen((_) {
@@ -262,6 +266,7 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage> {
     final wasPlaying = _isPlaying;
     final savedPos = _position;
     setState(() => _isMono = newMono);
+    _switchingSource = true;
     try {
       if (wasPlaying) {
         await _player.play(DeviceFileSource(_activePath), position: savedPos);
@@ -269,7 +274,9 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage> {
         await _player.setSource(DeviceFileSource(_activePath));
         if (savedPos > Duration.zero) await _player.seek(savedPos);
       }
-    } catch (_) {}
+    } catch (_) {
+      _switchingSource = false;
+    }
   }
 
   String _fmt(Duration d) {
