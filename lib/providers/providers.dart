@@ -916,7 +916,9 @@ class VisibleTabsNotifier extends Notifier<Set<AppTab>> {
   @override
   Set<AppTab> build() {
     SchedulerBinding.instance.addPostFrameCallback((_) => _load());
-    return {AppTab.projects, AppTab.releases, AppTab.playlists, AppTab.queue, AppTab.statistics, AppTab.player};
+    final defaults = {AppTab.projects, AppTab.releases, AppTab.playlists, AppTab.queue, AppTab.statistics, AppTab.player};
+    if (MobileUtils.isMobile()) defaults.remove(AppTab.player);
+    return defaults;
   }
 
   Future<void> _load() async {
@@ -954,6 +956,7 @@ class VisibleTabsNotifier extends Notifier<Set<AppTab>> {
           }
         }
         result.add(AppTab.projects); // always visible
+        if (MobileUtils.isMobile()) result.remove(AppTab.player);
         state = result;
       }
     } catch (e) {

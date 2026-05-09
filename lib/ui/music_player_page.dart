@@ -81,7 +81,9 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage> {
   @override
   void initState() {
     super.initState();
-    HardwareKeyboard.instance.addHandler(_handleKeyboard);
+    if (!Platform.isAndroid && !Platform.isIOS) {
+      HardwareKeyboard.instance.addHandler(_handleKeyboard);
+    }
     _player = AudioPlayer();
     _player.onPlayerStateChanged.listen((s) {
       if (!mounted) return;
@@ -102,7 +104,9 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage> {
 
   @override
   void dispose() {
-    HardwareKeyboard.instance.removeHandler(_handleKeyboard);
+    if (!Platform.isAndroid && !Platform.isIOS) {
+      HardwareKeyboard.instance.removeHandler(_handleKeyboard);
+    }
     _player.stop();
     _player.dispose();
     super.dispose();
