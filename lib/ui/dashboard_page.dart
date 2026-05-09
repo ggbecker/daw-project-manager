@@ -1945,23 +1945,43 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
           child: Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-                // Project count
-                Text(
-                  () {
-                    if (hiddenMode == 2) {
-                      return '${l10n.projectsCount(widget.hiddenCount)} ${l10n.hiddenOnly}';
-                    } else {
-                      var text = l10n.projectsCount(widget.visibleCount);
-                      if (widget.hiddenCount > 0 && hiddenMode == 0) {
-                        text += ' ${l10n.hiddenCount(widget.hiddenCount)}';
-                      }
-                      return text;
-                    }
-                  }(),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: hiddenMode == 2 ? Colors.orange.shade300 : null,
-                  ),
+                // Project count — all three mode variants are stacked and
+                // rendered simultaneously; only the active one is opaque.
+                // The Stack always sizes to the widest variant so the bar
+                // never shifts regardless of which mode is active.
+                Stack(
+                  children: [
+                    // Mode 0: "X projects (N hidden)"
+                    Opacity(
+                      opacity: hiddenMode == 0 ? 1.0 : 0.0,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(l10n.projectsCount(widget.visibleCount),
+                              style: const TextStyle(fontSize: 12)),
+                          if (widget.hiddenCount > 0)
+                            Text(' ${l10n.hiddenCount(widget.hiddenCount)}',
+                                style: const TextStyle(fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                    // Mode 1: "X projects" (show-all — visible count only)
+                    Opacity(
+                      opacity: hiddenMode == 1 ? 1.0 : 0.0,
+                      child: Text(l10n.projectsCount(widget.visibleCount),
+                          style: const TextStyle(fontSize: 12)),
+                    ),
+                    // Mode 2: "N projects hidden only"
+                    if (widget.hiddenCount > 0)
+                      Opacity(
+                        opacity: hiddenMode == 2 ? 1.0 : 0.0,
+                        child: Text(
+                          '${l10n.projectsCount(widget.hiddenCount)} ${l10n.hiddenOnly}',
+                          style: TextStyle(
+                              fontSize: 12, color: Colors.orange.shade300),
+                        ),
+                      ),
+                  ],
                 ),
                 const SizedBox(width: 8),
                 if (widget.hiddenCount > 0) ...[
@@ -1992,26 +2012,53 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
                     ),
                   ),
                   const SizedBox(width: 8),
-                  TextButton.icon(
-                    icon: Icon(
-                      hiddenMode == 2 ? Icons.visibility : Icons.visibility_off_outlined,
-                      size: 16,
-                    ),
-                    label: Text(
-                      hiddenMode == 2 ? l10n.showAll : l10n.showOnlyHidden,
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    style: TextButton.styleFrom(
-                      backgroundColor: hiddenMode == 2 ? Colors.orange.shade700 : null,
-                      foregroundColor: hiddenMode == 2 ? Colors.white : Theme.of(context).textTheme.bodyMedium?.color,
-                    ),
-                    onPressed: () {
-                      if (hiddenMode == 2) {
-                        hiddenNotifier.setShowOnlyHidden(false);
-                      } else {
-                        hiddenNotifier.setShowOnlyHidden(true);
-                      }
-                    },
+                  // Stack keeps the button at the width of whichever label
+                  // is wider — the ghost (opposite label, opacity 0) pins the
+                  // layout; the Stack always takes the max of both children.
+                  Stack(
+                    children: [
+                      Opacity(
+                        opacity: 0,
+                        child: IgnorePointer(
+                          child: TextButton.icon(
+                            icon: Icon(
+                              hiddenMode == 2 ? Icons.visibility_off_outlined : Icons.visibility,
+                              size: 16,
+                            ),
+                            label: Text(
+                              hiddenMode == 2 ? l10n.showOnlyHidden : l10n.showAll,
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                            onPressed: () {},
+                            style: TextButton.styleFrom(
+                              backgroundColor: hiddenMode != 2 ? Colors.orange.shade700 : null,
+                              foregroundColor: hiddenMode != 2 ? Colors.white : Theme.of(context).textTheme.bodyMedium?.color,
+                            ),
+                          ),
+                        ),
+                      ),
+                      TextButton.icon(
+                        icon: Icon(
+                          hiddenMode == 2 ? Icons.visibility : Icons.visibility_off_outlined,
+                          size: 16,
+                        ),
+                        label: Text(
+                          hiddenMode == 2 ? l10n.showAll : l10n.showOnlyHidden,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        style: TextButton.styleFrom(
+                          backgroundColor: hiddenMode == 2 ? Colors.orange.shade700 : null,
+                          foregroundColor: hiddenMode == 2 ? Colors.white : Theme.of(context).textTheme.bodyMedium?.color,
+                        ),
+                        onPressed: () {
+                          if (hiddenMode == 2) {
+                            hiddenNotifier.setShowOnlyHidden(false);
+                          } else {
+                            hiddenNotifier.setShowOnlyHidden(true);
+                          }
+                        },
+                      ),
+                    ],
                   ),
                   const SizedBox(width: 8),
                 ],
