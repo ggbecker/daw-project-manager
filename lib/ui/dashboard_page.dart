@@ -5162,8 +5162,13 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
                     _isGeneratingMono
                         ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
                         : FilterChip(
+                            avatar: Icon(
+                              _isMono ? Icons.check_box : Icons.check_box_outline_blank,
+                              size: 16,
+                              color: _isMono ? Colors.red : null,
+                            ),
                             label: Text('Mono', style: TextStyle(fontSize: 11, color: _isMono ? Colors.red : null, fontWeight: _isMono ? FontWeight.bold : null)),
-                            selected: _isMono, showCheckmark: true,
+                            selected: _isMono, showCheckmark: false,
                             selectedColor: Colors.red.withValues(alpha: 0.15),
                             onSelected: (_) => _toggleMono(),
                             visualDensity: VisualDensity.compact,
