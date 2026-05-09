@@ -3650,6 +3650,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         style: TrinaGridStyleConfig(
           gridBackgroundColor: Theme.of(context).cardColor,
           gridBorderColor: Theme.of(context).dividerColor.withValues(alpha: 0.4),
+          borderColor: Theme.of(context).dividerColor.withValues(alpha: 0.25),
           gridBorderRadius: BorderRadius.zero,
           rowColor: Theme.of(context).cardColor,
           cellColorInEditState: Theme.of(context).cardColor,
@@ -3673,6 +3674,9 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           evenRowColor: Theme.of(context).brightness == Brightness.dark
               ? Color.alphaBlend(Colors.white.withValues(alpha: 0.05), Theme.of(context).cardColor)
               : Color.alphaBlend(Colors.black.withValues(alpha: 0.04), Theme.of(context).cardColor),
+        ),
+        scrollbar: const TrinaGridScrollbarConfig(
+          showHorizontal: false,
         ),
         columnSize: const TrinaGridColumnSizeConfig(
           autoSizeMode: TrinaAutoSizeMode.scale,
