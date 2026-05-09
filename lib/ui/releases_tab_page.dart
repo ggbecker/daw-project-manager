@@ -588,7 +588,7 @@ class _ReleasesTableState extends ConsumerState<_ReleasesTable> {
       },
       configuration: TrinaGridConfiguration(
         style: TrinaGridStyleConfig(
-          gridBackgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          gridBackgroundColor: Theme.of(context).cardColor,
           gridBorderColor: Theme.of(context).dividerColor.withValues(alpha: 0.4),
           borderColor: ref.watch(themeTypeProvider) == AppThemeType.neonDark
                 ? Theme.of(context).dividerColor

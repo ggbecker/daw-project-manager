@@ -670,12 +670,15 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     final repoAsync = ref.watch(repositoryProvider);
     final roots = ref.watch(scanRootsProvider);
 
-    // Show first-launch dialog on desktop when there are no scan roots yet.
+    // Show first-launch dialog on desktop when the profile is truly blank (no
+    // roots AND no projects). Profiles that have projects but no roots (e.g.
+    // restored from Google Drive) are already set up and should not see this.
     if (!MobileUtils.isMobile() &&
         !_startupDialogShown &&
         !_hideStartupDialog &&
         repoAsync.hasValue &&
-        roots.isEmpty) {
+        roots.isEmpty &&
+        repoAsync.value!.getAllProjects().isEmpty) {
       _startupDialogShown = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) showStartupDialog(context);
