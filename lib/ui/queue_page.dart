@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/music_project.dart';
+import '../models/release.dart';
 import '../models/todo_item.dart';
 import '../providers/providers.dart';
 import '../utils/search_utils.dart';
 import '../generated/l10n/app_localizations.dart';
 import 'project_detail_page.dart';
+import 'release_detail_page.dart';
 
 Color _phaseColor(String status) {
   switch (status) {
@@ -31,18 +33,21 @@ class QueuePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final projectsAsync = ref.watch(allProjectsStreamProvider);
+    final releasesAsync = ref.watch(releasesProvider);
     final searchText = ref.watch(queueSearchProvider).toLowerCase().trim();
+
+    final releases = releasesAsync.value ?? [];
 
     return projectsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (_, _) => Center(child: Text(l10n.errorLoadingProjects)),
       data: (allProjects) {
         // Build list of (project, pendingTodos) pairs, filtering by search
-        final entries = <MapEntry<MusicProject, List<TodoItem>>>[];
+        final projectEntries = <MapEntry<MusicProject, List<TodoItem>>>[];
         for (final project in allProjects) {
           if (searchText.isEmpty) {
             final pending = project.todos.where((t) => !t.completed).toList();
-            if (pending.isNotEmpty) entries.add(MapEntry(project, pending));
+            if (pending.isNotEmpty) projectEntries.add(MapEntry(project, pending));
           } else {
             final matchProject = fuzzyMatchAll(project.displayName, searchText);
             final matchingTodos = project.todos
@@ -51,24 +56,47 @@ class QueuePage extends ConsumerWidget {
                     (matchProject || fuzzyMatchAll(t.text, searchText)))
                 .toList();
             if (matchingTodos.isNotEmpty) {
-              entries.add(MapEntry(project, matchingTodos));
+              projectEntries.add(MapEntry(project, matchingTodos));
             }
           }
         }
 
-        // Sort by pending count descending, then by project name
-        entries.sort((a, b) {
+        // Build list of (release, pendingTodos) pairs, filtering by search
+        final releaseEntries = <MapEntry<Release, List<TodoItem>>>[];
+        for (final release in releases) {
+          if (searchText.isEmpty) {
+            final pending = release.todos.where((t) => !t.completed).toList();
+            if (pending.isNotEmpty) releaseEntries.add(MapEntry(release, pending));
+          } else {
+            final matchRelease = fuzzyMatchAll(release.title, searchText);
+            final matchingTodos = release.todos
+                .where((t) =>
+                    !t.completed &&
+                    (matchRelease || fuzzyMatchAll(t.text, searchText)))
+                .toList();
+            if (matchingTodos.isNotEmpty) {
+              releaseEntries.add(MapEntry(release, matchingTodos));
+            }
+          }
+        }
+
+        // Sort each group by pending count descending, then by name
+        projectEntries.sort((a, b) {
           final cmp = b.value.length.compareTo(a.value.length);
           if (cmp != 0) return cmp;
-          return a.key.displayName
-              .toLowerCase()
-              .compareTo(b.key.displayName.toLowerCase());
+          return a.key.displayName.toLowerCase().compareTo(b.key.displayName.toLowerCase());
+        });
+        releaseEntries.sort((a, b) {
+          final cmp = b.value.length.compareTo(a.value.length);
+          if (cmp != 0) return cmp;
+          return a.key.title.toLowerCase().compareTo(b.key.title.toLowerCase());
         });
 
-        final totalPending =
-            entries.fold(0, (sum, e) => sum + e.value.length);
+        final totalPending = projectEntries.fold<int>(0, (sum, e) => sum + e.value.length)
+            + releaseEntries.fold<int>(0, (sum, e) => sum + e.value.length);
+        final totalSections = projectEntries.length + releaseEntries.length;
 
-        if (entries.isEmpty) {
+        if (totalSections == 0) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -102,13 +130,27 @@ class QueuePage extends ConsumerWidget {
           );
         }
 
+        // Interleave project and release sections sorted by pending count
+        final items = <Widget>[];
+        int pi = 0, ri = 0;
+        while (pi < projectEntries.length || ri < releaseEntries.length) {
+          final pCount = pi < projectEntries.length ? projectEntries[pi].value.length : -1;
+          final rCount = ri < releaseEntries.length ? releaseEntries[ri].value.length : -1;
+          if (pCount >= rCount) {
+            final e = projectEntries[pi++];
+            items.add(_ProjectTodoSection(project: e.key, pendingTodos: e.value));
+          } else {
+            final e = releaseEntries[ri++];
+            items.add(_ReleaseTodoSection(release: e.key, pendingTodos: e.value));
+          }
+        }
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Summary bar
             Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               child: Row(
                 children: [
                   Icon(Icons.checklist,
@@ -116,7 +158,7 @@ class QueuePage extends ConsumerWidget {
                       color: Theme.of(context).colorScheme.primary),
                   const SizedBox(width: 8),
                   Text(
-                    l10n.queuePendingSummary(totalPending, entries.length),
+                    l10n.queuePendingSummary(totalPending, totalSections),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],
@@ -124,16 +166,9 @@ class QueuePage extends ConsumerWidget {
             ),
             const Divider(height: 1),
             Expanded(
-              child: ListView.builder(
+              child: ListView(
                 padding: const EdgeInsets.symmetric(vertical: 8),
-                itemCount: entries.length,
-                itemBuilder: (context, index) {
-                  final entry = entries[index];
-                  return _ProjectTodoSection(
-                    project: entry.key,
-                    pendingTodos: entry.value,
-                  );
-                },
+                children: items,
               ),
             ),
           ],
@@ -284,7 +319,7 @@ class _Badge extends StatelessWidget {
 class _TodoCheckItem extends ConsumerWidget {
   final MusicProject project;
   final TodoItem todo;
-  final VoidCallback? onTap; // unused but kept for future
+  final VoidCallback? onTap;
 
   const _TodoCheckItem({
     required this.project,
@@ -309,6 +344,131 @@ class _TodoCheckItem extends ConsumerWidget {
             .toList();
         await repo.updateProject(project.copyWith(todos: updatedTodos));
         ref.invalidate(allProjectsStreamProvider);
+      },
+    );
+  }
+}
+
+// ─── Release sections ────────────────────────────────────────────────────────
+
+class _ReleaseTodoSection extends ConsumerStatefulWidget {
+  final Release release;
+  final List<TodoItem> pendingTodos;
+
+  const _ReleaseTodoSection({
+    required this.release,
+    required this.pendingTodos,
+  });
+
+  @override
+  ConsumerState<_ReleaseTodoSection> createState() => _ReleaseTodoSectionState();
+}
+
+class _ReleaseTodoSectionState extends ConsumerState<_ReleaseTodoSection> {
+  bool _expanded = true;
+
+  static const _accentColor = Colors.teal;
+
+  @override
+  Widget build(BuildContext context) {
+    final release = widget.release;
+    final pendingTodos = widget.pendingTodos;
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          InkWell(
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => ReleaseDetailPage(releaseId: release.id),
+              ),
+            ),
+            borderRadius: BorderRadius.vertical(
+              top: const Radius.circular(12),
+              bottom: _expanded ? Radius.zero : const Radius.circular(12),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              child: Row(
+                children: [
+                  Icon(Icons.album, size: 13, color: _accentColor.shade300),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      release.title,
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleSmall
+                          ?.copyWith(fontWeight: FontWeight.w600),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  _Badge(
+                    label: 'Release',
+                    color: _accentColor.shade300,
+                  ),
+                  const SizedBox(width: 6),
+                  _Badge(
+                    label: '${pendingTodos.length}',
+                    color: Theme.of(context).colorScheme.primary,
+                    filled: true,
+                  ),
+                  const SizedBox(width: 2),
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => setState(() => _expanded = !_expanded),
+                    child: Icon(
+                      _expanded ? Icons.expand_less : Icons.expand_more,
+                      size: 18,
+                      color: Theme.of(context).textTheme.bodySmall?.color,
+                    ),
+                  ),
+                  const SizedBox(width: 2),
+                ],
+              ),
+            ),
+          ),
+          if (_expanded) ...[
+            const Divider(height: 1),
+            ...pendingTodos.map(
+              (todo) => _ReleaseTodoCheckItem(release: release, todo: todo),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ReleaseTodoCheckItem extends ConsumerWidget {
+  final Release release;
+  final TodoItem todo;
+
+  const _ReleaseTodoCheckItem({
+    required this.release,
+    required this.todo,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return CheckboxListTile(
+      value: false,
+      dense: true,
+      controlAffinity: ListTileControlAffinity.leading,
+      title: Text(
+        todo.text,
+        style: Theme.of(context).textTheme.bodyMedium,
+      ),
+      onChanged: (_) async {
+        final repo = await ref.read(repositoryProvider.future);
+        final updatedTodos = release.todos
+            .map((t) => t.id == todo.id ? t.copyWith(completed: true) : t)
+            .toList();
+        await repo.updateRelease(release.copyWith(todos: updatedTodos));
+        ref.invalidate(releasesProvider);
       },
     );
   }

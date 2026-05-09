@@ -35,6 +35,7 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage> {
   List<MusicProject> _tracks = [];
   String _searchQuery = '';
   late TextEditingController _searchController;
+  double _sidebarWidth = 320.0;
 
   MusicProject? get _current =>
       _currentIndex >= 0 && _currentIndex < _tracks.length
@@ -290,7 +291,7 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage> {
       children: [
         // ── Left: track list ──────────────────────────────────────────────
         SizedBox(
-          width: 280,
+          width: _sidebarWidth,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -401,7 +402,23 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage> {
             ],
           ),
         ),
-        const VerticalDivider(width: 1),
+        // ── Resizable divider ─────────────────────────────────────────────
+        MouseRegion(
+          cursor: SystemMouseCursors.resizeColumn,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onHorizontalDragUpdate: (d) {
+              setState(() {
+                _sidebarWidth = (_sidebarWidth + d.delta.dx).clamp(180.0, 520.0);
+              });
+            },
+            child: Container(
+              width: 5,
+              color: Colors.transparent,
+              child: const VerticalDivider(width: 1),
+            ),
+          ),
+        ),
         // ── Right: player ─────────────────────────────────────────────────
         Expanded(
           child: _current == null
