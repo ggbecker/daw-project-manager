@@ -26,6 +26,7 @@ import 'widgets/startup_dialog.dart';
 import 'widgets/tab_customization_dialog.dart';
 import '../services/dock_menu_service.dart';
 import '../utils/mobile_utils.dart';
+import '../providers/theme_provider.dart';
 import '../utils/file_launcher.dart';
 import '../utils/search_utils.dart';
 import '../utils/route_observer.dart';
@@ -3650,7 +3651,9 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         style: TrinaGridStyleConfig(
           gridBackgroundColor: Theme.of(context).cardColor,
           gridBorderColor: Theme.of(context).dividerColor.withValues(alpha: 0.4),
-          borderColor: Theme.of(context).dividerColor.withValues(alpha: 0.25),
+          borderColor: ref.watch(themeTypeProvider) == AppThemeType.neonDark
+                        ? Theme.of(context).dividerColor
+                        : Theme.of(context).dividerColor.withValues(alpha: 0.25),
           gridBorderRadius: BorderRadius.zero,
           rowColor: Theme.of(context).cardColor,
           cellColorInEditState: Theme.of(context).cardColor,
