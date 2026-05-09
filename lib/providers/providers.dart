@@ -811,6 +811,42 @@ final autoBackupIntervalProvider =
     NotifierProvider<AutoBackupIntervalNotifier, AutoBackupInterval>(
         AutoBackupIntervalNotifier.new);
 
+// ---------------------------------------------------------------------------
+// Upload Auto-Detected Preview Songs
+// ---------------------------------------------------------------------------
+
+class UploadAutoPreviewSongsNotifier extends Notifier<bool> {
+  static const _key = 'uploadAutoPreviewSongs';
+
+  @override
+  bool build() {
+    SchedulerBinding.instance.addPostFrameCallback((_) => _load());
+    return false;
+  }
+
+  Future<void> _load() async {
+    try {
+      await ensureHiveInitialized();
+      final box = await Hive.openBox<String>('app_settings');
+      final saved = box.get(_key);
+      if (saved != null) state = saved == 'true';
+    } catch (_) {}
+  }
+
+  Future<void> toggle() async {
+    state = !state;
+    try {
+      await ensureHiveInitialized();
+      final box = await Hive.openBox<String>('app_settings');
+      await box.put(_key, state.toString());
+    } catch (_) {}
+  }
+}
+
+final uploadAutoPreviewSongsProvider =
+    NotifierProvider<UploadAutoPreviewSongsNotifier, bool>(
+        UploadAutoPreviewSongsNotifier.new);
+
 // Playlists Provider
 final playlistsProvider = StreamProvider<List<Playlist>>((ref) async* {
   final repo = await ref.watch(repositoryProvider.future);
