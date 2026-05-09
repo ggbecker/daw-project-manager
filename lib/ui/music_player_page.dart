@@ -33,11 +33,26 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage> {
   WaveformPeaks? _peaks;
   int _currentIndex = -1;
   List<MusicProject> _tracks = [];
+  String _searchQuery = '';
+  late TextEditingController _searchController;
 
   MusicProject? get _current =>
       _currentIndex >= 0 && _currentIndex < _tracks.length
           ? _tracks[_currentIndex]
           : null;
+
+  List<(int, MusicProject)> get _displayTracks {
+    if (_searchQuery.isEmpty) {
+      return List.generate(_tracks.length, (i) => (i, _tracks[i]));
+    }
+    final q = _searchQuery.toLowerCase();
+    return [
+      for (int i = 0; i < _tracks.length; i++)
+        if (_tracks[i].displayName.toLowerCase().contains(q) ||
+            p.basename(_resolvedPath(_tracks[i]) ?? '').toLowerCase().contains(q))
+          (i, _tracks[i]),
+    ];
+  }
 
   bool _handleKeyboard(KeyEvent event) {
     if (event is! KeyDownEvent && event is! KeyRepeatEvent) return false;
@@ -81,6 +96,7 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage> {
   @override
   void initState() {
     super.initState();
+    _searchController = TextEditingController();
     if (!Platform.isAndroid && !Platform.isIOS) {
       HardwareKeyboard.instance.addHandler(_handleKeyboard);
     }
@@ -104,6 +120,7 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage> {
 
   @override
   void dispose() {
+    _searchController.dispose();
     if (!Platform.isAndroid && !Platform.isIOS) {
       HardwareKeyboard.instance.removeHandler(_handleKeyboard);
     }
@@ -287,11 +304,40 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage> {
                         style: theme.textTheme.titleSmall
                             ?.copyWith(fontWeight: FontWeight.w600)),
                     const Spacer(),
-                    Text('${_tracks.length} tracks',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: cs.onSurface.withValues(alpha: 0.5),
-                        )),
+                    Text(
+                      _searchQuery.isEmpty
+                          ? '${_tracks.length} tracks'
+                          : '${_displayTracks.length}/${_tracks.length}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: cs.onSurface.withValues(alpha: 0.5),
+                      ),
+                    ),
                   ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Search tracks…',
+                    prefixIcon: const Icon(Icons.search, size: 18),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 16),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() => _searchQuery = '');
+                            },
+                          )
+                        : null,
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onChanged: (v) => setState(() => _searchQuery = v),
                 ),
               ),
               const Divider(height: 1),
@@ -306,41 +352,51 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage> {
                           ),
                         ),
                       )
-                    : ListView.builder(
-                        itemCount: _tracks.length,
-                        itemBuilder: (context, i) {
-                          final track = _tracks[i];
-                          final selected = i == _currentIndex;
-                          return ListTile(
-                            dense: true,
-                            selected: selected,
-                            selectedTileColor: cs.primary.withValues(alpha: 0.1),
-                            leading: Icon(
-                              selected && _isPlaying
-                                  ? Icons.volume_up
-                                  : Icons.music_note,
-                              size: 18,
-                              color: selected ? cs.primary : null,
-                            ),
-                            title: Text(
-                              track.displayName,
-                              style: TextStyle(
-                                fontWeight: selected ? FontWeight.w600 : null,
-                                color: selected ? cs.primary : null,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            subtitle: Text(
-                              p.basename(_resolvedPath(track) ?? ''),
-                              overflow: TextOverflow.ellipsis,
+                    : _displayTracks.isEmpty
+                        ? Center(
+                            child: Text(
+                              'No tracks match\n"$_searchQuery"',
+                              textAlign: TextAlign.center,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: cs.onSurface.withValues(alpha: 0.5),
                               ),
                             ),
-                            onTap: () => _selectTrack(i),
-                          );
-                        },
-                      ),
+                          )
+                        : ListView.builder(
+                            itemCount: _displayTracks.length,
+                            itemBuilder: (context, i) {
+                              final (originalIndex, track) = _displayTracks[i];
+                              final selected = originalIndex == _currentIndex;
+                              return ListTile(
+                                dense: true,
+                                selected: selected,
+                                selectedTileColor: cs.primary.withValues(alpha: 0.1),
+                                leading: Icon(
+                                  selected && _isPlaying
+                                      ? Icons.volume_up
+                                      : Icons.music_note,
+                                  size: 18,
+                                  color: selected ? cs.primary : null,
+                                ),
+                                title: Text(
+                                  track.displayName,
+                                  style: TextStyle(
+                                    fontWeight: selected ? FontWeight.w600 : null,
+                                    color: selected ? cs.primary : null,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                subtitle: Text(
+                                  p.basename(_resolvedPath(track) ?? ''),
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: cs.onSurface.withValues(alpha: 0.5),
+                                  ),
+                                ),
+                                onTap: () => _selectTrack(originalIndex),
+                              );
+                            },
+                          ),
               ),
             ],
           ),
