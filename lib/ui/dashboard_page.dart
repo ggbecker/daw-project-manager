@@ -3680,7 +3680,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         ),
         columnSize: const TrinaGridColumnSizeConfig(
           autoSizeMode: TrinaAutoSizeMode.scale,
-          resizeMode: TrinaResizeMode.normal,
+          resizeMode: TrinaResizeMode.pushAndPull,
         ),
         shortcut: TrinaGridShortcut(
           actions: {
