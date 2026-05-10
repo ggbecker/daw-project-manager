@@ -2,6 +2,20 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 
+class ShallowScanResult {
+  final FileSystemEntity file;
+  /// Absolute path of the folder this file represents.
+  final String folderPath;
+  /// Absolute path of the parent folder (null for depth-1 results).
+  final String? parentFolderPath;
+
+  const ShallowScanResult({
+    required this.file,
+    required this.folderPath,
+    this.parentFolderPath,
+  });
+}
+
 class ScannerService {
   static const supportedExtensions = {
     '.als', // Ableton Live
@@ -43,6 +57,98 @@ class ScannerService {
   bool _isCubaseAutoSave(String path) {
     final base = p.basenameWithoutExtension(path).toLowerCase();
     return base.contains('_autosave');
+  }
+
+  /// Finds the best representative DAW file directly inside [dir].
+  /// Prefers a file whose stem matches the folder name; falls back to the
+  /// most recently modified file. Returns null if no DAW file is found.
+  Future<FileSystemEntity?> _bestFileInFolder(Directory dir) async {
+    final folderName = p.basename(dir.path).toLowerCase();
+    FileSystemEntity? best;
+    DateTime? bestModified;
+
+    await for (final entity in dir.list(recursive: false, followLinks: false)) {
+      if (entity is! File) {
+        // Logic Pro .logicx bundles are directories
+        if (entity is Directory && entity.path.toLowerCase().endsWith('.logicx')) {
+          final stat = await entity.stat();
+          final stem = p.basenameWithoutExtension(entity.path).toLowerCase();
+          if (best == null || stem == folderName || stat.modified.isAfter(bestModified!)) {
+            best = entity;
+            bestModified = stat.modified;
+          }
+        }
+        continue;
+      }
+      final ext = p.extension(entity.path).toLowerCase();
+      if (!supportedExtensions.contains(ext)) continue;
+      if (_isInBackupFolder(entity.path)) continue;
+      if ((ext == '.cpr' || ext == '.npr') && _isCubaseAutoSave(entity.path)) continue;
+
+      final stat = await entity.stat();
+      final stem = p.basenameWithoutExtension(entity.path).toLowerCase();
+      if (best == null) {
+        best = entity;
+        bestModified = stat.modified;
+      } else if (stem == folderName) {
+        best = entity;
+        bestModified = stat.modified;
+        break; // exact name match wins immediately
+      } else if (stat.modified.isAfter(bestModified!)) {
+        best = entity;
+        bestModified = stat.modified;
+      }
+    }
+    return best;
+  }
+
+  /// Folder-based shallow scan. Each immediate subfolder of [rootPath] that
+  /// contains a DAW file becomes one project. With [maxDepth] == 2, each
+  /// sub-subfolder also becomes a project linked to its parent folder.
+  Stream<ShallowScanResult> scanDirectoryShallow(
+    String rootPath, {
+    int maxDepth = 1,
+    List<String> ignoredPaths = const [],
+  }) async* {
+    final rootDir = Directory(rootPath);
+    if (!await rootDir.exists()) return;
+
+    final ignoredBases = ignoredPaths.map((x) => p.normalize(x)).toList();
+    bool isIgnored(String path) {
+      final cand = p.normalize(path);
+      for (final base in ignoredBases) {
+        if (cand == base) return true;
+        final prefix = base.endsWith(p.separator) ? base : base + p.separator;
+        if (cand.startsWith(prefix)) return true;
+      }
+      return false;
+    }
+
+    await for (final depth1 in rootDir.list(recursive: false, followLinks: false)) {
+      if (depth1 is! Directory) continue;
+      if (isIgnored(depth1.path)) continue;
+
+      final best1 = await _bestFileInFolder(depth1);
+      if (best1 != null) {
+        yield ShallowScanResult(file: best1, folderPath: depth1.path, parentFolderPath: null);
+      }
+
+      if (maxDepth >= 2) {
+        await for (final depth2 in depth1.list(recursive: false, followLinks: false)) {
+          if (depth2 is! Directory) continue;
+          if (isIgnored(depth2.path)) continue;
+
+          final best2 = await _bestFileInFolder(depth2);
+          if (best2 != null) {
+            yield ShallowScanResult(
+              file: best2,
+              folderPath: depth2.path,
+              parentFolderPath: depth1.path,
+            );
+          }
+        }
+      }
+    }
   }
 
   Stream<FileSystemEntity> scanDirectory(

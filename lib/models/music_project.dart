@@ -81,6 +81,9 @@ class MusicProject {
   @HiveField(24)
   final String? previewSongAutoPath; // Auto-detected mixdown path (not manually set by user)
 
+  @HiveField(25)
+  final String? parentProjectId; // Parent project ID when using shallow scan with depth ≥ 2
+
   const MusicProject({
     required this.id,
     required this.filePath,
@@ -107,6 +110,7 @@ class MusicProject {
     this.uploadedPreviewSongHash,
     this.deadline,
     this.previewSongAutoPath,
+    this.parentProjectId,
   });
 
   String get displayName => (customDisplayName != null && customDisplayName!.trim().isNotEmpty)
@@ -363,6 +367,8 @@ class MusicProject {
     bool clearDeadline = false,
     String? previewSongAutoPath,
     bool clearPreviewSongAutoPath = false,
+    String? parentProjectId,
+    bool clearParentProjectId = false,
   }) {
     return MusicProject(
       id: id ?? this.id,
@@ -390,6 +396,7 @@ class MusicProject {
       uploadedPreviewSongHash: clearUploadedPreviewSongHash ? null : (uploadedPreviewSongHash ?? this.uploadedPreviewSongHash),
       deadline: clearDeadline ? null : (deadline ?? this.deadline),
       previewSongAutoPath: clearPreviewSongAutoPath ? null : (previewSongAutoPath ?? this.previewSongAutoPath),
+      parentProjectId: clearParentProjectId ? null : (parentProjectId ?? this.parentProjectId),
     );
   }
 }
@@ -434,13 +441,14 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
       uploadedPreviewSongHash: fields.containsKey(22) ? fields[22] as String? : null,
       deadline: fields.containsKey(23) ? fields[23] as DateTime? : null,
       previewSongAutoPath: fields.containsKey(24) ? fields[24] as String? : null,
+      parentProjectId: fields.containsKey(25) ? fields[25] as String? : null,
     );
   }
 
   @override
   void write(BinaryWriter writer, MusicProject obj) {
     writer
-      ..writeByte(25) // 25 fields (0-24)
+      ..writeByte(26) // 26 fields (0-25)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -490,6 +498,8 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
       ..writeByte(23)
       ..write(obj.deadline)
       ..writeByte(24)
-      ..write(obj.previewSongAutoPath);
+      ..write(obj.previewSongAutoPath)
+      ..writeByte(25)
+      ..write(obj.parentProjectId);
   }
 }

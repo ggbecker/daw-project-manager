@@ -48,15 +48,34 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
 
   bool get _isDesktop => !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux);
 
-  Future<void> _scanOnlyFolder(ProjectRepository repo, String folderId, String folderPath) async {
+  Future<void> _scanOnlyFolder(ProjectRepository repo, String folderId, String folderPath, {int scanDepth = 0}) async {
     final scanner = ScannerService();
     final excluded = repo.getIgnoredPaths().map((p) => p.path).toList(growable: false);
     final scanTime = DateTime.now();
     int found = 0;
 
-    await for (final entity in scanner.scanDirectory(folderPath, ignoredPaths: excluded)) {
-      await repo.upsertFromFileSystemEntity(entity, fullMetadata: false);
-      found++;
+    if (scanDepth > 0) {
+      final allResults = await scanner.scanDirectoryShallow(folderPath, maxDepth: scanDepth, ignoredPaths: excluded).toList();
+      final folderToId = <String, String>{};
+      final foundPaths = <String>{};
+      for (final result in allResults.where((r) => r.parentFolderPath == null)) {
+        await repo.upsertFromFileSystemEntity(result.file, fullMetadata: false);
+        foundPaths.add(result.file.path);
+        final saved = repo.getByPath(result.file.path);
+        if (saved != null) folderToId[result.folderPath] = saved.id;
+        found++;
+      }
+      for (final result in allResults.where((r) => r.parentFolderPath != null)) {
+        await repo.upsertFromFileSystemEntity(result.file, fullMetadata: false, parentProjectId: folderToId[result.parentFolderPath]);
+        foundPaths.add(result.file.path);
+        found++;
+      }
+      await repo.removeOrphanedProjectsFromRoot(folderPath, foundPaths);
+    } else {
+      await for (final entity in scanner.scanDirectory(folderPath, ignoredPaths: excluded)) {
+        await repo.upsertFromFileSystemEntity(entity, fullMetadata: false);
+        found++;
+      }
     }
     await repo.updateRootLastScanAt(folderId, scanTime);
 
@@ -322,28 +341,69 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
                   )
                 else
                   ...projectFolders.map((f) {
-                    return ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.folder),
-                      title: Text(f.path),
-                      subtitle: f.lastScanAt == null
-                          ? Text(l10n.notScannedYet)
-                          : Text(l10n.lastScan(f.lastScanAt.toString())),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            tooltip: l10n.relocateFolderDialogTitle,
-                            onPressed: _busy ? null : () => _relocateProjectFolder(f.id, f.path),
-                            icon: const Icon(Icons.drive_file_move_outline),
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(Icons.folder),
+                          title: Text(f.path),
+                          subtitle: f.lastScanAt == null
+                              ? Text(l10n.notScannedYet)
+                              : Text(l10n.lastScan(f.lastScanAt.toString())),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                tooltip: l10n.relocateFolderDialogTitle,
+                                onPressed: _busy ? null : () => _relocateProjectFolder(f.id, f.path),
+                                icon: const Icon(Icons.drive_file_move_outline),
+                              ),
+                              IconButton(
+                                tooltip: l10n.remove,
+                                onPressed: _busy ? null : () => _removeProjectFolder(f.id),
+                                icon: const Icon(Icons.delete_outline),
+                              ),
+                            ],
                           ),
-                          IconButton(
-                            tooltip: l10n.remove,
-                            onPressed: _busy ? null : () => _removeProjectFolder(f.id),
-                            icon: const Icon(Icons.delete_outline),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 40, bottom: 8),
+                          child: Row(
+                            children: [
+                              Text('Scan depth:', style: Theme.of(context).textTheme.bodySmall),
+                              const SizedBox(width: 8),
+                              SegmentedButton<int>(
+                                segments: const [
+                                  ButtonSegment(value: 0, label: Text('All levels')),
+                                  ButtonSegment(value: 1, label: Text('1 level')),
+                                  ButtonSegment(value: 2, label: Text('2 levels')),
+                                ],
+                                selected: {f.scanDepth},
+                                showSelectedIcon: false,
+                                style: ButtonStyle(
+                                  visualDensity: VisualDensity.compact,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                onSelectionChanged: _busy ? null : (selected) async {
+                                  final newDepth = selected.first;
+                                  if (newDepth == f.scanDepth) return;
+                                  setState(() => _busy = true);
+                                  try {
+                                    final repo = await ref.read(repositoryProvider.future);
+                                    await repo.updateRootScanDepth(f.id, newDepth);
+                                    ref.invalidate(scanRootsProvider);
+                                    await _scanOnlyFolder(repo, f.id, f.path, scanDepth: newDepth);
+                                    ref.invalidate(allProjectsStreamProvider);
+                                  } finally {
+                                    if (mounted) setState(() => _busy = false);
+                                  }
+                                },
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     );
                   }),
               ],

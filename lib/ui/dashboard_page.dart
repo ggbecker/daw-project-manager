@@ -540,9 +540,48 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       final ignoredPaths = repo.getIgnoredPaths().map((p) => p.path).toList(growable: false);
       final scanTime = DateTime.now();
       for (final root in repo.getRoots()) {
-        await for (final entity in scanner.scanDirectory(root.path, ignoredPaths: ignoredPaths)) {
-          await repo.upsertFromFileSystemEntity(entity, fullMetadata: fullMetadata);
-          foundCount++;
+        if (root.scanDepth > 0) {
+          // Collect all shallow results first so we can do a two-pass upsert
+          // without streaming twice (avoids duplicate filesystem reads).
+          final allResults = await scanner.scanDirectoryShallow(
+            root.path,
+            maxDepth: root.scanDepth,
+            ignoredPaths: ignoredPaths,
+          ).toList();
+
+          // First pass: upsert depth-1 folders and record folderPath → project id.
+          // Doing this before depth-2 so parent IDs are available.
+          final folderToId = <String, String>{};
+          final foundPaths = <String>{};
+          for (final result in allResults.where((r) => r.parentFolderPath == null)) {
+            await repo.upsertFromFileSystemEntity(result.file, fullMetadata: fullMetadata);
+            foundPaths.add(result.file.path);
+            final saved = repo.getByPath(result.file.path);
+            if (saved != null) folderToId[result.folderPath] = saved.id;
+            foundCount++;
+          }
+
+          // Second pass: upsert depth-2 folders linked to their parents.
+          for (final result in allResults.where((r) => r.parentFolderPath != null)) {
+            final parentId = folderToId[result.parentFolderPath];
+            await repo.upsertFromFileSystemEntity(
+              result.file,
+              fullMetadata: fullMetadata,
+              parentProjectId: parentId,
+            );
+            foundPaths.add(result.file.path);
+            foundCount++;
+          }
+
+          // Prune projects under this root that weren't found by the shallow scan
+          // (e.g. individual-file entries left over from a prior deep scan).
+          // Runs after upserts so metadata on matched projects is already preserved.
+          await repo.removeOrphanedProjectsFromRoot(root.path, foundPaths);
+        } else {
+          await for (final entity in scanner.scanDirectory(root.path, ignoredPaths: ignoredPaths)) {
+            await repo.upsertFromFileSystemEntity(entity, fullMetadata: fullMetadata);
+            foundCount++;
+          }
         }
         // Update lastScanAt timestamp for this root
         await repo.updateRootLastScanAt(root.id, scanTime);
@@ -3054,28 +3093,66 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     }
   }
 
+  TrinaRow _projectToRow(MusicProject p) {
+    final dawDisplay = p.dawType != null
+        ? (p.dawVersion != null && p.dawVersion!.isNotEmpty
+            ? '${p.dawType} ${p.dawVersion}'
+            : p.dawType!)
+        : '';
+    return TrinaRow(
+      cells: {
+        'checkbox': TrinaCell(value: ''),
+        'name': TrinaCell(value: p.displayName),
+        'status': TrinaCell(value: p.status),
+        'dawType': TrinaCell(value: dawDisplay),
+        'bpm': TrinaCell(value: p.bpm?.toString() ?? ''),
+        'key': TrinaCell(value: p.musicalKey ?? ''),
+        'lastModified': TrinaCell(value: widget.dateFormat.format(p.lastModifiedAt)),
+        'deadline': TrinaCell(value: p.deadlineStatus ?? ''),
+        'launch': TrinaCell(value: ''),
+        'data': TrinaCell(value: p),
+      },
+    );
+  }
+
   List<TrinaRow> _mapProjectsToRows(List<MusicProject> projects) {
-    return projects.map((p) {
-      // Combine DAW type and version into a single string
-      final dawDisplay = p.dawType != null
-          ? (p.dawVersion != null && p.dawVersion!.isNotEmpty
-              ? '${p.dawType} ${p.dawVersion}'
-              : p.dawType!)
-          : '';
-      
+    final hasTree = projects.any((p) => p.parentProjectId != null);
+    if (!hasTree) return projects.map(_projectToRow).toList();
+
+    // Build tree: group children by parentProjectId.
+    final childrenMap = <String, List<MusicProject>>{};
+    final topLevel = <MusicProject>[];
+    for (final proj in projects) {
+      if (proj.parentProjectId != null) {
+        childrenMap.putIfAbsent(proj.parentProjectId!, () => []).add(proj);
+      } else {
+        topLevel.add(proj);
+      }
+    }
+
+    return topLevel.map((parent) {
+      final children = childrenMap[parent.id] ?? [];
+      if (children.isEmpty) return _projectToRow(parent);
       return TrinaRow(
         cells: {
-          'checkbox': TrinaCell(value: ''), // Placeholder for checkbox column
-          'name': TrinaCell(value: p.displayName),
-          'status': TrinaCell(value: p.status),
-          'dawType': TrinaCell(value: dawDisplay),
-          'bpm': TrinaCell(value: p.bpm?.toString() ?? ''),
-          'key': TrinaCell(value: p.musicalKey ?? ''),
-          'lastModified': TrinaCell(value: widget.dateFormat.format(p.lastModifiedAt)),
-          'deadline': TrinaCell(value: p.deadlineStatus ?? ''),
+          'checkbox': TrinaCell(value: ''),
+          'name': TrinaCell(value: parent.displayName),
+          'status': TrinaCell(value: parent.status),
+          'dawType': TrinaCell(value: parent.dawType != null
+              ? (parent.dawVersion != null && parent.dawVersion!.isNotEmpty
+                  ? '${parent.dawType} ${parent.dawVersion}'
+                  : parent.dawType!)
+              : ''),
+          'bpm': TrinaCell(value: parent.bpm?.toString() ?? ''),
+          'key': TrinaCell(value: parent.musicalKey ?? ''),
+          'lastModified': TrinaCell(value: widget.dateFormat.format(parent.lastModifiedAt)),
+          'deadline': TrinaCell(value: parent.deadlineStatus ?? ''),
           'launch': TrinaCell(value: ''),
-          'data': TrinaCell(value: p),
+          'data': TrinaCell(value: parent),
         },
+        type: TrinaRowType.group(
+          children: FilteredList(initialList: children.map(_projectToRow).toList()),
+        ),
       );
     }).toList();
   }
@@ -3744,6 +3821,14 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           rows: initialRows,
           onLoaded: (TrinaGridOnLoadedEvent event) {
             stateManager = event.stateManager;
+            stateManager!.setRowGroup(
+              TrinaRowGroupTreeDelegate(
+                resolveColumnDepth: (column) => column.field == 'name' ? 0 : null,
+                showText: (cell) => true,
+                showFirstExpandableIcon: true,
+                showCount: false,
+              ),
+            );
           },
       onChanged: (TrinaGridOnChangedEvent event) async {
         final project = event.row.cells['data']?.value as MusicProject?;
