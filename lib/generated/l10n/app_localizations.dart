@@ -463,7 +463,7 @@ abstract class AppLocalizations {
   /// No description provided for @switchProfile.
   ///
   /// In en, this message translates to:
-  /// **'Switch'**
+  /// **'Switch Profile'**
   String get switchProfile;
 
   /// No description provided for @edit.

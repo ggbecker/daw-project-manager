@@ -475,6 +475,60 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
   }
 
 
+  Future<void> _quickSwitchProfile(BuildContext context) async {
+    final allProfiles = ref.read(allProfilesProvider).value;
+    if (allProfiles == null || allProfiles.length < 2) return;
+
+    final currentProfile = ref.read(currentProfileProvider).value;
+
+    if (allProfiles.length == 2) {
+      final target = allProfiles.firstWhere(
+        (p) => p.id != currentProfile?.id,
+        orElse: () => allProfiles[0],
+      );
+      await _performProfileSwitch(target.id);
+    } else {
+      if (!context.mounted) return;
+      final target = await showDialog<String>(
+        context: context,
+        builder: (ctx) => SimpleDialog(
+          title: Text(AppLocalizations.of(ctx)!.switchProfile),
+          children: allProfiles
+              .where((p) => p.id != currentProfile?.id)
+              .map((p) => SimpleDialogOption(
+                    onPressed: () => Navigator.of(ctx).pop(p.id),
+                    child: Text(p.name),
+                  ))
+              .toList(),
+        ),
+      );
+      if (target != null) await _performProfileSwitch(target);
+    }
+  }
+
+  Future<void> _performProfileSwitch(String profileId) async {
+    final profileRepo = await ref.read(profileRepositoryProvider.future);
+    final profileSwitchingNotifier = ref.read(profileSwitchingProvider.notifier);
+    final container = ProviderScope.containerOf(context);
+
+    try {
+      await profileRepo.setCurrentProfileId(profileId);
+      profileSwitchingNotifier.setSwitching(true);
+
+      container.invalidate(repositoryProvider);
+      container.invalidate(allProjectsStreamProvider);
+      container.invalidate(releasesProvider);
+      container.invalidate(scanRootsProvider);
+      container.invalidate(currentProfileProvider);
+
+      await Future.delayed(const Duration(milliseconds: 100));
+      await container.read(repositoryProvider.future);
+      profileSwitchingNotifier.complete();
+    } catch (e) {
+      profileSwitchingNotifier.complete();
+    }
+  }
+
   Future<void> _scanAll({bool fullMetadata = false}) async {
     if (_scanning) return;
     final repo = await ref.read(repositoryProvider.future);
@@ -875,6 +929,18 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                   onPressed: () => Navigator.of(context).push(
                                     MaterialPageRoute(builder: (_) => const GoogleDriveSyncPage()),
                                   ),
+                                ),
+                                // Quick profile switch button
+                                Consumer(
+                                  builder: (context, ref, child) {
+                                    final allProfiles = ref.watch(allProfilesProvider).value;
+                                    if (allProfiles == null || allProfiles.length < 2) return const SizedBox.shrink();
+                                    return IconButton(
+                                      icon: const Icon(Icons.swap_horiz),
+                                      tooltip: AppLocalizations.of(context)!.switchProfile,
+                                      onPressed: () => _quickSwitchProfile(context),
+                                    );
+                                  },
                                 ),
                                 // Profile button
                                 Consumer(
@@ -1348,6 +1414,18 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                   // Ações de Root e Scan
                   Row(
                       children: [
+                        // Quick profile switch button
+                        Consumer(
+                          builder: (context, ref, child) {
+                            final allProfiles = ref.watch(allProfilesProvider).value;
+                            if (allProfiles == null || allProfiles.length < 2) return const SizedBox.shrink();
+                            return IconButton(
+                              icon: const Icon(Icons.swap_horiz),
+                              tooltip: AppLocalizations.of(context)!.switchProfile,
+                              onPressed: () => _quickSwitchProfile(context),
+                            );
+                          },
+                        ),
                         // Profile button - always visible
                         Consumer(
                           builder: (context, ref, child) {
@@ -1383,7 +1461,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                               ),
                               data: (currentProfile) {
                                 Widget profileIcon;
-                                if (currentProfile?.photoPath != null && 
+                                if (currentProfile?.photoPath != null &&
                                     File(currentProfile!.photoPath!).existsSync()) {
                                   profileIcon = ClipRRect(
                                     borderRadius: BorderRadius.circular(12),

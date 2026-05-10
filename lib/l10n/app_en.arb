@@ -106,7 +106,7 @@
   "create": "Create",
   "profiles": "Profiles",
   "active": "Active",
-  "switchProfile": "Switch",
+  "switchProfile": "Switch Profile",
   "edit": "Edit",
   "delete": "Delete",
   "addFolder": "Add Folder",

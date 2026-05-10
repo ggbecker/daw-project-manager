@@ -201,7 +201,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get active => 'Active';
 
   @override
-  String get switchProfile => 'Switch';
+  String get switchProfile => 'Switch Profile';
 
   @override
   String get edit => 'Edit';
