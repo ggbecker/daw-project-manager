@@ -33,6 +33,10 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
   int _selectedIndex = -1;
   final TextEditingController _addTodoController = TextEditingController();
 
+  // Manual double-click detection — avoids DoubleTapGestureRecognizer in the arena.
+  DateTime? _lastTapTime;
+  int _lastTapKey = -1; // library: originalIndex, queue: ~i (bitwise not)
+
   MusicProject? get _current =>
       _currentIndex >= 0 && _currentIndex < _tracks.length
           ? _tracks[_currentIndex]
@@ -60,6 +64,12 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
   void initState() {
     super.initState();
     _searchController = TextEditingController();
+    // Seed the track list from whatever the stream already holds on first mount.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final value = ref.read(allProjectsStreamProvider).value;
+      if (value != null) _buildTrackList(value);
+    });
   }
 
   @override
@@ -90,6 +100,24 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
         .where((p) => _resolvedPath(p) != null)
         .toList()
       ..sort((a, b) => b.lastModifiedAt.compareTo(a.lastModifiedAt));
+
+    // Skip rebuild when nothing the UI cares about has changed.
+    if (tracks.length == _tracks.length) {
+      bool same = true;
+      for (int i = 0; i < tracks.length && same; i++) {
+        final a = tracks[i], b = _tracks[i];
+        if (a.id != b.id ||
+            a.displayName != b.displayName ||
+            a.status != b.status ||
+            a.todos.length != b.todos.length ||
+            a.todos.where((t) => t.completed).length !=
+                b.todos.where((t) => t.completed).length) {
+          same = false;
+        }
+      }
+      if (same) return;
+    }
+
     setState(() {
       final prevCurrentId = _current?.id;
       final prevSelectedId = _selectedIndex >= 0 && _selectedIndex < _tracks.length
@@ -196,21 +224,11 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
     final l10n = AppLocalizations.of(context)!;
 
     ref.listen(allProjectsStreamProvider, (_, next) {
-      final projects = next.value ?? [];
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _buildTrackList(projects);
-      });
+      _buildTrackList(next.value ?? []);
     });
     ref.listen(desktopPlayerCompletedProvider, (prev, next) {
       if (_currentIndex >= 0 || _playingFromPlaylist) _playNext();
     });
-
-    final allProjects = ref.watch(allProjectsStreamProvider).value ?? [];
-    if (_tracks.isEmpty && allProjects.isNotEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _buildTrackList(allProjects);
-      });
-    }
 
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
@@ -343,19 +361,29 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
                                   ),
                                 ),
                                 child: GestureDetector(
-                                  onTap: () => setState(() {
-                                    _selectedIndex = originalIndex;
-                                    _addTodoController.clear();
-                                  }),
-                                  onDoubleTap: () {
-                                    setState(() {
-                                      _playlist.clear();
-                                      _playlist.add(track);
-                                      _playlistIndex = 0;
-                                      _playingFromPlaylist = true;
-                                    });
-                                    _selectTrack(originalIndex,
-                                        keepPlaylistState: true);
+                                  onTapDown: (_) {
+                                    final now = DateTime.now();
+                                    final isDouble = _lastTapKey == originalIndex &&
+                                        _lastTapTime != null &&
+                                        now.difference(_lastTapTime!) <
+                                            const Duration(milliseconds: 350);
+                                    _lastTapTime = isDouble ? null : now;
+                                    _lastTapKey = originalIndex;
+                                    if (isDouble) {
+                                      setState(() {
+                                        _playlist.clear();
+                                        _playlist.add(track);
+                                        _playlistIndex = 0;
+                                        _playingFromPlaylist = true;
+                                      });
+                                      _selectTrack(originalIndex,
+                                          keepPlaylistState: true);
+                                    } else {
+                                      setState(() {
+                                        _selectedIndex = originalIndex;
+                                        _addTodoController.clear();
+                                      });
+                                    }
                                   },
                                   onSecondaryTapUp: (details) =>
                                       _showTrackContextMenu(
@@ -786,18 +814,27 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
                           final resolvedPath = _resolvedPath(track);
                           return GestureDetector(
                             key: ValueKey(track.id),
-                            onTap: () {
-                              final idx = _tracks.indexWhere((t) => t.id == track.id);
-                              if (idx >= 0) {
-                                setState(() {
-                                  _selectedIndex = idx;
-                                  _addTodoController.clear();
-                                });
+                            onTapDown: (_) {
+                              final key = ~i; // negative namespace for queue items
+                              final now = DateTime.now();
+                              final isDouble = _lastTapKey == key &&
+                                  _lastTapTime != null &&
+                                  now.difference(_lastTapTime!) <
+                                      const Duration(milliseconds: 350);
+                              _lastTapTime = isDouble ? null : now;
+                              _lastTapKey = key;
+                              if (isDouble) {
+                                if (resolvedPath != null) _selectFromPlaylist(i);
+                              } else {
+                                final idx = _tracks.indexWhere((t) => t.id == track.id);
+                                if (idx >= 0) {
+                                  setState(() {
+                                    _selectedIndex = idx;
+                                    _addTodoController.clear();
+                                  });
+                                }
                               }
                             },
-                            onDoubleTap: resolvedPath == null
-                                ? null
-                                : () => _selectFromPlaylist(i),
                             onSecondaryTapUp: (details) {
                               final RenderBox overlay = Overlay.of(context)
                                   .context

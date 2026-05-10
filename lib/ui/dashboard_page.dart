@@ -988,7 +988,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                         final playerRequest = ref.watch(desktopPlayerProvider);
                         if (playerRequest == null) return null;
                         return _DesktopPlayerBar(
-                          key: ValueKey(playerRequest.generation),
+                          key: const Key('desktop_player_bar'),
                           request: playerRequest,
                         );
                       }(),
@@ -4932,6 +4932,26 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _focusNode.requestFocus();
     });
+  }
+
+  @override
+  void didUpdateWidget(_DesktopPlayerBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.request.resolvedPath != widget.request.resolvedPath) {
+      _player.stop();
+      setState(() {
+        _isPlaying = false;
+        _position = Duration.zero;
+        _duration = Duration.zero;
+        _isMono = false;
+        _isGeneratingMono = false;
+        _monoFilePath = null;
+        _fileInfo = null;
+        _peaks = null;
+      });
+      _player.play(DeviceFileSource(widget.request.resolvedPath));
+      _loadBackgroundData();
+    }
   }
 
   @override
