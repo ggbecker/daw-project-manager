@@ -2560,6 +2560,87 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String autoBackupNextBackup(String time) {
-    return 'Next backup: $time';
+    return 'Próxima copia: $time';
+  }
+
+  @override
+  String get playerTitle => 'Reproductor de música';
+
+  @override
+  String get playerToggleQueue => 'Alternar cola';
+
+  @override
+  String get playerSearchHint => 'Buscar pistas…';
+
+  @override
+  String playerTrackCount(int count) {
+    return '$count pistas';
+  }
+
+  @override
+  String playerTrackCountFiltered(int filtered, int total) {
+    return '$filtered/$total';
+  }
+
+  @override
+  String get playerNoPreviewSongs =>
+      'No se encontraron pistas de vista previa.\nAbre un proyecto y establece una vista previa.';
+
+  @override
+  String playerNoTracksMatch(String query) {
+    return 'Ninguna pista coincide con\n\"$query\"';
+  }
+
+  @override
+  String get playerDoubleClickToPlay =>
+      'Doble clic en una pista para reproducir';
+
+  @override
+  String get playerSingleClickToPreview =>
+      'Clic simple para vista previa en la barra inferior';
+
+  @override
+  String get playerQueueTitle => 'Cola';
+
+  @override
+  String get playerClearQueue => 'Vaciar cola';
+
+  @override
+  String get playerQueueEmptyHint =>
+      'Doble clic para comenzar,\no arrastra pistas aquí para la cola.';
+
+  @override
+  String get playerPrev => 'Anterior';
+
+  @override
+  String get playerNext => 'Siguiente';
+
+  @override
+  String get playerGoToProject => 'Ir al proyecto';
+
+  @override
+  String get playerAddToQueue => 'Añadir a la cola';
+
+  @override
+  String get playerRemoveFromQueue => 'Quitar de la cola';
+
+  @override
+  String get playerDismissDetail => 'Cerrar detalle';
+
+  @override
+  String get playerNotes => 'NOTAS';
+
+  @override
+  String get playerTasks => 'TAREAS';
+
+  @override
+  String get playerNoTasks => 'Sin tareas aún.';
+
+  @override
+  String get playerAddTaskHint => 'Añadir una tarea…';
+
+  @override
+  String playerCompletedTasks(int count) {
+    return '$count completada(s)';
   }
 }

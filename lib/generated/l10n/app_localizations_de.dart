@@ -2559,6 +2559,87 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String autoBackupNextBackup(String time) {
-    return 'Next backup: $time';
+    return 'Nächstes Backup: $time';
+  }
+
+  @override
+  String get playerTitle => 'Musikplayer';
+
+  @override
+  String get playerToggleQueue => 'Warteschlange umschalten';
+
+  @override
+  String get playerSearchHint => 'Tracks suchen…';
+
+  @override
+  String playerTrackCount(int count) {
+    return '$count Tracks';
+  }
+
+  @override
+  String playerTrackCountFiltered(int filtered, int total) {
+    return '$filtered/$total';
+  }
+
+  @override
+  String get playerNoPreviewSongs =>
+      'Keine Vorschaulieder gefunden.\nÖffne ein Projekt und lege ein Vorschaustück fest.';
+
+  @override
+  String playerNoTracksMatch(String query) {
+    return 'Keine Tracks passen zu\n\"$query\"';
+  }
+
+  @override
+  String get playerDoubleClickToPlay =>
+      'Doppelklick auf einen Track zum Abspielen';
+
+  @override
+  String get playerSingleClickToPreview =>
+      'Einfachklick zur Vorschau in der Leiste unten';
+
+  @override
+  String get playerQueueTitle => 'Warteschlange';
+
+  @override
+  String get playerClearQueue => 'Warteschlange leeren';
+
+  @override
+  String get playerQueueEmptyHint =>
+      'Doppelklick zum Starten,\noder Tracks hierher ziehen.';
+
+  @override
+  String get playerPrev => 'Vorheriger';
+
+  @override
+  String get playerNext => 'Nächster';
+
+  @override
+  String get playerGoToProject => 'Zum Projekt';
+
+  @override
+  String get playerAddToQueue => 'Zur Warteschlange hinzufügen';
+
+  @override
+  String get playerRemoveFromQueue => 'Aus Warteschlange entfernen';
+
+  @override
+  String get playerDismissDetail => 'Detail ausblenden';
+
+  @override
+  String get playerNotes => 'NOTIZEN';
+
+  @override
+  String get playerTasks => 'AUFGABEN';
+
+  @override
+  String get playerNoTasks => 'Noch keine Aufgaben.';
+
+  @override
+  String get playerAddTaskHint => 'Aufgabe hinzufügen…';
+
+  @override
+  String playerCompletedTasks(int count) {
+    return '$count abgeschlossen';
   }
 }

@@ -1349,6 +1349,18 @@ final desktopPlayerProvider =
     NotifierProvider<DesktopPlayerNotifier, DesktopPlayerRequest?>(
         DesktopPlayerNotifier.new);
 
+/// Incremented each time the desktop player finishes a track naturally.
+/// Music player listens to this to trigger queue auto-advance.
+class DesktopPlayerCompletedNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+  void increment() => state++;
+}
+
+final desktopPlayerCompletedProvider =
+    NotifierProvider<DesktopPlayerCompletedNotifier, int>(
+        DesktopPlayerCompletedNotifier.new);
+
 // ─── Waveform peaks cache ─────────────────────────────────────────────────────
 
 /// In-memory cache: resolved file path → extracted [WaveformPeaks].

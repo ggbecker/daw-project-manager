@@ -2546,6 +2546,87 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String autoBackupNextBackup(String time) {
-    return 'Next backup: $time';
+    return 'Próximo backup: $time';
+  }
+
+  @override
+  String get playerTitle => 'Reprodutor de Música';
+
+  @override
+  String get playerToggleQueue => 'Alternar fila';
+
+  @override
+  String get playerSearchHint => 'Pesquisar faixas…';
+
+  @override
+  String playerTrackCount(int count) {
+    return '$count faixas';
+  }
+
+  @override
+  String playerTrackCountFiltered(int filtered, int total) {
+    return '$filtered/$total';
+  }
+
+  @override
+  String get playerNoPreviewSongs =>
+      'Nenhuma prévia encontrada.\nAbra um projeto e defina uma prévia.';
+
+  @override
+  String playerNoTracksMatch(String query) {
+    return 'Nenhuma faixa corresponde a\n\"$query\"';
+  }
+
+  @override
+  String get playerDoubleClickToPlay =>
+      'Clique duplo para começar a reproduzir';
+
+  @override
+  String get playerSingleClickToPreview =>
+      'Clique simples para ouvir na barra abaixo';
+
+  @override
+  String get playerQueueTitle => 'Fila';
+
+  @override
+  String get playerClearQueue => 'Limpar fila';
+
+  @override
+  String get playerQueueEmptyHint =>
+      'Clique duplo para começar,\nou arraste faixas para a fila.';
+
+  @override
+  String get playerPrev => 'Anterior';
+
+  @override
+  String get playerNext => 'Próximo';
+
+  @override
+  String get playerGoToProject => 'Ir ao projeto';
+
+  @override
+  String get playerAddToQueue => 'Adicionar à fila';
+
+  @override
+  String get playerRemoveFromQueue => 'Remover da fila';
+
+  @override
+  String get playerDismissDetail => 'Fechar detalhes';
+
+  @override
+  String get playerNotes => 'NOTAS';
+
+  @override
+  String get playerTasks => 'TAREFAS';
+
+  @override
+  String get playerNoTasks => 'Nenhuma tarefa ainda.';
+
+  @override
+  String get playerAddTaskHint => 'Adicionar uma tarefa…';
+
+  @override
+  String playerCompletedTasks(int count) {
+    return '$count concluída(s)';
   }
 }

@@ -1698,10 +1698,38 @@
   "autoBackupHourly": "Every hour",
   "autoBackupEvery6Hours": "Every 6 hours",
   "autoBackupDaily": "Daily",
-  "autoBackupNextBackup": "Next backup: {time}",
+  "autoBackupNextBackup": "Próximo backup: {time}",
   "@autoBackupNextBackup": {
     "placeholders": {
       "time": { "type": "String" }
+    }
+  },
+  "playerTitle": "Reprodutor de Música",
+  "playerToggleQueue": "Alternar fila",
+  "playerSearchHint": "Pesquisar faixas…",
+  "playerTrackCount": "{count} faixas",
+  "playerTrackCountFiltered": "{filtered}/{total}",
+  "playerNoPreviewSongs": "Nenhuma prévia encontrada.\nAbra um projeto e defina uma prévia.",
+  "playerNoTracksMatch": "Nenhuma faixa corresponde a\n\"{query}\"",
+  "playerDoubleClickToPlay": "Clique duplo para começar a reproduzir",
+  "playerSingleClickToPreview": "Clique simples para ouvir na barra abaixo",
+  "playerQueueTitle": "Fila",
+  "playerClearQueue": "Limpar fila",
+  "playerQueueEmptyHint": "Clique duplo para começar,\nou arraste faixas para a fila.",
+  "playerPrev": "Anterior",
+  "playerNext": "Próximo",
+  "playerGoToProject": "Ir ao projeto",
+  "playerAddToQueue": "Adicionar à fila",
+  "playerRemoveFromQueue": "Remover da fila",
+  "playerDismissDetail": "Fechar detalhes",
+  "playerNotes": "NOTAS",
+  "playerTasks": "TAREFAS",
+  "playerNoTasks": "Nenhuma tarefa ainda.",
+  "playerAddTaskHint": "Adicionar uma tarefa…",
+  "playerCompletedTasks": "{count} concluída(s)",
+  "@playerCompletedTasks": {
+    "placeholders": {
+      "count": { "type": "int" }
     }
   }
 }

@@ -1674,10 +1674,38 @@
   "autoBackupHourly": "Every hour",
   "autoBackupEvery6Hours": "Every 6 hours",
   "autoBackupDaily": "Daily",
-  "autoBackupNextBackup": "Next backup: {time}",
+  "autoBackupNextBackup": "Prossimo backup: {time}",
   "@autoBackupNextBackup": {
     "placeholders": {
       "time": { "type": "String" }
+    }
+  },
+  "playerTitle": "Lettore musicale",
+  "playerToggleQueue": "Attiva/disattiva coda",
+  "playerSearchHint": "Cerca tracce…",
+  "playerTrackCount": "{count} tracce",
+  "playerTrackCountFiltered": "{filtered}/{total}",
+  "playerNoPreviewSongs": "Nessuna anteprima trovata.\nApri un progetto e imposta un'anteprima.",
+  "playerNoTracksMatch": "Nessuna traccia corrisponde a\n\"{query}\"",
+  "playerDoubleClickToPlay": "Doppio clic su una traccia per riprodurla",
+  "playerSingleClickToPreview": "Clic singolo per l'anteprima nella barra sottostante",
+  "playerQueueTitle": "Coda",
+  "playerClearQueue": "Svuota coda",
+  "playerQueueEmptyHint": "Doppio clic per iniziare,\no trascina le tracce qui.",
+  "playerPrev": "Precedente",
+  "playerNext": "Successivo",
+  "playerGoToProject": "Vai al progetto",
+  "playerAddToQueue": "Aggiungi alla coda",
+  "playerRemoveFromQueue": "Rimuovi dalla coda",
+  "playerDismissDetail": "Chiudi dettaglio",
+  "playerNotes": "NOTE",
+  "playerTasks": "ATTIVITÀ",
+  "playerNoTasks": "Nessuna attività ancora.",
+  "playerAddTaskHint": "Aggiungi un'attività…",
+  "playerCompletedTasks": "{count} completata/e",
+  "@playerCompletedTasks": {
+    "placeholders": {
+      "count": { "type": "int" }
     }
   }
 }

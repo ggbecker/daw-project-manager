@@ -1674,10 +1674,38 @@
   "autoBackupHourly": "Every hour",
   "autoBackupEvery6Hours": "Every 6 hours",
   "autoBackupDaily": "Daily",
-  "autoBackupNextBackup": "Next backup: {time}",
+  "autoBackupNextBackup": "Следующий бэкап: {time}",
   "@autoBackupNextBackup": {
     "placeholders": {
       "time": { "type": "String" }
+    }
+  },
+  "playerTitle": "Музыкальный плеер",
+  "playerToggleQueue": "Переключить очередь",
+  "playerSearchHint": "Поиск треков…",
+  "playerTrackCount": "{count} треков",
+  "playerTrackCountFiltered": "{filtered}/{total}",
+  "playerNoPreviewSongs": "Треки для предпросмотра не найдены.\nОткройте проект и добавьте трек.",
+  "playerNoTracksMatch": "Треки не найдены:\n\"{query}\"",
+  "playerDoubleClickToPlay": "Дважды щёлкните по треку для воспроизведения",
+  "playerSingleClickToPreview": "Одиночный клик — предпросмотр в панели ниже",
+  "playerQueueTitle": "Очередь",
+  "playerClearQueue": "Очистить очередь",
+  "playerQueueEmptyHint": "Дважды щёлкните для начала,\nили перетащите треки сюда.",
+  "playerPrev": "Предыдущий",
+  "playerNext": "Следующий",
+  "playerGoToProject": "Перейти к проекту",
+  "playerAddToQueue": "Добавить в очередь",
+  "playerRemoveFromQueue": "Убрать из очереди",
+  "playerDismissDetail": "Закрыть детали",
+  "playerNotes": "ЗАМЕТКИ",
+  "playerTasks": "ЗАДАЧИ",
+  "playerNoTasks": "Задач пока нет.",
+  "playerAddTaskHint": "Добавить задачу…",
+  "playerCompletedTasks": "{count} выполнено",
+  "@playerCompletedTasks": {
+    "placeholders": {
+      "count": { "type": "int" }
     }
   }
 }

@@ -2467,6 +2467,83 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String autoBackupNextBackup(String time) {
-    return 'Next backup: $time';
+    return '下次备份：$time';
+  }
+
+  @override
+  String get playerTitle => '音乐播放器';
+
+  @override
+  String get playerToggleQueue => '切换队列';
+
+  @override
+  String get playerSearchHint => '搜索曲目…';
+
+  @override
+  String playerTrackCount(int count) {
+    return '$count首曲目';
+  }
+
+  @override
+  String playerTrackCountFiltered(int filtered, int total) {
+    return '$filtered/$total';
+  }
+
+  @override
+  String get playerNoPreviewSongs => '未找到预览曲目。\n请打开项目并设置预览曲目。';
+
+  @override
+  String playerNoTracksMatch(String query) {
+    return '没有曲目匹配\n\"$query\"';
+  }
+
+  @override
+  String get playerDoubleClickToPlay => '双击曲目开始播放';
+
+  @override
+  String get playerSingleClickToPreview => '单击在下方播放栏中预览';
+
+  @override
+  String get playerQueueTitle => '队列';
+
+  @override
+  String get playerClearQueue => '清空队列';
+
+  @override
+  String get playerQueueEmptyHint => '双击曲目开始，\n或将曲目拖到此处加入队列。';
+
+  @override
+  String get playerPrev => '上一首';
+
+  @override
+  String get playerNext => '下一首';
+
+  @override
+  String get playerGoToProject => '前往项目';
+
+  @override
+  String get playerAddToQueue => '加入队列';
+
+  @override
+  String get playerRemoveFromQueue => '从队列移除';
+
+  @override
+  String get playerDismissDetail => '关闭详情';
+
+  @override
+  String get playerNotes => '备注';
+
+  @override
+  String get playerTasks => '任务';
+
+  @override
+  String get playerNoTasks => '暂无任务。';
+
+  @override
+  String get playerAddTaskHint => '添加任务…';
+
+  @override
+  String playerCompletedTasks(int count) {
+    return '已完成 $count 项';
   }
 }

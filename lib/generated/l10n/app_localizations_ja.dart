@@ -2492,6 +2492,84 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String autoBackupNextBackup(String time) {
-    return 'Next backup: $time';
+    return '次回バックアップ：$time';
+  }
+
+  @override
+  String get playerTitle => 'ミュージックプレイヤー';
+
+  @override
+  String get playerToggleQueue => 'キューを切り替え';
+
+  @override
+  String get playerSearchHint => 'トラックを検索…';
+
+  @override
+  String playerTrackCount(int count) {
+    return '$countトラック';
+  }
+
+  @override
+  String playerTrackCountFiltered(int filtered, int total) {
+    return '$filtered/$total';
+  }
+
+  @override
+  String get playerNoPreviewSongs =>
+      'プレビュー曲が見つかりません。\nプロジェクトを開いてプレビュー曲を設定してください。';
+
+  @override
+  String playerNoTracksMatch(String query) {
+    return '\"$query\"に一致するトラックがありません';
+  }
+
+  @override
+  String get playerDoubleClickToPlay => 'トラックをダブルクリックして再生';
+
+  @override
+  String get playerSingleClickToPreview => 'シングルクリックで下のバーにプレビュー';
+
+  @override
+  String get playerQueueTitle => 'キュー';
+
+  @override
+  String get playerClearQueue => 'キューをクリア';
+
+  @override
+  String get playerQueueEmptyHint => 'ダブルクリックで開始、\nまたはトラックをここにドラッグ。';
+
+  @override
+  String get playerPrev => '前へ';
+
+  @override
+  String get playerNext => '次へ';
+
+  @override
+  String get playerGoToProject => 'プロジェクトへ移動';
+
+  @override
+  String get playerAddToQueue => 'キューに追加';
+
+  @override
+  String get playerRemoveFromQueue => 'キューから削除';
+
+  @override
+  String get playerDismissDetail => '詳細を閉じる';
+
+  @override
+  String get playerNotes => 'メモ';
+
+  @override
+  String get playerTasks => 'タスク';
+
+  @override
+  String get playerNoTasks => 'タスクはまだありません。';
+
+  @override
+  String get playerAddTaskHint => 'タスクを追加…';
+
+  @override
+  String playerCompletedTasks(int count) {
+    return '$count件完了';
   }
 }

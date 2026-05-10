@@ -979,7 +979,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                               AppTab.player => NavigationDestination(
                                   icon: const Icon(Icons.headphones_outlined),
                                   selectedIcon: const Icon(Icons.headphones),
-                                  label: 'Music Player',
+                                  label: AppLocalizations.of(context)!.playerTitle,
                                 ),
                             },
                         ],
@@ -4924,6 +4924,7 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
     _player.onPlayerComplete.listen((_) {
       if (!mounted) return;
       setState(() { _isPlaying = false; _position = Duration.zero; });
+      ref.read(desktopPlayerCompletedProvider.notifier).increment();
     });
     _player.play(DeviceFileSource(widget.request.resolvedPath));
     _loadBackgroundData();
@@ -5041,6 +5042,9 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(desktopPlayerProvider, (prev, next) {
+      if (next == null) _player.stop();
+    });
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final progress = _duration.inMilliseconds > 0

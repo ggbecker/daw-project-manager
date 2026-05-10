@@ -1674,10 +1674,38 @@
   "autoBackupHourly": "Every hour",
   "autoBackupEvery6Hours": "Every 6 hours",
   "autoBackupDaily": "Daily",
-  "autoBackupNextBackup": "Next backup: {time}",
+  "autoBackupNextBackup": "次回バックアップ：{time}",
   "@autoBackupNextBackup": {
     "placeholders": {
       "time": { "type": "String" }
+    }
+  },
+  "playerTitle": "ミュージックプレイヤー",
+  "playerToggleQueue": "キューを切り替え",
+  "playerSearchHint": "トラックを検索…",
+  "playerTrackCount": "{count}トラック",
+  "playerTrackCountFiltered": "{filtered}/{total}",
+  "playerNoPreviewSongs": "プレビュー曲が見つかりません。\nプロジェクトを開いてプレビュー曲を設定してください。",
+  "playerNoTracksMatch": "\"{query}\"に一致するトラックがありません",
+  "playerDoubleClickToPlay": "トラックをダブルクリックして再生",
+  "playerSingleClickToPreview": "シングルクリックで下のバーにプレビュー",
+  "playerQueueTitle": "キュー",
+  "playerClearQueue": "キューをクリア",
+  "playerQueueEmptyHint": "ダブルクリックで開始、\nまたはトラックをここにドラッグ。",
+  "playerPrev": "前へ",
+  "playerNext": "次へ",
+  "playerGoToProject": "プロジェクトへ移動",
+  "playerAddToQueue": "キューに追加",
+  "playerRemoveFromQueue": "キューから削除",
+  "playerDismissDetail": "詳細を閉じる",
+  "playerNotes": "メモ",
+  "playerTasks": "タスク",
+  "playerNoTasks": "タスクはまだありません。",
+  "playerAddTaskHint": "タスクを追加…",
+  "playerCompletedTasks": "{count}件完了",
+  "@playerCompletedTasks": {
+    "placeholders": {
+      "count": { "type": "int" }
     }
   }
 }

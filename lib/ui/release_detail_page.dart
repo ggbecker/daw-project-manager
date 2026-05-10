@@ -23,6 +23,7 @@ import '../utils/file_launcher.dart';
 import '../generated/l10n/app_localizations.dart';
 import 'project_detail_page.dart';
 import 'widgets/todo_list_widget.dart';
+import 'widgets/waveform_widget.dart';
 
 class ReleaseDetailPage extends ConsumerStatefulWidget {
   final String releaseId;
@@ -2107,6 +2108,7 @@ class _AudioFileItemState extends ConsumerState<_AudioFileItem> {
   bool _isGeneratingMono = false;
   String? _monoFilePath;
   AudioFileInfo? _fileInfo;
+  WaveformPeaks? _peaks;
 
   void _attachListeners(AudioPlayer player, int gen) {
     player.onPlayerStateChanged.listen((state) {
@@ -2174,6 +2176,9 @@ class _AudioFileItemState extends ConsumerState<_AudioFileItem> {
     final filePath = widget.file.filePath;
     AudioAnalysisService.getFileInfo(filePath).then((info) {
       if (mounted && info != null) setState(() => _fileInfo = info);
+    });
+    ref.read(waveformCacheProvider.notifier).getOrExtract(filePath).then((peaks) {
+      if (mounted && peaks != null) setState(() => _peaks = peaks);
     });
     if (_supportsMonoMix()) _prepareMonoFile(filePath);
   }
@@ -2265,6 +2270,7 @@ class _AudioFileItemState extends ConsumerState<_AudioFileItem> {
   }
 
   Future<void> _togglePlayPause() async {
+    if (!_isPlaying) ref.read(desktopPlayerProvider.notifier).close();
     try {
       if (_isPlaying) {
         await _audioPlayer.pause();
@@ -2354,6 +2360,9 @@ class _AudioFileItemState extends ConsumerState<_AudioFileItem> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(desktopPlayerProvider, (prev, next) {
+      if (next != null && _isPlaying) _audioPlayer.pause();
+    });
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       color: Theme.of(context).cardColor,
@@ -2419,17 +2428,15 @@ class _AudioFileItemState extends ConsumerState<_AudioFileItem> {
                 Expanded(
                   child: Column(
                     children: [
-                      Slider(
-                        value: _duration.inMilliseconds > 0
-                            ? _position.inMilliseconds.toDouble()
+                      WaveformWidget(
+                        peaks: _peaks,
+                        progress: _duration.inMilliseconds > 0
+                            ? _position.inMilliseconds / _duration.inMilliseconds
                             : 0.0,
-                        max: _duration.inMilliseconds > 0
-                            ? _duration.inMilliseconds.toDouble()
-                            : 100.0,
-                        onChanged: (value) async {
-                          final position = Duration(milliseconds: value.toInt());
-                          await _audioPlayer.seek(position);
-                        },
+                        height: 64,
+                        onSeek: (p) => _audioPlayer.seek(Duration(
+                          milliseconds: (p * _duration.inMilliseconds).round(),
+                        )),
                       ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,

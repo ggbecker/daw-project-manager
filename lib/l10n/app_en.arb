@@ -2716,5 +2716,68 @@
     "placeholders": {
       "time": { "type": "String" }
     }
+  },
+  "playerTitle": "Music Player",
+  "@playerTitle": {},
+  "playerToggleQueue": "Toggle queue",
+  "@playerToggleQueue": {},
+  "playerSearchHint": "Search tracks…",
+  "@playerSearchHint": {},
+  "playerTrackCount": "{count} tracks",
+  "@playerTrackCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "playerTrackCountFiltered": "{filtered}/{total}",
+  "@playerTrackCountFiltered": {
+    "placeholders": {
+      "filtered": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "playerNoPreviewSongs": "No preview songs found.\nOpen a project and set a preview song.",
+  "@playerNoPreviewSongs": {},
+  "playerNoTracksMatch": "No tracks match\n\"{query}\"",
+  "@playerNoTracksMatch": {
+    "placeholders": {
+      "query": { "type": "String" }
+    }
+  },
+  "playerDoubleClickToPlay": "Double-click a track to start playing",
+  "@playerDoubleClickToPlay": {},
+  "playerSingleClickToPreview": "Single-click to preview in the player bar below",
+  "@playerSingleClickToPreview": {},
+  "playerQueueTitle": "Queue",
+  "@playerQueueTitle": {},
+  "playerClearQueue": "Clear queue",
+  "@playerClearQueue": {},
+  "playerQueueEmptyHint": "Double-click a track to start,\nor drag tracks here to queue.",
+  "@playerQueueEmptyHint": {},
+  "playerPrev": "Previous",
+  "@playerPrev": {},
+  "playerNext": "Next",
+  "@playerNext": {},
+  "playerGoToProject": "Go to project",
+  "@playerGoToProject": {},
+  "playerAddToQueue": "Add to queue",
+  "@playerAddToQueue": {},
+  "playerRemoveFromQueue": "Remove from queue",
+  "@playerRemoveFromQueue": {},
+  "playerDismissDetail": "Dismiss detail",
+  "@playerDismissDetail": {},
+  "playerNotes": "NOTES",
+  "@playerNotes": {},
+  "playerTasks": "TASKS",
+  "@playerTasks": {},
+  "playerNoTasks": "No tasks yet.",
+  "@playerNoTasks": {},
+  "playerAddTaskHint": "Add a task…",
+  "@playerAddTaskHint": {},
+  "playerCompletedTasks": "{count} completed",
+  "@playerCompletedTasks": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
   }
 }
