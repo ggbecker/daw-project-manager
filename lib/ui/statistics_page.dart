@@ -137,6 +137,12 @@ class _ChartsPanel extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           FilterChip(
+            avatar: Icon(
+              hideFinished ? Icons.check_box : Icons.check_box_outline_blank,
+              size: 16,
+              color: hideFinished ? Theme.of(context).colorScheme.primary : null,
+            ),
+            showCheckmark: false,
             label: Text(l10n.hideFinished,
                 style: const TextStyle(fontSize: 12)),
             selected: hideFinished,

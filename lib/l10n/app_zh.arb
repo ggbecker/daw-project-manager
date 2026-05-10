@@ -1674,10 +1674,38 @@
   "autoBackupHourly": "Every hour",
   "autoBackupEvery6Hours": "Every 6 hours",
   "autoBackupDaily": "Daily",
-  "autoBackupNextBackup": "Next backup: {time}",
+  "autoBackupNextBackup": "下次备份：{time}",
   "@autoBackupNextBackup": {
     "placeholders": {
       "time": { "type": "String" }
+    }
+  },
+  "playerTitle": "音乐播放器",
+  "playerToggleQueue": "切换队列",
+  "playerSearchHint": "搜索曲目…",
+  "playerTrackCount": "{count}首曲目",
+  "playerTrackCountFiltered": "{filtered}/{total}",
+  "playerNoPreviewSongs": "未找到预览曲目。\n请打开项目并设置预览曲目。",
+  "playerNoTracksMatch": "没有曲目匹配\n\"{query}\"",
+  "playerDoubleClickToPlay": "双击曲目开始播放",
+  "playerSingleClickToPreview": "单击在下方播放栏中预览",
+  "playerQueueTitle": "队列",
+  "playerClearQueue": "清空队列",
+  "playerQueueEmptyHint": "双击曲目开始，\n或将曲目拖到此处加入队列。",
+  "playerPrev": "上一首",
+  "playerNext": "下一首",
+  "playerGoToProject": "前往项目",
+  "playerAddToQueue": "加入队列",
+  "playerRemoveFromQueue": "从队列移除",
+  "playerDismissDetail": "关闭详情",
+  "playerNotes": "备注",
+  "playerTasks": "任务",
+  "playerNoTasks": "暂无任务。",
+  "playerAddTaskHint": "添加任务…",
+  "playerCompletedTasks": "已完成 {count} 项",
+  "@playerCompletedTasks": {
+    "placeholders": {
+      "count": { "type": "int" }
     }
   }
 }

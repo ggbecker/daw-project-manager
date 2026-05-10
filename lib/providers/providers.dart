@@ -183,6 +183,19 @@ final releasesSearchProvider = NotifierProvider<ReleasesSearchNotifier, String>(
   return ReleasesSearchNotifier();
 });
 
+enum ReleasesSort { dateDesc, dateAsc, titleAsc, titleDesc }
+
+class ReleasesSortNotifier extends Notifier<ReleasesSort> {
+  @override
+  ReleasesSort build() => ReleasesSort.dateDesc;
+
+  void setSort(ReleasesSort sort) => state = sort;
+}
+
+final releasesSortProvider = NotifierProvider<ReleasesSortNotifier, ReleasesSort>(() {
+  return ReleasesSortNotifier();
+});
+
 class PlaylistsSearchNotifier extends Notifier<String> {
   @override
   String build() {
@@ -811,6 +824,42 @@ final autoBackupIntervalProvider =
     NotifierProvider<AutoBackupIntervalNotifier, AutoBackupInterval>(
         AutoBackupIntervalNotifier.new);
 
+// ---------------------------------------------------------------------------
+// Upload Auto-Detected Preview Songs
+// ---------------------------------------------------------------------------
+
+class UploadAutoPreviewSongsNotifier extends Notifier<bool> {
+  static const _key = 'uploadAutoPreviewSongs';
+
+  @override
+  bool build() {
+    SchedulerBinding.instance.addPostFrameCallback((_) => _load());
+    return false;
+  }
+
+  Future<void> _load() async {
+    try {
+      await ensureHiveInitialized();
+      final box = await Hive.openBox<String>('app_settings');
+      final saved = box.get(_key);
+      if (saved != null) state = saved == 'true';
+    } catch (_) {}
+  }
+
+  Future<void> toggle() async {
+    state = !state;
+    try {
+      await ensureHiveInitialized();
+      final box = await Hive.openBox<String>('app_settings');
+      await box.put(_key, state.toString());
+    } catch (_) {}
+  }
+}
+
+final uploadAutoPreviewSongsProvider =
+    NotifierProvider<UploadAutoPreviewSongsNotifier, bool>(
+        UploadAutoPreviewSongsNotifier.new);
+
 // Playlists Provider
 final playlistsProvider = StreamProvider<List<Playlist>>((ref) async* {
   final repo = await ref.watch(repositoryProvider.future);
@@ -916,7 +965,9 @@ class VisibleTabsNotifier extends Notifier<Set<AppTab>> {
   @override
   Set<AppTab> build() {
     SchedulerBinding.instance.addPostFrameCallback((_) => _load());
-    return {AppTab.projects, AppTab.releases, AppTab.playlists, AppTab.queue, AppTab.statistics, AppTab.player};
+    final defaults = {AppTab.projects, AppTab.releases, AppTab.playlists, AppTab.queue, AppTab.statistics, AppTab.player};
+    if (MobileUtils.isMobile()) defaults.remove(AppTab.player);
+    return defaults;
   }
 
   Future<void> _load() async {
@@ -954,6 +1005,7 @@ class VisibleTabsNotifier extends Notifier<Set<AppTab>> {
           }
         }
         result.add(AppTab.projects); // always visible
+        if (MobileUtils.isMobile()) result.remove(AppTab.player);
         state = result;
       }
     } catch (e) {
@@ -1296,6 +1348,18 @@ class DesktopPlayerNotifier extends Notifier<DesktopPlayerRequest?> {
 final desktopPlayerProvider =
     NotifierProvider<DesktopPlayerNotifier, DesktopPlayerRequest?>(
         DesktopPlayerNotifier.new);
+
+/// Incremented each time the desktop player finishes a track naturally.
+/// Music player listens to this to trigger queue auto-advance.
+class DesktopPlayerCompletedNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+  void increment() => state++;
+}
+
+final desktopPlayerCompletedProvider =
+    NotifierProvider<DesktopPlayerCompletedNotifier, int>(
+        DesktopPlayerCompletedNotifier.new);
 
 // ─── Waveform peaks cache ─────────────────────────────────────────────────────
 

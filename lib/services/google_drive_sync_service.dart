@@ -2099,6 +2099,7 @@ class GoogleDriveSyncService {
     required ProjectRepository projectRepo,
     required ProfileRepository profileRepo,
     String? profileId, // Optional - kept for compatibility but not used in filename
+    bool uploadAutoDetectedSongs = false,
   }) async {
     if (_driveApi == null || _appDataFolderId == null) {
       throw Exception('Not signed in to Google Drive');
@@ -2332,8 +2333,9 @@ class GoogleDriveSyncService {
                       'project': latestProject,
                       'projectBox': profileProjectsBox,
                       'existingHash': existingHash,
+                      'filePath': latestProject.previewSongPath!,
                     });
-                    
+
                     if (kDebugMode) {
                       print('  Preview song needs upload for project ${latestProject.id}');
                     }
@@ -2347,6 +2349,47 @@ class GoogleDriveSyncService {
                   if (project.uploadedPreviewSongHash != null) {
                     previewSongHashes[project.id] = project.uploadedPreviewSongHash!;
                   }
+                }
+              } else if (uploadAutoDetectedSongs &&
+                  (project.previewSongPath == null || project.previewSongPath!.isEmpty) &&
+                  project.previewSongAutoPath != null &&
+                  project.previewSongAutoPath!.isNotEmpty) {
+                // No manually-set path — upload the auto-detected one if the setting is on
+                try {
+                  final latestProject = profileProjectsBox.get(project.id);
+                  if (latestProject == null) continue;
+                  final autoPath = latestProject.previewSongAutoPath;
+                  if (autoPath == null || autoPath.isEmpty) continue;
+
+                  final currentHash = await _calculateFileHash(autoPath);
+                  final storedHash = latestProject.uploadedPreviewSongHash;
+
+                  if (storedHash != null && storedHash == currentHash) {
+                    // Hash matches — check if already on Drive
+                    final previewSongsFolderId = await _ensurePreviewSongsFolder();
+                    final driveFileName = '${latestProject.id}_preview${path.extension(autoPath)}';
+                    final response = await _driveApi!.files.list(
+                      q: "name='$driveFileName' and parents in '$previewSongsFolderId' and trashed=false",
+                      spaces: 'drive',
+                    );
+                    if (response.files != null && response.files!.isNotEmpty) {
+                      previewSongFileMap[latestProject.id] = response.files!.first.id!;
+                      previewSongHashes[latestProject.id] = currentHash;
+                      previewSongFileNames[latestProject.id] = path.basename(autoPath);
+                      if (kDebugMode) print('  Auto preview song already on Drive, skipping upload');
+                      continue;
+                    }
+                  }
+
+                  previewSongsToUpload.add({
+                    'project': latestProject,
+                    'projectBox': profileProjectsBox,
+                    'existingHash': storedHash ?? existingHashes[latestProject.id],
+                    'filePath': autoPath,
+                  });
+                  if (kDebugMode) print('  Auto preview song queued for upload: $autoPath');
+                } catch (e) {
+                  if (kDebugMode) print('  Error checking auto preview song for project ${project.id}: $e');
                 }
               }
             }
@@ -2528,20 +2571,21 @@ class GoogleDriveSyncService {
         final project = uploadInfo['project'] as MusicProject;
         final projectBox = uploadInfo['projectBox'] as Box<MusicProject>;
         final existingHash = uploadInfo['existingHash'] as String?;
-        
+        final filePath = uploadInfo['filePath'] as String;
+
         // Emit progress
         _progressController.add(BackupProgress(
           stage: BackupProgressStage.uploadingPreviewSongs,
-          currentItem: 'Uploading preview: ${path.basename(project.previewSongPath!)}',
+          currentItem: 'Uploading preview: ${path.basename(filePath)}',
           currentIndex: uploadedCount,
           totalItems: previewSongsToUpload.length,
           progress: 0.2 + (uploadedCount / previewSongsToUpload.length * 0.6), // 20-80% range
         ));
-        
+
         try {
           final result = await _uploadPreviewSongFile(
             projectId: project.id,
-            localFilePath: project.previewSongPath!,
+            localFilePath: filePath,
             existingHash: existingHash,
           );
           

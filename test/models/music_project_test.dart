@@ -22,14 +22,14 @@ void main() {
       expect(p.displayName, 'My Custom Name');
     });
 
-    test('returns fileName when customDisplayName is null', () {
+    test('returns fileName without extension when customDisplayName is null', () {
       final p = TestFactories.makeProject(customDisplayName: null);
-      expect(p.displayName, 'MyProject.als');
+      expect(p.displayName, 'MyProject');
     });
 
-    test('returns fileName when customDisplayName is whitespace only', () {
+    test('returns fileName without extension when customDisplayName is whitespace only', () {
       final p = TestFactories.makeProject(customDisplayName: '   ');
-      expect(p.displayName, 'MyProject.als');
+      expect(p.displayName, 'MyProject');
     });
   });
 

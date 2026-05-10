@@ -26,6 +26,7 @@ import 'widgets/startup_dialog.dart';
 import 'widgets/tab_customization_dialog.dart';
 import '../services/dock_menu_service.dart';
 import '../utils/mobile_utils.dart';
+import '../providers/theme_provider.dart';
 import '../utils/file_launcher.dart';
 import '../utils/search_utils.dart';
 import '../utils/route_observer.dart';
@@ -246,14 +247,13 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
 
   @override
   void didPushNext() {
-    // A new route was pushed on top of the dashboard — stop the bottom player.
-    ref.read(desktopPlayerProvider.notifier).close();
+    // Don't close the player here — DropdownButton/showMenu also push ModalRoutes,
+    // which would close the player on every filter/combo interaction. Tab changes
+    // are handled in _onTabChanged instead.
   }
 
   void _onTabChanged() {
     if (!_tabController.indexIsChanging && mounted) {
-      // Stop the bottom player whenever the user switches tabs.
-      ref.read(desktopPlayerProvider.notifier).close();
       switch (_currentTab) {
         case AppTab.projects:
           final projectsSearch = ref.read(projectsSearchProvider);
@@ -669,12 +669,15 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     final repoAsync = ref.watch(repositoryProvider);
     final roots = ref.watch(scanRootsProvider);
 
-    // Show first-launch dialog on desktop when there are no scan roots yet.
+    // Show first-launch dialog on desktop when the profile is truly blank (no
+    // roots AND no projects). Profiles that have projects but no roots (e.g.
+    // restored from Google Drive) are already set up and should not see this.
     if (!MobileUtils.isMobile() &&
         !_startupDialogShown &&
         !_hideStartupDialog &&
         repoAsync.hasValue &&
-        roots.isEmpty) {
+        roots.isEmpty &&
+        repoAsync.value!.getAllProjects().isEmpty) {
       _startupDialogShown = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) showStartupDialog(context);
@@ -976,7 +979,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                               AppTab.player => NavigationDestination(
                                   icon: const Icon(Icons.headphones_outlined),
                                   selectedIcon: const Icon(Icons.headphones),
-                                  label: 'Music Player',
+                                  label: AppLocalizations.of(context)!.playerTitle,
                                 ),
                             },
                         ],
@@ -985,7 +988,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                         final playerRequest = ref.watch(desktopPlayerProvider);
                         if (playerRequest == null) return null;
                         return _DesktopPlayerBar(
-                          key: ValueKey(playerRequest.generation),
+                          key: const Key('desktop_player_bar'),
                           request: playerRequest,
                         );
                       }(),
@@ -1942,23 +1945,43 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
           child: Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-                // Project count
-                Text(
-                  () {
-                    if (hiddenMode == 2) {
-                      return '${l10n.projectsCount(widget.hiddenCount)} ${l10n.hiddenOnly}';
-                    } else {
-                      var text = l10n.projectsCount(widget.visibleCount);
-                      if (widget.hiddenCount > 0 && hiddenMode == 0) {
-                        text += ' ${l10n.hiddenCount(widget.hiddenCount)}';
-                      }
-                      return text;
-                    }
-                  }(),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: hiddenMode == 2 ? Colors.orange.shade300 : null,
-                  ),
+                // Project count — all three mode variants are stacked and
+                // rendered simultaneously; only the active one is opaque.
+                // The Stack always sizes to the widest variant so the bar
+                // never shifts regardless of which mode is active.
+                Stack(
+                  children: [
+                    // Mode 0: "X projects (N hidden)"
+                    Opacity(
+                      opacity: hiddenMode == 0 ? 1.0 : 0.0,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(l10n.projectsCount(widget.visibleCount),
+                              style: const TextStyle(fontSize: 12)),
+                          if (widget.hiddenCount > 0)
+                            Text(' ${l10n.hiddenCount(widget.hiddenCount)}',
+                                style: const TextStyle(fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                    // Mode 1: "X projects" (show-all — visible count only)
+                    Opacity(
+                      opacity: hiddenMode == 1 ? 1.0 : 0.0,
+                      child: Text(l10n.projectsCount(widget.visibleCount),
+                          style: const TextStyle(fontSize: 12)),
+                    ),
+                    // Mode 2: "N projects hidden only"
+                    if (widget.hiddenCount > 0)
+                      Opacity(
+                        opacity: hiddenMode == 2 ? 1.0 : 0.0,
+                        child: Text(
+                          '${l10n.projectsCount(widget.hiddenCount)} ${l10n.hiddenOnly}',
+                          style: TextStyle(
+                              fontSize: 12, color: Colors.orange.shade300),
+                        ),
+                      ),
+                  ],
                 ),
                 const SizedBox(width: 8),
                 if (widget.hiddenCount > 0) ...[
@@ -1989,26 +2012,53 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
                     ),
                   ),
                   const SizedBox(width: 8),
-                  TextButton.icon(
-                    icon: Icon(
-                      hiddenMode == 2 ? Icons.visibility : Icons.visibility_off_outlined,
-                      size: 16,
-                    ),
-                    label: Text(
-                      hiddenMode == 2 ? l10n.showAll : l10n.showOnlyHidden,
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    style: TextButton.styleFrom(
-                      backgroundColor: hiddenMode == 2 ? Colors.orange.shade700 : null,
-                      foregroundColor: hiddenMode == 2 ? Colors.white : Theme.of(context).textTheme.bodyMedium?.color,
-                    ),
-                    onPressed: () {
-                      if (hiddenMode == 2) {
-                        hiddenNotifier.setShowOnlyHidden(false);
-                      } else {
-                        hiddenNotifier.setShowOnlyHidden(true);
-                      }
-                    },
+                  // Stack keeps the button at the width of whichever label
+                  // is wider — the ghost (opposite label, opacity 0) pins the
+                  // layout; the Stack always takes the max of both children.
+                  Stack(
+                    children: [
+                      Opacity(
+                        opacity: 0,
+                        child: IgnorePointer(
+                          child: TextButton.icon(
+                            icon: Icon(
+                              hiddenMode == 2 ? Icons.visibility_off_outlined : Icons.visibility,
+                              size: 16,
+                            ),
+                            label: Text(
+                              hiddenMode == 2 ? l10n.showOnlyHidden : l10n.showAll,
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                            onPressed: () {},
+                            style: TextButton.styleFrom(
+                              backgroundColor: hiddenMode != 2 ? Colors.orange.shade700 : null,
+                              foregroundColor: hiddenMode != 2 ? Colors.white : Theme.of(context).textTheme.bodyMedium?.color,
+                            ),
+                          ),
+                        ),
+                      ),
+                      TextButton.icon(
+                        icon: Icon(
+                          hiddenMode == 2 ? Icons.visibility : Icons.visibility_off_outlined,
+                          size: 16,
+                        ),
+                        label: Text(
+                          hiddenMode == 2 ? l10n.showAll : l10n.showOnlyHidden,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        style: TextButton.styleFrom(
+                          backgroundColor: hiddenMode == 2 ? Colors.orange.shade700 : null,
+                          foregroundColor: hiddenMode == 2 ? Colors.white : Theme.of(context).textTheme.bodyMedium?.color,
+                        ),
+                        onPressed: () {
+                          if (hiddenMode == 2) {
+                            hiddenNotifier.setShowOnlyHidden(false);
+                          } else {
+                            hiddenNotifier.setShowOnlyHidden(true);
+                          }
+                        },
+                      ),
+                    ],
                   ),
                   const SizedBox(width: 8),
                 ],
@@ -3650,6 +3700,9 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         style: TrinaGridStyleConfig(
           gridBackgroundColor: Theme.of(context).cardColor,
           gridBorderColor: Theme.of(context).dividerColor.withValues(alpha: 0.4),
+          borderColor: ref.watch(themeTypeProvider) == AppThemeType.neonDark
+                        ? Theme.of(context).dividerColor
+                        : Theme.of(context).dividerColor.withValues(alpha: 0.25),
           gridBorderRadius: BorderRadius.zero,
           rowColor: Theme.of(context).cardColor,
           cellColorInEditState: Theme.of(context).cardColor,
@@ -3674,9 +3727,12 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               ? Color.alphaBlend(Colors.white.withValues(alpha: 0.05), Theme.of(context).cardColor)
               : Color.alphaBlend(Colors.black.withValues(alpha: 0.04), Theme.of(context).cardColor),
         ),
+        scrollbar: const TrinaGridScrollbarConfig(
+          showHorizontal: false,
+        ),
         columnSize: const TrinaGridColumnSizeConfig(
           autoSizeMode: TrinaAutoSizeMode.scale,
-          resizeMode: TrinaResizeMode.normal,
+          resizeMode: TrinaResizeMode.pushAndPull,
         ),
         shortcut: TrinaGridShortcut(
           actions: {
@@ -4868,6 +4924,7 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
     _player.onPlayerComplete.listen((_) {
       if (!mounted) return;
       setState(() { _isPlaying = false; _position = Duration.zero; });
+      ref.read(desktopPlayerCompletedProvider.notifier).increment();
     });
     _player.play(DeviceFileSource(widget.request.resolvedPath));
     _loadBackgroundData();
@@ -4875,6 +4932,26 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _focusNode.requestFocus();
     });
+  }
+
+  @override
+  void didUpdateWidget(_DesktopPlayerBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.request.resolvedPath != widget.request.resolvedPath) {
+      _player.stop();
+      setState(() {
+        _isPlaying = false;
+        _position = Duration.zero;
+        _duration = Duration.zero;
+        _isMono = false;
+        _isGeneratingMono = false;
+        _monoFilePath = null;
+        _fileInfo = null;
+        _peaks = null;
+      });
+      _player.play(DeviceFileSource(widget.request.resolvedPath));
+      _loadBackgroundData();
+    }
   }
 
   @override
@@ -4985,6 +5062,9 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(desktopPlayerProvider, (prev, next) {
+      if (next == null) _player.stop();
+    });
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final progress = _duration.inMilliseconds > 0
@@ -5162,8 +5242,13 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
                     _isGeneratingMono
                         ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
                         : FilterChip(
+                            avatar: Icon(
+                              _isMono ? Icons.check_box : Icons.check_box_outline_blank,
+                              size: 16,
+                              color: _isMono ? Colors.red : null,
+                            ),
                             label: Text('Mono', style: TextStyle(fontSize: 11, color: _isMono ? Colors.red : null, fontWeight: _isMono ? FontWeight.bold : null)),
-                            selected: _isMono, showCheckmark: true,
+                            selected: _isMono, showCheckmark: false,
                             selectedColor: Colors.red.withValues(alpha: 0.15),
                             onSelected: (_) => _toggleMono(),
                             visualDensity: VisualDensity.compact,

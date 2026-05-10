@@ -1630,6 +1630,8 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
   Future<void> _togglePlayPause() async {
     if (!_hasAudioFile()) return;
 
+    if (!_isPlaying) ref.read(desktopPlayerProvider.notifier).close();
+
     try {
       if (_isPlaying) {
         await _audioPlayer.pause();
@@ -2172,6 +2174,9 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(desktopPlayerProvider, (prev, next) {
+      if (next != null && _isPlaying) _audioPlayer.pause();
+    });
     return DropTarget(
       onDragDone: (detail) async {
         setState(() {

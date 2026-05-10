@@ -1674,10 +1674,38 @@
   "autoBackupHourly": "Every hour",
   "autoBackupEvery6Hours": "Every 6 hours",
   "autoBackupDaily": "Daily",
-  "autoBackupNextBackup": "Next backup: {time}",
+  "autoBackupNextBackup": "Próxima copia: {time}",
   "@autoBackupNextBackup": {
     "placeholders": {
       "time": { "type": "String" }
+    }
+  },
+  "playerTitle": "Reproductor de música",
+  "playerToggleQueue": "Alternar cola",
+  "playerSearchHint": "Buscar pistas…",
+  "playerTrackCount": "{count} pistas",
+  "playerTrackCountFiltered": "{filtered}/{total}",
+  "playerNoPreviewSongs": "No se encontraron pistas de vista previa.\nAbre un proyecto y establece una vista previa.",
+  "playerNoTracksMatch": "Ninguna pista coincide con\n\"{query}\"",
+  "playerDoubleClickToPlay": "Doble clic en una pista para reproducir",
+  "playerSingleClickToPreview": "Clic simple para vista previa en la barra inferior",
+  "playerQueueTitle": "Cola",
+  "playerClearQueue": "Vaciar cola",
+  "playerQueueEmptyHint": "Doble clic para comenzar,\no arrastra pistas aquí para la cola.",
+  "playerPrev": "Anterior",
+  "playerNext": "Siguiente",
+  "playerGoToProject": "Ir al proyecto",
+  "playerAddToQueue": "Añadir a la cola",
+  "playerRemoveFromQueue": "Quitar de la cola",
+  "playerDismissDetail": "Cerrar detalle",
+  "playerNotes": "NOTAS",
+  "playerTasks": "TAREAS",
+  "playerNoTasks": "Sin tareas aún.",
+  "playerAddTaskHint": "Añadir una tarea…",
+  "playerCompletedTasks": "{count} completada(s)",
+  "@playerCompletedTasks": {
+    "placeholders": {
+      "count": { "type": "int" }
     }
   }
 }

@@ -1674,10 +1674,38 @@
   "autoBackupHourly": "Every hour",
   "autoBackupEvery6Hours": "Every 6 hours",
   "autoBackupDaily": "Daily",
-  "autoBackupNextBackup": "Next backup: {time}",
+  "autoBackupNextBackup": "Nächstes Backup: {time}",
   "@autoBackupNextBackup": {
     "placeholders": {
       "time": { "type": "String" }
+    }
+  },
+  "playerTitle": "Musikplayer",
+  "playerToggleQueue": "Warteschlange umschalten",
+  "playerSearchHint": "Tracks suchen…",
+  "playerTrackCount": "{count} Tracks",
+  "playerTrackCountFiltered": "{filtered}/{total}",
+  "playerNoPreviewSongs": "Keine Vorschaulieder gefunden.\nÖffne ein Projekt und lege ein Vorschaustück fest.",
+  "playerNoTracksMatch": "Keine Tracks passen zu\n\"{query}\"",
+  "playerDoubleClickToPlay": "Doppelklick auf einen Track zum Abspielen",
+  "playerSingleClickToPreview": "Einfachklick zur Vorschau in der Leiste unten",
+  "playerQueueTitle": "Warteschlange",
+  "playerClearQueue": "Warteschlange leeren",
+  "playerQueueEmptyHint": "Doppelklick zum Starten,\noder Tracks hierher ziehen.",
+  "playerPrev": "Vorheriger",
+  "playerNext": "Nächster",
+  "playerGoToProject": "Zum Projekt",
+  "playerAddToQueue": "Zur Warteschlange hinzufügen",
+  "playerRemoveFromQueue": "Aus Warteschlange entfernen",
+  "playerDismissDetail": "Detail ausblenden",
+  "playerNotes": "NOTIZEN",
+  "playerTasks": "AUFGABEN",
+  "playerNoTasks": "Noch keine Aufgaben.",
+  "playerAddTaskHint": "Aufgabe hinzufügen…",
+  "playerCompletedTasks": "{count} abgeschlossen",
+  "@playerCompletedTasks": {
+    "placeholders": {
+      "count": { "type": "int" }
     }
   }
 }

@@ -4315,6 +4315,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Next backup: {time}'**
   String autoBackupNextBackup(String time);
+
+  /// No description provided for @playerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Music Player'**
+  String get playerTitle;
+
+  /// No description provided for @playerToggleQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle queue'**
+  String get playerToggleQueue;
+
+  /// No description provided for @playerSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search tracks…'**
+  String get playerSearchHint;
+
+  /// No description provided for @playerTrackCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} tracks'**
+  String playerTrackCount(int count);
+
+  /// No description provided for @playerTrackCountFiltered.
+  ///
+  /// In en, this message translates to:
+  /// **'{filtered}/{total}'**
+  String playerTrackCountFiltered(int filtered, int total);
+
+  /// No description provided for @playerNoPreviewSongs.
+  ///
+  /// In en, this message translates to:
+  /// **'No preview songs found.\nOpen a project and set a preview song.'**
+  String get playerNoPreviewSongs;
+
+  /// No description provided for @playerNoTracksMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No tracks match\n\"{query}\"'**
+  String playerNoTracksMatch(String query);
+
+  /// No description provided for @playerDoubleClickToPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Double-click a track to start playing'**
+  String get playerDoubleClickToPlay;
+
+  /// No description provided for @playerSingleClickToPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Single-click to preview in the player bar below'**
+  String get playerSingleClickToPreview;
+
+  /// No description provided for @playerQueueTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Queue'**
+  String get playerQueueTitle;
+
+  /// No description provided for @playerClearQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear queue'**
+  String get playerClearQueue;
+
+  /// No description provided for @playerQueueEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Double-click a track to start,\nor drag tracks here to queue.'**
+  String get playerQueueEmptyHint;
+
+  /// No description provided for @playerPrev.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous'**
+  String get playerPrev;
+
+  /// No description provided for @playerNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get playerNext;
+
+  /// No description provided for @playerGoToProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to project'**
+  String get playerGoToProject;
+
+  /// No description provided for @playerAddToQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to queue'**
+  String get playerAddToQueue;
+
+  /// No description provided for @playerRemoveFromQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from queue'**
+  String get playerRemoveFromQueue;
+
+  /// No description provided for @playerDismissDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss detail'**
+  String get playerDismissDetail;
+
+  /// No description provided for @playerNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'NOTES'**
+  String get playerNotes;
+
+  /// No description provided for @playerTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'TASKS'**
+  String get playerTasks;
+
+  /// No description provided for @playerNoTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'No tasks yet.'**
+  String get playerNoTasks;
+
+  /// No description provided for @playerAddTaskHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a task…'**
+  String get playerAddTaskHint;
+
+  /// No description provided for @playerCompletedTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} completed'**
+  String playerCompletedTasks(int count);
 }
 
 class _AppLocalizationsDelegate

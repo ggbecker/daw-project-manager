@@ -2546,4 +2546,84 @@ class AppLocalizationsEn extends AppLocalizations {
   String autoBackupNextBackup(String time) {
     return 'Next backup: $time';
   }
+
+  @override
+  String get playerTitle => 'Music Player';
+
+  @override
+  String get playerToggleQueue => 'Toggle queue';
+
+  @override
+  String get playerSearchHint => 'Search tracks…';
+
+  @override
+  String playerTrackCount(int count) {
+    return '$count tracks';
+  }
+
+  @override
+  String playerTrackCountFiltered(int filtered, int total) {
+    return '$filtered/$total';
+  }
+
+  @override
+  String get playerNoPreviewSongs =>
+      'No preview songs found.\nOpen a project and set a preview song.';
+
+  @override
+  String playerNoTracksMatch(String query) {
+    return 'No tracks match\n\"$query\"';
+  }
+
+  @override
+  String get playerDoubleClickToPlay => 'Double-click a track to start playing';
+
+  @override
+  String get playerSingleClickToPreview =>
+      'Single-click to preview in the player bar below';
+
+  @override
+  String get playerQueueTitle => 'Queue';
+
+  @override
+  String get playerClearQueue => 'Clear queue';
+
+  @override
+  String get playerQueueEmptyHint =>
+      'Double-click a track to start,\nor drag tracks here to queue.';
+
+  @override
+  String get playerPrev => 'Previous';
+
+  @override
+  String get playerNext => 'Next';
+
+  @override
+  String get playerGoToProject => 'Go to project';
+
+  @override
+  String get playerAddToQueue => 'Add to queue';
+
+  @override
+  String get playerRemoveFromQueue => 'Remove from queue';
+
+  @override
+  String get playerDismissDetail => 'Dismiss detail';
+
+  @override
+  String get playerNotes => 'NOTES';
+
+  @override
+  String get playerTasks => 'TASKS';
+
+  @override
+  String get playerNoTasks => 'No tasks yet.';
+
+  @override
+  String get playerAddTaskHint => 'Add a task…';
+
+  @override
+  String playerCompletedTasks(int count) {
+    return '$count completed';
+  }
 }

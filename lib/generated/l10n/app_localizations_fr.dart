@@ -2566,6 +2566,87 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String autoBackupNextBackup(String time) {
-    return 'Next backup: $time';
+    return 'Prochain backup : $time';
+  }
+
+  @override
+  String get playerTitle => 'Lecteur de musique';
+
+  @override
+  String get playerToggleQueue => 'Basculer la file d\'attente';
+
+  @override
+  String get playerSearchHint => 'Rechercher des pistes…';
+
+  @override
+  String playerTrackCount(int count) {
+    return '$count pistes';
+  }
+
+  @override
+  String playerTrackCountFiltered(int filtered, int total) {
+    return '$filtered/$total';
+  }
+
+  @override
+  String get playerNoPreviewSongs =>
+      'Aucun aperçu trouvé.\nOuvrez un projet et définissez un aperçu.';
+
+  @override
+  String playerNoTracksMatch(String query) {
+    return 'Aucune piste ne correspond à\n\"$query\"';
+  }
+
+  @override
+  String get playerDoubleClickToPlay =>
+      'Double-cliquez sur une piste pour la lire';
+
+  @override
+  String get playerSingleClickToPreview =>
+      'Clic simple pour l\'aperçu dans la barre ci-dessous';
+
+  @override
+  String get playerQueueTitle => 'File d\'attente';
+
+  @override
+  String get playerClearQueue => 'Vider la file d\'attente';
+
+  @override
+  String get playerQueueEmptyHint =>
+      'Double-cliquez pour démarrer,\nou faites glisser des pistes ici.';
+
+  @override
+  String get playerPrev => 'Précédent';
+
+  @override
+  String get playerNext => 'Suivant';
+
+  @override
+  String get playerGoToProject => 'Aller au projet';
+
+  @override
+  String get playerAddToQueue => 'Ajouter à la file';
+
+  @override
+  String get playerRemoveFromQueue => 'Retirer de la file';
+
+  @override
+  String get playerDismissDetail => 'Fermer le détail';
+
+  @override
+  String get playerNotes => 'NOTES';
+
+  @override
+  String get playerTasks => 'TÂCHES';
+
+  @override
+  String get playerNoTasks => 'Aucune tâche pour l\'instant.';
+
+  @override
+  String get playerAddTaskHint => 'Ajouter une tâche…';
+
+  @override
+  String playerCompletedTasks(int count) {
+    return '$count terminée(s)';
   }
 }

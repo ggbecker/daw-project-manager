@@ -2551,6 +2551,87 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String autoBackupNextBackup(String time) {
-    return 'Next backup: $time';
+    return 'Prossimo backup: $time';
+  }
+
+  @override
+  String get playerTitle => 'Lettore musicale';
+
+  @override
+  String get playerToggleQueue => 'Attiva/disattiva coda';
+
+  @override
+  String get playerSearchHint => 'Cerca tracce…';
+
+  @override
+  String playerTrackCount(int count) {
+    return '$count tracce';
+  }
+
+  @override
+  String playerTrackCountFiltered(int filtered, int total) {
+    return '$filtered/$total';
+  }
+
+  @override
+  String get playerNoPreviewSongs =>
+      'Nessuna anteprima trovata.\nApri un progetto e imposta un\'anteprima.';
+
+  @override
+  String playerNoTracksMatch(String query) {
+    return 'Nessuna traccia corrisponde a\n\"$query\"';
+  }
+
+  @override
+  String get playerDoubleClickToPlay =>
+      'Doppio clic su una traccia per riprodurla';
+
+  @override
+  String get playerSingleClickToPreview =>
+      'Clic singolo per l\'anteprima nella barra sottostante';
+
+  @override
+  String get playerQueueTitle => 'Coda';
+
+  @override
+  String get playerClearQueue => 'Svuota coda';
+
+  @override
+  String get playerQueueEmptyHint =>
+      'Doppio clic per iniziare,\no trascina le tracce qui.';
+
+  @override
+  String get playerPrev => 'Precedente';
+
+  @override
+  String get playerNext => 'Successivo';
+
+  @override
+  String get playerGoToProject => 'Vai al progetto';
+
+  @override
+  String get playerAddToQueue => 'Aggiungi alla coda';
+
+  @override
+  String get playerRemoveFromQueue => 'Rimuovi dalla coda';
+
+  @override
+  String get playerDismissDetail => 'Chiudi dettaglio';
+
+  @override
+  String get playerNotes => 'NOTE';
+
+  @override
+  String get playerTasks => 'ATTIVITÀ';
+
+  @override
+  String get playerNoTasks => 'Nessuna attività ancora.';
+
+  @override
+  String get playerAddTaskHint => 'Aggiungi un\'attività…';
+
+  @override
+  String playerCompletedTasks(int count) {
+    return '$count completata/e';
   }
 }

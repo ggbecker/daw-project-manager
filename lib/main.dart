@@ -39,7 +39,7 @@ void _startAutoBackupTimer(
     if (_autoBackupRunning) return;
     _autoBackupRunning = true;
     try {
-      // Read saved interval from app_settings box
+      // Read saved settings from app_settings box
       await ensureHiveInitialized();
       final settingsBox = await Hive.openBox<String>('app_settings');
       final interval = AutoBackupInterval.fromStorageKey(
@@ -73,9 +73,11 @@ void _startAutoBackupTimer(
       final profileRepo =
           await container.read(profileRepositoryProvider.future);
       final projectRepo = await container.read(repositoryProvider.future);
+      final uploadAutoDetected = settingsBox.get('uploadAutoPreviewSongs') == 'true';
       await syncService.uploadDatabase(
         projectRepo: projectRepo,
         profileRepo: profileRepo,
+        uploadAutoDetectedSongs: uploadAutoDetected,
       );
       if (kDebugMode) print('Auto-backup completed successfully');
     } catch (e) {

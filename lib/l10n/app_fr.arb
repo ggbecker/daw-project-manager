@@ -1674,10 +1674,38 @@
   "autoBackupHourly": "Every hour",
   "autoBackupEvery6Hours": "Every 6 hours",
   "autoBackupDaily": "Daily",
-  "autoBackupNextBackup": "Next backup: {time}",
+  "autoBackupNextBackup": "Prochain backup : {time}",
   "@autoBackupNextBackup": {
     "placeholders": {
       "time": { "type": "String" }
+    }
+  },
+  "playerTitle": "Lecteur de musique",
+  "playerToggleQueue": "Basculer la file d'attente",
+  "playerSearchHint": "Rechercher des pistes…",
+  "playerTrackCount": "{count} pistes",
+  "playerTrackCountFiltered": "{filtered}/{total}",
+  "playerNoPreviewSongs": "Aucun aperçu trouvé.\nOuvrez un projet et définissez un aperçu.",
+  "playerNoTracksMatch": "Aucune piste ne correspond à\n\"{query}\"",
+  "playerDoubleClickToPlay": "Double-cliquez sur une piste pour la lire",
+  "playerSingleClickToPreview": "Clic simple pour l'aperçu dans la barre ci-dessous",
+  "playerQueueTitle": "File d'attente",
+  "playerClearQueue": "Vider la file d'attente",
+  "playerQueueEmptyHint": "Double-cliquez pour démarrer,\nou faites glisser des pistes ici.",
+  "playerPrev": "Précédent",
+  "playerNext": "Suivant",
+  "playerGoToProject": "Aller au projet",
+  "playerAddToQueue": "Ajouter à la file",
+  "playerRemoveFromQueue": "Retirer de la file",
+  "playerDismissDetail": "Fermer le détail",
+  "playerNotes": "NOTES",
+  "playerTasks": "TÂCHES",
+  "playerNoTasks": "Aucune tâche pour l'instant.",
+  "playerAddTaskHint": "Ajouter une tâche…",
+  "playerCompletedTasks": "{count} terminée(s)",
+  "@playerCompletedTasks": {
+    "placeholders": {
+      "count": { "type": "int" }
     }
   }
 }

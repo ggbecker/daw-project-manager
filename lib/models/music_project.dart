@@ -1,4 +1,5 @@
 import 'package:hive_ce/hive.dart';
+import 'package:path/path.dart' as p;
 import 'todo_item.dart';
 
 @HiveType(typeId: 1)
@@ -110,7 +111,7 @@ class MusicProject {
 
   String get displayName => (customDisplayName != null && customDisplayName!.trim().isNotEmpty)
       ? customDisplayName!.trim()
-      : fileName;
+      : p.basenameWithoutExtension(fileName);
 
   /// Returns the project age based on file creation date
   /// Falls back to lastModifiedAt if fileCreatedAt is not available

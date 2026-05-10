@@ -14,6 +14,7 @@ import '../providers/providers.dart';
 import '../utils/mobile_utils.dart';
 import '../utils/search_utils.dart';
 import '../generated/l10n/app_localizations.dart';
+import '../providers/theme_provider.dart';
 import 'release_detail_page.dart';
 
 class ReleasesTabPage extends ConsumerStatefulWidget {
@@ -103,6 +104,7 @@ class _ReleasesTabPageState extends ConsumerState<ReleasesTabPage> {
     
     // Use releases search provider instead of widget.searchText
     final releasesSearch = ref.watch(releasesSearchProvider);
+    final releasesSort = ref.watch(releasesSortProvider);
 
     return releasesAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -125,7 +127,21 @@ class _ReleasesTabPageState extends ConsumerState<ReleasesTabPage> {
                 fuzzyMatchAll(release.description ?? '', releasesSearch);
           }).toList();
         }
-        
+
+        // Sort releases
+        filteredReleases = List.from(filteredReleases)..sort((a, b) {
+          switch (releasesSort) {
+            case ReleasesSort.dateAsc:
+              return (a.releaseDate ?? DateTime(0)).compareTo(b.releaseDate ?? DateTime(0));
+            case ReleasesSort.titleAsc:
+              return a.title.toLowerCase().compareTo(b.title.toLowerCase());
+            case ReleasesSort.titleDesc:
+              return b.title.toLowerCase().compareTo(a.title.toLowerCase());
+            case ReleasesSort.dateDesc:
+              return (b.releaseDate ?? DateTime(0)).compareTo(a.releaseDate ?? DateTime(0));
+          }
+        });
+
         if (filteredReleases.isEmpty) {
           // Show different message if search filtered everything out
           if (releasesSearch.trim().isNotEmpty) {
@@ -188,45 +204,63 @@ class _ReleasesTabPageState extends ConsumerState<ReleasesTabPage> {
         }
 
         final isMobile = MobileUtils.isMobile();
+        final l10n = AppLocalizations.of(context)!;
         return Column(
           children: [
-            // Header with create button
-            Padding(
-              padding: MobileUtils.getResponsivePadding(context),
-              child: isMobile
-                  ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          AppLocalizations.of(context)!.releasesCount(filteredReleases.length),
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            onPressed: _createNewRelease,
-                            icon: const Icon(Icons.add),
-                            label: Text(AppLocalizations.of(context)!.createNewRelease),
-                          ),
-                        ),
-                      ],
-                    )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          AppLocalizations.of(context)!.releasesCount(filteredReleases.length),
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
-                        ElevatedButton.icon(
-                          onPressed: _createNewRelease,
-                          icon: const Icon(Icons.add),
-                          label: Text(AppLocalizations.of(context)!.createNewRelease),
-                        ),
-                      ],
+            // Filter bar
+            if (isMobile)
+              Padding(
+                padding: MobileUtils.getResponsivePadding(context),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      l10n.releasesCount(filteredReleases.length),
+                      style: Theme.of(context).textTheme.titleMedium,
                     ),
-            ),
+                    ElevatedButton.icon(
+                      onPressed: _createNewRelease,
+                      icon: const Icon(Icons.add),
+                      label: Text(l10n.createNewRelease),
+                    ),
+                  ],
+                ),
+              )
+            else
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                color: Theme.of(context).cardColor,
+                child: Row(
+                  children: [
+                    Text(
+                      l10n.releasesCount(filteredReleases.length),
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    const SizedBox(width: 12),
+                    DropdownButton<ReleasesSort>(
+                      value: releasesSort,
+                      underline: const SizedBox.shrink(),
+                      style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color),
+                      icon: Icon(Icons.sort, size: 16, color: Theme.of(context).textTheme.bodyMedium?.color),
+                      items: const [
+                        DropdownMenuItem(value: ReleasesSort.dateDesc, child: Text('Newest first')),
+                        DropdownMenuItem(value: ReleasesSort.dateAsc, child: Text('Oldest first')),
+                        DropdownMenuItem(value: ReleasesSort.titleAsc, child: Text('Title A–Z')),
+                        DropdownMenuItem(value: ReleasesSort.titleDesc, child: Text('Title Z–A')),
+                      ],
+                      onChanged: (v) {
+                        if (v != null) ref.read(releasesSortProvider.notifier).setSort(v);
+                      },
+                    ),
+                    const Spacer(),
+                    ElevatedButton.icon(
+                      onPressed: _createNewRelease,
+                      icon: const Icon(Icons.add),
+                      label: Text(l10n.createNewRelease),
+                    ),
+                  ],
+                ),
+              ),
             const Divider(height: 1),
             // Releases table/list
             Expanded(
@@ -587,8 +621,11 @@ class _ReleasesTableState extends ConsumerState<_ReleasesTable> {
       },
       configuration: TrinaGridConfiguration(
         style: TrinaGridStyleConfig(
-          gridBackgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          gridBackgroundColor: Theme.of(context).cardColor,
           gridBorderColor: Theme.of(context).dividerColor.withValues(alpha: 0.4),
+          borderColor: ref.watch(themeTypeProvider) == AppThemeType.neonDark
+                ? Theme.of(context).dividerColor
+                : Theme.of(context).dividerColor.withValues(alpha: 0.25),
           gridBorderRadius: BorderRadius.zero,
           rowColor: Theme.of(context).cardColor,
           cellColorInEditState: Theme.of(context).cardColor,
@@ -613,9 +650,12 @@ class _ReleasesTableState extends ConsumerState<_ReleasesTable> {
               ? Color.alphaBlend(Colors.white.withValues(alpha: 0.05), Theme.of(context).cardColor)
               : Color.alphaBlend(Colors.black.withValues(alpha: 0.04), Theme.of(context).cardColor),
         ),
+        scrollbar: const TrinaGridScrollbarConfig(
+          showHorizontal: false,
+        ),
         columnSize: const TrinaGridColumnSizeConfig(
           autoSizeMode: TrinaAutoSizeMode.scale,
-          resizeMode: TrinaResizeMode.normal,
+          resizeMode: TrinaResizeMode.pushAndPull,
         ),
         shortcut: TrinaGridShortcut(
           actions: {

@@ -2545,6 +2545,87 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String autoBackupNextBackup(String time) {
-    return 'Next backup: $time';
+    return 'Следующий бэкап: $time';
+  }
+
+  @override
+  String get playerTitle => 'Музыкальный плеер';
+
+  @override
+  String get playerToggleQueue => 'Переключить очередь';
+
+  @override
+  String get playerSearchHint => 'Поиск треков…';
+
+  @override
+  String playerTrackCount(int count) {
+    return '$count треков';
+  }
+
+  @override
+  String playerTrackCountFiltered(int filtered, int total) {
+    return '$filtered/$total';
+  }
+
+  @override
+  String get playerNoPreviewSongs =>
+      'Треки для предпросмотра не найдены.\nОткройте проект и добавьте трек.';
+
+  @override
+  String playerNoTracksMatch(String query) {
+    return 'Треки не найдены:\n\"$query\"';
+  }
+
+  @override
+  String get playerDoubleClickToPlay =>
+      'Дважды щёлкните по треку для воспроизведения';
+
+  @override
+  String get playerSingleClickToPreview =>
+      'Одиночный клик — предпросмотр в панели ниже';
+
+  @override
+  String get playerQueueTitle => 'Очередь';
+
+  @override
+  String get playerClearQueue => 'Очистить очередь';
+
+  @override
+  String get playerQueueEmptyHint =>
+      'Дважды щёлкните для начала,\nили перетащите треки сюда.';
+
+  @override
+  String get playerPrev => 'Предыдущий';
+
+  @override
+  String get playerNext => 'Следующий';
+
+  @override
+  String get playerGoToProject => 'Перейти к проекту';
+
+  @override
+  String get playerAddToQueue => 'Добавить в очередь';
+
+  @override
+  String get playerRemoveFromQueue => 'Убрать из очереди';
+
+  @override
+  String get playerDismissDetail => 'Закрыть детали';
+
+  @override
+  String get playerNotes => 'ЗАМЕТКИ';
+
+  @override
+  String get playerTasks => 'ЗАДАЧИ';
+
+  @override
+  String get playerNoTasks => 'Задач пока нет.';
+
+  @override
+  String get playerAddTaskHint => 'Добавить задачу…';
+
+  @override
+  String playerCompletedTasks(int count) {
+    return '$count выполнено';
   }
 }
