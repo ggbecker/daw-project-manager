@@ -201,7 +201,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get active => 'Active';
 
   @override
-  String get switchProfile => 'Switch';
+  String get switchProfile => 'Switch Profile';
 
   @override
   String get edit => 'Edit';
@@ -232,7 +232,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deepScanTooltip =>
-      'Deep Scan extracts full metadata from project files:\n• BPM (Beats Per Minute)\n• Musical Key\n• DAW Version\nThis is slower but provides complete information.';
+      'Deep Scan extracts full metadata from project files:\n• BPM (Beats Per Minute)\n• Musical Key\n• DAW Version\nCurrently supported: Ableton Live and Cubase.\nThis is slower but provides complete information.';
 
   @override
   String get deepScanConfirm =>

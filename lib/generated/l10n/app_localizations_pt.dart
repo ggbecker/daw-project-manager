@@ -232,7 +232,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get deepScanTooltip =>
-      'A Varredura Profunda extrai metadados completos dos arquivos de projeto:\n• BPM (Batidas Por Minuto)\n• Tom Musical\n• Versão do DAW\nIsso é mais lento, mas fornece informações completas.';
+      'A Varredura Profunda extrai metadados completos dos arquivos de projeto:\n• BPM (Batidas Por Minuto)\n• Tom Musical\n• Versão do DAW\nSuportado atualmente: Ableton Live e Cubase.\nIsso é mais lento, mas fornece informações completas.';
 
   @override
   String get deepScanConfirm =>

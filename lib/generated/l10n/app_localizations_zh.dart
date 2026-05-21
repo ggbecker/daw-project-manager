@@ -224,7 +224,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get deepScanTooltip =>
-      '深度扫描从项目文件中提取完整的元数据：\n• BPM（每分钟节拍数）\n• 音乐调性\n• DAW版本\n这较慢，但提供完整信息。';
+      '深度扫描从项目文件中提取完整的元数据：\n• BPM（每分钟节拍数）\n• 音乐调性\n• DAW版本\n目前支持：Ableton Live 和 Cubase。\n这较慢，但提供完整信息。';
 
   @override
   String get deepScanConfirm =>

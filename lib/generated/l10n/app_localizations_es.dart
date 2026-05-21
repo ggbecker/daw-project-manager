@@ -233,7 +233,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get deepScanTooltip =>
-      'El Escaneo Profundo extrae metadatos completos de los archivos de proyecto:\n• BPM (Pulsos Por Minuto)\n• Tonalidad Musical\n• Versión del DAW\nEsto es más lento pero proporciona información completa.';
+      'El Escaneo Profundo extrae metadatos completos de los archivos de proyecto:\n• BPM (Pulsos Por Minuto)\n• Tonalidad Musical\n• Versión del DAW\nCompatible actualmente: Ableton Live y Cubase.\nEsto es más lento pero proporciona información completa.';
 
   @override
   String get deepScanConfirm =>

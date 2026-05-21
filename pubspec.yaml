@@ -73,6 +73,7 @@ dev_dependencies:
   msix: ^3.16.12
   build_runner: ^2.4.0
   hive_ce_generator: ^1.0.0
+  flutter_launcher_icons: ^0.14.4
 
 dependency_overrides:
   yaml: ^3.0.0
@@ -130,3 +131,12 @@ msix_config:
   install_certificate: false
   publisher: "CN=346F9F1A-9A2E-45E9-81C1-27476C725076"
   store: true
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  image_path: "app_icon.png"
+  adaptive_icon_background: "#FF6100"
+  adaptive_icon_foreground: "app_icon.png"
+  min_sdk_android: 21 # android min sdk min:16, default 21

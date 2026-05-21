@@ -463,7 +463,7 @@ abstract class AppLocalizations {
   /// No description provided for @switchProfile.
   ///
   /// In en, this message translates to:
-  /// **'Switch'**
+  /// **'Switch Profile'**
   String get switchProfile;
 
   /// No description provided for @edit.
@@ -523,7 +523,7 @@ abstract class AppLocalizations {
   /// No description provided for @deepScanTooltip.
   ///
   /// In en, this message translates to:
-  /// **'Deep Scan extracts full metadata from project files:\n• BPM (Beats Per Minute)\n• Musical Key\n• DAW Version\nThis is slower but provides complete information.'**
+  /// **'Deep Scan extracts full metadata from project files:\n• BPM (Beats Per Minute)\n• Musical Key\n• DAW Version\nCurrently supported: Ableton Live and Cubase.\nThis is slower but provides complete information.'**
   String get deepScanTooltip;
 
   /// No description provided for @deepScanConfirm.
