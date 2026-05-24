@@ -2812,10 +2812,9 @@ class _RenameProjectDialogState extends State<_RenameProjectDialog> {
 
 class _SessionHistorySection extends StatelessWidget {
   final List<SessionRecord> sessions;
-
   const _SessionHistorySection({required this.sessions});
 
-  String _fmtDuration(int seconds) {
+  static String _fmt(int seconds) {
     final h = seconds ~/ 3600;
     final m = (seconds % 3600) ~/ 60;
     final s = seconds % 60;
@@ -2824,22 +2823,52 @@ class _SessionHistorySection extends StatelessWidget {
     return '${s}s';
   }
 
+  /// Groups sessions by calendar day, returns list sorted oldest→newest.
+  List<MapEntry<DateTime, int>> _groupByDay() {
+    final totals = <String, int>{};
+    final dates = <String, DateTime>{};
+    for (final s in sessions) {
+      final key = DateFormat('yyyy-MM-dd').format(s.startedAt);
+      totals[key] = (totals[key] ?? 0) + s.durationSeconds;
+      dates[key] ??=
+          DateTime(s.startedAt.year, s.startedAt.month, s.startedAt.day);
+    }
+    return (totals.entries.toList()..sort((a, b) => a.key.compareTo(b.key)))
+        .map((e) => MapEntry(dates[e.key]!, e.value))
+        .toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final sorted = [...sessions]
-      ..sort((a, b) => b.startedAt.compareTo(a.startedAt));
+    final grouped = _groupByDay();
+    final totalSeconds =
+        sessions.fold<int>(0, (a, b) => a + b.durationSeconds);
     final dateFmt = DateFormat('MMM d, yyyy');
-    final timeFmt = DateFormat('HH:mm');
+    final bodySmall = theme.textTheme.bodySmall;
+    final divider = theme.dividerColor.withValues(alpha: 0.4);
+
+    Widget cell(String text,
+            {bool bold = false, Color? color, CrossAxisAlignment? align}) =>
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+          child: Text(
+            text,
+            style: bodySmall?.copyWith(
+              fontWeight: bold ? FontWeight.w600 : FontWeight.normal,
+              color: color,
+            ),
+          ),
+        );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(Icons.work_history_outlined, size: 16,
-                color: theme.colorScheme.primary),
+            Icon(Icons.work_history_outlined,
+                size: 16, color: theme.colorScheme.primary),
             const SizedBox(width: 6),
             Text(
               l10n.sessionHistory,
@@ -2848,44 +2877,58 @@ class _SessionHistorySection extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
         if (sessions.isEmpty)
           Text(
             l10n.noSessionsYet,
-            style: theme.textTheme.bodySmall
-                ?.copyWith(color: theme.disabledColor),
+            style: bodySmall?.copyWith(color: theme.disabledColor),
           )
         else
-          ...sorted.map((s) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 3),
-                child: Row(
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Table(
+              columnWidths: const {
+                0: FlexColumnWidth(3),
+                1: FlexColumnWidth(2),
+              },
+              border: TableBorder(
+                horizontalInside: BorderSide(color: divider, width: 1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              children: [
+                // Header
+                TableRow(
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                  ),
                   children: [
-                    Container(
-                      width: 5,
-                      height: 5,
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.6),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        '${dateFmt.format(s.startedAt)}  '
-                        '${timeFmt.format(s.startedAt)}–${timeFmt.format(s.endedAt)}',
-                        style: theme.textTheme.bodySmall,
-                      ),
-                    ),
-                    Text(
-                      _fmtDuration(s.durationSeconds),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    cell('Date', bold: true),
+                    cell('Time worked', bold: true),
                   ],
                 ),
-              )),
+                // Data rows — one per calendar day
+                for (final g in grouped)
+                  TableRow(
+                    children: [
+                      cell(dateFmt.format(g.key)),
+                      cell(_fmt(g.value)),
+                    ],
+                  ),
+                // Total row
+                TableRow(
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.10),
+                  ),
+                  children: [
+                    cell('Total', bold: true,
+                        color: theme.colorScheme.primary),
+                    cell(_fmt(totalSeconds), bold: true,
+                        color: theme.colorScheme.primary),
+                  ],
+                ),
+              ],
+            ),
+          ),
       ],
     );
   }

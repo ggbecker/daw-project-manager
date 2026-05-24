@@ -43,7 +43,6 @@ import 'notification_settings_page.dart';
 import 'widgets/desktop_title_bar.dart';
 import 'widgets/language_switcher.dart';
 import 'widgets/theme_switcher.dart';
-import 'widgets/update_available_dialog.dart';
 import '../generated/l10n/app_localizations.dart';
 
 import 'package:hive_ce_flutter/hive_flutter.dart';
@@ -1726,30 +1725,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
             );
             },
           ),
-
-            // Update available banner
-            Consumer(
-              builder: (context, ref, _) {
-                final version = ref.watch(availableUpdateProvider);
-                if (version == null) return const SizedBox.shrink();
-                final l10n = AppLocalizations.of(context)!;
-                return MaterialBanner(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                  content: Text(l10n.updateAvailableMessage(version)),
-                  leading: const Icon(Icons.system_update_alt),
-                  actions: [
-                    TextButton(
-                      onPressed: () => UpdateAvailableDialog.show(context, version),
-                      child: Text(l10n.viewUpdateDetails),
-                    ),
-                    TextButton(
-                      onPressed: () => ref.read(availableUpdateProvider.notifier).set(null),
-                      child: Text(l10n.dismiss),
-                    ),
-                  ],
-                );
-              },
-            ),
 
             // Project folders are managed in the dedicated desktop-only settings page.
             // Tab Bar (desktop only - mobile uses AppBar bottom)
@@ -3472,22 +3447,9 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         renderer: (rendererContext) {
           final project = rendererContext.row.cells['data']?.value as MusicProject?;
           if (project == null) {
-            // Folder row — expand / collapse arrow
-            final isExpanded = rendererContext.row.type.isGroup &&
-                rendererContext.row.type.group.expanded;
-            return GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => rendererContext.stateManager
-                  .toggleExpandedRowGroup(rowGroup: rendererContext.row),
-              child: Center(
-                child: Icon(
-                  isExpanded
-                      ? Icons.keyboard_arrow_down
-                      : Icons.keyboard_arrow_right,
-                  size: 18,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
+            return _ExpandArrowCell(
+              row: rendererContext.row,
+              stateManager: rendererContext.stateManager,
             );
           }
           final isSelected = widget.selectedIds.contains(project.id);
@@ -3515,29 +3477,10 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         renderer: (rendererContext) {
           final project = rendererContext.row.cells['data']?.value as MusicProject?;
           if (project == null) {
-            // Folder header row — folder icon + name, tappable to toggle
-            final isExpanded = rendererContext.row.type.isGroup &&
-                rendererContext.row.type.group.expanded;
-            return GestureDetector(
-              onTap: () => rendererContext.stateManager
-                  .toggleExpandedRowGroup(rowGroup: rendererContext.row),
-              child: Row(
-                children: [
-                  Icon(
-                    isExpanded ? Icons.folder_open : Icons.folder,
-                    size: 15,
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      rendererContext.cell.value.toString(),
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
+            return _FolderNameCell(
+              row: rendererContext.row,
+              stateManager: rendererContext.stateManager,
+              folderName: rendererContext.cell.value.toString(),
             );
           }
 
@@ -7159,6 +7102,117 @@ class _StopSessionButtonState extends State<_StopSessionButton> {
             child: Center(child: Icon(Icons.stop_rounded, size: 16, color: color)),
           ),
         ),
+      ),
+    );
+  }
+}
+
+// Subscribes to stateManager to react to row group expand/collapse changes.
+class _ExpandArrowCell extends StatefulWidget {
+  final TrinaRow row;
+  final TrinaGridStateManager stateManager;
+  const _ExpandArrowCell({required this.row, required this.stateManager});
+
+  @override
+  State<_ExpandArrowCell> createState() => _ExpandArrowCellState();
+}
+
+class _ExpandArrowCellState extends State<_ExpandArrowCell> {
+  late bool _expanded;
+
+  @override
+  void initState() {
+    super.initState();
+    _expanded = widget.row.type.isGroup && widget.row.type.group.expanded;
+    widget.stateManager.addListener(_sync);
+  }
+
+  void _sync() {
+    if (!mounted) return;
+    final now = widget.row.type.isGroup && widget.row.type.group.expanded;
+    if (now != _expanded) setState(() => _expanded = now);
+  }
+
+  @override
+  void dispose() {
+    widget.stateManager.removeListener(_sync);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () =>
+          widget.stateManager.toggleExpandedRowGroup(rowGroup: widget.row),
+      child: Center(
+        child: Icon(
+          _expanded ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_right,
+          size: 18,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+      ),
+    );
+  }
+}
+
+class _FolderNameCell extends StatefulWidget {
+  final TrinaRow row;
+  final TrinaGridStateManager stateManager;
+  final String folderName;
+  const _FolderNameCell({
+    required this.row,
+    required this.stateManager,
+    required this.folderName,
+  });
+
+  @override
+  State<_FolderNameCell> createState() => _FolderNameCellState();
+}
+
+class _FolderNameCellState extends State<_FolderNameCell> {
+  late bool _expanded;
+
+  @override
+  void initState() {
+    super.initState();
+    _expanded = widget.row.type.isGroup && widget.row.type.group.expanded;
+    widget.stateManager.addListener(_sync);
+  }
+
+  void _sync() {
+    if (!mounted) return;
+    final now = widget.row.type.isGroup && widget.row.type.group.expanded;
+    if (now != _expanded) setState(() => _expanded = now);
+  }
+
+  @override
+  void dispose() {
+    widget.stateManager.removeListener(_sync);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () =>
+          widget.stateManager.toggleExpandedRowGroup(rowGroup: widget.row),
+      child: Row(
+        children: [
+          Icon(
+            _expanded ? Icons.folder_open : Icons.folder,
+            size: 15,
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              widget.folderName,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }
