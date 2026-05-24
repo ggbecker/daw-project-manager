@@ -2643,4 +2643,254 @@ class AppLocalizationsEs extends AppLocalizations {
   String playerCompletedTasks(int count) {
     return '$count completada(s)';
   }
+
+  @override
+  String get playerPreviousTrack => 'Pista anterior';
+
+  @override
+  String get playerNextTrack => 'Siguiente pista';
+
+  @override
+  String get playerOpenProject => 'Abrir proyecto';
+
+  @override
+  String get volumeMute => 'Silenciar';
+
+  @override
+  String get volumeUnmute => 'Activar sonido';
+
+  @override
+  String totalWorkTime(String time) {
+    return 'Trabajo total: $time';
+  }
+
+  @override
+  String sessionTime(String time) {
+    return 'Sesión: $time';
+  }
+
+  @override
+  String get sessionHistory => 'Historial de sesiones';
+
+  @override
+  String get noSessionsYet => 'Aún no hay sesiones registradas';
+
+  @override
+  String get tabPosition => 'Posición de pestañas';
+
+  @override
+  String get tabPositionTop => 'Arriba';
+
+  @override
+  String get tabPositionLeft => 'Izquierda';
+
+  @override
+  String updateAvailableMessage(String version) {
+    return 'Versión $version disponible';
+  }
+
+  @override
+  String get dismiss => 'Descartar';
+
+  @override
+  String get checkForUpdates => 'Buscar actualizaciones';
+
+  @override
+  String get checkForUpdatesDescription =>
+      'Recibe notificaciones cuando haya una nueva versión disponible.';
+
+  @override
+  String get checkNow => 'Verificar ahora';
+
+  @override
+  String updateAvailable(String version) {
+    return 'Actualización disponible: v$version';
+  }
+
+  @override
+  String get upToDate => 'La app está actualizada';
+
+  @override
+  String get updateAvailableTitle => 'Actualización disponible';
+
+  @override
+  String updateAvailableVersion(String version) {
+    return 'La versión $version está lista.';
+  }
+
+  @override
+  String updateCurrentVersion(String version) {
+    return 'Estás usando v$version.';
+  }
+
+  @override
+  String get viewUpdateDetails => 'Ver detalles';
+
+  @override
+  String get getOnMicrosoftStore => 'Obtener en Microsoft Store';
+
+  @override
+  String get downloadFromGitHub => 'Descargar desde GitHub';
+
+  @override
+  String get updateWindowsInstructions =>
+      'Abre Microsoft Store y actualiza DAW Project Manager, o haz clic abajo.';
+
+  @override
+  String get updateMacInstructions =>
+      'Descarga la última versión desde GitHub y reemplaza la app actual.';
+
+  @override
+  String get resetOnboarding => 'Restablecer configuración inicial';
+
+  @override
+  String get onboardingWelcomeTitle => 'Bienvenido a DAW Project Manager';
+
+  @override
+  String get onboardingWelcomeBody =>
+      'Organiza todos tus proyectos musicales en un solo lugar.';
+
+  @override
+  String get onboardingLanguageTitle => 'Elige tu idioma';
+
+  @override
+  String get onboardingThemeTitle => 'Elige un tema';
+
+  @override
+  String get onboardingFoldersTitle => 'Añadir carpetas de proyectos';
+
+  @override
+  String get onboardingFoldersBody =>
+      'Añade la carpeta raíz donde se almacenan tus proyectos DAW.';
+
+  @override
+  String get onboardingDriveTitle => 'Sincronización con Google Drive';
+
+  @override
+  String get onboardingDriveBody =>
+      'Haz copias de seguridad y sincroniza los metadatos con Google Drive.';
+
+  @override
+  String get onboardingUpdatesTitle => 'Buscar actualizaciones';
+
+  @override
+  String get onboardingUpdatesBody =>
+      'Recibe notificaciones cuando haya una nueva versión disponible.';
+
+  @override
+  String get onboardingDoneTitle => '¡Todo listo!';
+
+  @override
+  String get onboardingDoneBody => 'Empieza a explorar tus proyectos.';
+
+  @override
+  String get onboardingNext => 'Siguiente';
+
+  @override
+  String get onboardingBack => 'Atrás';
+
+  @override
+  String get onboardingGetStarted => 'Comenzar';
+
+  @override
+  String get dawSession => 'Sesión DAW';
+
+  @override
+  String get clearDawSession => 'Cerrar sesión';
+
+  @override
+  String get stop => 'Parar';
+
+  @override
+  String get pause => 'Pausar';
+
+  @override
+  String get resume => 'Reanudar';
+
+  @override
+  String get workTimerSection => 'Recordatorios de sesión de trabajo';
+
+  @override
+  String get workTimerSectionDesc =>
+      'Recibe notificaciones mientras trabajas en un proyecto suscrito';
+
+  @override
+  String get workTimerEnabled => 'Activar recordatorios de sesión de trabajo';
+
+  @override
+  String get workTimerIntervalLabel => 'Notificar cada';
+
+  @override
+  String get minutes => 'minutos';
+
+  @override
+  String workTimerNotifBody(String time) {
+    return 'Llevas trabajando $time';
+  }
+
+  @override
+  String get general => 'General';
+
+  @override
+  String get expand => 'Expandir';
+
+  @override
+  String get collapse => 'Contraer';
+
+  @override
+  String get sessionMode => 'Modo sesión';
+
+  @override
+  String get sessionModeDescription =>
+      'Suscríbete a un proyecto antes de lanzarlo para rastrear el tiempo de trabajo y gestionarlo desde la barra de herramientas';
+
+  @override
+  String get startSession => 'Iniciar sesión';
+
+  @override
+  String get endSession => 'Finalizar sesión';
+
+  @override
+  String get switchSession => 'Cambiar sesión';
+
+  @override
+  String get switchSessionBody =>
+      '¿Detener la sesión actual e iniciar una nueva?';
+
+  @override
+  String switchSessionCurrent(String project) {
+    return 'Actual: $project';
+  }
+
+  @override
+  String switchSessionNew(String project) {
+    return 'Nueva: $project';
+  }
+
+  @override
+  String get sessionDuration => 'Tiempo de sesión';
+
+  @override
+  String get scanDepthLabel => 'Profundidad de escaneo:';
+
+  @override
+  String get scanDepthAll => 'Todos los niveles';
+
+  @override
+  String get scanDepthOne => '1 nivel';
+
+  @override
+  String get scanDepthTwo => '2 niveles';
+
+  @override
+  String get scanDepthAllTooltip =>
+      'Escanea todas las subcarpetas de forma recursiva. Ideal para estructuras simples; puede ser lento en unidades grandes.';
+
+  @override
+  String get scanDepthOneTooltip =>
+      'Escanea solo las subcarpetas inmediatas de esta carpeta raíz. Cada subcarpeta se convierte en un proyecto.';
+
+  @override
+  String get scanDepthTwoTooltip =>
+      'Escanea dos niveles de profundidad. Las subcarpetas directas y sus hijos se muestran en vista de árbol.';
 }

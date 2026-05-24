@@ -43,6 +43,7 @@ import 'notification_settings_page.dart';
 import 'widgets/desktop_title_bar.dart';
 import 'widgets/language_switcher.dart';
 import 'widgets/theme_switcher.dart';
+import 'widgets/update_available_dialog.dart';
 import '../generated/l10n/app_localizations.dart';
 
 import 'package:hive_ce_flutter/hive_flutter.dart';
@@ -55,6 +56,19 @@ import 'package:uuid/uuid.dart';
 /// App version embedded at build-time (CI passes `--dart-define=APP_VERSION=x.y.z`).
 /// For PR/local builds, we fall back to a dummy version.
 const String appVersion = String.fromEnvironment('APP_VERSION', defaultValue: '0.0.0');
+
+/// Returns true when any text input (TextField / EditableText) currently has
+/// focus. Used by keyboard handlers to avoid stealing Space / arrow keys while
+/// the user is typing.
+///
+/// Reliable approach: the inner [Focus] widget created by [EditableText] is a
+/// widget-tree descendant of [EditableText], so walking ancestors from its
+/// BuildContext will find [EditableText] as a parent.
+bool _isTextInputFocused() {
+  final context = FocusManager.instance.primaryFocus?.context;
+  if (context == null) return false;
+  return context.findAncestorWidgetOfExactType<EditableText>() != null;
+}
 
 // Intent classes for keyboard shortcuts
 class _SearchIntent extends Intent {
@@ -107,6 +121,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
   bool _extractingMetadata = false;
   bool _isSearchingMobile = false;
   bool _isSearchingDesktop = false;
+  bool _railCollapsed = false;
   late TabController _tabController;
 
   // Startup dialog
@@ -804,6 +819,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     final isProfileSwitching = ref.watch(profileSwitchingProvider);
     final isScanning = _scanning || initialScanning;
     final isAnyOperation = isScanning || isProfileSwitching || _extractingMetadata;
+    final isLeftRail = !MobileUtils.isMobile() && ref.watch(tabPositionProvider) == TabPosition.left;
     
     // Sync search controller with provider state
     if (_searchController.text != currentSearch) {
@@ -1554,7 +1570,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                           },
                         ),
                         const SizedBox(width: 8),
-                        if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) ...[
+                        if (!isLeftRail && !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) ...[
                           OutlinedButton.icon(
                             onPressed: isAnyOperation
                                 ? null
@@ -1565,12 +1581,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                       ),
                                     );
                                   },
-                            icon: const Icon(Icons.tune),
-                            label: Text(AppLocalizations.of(context)!.roots),
+                            icon: const Icon(Icons.settings_outlined),
+                            label: Text(AppLocalizations.of(context)!.settings),
                           ),
                           const SizedBox(width: 12),
                         ],
-                        ElevatedButton.icon(
+                        if (!isLeftRail) ElevatedButton.icon(
                           onPressed: isAnyOperation
                               ? null
                               : () async {
@@ -1585,8 +1601,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                               : const Icon(Icons.refresh),
                           label: Text(isAnyOperation ? AppLocalizations.of(context)!.scanning : AppLocalizations.of(context)!.rescan),
                         ),
-                        const SizedBox(width: 12),
-                        Tooltip(
+                        if (!isLeftRail) ...[
+                          const SizedBox(width: 12),
+                          Tooltip(
                             message: AppLocalizations.of(context)!.deepScanTooltip,
                             waitDuration: const Duration(milliseconds: 500),
                             child: ElevatedButton.icon(
@@ -1631,6 +1648,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                               ),
                             ),
                           ),
+                        ],
                       ],
                     ),
                   const SizedBox(width: 8),
@@ -1645,6 +1663,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                         ),
                       ),
                     ),
+                  const SizedBox(width: 16),
+                  // Active DAW session chip
+                  const _ActiveProjectChip(),
                   const SizedBox(width: 8),
                   // Search bar (desktop only — hidden on Playlists tab)
                   if (!MobileUtils.isMobile())
@@ -1705,10 +1726,34 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
             );
             },
           ),
-            
+
+            // Update available banner
+            Consumer(
+              builder: (context, ref, _) {
+                final version = ref.watch(availableUpdateProvider);
+                if (version == null) return const SizedBox.shrink();
+                final l10n = AppLocalizations.of(context)!;
+                return MaterialBanner(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  content: Text(l10n.updateAvailableMessage(version)),
+                  leading: const Icon(Icons.system_update_alt),
+                  actions: [
+                    TextButton(
+                      onPressed: () => UpdateAvailableDialog.show(context, version),
+                      child: Text(l10n.viewUpdateDetails),
+                    ),
+                    TextButton(
+                      onPressed: () => ref.read(availableUpdateProvider.notifier).set(null),
+                      child: Text(l10n.dismiss),
+                    ),
+                  ],
+                );
+              },
+            ),
+
             // Project folders are managed in the dedicated desktop-only settings page.
             // Tab Bar (desktop only - mobile uses AppBar bottom)
-            if (!MobileUtils.isMobile())
+            if (!MobileUtils.isMobile() && ref.watch(tabPositionProvider) == TabPosition.top)
               Builder(
                 builder: (context) => TabBar(
                   controller: _tabController,
@@ -1728,14 +1773,15 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                   indicatorColor: Theme.of(context).colorScheme.primary,
                 ),
               ),
-            // Tab Bar View
+            // Tab Bar View (with optional left NavigationRail)
             Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  for (final tab in _currentVisibleTabs)
-                    switch (tab) {
-                      AppTab.projects => MobileUtils.isMobile()
+              child: Builder(builder: (context) {
+                final tabView = TabBarView(
+                  controller: _tabController,
+                  children: [
+                    for (final tab in _currentVisibleTabs)
+                      switch (tab) {
+                        AppTab.projects => MobileUtils.isMobile()
                           ? _MobileProjectsList(
                               projects: projects,
                               dateFormat: dateFormat,
@@ -1777,8 +1823,142 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                       AppTab.statistics => const StatisticsPage(),
                       AppTab.player     => const MusicPlayerPage(),
                     },
-                ],
-              ),
+                  ],
+                );
+                // Left navigation rail
+                if (!MobileUtils.isMobile() && ref.watch(tabPositionProvider) == TabPosition.left) {
+                  return Row(
+                    children: [
+                      NavigationRail(
+                        selectedIndex: _tabController.index,
+                        onDestinationSelected: (i) => _tabController.animateTo(i),
+                        labelType: _railCollapsed
+                            ? NavigationRailLabelType.none
+                            : NavigationRailLabelType.all,
+                        leading: Tooltip(
+                          message: _railCollapsed
+                              ? AppLocalizations.of(context)!.expand
+                              : AppLocalizations.of(context)!.collapse,
+                          child: IconButton(
+                            icon: Icon(_railCollapsed
+                                ? Icons.chevron_right
+                                : Icons.chevron_left),
+                            onPressed: () =>
+                                setState(() => _railCollapsed = !_railCollapsed),
+                          ),
+                        ),
+                        destinations: [
+                          for (final tab in _currentVisibleTabs)
+                            switch (tab) {
+                              AppTab.projects   => NavigationRailDestination(icon: const Icon(Icons.library_music), label: Text(AppLocalizations.of(context)!.projectsTab)),
+                              AppTab.releases   => NavigationRailDestination(icon: const Icon(Icons.album), label: Text(AppLocalizations.of(context)!.releasesTab)),
+                              AppTab.playlists  => NavigationRailDestination(icon: const Icon(Icons.playlist_play), label: Text(AppLocalizations.of(context)!.playlists)),
+                              AppTab.queue      => NavigationRailDestination(icon: const Icon(Icons.checklist), label: Text(AppLocalizations.of(context)!.queueTab)),
+                              AppTab.statistics => NavigationRailDestination(icon: const Icon(Icons.bar_chart_rounded), label: Text(AppLocalizations.of(context)!.statisticsTab)),
+                              AppTab.player     => const NavigationRailDestination(icon: Icon(Icons.headphones), label: Text('Music Player')),
+                            },
+                        ],
+                        trailing: Expanded(
+                          child: Align(
+                            alignment: Alignment.bottomCenter,
+                            child: Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // Rescan
+                                  Tooltip(
+                                    message: isAnyOperation
+                                        ? AppLocalizations.of(context)!.scanning
+                                        : AppLocalizations.of(context)!.rescan,
+                                    child: IconButton(
+                                      icon: isAnyOperation
+                                          ? const SizedBox(
+                                              width: 18, height: 18,
+                                              child: CircularProgressIndicator(strokeWidth: 2),
+                                            )
+                                          : const Icon(Icons.refresh),
+                                      onPressed: isAnyOperation ? null : () => _scanAll(),
+                                    ),
+                                  ),
+                                  if (!_railCollapsed)
+                                    Text(
+                                      isAnyOperation
+                                          ? AppLocalizations.of(context)!.scanning
+                                          : AppLocalizations.of(context)!.rescan,
+                                      style: Theme.of(context).textTheme.labelSmall,
+                                    ),
+                                  const SizedBox(height: 8),
+                                  // Deep scan
+                                  Tooltip(
+                                    message: AppLocalizations.of(context)!.deepScanTooltip,
+                                    waitDuration: const Duration(milliseconds: 500),
+                                    child: IconButton(
+                                      icon: isAnyOperation
+                                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                                          : const Icon(Icons.search),
+                                      onPressed: isAnyOperation
+                                          ? null
+                                          : () async {
+                                              final confirm = await showDialog<bool>(
+                                                context: context,
+                                                builder: (ctx) => AlertDialog(
+                                                  backgroundColor: Theme.of(context).cardColor,
+                                                  title: Text(AppLocalizations.of(context)!.deepScan),
+                                                  content: Text(AppLocalizations.of(context)!.deepScanConfirm),
+                                                  actions: [
+                                                    TextButton(
+                                                      onPressed: () => Navigator.pop(ctx, false),
+                                                      child: Text(AppLocalizations.of(context)!.cancel),
+                                                    ),
+                                                    ElevatedButton(
+                                                      onPressed: () => Navigator.pop(ctx, true),
+                                                      style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary),
+                                                      child: Text(AppLocalizations.of(context)!.deepScan),
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
+                                              if (confirm == true) await _fullScanAll();
+                                            },
+                                    ),
+                                  ),
+                                  if (!_railCollapsed)
+                                    Text(
+                                      AppLocalizations.of(context)!.deepScan,
+                                      style: Theme.of(context).textTheme.labelSmall,
+                                    ),
+                                  const SizedBox(height: 8),
+                                  // Settings
+                                  Tooltip(
+                                    message: AppLocalizations.of(context)!.settings,
+                                    child: IconButton(
+                                      icon: const Icon(Icons.settings_outlined),
+                                      onPressed: () => Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) => const ProjectFoldersSettingsPage(),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  if (!_railCollapsed)
+                                    Text(
+                                      AppLocalizations.of(context)!.settings,
+                                      style: Theme.of(context).textTheme.labelSmall,
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const VerticalDivider(width: 1),
+                      Expanded(child: tabView),
+                    ],
+                  );
+                }
+                return tabView;
+              }),
             ),
           ],
                 ),
@@ -2806,7 +2986,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   }
 
   String? _getDawLogoPath(String? dawType) {
-    if (dawType == null) return null;
+    if (dawType == null || dawType.isEmpty) return null;
     
     // Map DAW types to logo file names (case-insensitive matching)
     final dawLower = dawType.toLowerCase();
@@ -2859,17 +3039,11 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       return;
     }
     final success = await FileLauncher.launchProject(project.filePath);
-    
+
     if (success) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.launchingProject(project.displayName))));
       }
-      
-      // On desktop, automatically open project details for context
-      // This helps users return to the app with the project context loaded
-      // if (mounted && !MobileUtils.isMobile()) {
-      //   await _viewProjectDetails(project);
-      // }
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -3119,54 +3293,77 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     final hasTree = projects.any((p) => p.parentProjectId != null);
     if (!hasTree) return projects.map(_projectToRow).toList();
 
-    // Build tree: group children by parentProjectId.
-    final childrenMap = <String, List<MusicProject>>{};
-    final topLevel = <MusicProject>[];
+    // Group all projects by the directory their file lives in.
+    final byDir = <String, List<MusicProject>>{};
     for (final proj in projects) {
-      if (proj.parentProjectId != null) {
-        childrenMap.putIfAbsent(proj.parentProjectId!, () => []).add(proj);
-      } else {
-        topLevel.add(proj);
-      }
+      final dir = path.dirname(proj.filePath);
+      byDir.putIfAbsent(dir, () => []).add(proj);
     }
 
-    return topLevel.map((parent) {
-      final children = childrenMap[parent.id] ?? [];
-      if (children.isEmpty) return _projectToRow(parent);
-      return TrinaRow(
+    // Sort directories newest-first (by the most recently modified project in each dir).
+    final sortedDirs = byDir.keys.toList()
+      ..sort((a, b) {
+        final aLatest = byDir[a]!.map((p) => p.lastModifiedAt).reduce((x, y) => x.isAfter(y) ? x : y);
+        final bLatest = byDir[b]!.map((p) => p.lastModifiedAt).reduce((x, y) => x.isAfter(y) ? x : y);
+        return bLatest.compareTo(aLatest);
+      });
+
+    final rows = <TrinaRow>[];
+    for (final dir in sortedDirs) {
+      final group = List<MusicProject>.from(byDir[dir]!);
+      // Oldest first within each folder (most established work at the top).
+      group.sort((a, b) => a.lastModifiedAt.compareTo(b.lastModifiedAt));
+
+      if (group.length == 1) {
+        rows.add(_projectToRow(group.first));
+        continue;
+      }
+
+      // Folder header row: shows directory name + newest modification date.
+      final latestModified = group.map((p) => p.lastModifiedAt).reduce((x, y) => x.isAfter(y) ? x : y);
+      rows.add(TrinaRow(
         cells: {
           'checkbox': TrinaCell(value: ''),
-          'name': TrinaCell(value: parent.displayName),
-          'status': TrinaCell(value: parent.status),
-          'dawType': TrinaCell(value: parent.dawType != null
-              ? (parent.dawVersion != null && parent.dawVersion!.isNotEmpty
-                  ? '${parent.dawType} ${parent.dawVersion}'
-                  : parent.dawType!)
-              : ''),
-          'bpm': TrinaCell(value: parent.bpm?.toString() ?? ''),
-          'key': TrinaCell(value: parent.musicalKey ?? ''),
-          'lastModified': TrinaCell(value: widget.dateFormat.format(parent.lastModifiedAt)),
-          'deadline': TrinaCell(value: parent.deadlineStatus ?? ''),
+          'name': TrinaCell(value: path.basename(dir)),
+          'status': TrinaCell(value: ''),
+          'dawType': TrinaCell(value: ''),
+          'bpm': TrinaCell(value: ''),
+          'key': TrinaCell(value: ''),
+          'lastModified': TrinaCell(value: widget.dateFormat.format(latestModified)),
+          'deadline': TrinaCell(value: ''),
           'launch': TrinaCell(value: ''),
-          'data': TrinaCell(value: parent),
+          'data': TrinaCell(value: null),
         },
         type: TrinaRowType.group(
-          children: FilteredList(initialList: children.map(_projectToRow).toList()),
+          children: FilteredList(initialList: group.map(_projectToRow).toList()),
         ),
-      );
-    }).toList();
+      ));
+    }
+    return rows;
   }
 
   @override
   void didUpdateWidget(_PlutoProjectsTable oldWidget) {
     super.didUpdateWidget(oldWidget);
     
-    if (oldWidget.projects != widget.projects || oldWidget.selectedIds != widget.selectedIds) {
+    if (oldWidget.projects != widget.projects) {
       if (stateManager != null) {
         final newRows = _mapProjectsToRows(widget.projects);
         stateManager!.removeRows(stateManager!.rows, notify: false);
         stateManager!.insertRows(0, newRows);
-        // Force rebuild to update checkbox states and color coding
+        stateManager!.notifyListeners();
+      }
+    } else if (oldWidget.selectedIds != widget.selectedIds) {
+      // Selection changed only — update cell values to invalidate renderer cache
+      // without destroying rows (which would reset folder expanded/collapsed state).
+      if (stateManager != null) {
+        for (final row in stateManager!.rows) {
+          final project = row.cells['data']?.value as MusicProject?;
+          if (project != null) {
+            row.cells['checkbox']?.value =
+                widget.selectedIds.contains(project.id) ? 'selected' : '';
+          }
+        }
         stateManager!.notifyListeners();
       }
     }
@@ -3207,6 +3404,35 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         stateManager?.notifyListeners();
       });
     });
+    // Repaint rows when the currently playing track changes (for highlight).
+    ref.listen(desktopPlayerProvider, (prev, next) {
+      if (prev?.project.id != next?.project.id) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) stateManager?.notifyListeners();
+        });
+      }
+    });
+    ref.listen(sessionModeProvider, (prev, next) {
+      if (prev != next) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) stateManager?.notifyListeners();
+        });
+      }
+    });
+    ref.listen(activeProjectProvider, (prev, next) {
+      if (prev?.id != next?.id) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) stateManager?.notifyListeners();
+        });
+      }
+    });
+    ref.listen(workTimerPausedProvider, (prev, next) {
+      if (prev != next) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) stateManager?.notifyListeners();
+        });
+      }
+    });
     final columns = [
       TrinaColumn(
         title: '',
@@ -3232,24 +3458,47 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               ),
             ),
             child: Center(
-              child: Checkbox(
-                value: widget.areAllSelected,
-                tristate: widget.selectedIds.isNotEmpty && !widget.areAllSelected,
-                onChanged: (_) => widget.onToggleSelectAll(),
+              child: Transform.scale(
+                scale: 0.78,
+                child: Checkbox(
+                  value: widget.areAllSelected,
+                  tristate: widget.selectedIds.isNotEmpty && !widget.areAllSelected,
+                  onChanged: (_) => widget.onToggleSelectAll(),
+                ),
               ),
             ),
           );
         },
         renderer: (rendererContext) {
           final project = rendererContext.row.cells['data']?.value as MusicProject?;
-          if (project == null) return const SizedBox.shrink();
-          
+          if (project == null) {
+            // Folder row — expand / collapse arrow
+            final isExpanded = rendererContext.row.type.isGroup &&
+                rendererContext.row.type.group.expanded;
+            return GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => rendererContext.stateManager
+                  .toggleExpandedRowGroup(rowGroup: rendererContext.row),
+              child: Center(
+                child: Icon(
+                  isExpanded
+                      ? Icons.keyboard_arrow_down
+                      : Icons.keyboard_arrow_right,
+                  size: 18,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+            );
+          }
           final isSelected = widget.selectedIds.contains(project.id);
-          return Checkbox(
-            value: isSelected,
-            onChanged: (value) {
-              widget.onToggleSelection(project.id);
-            },
+          return Transform.scale(
+            scale: 0.78,
+            child: Checkbox(
+              value: isSelected,
+              onChanged: (value) {
+                widget.onToggleSelection(project.id);
+              },
+            ),
           );
         },
       ),
@@ -3266,7 +3515,30 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         renderer: (rendererContext) {
           final project = rendererContext.row.cells['data']?.value as MusicProject?;
           if (project == null) {
-            return Text(rendererContext.cell.value.toString());
+            // Folder header row — folder icon + name, tappable to toggle
+            final isExpanded = rendererContext.row.type.isGroup &&
+                rendererContext.row.type.group.expanded;
+            return GestureDetector(
+              onTap: () => rendererContext.stateManager
+                  .toggleExpandedRowGroup(rowGroup: rendererContext.row),
+              child: Row(
+                children: [
+                  Icon(
+                    isExpanded ? Icons.folder_open : Icons.folder,
+                    size: 15,
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      rendererContext.cell.value.toString(),
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            );
           }
 
           final fileExists = File(project.filePath).existsSync() ||
@@ -3278,29 +3550,42 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               project.notes != null &&
               fuzzyMatchAll(project.notes!, currentQuery);
 
-          return GestureDetector(
-            onSecondaryTapDown: (TapDownDetails details) {
-              _showContextMenu(context, project, details.globalPosition);
-            },
-            child: Row(
-              children: [
-                Expanded(child: Text(rendererContext.cell.value.toString())),
-                if (isNotesMatch)
-                  Tooltip(
-                    message: AppLocalizations.of(context)!.matchedInDescription,
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 6),
-                      child: Icon(Icons.notes, size: 14, color: Colors.amber.shade600),
+          // Tree connector for child rows inside a folder group
+          final depth = rendererContext.row.depth;
+          final parent = rendererContext.row.parent;
+          final isLastChild = parent == null ||
+              !parent.type.isGroup ||
+              parent.type.group.children.isEmpty ||
+              parent.type.group.children.last == rendererContext.row;
+
+          return Row(
+            children: [
+              if (depth > 0)
+                SizedBox(
+                  width: 20,
+                  height: double.infinity,
+                  child: CustomPaint(
+                    painter: _TreeConnectorPainter(
+                      isLast: isLastChild,
+                      color: Theme.of(context).dividerColor.withValues(alpha: 0.7),
                     ),
                   ),
-                if (!fileExists && !MobileUtils.isMobile())
-                  Tooltip(
-                    message: AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
-                    child: Icon(Icons.cloud_off, size: 14,
-                        color: Colors.orange.shade400),
+                ),
+              Expanded(child: Text(rendererContext.cell.value.toString())),
+              if (isNotesMatch)
+                Tooltip(
+                  message: AppLocalizations.of(context)!.matchedInDescription,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 6),
+                    child: Icon(Icons.notes, size: 14, color: Colors.amber.shade600),
                   ),
-              ],
-            ),
+                ),
+              if (!fileExists && !MobileUtils.isMobile())
+                Tooltip(
+                  message: AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
+                  child: Icon(Icons.cloud_off, size: 14, color: Colors.orange.shade400),
+                ),
+            ],
           );
         },
       ),
@@ -3329,14 +3614,11 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             ],
           );
 
-          if (project == null) return textWidget;
+          if (project == null) return const SizedBox.shrink();
 
           return GestureDetector(
             onTapDown: (TapDownDetails details) {
               _showPhaseMenu(context, project, details.globalPosition, rendererContext);
-            },
-            onSecondaryTapDown: (TapDownDetails details) {
-              _showContextMenu(context, project, details.globalPosition);
             },
             child: textWidget,
           );
@@ -3351,6 +3633,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         minWidth: 100,
         renderer: (rendererContext) {
           final project = rendererContext.row.cells['data']?.value as MusicProject?;
+          if (project == null) return const SizedBox.shrink();
           final dawType = rendererContext.cell.value as String? ?? '';
           final logoPath = _getDawLogoPath(dawType);
           
@@ -3376,14 +3659,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             ],
           );
           
-          if (project == null) return content;
-          
-          return GestureDetector(
-            onSecondaryTapDown: (TapDownDetails details) {
-              _showContextMenu(context, project, details.globalPosition);
-            },
-            child: content,
-          );
+          return content;
         },
       ),
       TrinaColumn(
@@ -3398,13 +3674,8 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           final textWidget = Text(rendererContext.cell.value.toString());
           
           if (project == null) return textWidget;
-          
-          return GestureDetector(
-            onSecondaryTapDown: (TapDownDetails details) {
-              _showContextMenu(context, project, details.globalPosition);
-            },
-            child: textWidget,
-          );
+
+          return textWidget;
         },
       ),
       TrinaColumn(
@@ -3427,57 +3698,50 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             return const SizedBox.shrink();
           }
           
-          return GestureDetector(
-            onSecondaryTapDown: (TapDownDetails details) {
-              _showContextMenu(context, project, details.globalPosition);
-            },
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Musical key on the left
-                Flexible(
-                  child: Text(
-                    key,
-                    style: TextStyle(
-                      color: Theme.of(context).textTheme.bodyMedium?.color,
-                      fontSize: 12,
-                    ),
-                    overflow: TextOverflow.ellipsis,
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Flexible(
+                child: Text(
+                  key,
+                  style: TextStyle(
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                    fontSize: 12,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (camelot != null) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  child: Container(
+                    width: 1,
+                    height: 14,
+                    color: Colors.grey.withOpacity(0.3),
                   ),
                 ),
-                // Visual separator and Camelot code on the right
-                if (camelot != null) ...[
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
-                    child: Container(
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(3),
+                    border: Border.all(
+                      color: Colors.blue.withOpacity(0.4),
                       width: 1,
-                      height: 14,
-                      color: Colors.grey.withOpacity(0.3),
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(3),
-                      border: Border.all(
-                        color: Colors.blue.withOpacity(0.4),
-                        width: 1,
-                      ),
-                    ),
-                    child: Text(
-                      camelot,
-                      style: const TextStyle(
-                        color: Colors.blue,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  child: Text(
+                    camelot,
+                    style: const TextStyle(
+                      color: Colors.blue,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ],
+                ),
               ],
-            ),
+            ],
           );
         },
       ),
@@ -3490,9 +3754,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         minWidth: 160,
         renderer: (rendererContext) {
           final project = rendererContext.row.cells['data']?.value as MusicProject?;
-          if (project == null) {
-            return Text(rendererContext.cell.value.toString());
-          }
+          if (project == null) return const SizedBox.shrink();
 
           final status = project.status;
           
@@ -3534,12 +3796,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             style: TextStyle(color: textColor),
           );
           
-          return GestureDetector(
-            onSecondaryTapDown: (TapDownDetails details) {
-              _showContextMenu(context, project, details.globalPosition);
-            },
-            child: textWidget,
-          );
+          return textWidget;
         },
       ),
       TrinaColumn(
@@ -3610,12 +3867,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             ),
           );
 
-          return GestureDetector(
-            onSecondaryTapDown: (TapDownDetails details) {
-              _showContextMenu(context, project, details.globalPosition);
-            },
-            child: deadlineWidget,
-          );
+          return deadlineWidget;
         },
       ),
       TrinaColumn(
@@ -3626,7 +3878,8 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         width: 290, // Increased width to accommodate all action buttons
         minWidth: 250,
         renderer: (ctx) {
-          final project = ctx.row.cells['data']!.value as MusicProject;
+          final project = ctx.row.cells['data']?.value as MusicProject?;
+          if (project == null) return const SizedBox.shrink();
           
           // Lógica para determinar o diretório pai
           final String projectPath = project.filePath;
@@ -3635,11 +3888,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               ? projectPath // Se for um diretório, usa o próprio caminho
               : path.dirname(projectPath); // Se for um arquivo, usa o diretório pai
           
-          return GestureDetector(
-            onSecondaryTapDown: (TapDownDetails details) {
-              _showContextMenu(context, project, details.globalPosition);
-            },
-            child: Row(
+          return Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Play Preview Song button (always show, but disabled if no preview)
@@ -3670,17 +3919,44 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                   style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5), fontSize: 16),
                 ),
               ),
-              // Launch button
-              Tooltip(
-                message: sourceFileExists || MobileUtils.isMobile() ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
-                child: IconButton(
-                  icon: const Icon(Icons.open_in_new),
-                  iconSize: 24,
-                  padding: const EdgeInsets.all(4),
-                  constraints: const BoxConstraints(),
-                  tooltip: sourceFileExists ? '${AppLocalizations.of(context)!.tooltipLaunchInDaw} (O)' : null,
-                  onPressed: sourceFileExists ? () => _launchProject(project) : null,
-                ),
+              // Launch / Start Session button — Consumer makes it self-reactive to
+              // sessionModeProvider and activeProjectProvider without relying on
+              // TrinaGrid to rebuild its cached column objects.
+              Consumer(
+                builder: (context, ref, _) {
+                  final mode = ref.watch(sessionModeProvider);
+                  final subProject = ref.watch(activeProjectProvider);
+                  if (!mode) {
+                    return IconButton(
+                      icon: const Icon(Icons.open_in_new),
+                      iconSize: 24,
+                      padding: const EdgeInsets.all(4),
+                      constraints: const BoxConstraints(),
+                      tooltip: sourceFileExists
+                          ? '${AppLocalizations.of(context)!.tooltipLaunchInDaw} (O)'
+                          : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
+                      onPressed: sourceFileExists ? () => _launchProject(project) : null,
+                    );
+                  }
+                  final isSubscribed = subProject?.id == project.id;
+                  return IconButton(
+                    icon: Icon(isSubscribed ? Icons.bookmark : Icons.bookmark_add_outlined),
+                    iconSize: 24,
+                    padding: const EdgeInsets.all(4),
+                    constraints: const BoxConstraints(),
+                    tooltip: isSubscribed
+                        ? AppLocalizations.of(context)!.endSession
+                        : AppLocalizations.of(context)!.startSession,
+                    color: isSubscribed ? Colors.green.shade400 : null,
+                    onPressed: () {
+                      if (isSubscribed) {
+                        _confirmEndSession(context, ref);
+                      } else {
+                        _confirmStartSession(context, ref, project);
+                      }
+                    },
+                  );
+                },
               ),
               // Separator
               Padding(
@@ -3764,7 +4040,6 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                 },
               ),
             ],
-          ),
           );
         },
       ),
@@ -3815,21 +4090,68 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       );
     }
 
+    // Read from Riverpod so isNeon and all theme colors come from the same build tick,
+    // preventing a one-frame inversion when the user switches themes.
+    final activeTheme = ref.watch(themeDataProvider);
+    final isNeon = ref.watch(themeTypeProvider) == AppThemeType.neonDark;
+    final isDark = activeTheme.brightness == Brightness.dark;
+
+    final playingHighlightColor = activeTheme.colorScheme.primary.withValues(alpha: 0.32);
+    final rowSelectColor = activeTheme.colorScheme.primary.withValues(alpha: 0.18);
+
+    // Neon Dark: use scaffold background (very dark navy) for odd rows so alternating rows are clearly visible.
+    // Classic Dark: use card colour for odd rows (current behaviour).
+    final oddColor = isNeon
+        ? activeTheme.scaffoldBackgroundColor
+        : activeTheme.cardColor;
+    final evenColor = isNeon
+        ? activeTheme.cardColor
+        : isDark
+            ? Color.alphaBlend(Colors.white.withValues(alpha: 0.05), activeTheme.cardColor)
+            : Color.alphaBlend(Colors.black.withValues(alpha: 0.04), activeTheme.cardColor);
+
     final grid = TrinaGrid(
-          key: ValueKey('trina_grid_${l10n.localeName}'), // Force rebuild when locale changes
+          key: ValueKey('trina_grid_${l10n.localeName}_${isNeon ? "neon" : "classic"}'),
+          columnMenuDelegate: _FitAllColumnsMenuDelegate(),
           columns: columns,
           rows: initialRows,
+          rowColorCallback: (TrinaRowColorContext ctx) {
+            final project = ctx.row.cells['data']?.value as MusicProject?;
+            if (project != null) {
+              final playing = ref.read(desktopPlayerProvider);
+              if (playing?.project.id == project.id) return playingHighlightColor;
+              final isSession = ref.read(activeProjectProvider)?.id == project.id;
+              final isActivated = stateManager?.currentRow == ctx.row;
+              if (isSession) {
+                // Read current paused state directly so notifyListeners refreshes pick it up.
+                final isPaused = ref.read(workTimerPausedProvider);
+                return isPaused
+                    ? const Color(0x70FBBF24) // amber when paused
+                    : const Color(0x7022C55E); // green when active
+              }
+              if (isActivated) return rowSelectColor;
+            }
+            return ctx.rowIdx.isOdd ? oddColor : evenColor;
+          },
           onLoaded: (TrinaGridOnLoadedEvent event) {
             stateManager = event.stateManager;
             stateManager!.setRowGroup(
               TrinaRowGroupTreeDelegate(
-                resolveColumnDepth: (column) => column.field == 'name' ? 0 : null,
+                // Returning null for all columns disables TrinaGrid's auto
+                // expand icon; we render our own in the checkbox column.
+                resolveColumnDepth: (column) => null,
                 showText: (cell) => true,
-                showFirstExpandableIcon: true,
+                showFirstExpandableIcon: false,
                 showCount: false,
               ),
             );
           },
+      onRowSecondaryTap: (TrinaGridOnRowSecondaryTapEvent event) {
+        final project = event.row.cells['data']?.value as MusicProject?;
+        if (project != null && mounted) {
+          _showContextMenu(context, project, event.offset);
+        }
+      },
       onChanged: (TrinaGridOnChangedEvent event) async {
         final project = event.row.cells['data']?.value as MusicProject?;
         if (project == null) return;
@@ -3861,34 +4183,39 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       },
       configuration: TrinaGridConfiguration(
         style: TrinaGridStyleConfig(
-          gridBackgroundColor: Theme.of(context).cardColor,
-          gridBorderColor: Theme.of(context).dividerColor.withValues(alpha: 0.4),
-          borderColor: ref.watch(themeTypeProvider) == AppThemeType.neonDark
-                        ? Theme.of(context).dividerColor
-                        : Theme.of(context).dividerColor.withValues(alpha: 0.25),
+          // Neon Dark: card colour for header area, scaffold bg used only for odd rows via rowColorCallback
+          gridBackgroundColor: activeTheme.cardColor,
+          gridBorderColor: isNeon
+              ? activeTheme.colorScheme.primary.withValues(alpha: 0.25)
+              : activeTheme.dividerColor.withValues(alpha: 0.4),
+          borderColor: isNeon
+              ? activeTheme.colorScheme.primary.withValues(alpha: 0.15)
+              : activeTheme.dividerColor.withValues(alpha: 0.25),
           gridBorderRadius: BorderRadius.zero,
-          rowColor: Theme.of(context).cardColor,
-          cellColorInEditState: Theme.of(context).cardColor,
-          cellColorInReadOnlyState: Theme.of(context).cardColor,
+          rowColor: oddColor,
+          cellColorInEditState: Colors.transparent,
+          cellColorInReadOnlyState: Colors.transparent,
           columnTextStyle: TextStyle(
-            color: Theme.of(context).textTheme.titleMedium?.color,
+            color: isNeon
+                ? activeTheme.colorScheme.primary
+                : activeTheme.textTheme.titleMedium?.color,
             fontWeight: FontWeight.w600,
           ),
           cellTextStyle: TextStyle(
-            color: Theme.of(context).textTheme.bodyMedium?.color,
+            color: activeTheme.textTheme.bodyMedium?.color,
           ),
           columnHeight: 44,
           rowHeight: 48,
-          activatedBorderColor: Theme.of(context).colorScheme.primary,
-          activatedColor: Theme.of(context).brightness == Brightness.dark
-              ? Colors.white.withValues(alpha: 0.15)
-              : Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-          iconColor: Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey,
-          menuBackgroundColor: Theme.of(context).cardColor,
-          oddRowColor: Theme.of(context).cardColor,
-          evenRowColor: Theme.of(context).brightness == Brightness.dark
-              ? Color.alphaBlend(Colors.white.withValues(alpha: 0.05), Theme.of(context).cardColor)
-              : Color.alphaBlend(Colors.black.withValues(alpha: 0.04), Theme.of(context).cardColor),
+          activatedBorderColor: activeTheme.colorScheme.primary,
+          // Transparent so rowColorCallback controls all row backgrounds
+          // (session green/yellow, playing, and click-selection).
+          activatedColor: Colors.transparent,
+          iconColor: isNeon
+              ? activeTheme.colorScheme.primary.withValues(alpha: 0.7)
+              : activeTheme.textTheme.bodyMedium?.color ?? Colors.grey,
+          menuBackgroundColor: activeTheme.cardColor,
+          oddRowColor: oddColor,
+          evenRowColor: evenColor,
         ),
         scrollbar: const TrinaGridScrollbarConfig(
           showHorizontal: false,
@@ -4358,13 +4685,6 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
     }
   }
 
-  Future<void> _stop() async {
-    await _audioPlayer.stop();
-    setState(() {
-      _position = Duration.zero;
-    });
-  }
-
   Future<void> _seek(int seconds) async {
     final target = _position + Duration(seconds: seconds);
     final clamped = target.isNegative ? Duration.zero : (_duration > Duration.zero && target > _duration ? _duration : target);
@@ -4373,9 +4693,10 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
 
   String _formatDuration(Duration duration) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final hours = duration.inHours;
     final minutes = twoDigits(duration.inMinutes.remainder(60));
     final seconds = twoDigits(duration.inSeconds.remainder(60));
-    return '$minutes:$seconds';
+    return hours > 0 ? '${twoDigits(hours)}:$minutes:$seconds' : '$minutes:$seconds';
   }
 
   static final _uuidPreviewRe = RegExp(
@@ -4445,11 +4766,6 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
                       widget.project.previewSongPath?.isNotEmpty != true
                   ? Colors.amber
                   : Theme.of(context).colorScheme.primary,
-            ),
-            IconButton(
-              icon: const Icon(Icons.stop),
-              onPressed: _isPlaying || _position > Duration.zero ? _stop : null,
-              iconSize: 32,
             ),
             IconButton(
               icon: const Icon(Icons.forward_5),
@@ -4586,10 +4902,6 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
                       widget.project.previewSongPath?.isNotEmpty != true
                   ? Colors.amber
                   : null,
-            ),
-            IconButton(
-              icon: const Icon(Icons.stop),
-              onPressed: _isPlaying || _position > Duration.zero ? _stop : null,
             ),
             Tooltip(
               message: '→ +5s',
@@ -4922,6 +5234,7 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
       autofocus: true,
       onKeyEvent: (node, event) {
         if (event is! KeyDownEvent && event is! KeyRepeatEvent) return KeyEventResult.ignored;
+        if (_isTextInputFocused()) return KeyEventResult.ignored;
         final isModified = HardwareKeyboard.instance.isControlPressed ||
             HardwareKeyboard.instance.isMetaPressed;
         if (event.logicalKey == LogicalKeyboardKey.space) {
@@ -5042,8 +5355,7 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
   bool _handleKeyboard(KeyEvent event) {
     if (event is! KeyDownEvent && event is! KeyRepeatEvent) return false;
     // Never steal keys from text inputs.
-    final primaryFocus = FocusManager.instance.primaryFocus;
-    if (primaryFocus?.context?.widget is EditableText) return false;
+    if (_isTextInputFocused()) return false;
 
     final modified = HardwareKeyboard.instance.isControlPressed ||
         HardwareKeyboard.instance.isMetaPressed;
@@ -5087,7 +5399,9 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
     _player.onPlayerComplete.listen((_) {
       if (!mounted) return;
       setState(() { _isPlaying = false; _position = Duration.zero; });
-      ref.read(desktopPlayerCompletedProvider.notifier).increment();
+      if (widget.request.isQueuedPlayback) {
+        ref.read(desktopPlayerCompletedProvider.notifier).increment();
+      }
     });
     _player.play(DeviceFileSource(widget.request.resolvedPath));
     _loadBackgroundData();
@@ -5100,7 +5414,8 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
   @override
   void didUpdateWidget(_DesktopPlayerBar oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.request.resolvedPath != widget.request.resolvedPath) {
+    if (oldWidget.request.resolvedPath != widget.request.resolvedPath ||
+        oldWidget.request.generation != widget.request.generation) {
       _player.stop();
       setState(() {
         _isPlaying = false;
@@ -5204,11 +5519,6 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
     }
   }
 
-  Future<void> _stop() async {
-    await _player.stop();
-    if (mounted) setState(() => _position = Duration.zero);
-  }
-
   Future<void> _seek(int seconds) async {
     final target = _position + Duration(seconds: seconds);
     final clamped = target.isNegative
@@ -5228,6 +5538,9 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
     ref.listen(desktopPlayerProvider, (prev, next) {
       if (next == null) _player.stop();
     });
+    final queueNav = ref.watch(queueNavigationProvider);
+    final isQueued = widget.request.isQueuedPlayback;
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final progress = _duration.inMilliseconds > 0
@@ -5307,6 +5620,13 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
               child: Row(
                 children: [
                   // Transport controls
+                  if (isQueued)
+                    IconButton(
+                      icon: const Icon(Icons.skip_previous),
+                      iconSize: 20, padding: iconPad, constraints: iconConstraints,
+                      tooltip: l10n.playerPreviousTrack,
+                      onPressed: queueNav.playPrev,
+                    ),
                   Tooltip(
                     message: '−5s  (←)  •  $modKey+← −30s',
                     child: IconButton(icon: const Icon(Icons.replay_5), iconSize: 20, padding: iconPad, constraints: iconConstraints, onPressed: () => _seek(-5)),
@@ -5318,16 +5638,17 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
                     tooltip: 'Play / Pause  (Space)',
                     onPressed: _togglePlayPause,
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.stop_circle_outlined),
-                    iconSize: 22, padding: iconPad, constraints: iconConstraints,
-                    onPressed: _isPlaying || _position > Duration.zero ? _stop : null,
-                  ),
                   Tooltip(
                     message: '+5s  (→)  •  $modKey+→ +30s',
                     child: IconButton(icon: const Icon(Icons.forward_5), iconSize: 20, padding: iconPad, constraints: iconConstraints, onPressed: () => _seek(5)),
                   ),
-                  const SizedBox(width: 4),
+                  if (isQueued)
+                    IconButton(
+                      icon: const Icon(Icons.skip_next),
+                      iconSize: 20, padding: iconPad, constraints: iconConstraints,
+                      tooltip: l10n.playerNextTrack,
+                      onPressed: queueNav.playNext,
+                    ),
                   // Volume (immediately after transport)
                   IconButton(
                     icon: Icon(_volume == 0 ? Icons.volume_off : (_volume < 0.5 ? Icons.volume_down : Icons.volume_up)),
@@ -5347,7 +5668,7 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
                     },
                   ),
                   SizedBox(
-                    width: 90,
+                    width: 135,
                     child: Slider(
                       value: _volume, min: 0, max: 1,
                       onChanged: (v) {
@@ -5424,6 +5745,16 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
                     style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.5)),
                   ),
                   const SizedBox(width: 10),
+                  // Open project detail
+                  IconButton(
+                    icon: const Icon(Icons.open_in_new),
+                    iconSize: 18, padding: iconPad, constraints: iconConstraints,
+                    tooltip: l10n.playerOpenProject,
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => ProjectDetailPage(projectId: project.id)),
+                    ),
+                  ),
                   // Close
                   IconButton(
                     icon: const Icon(Icons.close),
@@ -6179,6 +6510,656 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// Column menu delegate that extends the default TrinaGrid header context menu with
+/// an "Auto fit all columns" option that calls autoFitColumn on every column at once.
+class _FitAllColumnsMenuDelegate
+    implements TrinaColumnMenuDelegate<dynamic> {
+  static const String _menuFitAll = 'fitAll';
+
+  @override
+  List<PopupMenuEntry<dynamic>> buildMenuItems({
+    required TrinaGridStateManager stateManager,
+    required TrinaColumn column,
+  }) {
+    final defaults =
+        const TrinaColumnMenuDelegateDefault().buildMenuItems(
+      stateManager: stateManager,
+      column: column,
+    );
+    return [
+      ...defaults,
+      const PopupMenuDivider(),
+      const PopupMenuItem<String>(
+        value: _menuFitAll,
+        child: Row(
+          children: [
+            Icon(Icons.fit_screen, size: 16),
+            SizedBox(width: 8),
+            Text('Auto fit all columns'),
+          ],
+        ),
+      ),
+    ];
+  }
+
+  @override
+  void onSelected({
+    required BuildContext context,
+    required TrinaGridStateManager stateManager,
+    required TrinaColumn column,
+    required bool mounted,
+    required dynamic selected,
+  }) {
+    if (selected == _menuFitAll) {
+      if (!mounted) return;
+      for (final col in stateManager.columns) {
+        stateManager.autoFitColumn(context, col);
+      }
+      stateManager.notifyResizingListeners();
+      return;
+    }
+    const TrinaColumnMenuDelegateDefault().onSelected(
+      context: context,
+      stateManager: stateManager,
+      column: column,
+      mounted: mounted,
+      selected: selected,
+    );
+  }
+}
+
+/// Shows a confirmation dialog before ending the active session.
+/// Displays the project name and elapsed session time so the user can review
+/// before committing.
+Future<void> _confirmEndSession(BuildContext context, WidgetRef ref) async {
+  final project = ref.read(activeProjectProvider);
+  if (project == null) return;
+
+  final elapsed = ref.read(workTimerProvider);
+  final l10n = AppLocalizations.of(context)!;
+
+  String fmt(int s) {
+    final h = s ~/ 3600;
+    final m = (s % 3600) ~/ 60;
+    if (h > 0) return '${h}h ${m}m';
+    if (m > 0) return '${m}m';
+    return '< 1m';
+  }
+
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text(l10n.endSession),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            project.displayName,
+            style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          if (elapsed > 0) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Icon(Icons.timer_outlined, size: 16,
+                    color: Theme.of(ctx).colorScheme.primary),
+                const SizedBox(width: 6),
+                Text(
+                  '${l10n.sessionDuration}: ${fmt(elapsed)}',
+                  style: Theme.of(ctx).textTheme.bodyMedium,
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(ctx, true),
+          style: FilledButton.styleFrom(
+            backgroundColor: Theme.of(ctx).colorScheme.error,
+            foregroundColor: Theme.of(ctx).colorScheme.onError,
+          ),
+          child: Text(l10n.endSession),
+        ),
+      ],
+    ),
+  );
+
+  if (confirmed == true && context.mounted) {
+    ref.read(activeProjectProvider.notifier).clear();
+  }
+}
+
+/// Shows a confirmation dialog before starting a session on a project.
+/// If another session is already active, offers to switch instead.
+Future<void> _confirmStartSession(
+    BuildContext context, WidgetRef ref, MusicProject project) async {
+  final l10n = AppLocalizations.of(context)!;
+  final current = ref.read(activeProjectProvider);
+
+  if (current != null) {
+    // ── Switch dialog ──────────────────────────────────────────────────────
+    final elapsed = ref.read(workTimerProvider);
+
+    String fmt(int s) {
+      final h = s ~/ 3600;
+      final m = (s % 3600) ~/ 60;
+      if (h > 0) return '${h}h ${m}m';
+      if (m > 0) return '${m}m';
+      return '< 1m';
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        final theme = Theme.of(ctx);
+        return AlertDialog(
+          title: Text(l10n.switchSession),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.switchSessionBody,
+                  style: theme.textTheme.bodySmall),
+              const SizedBox(height: 14),
+              // Current project row
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.red.withValues(alpha: 0.25)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.bookmark, size: 14, color: Colors.red.shade400),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        l10n.switchSessionCurrent(current.displayName),
+                        style: const TextStyle(fontSize: 13),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (elapsed > 0)
+                      Text(
+                        fmt(elapsed),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: theme.textTheme.bodySmall?.color,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 6),
+                child: Center(child: Icon(Icons.arrow_downward, size: 16)),
+              ),
+              // New project row
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.green.withValues(alpha: 0.25)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.bookmark_add_outlined,
+                        size: 14, color: Colors.green.shade400),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        l10n.switchSessionNew(project.displayName),
+                        style: const TextStyle(
+                            fontSize: 13, fontWeight: FontWeight.w600),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(l10n.switchSession),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true && context.mounted) {
+      ref.read(activeProjectProvider.notifier).set(project);
+    }
+    return;
+  }
+
+  // ── Simple start dialog ────────────────────────────────────────────────
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text(l10n.startSession),
+      content: Text(
+        project.displayName,
+        style: Theme.of(ctx)
+            .textTheme
+            .titleMedium
+            ?.copyWith(fontWeight: FontWeight.w600),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(ctx, true),
+          child: Text(l10n.startSession),
+        ),
+      ],
+    ),
+  );
+
+  if (confirmed == true && context.mounted) {
+    ref.read(activeProjectProvider.notifier).set(project);
+  }
+}
+
+/// Compact chip displayed in the toolbar when a project session is active.
+/// Shows a pulsing dot, project name, session timer, and quick-action buttons.
+class _ActiveProjectChip extends ConsumerStatefulWidget {
+  const _ActiveProjectChip();
+
+  @override
+  ConsumerState<_ActiveProjectChip> createState() => _ActiveProjectChipState();
+}
+
+class _ActiveProjectChipState extends ConsumerState<_ActiveProjectChip>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse;
+  late final Animation<double> _anim;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulse = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1100),
+    )..repeat(reverse: true);
+    _anim = CurvedAnimation(parent: _pulse, curve: Curves.easeInOut);
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  static const _dot = Padding(
+    padding: EdgeInsets.symmetric(horizontal: 4),
+    child: Text('·', style: TextStyle(color: Color(0x4DFFFFFF), fontSize: 11)),
+  );
+
+  String _formatWorkTime(int totalSeconds) {
+    final h = totalSeconds ~/ 3600;
+    final m = (totalSeconds % 3600) ~/ 60;
+    final s = totalSeconds % 60;
+    if (h > 0) return '${h}h ${m}m';
+    if (m > 0) return '${m}m ${s}s';
+    return '${s}s';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final project = ref.watch(activeProjectProvider);
+    final sessionElapsed = ref.watch(workTimerProvider);
+    final isPaused = ref.watch(workTimerPausedProvider);
+
+    if (project == null) return const SizedBox.shrink();
+
+    final l10n = AppLocalizations.of(context)!;
+    final dawLabel = project.dawType ?? project.fileExtension.replaceFirst('.', '').toUpperCase();
+    const green = Color(0xFF22C55E);
+    const yellow = Color(0xFFFBBF24);
+    final chipColor = isPaused ? yellow : green;
+
+    // Always pulse — color (green vs yellow) does the state communication.
+    if (!_pulse.isAnimating) _pulse.repeat(reverse: true);
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      margin: const EdgeInsets.symmetric(vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: chipColor.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: chipColor.withValues(alpha: 0.6), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Pulsing dot — green when active, yellow when paused; always animates.
+          AnimatedBuilder(
+            animation: _anim,
+            builder: (context, _) {
+              final v = _anim.value;
+              return Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  color: chipColor.withValues(alpha: 0.35 + 0.65 * v),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: chipColor.withValues(alpha: 0.7 * v),
+                      blurRadius: 5 + 5 * v,
+                      spreadRadius: 0.5 + 2 * v,
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          const SizedBox(width: 10),
+          // Two-line content block
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Line 1 — project name (tooltip shows full name when truncated)
+              Tooltip(
+                message: project.displayName,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 260),
+                  child: Text(
+                    project.displayName,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      height: 1.2,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 2),
+              // Line 2 — DAW version, BPM, key, Camelot, total work, session timer
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // DAW name + version
+                  Text(
+                    project.dawVersion != null
+                        ? '$dawLabel ${project.dawVersion}'
+                        : dawLabel,
+                    style: TextStyle(color: Colors.white.withValues(alpha: 0.55), fontSize: 11),
+                  ),
+                  // BPM
+                  if (project.bpm != null) ...[
+                    _dot,
+                    Icon(Icons.speed, size: 11, color: Colors.white.withValues(alpha: 0.4)),
+                    const SizedBox(width: 2),
+                    Text(
+                      '${project.bpm! % 1 == 0 ? project.bpm!.toInt() : project.bpm!.toStringAsFixed(1)} BPM',
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.55), fontSize: 11),
+                    ),
+                  ],
+                  // Musical key
+                  if (project.musicalKey != null && project.musicalKey!.isNotEmpty) ...[
+                    _dot,
+                    Icon(Icons.music_note, size: 11, color: Colors.white.withValues(alpha: 0.4)),
+                    const SizedBox(width: 2),
+                    Text(
+                      project.musicalKey!,
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.55), fontSize: 11),
+                    ),
+                  ],
+                  // Camelot code badge
+                  if (project.camelotCode != null) ...[
+                    const SizedBox(width: 5),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withValues(alpha: 0.25),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        project.camelotCode!,
+                        style: const TextStyle(
+                          color: Colors.blue,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                  // Total accumulated work time
+                  if (project.totalWorkSeconds > 0) ...[
+                    _dot,
+                    Icon(Icons.history, size: 11, color: Colors.white.withValues(alpha: 0.4)),
+                    const SizedBox(width: 2),
+                    Text(
+                      _formatWorkTime(project.totalWorkSeconds),
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.45), fontSize: 11),
+                    ),
+                  ],
+                  // Session elapsed timer
+                  const SizedBox(width: 6),
+                  Icon(Icons.timer_outlined, size: 11, color: chipColor.withValues(alpha: 0.85)),
+                  const SizedBox(width: 2),
+                  Text(
+                    _formatWorkTime(sessionElapsed),
+                    style: TextStyle(
+                      color: chipColor,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(width: 12),
+          // Action buttons — icon-only with tooltips
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              FilledButton.icon(
+                onPressed: () async {
+                  final exists = File(project.filePath).existsSync() ||
+                      Directory(project.filePath).existsSync();
+                  if (exists) await FileLauncher.launchProject(project.filePath);
+                },
+                icon: const Icon(Icons.launch, size: 14),
+                label: Text(l10n.launch, style: const TextStyle(fontSize: 12)),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+              const SizedBox(width: 6),
+              OutlinedButton.icon(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => ProjectDetailPage(projectId: project.id)),
+                ),
+                icon: const Icon(Icons.open_in_new, size: 14),
+                label: Text(l10n.projectDetails, style: const TextStyle(fontSize: 12)),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                  foregroundColor: Colors.white70,
+                ),
+              ),
+              const SizedBox(width: 8),
+              _PauseSessionButton(
+                isPaused: isPaused,
+                onPressed: () {
+                  if (isPaused) {
+                    ref.read(workTimerProvider.notifier).resume();
+                  } else {
+                    ref.read(workTimerProvider.notifier).pause();
+                  }
+                },
+              ),
+              const SizedBox(width: 4),
+              _StopSessionButton(
+                onPressed: () => _confirmEndSession(context, ref),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Paints the ├── / └── tree connector for child rows in the folder tree view.
+class _TreeConnectorPainter extends CustomPainter {
+  final bool isLast;
+  final Color color;
+
+  const _TreeConnectorPainter({required this.isLast, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    const x = 8.0; // horizontal position of the vertical trunk line
+    final midY = size.height / 2;
+
+    // Vertical segment: top → midY for last child (└), top → bottom for others (├)
+    canvas.drawLine(Offset(x, 0), Offset(x, isLast ? midY : size.height), paint);
+
+    // Horizontal branch: trunk → right edge at mid-height
+    canvas.drawLine(Offset(x, midY), Offset(size.width, midY), paint);
+  }
+
+  @override
+  bool shouldRepaint(_TreeConnectorPainter old) =>
+      old.isLast != isLast || old.color != color;
+}
+
+class _PauseSessionButton extends StatefulWidget {
+  final bool isPaused;
+  final VoidCallback onPressed;
+  const _PauseSessionButton({required this.isPaused, required this.onPressed});
+
+  @override
+  State<_PauseSessionButton> createState() => _PauseSessionButtonState();
+}
+
+class _PauseSessionButtonState extends State<_PauseSessionButton> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    const yellow = Color(0xFFFBBF24);
+    const green = Color(0xFF22C55E);
+
+    final baseColor = widget.isPaused ? yellow : Colors.white54;
+    final hoverColor = widget.isPaused ? green : yellow;
+    final color = _hovered ? hoverColor : baseColor;
+    final glowColor = _hovered ? hoverColor : yellow;
+    final icon = widget.isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded;
+
+    return Tooltip(
+      message: widget.isPaused ? l10n.resume : l10n.pause,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: GestureDetector(
+          onTap: widget.onPressed,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: color.withValues(alpha: 0.5), width: 1),
+              color: color.withValues(alpha: _hovered ? 0.10 : (widget.isPaused ? 0.08 : 0.0)),
+              boxShadow: (_hovered || widget.isPaused)
+                  ? [BoxShadow(color: glowColor.withValues(alpha: _hovered ? 0.35 : 0.2), blurRadius: _hovered ? 8 : 5)]
+                  : const [],
+            ),
+            child: Center(child: Icon(icon, size: 16, color: color)),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StopSessionButton extends StatefulWidget {
+  final VoidCallback onPressed;
+  const _StopSessionButton({required this.onPressed});
+
+  @override
+  State<_StopSessionButton> createState() => _StopSessionButtonState();
+}
+
+class _StopSessionButtonState extends State<_StopSessionButton> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    const red = Color(0xFFEF5350);
+    final color = _hovered ? red : Colors.white54;
+
+    return Tooltip(
+      message: l10n.stop,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: GestureDetector(
+          onTap: widget.onPressed,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: color.withValues(alpha: 0.5), width: 1),
+              color: color.withValues(alpha: _hovered ? 0.10 : 0.0),
+              boxShadow: _hovered
+                  ? [BoxShadow(color: red.withValues(alpha: 0.35), blurRadius: 8)]
+                  : const [],
+            ),
+            child: Center(child: Icon(Icons.stop_rounded, size: 16, color: color)),
+          ),
+        ),
+      ),
     );
   }
 }

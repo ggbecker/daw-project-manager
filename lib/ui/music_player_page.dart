@@ -64,11 +64,16 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
   void initState() {
     super.initState();
     _searchController = TextEditingController();
-    // Seed the track list from whatever the stream already holds on first mount.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      // Seed the track list from whatever the stream already holds on first mount.
       final value = ref.read(allProjectsStreamProvider).value;
       if (value != null) _buildTrackList(value);
+      // Register queue navigation callbacks for the bottom player bar.
+      ref.read(queueNavigationProvider.notifier).register(
+        playNext: _playNext,
+        playPrev: _playPrev,
+      );
     });
   }
 
@@ -76,6 +81,7 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
   void dispose() {
     _searchController.dispose();
     _addTodoController.dispose();
+    ref.read(queueNavigationProvider.notifier).unregister();
     super.dispose();
   }
 
@@ -144,7 +150,7 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
       _selectedIndex = index;
       if (!keepPlaylistState) _playingFromPlaylist = false;
     });
-    ref.read(desktopPlayerProvider.notifier).play(track, filePath);
+    ref.read(desktopPlayerProvider.notifier).play(track, filePath, isQueuedPlayback: true);
   }
 
   void _selectFromPlaylist(int pi) {

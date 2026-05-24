@@ -6,6 +6,7 @@ import '../generated/l10n/app_localizations.dart';
 import '../models/notification_preferences.dart';
 import '../services/deadline_notification_service.dart';
 import '../providers/providers.dart';
+import 'widgets/desktop_title_bar.dart';
 
 /// Page for configuring deadline notification preferences
 class NotificationSettingsPage extends ConsumerStatefulWidget {
@@ -90,20 +91,11 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
     }
   }
 
+  bool get _isMobile => Platform.isAndroid || Platform.isIOS;
+
   @override
   Widget build(BuildContext context) {
-    if (!Platform.isAndroid) {
-      return Scaffold(
-        appBar: AppBar(
-          title: Text(AppLocalizations.of(context)!.notificationSettings),
-        ),
-        body: Center(
-          child: Text(AppLocalizations.of(context)!.notificationsOnlyOnAndroid),
-        ),
-      );
-    }
-
-    if (_isLoading) {
+    if (_isLoading && Platform.isAndroid) {
       return Scaffold(
         appBar: AppBar(
           title: Text(AppLocalizations.of(context)!.notificationSettings),
@@ -112,20 +104,15 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.notificationSettings),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.save),
-            onPressed: _savePreferences,
-            tooltip: AppLocalizations.of(context)!.save,
-          ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16.0),
-        children: [
+    final l10n = AppLocalizations.of(context)!;
+    final listView = ListView(
+      padding: const EdgeInsets.all(16.0),
+      children: [
+          // ── Work Session Reminders (all platforms) ──────────────────────
+          _WorkTimerSection(l10n: l10n),
+
+          if (Platform.isAndroid) ...[
+          const Divider(height: 32),
           // Permission status
           if (!_hasPermission)
             Card(
@@ -534,6 +521,25 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
               ),
             ),
           ],
+          ], // closes if (Platform.isAndroid)
+        ],
+    );
+    return Scaffold(
+      appBar: _isMobile ? AppBar(
+        title: Text(l10n.notificationSettings),
+        actions: [
+          if (Platform.isAndroid)
+            IconButton(
+              icon: const Icon(Icons.save),
+              onPressed: _savePreferences,
+              tooltip: l10n.save,
+            ),
+        ],
+      ) : null,
+      body: Column(
+        children: [
+          DesktopTitleBar(title: l10n.notificationSettings, showBack: true),
+          Expanded(child: listView),
         ],
       ),
     );
@@ -568,6 +574,7 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
   }
 
   Widget _buildReminderChip(int days) {
+    // ignore: dead_code — this method is only called from the Android branch
     final isSelected = _preferences?.reminderDays.contains(days) ?? false;
     final isEnabled = _hasPermission && (_preferences?.enabled ?? true);
     final l10n = AppLocalizations.of(context)!;
@@ -590,6 +597,76 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
               });
             }
           : null,
+    );
+  }
+}
+
+/// Work timer notification settings — shown on all platforms.
+class _WorkTimerSection extends ConsumerWidget {
+  final AppLocalizations l10n;
+  const _WorkTimerSection({required this.l10n});
+
+  // Intervals stored in seconds. 10 = testing; rest are minute multiples.
+  static const _intervalSeconds = [10, 900, 1800, 2700, 3600, 5400, 7200];
+
+  String _label(int seconds, AppLocalizations l10n) {
+    if (seconds < 60) return '$seconds s (test)';
+    final m = seconds ~/ 60;
+    return '$m ${l10n.minutes}';
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final enabled = ref.watch(workTimerNotifEnabledProvider);
+    final interval = ref.watch(workTimerNotifIntervalProvider);
+    final safeInterval =
+        _intervalSeconds.contains(interval) ? interval : 3600;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.timer_outlined),
+          title: Text(l10n.workTimerSection,
+              style: const TextStyle(fontWeight: FontWeight.w600)),
+          subtitle: Text(l10n.workTimerSectionDesc),
+        ),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(l10n.workTimerEnabled),
+          value: enabled,
+          onChanged: (v) =>
+              ref.read(workTimerNotifEnabledProvider.notifier).set(v),
+        ),
+        AnimatedOpacity(
+          duration: const Duration(milliseconds: 200),
+          opacity: enabled ? 1.0 : 0.4,
+          child: ListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(l10n.workTimerIntervalLabel),
+            trailing: DropdownButton<int>(
+              value: safeInterval,
+              underline: const SizedBox.shrink(),
+              items: _intervalSeconds
+                  .map((s) => DropdownMenuItem(
+                        value: s,
+                        child: Text(_label(s, l10n)),
+                      ))
+                  .toList(),
+              onChanged: enabled
+                  ? (v) {
+                      if (v != null) {
+                        ref
+                            .read(workTimerNotifIntervalProvider.notifier)
+                            .set(v);
+                      }
+                    }
+                  : null,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

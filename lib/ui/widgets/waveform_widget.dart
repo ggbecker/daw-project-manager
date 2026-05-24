@@ -35,17 +35,34 @@ class WaveformWidget extends StatelessWidget {
     final unplayed = unplayedColor ?? played.withValues(alpha: 0.3);
 
     if (peaks == null) {
-      return SizedBox(
-        height: height,
-        child: Center(
-          child: SizedBox(
-            height: 2,
-            child: LinearProgressIndicator(
-              backgroundColor: unplayed,
-              color: played,
+      // No peaks yet — show a seekable thin progress bar so the user can
+      // still seek while the waveform is being extracted in the background.
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final w = constraints.maxWidth;
+          final h = height ?? constraints.maxHeight;
+          return GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTapDown: onSeek != null ? (d) => _handleSeek(d.localPosition.dx, w) : null,
+            onHorizontalDragUpdate: onSeek != null ? (d) => _handleSeek(d.localPosition.dx, w) : null,
+            child: SizedBox(
+              height: h,
+              child: Center(
+                child: SizedBox(
+                  height: 3,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(1.5),
+                    child: LinearProgressIndicator(
+                      value: progress > 0 ? progress : null,
+                      backgroundColor: unplayed,
+                      color: played,
+                    ),
+                  ),
+                ),
+              ),
             ),
-          ),
-        ),
+          );
+        },
       );
     }
 
@@ -101,7 +118,6 @@ class _WaveformPainter extends CustomPainter {
     }
     path.lineTo(size.width, middle);
     for (int i = count - 1; i >= 0; i--) {
-      // minValues are negative, so middle - middle * minValue draws below center
       path.lineTo(dx * i, middle - middle * peaks.minValues[i]);
     }
     path.close();
@@ -111,11 +127,13 @@ class _WaveformPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final path = _buildPath(size);
+
     final paint = Paint()
       ..style = PaintingStyle.fill
-      ..isAntiAlias = true;
+      ..isAntiAlias = true
+      ..color = unplayedColor;
 
-    canvas.drawPath(path, paint..color = unplayedColor);
+    canvas.drawPath(path, paint);
 
     if (progress > 0) {
       canvas.save();

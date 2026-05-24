@@ -2629,4 +2629,253 @@ class AppLocalizationsPt extends AppLocalizations {
   String playerCompletedTasks(int count) {
     return '$count concluída(s)';
   }
+
+  @override
+  String get playerPreviousTrack => 'Faixa anterior';
+
+  @override
+  String get playerNextTrack => 'Próxima faixa';
+
+  @override
+  String get playerOpenProject => 'Abrir projeto';
+
+  @override
+  String get volumeMute => 'Silenciar';
+
+  @override
+  String get volumeUnmute => 'Reativar som';
+
+  @override
+  String totalWorkTime(String time) {
+    return 'Trabalho total: $time';
+  }
+
+  @override
+  String sessionTime(String time) {
+    return 'Sessão: $time';
+  }
+
+  @override
+  String get sessionHistory => 'Histórico de sessões';
+
+  @override
+  String get noSessionsYet => 'Nenhuma sessão registrada ainda';
+
+  @override
+  String get tabPosition => 'Posição das abas';
+
+  @override
+  String get tabPositionTop => 'Topo';
+
+  @override
+  String get tabPositionLeft => 'Esquerda';
+
+  @override
+  String updateAvailableMessage(String version) {
+    return 'Versão $version disponível';
+  }
+
+  @override
+  String get dismiss => 'Dispensar';
+
+  @override
+  String get checkForUpdates => 'Verificar atualizações';
+
+  @override
+  String get checkForUpdatesDescription =>
+      'Seja notificado quando uma nova versão estiver disponível.';
+
+  @override
+  String get checkNow => 'Verificar agora';
+
+  @override
+  String updateAvailable(String version) {
+    return 'Atualização disponível: v$version';
+  }
+
+  @override
+  String get upToDate => 'O app está atualizado';
+
+  @override
+  String get updateAvailableTitle => 'Atualização disponível';
+
+  @override
+  String updateAvailableVersion(String version) {
+    return 'A versão $version está pronta.';
+  }
+
+  @override
+  String updateCurrentVersion(String version) {
+    return 'Você está usando v$version.';
+  }
+
+  @override
+  String get viewUpdateDetails => 'Ver detalhes';
+
+  @override
+  String get getOnMicrosoftStore => 'Obter na Microsoft Store';
+
+  @override
+  String get downloadFromGitHub => 'Baixar do GitHub';
+
+  @override
+  String get updateWindowsInstructions =>
+      'Abra a Microsoft Store e atualize o DAW Project Manager, ou clique abaixo.';
+
+  @override
+  String get updateMacInstructions =>
+      'Baixe a versão mais recente do GitHub e substitua o app atual.';
+
+  @override
+  String get resetOnboarding => 'Redefinir integração inicial';
+
+  @override
+  String get onboardingWelcomeTitle => 'Bem-vindo ao DAW Project Manager';
+
+  @override
+  String get onboardingWelcomeBody =>
+      'Organize todos os seus projetos musicais em um só lugar.';
+
+  @override
+  String get onboardingLanguageTitle => 'Escolha o Idioma';
+
+  @override
+  String get onboardingThemeTitle => 'Escolha um Tema';
+
+  @override
+  String get onboardingFoldersTitle => 'Adicionar Pastas de Projetos';
+
+  @override
+  String get onboardingFoldersBody =>
+      'Adicione a pasta raiz onde seus projetos de DAW estão armazenados.';
+
+  @override
+  String get onboardingDriveTitle => 'Sincronização Google Drive';
+
+  @override
+  String get onboardingDriveBody =>
+      'Faça backup e sincronize os metadados do projeto com o Google Drive.';
+
+  @override
+  String get onboardingUpdatesTitle => 'Verificações de Atualizações';
+
+  @override
+  String get onboardingUpdatesBody =>
+      'Seja notificado quando uma nova versão estiver disponível.';
+
+  @override
+  String get onboardingDoneTitle => 'Tudo Pronto!';
+
+  @override
+  String get onboardingDoneBody => 'Comece a explorar seus projetos.';
+
+  @override
+  String get onboardingNext => 'Próximo';
+
+  @override
+  String get onboardingBack => 'Voltar';
+
+  @override
+  String get onboardingGetStarted => 'Começar';
+
+  @override
+  String get dawSession => 'Sessão DAW';
+
+  @override
+  String get clearDawSession => 'Encerrar sessão';
+
+  @override
+  String get stop => 'Parar';
+
+  @override
+  String get pause => 'Pausar';
+
+  @override
+  String get resume => 'Retomar';
+
+  @override
+  String get workTimerSection => 'Lembretes de sessão de trabalho';
+
+  @override
+  String get workTimerSectionDesc =>
+      'Receba notificações enquanto trabalha em um projeto inscrito';
+
+  @override
+  String get workTimerEnabled => 'Ativar lembretes de sessão de trabalho';
+
+  @override
+  String get workTimerIntervalLabel => 'Notificar a cada';
+
+  @override
+  String get minutes => 'minutos';
+
+  @override
+  String workTimerNotifBody(String time) {
+    return 'Você está trabalhando há $time';
+  }
+
+  @override
+  String get general => 'Geral';
+
+  @override
+  String get expand => 'Expandir';
+
+  @override
+  String get collapse => 'Recolher';
+
+  @override
+  String get sessionMode => 'Modo sessão';
+
+  @override
+  String get sessionModeDescription =>
+      'Inscreva-se em um projeto antes de lançá-lo para rastrear o tempo de trabalho e gerenciá-lo pela barra de ferramentas';
+
+  @override
+  String get startSession => 'Iniciar sessão';
+
+  @override
+  String get endSession => 'Encerrar sessão';
+
+  @override
+  String get switchSession => 'Trocar sessão';
+
+  @override
+  String get switchSessionBody => 'Encerrar a sessão atual e iniciar uma nova?';
+
+  @override
+  String switchSessionCurrent(String project) {
+    return 'Atual: $project';
+  }
+
+  @override
+  String switchSessionNew(String project) {
+    return 'Nova: $project';
+  }
+
+  @override
+  String get sessionDuration => 'Tempo de sessão';
+
+  @override
+  String get scanDepthLabel => 'Profundidade de varredura:';
+
+  @override
+  String get scanDepthAll => 'Todos os níveis';
+
+  @override
+  String get scanDepthOne => '1 nível';
+
+  @override
+  String get scanDepthTwo => '2 níveis';
+
+  @override
+  String get scanDepthAllTooltip =>
+      'Varre todas as subpastas recursivamente. Ideal para estruturas simples; pode ser lento em drives grandes.';
+
+  @override
+  String get scanDepthOneTooltip =>
+      'Varre apenas as subpastas imediatas desta pasta raiz. Cada subpasta vira um projeto.';
+
+  @override
+  String get scanDepthTwoTooltip =>
+      'Varre dois níveis de profundidade. Subpastas diretas e seus filhos são exibidos em árvore.';
 }

@@ -2628,4 +2628,253 @@ class AppLocalizationsRu extends AppLocalizations {
   String playerCompletedTasks(int count) {
     return '$count выполнено';
   }
+
+  @override
+  String get playerPreviousTrack => 'Предыдущий трек';
+
+  @override
+  String get playerNextTrack => 'Следующий трек';
+
+  @override
+  String get playerOpenProject => 'Открыть проект';
+
+  @override
+  String get volumeMute => 'Отключить звук';
+
+  @override
+  String get volumeUnmute => 'Включить звук';
+
+  @override
+  String totalWorkTime(String time) {
+    return 'Всего работы: $time';
+  }
+
+  @override
+  String sessionTime(String time) {
+    return 'Сессия: $time';
+  }
+
+  @override
+  String get sessionHistory => 'История сессий';
+
+  @override
+  String get noSessionsYet => 'Сессии ещё не записаны';
+
+  @override
+  String get tabPosition => 'Расположение вкладок';
+
+  @override
+  String get tabPositionTop => 'Сверху';
+
+  @override
+  String get tabPositionLeft => 'Слева';
+
+  @override
+  String updateAvailableMessage(String version) {
+    return 'Доступна версия $version';
+  }
+
+  @override
+  String get dismiss => 'Закрыть';
+
+  @override
+  String get checkForUpdates => 'Проверять обновления';
+
+  @override
+  String get checkForUpdatesDescription =>
+      'Получать уведомления о выходе новых версий.';
+
+  @override
+  String get checkNow => 'Проверить сейчас';
+
+  @override
+  String updateAvailable(String version) {
+    return 'Доступно обновление: v$version';
+  }
+
+  @override
+  String get upToDate => 'Приложение актуально';
+
+  @override
+  String get updateAvailableTitle => 'Доступно обновление';
+
+  @override
+  String updateAvailableVersion(String version) {
+    return 'Версия $version готова.';
+  }
+
+  @override
+  String updateCurrentVersion(String version) {
+    return 'Вы используете v$version.';
+  }
+
+  @override
+  String get viewUpdateDetails => 'Подробнее';
+
+  @override
+  String get getOnMicrosoftStore => 'Получить в Microsoft Store';
+
+  @override
+  String get downloadFromGitHub => 'Скачать с GitHub';
+
+  @override
+  String get updateWindowsInstructions =>
+      'Откройте Microsoft Store и обновите DAW Project Manager, или нажмите кнопку ниже.';
+
+  @override
+  String get updateMacInstructions =>
+      'Скачайте последнюю версию с GitHub и замените текущее приложение.';
+
+  @override
+  String get resetOnboarding => 'Сбросить обучение';
+
+  @override
+  String get onboardingWelcomeTitle => 'Добро пожаловать в DAW Project Manager';
+
+  @override
+  String get onboardingWelcomeBody =>
+      'Управляйте всеми музыкальными проектами в одном месте.';
+
+  @override
+  String get onboardingLanguageTitle => 'Выберите язык';
+
+  @override
+  String get onboardingThemeTitle => 'Выберите тему';
+
+  @override
+  String get onboardingFoldersTitle => 'Добавить папки проектов';
+
+  @override
+  String get onboardingFoldersBody =>
+      'Добавьте корневую папку, в которой хранятся ваши DAW-проекты.';
+
+  @override
+  String get onboardingDriveTitle => 'Синхронизация с Google Drive';
+
+  @override
+  String get onboardingDriveBody =>
+      'Резервное копирование и синхронизация метаданных проектов с Google Drive.';
+
+  @override
+  String get onboardingUpdatesTitle => 'Проверка обновлений';
+
+  @override
+  String get onboardingUpdatesBody =>
+      'Получать уведомления о выходе новых версий.';
+
+  @override
+  String get onboardingDoneTitle => 'Всё готово!';
+
+  @override
+  String get onboardingDoneBody => 'Начните изучать свои проекты.';
+
+  @override
+  String get onboardingNext => 'Далее';
+
+  @override
+  String get onboardingBack => 'Назад';
+
+  @override
+  String get onboardingGetStarted => 'Начать';
+
+  @override
+  String get dawSession => 'Сессия DAW';
+
+  @override
+  String get clearDawSession => 'Очистить сессию';
+
+  @override
+  String get stop => 'Стоп';
+
+  @override
+  String get pause => 'Пауза';
+
+  @override
+  String get resume => 'Продолжить';
+
+  @override
+  String get workTimerSection => 'Напоминания о рабочей сессии';
+
+  @override
+  String get workTimerSectionDesc =>
+      'Получайте уведомления во время работы над подписанным проектом';
+
+  @override
+  String get workTimerEnabled => 'Включить напоминания о рабочей сессии';
+
+  @override
+  String get workTimerIntervalLabel => 'Уведомлять каждые';
+
+  @override
+  String get minutes => 'минут';
+
+  @override
+  String workTimerNotifBody(String time) {
+    return 'Вы работаете уже $time';
+  }
+
+  @override
+  String get general => 'Общие';
+
+  @override
+  String get expand => 'Развернуть';
+
+  @override
+  String get collapse => 'Свернуть';
+
+  @override
+  String get sessionMode => 'Режим сессии';
+
+  @override
+  String get sessionModeDescription =>
+      'Подпишитесь на проект перед запуском, чтобы отслеживать рабочее время и управлять им с панели инструментов';
+
+  @override
+  String get startSession => 'Начать сессию';
+
+  @override
+  String get endSession => 'Завершить сессию';
+
+  @override
+  String get switchSession => 'Сменить сессию';
+
+  @override
+  String get switchSessionBody => 'Завершить текущую сессию и начать новую?';
+
+  @override
+  String switchSessionCurrent(String project) {
+    return 'Текущий: $project';
+  }
+
+  @override
+  String switchSessionNew(String project) {
+    return 'Новый: $project';
+  }
+
+  @override
+  String get sessionDuration => 'Время сессии';
+
+  @override
+  String get scanDepthLabel => 'Глубина сканирования:';
+
+  @override
+  String get scanDepthAll => 'Все уровни';
+
+  @override
+  String get scanDepthOne => '1 уровень';
+
+  @override
+  String get scanDepthTwo => '2 уровня';
+
+  @override
+  String get scanDepthAllTooltip =>
+      'Рекурсивно сканирует все подпапки. Лучше для простых структур; может быть медленным на больших дисках.';
+
+  @override
+  String get scanDepthOneTooltip =>
+      'Сканирует только прямые подпапки корневой папки. Каждая подпапка становится проектом.';
+
+  @override
+  String get scanDepthTwoTooltip =>
+      'Сканирует два уровня вглубь. Прямые подпапки и их дочерние элементы отображаются деревом.';
 }

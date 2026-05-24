@@ -2649,4 +2649,254 @@ class AppLocalizationsFr extends AppLocalizations {
   String playerCompletedTasks(int count) {
     return '$count terminée(s)';
   }
+
+  @override
+  String get playerPreviousTrack => 'Piste précédente';
+
+  @override
+  String get playerNextTrack => 'Piste suivante';
+
+  @override
+  String get playerOpenProject => 'Ouvrir le projet';
+
+  @override
+  String get volumeMute => 'Muet';
+
+  @override
+  String get volumeUnmute => 'Réactiver le son';
+
+  @override
+  String totalWorkTime(String time) {
+    return 'Travail total : $time';
+  }
+
+  @override
+  String sessionTime(String time) {
+    return 'Session : $time';
+  }
+
+  @override
+  String get sessionHistory => 'Historique des sessions';
+
+  @override
+  String get noSessionsYet => 'Aucune session enregistrée';
+
+  @override
+  String get tabPosition => 'Position des onglets';
+
+  @override
+  String get tabPositionTop => 'Haut';
+
+  @override
+  String get tabPositionLeft => 'Gauche';
+
+  @override
+  String updateAvailableMessage(String version) {
+    return 'Version $version disponible';
+  }
+
+  @override
+  String get dismiss => 'Ignorer';
+
+  @override
+  String get checkForUpdates => 'Vérifier les mises à jour';
+
+  @override
+  String get checkForUpdatesDescription =>
+      'Soyez notifié lorsqu\'une nouvelle version est disponible.';
+
+  @override
+  String get checkNow => 'Vérifier maintenant';
+
+  @override
+  String updateAvailable(String version) {
+    return 'Mise à jour disponible : v$version';
+  }
+
+  @override
+  String get upToDate => 'L\'application est à jour';
+
+  @override
+  String get updateAvailableTitle => 'Mise à jour disponible';
+
+  @override
+  String updateAvailableVersion(String version) {
+    return 'La version $version est prête.';
+  }
+
+  @override
+  String updateCurrentVersion(String version) {
+    return 'Vous utilisez v$version.';
+  }
+
+  @override
+  String get viewUpdateDetails => 'Voir les détails';
+
+  @override
+  String get getOnMicrosoftStore => 'Obtenir sur Microsoft Store';
+
+  @override
+  String get downloadFromGitHub => 'Télécharger depuis GitHub';
+
+  @override
+  String get updateWindowsInstructions =>
+      'Ouvrez Microsoft Store et mettez à jour DAW Project Manager, ou cliquez ci-dessous.';
+
+  @override
+  String get updateMacInstructions =>
+      'Téléchargez la dernière version depuis GitHub et remplacez l\'application.';
+
+  @override
+  String get resetOnboarding => 'Réinitialiser l\'intégration';
+
+  @override
+  String get onboardingWelcomeTitle => 'Bienvenue dans DAW Project Manager';
+
+  @override
+  String get onboardingWelcomeBody =>
+      'Organisez tous vos projets musicaux en un seul endroit.';
+
+  @override
+  String get onboardingLanguageTitle => 'Choisissez votre langue';
+
+  @override
+  String get onboardingThemeTitle => 'Choisissez un thème';
+
+  @override
+  String get onboardingFoldersTitle => 'Ajouter des dossiers de projets';
+
+  @override
+  String get onboardingFoldersBody =>
+      'Ajoutez le dossier racine où sont stockés vos projets DAW.';
+
+  @override
+  String get onboardingDriveTitle => 'Synchronisation Google Drive';
+
+  @override
+  String get onboardingDriveBody =>
+      'Sauvegardez et synchronisez les métadonnées du projet avec Google Drive.';
+
+  @override
+  String get onboardingUpdatesTitle => 'Vérifications des mises à jour';
+
+  @override
+  String get onboardingUpdatesBody =>
+      'Soyez notifié lorsqu\'une nouvelle version est disponible.';
+
+  @override
+  String get onboardingDoneTitle => 'Tout est prêt !';
+
+  @override
+  String get onboardingDoneBody => 'Commencez à explorer vos projets.';
+
+  @override
+  String get onboardingNext => 'Suivant';
+
+  @override
+  String get onboardingBack => 'Retour';
+
+  @override
+  String get onboardingGetStarted => 'Commencer';
+
+  @override
+  String get dawSession => 'Session DAW';
+
+  @override
+  String get clearDawSession => 'Fermer la session';
+
+  @override
+  String get stop => 'Arrêter';
+
+  @override
+  String get pause => 'Pause';
+
+  @override
+  String get resume => 'Reprendre';
+
+  @override
+  String get workTimerSection => 'Rappels de session de travail';
+
+  @override
+  String get workTimerSectionDesc =>
+      'Recevez des notifications pendant que vous travaillez sur un projet abonné';
+
+  @override
+  String get workTimerEnabled => 'Activer les rappels de session de travail';
+
+  @override
+  String get workTimerIntervalLabel => 'Notifier toutes les';
+
+  @override
+  String get minutes => 'minutes';
+
+  @override
+  String workTimerNotifBody(String time) {
+    return 'Vous travaillez depuis $time';
+  }
+
+  @override
+  String get general => 'Général';
+
+  @override
+  String get expand => 'Développer';
+
+  @override
+  String get collapse => 'Réduire';
+
+  @override
+  String get sessionMode => 'Mode session';
+
+  @override
+  String get sessionModeDescription =>
+      'Abonnez-vous à un projet avant de le lancer pour suivre le temps de travail et le gérer depuis la barre d\'outils';
+
+  @override
+  String get startSession => 'Démarrer la session';
+
+  @override
+  String get endSession => 'Terminer la session';
+
+  @override
+  String get switchSession => 'Changer de session';
+
+  @override
+  String get switchSessionBody =>
+      'Arrêter la session en cours et en démarrer une nouvelle ?';
+
+  @override
+  String switchSessionCurrent(String project) {
+    return 'Actuelle : $project';
+  }
+
+  @override
+  String switchSessionNew(String project) {
+    return 'Nouvelle : $project';
+  }
+
+  @override
+  String get sessionDuration => 'Durée de la session';
+
+  @override
+  String get scanDepthLabel => 'Profondeur de scan :';
+
+  @override
+  String get scanDepthAll => 'Tous les niveaux';
+
+  @override
+  String get scanDepthOne => '1 niveau';
+
+  @override
+  String get scanDepthTwo => '2 niveaux';
+
+  @override
+  String get scanDepthAllTooltip =>
+      'Analyse tous les sous-dossiers de manière récursive. Idéal pour les structures simples ; peut être lent sur les grands disques.';
+
+  @override
+  String get scanDepthOneTooltip =>
+      'Analyse uniquement les sous-dossiers directs de ce dossier racine. Chaque sous-dossier devient un projet.';
+
+  @override
+  String get scanDepthTwoTooltip =>
+      'Analyse deux niveaux de profondeur. Les sous-dossiers directs et leurs enfants sont affichés en arborescence.';
 }

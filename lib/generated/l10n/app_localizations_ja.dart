@@ -2572,4 +2572,246 @@ class AppLocalizationsJa extends AppLocalizations {
   String playerCompletedTasks(int count) {
     return '$count件完了';
   }
+
+  @override
+  String get playerPreviousTrack => '前のトラック';
+
+  @override
+  String get playerNextTrack => '次のトラック';
+
+  @override
+  String get playerOpenProject => 'プロジェクトを開く';
+
+  @override
+  String get volumeMute => 'ミュート';
+
+  @override
+  String get volumeUnmute => 'ミュート解除';
+
+  @override
+  String totalWorkTime(String time) {
+    return '総作業時間: $time';
+  }
+
+  @override
+  String sessionTime(String time) {
+    return 'セッション: $time';
+  }
+
+  @override
+  String get sessionHistory => 'セッション履歴';
+
+  @override
+  String get noSessionsYet => 'セッションはまだ記録されていません';
+
+  @override
+  String get tabPosition => 'タブの位置';
+
+  @override
+  String get tabPositionTop => '上';
+
+  @override
+  String get tabPositionLeft => '左';
+
+  @override
+  String updateAvailableMessage(String version) {
+    return 'バージョン $version が利用可能です';
+  }
+
+  @override
+  String get dismiss => '閉じる';
+
+  @override
+  String get checkForUpdates => 'アップデートを確認';
+
+  @override
+  String get checkForUpdatesDescription => '新しいバージョンが利用可能なときに通知を受け取ります。';
+
+  @override
+  String get checkNow => '今すぐ確認';
+
+  @override
+  String updateAvailable(String version) {
+    return 'アップデートあり: v$version';
+  }
+
+  @override
+  String get upToDate => 'アプリは最新です';
+
+  @override
+  String get updateAvailableTitle => 'アップデートあり';
+
+  @override
+  String updateAvailableVersion(String version) {
+    return 'バージョン $version が利用可能です。';
+  }
+
+  @override
+  String updateCurrentVersion(String version) {
+    return '現在 v$version を使用中です。';
+  }
+
+  @override
+  String get viewUpdateDetails => '詳細を見る';
+
+  @override
+  String get getOnMicrosoftStore => 'Microsoft Store で入手';
+
+  @override
+  String get downloadFromGitHub => 'GitHub からダウンロード';
+
+  @override
+  String get updateWindowsInstructions =>
+      'Microsoft Store を開いて DAW Project Manager をアップデートするか、下のボタンをクリックしてください。';
+
+  @override
+  String get updateMacInstructions =>
+      'GitHub から最新バージョンをダウンロードして現在のアプリと置き換えてください。';
+
+  @override
+  String get resetOnboarding => '初期設定をリセット';
+
+  @override
+  String get onboardingWelcomeTitle => 'DAW Project Managerへようこそ';
+
+  @override
+  String get onboardingWelcomeBody => 'すべての音楽プロジェクトを一か所で管理できます。';
+
+  @override
+  String get onboardingLanguageTitle => '言語を選択';
+
+  @override
+  String get onboardingThemeTitle => 'テーマを選択';
+
+  @override
+  String get onboardingFoldersTitle => 'プロジェクトフォルダを追加';
+
+  @override
+  String get onboardingFoldersBody => 'DAWプロジェクトが保存されているルートフォルダを追加してください。';
+
+  @override
+  String get onboardingDriveTitle => 'Google Driveの同期';
+
+  @override
+  String get onboardingDriveBody => 'プロジェクトのメタデータをGoogle Driveにバックアップして同期します。';
+
+  @override
+  String get onboardingUpdatesTitle => 'アップデート確認';
+
+  @override
+  String get onboardingUpdatesBody => '新しいバージョンが利用可能なときに通知を受け取ります。';
+
+  @override
+  String get onboardingDoneTitle => '準備完了！';
+
+  @override
+  String get onboardingDoneBody => 'プロジェクトの探索を始めましょう。';
+
+  @override
+  String get onboardingNext => '次へ';
+
+  @override
+  String get onboardingBack => '戻る';
+
+  @override
+  String get onboardingGetStarted => '始める';
+
+  @override
+  String get dawSession => 'DAWセッション';
+
+  @override
+  String get clearDawSession => 'セッションをクリア';
+
+  @override
+  String get stop => '停止';
+
+  @override
+  String get pause => '一時停止';
+
+  @override
+  String get resume => '再開';
+
+  @override
+  String get workTimerSection => '作業セッションリマインダー';
+
+  @override
+  String get workTimerSectionDesc => '購読中のプロジェクトの作業中に通知を受け取る';
+
+  @override
+  String get workTimerEnabled => '作業セッションリマインダーを有効にする';
+
+  @override
+  String get workTimerIntervalLabel => '次の間隔で通知';
+
+  @override
+  String get minutes => '分';
+
+  @override
+  String workTimerNotifBody(String time) {
+    return '$time間作業しています';
+  }
+
+  @override
+  String get general => '一般';
+
+  @override
+  String get expand => '展開';
+
+  @override
+  String get collapse => '折りたたむ';
+
+  @override
+  String get sessionMode => 'セッションモード';
+
+  @override
+  String get sessionModeDescription => '起動前にプロジェクトを購読して、作業時間を追跡し、ツールバーから管理します';
+
+  @override
+  String get startSession => 'セッション開始';
+
+  @override
+  String get endSession => 'セッション終了';
+
+  @override
+  String get switchSession => 'セッション切替';
+
+  @override
+  String get switchSessionBody => '現在のセッションを終了して新しいセッションを開始しますか？';
+
+  @override
+  String switchSessionCurrent(String project) {
+    return '現在: $project';
+  }
+
+  @override
+  String switchSessionNew(String project) {
+    return '新規: $project';
+  }
+
+  @override
+  String get sessionDuration => 'セッション時間';
+
+  @override
+  String get scanDepthLabel => 'スキャン深度:';
+
+  @override
+  String get scanDepthAll => '全階層';
+
+  @override
+  String get scanDepthOne => '1階層';
+
+  @override
+  String get scanDepthTwo => '2階層';
+
+  @override
+  String get scanDepthAllTooltip =>
+      'すべてのサブフォルダを再帰的にスキャンします。シンプルな構造に最適ですが、大きなドライブでは遅い場合があります。';
+
+  @override
+  String get scanDepthOneTooltip =>
+      'このルートフォルダの直接の子フォルダのみスキャンします。各サブフォルダがプロジェクトになります。';
+
+  @override
+  String get scanDepthTwoTooltip =>
+      '2階層の深さでスキャンします。直接のサブフォルダとその子フォルダがツリー表示されます。';
 }

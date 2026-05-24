@@ -4453,6 +4453,444 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} completed'**
   String playerCompletedTasks(int count);
+
+  /// No description provided for @playerPreviousTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous track'**
+  String get playerPreviousTrack;
+
+  /// No description provided for @playerNextTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'Next track'**
+  String get playerNextTrack;
+
+  /// No description provided for @playerOpenProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Open project'**
+  String get playerOpenProject;
+
+  /// No description provided for @volumeMute.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute'**
+  String get volumeMute;
+
+  /// No description provided for @volumeUnmute.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute'**
+  String get volumeUnmute;
+
+  /// No description provided for @totalWorkTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Total work: {time}'**
+  String totalWorkTime(String time);
+
+  /// No description provided for @sessionTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Session: {time}'**
+  String sessionTime(String time);
+
+  /// No description provided for @sessionHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Session History'**
+  String get sessionHistory;
+
+  /// No description provided for @noSessionsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No sessions recorded yet'**
+  String get noSessionsYet;
+
+  /// No description provided for @tabPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'Tab position'**
+  String get tabPosition;
+
+  /// No description provided for @tabPositionTop.
+  ///
+  /// In en, this message translates to:
+  /// **'Top'**
+  String get tabPositionTop;
+
+  /// No description provided for @tabPositionLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Left'**
+  String get tabPositionLeft;
+
+  /// No description provided for @updateAvailableMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version} is available'**
+  String updateAvailableMessage(String version);
+
+  /// No description provided for @dismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get dismiss;
+
+  /// No description provided for @checkForUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for updates'**
+  String get checkForUpdates;
+
+  /// No description provided for @checkForUpdatesDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Get notified when a new version of the app is available.'**
+  String get checkForUpdatesDescription;
+
+  /// No description provided for @checkNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Check now'**
+  String get checkNow;
+
+  /// No description provided for @updateAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Update available: v{version}'**
+  String updateAvailable(String version);
+
+  /// No description provided for @upToDate.
+  ///
+  /// In en, this message translates to:
+  /// **'App is up to date'**
+  String get upToDate;
+
+  /// No description provided for @updateAvailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Available'**
+  String get updateAvailableTitle;
+
+  /// No description provided for @updateAvailableVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'A new version {version} is ready.'**
+  String updateAvailableVersion(String version);
+
+  /// No description provided for @updateCurrentVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'You are running v{version}.'**
+  String updateCurrentVersion(String version);
+
+  /// No description provided for @viewUpdateDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'View Details'**
+  String get viewUpdateDetails;
+
+  /// No description provided for @getOnMicrosoftStore.
+  ///
+  /// In en, this message translates to:
+  /// **'Get on Microsoft Store'**
+  String get getOnMicrosoftStore;
+
+  /// No description provided for @downloadFromGitHub.
+  ///
+  /// In en, this message translates to:
+  /// **'Download from GitHub'**
+  String get downloadFromGitHub;
+
+  /// No description provided for @updateWindowsInstructions.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the Microsoft Store and update DAW Project Manager, or click the button below.'**
+  String get updateWindowsInstructions;
+
+  /// No description provided for @updateMacInstructions.
+  ///
+  /// In en, this message translates to:
+  /// **'Download the latest release from GitHub and replace the current app.'**
+  String get updateMacInstructions;
+
+  /// No description provided for @resetOnboarding.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset onboarding'**
+  String get resetOnboarding;
+
+  /// No description provided for @onboardingWelcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to DAW Project Manager'**
+  String get onboardingWelcomeTitle;
+
+  /// No description provided for @onboardingWelcomeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Organize all your music projects across every DAW in one place.'**
+  String get onboardingWelcomeBody;
+
+  /// No description provided for @onboardingLanguageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Your Language'**
+  String get onboardingLanguageTitle;
+
+  /// No description provided for @onboardingThemeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a Theme'**
+  String get onboardingThemeTitle;
+
+  /// No description provided for @onboardingFoldersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Project Folders'**
+  String get onboardingFoldersTitle;
+
+  /// No description provided for @onboardingFoldersBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Add the root folder where your DAW projects are stored.'**
+  String get onboardingFoldersBody;
+
+  /// No description provided for @onboardingDriveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Drive Sync'**
+  String get onboardingDriveTitle;
+
+  /// No description provided for @onboardingDriveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Optionally back up and sync project metadata to Google Drive.'**
+  String get onboardingDriveBody;
+
+  /// No description provided for @onboardingUpdatesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Checks'**
+  String get onboardingUpdatesTitle;
+
+  /// No description provided for @onboardingUpdatesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Get notified when a new version is available.'**
+  String get onboardingUpdatesBody;
+
+  /// No description provided for @onboardingDoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re All Set!'**
+  String get onboardingDoneTitle;
+
+  /// No description provided for @onboardingDoneBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Start exploring your projects.'**
+  String get onboardingDoneBody;
+
+  /// No description provided for @onboardingNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get onboardingNext;
+
+  /// No description provided for @onboardingBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get onboardingBack;
+
+  /// No description provided for @onboardingGetStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Started'**
+  String get onboardingGetStarted;
+
+  /// No description provided for @dawSession.
+  ///
+  /// In en, this message translates to:
+  /// **'DAW Session'**
+  String get dawSession;
+
+  /// No description provided for @clearDawSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear session'**
+  String get clearDawSession;
+
+  /// No description provided for @stop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get stop;
+
+  /// No description provided for @pause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get pause;
+
+  /// No description provided for @resume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get resume;
+
+  /// No description provided for @workTimerSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Work Session Reminders'**
+  String get workTimerSection;
+
+  /// No description provided for @workTimerSectionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Get notified while working on a subscribed project'**
+  String get workTimerSectionDesc;
+
+  /// No description provided for @workTimerEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable work session reminders'**
+  String get workTimerEnabled;
+
+  /// No description provided for @workTimerIntervalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Notify every'**
+  String get workTimerIntervalLabel;
+
+  /// No description provided for @minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'minutes'**
+  String get minutes;
+
+  /// No description provided for @workTimerNotifBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You have been working for {time}'**
+  String workTimerNotifBody(String time);
+
+  /// No description provided for @general.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get general;
+
+  /// No description provided for @expand.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand'**
+  String get expand;
+
+  /// No description provided for @collapse.
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse'**
+  String get collapse;
+
+  /// No description provided for @sessionMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Session mode'**
+  String get sessionMode;
+
+  /// No description provided for @sessionModeDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribe to a project before launching, to track work time and manage it from the toolbar'**
+  String get sessionModeDescription;
+
+  /// No description provided for @startSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Start session'**
+  String get startSession;
+
+  /// No description provided for @endSession.
+  ///
+  /// In en, this message translates to:
+  /// **'End session'**
+  String get endSession;
+
+  /// No description provided for @switchSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch session'**
+  String get switchSession;
+
+  /// No description provided for @switchSessionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop the current session and start a new one?'**
+  String get switchSessionBody;
+
+  /// No description provided for @switchSessionCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current: {project}'**
+  String switchSessionCurrent(String project);
+
+  /// No description provided for @switchSessionNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New: {project}'**
+  String switchSessionNew(String project);
+
+  /// No description provided for @sessionDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Session time'**
+  String get sessionDuration;
+
+  /// No description provided for @scanDepthLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan depth:'**
+  String get scanDepthLabel;
+
+  /// No description provided for @scanDepthAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All levels'**
+  String get scanDepthAll;
+
+  /// No description provided for @scanDepthOne.
+  ///
+  /// In en, this message translates to:
+  /// **'1 level'**
+  String get scanDepthOne;
+
+  /// No description provided for @scanDepthTwo.
+  ///
+  /// In en, this message translates to:
+  /// **'2 levels'**
+  String get scanDepthTwo;
+
+  /// No description provided for @scanDepthAllTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Recursively scans every subfolder. Best for simple structures; may be slow on large drives.'**
+  String get scanDepthAllTooltip;
+
+  /// No description provided for @scanDepthOneTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Scans only the immediate child folders of this root. Each subfolder becomes one project entry.'**
+  String get scanDepthOneTooltip;
+
+  /// No description provided for @scanDepthTwoTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Scans two levels deep. Direct subfolders and their children are shown as a grouped tree.'**
+  String get scanDepthTwoTooltip;
 }
 
 class _AppLocalizationsDelegate

@@ -2546,4 +2546,242 @@ class AppLocalizationsZh extends AppLocalizations {
   String playerCompletedTasks(int count) {
     return '已完成 $count 项';
   }
+
+  @override
+  String get playerPreviousTrack => '上一曲';
+
+  @override
+  String get playerNextTrack => '下一曲';
+
+  @override
+  String get playerOpenProject => '打开项目';
+
+  @override
+  String get volumeMute => '静音';
+
+  @override
+  String get volumeUnmute => '取消静音';
+
+  @override
+  String totalWorkTime(String time) {
+    return '总工作时间: $time';
+  }
+
+  @override
+  String sessionTime(String time) {
+    return '会话: $time';
+  }
+
+  @override
+  String get sessionHistory => '会话历史';
+
+  @override
+  String get noSessionsYet => '尚未记录任何会话';
+
+  @override
+  String get tabPosition => '标签位置';
+
+  @override
+  String get tabPositionTop => '顶部';
+
+  @override
+  String get tabPositionLeft => '左侧';
+
+  @override
+  String updateAvailableMessage(String version) {
+    return '版本 $version 已可用';
+  }
+
+  @override
+  String get dismiss => '关闭';
+
+  @override
+  String get checkForUpdates => '检查更新';
+
+  @override
+  String get checkForUpdatesDescription => '当有新版本时获得通知。';
+
+  @override
+  String get checkNow => '立即检查';
+
+  @override
+  String updateAvailable(String version) {
+    return '有可用更新：v$version';
+  }
+
+  @override
+  String get upToDate => '应用已是最新版本';
+
+  @override
+  String get updateAvailableTitle => '有可用更新';
+
+  @override
+  String updateAvailableVersion(String version) {
+    return '版本 $version 已就绪。';
+  }
+
+  @override
+  String updateCurrentVersion(String version) {
+    return '您当前使用的是 v$version。';
+  }
+
+  @override
+  String get viewUpdateDetails => '查看详情';
+
+  @override
+  String get getOnMicrosoftStore => '在 Microsoft Store 获取';
+
+  @override
+  String get downloadFromGitHub => '从 GitHub 下载';
+
+  @override
+  String get updateWindowsInstructions =>
+      '打开 Microsoft Store 更新 DAW Project Manager，或点击下方按钮。';
+
+  @override
+  String get updateMacInstructions => '从 GitHub 下载最新版本并替换当前应用。';
+
+  @override
+  String get resetOnboarding => '重置引导设置';
+
+  @override
+  String get onboardingWelcomeTitle => '欢迎使用 DAW Project Manager';
+
+  @override
+  String get onboardingWelcomeBody => '在一个地方管理您所有的音乐项目。';
+
+  @override
+  String get onboardingLanguageTitle => '选择语言';
+
+  @override
+  String get onboardingThemeTitle => '选择主题';
+
+  @override
+  String get onboardingFoldersTitle => '添加项目文件夹';
+
+  @override
+  String get onboardingFoldersBody => '添加存储 DAW 项目的根文件夹。';
+
+  @override
+  String get onboardingDriveTitle => 'Google Drive 同步';
+
+  @override
+  String get onboardingDriveBody => '将项目元数据备份并同步到 Google Drive。';
+
+  @override
+  String get onboardingUpdatesTitle => '更新检查';
+
+  @override
+  String get onboardingUpdatesBody => '当有新版本时获得通知。';
+
+  @override
+  String get onboardingDoneTitle => '一切就绪！';
+
+  @override
+  String get onboardingDoneBody => '开始探索您的项目。';
+
+  @override
+  String get onboardingNext => '下一步';
+
+  @override
+  String get onboardingBack => '返回';
+
+  @override
+  String get onboardingGetStarted => '开始使用';
+
+  @override
+  String get dawSession => 'DAW会话';
+
+  @override
+  String get clearDawSession => '清除会话';
+
+  @override
+  String get stop => '停止';
+
+  @override
+  String get pause => '暂停';
+
+  @override
+  String get resume => '继续';
+
+  @override
+  String get workTimerSection => '工作会话提醒';
+
+  @override
+  String get workTimerSectionDesc => '在订阅项目上工作时获取通知';
+
+  @override
+  String get workTimerEnabled => '启用工作会话提醒';
+
+  @override
+  String get workTimerIntervalLabel => '每隔通知';
+
+  @override
+  String get minutes => '分钟';
+
+  @override
+  String workTimerNotifBody(String time) {
+    return '您已工作 $time';
+  }
+
+  @override
+  String get general => '常规';
+
+  @override
+  String get expand => '展开';
+
+  @override
+  String get collapse => '折叠';
+
+  @override
+  String get sessionMode => '会话模式';
+
+  @override
+  String get sessionModeDescription => '启动前订阅项目，以跟踪工作时间并从工具栏管理';
+
+  @override
+  String get startSession => '开始会话';
+
+  @override
+  String get endSession => '结束会话';
+
+  @override
+  String get switchSession => '切换会话';
+
+  @override
+  String get switchSessionBody => '停止当前会话并开始新会话？';
+
+  @override
+  String switchSessionCurrent(String project) {
+    return '当前：$project';
+  }
+
+  @override
+  String switchSessionNew(String project) {
+    return '新建：$project';
+  }
+
+  @override
+  String get sessionDuration => '会话时长';
+
+  @override
+  String get scanDepthLabel => '扫描深度：';
+
+  @override
+  String get scanDepthAll => '全部层级';
+
+  @override
+  String get scanDepthOne => '1层';
+
+  @override
+  String get scanDepthTwo => '2层';
+
+  @override
+  String get scanDepthAllTooltip => '递归扫描所有子文件夹。适合简单结构；大型驱动器上可能较慢。';
+
+  @override
+  String get scanDepthOneTooltip => '仅扫描此根文件夹的直接子文件夹，每个子文件夹成为一个项目。';
+
+  @override
+  String get scanDepthTwoTooltip => '扫描两层深度。直接子文件夹及其子项以树形视图显示。';
 }

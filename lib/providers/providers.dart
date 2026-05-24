@@ -12,6 +12,7 @@ import 'package:path/path.dart' as p;
 import '../utils/app_paths.dart';
 import '../utils/mobile_utils.dart';
 
+import '../generated/l10n/app_localizations.dart';
 import '../models/music_project.dart';
 import '../services/audio_analysis_service.dart';
 import '../services/waveform_disk_cache.dart';
@@ -26,6 +27,7 @@ import '../repository/project_repository.dart';
 import '../utils/search_utils.dart';
 import '../repository/profile_repository.dart';
 import '../services/google_drive_sync_service.dart';
+import '../services/deadline_notification_service.dart';
 import '../models/auto_backup_interval.dart';
 
 // Profile Repository Provider
@@ -860,6 +862,99 @@ final uploadAutoPreviewSongsProvider =
     NotifierProvider<UploadAutoPreviewSongsNotifier, bool>(
         UploadAutoPreviewSongsNotifier.new);
 
+// ---------------------------------------------------------------------------
+// Update Check Setting
+// ---------------------------------------------------------------------------
+
+class CheckForUpdatesNotifier extends Notifier<bool> {
+  static const _key = 'checkForUpdates';
+
+  @override
+  bool build() {
+    SchedulerBinding.instance.addPostFrameCallback((_) => _load());
+    return false;
+  }
+
+  Future<void> _load() async {
+    try {
+      await ensureHiveInitialized();
+      final box = await Hive.openBox<String>('app_settings');
+      final saved = box.get(_key);
+      if (saved != null) state = saved == 'true';
+    } catch (_) {}
+  }
+
+  Future<void> toggle() async {
+    state = !state;
+    try {
+      await ensureHiveInitialized();
+      final box = await Hive.openBox<String>('app_settings');
+      await box.put(_key, state.toString());
+    } catch (_) {}
+  }
+}
+
+final checkForUpdatesProvider =
+    NotifierProvider<CheckForUpdatesNotifier, bool>(CheckForUpdatesNotifier.new);
+
+/// Holds the latest available version string when a newer release is found; null otherwise.
+class AvailableUpdateNotifier extends Notifier<String?> {
+  @override
+  String? build() => null;
+  void set(String? version) => state = version;
+}
+
+final availableUpdateProvider =
+    NotifierProvider<AvailableUpdateNotifier, String?>(AvailableUpdateNotifier.new);
+
+/// Tracks whether the first-run onboarding wizard has been completed.
+class OnboardingCompleteNotifier extends Notifier<bool> {
+  static const _key = 'onboardingComplete';
+
+  @override
+  bool build() {
+    try {
+      final box = Hive.box<String>('settings');
+      return box.get(_key) == 'true';
+    } catch (_) {
+      _loadAsync();
+      return true;
+    }
+  }
+
+  void _loadAsync() async {
+    final box = await Hive.openBox<String>('settings');
+    state = box.get(_key) == 'true';
+  }
+
+  Future<void> complete() async {
+    state = true;
+    final box = await Hive.openBox<String>('settings');
+    await box.put(_key, 'true');
+  }
+
+  Future<void> reset() async {
+    state = false;
+    final box = await Hive.openBox<String>('settings');
+    await box.put(_key, 'false');
+  }
+}
+
+final onboardingCompleteProvider =
+    NotifierProvider<OnboardingCompleteNotifier, bool>(OnboardingCompleteNotifier.new);
+
+/// Tracks the project most recently launched in a DAW, shown as a quick-access
+/// chip in the title bar.
+class ActiveProjectNotifier extends Notifier<MusicProject?> {
+  @override
+  MusicProject? build() => null;
+  void set(MusicProject project) => state = project;
+  void clear() => state = null;
+}
+
+final activeProjectProvider =
+    NotifierProvider<ActiveProjectNotifier, MusicProject?>(ActiveProjectNotifier.new);
+
 // Playlists Provider
 final playlistsProvider = StreamProvider<List<Playlist>>((ref) async* {
   final repo = await ref.watch(repositoryProvider.future);
@@ -1015,6 +1110,8 @@ class VisibleTabsNotifier extends Notifier<Set<AppTab>> {
 
   Future<void> setTabVisible(AppTab tab, bool visible) async {
     if (tab == AppTab.projects) return;
+    // Player tab is desktop-only; never allow it to be enabled on mobile.
+    if (tab == AppTab.player && MobileUtils.isMobile()) return;
     final updated = Set<AppTab>.from(state);
     if (visible) {
       updated.add(tab);
@@ -1039,6 +1136,38 @@ class VisibleTabsNotifier extends Notifier<Set<AppTab>> {
 
 final visibleTabsProvider = NotifierProvider<VisibleTabsNotifier, Set<AppTab>>(() {
   return VisibleTabsNotifier();
+});
+
+// ---------------------------------------------------------------------------
+// Tab Position (top vs left rail)
+// ---------------------------------------------------------------------------
+
+enum TabPosition { top, left }
+
+class TabPositionNotifier extends Notifier<TabPosition> {
+  static const _key = 'tabPosition';
+
+  @override
+  TabPosition build() {
+    _load();
+    return TabPosition.top;
+  }
+
+  void _load() async {
+    final box = await Hive.openBox<String>('settings');
+    final saved = box.get(_key);
+    if (saved == 'left') state = TabPosition.left;
+  }
+
+  void set(TabPosition pos) async {
+    state = pos;
+    final box = await Hive.openBox<String>('settings');
+    await box.put(_key, pos == TabPosition.left ? 'left' : 'top');
+  }
+}
+
+final tabPositionProvider = NotifierProvider<TabPositionNotifier, TabPosition>(() {
+  return TabPositionNotifier();
 });
 
 // ---------------------------------------------------------------------------
@@ -1321,11 +1450,15 @@ class DesktopPlayerRequest {
   final MusicProject project;
   final String resolvedPath;
   final int generation;
+  /// True when the track is playing as part of the music-player queue.
+  /// False for single-track previews (projects list, player bar quick-play).
+  final bool isQueuedPlayback;
 
   const DesktopPlayerRequest({
     required this.project,
     required this.resolvedPath,
     required this.generation,
+    this.isQueuedPlayback = false,
   });
 }
 
@@ -1333,12 +1466,13 @@ class DesktopPlayerNotifier extends Notifier<DesktopPlayerRequest?> {
   @override
   DesktopPlayerRequest? build() => null;
 
-  void play(MusicProject project, String resolvedPath) {
+  void play(MusicProject project, String resolvedPath, {bool isQueuedPlayback = false}) {
     final gen = (state?.generation ?? 0) + 1;
     state = DesktopPlayerRequest(
       project: project,
       resolvedPath: resolvedPath,
       generation: gen,
+      isQueuedPlayback: isQueuedPlayback,
     );
   }
 
@@ -1360,6 +1494,27 @@ class DesktopPlayerCompletedNotifier extends Notifier<int> {
 final desktopPlayerCompletedProvider =
     NotifierProvider<DesktopPlayerCompletedNotifier, int>(
         DesktopPlayerCompletedNotifier.new);
+
+// ─── Queue navigation (prev / next from bottom player bar) ────────────────────
+
+/// Callbacks registered by [MusicPlayerPage] so [_DesktopPlayerBar] can
+/// trigger previous/next track navigation without coupling the two widgets.
+class QueueNavigationNotifier extends Notifier<({void Function()? playNext, void Function()? playPrev})> {
+  @override
+  ({void Function()? playNext, void Function()? playPrev}) build() =>
+      (playNext: null, playPrev: null);
+
+  void register({required void Function() playNext, required void Function() playPrev}) {
+    state = (playNext: playNext, playPrev: playPrev);
+  }
+
+  void unregister() => state = (playNext: null, playPrev: null);
+}
+
+final queueNavigationProvider = NotifierProvider<
+    QueueNavigationNotifier,
+    ({void Function()? playNext, void Function()? playPrev})>(
+    QueueNavigationNotifier.new);
 
 // ─── Waveform peaks cache ─────────────────────────────────────────────────────
 
@@ -1398,3 +1553,240 @@ class WaveformCacheNotifier extends Notifier<Map<String, WaveformPeaks>> {
 final waveformCacheProvider =
     NotifierProvider<WaveformCacheNotifier, Map<String, WaveformPeaks>>(
         WaveformCacheNotifier.new);
+
+// ---------------------------------------------------------------------------
+// Session Mode (subscribe-before-launch vs direct launch)
+// ---------------------------------------------------------------------------
+
+class SessionModeNotifier extends Notifier<bool> {
+  static const _key = 'sessionMode';
+
+  @override
+  bool build() {
+    _load();
+    return false; // default: direct launch
+  }
+
+  Future<void> _load() async {
+    final box = await Hive.openBox<String>('settings');
+    final saved = box.get(_key);
+    if (saved != null) state = saved == 'true';
+  }
+
+  Future<void> set(bool value) async {
+    state = value;
+    final box = await Hive.openBox<String>('settings');
+    await box.put(_key, value.toString());
+  }
+
+  Future<void> toggle() async => set(!state);
+}
+
+final sessionModeProvider =
+    NotifierProvider<SessionModeNotifier, bool>(SessionModeNotifier.new);
+
+// ---------------------------------------------------------------------------
+// Work Timer Notification Settings
+// ---------------------------------------------------------------------------
+
+class WorkTimerNotifEnabledNotifier extends Notifier<bool> {
+  static const _key = 'workTimerNotifEnabled';
+
+  @override
+  bool build() {
+    _load();
+    return false;
+  }
+
+  Future<void> _load() async {
+    final box = await Hive.openBox<String>('settings');
+    final saved = box.get(_key);
+    if (saved != null) state = saved == 'true';
+  }
+
+  Future<void> set(bool value) async {
+    state = value;
+    final box = await Hive.openBox<String>('settings');
+    await box.put(_key, value.toString());
+  }
+}
+
+final workTimerNotifEnabledProvider =
+    NotifierProvider<WorkTimerNotifEnabledNotifier, bool>(
+        WorkTimerNotifEnabledNotifier.new);
+
+class WorkTimerNotifIntervalNotifier extends Notifier<int> {
+  // Stored and exposed in SECONDS. Default: 3600 (60 minutes).
+  // Legacy values ≤ 120 are treated as minutes and migrated on first load.
+  static const _key = 'workTimerNotifIntervalSecs';
+
+  @override
+  int build() {
+    _load();
+    return 3600;
+  }
+
+  Future<void> _load() async {
+    final box = await Hive.openBox<String>('settings');
+    // Try new seconds key first, then fall back to legacy minutes key.
+    final savedSecs = box.get(_key);
+    if (savedSecs != null) {
+      state = int.tryParse(savedSecs) ?? 3600;
+    } else {
+      final legacyMins = box.get('workTimerNotifInterval');
+      if (legacyMins != null) {
+        final mins = int.tryParse(legacyMins) ?? 60;
+        state = mins * 60;
+      }
+    }
+  }
+
+  Future<void> set(int seconds) async {
+    state = seconds;
+    final box = await Hive.openBox<String>('settings');
+    await box.put(_key, seconds.toString());
+  }
+}
+
+final workTimerNotifIntervalProvider =
+    NotifierProvider<WorkTimerNotifIntervalNotifier, int>(
+        WorkTimerNotifIntervalNotifier.new);
+
+// ---------------------------------------------------------------------------
+// Work Timer — tracks time on the subscribed project, fires notifications
+// ---------------------------------------------------------------------------
+
+class WorkTimerNotifier extends Notifier<int> {
+  // State = elapsed seconds of active work (0 when idle; frozen while paused).
+  Timer? _ticker;
+  DateTime? _startTime; // adjusted on resume to exclude paused durations
+  DateTime? _pausedAt;  // set when paused, null otherwise
+
+  @override
+  int build() {
+    ref.onDispose(() {
+      _ticker?.cancel();
+      _ticker = null;
+    });
+
+    ref.listen<MusicProject?>(activeProjectProvider, (prev, next) {
+      if (prev != null && _startTime != null) {
+        _saveSession(prev);
+      }
+      if (next != null && prev?.id != next.id) {
+        _start();
+      } else if (next == null) {
+        _stop();
+      }
+    });
+
+    // If a project is already subscribed when this provider is first read, start tracking.
+    if (ref.read(activeProjectProvider) != null) _start();
+
+    return 0;
+  }
+
+  void _start() {
+    _ticker?.cancel();
+    _startTime = DateTime.now();
+    _pausedAt = null;
+    ref.read(workTimerPausedProvider.notifier).set(false);
+    state = 0;
+    _ticker = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
+  }
+
+  void _stop() {
+    _ticker?.cancel();
+    _ticker = null;
+    _startTime = null;
+    _pausedAt = null;
+    ref.read(workTimerPausedProvider.notifier).set(false);
+    state = 0;
+  }
+
+  void pause() {
+    if (_startTime == null || _pausedAt != null) return;
+    // Freeze the elapsed display at the current second count.
+    state = DateTime.now().difference(_startTime!).inSeconds;
+    _pausedAt = DateTime.now();
+    _ticker?.cancel();
+    _ticker = null;
+    ref.read(workTimerPausedProvider.notifier).set(true);
+  }
+
+  void resume() {
+    if (_startTime == null || _pausedAt == null) return;
+    // Shift _startTime forward by the pause duration so elapsed seconds
+    // remain continuous across pause/resume cycles.
+    final pauseDuration = DateTime.now().difference(_pausedAt!);
+    _startTime = _startTime!.add(pauseDuration);
+    _pausedAt = null;
+    ref.read(workTimerPausedProvider.notifier).set(false);
+    _ticker = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
+  }
+
+  Future<void> _saveSession(MusicProject project) async {
+    final start = _startTime;
+    if (start == null) return;
+    // Use _pausedAt as the end time if paused; otherwise use now.
+    final end = _pausedAt ?? DateTime.now();
+    final elapsedSeconds = end.difference(start).inSeconds;
+    if (elapsedSeconds <= 0) return;
+    final record = SessionRecord(
+      startedAt: start,
+      endedAt: end,
+      durationSeconds: elapsedSeconds,
+    );
+    final repo = await ref.read(repositoryProvider.future);
+    final latest = repo.getById(project.id) ?? project;
+    final updated = latest.copyWith(
+      totalWorkSeconds: latest.totalWorkSeconds + elapsedSeconds,
+      sessions: [...latest.sessions, record],
+      updatedAt: DateTime.now(),
+    );
+    repo.updateProject(updated);
+  }
+
+  void _tick() {
+    if (_startTime == null) return;
+    final elapsed = DateTime.now().difference(_startTime!);
+    state = elapsed.inSeconds;
+
+    final enabled = ref.read(workTimerNotifEnabledProvider);
+    if (!enabled) return;
+
+    final intervalSeconds = ref.read(workTimerNotifIntervalProvider);
+    if (elapsed.inSeconds > 0 && elapsed.inSeconds % intervalSeconds == 0) {
+      final project = ref.read(activeProjectProvider);
+      if (project != null) {
+        final locale = ref.read(localeProvider);
+        final l10n = lookupAppLocalizations(locale);
+        final h = elapsed.inHours;
+        final m = elapsed.inMinutes.remainder(60);
+        final s = elapsed.inSeconds.remainder(60);
+        final timeStr = h > 0
+            ? (m > 0 ? '${h}h ${m}m' : '${h}h')
+            : m > 0
+                ? (s > 0 ? '${m}m ${s}s' : '${m}m')
+                : '${s}s';
+        DeadlineNotificationService().showWorkTimerNotification(
+          project.displayName,
+          l10n.workTimerNotifBody(timeStr),
+        );
+      }
+    }
+  }
+}
+
+final workTimerProvider =
+    NotifierProvider<WorkTimerNotifier, int>(WorkTimerNotifier.new);
+
+/// True while the work-timer is paused (ticker stopped, elapsed frozen).
+class WorkTimerPausedNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+  void set(bool value) => state = value;
+}
+
+final workTimerPausedProvider =
+    NotifierProvider<WorkTimerPausedNotifier, bool>(WorkTimerPausedNotifier.new);

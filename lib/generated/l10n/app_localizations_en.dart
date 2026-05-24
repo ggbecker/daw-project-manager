@@ -2626,4 +2626,254 @@ class AppLocalizationsEn extends AppLocalizations {
   String playerCompletedTasks(int count) {
     return '$count completed';
   }
+
+  @override
+  String get playerPreviousTrack => 'Previous track';
+
+  @override
+  String get playerNextTrack => 'Next track';
+
+  @override
+  String get playerOpenProject => 'Open project';
+
+  @override
+  String get volumeMute => 'Mute';
+
+  @override
+  String get volumeUnmute => 'Unmute';
+
+  @override
+  String totalWorkTime(String time) {
+    return 'Total work: $time';
+  }
+
+  @override
+  String sessionTime(String time) {
+    return 'Session: $time';
+  }
+
+  @override
+  String get sessionHistory => 'Session History';
+
+  @override
+  String get noSessionsYet => 'No sessions recorded yet';
+
+  @override
+  String get tabPosition => 'Tab position';
+
+  @override
+  String get tabPositionTop => 'Top';
+
+  @override
+  String get tabPositionLeft => 'Left';
+
+  @override
+  String updateAvailableMessage(String version) {
+    return 'Version $version is available';
+  }
+
+  @override
+  String get dismiss => 'Dismiss';
+
+  @override
+  String get checkForUpdates => 'Check for updates';
+
+  @override
+  String get checkForUpdatesDescription =>
+      'Get notified when a new version of the app is available.';
+
+  @override
+  String get checkNow => 'Check now';
+
+  @override
+  String updateAvailable(String version) {
+    return 'Update available: v$version';
+  }
+
+  @override
+  String get upToDate => 'App is up to date';
+
+  @override
+  String get updateAvailableTitle => 'Update Available';
+
+  @override
+  String updateAvailableVersion(String version) {
+    return 'A new version $version is ready.';
+  }
+
+  @override
+  String updateCurrentVersion(String version) {
+    return 'You are running v$version.';
+  }
+
+  @override
+  String get viewUpdateDetails => 'View Details';
+
+  @override
+  String get getOnMicrosoftStore => 'Get on Microsoft Store';
+
+  @override
+  String get downloadFromGitHub => 'Download from GitHub';
+
+  @override
+  String get updateWindowsInstructions =>
+      'Open the Microsoft Store and update DAW Project Manager, or click the button below.';
+
+  @override
+  String get updateMacInstructions =>
+      'Download the latest release from GitHub and replace the current app.';
+
+  @override
+  String get resetOnboarding => 'Reset onboarding';
+
+  @override
+  String get onboardingWelcomeTitle => 'Welcome to DAW Project Manager';
+
+  @override
+  String get onboardingWelcomeBody =>
+      'Organize all your music projects across every DAW in one place.';
+
+  @override
+  String get onboardingLanguageTitle => 'Choose Your Language';
+
+  @override
+  String get onboardingThemeTitle => 'Choose a Theme';
+
+  @override
+  String get onboardingFoldersTitle => 'Add Project Folders';
+
+  @override
+  String get onboardingFoldersBody =>
+      'Add the root folder where your DAW projects are stored.';
+
+  @override
+  String get onboardingDriveTitle => 'Google Drive Sync';
+
+  @override
+  String get onboardingDriveBody =>
+      'Optionally back up and sync project metadata to Google Drive.';
+
+  @override
+  String get onboardingUpdatesTitle => 'Update Checks';
+
+  @override
+  String get onboardingUpdatesBody =>
+      'Get notified when a new version is available.';
+
+  @override
+  String get onboardingDoneTitle => 'You\'re All Set!';
+
+  @override
+  String get onboardingDoneBody => 'Start exploring your projects.';
+
+  @override
+  String get onboardingNext => 'Next';
+
+  @override
+  String get onboardingBack => 'Back';
+
+  @override
+  String get onboardingGetStarted => 'Get Started';
+
+  @override
+  String get dawSession => 'DAW Session';
+
+  @override
+  String get clearDawSession => 'Clear session';
+
+  @override
+  String get stop => 'Stop';
+
+  @override
+  String get pause => 'Pause';
+
+  @override
+  String get resume => 'Resume';
+
+  @override
+  String get workTimerSection => 'Work Session Reminders';
+
+  @override
+  String get workTimerSectionDesc =>
+      'Get notified while working on a subscribed project';
+
+  @override
+  String get workTimerEnabled => 'Enable work session reminders';
+
+  @override
+  String get workTimerIntervalLabel => 'Notify every';
+
+  @override
+  String get minutes => 'minutes';
+
+  @override
+  String workTimerNotifBody(String time) {
+    return 'You have been working for $time';
+  }
+
+  @override
+  String get general => 'General';
+
+  @override
+  String get expand => 'Expand';
+
+  @override
+  String get collapse => 'Collapse';
+
+  @override
+  String get sessionMode => 'Session mode';
+
+  @override
+  String get sessionModeDescription =>
+      'Subscribe to a project before launching, to track work time and manage it from the toolbar';
+
+  @override
+  String get startSession => 'Start session';
+
+  @override
+  String get endSession => 'End session';
+
+  @override
+  String get switchSession => 'Switch session';
+
+  @override
+  String get switchSessionBody =>
+      'Stop the current session and start a new one?';
+
+  @override
+  String switchSessionCurrent(String project) {
+    return 'Current: $project';
+  }
+
+  @override
+  String switchSessionNew(String project) {
+    return 'New: $project';
+  }
+
+  @override
+  String get sessionDuration => 'Session time';
+
+  @override
+  String get scanDepthLabel => 'Scan depth:';
+
+  @override
+  String get scanDepthAll => 'All levels';
+
+  @override
+  String get scanDepthOne => '1 level';
+
+  @override
+  String get scanDepthTwo => '2 levels';
+
+  @override
+  String get scanDepthAllTooltip =>
+      'Recursively scans every subfolder. Best for simple structures; may be slow on large drives.';
+
+  @override
+  String get scanDepthOneTooltip =>
+      'Scans only the immediate child folders of this root. Each subfolder becomes one project entry.';
+
+  @override
+  String get scanDepthTwoTooltip =>
+      'Scans two levels deep. Direct subfolders and their children are shown as a grouped tree.';
 }

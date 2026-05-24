@@ -156,32 +156,45 @@ class AudioAnalysisService {
   }
 
   /// Extract min/max peak data for waveform visualization.
-  /// Works on WAV directly; for other formats, converts to a temp mono WAV first.
+  /// For MP3 files, uses a pure-Dart side-information parser (no ffmpeg required).
+  /// For other non-WAV formats, converts to a temp mono WAV via ffmpeg/afconvert.
   /// Returns null if the file cannot be parsed.
   static Future<WaveformPeaks?> extractWaveformPeaks(
     String filePath, {
     int targetFrames = 2000,
   }) async {
     final ext = filePath.toLowerCase().split('.').last;
-    String wavPath = filePath;
-    String? tmpPath;
 
-    if (ext != 'wav') {
-      final tmpDir = await getTemporaryDirectory();
-      tmpPath = '${tmpDir.path}/wfpk_${filePath.hashCode.abs()}.wav';
-      final ok = await writeMonoWavFile(filePath, tmpPath);
-      if (!ok) return null;
-      wavPath = tmpPath;
+    // Fast path: MP3 files are parsed directly from frame headers — no temp file,
+    // no external tools, works on every platform.
+    if (ext == 'mp3') {
+      try {
+        final peaks = await Isolate.run(
+            () => _extractMp3PeaksDirectIsolate(filePath, targetFrames));
+        if (peaks != null) return peaks;
+      } catch (_) {}
+      // Fall through to ffmpeg-based conversion if direct parsing failed.
     }
 
+    if (ext == 'wav') {
+      try {
+        return await Isolate.run(() => _extractPeaksIsolate(filePath, targetFrames));
+      } catch (_) {
+        return null;
+      }
+    }
+
+    // Non-WAV, non-MP3: convert via afconvert (macOS) or ffmpeg (Windows/Linux).
+    final tmpDir = await getTemporaryDirectory();
+    final tmpPath = '${tmpDir.path}/wfpk_${filePath.hashCode.abs()}.wav';
+    final ok = await writeMonoWavFile(filePath, tmpPath);
+    if (!ok) return null;
     try {
-      return await Isolate.run(() => _extractPeaksIsolate(wavPath, targetFrames));
+      return await Isolate.run(() => _extractPeaksIsolate(tmpPath, targetFrames));
     } catch (_) {
       return null;
     } finally {
-      if (tmpPath != null) {
-        try { File(tmpPath).deleteSync(); } catch (_) {}
-      }
+      try { File(tmpPath).deleteSync(); } catch (_) {}
     }
   }
 }
@@ -245,6 +258,165 @@ WaveformPeaks? _extractPeaksIsolate(String wavPath, int targetFrames) {
     maxValues: maxValues,
     sampleRate: info.sampleRate,
     durationSeconds: numSamples / info.sampleRate,
+  );
+}
+
+// ─── Pure-Dart MP3 peak extractor ────────────────────────────────────────────
+//
+// Reads the `global_gain` field from every MPEG Layer3 granule side-information
+// header.  global_gain controls the overall quantization step for a granule, so
+// it correlates well with the signal amplitude — enough for waveform display
+// without needing a full Huffman/MDCT decoder or any external tool.
+//
+// Bit offsets verified against ISO/IEC 11172-3 §2.4.3.3 and ISO/IEC 13818-3:
+//
+//   MPEG1 stereo (32-byte side info):
+//     9 main_data_begin + 3 private + 8 scfsi = 20 bits preamble
+//     granule_info = 59 bits each
+//     g0c0=41  g0c1=100  g1c0=159  g1c1=218
+//
+//   MPEG1 mono (17-byte side info):
+//     9 main_data_begin + 5 private + 4 scfsi = 18 bits preamble
+//     g0=39  g1=98
+//
+//   MPEG2/2.5 stereo (17-byte side info, 63-bit granule_info):
+//     8 main_data_begin + 2 private = 10 bits preamble
+//     c0=31  c1=94
+//
+//   MPEG2/2.5 mono (9-byte side info):
+//     8 main_data_begin + 1 private = 9 bits preamble
+//     c0=30
+
+/// Read [numBits] bits (MSB-first) from [bytes] starting at
+/// byte [byteOffset] + bit [bitOffset].
+int _readBits(Uint8List bytes, int byteOffset, int bitOffset, int numBits) {
+  int result = 0;
+  for (int b = 0; b < numBits; b++) {
+    final total = bitOffset + b;
+    final idx = byteOffset + (total >> 3);
+    if (idx >= bytes.length) break;
+    result = (result << 1) | ((bytes[idx] >> (7 - (total & 7))) & 1);
+  }
+  return result;
+}
+
+WaveformPeaks? _extractMp3PeaksDirectIsolate(String filePath, int targetFrames) {
+  final Uint8List bytes;
+  try {
+    bytes = File(filePath).readAsBytesSync();
+  } catch (_) {
+    return null;
+  }
+
+  int pos = 0;
+
+  // Skip ID3v2 tag (synchsafe size at bytes 6-9).
+  if (bytes.length > 10 &&
+      bytes[0] == 0x49 && bytes[1] == 0x44 && bytes[2] == 0x33) {
+    final id3Size = ((bytes[6] & 0x7F) << 21) | ((bytes[7] & 0x7F) << 14) |
+                    ((bytes[8] & 0x7F) << 7)  |  (bytes[9] & 0x7F);
+    pos = 10 + id3Size;
+  }
+
+  // One amplitude entry per granule (≈13 ms each at 44100 Hz).
+  final gains = <double>[];
+  int srDetected = 44100;
+  int totalSamples = 0;
+
+  const srTable = [
+    [44100, 48000, 32000], // MPEG 1
+    [22050, 24000, 16000], // MPEG 2
+    [11025, 12000,  8000], // MPEG 2.5
+  ];
+  const brV1L3 = [0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320];
+  const brV2L3 = [0,  8, 16, 24, 32, 40, 48, 56,  64,  80,  96, 112, 128, 144, 160];
+
+  while (pos + 4 <= bytes.length) {
+    // Sync word: 0xFF + top-3-bits of next byte all set.
+    if (bytes[pos] != 0xFF || (bytes[pos + 1] & 0xE0) != 0xE0) { pos++; continue; }
+
+    final h1 = bytes[pos + 1];
+    final h2 = bytes[pos + 2];
+    final h3 = bytes[pos + 3];
+
+    final mpegVerBits = (h1 >> 3) & 0x03; // 11=V1, 10=V2, 00=V2.5
+    final layer       = (h1 >> 1) & 0x03; // 01=L3
+
+    // Only MPEG Layer 3.
+    if (layer != 1) { pos++; continue; }
+
+    final bitrateIdx  = (h2 >> 4) & 0x0F;
+    final srIdx       = (h2 >> 2) & 0x03;
+    final padding     = (h2 >> 1) & 0x01;
+    final channelMode = (h3 >> 6) & 0x03; // 3 = mono
+
+    if (bitrateIdx == 0 || bitrateIdx == 0xF || srIdx == 3) { pos++; continue; }
+
+    final isV1    = mpegVerBits == 3;
+    final verIdx  = isV1 ? 0 : (mpegVerBits == 2 ? 1 : 2);
+    final isMono  = channelMode == 3;
+
+    final sr       = srTable[verIdx][srIdx];
+    final bitrate  = (isV1 ? brV1L3 : brV2L3)[bitrateIdx];
+    final frameBytes = (144 * bitrate * 1000 ~/ sr) + padding;
+
+    if (frameBytes < 10 || pos + frameBytes > bytes.length) { pos++; continue; }
+
+    srDetected = sr;
+
+    // Side information immediately follows the 4-byte header.
+    final sb = pos + 4;
+
+    if (isV1) {
+      // MPEG1: 2 granules per frame.  Extract global_gain for each granule,
+      // take the louder channel when stereo.
+      if (isMono) {
+        gains.add(max(_readBits(bytes, sb, 39, 8), _readBits(bytes, sb, 98, 8)).toDouble());
+      } else {
+        gains.add(max(_readBits(bytes, sb, 41, 8), _readBits(bytes, sb, 100, 8)).toDouble());
+        gains.add(max(_readBits(bytes, sb, 159, 8), _readBits(bytes, sb, 218, 8)).toDouble());
+      }
+      totalSamples += 1152; // 2 × 576
+    } else {
+      // MPEG2/2.5: 1 granule per frame.
+      if (isMono) {
+        gains.add(_readBits(bytes, sb, 30, 8).toDouble());
+      } else {
+        gains.add(max(_readBits(bytes, sb, 31, 8), _readBits(bytes, sb, 94, 8)).toDouble());
+      }
+      totalSamples += 576;
+    }
+
+    pos += frameBytes;
+  }
+
+  if (gains.isEmpty) return null;
+
+  // Normalise to 0..1 relative to the loudest granule in this file.
+  final maxGain = gains.reduce(max);
+  if (maxGain <= 0) return null;
+  final norm = gains.map((g) => (g / maxGain).clamp(0.0, 1.0)).toList();
+
+  // Subsample/bin into targetFrames, preserving the loudest value per bin.
+  final count = norm.length;
+  final minVals = List<double>.filled(targetFrames, 0.0);
+  final maxVals = List<double>.filled(targetFrames, 0.0);
+  for (int f = 0; f < targetFrames; f++) {
+    final s = f * count ~/ targetFrames;
+    final e = ((f + 1) * count ~/ targetFrames).clamp(s + 1, count);
+    double v = 0;
+    for (int k = s; k < e; k++) {
+      if (norm[k] > v) v = norm[k];
+    }
+    maxVals[f] = v;
+    minVals[f] = -v; // Symmetric envelope
+  }
+
+  return WaveformPeaks(
+    minValues: minVals,
+    maxValues: maxVals,
+    sampleRate: srDetected,
+    durationSeconds: totalSamples / srDetected,
   );
 }
 

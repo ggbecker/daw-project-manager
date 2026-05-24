@@ -4,12 +4,16 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'notification_settings_page.dart';
 import 'widgets/desktop_title_bar.dart';
+import 'widgets/update_available_dialog.dart';
+import 'dashboard_page.dart' show appVersion;
 
 import '../generated/l10n/app_localizations.dart';
 import '../providers/providers.dart';
 import '../repository/project_repository.dart';
 import '../services/scanner_service.dart';
+import '../services/update_check_service.dart';
 import '../utils/mobile_utils.dart';
 
 class ProjectFoldersSettingsPage extends ConsumerStatefulWidget {
@@ -22,6 +26,7 @@ class ProjectFoldersSettingsPage extends ConsumerStatefulWidget {
 
 class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSettingsPage> {
   bool _busy = false;
+  bool _checkingUpdate = false;
   late final TextEditingController _customMixdownCtrl;
 
   @override
@@ -295,9 +300,111 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
     final projectFolders = ref.watch(scanRootsProvider);
     final excludedFolders = ref.watch(ignoredPathsProvider);
 
+    final sessionMode = ref.watch(sessionModeProvider);
+    final checkUpdates = ref.watch(checkForUpdatesProvider);
+
     final listBody = ListView(
       padding: MobileUtils.getResponsivePadding(context),
       children: [
+        // General settings
+        Card(
+          clipBehavior: Clip.antiAlias,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.tune_outlined),
+                    const SizedBox(width: 10),
+                    Text(l10n.general, style: Theme.of(context).textTheme.titleMedium),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                SwitchListTile(
+                  value: sessionMode,
+                  onChanged: (v) => ref.read(sessionModeProvider.notifier).set(v),
+                  title: Text(l10n.sessionMode),
+                  subtitle: Text(l10n.sessionModeDescription,
+                      style: Theme.of(context).textTheme.bodySmall),
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                ),
+                SwitchListTile(
+                  value: checkUpdates,
+                  onChanged: (v) => ref.read(checkForUpdatesProvider.notifier).toggle(),
+                  title: Text(l10n.checkForUpdates),
+                  subtitle: Text(l10n.checkForUpdatesDescription,
+                      style: Theme.of(context).textTheme.bodySmall),
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: _checkingUpdate
+                        ? null
+                        : () async {
+                            setState(() => _checkingUpdate = true);
+                            final result = await UpdateCheckService.checkForUpdate(appVersion);
+                            if (!mounted) return;
+                            setState(() => _checkingUpdate = false);
+                            if (result != null) {
+                              ref.read(availableUpdateProvider.notifier).set(result);
+                              UpdateAvailableDialog.show(context, result);
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(l10n.upToDate)),
+                              );
+                            }
+                          },
+                    icon: _checkingUpdate
+                        ? const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.refresh, size: 16),
+                    label: Text(l10n.checkNow),
+                    style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                  ),
+                ),
+                const Divider(height: 20),
+                ListTile(
+                  leading: const Icon(Icons.notifications_outlined),
+                  title: Text(l10n.notificationSettings),
+                  subtitle: Text(l10n.workTimerSection,
+                      style: Theme.of(context).textTheme.bodySmall),
+                  trailing: const Icon(Icons.chevron_right),
+                  contentPadding: EdgeInsets.zero,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const NotificationSettingsPage(),
+                    ),
+                  ),
+                ),
+                const Divider(height: 20),
+                TextButton.icon(
+                  onPressed: () {
+                    ref.read(onboardingCompleteProvider.notifier).reset();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(l10n.resetOnboarding)),
+                    );
+                  },
+                  icon: Icon(Icons.restart_alt, size: 16,
+                      color: Theme.of(context).colorScheme.error),
+                  label: Text(l10n.resetOnboarding,
+                      style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                  style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
         // Project folders section
         Card(
           clipBehavior: Clip.antiAlias,
@@ -371,13 +478,31 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
                           padding: const EdgeInsets.only(left: 40, bottom: 8),
                           child: Row(
                             children: [
-                              Text('Scan depth:', style: Theme.of(context).textTheme.bodySmall),
+                              Text(l10n.scanDepthLabel, style: Theme.of(context).textTheme.bodySmall),
                               const SizedBox(width: 8),
                               SegmentedButton<int>(
-                                segments: const [
-                                  ButtonSegment(value: 0, label: Text('All levels')),
-                                  ButtonSegment(value: 1, label: Text('1 level')),
-                                  ButtonSegment(value: 2, label: Text('2 levels')),
+                                segments: [
+                                  ButtonSegment(
+                                    value: 0,
+                                    label: Tooltip(
+                                      message: l10n.scanDepthAllTooltip,
+                                      child: Text(l10n.scanDepthAll),
+                                    ),
+                                  ),
+                                  ButtonSegment(
+                                    value: 1,
+                                    label: Tooltip(
+                                      message: l10n.scanDepthOneTooltip,
+                                      child: Text(l10n.scanDepthOne),
+                                    ),
+                                  ),
+                                  ButtonSegment(
+                                    value: 2,
+                                    label: Tooltip(
+                                      message: l10n.scanDepthTwoTooltip,
+                                      child: Text(l10n.scanDepthTwo),
+                                    ),
+                                  ),
                                 ],
                                 selected: {f.scanDepth},
                                 showSelectedIcon: false,
@@ -731,7 +856,7 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
       ) : null,
       body: Column(
         children: [
-          DesktopTitleBar(title: l10n.roots, showBack: true),
+          DesktopTitleBar(title: l10n.settings, showBack: true),
           Expanded(child: listBody),
         ],
       ),

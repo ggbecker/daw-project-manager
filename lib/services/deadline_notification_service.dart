@@ -18,6 +18,96 @@ class DeadlineNotificationService {
   final FlutterLocalNotificationsPlugin _notifications = FlutterLocalNotificationsPlugin();
   Box<NotificationPreferences>? _preferencesBox;
   bool _isInitialized = false;
+  bool _isDesktopInitialized = false;
+
+  static const _workTimerNotifId = 9999;
+
+  /// Writes the AUMID entry into the Windows registry so toast notifications
+  /// show the app icon in the notification header row.
+  /// Fire-and-forget — failures are silently swallowed.
+  void _registerWindowsAumid() {
+    try {
+      final exeDir = File(Platform.resolvedExecutable).parent.path;
+      // Use forward slashes — Windows accepts them in registry string values.
+      final iconPath = '$exeDir/data/flutter_assets/app_icon.png';
+      const key =
+          r'HKCU\Software\Classes\AppUserModelId\BandPassRecords.DAWProjectManager';
+      Process.run('reg', ['add', key, '/v', 'DisplayName', '/t', 'REG_SZ', '/d', 'DAW Project Manager', '/f']);
+      Process.run('reg', ['add', key, '/v', 'IconUri',     '/t', 'REG_SZ', '/d', iconPath, '/f']);
+    } catch (_) {}
+  }
+
+  /// Initialize notifications on desktop (Windows/macOS/Linux).
+  /// Safe to call multiple times — no-ops after first success.
+  Future<void> initializeDesktop() async {
+    if (_isDesktopInitialized || Platform.isAndroid || Platform.isIOS) return;
+    try {
+      if (Platform.isWindows) _registerWindowsAumid();
+
+      const darwinSettings = DarwinInitializationSettings(
+        requestAlertPermission: false,
+        requestBadgePermission: false,
+        requestSoundPermission: false,
+      );
+      const windowsSettings = WindowsInitializationSettings(
+        appName: 'DAW Project Manager',
+        appUserModelId: 'BandPassRecords.DAWProjectManager',
+        guid: 'a3c9f2e1-4b87-4d6a-9e05-2c1d8f3b7a94',
+      );
+      const linuxSettings = LinuxInitializationSettings(
+        defaultActionName: 'Open',
+      );
+      const initSettings = InitializationSettings(
+        macOS: darwinSettings,
+        linux: linuxSettings,
+        windows: windowsSettings,
+      );
+      await _notifications.initialize(settings: initSettings);
+      _isDesktopInitialized = true;
+    } catch (e) {
+      if (kDebugMode) print('[DeadlineNotification] Desktop init failed: $e');
+    }
+  }
+
+  /// Show a work-session reminder notification on any platform.
+  /// [body] is the pre-localised notification body string.
+  Future<void> showWorkTimerNotification(String projectName, String body) async {
+    if (!Platform.isAndroid && !_isDesktopInitialized) {
+      await initializeDesktop();
+    }
+    try {
+      const androidDetails = AndroidNotificationDetails(
+        'work_timer',
+        'Work Timer',
+        channelDescription: 'Work session time reminders',
+        importance: Importance.defaultImportance,
+        priority: Priority.defaultPriority,
+        autoCancel: true,
+      );
+      const darwinDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: false,
+        presentSound: false,
+      );
+      // No custom image — the header icon comes from the AUMID registry entry
+      // registered in _registerWindowsAumid() at startup.
+      const windowsDetails = WindowsNotificationDetails();
+      final notifDetails = NotificationDetails(
+        android: androidDetails,
+        macOS: darwinDetails,
+        iOS: darwinDetails,
+        windows: windowsDetails,
+      );
+      await _notifications.show(
+        id: _workTimerNotifId,
+        title: projectName,
+        body: body,
+        notificationDetails: notifDetails,
+      );
+    } catch (e) {
+      if (kDebugMode) print('[DeadlineNotification] Work timer notification failed: $e');
+    }
+  }
 
   /// Callback for when notification is tapped
   Function(String projectId)? _onNotificationTapCallback;

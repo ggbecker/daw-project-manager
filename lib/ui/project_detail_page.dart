@@ -56,6 +56,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
   String? _lastSavedKey;
   String? _lastSavedNotes;
   String? _selectedPhase;
+
   bool _hasInitializedPhase = false; // Track if we've initialized the phase
   bool _extractingMetadata = false; // Track metadata extraction state
 
@@ -199,7 +200,6 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
     _bpmFocusNode = FocusNode();
     _keyFocusNode = FocusNode();
     _notesFocusNode = FocusNode();
-    // Initialize with default phase - will be set in build method
   }
 
   @override
@@ -207,7 +207,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
     _nameCtrl.dispose();
     _bpmCtrl.dispose();
     _keyCtrl.dispose();
-    _notesCtrl.dispose(); // DISPOSE
+    _notesCtrl.dispose();
     _nameFocusNode.dispose();
     _bpmFocusNode.dispose();
     _keyFocusNode.dispose();
@@ -439,7 +439,6 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
         
         // Use the current project instead of the passed one
         final updatedProject = currentProject;
-        
 
         // Sincroniza controllers com os dados do projeto
         // Só atualiza se o campo não estiver com foco E se o texto não foi modificado pelo usuário
@@ -527,6 +526,8 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                   dateFormat: dateFormat,
                   formatDuration: _formatDuration,
                   formatCompletionDuration: _formatCompletionDuration,
+                  isSessionActive: ref.watch(activeProjectProvider)?.id == widget.projectId,
+                  liveSessionSeconds: ref.watch(workTimerProvider),
                 ),
                 _ProjectDetailActionBar(
                   project: updatedProject,
@@ -1027,6 +1028,8 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                             ),
 
                             const SizedBox(height: 24),
+                            _SessionHistorySection(sessions: updatedProject.sessions),
+                            const SizedBox(height: 24),
                             _ProjectStatsButton(projectId: updatedProject.id),
                             const SizedBox(height: 16),
                         ],
@@ -1079,6 +1082,8 @@ class _ProjectDetailHeader extends StatelessWidget {
   final DateFormat dateFormat;
   final String Function(Duration) formatDuration;
   final String? Function(Duration?) formatCompletionDuration;
+  final bool isSessionActive;
+  final int liveSessionSeconds;
 
   const _ProjectDetailHeader({
     required this.project,
@@ -1086,7 +1091,24 @@ class _ProjectDetailHeader extends StatelessWidget {
     required this.dateFormat,
     required this.formatDuration,
     required this.formatCompletionDuration,
+    required this.isSessionActive,
+    required this.liveSessionSeconds,
   });
+
+  String _formatTotalWork(int seconds) {
+    final h = seconds ~/ 3600;
+    final m = (seconds % 3600) ~/ 60;
+    if (h > 0) return '${h}h ${m}m';
+    if (m > 0) return '${m}m';
+    return '${seconds}s';
+  }
+
+  String _formatLiveSession(int seconds) {
+    final h = seconds ~/ 3600;
+    final m = ((seconds % 3600) ~/ 60).toString().padLeft(2, '0');
+    final s = (seconds % 60).toString().padLeft(2, '0');
+    return h > 0 ? '$h:$m:$s' : '$m:$s';
+  }
 
   String _relativeDate(BuildContext context, DateTime date) {
     final l10n = AppLocalizations.of(context)!;
@@ -1194,6 +1216,17 @@ class _ProjectDetailHeader extends StatelessWidget {
                 _InfoChip(
                   icon: Icons.calendar_today_outlined,
                   label: l10n.createdDate(_relativeDate(context, project.fileCreatedAt!)),
+                ),
+              if (project.totalWorkSeconds > 0)
+                _InfoChip(
+                  icon: Icons.work_history,
+                  label: l10n.totalWorkTime(_formatTotalWork(project.totalWorkSeconds)),
+                ),
+              if (isSessionActive)
+                _InfoChip(
+                  icon: Icons.timelapse,
+                  label: l10n.sessionTime(_formatLiveSession(liveSessionSeconds)),
+                  color: Colors.green.shade400,
                 ),
             ],
           ),
@@ -1345,6 +1378,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
   Duration _position = Duration.zero;
   bool _isDraggingOver = false;
   double _volume = 1.0;
+  double _preMuteVolume = 1.0;
 
   // Mono
   bool _isMono = false;
@@ -1749,13 +1783,6 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
     }
   }
 
-  Future<void> _stop() async {
-    await _audioPlayer.stop();
-    setState(() {
-      _position = Duration.zero;
-    });
-  }
-
   Future<void> _seek(int seconds) async {
     final target = _position + Duration(seconds: seconds);
     final clamped = target.isNegative
@@ -2116,9 +2143,10 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
 
   String _formatDuration(Duration duration) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final hours = duration.inHours;
     final minutes = twoDigits(duration.inMinutes.remainder(60));
     final seconds = twoDigits(duration.inSeconds.remainder(60));
-    return '$minutes:$seconds';
+    return hours > 0 ? '${twoDigits(hours)}:$minutes:$seconds' : '$minutes:$seconds';
   }
 
   bool _isValidAudioFile(String filePath) {
@@ -2378,13 +2406,13 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                                 ),
                                 IconButton(
                                   icon: Icon(
-                                    _isPlaying ? Icons.pause : Icons.play_arrow,
+                                    _isPlaying ? Icons.pause_circle : Icons.play_circle,
                                   ),
                                   onPressed: () {
                                     _focusNode.requestFocus();
                                     _togglePlayPause();
                                   },
-                                  iconSize: 32,
+                                  iconSize: 34,
                                   color: _autoDetectedPath != null &&
                                           widget.project.previewSongPath
                                                   ?.isNotEmpty !=
@@ -2393,24 +2421,30 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                                       : null,
                                 ),
                                 IconButton(
-                                  icon: const Icon(Icons.stop),
-                                  onPressed: _isPlaying || _position > Duration.zero
-                                      ? _stop
-                                      : null,
-                                ),
-                                IconButton(
                                   icon: const Icon(Icons.forward_5),
                                   tooltip: Platform.isMacOS ? '→ +5s  •  ⌘+→ +30s' : '→ +5s  •  Ctrl+→ +30s',
                                   onPressed: () => _seek(5),
                                 ),
-                                const SizedBox(width: 8),
-                                Icon(
-                                  _volume == 0 ? Icons.volume_off : (_volume < 0.5 ? Icons.volume_down : Icons.volume_up),
-                                  size: 20,
+                                IconButton(
+                                  icon: Icon(
+                                    _volume == 0 ? Icons.volume_off : (_volume < 0.5 ? Icons.volume_down : Icons.volume_up),
+                                    size: 20,
+                                  ),
+                                  onPressed: () async {
+                                    if (_volume > 0) {
+                                      setState(() { _preMuteVolume = _volume; _volume = 0; });
+                                      await _audioPlayer.setVolume(0);
+                                    } else {
+                                      final restore = _preMuteVolume > 0 ? _preMuteVolume : 1.0;
+                                      setState(() { _volume = restore; });
+                                      await _audioPlayer.setVolume(restore);
+                                    }
+                                  },
+                                  tooltip: _volume == 0 ? AppLocalizations.of(context)!.volumeUnmute : AppLocalizations.of(context)!.volumeMute,
                                   color: Theme.of(context).textTheme.bodySmall?.color,
                                 ),
                                 SizedBox(
-                                  width: 80,
+                                  width: 120,
                                   child: Slider(
                                     value: _volume,
                                     min: 0.0,
@@ -2419,6 +2453,14 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                                       setState(() { _volume = value; });
                                       await _audioPlayer.setVolume(value);
                                     },
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '${_formatDuration(_position)} / ${_formatDuration(_duration)}',
+                                  style: TextStyle(
+                                    color: Theme.of(context).textTheme.bodySmall?.color,
+                                    fontSize: 12,
                                   ),
                                 ),
                               ],
@@ -2433,25 +2475,6 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                               onSeek: (p) => _audioPlayer.seek(Duration(
                                 milliseconds: (p * _duration.inMilliseconds).round(),
                               )),
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  _formatDuration(_position),
-                                  style: TextStyle(
-                                    color: Theme.of(context).textTheme.bodySmall?.color,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                                Text(
-                                  _formatDuration(_duration),
-                                  style: TextStyle(
-                                    color: Theme.of(context).textTheme.bodySmall?.color,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
                             ),
                           ],
                         ),
@@ -2782,5 +2805,88 @@ class _RenameProjectDialogState extends State<_RenameProjectDialog> {
       newName: _ctrl.text.trim(),
       renameFolder: widget.canRenameFolder && _renameFolder,
     ));
+  }
+}
+
+// ─── Session History Section ──────────────────────────────────────────────────
+
+class _SessionHistorySection extends StatelessWidget {
+  final List<SessionRecord> sessions;
+
+  const _SessionHistorySection({required this.sessions});
+
+  String _fmtDuration(int seconds) {
+    final h = seconds ~/ 3600;
+    final m = (seconds % 3600) ~/ 60;
+    final s = seconds % 60;
+    if (h > 0) return '${h}h ${m}m';
+    if (m > 0) return '${m}m ${s}s';
+    return '${s}s';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final sorted = [...sessions]
+      ..sort((a, b) => b.startedAt.compareTo(a.startedAt));
+    final dateFmt = DateFormat('MMM d, yyyy');
+    final timeFmt = DateFormat('HH:mm');
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.work_history_outlined, size: 16,
+                color: theme.colorScheme.primary),
+            const SizedBox(width: 6),
+            Text(
+              l10n.sessionHistory,
+              style: theme.textTheme.titleSmall
+                  ?.copyWith(fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        if (sessions.isEmpty)
+          Text(
+            l10n.noSessionsYet,
+            style: theme.textTheme.bodySmall
+                ?.copyWith(color: theme.disabledColor),
+          )
+        else
+          ...sorted.map((s) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 3),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 5,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.6),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '${dateFmt.format(s.startedAt)}  '
+                        '${timeFmt.format(s.startedAt)}–${timeFmt.format(s.endedAt)}',
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ),
+                    Text(
+                      _fmtDuration(s.durationSeconds),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              )),
+      ],
+    );
   }
 }

@@ -4416,6 +4416,7 @@ class GoogleDriveSyncService {
       'fileCreatedAt': project.fileCreatedAt?.toIso8601String(),
       'statusChangedAt': project.statusChangedAt?.toIso8601String(),
       'deadline': project.deadline?.toIso8601String(),
+      'totalWorkSeconds': project.totalWorkSeconds,
     };
   }
 
@@ -4456,6 +4457,7 @@ class GoogleDriveSyncService {
       deadline: data['deadline'] != null
           ? DateTime.parse(data['deadline'] as String)
           : null,
+      totalWorkSeconds: data['totalWorkSeconds'] as int? ?? 0,
     );
   }
 

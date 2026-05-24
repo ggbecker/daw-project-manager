@@ -1,11 +1,12 @@
 import 'dart:async';
+import 'dart:math' show sqrt;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show LogicalKeyboardKey;
+import 'package:flutter/services.dart' show LogicalKeyboardKey, MethodChannel;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'generated/l10n/app_localizations.dart';
-import 'dart:io' show Platform;
+import 'dart:io' show Platform, ServerSocket, InternetAddress, SocketException, File, Directory, exit;
 import 'package:window_manager/window_manager.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 
@@ -16,12 +17,15 @@ import 'services/scanner_service.dart';
 import 'services/deadline_notification_service.dart';
 import 'services/notification_background_service.dart';
 import 'services/google_drive_sync_service.dart';
+import 'services/update_check_service.dart';
 import 'models/auto_backup_interval.dart';
 import 'utils/app_paths.dart';
 
 import 'ui/dashboard_page.dart';
+import 'ui/onboarding_wizard_page.dart';
 import 'ui/project_detail_page.dart';
 import 'ui/widgets/macos_menu_bar.dart';
+import 'ui/widgets/update_available_dialog.dart';
 import 'providers/theme_provider.dart';
 import 'utils/route_observer.dart';
 
@@ -30,6 +34,30 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 // Auto-backup state (top-level so it persists for the app lifetime)
 bool _autoBackupRunning = false;
+
+// Keeps the single-instance socket alive for the app's lifetime.
+// ignore: unused_element
+ServerSocket? _singleInstanceSocket;
+
+/// Reads the update-check preference directly from Hive (bypassing the provider
+/// which defers its Hive load to after the first frame) and, if enabled, checks
+/// for a newer release in the background.
+Future<void> _runStartupUpdateCheck(ProviderContainer container) async {
+  try {
+    final box = await Hive.openBox<String>('app_settings');
+    if (box.get('checkForUpdates') != 'true') return;
+    const current = String.fromEnvironment('APP_VERSION', defaultValue: '0.0.0');
+    final newer = await UpdateCheckService.checkForUpdate(current);
+    if (newer != null) {
+      container.read(availableUpdateProvider.notifier).set(newer);
+      // Show dialog once the first frame has rendered (navigator is ready).
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final ctx = navigatorKey.currentContext;
+        if (ctx != null) UpdateAvailableDialog.show(ctx, newer);
+      });
+    }
+  } catch (_) {}
+}
 
 void _startAutoBackupTimer(
   ProviderContainer container,
@@ -152,8 +180,30 @@ Future<void> _runInitialScan(ProjectRepository repo, ProviderContainer container
 void main() async {
   // 1. Inicialização do Flutter
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // 2. Initialize notification services (Android only)
+
+  // 1b. Single-instance guard (desktop only)
+  if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
+    try {
+      _singleInstanceSocket = await ServerSocket.bind(InternetAddress.loopbackIPv4, 57321);
+    } on SocketException {
+      // Port is already bound — another instance is running. Exit silently.
+      exit(0);
+    }
+  }
+
+  // 1c. Generate taskbar overlay icons (Windows only)
+  if (!kIsWeb && Platform.isWindows) {
+    await _initTaskbarOverlayIcons();
+  }
+
+  // 2. Initialize notification services
+  if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
+    try {
+      await DeadlineNotificationService().initializeDesktop();
+    } catch (e) {
+      if (kDebugMode) print('Desktop notification init failed: $e');
+    }
+  }
   if (!kIsWeb && Platform.isAndroid) {
     try {
       final notificationService = DeadlineNotificationService();
@@ -197,6 +247,10 @@ void main() async {
     });
   }
   
+  // Pre-open the settings box so providers can read it synchronously on first build.
+  await ensureHiveInitialized();
+  await Hive.openBox<String>('settings');
+
   // NOVO: 4. Configuração do Riverpod e Auto-Scan
   final container = ProviderContainer();
   try {
@@ -239,6 +293,14 @@ void main() async {
     }
     _startAutoBackupTimer(container, autoBackupService);
 
+    // 4f. Bootstrap work timer (starts listening to activeProjectProvider).
+    container.read(workTimerProvider);
+
+    // 4g. Check for updates in background (desktop only, if enabled by user)
+    if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
+      _runStartupUpdateCheck(container);
+    }
+
   } catch (e) {
     // Mark as complete even on error
     container.read(initialScanStateProvider.notifier).complete();
@@ -253,6 +315,90 @@ void main() async {
       child: const DawProjectManagerApp(),
     ),
   );
+}
+
+// Windows taskbar overlay icon support — calls the native windows_taskbar plugin
+// via its method channel without using the Dart wrapper (avoids the asset-path assertion).
+const _taskbarChannel = MethodChannel('com.alexmercerind/windows_taskbar');
+final _taskbarIconPaths = <String, String>{};
+
+/// Generates a minimal 16×16 32bpp ICO from the given BGRA pixel array.
+Uint8List _buildIco(Uint8List pix) {
+  const int sz = 16;
+  const int andRowBytes = 4;
+  const int imgDataSize = sz * sz * 4 + sz * andRowBytes;
+  final bd = ByteData(6 + 16 + 40 + imgDataSize);
+  int p = 0;
+  bd.setUint16(p, 0, Endian.little); p += 2;
+  bd.setUint16(p, 1, Endian.little); p += 2;
+  bd.setUint16(p, 1, Endian.little); p += 2;
+  bd.setUint8(p++, sz); bd.setUint8(p++, sz);
+  bd.setUint8(p++, 0); bd.setUint8(p++, 0);
+  bd.setUint16(p, 1, Endian.little); p += 2;
+  bd.setUint16(p, 32, Endian.little); p += 2;
+  bd.setUint32(p, 40 + imgDataSize, Endian.little); p += 4;
+  bd.setUint32(p, 22, Endian.little); p += 4;
+  bd.setUint32(p, 40, Endian.little); p += 4;
+  bd.setInt32(p, sz, Endian.little); p += 4;
+  bd.setInt32(p, sz * 2, Endian.little); p += 4;
+  bd.setUint16(p, 1, Endian.little); p += 2;
+  bd.setUint16(p, 32, Endian.little); p += 2;
+  for (int k = 0; k < 6; k++) { bd.setUint32(p, 0, Endian.little); p += 4; }
+  bd.buffer.asUint8List(p, sz * sz * 4).setAll(0, pix);
+  return bd.buffer.asUint8List();
+}
+
+/// Solid anti-aliased circle of the given RGB color — minimalist status dot.
+Uint8List _makeCircleIco(int r, int g, int b) {
+  const int sz = 16;
+  final pix = Uint8List(sz * sz * 4);
+  const double cx = 7.5, cy = 7.5, radius = 7.0;
+  for (int row = 0; row < sz; row++) {
+    for (int col = 0; col < sz; col++) {
+      final d = sqrt((col - cx) * (col - cx) + (row - cy) * (row - cy));
+      final a = d <= radius - 1.0
+          ? 255
+          : d <= radius
+              ? ((radius - d) * 255).round().clamp(0, 255)
+              : 0;
+      final i = ((sz - 1 - row) * sz + col) * 4; // bottom-up DIB order
+      pix[i] = b; pix[i + 1] = g; pix[i + 2] = r; pix[i + 3] = a;
+    }
+  }
+  return _buildIco(pix);
+}
+
+/// Writes the two overlay ICO files to the system temp dir at startup.
+Future<void> _initTaskbarOverlayIcons() async {
+  try {
+    final tmp = Directory.systemTemp.path;
+    final playingBytes = _makeCircleIco(0x22, 0xC5, 0x5E); // #22C55E green
+    final pausedBytes  = _makeCircleIco(0xFB, 0xBF, 0x24); // #FBBF24 amber
+    final playingPath = '$tmp\\daw_pm_session_playing.ico';
+    final pausedPath  = '$tmp\\daw_pm_session_paused.ico';
+    await File(playingPath).writeAsBytes(playingBytes);
+    await File(pausedPath).writeAsBytes(pausedBytes);
+    _taskbarIconPaths['playing'] = playingPath;
+    _taskbarIconPaths['paused']  = pausedPath;
+  } catch (_) {}
+}
+
+/// Updates the Windows taskbar overlay icon to reflect session state.
+void _updateTaskbarStatus({required bool hasSession, required bool isPaused}) {
+  if (kIsWeb || !Platform.isWindows) return;
+  try {
+    if (!hasSession) {
+      _taskbarChannel.invokeMethod('ResetOverlayIcon', <String, Object?>{});
+    } else {
+      final path = _taskbarIconPaths[isPaused ? 'paused' : 'playing'];
+      if (path != null) {
+        _taskbarChannel.invokeMethod('SetOverlayIcon', <String, Object?>{
+          'icon': path,
+          'tooltip': isPaused ? 'Session Paused' : 'Session Active',
+        });
+      }
+    }
+  } catch (_) {}
 }
 
 class DawProjectManagerApp extends ConsumerStatefulWidget {
@@ -337,6 +483,29 @@ class _DawProjectManagerAppState extends ConsumerState<DawProjectManagerApp> wit
       });
     }
 
+    // Taskbar badges (Windows only)
+    if (!kIsWeb && Platform.isWindows) {
+      // Overlay icon: reflects session active/paused state
+      ref.listen(activeProjectProvider, (_, project) {
+        final isPaused = ref.read(workTimerPausedProvider);
+        _updateTaskbarStatus(hasSession: project != null, isPaused: isPaused);
+      });
+      ref.listen(workTimerPausedProvider, (_, isPaused) {
+        final project = ref.read(activeProjectProvider);
+        _updateTaskbarStatus(hasSession: project != null, isPaused: isPaused);
+      });
+      // Progress bar: indeterminate while scanning, cleared when done
+      ref.listen(initialScanStateProvider, (_, isScanning) {
+        try {
+          if (isScanning) {
+            _taskbarChannel.invokeMethod('SetProgressMode', <String, Object?>{'mode': 0x1}); // indeterminate
+          } else {
+            _taskbarChannel.invokeMethod('SetProgressMode', <String, Object?>{'mode': 0x0}); // noProgress
+          }
+        } catch (_) {}
+      });
+    }
+
     return MaterialApp(
       navigatorKey: navigatorKey,
       title: 'DAW Project Manager',
@@ -381,7 +550,9 @@ class _DawProjectManagerAppState extends ConsumerState<DawProjectManagerApp> wit
         ),
       ),
       navigatorObservers: [appRouteObserver],
-      home: const DashboardPage(),
+      home: ref.watch(onboardingCompleteProvider)
+          ? const DashboardPage()
+          : const OnboardingWizardPage(),
     );
   }
 }
