@@ -2734,6 +2734,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get collapse => '折叠';
 
   @override
+  String get lastModifiedColors => 'Last Modified date colors';
+
+  @override
+  String get lastModifiedColorsDescription =>
+      'Colors the Last Modified date based on age and status. Green = Finished. Older dates fade from yellow to red — stronger red means the project hasn\'t been touched in longer.';
+
+  @override
   String get sessionMode => '会话模式';
 
   @override
@@ -2765,23 +2772,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sessionDuration => '会话时长';
 
   @override
-  String get scanDepthLabel => '扫描深度：';
+  String get scanModeLabel => '扫描模式：';
 
   @override
-  String get scanDepthAll => '全部层级';
+  String get scanModeSectionTitle => 'Scan Mode';
 
   @override
-  String get scanDepthOne => '1层';
+  String get scanModeSectionDescription =>
+      'Controls how projects in each folder are displayed in the table — as a plain flat list or grouped by subfolder.';
 
   @override
-  String get scanDepthTwo => '2层';
+  String get scanModeFlat => '平铺';
 
   @override
-  String get scanDepthAllTooltip => '递归扫描所有子文件夹。适合简单结构；大型驱动器上可能较慢。';
+  String get scanModeSmartFolder => '智能文件夹';
 
   @override
-  String get scanDepthOneTooltip => '仅扫描此根文件夹的直接子文件夹，每个子文件夹成为一个项目。';
+  String get scanModeFlatDescription => '将所有项目显示为平铺列表。简单快速。';
 
   @override
-  String get scanDepthTwoTooltip => '扫描两层深度。直接子文件夹及其子项以树形视图显示。';
+  String get scanModeSmartFolderDescription => '当文件夹包含多个项目时，按文件夹分组显示。';
+
+  @override
+  String get skip => '跳过';
 }

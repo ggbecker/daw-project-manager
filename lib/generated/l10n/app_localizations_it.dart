@@ -2829,6 +2829,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get collapse => 'Comprimi';
 
   @override
+  String get lastModifiedColors => 'Last Modified date colors';
+
+  @override
+  String get lastModifiedColorsDescription =>
+      'Colors the Last Modified date based on age and status. Green = Finished. Older dates fade from yellow to red — stronger red means the project hasn\'t been touched in longer.';
+
+  @override
   String get sessionMode => 'Modalità sessione';
 
   @override
@@ -2862,26 +2869,29 @@ class AppLocalizationsIt extends AppLocalizations {
   String get sessionDuration => 'Durata sessione';
 
   @override
-  String get scanDepthLabel => 'Profondità scansione:';
+  String get scanModeLabel => 'Modalità scansione:';
 
   @override
-  String get scanDepthAll => 'Tutti i livelli';
+  String get scanModeSectionTitle => 'Scan Mode';
 
   @override
-  String get scanDepthOne => '1 livello';
+  String get scanModeSectionDescription =>
+      'Controls how projects in each folder are displayed in the table — as a plain flat list or grouped by subfolder.';
 
   @override
-  String get scanDepthTwo => '2 livelli';
+  String get scanModeFlat => 'Piatto';
 
   @override
-  String get scanDepthAllTooltip =>
-      'Scansiona tutte le sottocartelle in modo ricorsivo. Ideale per strutture semplici; può essere lento su drive grandi.';
+  String get scanModeSmartFolder => 'Cartella intelligente';
 
   @override
-  String get scanDepthOneTooltip =>
-      'Scansiona solo le sottocartelle dirette di questa cartella radice. Ogni sottocartella diventa un progetto.';
+  String get scanModeFlatDescription =>
+      'Mostra ogni progetto come lista semplice. Semplice e veloce.';
 
   @override
-  String get scanDepthTwoTooltip =>
-      'Scansiona due livelli in profondità. Le sottocartelle dirette e i loro figli vengono mostrati ad albero.';
+  String get scanModeSmartFolderDescription =>
+      'Raggruppa i progetti per cartella quando una cartella contiene più di un progetto.';
+
+  @override
+  String get skip => 'Salta';
 }

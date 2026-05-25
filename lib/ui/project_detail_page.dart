@@ -1727,14 +1727,9 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
             return;
           }
           
-          // Only look for a newer export when using an auto-detected path.
-          // When previewSongPath is set (manual pick or Drive backup download),
-          // skip the folder scan to avoid picking up another project's file
-          // from the same download folder.
-          final isAutoPath = widget.project.previewSongPath?.isNotEmpty != true;
-          final newer = isAutoPath
-              ? MixdownDetectorService.findNewerFileInSameFolder(_effectivePreviewPath!)
-              : null;
+          // Check for a newer audio file in the same folder as the current preview,
+          // regardless of whether the path was manually set or auto-detected.
+          final newer = MixdownDetectorService.findNewerFileInSameFolder(_effectivePreviewPath!);
           if (newer != null && mounted) {
             final l10n = AppLocalizations.of(context)!;
             final replace = await showDialog<bool>(

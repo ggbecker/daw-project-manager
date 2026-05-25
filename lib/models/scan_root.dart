@@ -1,3 +1,4 @@
+import 'package:daw_project_manager/models/scan_mode.dart';
 import 'package:hive_ce/hive.dart';
 
 @HiveType(typeId: 2)
@@ -14,9 +15,12 @@ class ScanRoot {
   @HiveField(3)
   final DateTime? lastScanAt;
 
-  /// 0 = unlimited (default), 1 = top-level subfolders only, 2 = two levels deep
+  /// 0 = Flat (deep recursive, no grouping), 1+ = Smart Folder (group by top-level subfolder).
+  /// Old value 2 auto-migrates to Smart Folder via [scanMode].
   @HiveField(4)
   final int scanDepth;
+
+  ScanMode get scanMode => scanDepth >= 1 ? ScanMode.smartFolder : ScanMode.flat;
 
   const ScanRoot({
     required this.id,

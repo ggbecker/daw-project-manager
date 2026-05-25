@@ -913,12 +913,14 @@ class OnboardingCompleteNotifier extends Notifier<bool> {
 
   @override
   bool build() {
+    _loadAsync();
     try {
+      // Box is already open on subsequent launches — read synchronously.
       final box = Hive.box<String>('settings');
       return box.get(_key) == 'true';
     } catch (_) {
-      _loadAsync();
-      return true;
+      // Box not open yet on very first frame; _loadAsync will set the real value.
+      return false;
     }
   }
 
@@ -1150,12 +1152,13 @@ class TabPositionNotifier extends Notifier<TabPosition> {
   @override
   TabPosition build() {
     _load();
-    return TabPosition.top;
+    return TabPosition.left;
   }
 
   void _load() async {
     final box = await Hive.openBox<String>('settings');
     final saved = box.get(_key);
+    if (saved == 'top') state = TabPosition.top;
     if (saved == 'left') state = TabPosition.left;
   }
 
@@ -1769,8 +1772,13 @@ class WorkTimerNotifier extends Notifier<int> {
             : m > 0
                 ? (s > 0 ? '${m}m ${s}s' : '${m}m')
                 : '${s}s';
+        final allProfiles = ref.read(allProfilesProvider).value ?? [];
+        final profile = ref.read(currentProfileProvider).value;
+        final title = (allProfiles.length > 1 && profile != null)
+            ? '${project.displayName} · ${profile.name}'
+            : project.displayName;
         DeadlineNotificationService().showWorkTimerNotification(
-          project.displayName,
+          title,
           l10n.workTimerNotifBody(timeStr),
         );
       }
@@ -1790,3 +1798,43 @@ class WorkTimerPausedNotifier extends Notifier<bool> {
 
 final workTimerPausedProvider =
     NotifierProvider<WorkTimerPausedNotifier, bool>(WorkTimerPausedNotifier.new);
+
+// ---------------------------------------------------------------------------
+// Last-Modified Color Coding Setting
+// Green = Finished status; red gradient = older last-modified date.
+// When disabled the column shows plain text color.
+// ---------------------------------------------------------------------------
+class LastModifiedColorNotifier extends Notifier<bool> {
+  static const _key = 'lastModifiedColorEnabled';
+
+  @override
+  bool build() {
+    SchedulerBinding.instance.addPostFrameCallback((_) => _load());
+    return true; // enabled by default
+  }
+
+  Future<void> _load() async {
+    try {
+      await ensureHiveInitialized();
+      final box = await Hive.openBox<String>('settings');
+      final saved = box.get(_key);
+      if (saved != null) state = saved == 'true';
+    } catch (e) {
+      if (kDebugMode) print('Failed to load $_key: $e');
+    }
+  }
+
+  Future<void> toggle() async {
+    state = !state;
+    try {
+      await ensureHiveInitialized();
+      final box = await Hive.openBox<String>('settings');
+      await box.put(_key, state.toString());
+    } catch (e) {
+      if (kDebugMode) print('Failed to save $_key: $e');
+    }
+  }
+}
+
+final lastModifiedColorProvider =
+    NotifierProvider<LastModifiedColorNotifier, bool>(LastModifiedColorNotifier.new);

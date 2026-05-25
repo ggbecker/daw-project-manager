@@ -49,6 +49,7 @@ import 'package:hive_ce_flutter/hive_flutter.dart';
 
 import '../models/music_project.dart';
 import '../models/release.dart';
+import '../models/scan_mode.dart';
 import '../providers/providers.dart';
 import 'package:uuid/uuid.dart';
 
@@ -121,6 +122,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
   bool _isSearchingMobile = false;
   bool _isSearchingDesktop = false;
   bool _railCollapsed = false;
+  double _railWidth = 130.0;
   late TabController _tabController;
 
   // Startup dialog
@@ -554,50 +556,13 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       final ignoredPaths = repo.getIgnoredPaths().map((p) => p.path).toList(growable: false);
       final scanTime = DateTime.now();
       for (final root in repo.getRoots()) {
-        if (root.scanDepth > 0) {
-          // Collect all shallow results first so we can do a two-pass upsert
-          // without streaming twice (avoids duplicate filesystem reads).
-          final allResults = await scanner.scanDirectoryShallow(
-            root.path,
-            maxDepth: root.scanDepth,
-            ignoredPaths: ignoredPaths,
-          ).toList();
-
-          // First pass: upsert depth-1 folders and record folderPath → project id.
-          // Doing this before depth-2 so parent IDs are available.
-          final folderToId = <String, String>{};
-          final foundPaths = <String>{};
-          for (final result in allResults.where((r) => r.parentFolderPath == null)) {
-            await repo.upsertFromFileSystemEntity(result.file, fullMetadata: fullMetadata);
-            foundPaths.add(result.file.path);
-            final saved = repo.getByPath(result.file.path);
-            if (saved != null) folderToId[result.folderPath] = saved.id;
-            foundCount++;
-          }
-
-          // Second pass: upsert depth-2 folders linked to their parents.
-          for (final result in allResults.where((r) => r.parentFolderPath != null)) {
-            final parentId = folderToId[result.parentFolderPath];
-            await repo.upsertFromFileSystemEntity(
-              result.file,
-              fullMetadata: fullMetadata,
-              parentProjectId: parentId,
-            );
-            foundPaths.add(result.file.path);
-            foundCount++;
-          }
-
-          // Prune projects under this root that weren't found by the shallow scan
-          // (e.g. individual-file entries left over from a prior deep scan).
-          // Runs after upserts so metadata on matched projects is already preserved.
-          await repo.removeOrphanedProjectsFromRoot(root.path, foundPaths);
-        } else {
-          await for (final entity in scanner.scanDirectory(root.path, ignoredPaths: ignoredPaths)) {
-            await repo.upsertFromFileSystemEntity(entity, fullMetadata: fullMetadata);
-            foundCount++;
-          }
+        final foundPaths = <String>{};
+        await for (final entity in scanner.scanDirectory(root.path, ignoredPaths: ignoredPaths)) {
+          await repo.upsertFromFileSystemEntity(entity, fullMetadata: fullMetadata);
+          foundPaths.add(entity.path);
+          foundCount++;
         }
-        // Update lastScanAt timestamp for this root
+        await repo.removeOrphanedProjectsFromRoot(root.path, foundPaths);
         await repo.updateRootLastScanAt(root.id, scanTime);
       }
 
@@ -976,74 +941,36 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                     },
                                     tooltip: AppLocalizations.of(context)!.notificationSettings,
                                   ),
-                                // Google Drive sync
-                                IconButton(
-                                  icon: const Icon(Icons.cloud_outlined),
-                                  tooltip: AppLocalizations.of(context)!.syncWithGoogleDrive,
-                                  onPressed: () => Navigator.of(context).push(
-                                    MaterialPageRoute(builder: (_) => const GoogleDriveSyncPage()),
+                                // Google Drive sync (hidden when left rail — shown there instead)
+                                if (!isLeftRail)
+                                  IconButton(
+                                    icon: const Icon(Icons.cloud_outlined),
+                                    tooltip: AppLocalizations.of(context)!.syncWithGoogleDrive,
+                                    onPressed: () => Navigator.of(context).push(
+                                      MaterialPageRoute(builder: (_) => const GoogleDriveSyncPage()),
+                                    ),
                                   ),
-                                ),
-                                // Quick profile switch button
-                                Consumer(
-                                  builder: (context, ref, child) {
-                                    final allProfiles = ref.watch(allProfilesProvider).value;
-                                    if (allProfiles == null || allProfiles.length < 2) return const SizedBox.shrink();
-                                    return IconButton(
-                                      icon: const Icon(Icons.swap_horiz),
-                                      tooltip: AppLocalizations.of(context)!.switchProfile,
-                                      onPressed: () => _quickSwitchProfile(context),
-                                    );
-                                  },
-                                ),
-                                // Profile button
-                                Consumer(
-                                  builder: (context, ref, child) {
-                                    final currentProfileAsync = ref.watch(currentProfileProvider);
-                                    return currentProfileAsync.when(
-                                      loading: () => IconButton(
-                                        icon: const Icon(Icons.person),
-                                        onPressed: () {
-                                          Navigator.of(context).push(
-                                            MaterialPageRoute(
-                                              builder: (_) => const ProfileManagerPage(),
-                                            ),
-                                          );
-                                        },
-                                        tooltip: AppLocalizations.of(context)!.profileManager,
-                                      ),
-                                      error: (_, _) => IconButton(
-                                        icon: const Icon(Icons.person),
-                                        onPressed: () {
-                                          Navigator.of(context).push(
-                                            MaterialPageRoute(
-                                              builder: (_) => const ProfileManagerPage(),
-                                            ),
-                                          );
-                                        },
-                                        tooltip: AppLocalizations.of(context)!.profileManager,
-                                      ),
-                                      data: (currentProfile) {
-                                        Widget profileIcon;
-                                        if (currentProfile?.photoPath != null &&
-                                            File(currentProfile!.photoPath!).existsSync()) {
-                                          profileIcon = ClipRRect(
-                                            borderRadius: BorderRadius.circular(16),
-                                            child: Image.file(
-                                              File(currentProfile.photoPath!),
-                                              width: 32,
-                                              height: 32,
-                                              fit: BoxFit.cover,
-                                              errorBuilder: (context, error, stackTrace) {
-                                                return const Icon(Icons.person);
-                                              },
-                                            ),
-                                          );
-                                        } else {
-                                          profileIcon = const Icon(Icons.person);
-                                        }
-                                        return IconButton(
-                                          icon: profileIcon,
+                                // Quick profile switch button (hidden when left rail)
+                                if (!isLeftRail)
+                                  Consumer(
+                                    builder: (context, ref, child) {
+                                      final allProfiles = ref.watch(allProfilesProvider).value;
+                                      if (allProfiles == null || allProfiles.length < 2) return const SizedBox.shrink();
+                                      return IconButton(
+                                        icon: const Icon(Icons.swap_horiz),
+                                        tooltip: AppLocalizations.of(context)!.switchProfile,
+                                        onPressed: () => _quickSwitchProfile(context),
+                                      );
+                                    },
+                                  ),
+                                // Profile button (hidden when left rail)
+                                if (!isLeftRail)
+                                  Consumer(
+                                    builder: (context, ref, child) {
+                                      final currentProfileAsync = ref.watch(currentProfileProvider);
+                                      return currentProfileAsync.when(
+                                        loading: () => IconButton(
+                                          icon: const Icon(Icons.person),
                                           onPressed: () {
                                             Navigator.of(context).push(
                                               MaterialPageRoute(
@@ -1051,12 +978,53 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                               ),
                                             );
                                           },
-                                          tooltip: currentProfile?.name ?? AppLocalizations.of(context)!.profileManager,
-                                        );
-                                      },
-                                    );
-                                  },
-                                ),
+                                          tooltip: AppLocalizations.of(context)!.profileManager,
+                                        ),
+                                        error: (_, _) => IconButton(
+                                          icon: const Icon(Icons.person),
+                                          onPressed: () {
+                                            Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                builder: (_) => const ProfileManagerPage(),
+                                              ),
+                                            );
+                                          },
+                                          tooltip: AppLocalizations.of(context)!.profileManager,
+                                        ),
+                                        data: (currentProfile) {
+                                          Widget profileIcon;
+                                          if (currentProfile?.photoPath != null &&
+                                              File(currentProfile!.photoPath!).existsSync()) {
+                                            profileIcon = ClipRRect(
+                                              borderRadius: BorderRadius.circular(16),
+                                              child: Image.file(
+                                                File(currentProfile.photoPath!),
+                                                width: 32,
+                                                height: 32,
+                                                fit: BoxFit.cover,
+                                                errorBuilder: (context, error, stackTrace) {
+                                                  return const Icon(Icons.person);
+                                                },
+                                              ),
+                                            );
+                                          } else {
+                                            profileIcon = const Icon(Icons.person);
+                                          }
+                                          return IconButton(
+                                            icon: profileIcon,
+                                            onPressed: () {
+                                              Navigator.of(context).push(
+                                                MaterialPageRoute(
+                                                  builder: (_) => const ProfileManagerPage(),
+                                                ),
+                                              );
+                                            },
+                                            tooltip: currentProfile?.name ?? AppLocalizations.of(context)!.profileManager,
+                                          );
+                                        },
+                                      );
+                                    },
+                                  ),
                               ],
                       )
                     : null,
@@ -1112,7 +1080,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                           request: playerRequest,
                         );
                       }(),
-                body: Column(
+                body: Builder(builder: (context) {
+                  final col = Column(
           children: [
             // Custom title bar – Windows/Linux only.
             // macOS uses the native title bar + MacOSMenuBar for Theme/Language/Support.
@@ -1468,76 +1437,30 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                   // Ações de Root e Scan
                   Row(
                       children: [
-                        // Quick profile switch button
-                        Consumer(
-                          builder: (context, ref, child) {
-                            final allProfiles = ref.watch(allProfilesProvider).value;
-                            if (allProfiles == null || allProfiles.length < 2) return const SizedBox.shrink();
-                            return IconButton(
-                              icon: const Icon(Icons.swap_horiz),
-                              tooltip: AppLocalizations.of(context)!.switchProfile,
-                              onPressed: () => _quickSwitchProfile(context),
-                            );
-                          },
-                        ),
-                        // Profile button - always visible
-                        Consumer(
-                          builder: (context, ref, child) {
-                            final currentProfileAsync = ref.watch(currentProfileProvider);
-                            return currentProfileAsync.when(
-                              loading: () => Tooltip(
-                                message: AppLocalizations.of(context)!.profileManager,
-                                child: TextButton.icon(
-                                  icon: const Icon(Icons.person, size: 24),
-                                  label: Text(AppLocalizations.of(context)!.profileManager),
-                                  onPressed: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) => const ProfileManagerPage(),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                              error: (_, _) => Tooltip(
-                                message: AppLocalizations.of(context)!.profileManager,
-                                child: TextButton.icon(
-                                  icon: const Icon(Icons.person, size: 24),
-                                  label: Text(AppLocalizations.of(context)!.profileManager),
-                                  onPressed: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) => const ProfileManagerPage(),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                              data: (currentProfile) {
-                                Widget profileIcon;
-                                if (currentProfile?.photoPath != null &&
-                                    File(currentProfile!.photoPath!).existsSync()) {
-                                  profileIcon = ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: Image.file(
-                                      File(currentProfile.photoPath!),
-                                      width: 24,
-                                      height: 24,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) {
-                                        return const Icon(Icons.person, size: 24);
-                                      },
-                                    ),
-                                  );
-                                } else {
-                                  profileIcon = const Icon(Icons.person, size: 24);
-                                }
-
-                                final profileName = currentProfile?.name ?? AppLocalizations.of(context)!.profileManager;
-
-                                return Tooltip(
-                                  message: profileName,
-                                  child: TextButton(
+                        // Quick profile switch button (hidden when left rail)
+                        if (!isLeftRail)
+                          Consumer(
+                            builder: (context, ref, child) {
+                              final allProfiles = ref.watch(allProfilesProvider).value;
+                              if (allProfiles == null || allProfiles.length < 2) return const SizedBox.shrink();
+                              return IconButton(
+                                icon: const Icon(Icons.swap_horiz),
+                                tooltip: AppLocalizations.of(context)!.switchProfile,
+                                onPressed: () => _quickSwitchProfile(context),
+                              );
+                            },
+                          ),
+                        // Profile button (hidden when left rail)
+                        if (!isLeftRail)
+                          Consumer(
+                            builder: (context, ref, child) {
+                              final currentProfileAsync = ref.watch(currentProfileProvider);
+                              return currentProfileAsync.when(
+                                loading: () => Tooltip(
+                                  message: AppLocalizations.of(context)!.profileManager,
+                                  child: TextButton.icon(
+                                    icon: const Icon(Icons.person, size: 24),
+                                    label: Text(AppLocalizations.of(context)!.profileManager),
                                     onPressed: () {
                                       Navigator.of(context).push(
                                         MaterialPageRoute(
@@ -1545,30 +1468,78 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                         ),
                                       );
                                     },
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        profileIcon,
-                                        const SizedBox(width: 8),
-                                        Flexible(
-                                          child: ConstrainedBox(
-                                            constraints: const BoxConstraints(maxWidth: 150),
-                                            child: Text(
-                                              profileName,
-                                              overflow: TextOverflow.ellipsis,
-                                              maxLines: 1,
+                                  ),
+                                ),
+                                error: (_, _) => Tooltip(
+                                  message: AppLocalizations.of(context)!.profileManager,
+                                  child: TextButton.icon(
+                                    icon: const Icon(Icons.person, size: 24),
+                                    label: Text(AppLocalizations.of(context)!.profileManager),
+                                    onPressed: () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) => const ProfileManagerPage(),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                                data: (currentProfile) {
+                                  Widget profileIcon;
+                                  if (currentProfile?.photoPath != null &&
+                                      File(currentProfile!.photoPath!).existsSync()) {
+                                    profileIcon = ClipRRect(
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: Image.file(
+                                        File(currentProfile.photoPath!),
+                                        width: 24,
+                                        height: 24,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return const Icon(Icons.person, size: 24);
+                                        },
+                                      ),
+                                    );
+                                  } else {
+                                    profileIcon = const Icon(Icons.person, size: 24);
+                                  }
+
+                                  final profileName = currentProfile?.name ?? AppLocalizations.of(context)!.profileManager;
+
+                                  return Tooltip(
+                                    message: profileName,
+                                    child: TextButton(
+                                      onPressed: () {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (_) => const ProfileManagerPage(),
+                                          ),
+                                        );
+                                      },
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          profileIcon,
+                                          const SizedBox(width: 8),
+                                          Flexible(
+                                            child: ConstrainedBox(
+                                              constraints: const BoxConstraints(maxWidth: 150),
+                                              child: Text(
+                                                profileName,
+                                                overflow: TextOverflow.ellipsis,
+                                                maxLines: 1,
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                        ),
-                        const SizedBox(width: 8),
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        if (!isLeftRail) const SizedBox(width: 8),
                         if (!isLeftRail && !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) ...[
                           OutlinedButton.icon(
                             onPressed: isAnyOperation
@@ -1651,8 +1622,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                       ],
                     ),
                   const SizedBox(width: 8),
-                  // Google Drive sync
-                  if (!MobileUtils.isMobile())
+                  // Google Drive sync (hidden when left rail — shown there instead)
+                  if (!MobileUtils.isMobile() && !isLeftRail)
                     Tooltip(
                       message: AppLocalizations.of(context)!.syncWithGoogleDrive,
                       child: IconButton(
@@ -1676,7 +1647,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 200),
                             curve: Curves.easeInOut,
-                            width: _isSearchingDesktop ? 400 : 0,
+                            width: (isLeftRail || _isSearchingDesktop) ? 400 : 0,
                             child: Focus(
                               onKeyEvent: (node, event) {
                                 if (event is KeyDownEvent &&
@@ -1699,23 +1670,35 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                 isDense: true,
                                 border: const OutlineInputBorder(),
                                 prefixIcon: const Icon(Icons.search),
-                                suffixIcon: IconButton(
-                                  icon: const Icon(Icons.close, size: 18),
-                                  onPressed: _collapseDesktopSearch,
-                                ),
+                                suffixIcon: isLeftRail
+                                    ? (ref.watch(sessionModeProvider) && _searchController.text.isNotEmpty
+                                        ? IconButton(
+                                            icon: const Icon(Icons.close, size: 18),
+                                            tooltip: AppLocalizations.of(context)!.clear,
+                                            onPressed: () {
+                                              _searchController.clear();
+                                              _updateCurrentTabSearch('');
+                                            },
+                                          )
+                                        : null)
+                                    : IconButton(
+                                        icon: const Icon(Icons.close, size: 18),
+                                        onPressed: _collapseDesktopSearch,
+                                      ),
                               ),
                               onChanged: _updateCurrentTabSearch,
                             ),
                           ),
                         ),
                         ),
-                        Tooltip(
-                          message: '${AppLocalizations.of(context)!.searchProjects} (${Platform.isMacOS ? 'Cmd+F' : 'Ctrl+F'})',
-                          child: IconButton(
-                            icon: const Icon(Icons.search),
-                            onPressed: _focusSearchAndSelectAll,
+                        if (!isLeftRail)
+                          Tooltip(
+                            message: '${AppLocalizations.of(context)!.searchProjects} (${Platform.isMacOS ? 'Cmd+F' : 'Ctrl+F'})',
+                            child: IconButton(
+                              icon: const Icon(Icons.search),
+                              onPressed: _focusSearchAndSelectAll,
+                            ),
                           ),
-                        ),
                         const SizedBox(width: 4),
                       ],
                     ),
@@ -1800,143 +1783,272 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                     },
                   ],
                 );
-                // Left navigation rail
-                if (!MobileUtils.isMobile() && ref.watch(tabPositionProvider) == TabPosition.left) {
-                  return Row(
-                    children: [
-                      NavigationRail(
-                        selectedIndex: _tabController.index,
-                        onDestinationSelected: (i) => _tabController.animateTo(i),
-                        labelType: _railCollapsed
-                            ? NavigationRailLabelType.none
-                            : NavigationRailLabelType.all,
-                        leading: Tooltip(
-                          message: _railCollapsed
-                              ? AppLocalizations.of(context)!.expand
-                              : AppLocalizations.of(context)!.collapse,
-                          child: IconButton(
-                            icon: Icon(_railCollapsed
-                                ? Icons.chevron_right
-                                : Icons.chevron_left),
-                            onPressed: () =>
-                                setState(() => _railCollapsed = !_railCollapsed),
-                          ),
-                        ),
-                        destinations: [
-                          for (final tab in _currentVisibleTabs)
-                            switch (tab) {
-                              AppTab.projects   => NavigationRailDestination(icon: const Icon(Icons.library_music), label: Text(AppLocalizations.of(context)!.projectsTab)),
-                              AppTab.releases   => NavigationRailDestination(icon: const Icon(Icons.album), label: Text(AppLocalizations.of(context)!.releasesTab)),
-                              AppTab.playlists  => NavigationRailDestination(icon: const Icon(Icons.playlist_play), label: Text(AppLocalizations.of(context)!.playlists)),
-                              AppTab.queue      => NavigationRailDestination(icon: const Icon(Icons.checklist), label: Text(AppLocalizations.of(context)!.queueTab)),
-                              AppTab.statistics => NavigationRailDestination(icon: const Icon(Icons.bar_chart_rounded), label: Text(AppLocalizations.of(context)!.statisticsTab)),
-                              AppTab.player     => const NavigationRailDestination(icon: Icon(Icons.headphones), label: Text('Music Player')),
-                            },
-                        ],
-                        trailing: Expanded(
-                          child: Align(
-                            alignment: Alignment.bottomCenter,
-                            child: Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  // Rescan
-                                  Tooltip(
-                                    message: isAnyOperation
-                                        ? AppLocalizations.of(context)!.scanning
-                                        : AppLocalizations.of(context)!.rescan,
-                                    child: IconButton(
-                                      icon: isAnyOperation
-                                          ? const SizedBox(
-                                              width: 18, height: 18,
-                                              child: CircularProgressIndicator(strokeWidth: 2),
-                                            )
-                                          : const Icon(Icons.refresh),
-                                      onPressed: isAnyOperation ? null : () => _scanAll(),
-                                    ),
-                                  ),
-                                  if (!_railCollapsed)
-                                    Text(
-                                      isAnyOperation
-                                          ? AppLocalizations.of(context)!.scanning
-                                          : AppLocalizations.of(context)!.rescan,
-                                      style: Theme.of(context).textTheme.labelSmall,
-                                    ),
-                                  const SizedBox(height: 8),
-                                  // Deep scan
-                                  Tooltip(
-                                    message: AppLocalizations.of(context)!.deepScanTooltip,
-                                    waitDuration: const Duration(milliseconds: 500),
-                                    child: IconButton(
-                                      icon: isAnyOperation
-                                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                                          : const Icon(Icons.search),
-                                      onPressed: isAnyOperation
-                                          ? null
-                                          : () async {
-                                              final confirm = await showDialog<bool>(
-                                                context: context,
-                                                builder: (ctx) => AlertDialog(
-                                                  backgroundColor: Theme.of(context).cardColor,
-                                                  title: Text(AppLocalizations.of(context)!.deepScan),
-                                                  content: Text(AppLocalizations.of(context)!.deepScanConfirm),
-                                                  actions: [
-                                                    TextButton(
-                                                      onPressed: () => Navigator.pop(ctx, false),
-                                                      child: Text(AppLocalizations.of(context)!.cancel),
-                                                    ),
-                                                    ElevatedButton(
-                                                      onPressed: () => Navigator.pop(ctx, true),
-                                                      style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary),
-                                                      child: Text(AppLocalizations.of(context)!.deepScan),
-                                                    ),
-                                                  ],
-                                                ),
-                                              );
-                                              if (confirm == true) await _fullScanAll();
-                                            },
-                                    ),
-                                  ),
-                                  if (!_railCollapsed)
-                                    Text(
-                                      AppLocalizations.of(context)!.deepScan,
-                                      style: Theme.of(context).textTheme.labelSmall,
-                                    ),
-                                  const SizedBox(height: 8),
-                                  // Settings
-                                  Tooltip(
-                                    message: AppLocalizations.of(context)!.settings,
-                                    child: IconButton(
-                                      icon: const Icon(Icons.settings_outlined),
-                                      onPressed: () => Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (_) => const ProjectFoldersSettingsPage(),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  if (!_railCollapsed)
-                                    Text(
-                                      AppLocalizations.of(context)!.settings,
-                                      style: Theme.of(context).textTheme.labelSmall,
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const VerticalDivider(width: 1),
-                      Expanded(child: tabView),
-                    ],
-                  );
-                }
                 return tabView;
               }),
             ),
           ],
-                ),
+                );
+                if (!isLeftRail) return col;
+                return Row(
+                  children: [
+                    NavigationRail(
+                      selectedIndex: _tabController.index,
+                      onDestinationSelected: (i) => _tabController.animateTo(i),
+                      minWidth: _railCollapsed ? 64.0 : _railWidth,
+                      labelType: _railCollapsed
+                          ? NavigationRailLabelType.none
+                          : NavigationRailLabelType.all,
+                      leading: Column(
+                        children: [
+                          // Collapse/expand toggle
+                          Tooltip(
+                            message: _railCollapsed
+                                ? AppLocalizations.of(context)!.expand
+                                : AppLocalizations.of(context)!.collapse,
+                            child: IconButton(
+                              icon: Icon(_railCollapsed
+                                  ? Icons.chevron_right
+                                  : Icons.chevron_left),
+                              onPressed: () => setState(() {
+                                if (_railCollapsed) _railWidth = 130.0;
+                                _railCollapsed = !_railCollapsed;
+                              }),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          // Profile avatar + name
+                          Consumer(builder: (ctx, ref, _) {
+                            final profile = ref.watch(currentProfileProvider).value;
+                            final hasPhoto = profile?.photoPath != null &&
+                                File(profile!.photoPath!).existsSync();
+                            const avatarSize = 44.0;
+                            final Widget avatar = hasPhoto
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(avatarSize),
+                                    child: Image.file(
+                                      File(profile.photoPath!),
+                                      width: avatarSize,
+                                      height: avatarSize,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  )
+                                : Container(
+                                    width: avatarSize,
+                                    height: avatarSize,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                    ),
+                                    child: const Icon(Icons.person, size: 26),
+                                  );
+                            return Tooltip(
+                              message: profile?.name ??
+                                  AppLocalizations.of(context)!.profileManager,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(8),
+                                onTap: () => Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => const ProfileManagerPage(),
+                                  ),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 4, horizontal: 4),
+                                  child: _railCollapsed
+                                      ? avatar
+                                      : Column(
+                                          children: [
+                                            avatar,
+                                            if (profile?.name != null) ...[
+                                              const SizedBox(height: 4),
+                                              SizedBox(
+                                                width: 80,
+                                                child: Text(
+                                                  profile!.name,
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .labelSmall,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  textAlign: TextAlign.center,
+                                                  maxLines: 1,
+                                                ),
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                ),
+                              ),
+                            );
+                          }),
+                          // Quick profile switch (multiple profiles only)
+                          Consumer(builder: (ctx, ref, _) {
+                            final allProfiles =
+                                ref.watch(allProfilesProvider).value;
+                            if (allProfiles == null || allProfiles.length < 2) {
+                              return const SizedBox.shrink();
+                            }
+                            return Tooltip(
+                              message: AppLocalizations.of(context)!
+                                  .switchProfile,
+                              child: IconButton(
+                                icon: const Icon(Icons.swap_horiz, size: 18),
+                                onPressed: () =>
+                                    _quickSwitchProfile(context),
+                              ),
+                            );
+                          }),
+                          const SizedBox(height: 8),
+                        ],
+                      ),
+                      destinations: [
+                        for (final tab in _currentVisibleTabs)
+                          switch (tab) {
+                            AppTab.projects   => NavigationRailDestination(icon: Tooltip(message: AppLocalizations.of(context)!.projectsTab, child: const Icon(Icons.library_music)), label: Text(AppLocalizations.of(context)!.projectsTab)),
+                            AppTab.releases   => NavigationRailDestination(icon: Tooltip(message: AppLocalizations.of(context)!.releasesTab, child: const Icon(Icons.album)), label: Text(AppLocalizations.of(context)!.releasesTab)),
+                            AppTab.playlists  => NavigationRailDestination(icon: Tooltip(message: AppLocalizations.of(context)!.playlists, child: const Icon(Icons.playlist_play)), label: Text(AppLocalizations.of(context)!.playlists)),
+                            AppTab.queue      => NavigationRailDestination(icon: Tooltip(message: AppLocalizations.of(context)!.queueTab, child: const Icon(Icons.checklist)), label: Text(AppLocalizations.of(context)!.queueTab)),
+                            AppTab.statistics => NavigationRailDestination(icon: Tooltip(message: AppLocalizations.of(context)!.statisticsTab, child: const Icon(Icons.bar_chart_rounded)), label: Text(AppLocalizations.of(context)!.statisticsTab)),
+                            AppTab.player     => NavigationRailDestination(icon: const Tooltip(message: 'Music Player', child: Icon(Icons.headphones)), label: const Text('Music Player')),
+                          },
+                      ],
+                      trailing: Expanded(
+                        child: Align(
+                          alignment: Alignment.bottomCenter,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Google Drive sync
+                                Tooltip(
+                                  message: AppLocalizations.of(context)!.googleDriveSync,
+                                  child: IconButton(
+                                    icon: const Icon(Icons.cloud_outlined),
+                                    onPressed: () => Navigator.of(context).push(
+                                      MaterialPageRoute(builder: (_) => const GoogleDriveSyncPage()),
+                                    ),
+                                  ),
+                                ),
+                                if (!_railCollapsed)
+                                  Text(
+                                    AppLocalizations.of(context)!.googleDriveSync,
+                                    style: Theme.of(context).textTheme.labelSmall,
+                                    textAlign: TextAlign.center,
+                                  ),
+                                const SizedBox(height: 8),
+                                // Rescan
+                                Tooltip(
+                                  message: isAnyOperation
+                                      ? AppLocalizations.of(context)!.scanning
+                                      : AppLocalizations.of(context)!.rescan,
+                                  child: IconButton(
+                                    icon: isAnyOperation
+                                        ? const SizedBox(
+                                            width: 18, height: 18,
+                                            child: CircularProgressIndicator(strokeWidth: 2),
+                                          )
+                                        : const Icon(Icons.refresh),
+                                    onPressed: isAnyOperation ? null : () => _scanAll(),
+                                  ),
+                                ),
+                                if (!_railCollapsed)
+                                  Text(
+                                    isAnyOperation
+                                        ? AppLocalizations.of(context)!.scanning
+                                        : AppLocalizations.of(context)!.rescan,
+                                    style: Theme.of(context).textTheme.labelSmall,
+                                  ),
+                                const SizedBox(height: 8),
+                                // Deep scan
+                                Tooltip(
+                                  message: AppLocalizations.of(context)!.deepScanTooltip,
+                                  waitDuration: const Duration(milliseconds: 500),
+                                  child: IconButton(
+                                    icon: isAnyOperation
+                                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                                        : const Icon(Icons.search),
+                                    onPressed: isAnyOperation
+                                        ? null
+                                        : () async {
+                                            final confirm = await showDialog<bool>(
+                                              context: context,
+                                              builder: (ctx) => AlertDialog(
+                                                backgroundColor: Theme.of(context).cardColor,
+                                                title: Text(AppLocalizations.of(context)!.deepScan),
+                                                content: Text(AppLocalizations.of(context)!.deepScanConfirm),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () => Navigator.pop(ctx, false),
+                                                    child: Text(AppLocalizations.of(context)!.cancel),
+                                                  ),
+                                                  ElevatedButton(
+                                                    onPressed: () => Navigator.pop(ctx, true),
+                                                    style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary),
+                                                    child: Text(AppLocalizations.of(context)!.deepScan),
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                            if (confirm == true) await _fullScanAll();
+                                          },
+                                  ),
+                                ),
+                                if (!_railCollapsed)
+                                  Text(
+                                    AppLocalizations.of(context)!.deepScan,
+                                    style: Theme.of(context).textTheme.labelSmall,
+                                  ),
+                                const SizedBox(height: 8),
+                                // Settings
+                                Tooltip(
+                                  message: AppLocalizations.of(context)!.settings,
+                                  child: IconButton(
+                                    icon: const Icon(Icons.settings_outlined),
+                                    onPressed: () => Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => const ProjectFoldersSettingsPage(),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                if (!_railCollapsed)
+                                  Text(
+                                    AppLocalizations.of(context)!.settings,
+                                    style: Theme.of(context).textTheme.labelSmall,
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Drag handle to resize the rail
+                    MouseRegion(
+                      cursor: SystemMouseCursors.resizeColumn,
+                      child: GestureDetector(
+                        onHorizontalDragUpdate: _railCollapsed
+                            ? null
+                            : (details) => setState(() {
+                                  _railWidth = (_railWidth + details.delta.dx)
+                                      .clamp(120.0, 400.0);
+                                }),
+                        child: Container(
+                          width: 6,
+                          color: Colors.transparent,
+                          child: Center(
+                            child: Container(
+                              width: 1,
+                              color: Theme.of(context).dividerColor,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(child: col),
+                  ],
+                );
+                }),
               ),
               // Loading overlay
               if (isAnyOperation)
@@ -2640,6 +2752,30 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     }
   }
 
+  void _onStateManagerChanged() {
+    if (mounted) setState(() {});
+  }
+
+  void _collapseAll() {
+    final sm = stateManager;
+    if (sm == null) return;
+    for (final row in sm.rows) {
+      if (row.type.isGroup && row.type.group.expanded) {
+        sm.toggleExpandedRowGroup(rowGroup: row);
+      }
+    }
+  }
+
+  void _expandAll() {
+    final sm = stateManager;
+    if (sm == null) return;
+    for (final row in sm.rows) {
+      if (row.type.isGroup && !row.type.group.expanded) {
+        sm.toggleExpandedRowGroup(rowGroup: row);
+      }
+    }
+  }
+
   // Drag-and-drop preview assignment
   double? _dragOverRowTop; // top Y of the highlighted row in local coords
 
@@ -2828,14 +2964,9 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       }
     }
 
-    // Only look for a newer export when using an auto-detected path.
-    // When previewSongPath is set (manual pick or Drive backup download), the
-    // file is intentionally chosen — skip the folder scan so we don't
-    // accidentally pick up another project's file from the same download folder.
-    final isAutoPath = project.previewSongPath?.isNotEmpty != true;
-    final newer = isAutoPath
-        ? MixdownDetectorService.findNewerFileInSameFolder(effectivePath)
-        : null;
+    // Check for a newer audio file in the same folder as the current preview,
+    // regardless of whether the path was manually set or auto-detected.
+    final newer = MixdownDetectorService.findNewerFileInSameFolder(effectivePath);
     if (newer != null && mounted) {
       final l10n = AppLocalizations.of(context)!;
       final replace = await showDialog<bool>(
@@ -2854,7 +2985,13 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       if (replace == null) return;
       if (replace) {
         final repo = await ref.read(repositoryProvider.future);
-        final updated = project.copyWith(previewSongAutoPath: newer.path);
+        final isManual = project.previewSongPath?.isNotEmpty == true;
+        final updated = isManual
+            ? project.copyWith(
+                previewSongPath: newer.path,
+                previewSongFileName: path.basename(newer.path),
+              )
+            : project.copyWith(previewSongAutoPath: newer.path);
         await repo.updateProject(updated);
         effectivePath = newer.path;
       }
@@ -3058,6 +3195,18 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.couldNotOpenFolder('Unable to open folder'))));
       }
+    }
+  }
+
+  Future<void> _toggleSession(MusicProject project) async {
+    if (!mounted) return;
+    final sessionMode = ref.read(sessionModeProvider);
+    if (!sessionMode) return;
+    final activeProject = ref.read(activeProjectProvider);
+    if (activeProject?.id == project.id) {
+      await _confirmEndSession(context, ref);
+    } else {
+      await _confirmStartSession(context, ref, project);
     }
   }
 
@@ -3265,56 +3414,90 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   }
 
   List<TrinaRow> _mapProjectsToRows(List<MusicProject> projects) {
-    final hasTree = projects.any((p) => p.parentProjectId != null);
-    if (!hasTree) return projects.map(_projectToRow).toList();
+    final roots = ref.read(scanRootsProvider);
 
-    // Group all projects by the directory their file lives in.
-    final byDir = <String, List<MusicProject>>{};
-    for (final proj in projects) {
-      final dir = path.dirname(proj.filePath);
-      byDir.putIfAbsent(dir, () => []).add(proj);
+    // Build normalized root path → ScanMode lookup.
+    final rootModes = <String, ScanMode>{
+      for (final r in roots) path.normalize(r.path): r.scanMode,
+    };
+
+    String? findRoot(String filePath) {
+      final norm = path.normalize(filePath);
+      for (final rootPath in rootModes.keys) {
+        final prefix = rootPath.endsWith(path.separator) ? rootPath : rootPath + path.separator;
+        if (norm.startsWith(prefix)) return rootPath;
+      }
+      return null;
     }
 
-    // Sort directories newest-first (by the most recently modified project in each dir).
-    final sortedDirs = byDir.keys.toList()
-      ..sort((a, b) {
-        final aLatest = byDir[a]!.map((p) => p.lastModifiedAt).reduce((x, y) => x.isAfter(y) ? x : y);
-        final bLatest = byDir[b]!.map((p) => p.lastModifiedAt).reduce((x, y) => x.isAfter(y) ? x : y);
-        return bLatest.compareTo(aLatest);
-      });
+    final flatProjects = <MusicProject>[];
+    final folderGroups = <String, List<MusicProject>>{};
 
-    final rows = <TrinaRow>[];
-    for (final dir in sortedDirs) {
-      final group = List<MusicProject>.from(byDir[dir]!);
-      // Oldest first within each folder (most established work at the top).
-      group.sort((a, b) => a.lastModifiedAt.compareTo(b.lastModifiedAt));
+    for (final proj in projects) {
+      final rootPath = findRoot(proj.filePath);
+      final mode = rootPath != null ? (rootModes[rootPath] ?? ScanMode.flat) : ScanMode.flat;
 
-      if (group.length == 1) {
-        rows.add(_projectToRow(group.first));
-        continue;
+      if (mode == ScanMode.smartFolder && rootPath != null) {
+        final rel = path.relative(path.normalize(proj.filePath), from: rootPath);
+        final parts = path.split(rel);
+        if (parts.length <= 1) {
+          // Project sits directly in the root — no subfolder to group by.
+          flatProjects.add(proj);
+        } else {
+          final topLevel = path.join(rootPath, parts[0]);
+          folderGroups.putIfAbsent(topLevel, () => []).add(proj);
+        }
+      } else {
+        flatProjects.add(proj);
       }
+    }
 
-      // Folder header row: shows directory name + newest modification date.
+    // Groups with exactly 1 project are demoted to flat.
+    for (final entry in folderGroups.entries) {
+      if (entry.value.length == 1) flatProjects.add(entry.value.first);
+    }
+    final realGroups = Map.fromEntries(
+      folderGroups.entries.where((e) => e.value.length > 1),
+    );
+
+    // Build display items as (latestModified, row) so we can sort interleaved.
+    final items = <(DateTime, TrinaRow)>[];
+
+    for (final proj in flatProjects) {
+      items.add((proj.lastModifiedAt, _projectToRow(proj)));
+    }
+
+    for (final entry in realGroups.entries) {
+      final dir = entry.key;
+      final group = List<MusicProject>.from(entry.value)
+        ..sort((a, b) => a.lastModifiedAt.compareTo(b.lastModifiedAt));
       final latestModified = group.map((p) => p.lastModifiedAt).reduce((x, y) => x.isAfter(y) ? x : y);
-      rows.add(TrinaRow(
-        cells: {
-          'checkbox': TrinaCell(value: ''),
-          'name': TrinaCell(value: path.basename(dir)),
-          'status': TrinaCell(value: ''),
-          'dawType': TrinaCell(value: ''),
-          'bpm': TrinaCell(value: ''),
-          'key': TrinaCell(value: ''),
-          'lastModified': TrinaCell(value: widget.dateFormat.format(latestModified)),
-          'deadline': TrinaCell(value: ''),
-          'launch': TrinaCell(value: ''),
-          'data': TrinaCell(value: null),
-        },
-        type: TrinaRowType.group(
-          children: FilteredList(initialList: group.map(_projectToRow).toList()),
+
+      items.add((
+        latestModified,
+        TrinaRow(
+          cells: {
+            'checkbox': TrinaCell(value: ''),
+            'name': TrinaCell(value: path.basename(dir)),
+            'status': TrinaCell(value: ''),
+            'dawType': TrinaCell(value: ''),
+            'bpm': TrinaCell(value: ''),
+            'key': TrinaCell(value: ''),
+            'lastModified': TrinaCell(value: widget.dateFormat.format(latestModified)),
+            'deadline': TrinaCell(value: ''),
+            'launch': TrinaCell(value: ''),
+            'data': TrinaCell(value: null),
+          },
+          type: TrinaRowType.group(
+            children: FilteredList(initialList: group.map(_projectToRow).toList()),
+          ),
         ),
       ));
     }
-    return rows;
+
+    // Sort all display items newest-first.
+    items.sort((a, b) => b.$1.compareTo(a.$1));
+    return items.map((e) => e.$2).toList();
   }
 
   @override
@@ -3323,9 +3506,32 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     
     if (oldWidget.projects != widget.projects) {
       if (stateManager != null) {
+        // Snapshot collapsed state of group rows before replacing, so Smart
+        // Folder groups that the user collapsed stay collapsed after a data
+        // refresh (e.g. metadata extraction).
+        final wasCollapsed = <String, bool>{};
+        for (final row in stateManager!.rows) {
+          if (row.type.isGroup) {
+            final name = row.cells['name']?.value as String? ?? '';
+            wasCollapsed[name] = !row.type.group.expanded;
+          }
+        }
+
         final newRows = _mapProjectsToRows(widget.projects);
         stateManager!.removeRows(stateManager!.rows, notify: false);
         stateManager!.insertRows(0, newRows);
+
+        // Restore collapsed state — new group rows default to expanded,
+        // so only toggle the ones that were collapsed.
+        for (final row in stateManager!.rows) {
+          if (row.type.isGroup) {
+            final name = row.cells['name']?.value as String? ?? '';
+            if (wasCollapsed[name] == true) {
+              stateManager!.toggleExpandedRowGroup(rowGroup: row);
+            }
+          }
+        }
+
         stateManager!.notifyListeners();
       }
     } else if (oldWidget.selectedIds != widget.selectedIds) {
@@ -3699,47 +3905,37 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           final project = rendererContext.row.cells['data']?.value as MusicProject?;
           if (project == null) return const SizedBox.shrink();
 
-          final status = project.status;
-          
-          // If status is "Finished", show green
+          final colorEnabled = ref.watch(lastModifiedColorProvider);
+          final defaultColor = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
+
           Color textColor;
-          if (status == 'Finished') {
-            textColor = Colors.green;
+          if (!colorEnabled) {
+            textColor = defaultColor;
           } else {
-            final now = DateTime.now();
-            final lastModified = project.lastModifiedAt;
-            
-            // Calculate color based on age of lastModifiedAt
-            final daysSinceModified = now.difference(lastModified).inDays;
-            
-            if (daysSinceModified < 21) {
-              // Recent (0-21 days): default white
-              textColor = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
-            } else if (daysSinceModified < 60) {
-              // Medium (21-60 days): yellow/orange gradient
-              final ratio = (daysSinceModified - 21) / 39.0; // 0 to 1 from 21 to 60 days
-              textColor = Color.lerp(
-                Colors.yellow.shade300,
-                Colors.orange.shade400,
-                ratio,
-              )!;
+            final status = project.status;
+            if (status == 'Finished') {
+              textColor = Colors.green;
             } else {
-              // Old (60+ days): orange to red gradient
-              final ratio = ((daysSinceModified - 60) / 60.0).clamp(0.0, 1.0); // 0 to 1 from 60 to 120 days
-              textColor = Color.lerp(
-                Colors.orange.shade400,
-                Colors.red.shade400,
-                ratio,
-              )!;
+              final now = DateTime.now();
+              final lastModified = project.lastModifiedAt;
+              final daysSinceModified = now.difference(lastModified).inDays;
+
+              if (daysSinceModified < 21) {
+                textColor = defaultColor;
+              } else if (daysSinceModified < 60) {
+                final ratio = (daysSinceModified - 21) / 39.0;
+                textColor = Color.lerp(Colors.yellow.shade300, Colors.orange.shade400, ratio)!;
+              } else {
+                final ratio = ((daysSinceModified - 60) / 60.0).clamp(0.0, 1.0);
+                textColor = Color.lerp(Colors.orange.shade400, Colors.red.shade400, ratio)!;
+              }
             }
           }
-          
-          final textWidget = Text(
+
+          return Text(
             rendererContext.cell.value.toString(),
             style: TextStyle(color: textColor),
           );
-          
-          return textWidget;
         },
       ),
       TrinaColumn(
@@ -3875,10 +4071,8 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                       iconSize: 24,
                       padding: const EdgeInsets.all(4),
                       constraints: const BoxConstraints(),
-                      tooltip: sourceFileExists
-                          ? '${AppLocalizations.of(context)!.tooltipLaunchInDaw} (O)'
-                          : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
-                      onPressed: sourceFileExists ? () => _launchProject(project) : null,
+                      tooltip: '${AppLocalizations.of(context)!.openInDaw} (O)',
+                      onPressed: () => _launchProject(project),
                     );
                   }
                   final isSubscribed = subProject?.id == project.id;
@@ -3888,8 +4082,8 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                     padding: const EdgeInsets.all(4),
                     constraints: const BoxConstraints(),
                     tooltip: isSubscribed
-                        ? AppLocalizations.of(context)!.endSession
-                        : AppLocalizations.of(context)!.startSession,
+                        ? '${AppLocalizations.of(context)!.endSession} (S)'
+                        : '${AppLocalizations.of(context)!.startSession} (S)',
                     color: isSubscribed ? Colors.green.shade400 : null,
                     onPressed: () {
                       if (isSubscribed) {
@@ -4088,6 +4282,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                 showCount: false,
               ),
             );
+            stateManager!.addListener(_onStateManagerChanged);
           },
       onRowSecondaryTap: (TrinaGridOnRowSecondaryTapEvent event) {
         final project = event.row.cells['data']?.value as MusicProject?;
@@ -4177,6 +4372,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             LogicalKeySet(LogicalKeyboardKey.keyO): _TrinaProjectAction(_launchProject),
             LogicalKeySet(LogicalKeyboardKey.keyD): _TrinaProjectAction(_viewProjectDetails),
             LogicalKeySet(LogicalKeyboardKey.keyF): _TrinaProjectAction(_openProjectFolder),
+            LogicalKeySet(LogicalKeyboardKey.keyS): _TrinaProjectAction(_toggleSession),
           },
         ),
       ),
@@ -4193,7 +4389,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       createFooter: (stateManager) => const SizedBox.shrink(),
     );
 
-    return DropTarget(
+    final dropTarget = DropTarget(
       onDragUpdated: (detail) => _updateDragTarget(detail.localPosition),
       onDragExited: (_) => setState(() {
         _dragOverRowTop = null;
@@ -4266,6 +4462,42 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         ],
       ),
     );
+
+    final sm = stateManager;
+    final hasGroups = sm != null && sm.rows.any((r) => r.type.isGroup);
+    if (!hasGroups) return dropTarget;
+
+    final anyExpanded = sm.rows.any((r) => r.type.isGroup && r.type.group.expanded);
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton.icon(
+                icon: Icon(
+                  anyExpanded ? Icons.unfold_less : Icons.unfold_more,
+                  size: 16,
+                ),
+                label: Text(
+                  anyExpanded ? '${l10n.collapse} All' : '${l10n.expand} All',
+                  style: const TextStyle(fontSize: 12),
+                ),
+                onPressed: anyExpanded ? _collapseAll : _expandAll,
+              ),
+            ],
+          ),
+        ),
+        Expanded(child: dropTarget),
+      ],
+    );
+  }
+
+  @override
+  void dispose() {
+    stateManager?.removeListener(_onStateManagerChanged);
+    super.dispose();
   }
 }
 
@@ -5348,10 +5580,6 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
     });
     _player.play(DeviceFileSource(widget.request.resolvedPath));
     _loadBackgroundData();
-    // Auto-focus the player bar so arrow shortcuts work without clicking first.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _focusNode.requestFocus();
-    });
   }
 
   @override
@@ -5471,9 +5699,11 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
   }
 
   String _fmt(Duration d) {
-    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
-    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
-    return '$m:$s';
+    String two(int n) => n.toString().padLeft(2, '0');
+    final h = d.inHours;
+    final m = two(d.inMinutes.remainder(60));
+    final s = two(d.inSeconds.remainder(60));
+    return h > 0 ? '${two(h)}:$m:$s' : '$m:$s';
   }
 
   @override
@@ -5688,21 +5918,58 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
                     style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.5)),
                   ),
                   const SizedBox(width: 10),
-                  // Open project detail
+                  // Session bookmark (only when session mode is on)
+                  Consumer(
+                    builder: (context, ref, _) {
+                      final sessionMode = ref.watch(sessionModeProvider);
+                      if (!sessionMode) return const SizedBox.shrink();
+                      final activeProject = ref.watch(activeProjectProvider);
+                      final isSubscribed = activeProject?.id == project.id;
+                      return IconButton(
+                        icon: Icon(isSubscribed ? Icons.bookmark : Icons.bookmark_add_outlined),
+                        iconSize: 18, padding: iconPad, constraints: iconConstraints,
+                        tooltip: isSubscribed ? l10n.endSession : l10n.startSession,
+                        color: isSubscribed ? Colors.green.shade400 : null,
+                        onPressed: () {
+                          if (isSubscribed) {
+                            _confirmEndSession(context, ref);
+                          } else {
+                            _confirmStartSession(context, ref, project);
+                          }
+                        },
+                      );
+                    },
+                  ),
+                  // View Details
                   IconButton(
-                    icon: const Icon(Icons.open_in_new),
+                    icon: const Icon(Icons.assignment),
                     iconSize: 18, padding: iconPad, constraints: iconConstraints,
-                    tooltip: l10n.playerOpenProject,
+                    tooltip: l10n.projectDetails,
                     onPressed: () => Navigator.push(
                       context,
                       MaterialPageRoute(builder: (_) => ProjectDetailPage(projectId: project.id)),
                     ),
                   ),
+                  // Open Folder
+                  IconButton(
+                    icon: const Icon(Icons.folder_open),
+                    iconSize: 18, padding: iconPad, constraints: iconConstraints,
+                    tooltip: l10n.openFolder,
+                    onPressed: () async {
+                      final projectPath = project.filePath;
+                      final folderPath = FileSystemEntity.isDirectorySync(projectPath)
+                          ? projectPath
+                          : path.dirname(projectPath);
+                      if (Directory(folderPath).existsSync()) {
+                        await FileLauncher.openFolder(folderPath);
+                      }
+                    },
+                  ),
                   // Close
                   IconButton(
                     icon: const Icon(Icons.close),
                     iconSize: 18, padding: iconPad, constraints: iconConstraints,
-                    tooltip: 'Close player',
+                    tooltip: l10n.close,
                     onPressed: () => ref.read(desktopPlayerProvider.notifier).close(),
                   ),
                 ],
@@ -5959,14 +6226,9 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
       }
     }
 
-    // Only look for a newer export when using an auto-detected path.
-    // When previewSongPath is set (manual pick or Drive backup download), the
-    // file is intentionally chosen — skip the folder scan so we don't
-    // accidentally pick up another project's file from the same download folder.
-    final isAutoPath = project.previewSongPath?.isNotEmpty != true;
-    final newer = isAutoPath
-        ? MixdownDetectorService.findNewerFileInSameFolder(effectivePath)
-        : null;
+    // Check for a newer audio file in the same folder as the current preview,
+    // regardless of whether the path was manually set or auto-detected.
+    final newer = MixdownDetectorService.findNewerFileInSameFolder(effectivePath);
     if (newer != null && mounted) {
       final l10n = AppLocalizations.of(context)!;
       final replace = await showDialog<bool>(
@@ -5985,7 +6247,13 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
       if (replace == null) return;
       if (replace) {
         final repo = await ref.read(repositoryProvider.future);
-        final updated = project.copyWith(previewSongAutoPath: newer.path);
+        final isManual = project.previewSongPath?.isNotEmpty == true;
+        final updated = isManual
+            ? project.copyWith(
+                previewSongPath: newer.path,
+                previewSongFileName: path.basename(newer.path),
+              )
+            : project.copyWith(previewSongAutoPath: newer.path);
         await repo.updateProject(updated);
         effectivePath = newer.path;
       }
@@ -6833,7 +7101,7 @@ class _ActiveProjectChipState extends ConsumerState<_ActiveProjectChip>
               Tooltip(
                 message: project.displayName,
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 260),
+                  constraints: const BoxConstraints(maxWidth: 400),
                   child: Text(
                     project.displayName,
                     style: const TextStyle(
@@ -6902,21 +7170,29 @@ class _ActiveProjectChipState extends ConsumerState<_ActiveProjectChip>
                     _dot,
                     Icon(Icons.history, size: 11, color: Colors.white.withValues(alpha: 0.4)),
                     const SizedBox(width: 2),
-                    Text(
-                      _formatWorkTime(project.totalWorkSeconds),
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.45), fontSize: 11),
+                    SizedBox(
+                      width: 56,
+                      child: Text(
+                        _formatWorkTime(project.totalWorkSeconds),
+                        style: TextStyle(color: Colors.white.withValues(alpha: 0.45), fontSize: 11),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
                   // Session elapsed timer
                   const SizedBox(width: 6),
                   Icon(Icons.timer_outlined, size: 11, color: chipColor.withValues(alpha: 0.85)),
                   const SizedBox(width: 2),
-                  Text(
-                    _formatWorkTime(sessionElapsed),
-                    style: TextStyle(
-                      color: chipColor,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
+                  SizedBox(
+                    width: 52,
+                    child: Text(
+                      _formatWorkTime(sessionElapsed),
+                      style: TextStyle(
+                        color: chipColor,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
@@ -6928,33 +7204,41 @@ class _ActiveProjectChipState extends ConsumerState<_ActiveProjectChip>
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              FilledButton.icon(
-                onPressed: () async {
-                  final exists = File(project.filePath).existsSync() ||
-                      Directory(project.filePath).existsSync();
-                  if (exists) await FileLauncher.launchProject(project.filePath);
-                },
-                icon: const Icon(Icons.launch, size: 14),
-                label: Text(l10n.launch, style: const TextStyle(fontSize: 12)),
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              Tooltip(
+                message: l10n.launch,
+                child: IconButton(
+                  icon: const Icon(Icons.launch),
+                  iconSize: 20,
+                  padding: const EdgeInsets.all(6),
+                  constraints: const BoxConstraints(),
+                  color: Colors.white70,
+                  onPressed: () async {
+                    final exists = File(project.filePath).existsSync() ||
+                        Directory(project.filePath).existsSync();
+                    if (!exists) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(AppLocalizations.of(context)!.fileMissing)),
+                        );
+                      }
+                      return;
+                    }
+                    await FileLauncher.launchProject(project.filePath);
+                  },
                 ),
               ),
-              const SizedBox(width: 6),
-              OutlinedButton.icon(
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => ProjectDetailPage(projectId: project.id)),
-                ),
-                icon: const Icon(Icons.open_in_new, size: 14),
-                label: Text(l10n.projectDetails, style: const TextStyle(fontSize: 12)),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
-                  foregroundColor: Colors.white70,
+              const SizedBox(width: 4),
+              Tooltip(
+                message: l10n.projectDetails,
+                child: IconButton(
+                  icon: const Icon(Icons.assignment),
+                  iconSize: 20,
+                  padding: const EdgeInsets.all(6),
+                  constraints: const BoxConstraints(),
+                  color: Colors.white70,
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => ProjectDetailPage(projectId: project.id)),
+                  ),
                 ),
               ),
               const SizedBox(width: 8),

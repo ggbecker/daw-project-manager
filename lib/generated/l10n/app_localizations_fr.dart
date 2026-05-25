@@ -2844,6 +2844,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get collapse => 'Réduire';
 
   @override
+  String get lastModifiedColors => 'Last Modified date colors';
+
+  @override
+  String get lastModifiedColorsDescription =>
+      'Colors the Last Modified date based on age and status. Green = Finished. Older dates fade from yellow to red — stronger red means the project hasn\'t been touched in longer.';
+
+  @override
   String get sessionMode => 'Mode session';
 
   @override
@@ -2877,26 +2884,29 @@ class AppLocalizationsFr extends AppLocalizations {
   String get sessionDuration => 'Durée de la session';
 
   @override
-  String get scanDepthLabel => 'Profondeur de scan :';
+  String get scanModeLabel => 'Mode de scan :';
 
   @override
-  String get scanDepthAll => 'Tous les niveaux';
+  String get scanModeSectionTitle => 'Scan Mode';
 
   @override
-  String get scanDepthOne => '1 niveau';
+  String get scanModeSectionDescription =>
+      'Controls how projects in each folder are displayed in the table — as a plain flat list or grouped by subfolder.';
 
   @override
-  String get scanDepthTwo => '2 niveaux';
+  String get scanModeFlat => 'Plat';
 
   @override
-  String get scanDepthAllTooltip =>
-      'Analyse tous les sous-dossiers de manière récursive. Idéal pour les structures simples ; peut être lent sur les grands disques.';
+  String get scanModeSmartFolder => 'Dossier intelligent';
 
   @override
-  String get scanDepthOneTooltip =>
-      'Analyse uniquement les sous-dossiers directs de ce dossier racine. Chaque sous-dossier devient un projet.';
+  String get scanModeFlatDescription =>
+      'Affiche tous les projets sous forme de liste simple. Simple et rapide.';
 
   @override
-  String get scanDepthTwoTooltip =>
-      'Analyse deux niveaux de profondeur. Les sous-dossiers directs et leurs enfants sont affichés en arborescence.';
+  String get scanModeSmartFolderDescription =>
+      'Regroupe les projets par dossier quand un dossier contient plus d\'un projet.';
+
+  @override
+  String get skip => 'Passer';
 }

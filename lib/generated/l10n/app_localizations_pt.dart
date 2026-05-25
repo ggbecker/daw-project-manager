@@ -2824,6 +2824,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get collapse => 'Recolher';
 
   @override
+  String get lastModifiedColors => 'Last Modified date colors';
+
+  @override
+  String get lastModifiedColorsDescription =>
+      'Colors the Last Modified date based on age and status. Green = Finished. Older dates fade from yellow to red — stronger red means the project hasn\'t been touched in longer.';
+
+  @override
   String get sessionMode => 'Modo sessão';
 
   @override
@@ -2856,26 +2863,29 @@ class AppLocalizationsPt extends AppLocalizations {
   String get sessionDuration => 'Tempo de sessão';
 
   @override
-  String get scanDepthLabel => 'Profundidade de varredura:';
+  String get scanModeLabel => 'Modo de varredura:';
 
   @override
-  String get scanDepthAll => 'Todos os níveis';
+  String get scanModeSectionTitle => 'Scan Mode';
 
   @override
-  String get scanDepthOne => '1 nível';
+  String get scanModeSectionDescription =>
+      'Controls how projects in each folder are displayed in the table — as a plain flat list or grouped by subfolder.';
 
   @override
-  String get scanDepthTwo => '2 níveis';
+  String get scanModeFlat => 'Simples';
 
   @override
-  String get scanDepthAllTooltip =>
-      'Varre todas as subpastas recursivamente. Ideal para estruturas simples; pode ser lento em drives grandes.';
+  String get scanModeSmartFolder => 'Pasta inteligente';
 
   @override
-  String get scanDepthOneTooltip =>
-      'Varre apenas as subpastas imediatas desta pasta raiz. Cada subpasta vira um projeto.';
+  String get scanModeFlatDescription =>
+      'Mostra cada projeto como uma lista simples. Simples e rápido.';
 
   @override
-  String get scanDepthTwoTooltip =>
-      'Varre dois níveis de profundidade. Subpastas diretas e seus filhos são exibidos em árvore.';
+  String get scanModeSmartFolderDescription =>
+      'Agrupa projetos por pasta quando uma pasta contém mais de um projeto.';
+
+  @override
+  String get skip => 'Pular';
 }

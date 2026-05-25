@@ -1,4 +1,4 @@
-{
+﻿{
   "@@locale": "pt",
   "appTitle": "Gerenciador de Projetos DAW",
   "@appTitle": {
@@ -1881,18 +1881,16 @@
   "@switchSessionNew": {"placeholders": {"project": {"type": "String"}}},
   "sessionDuration": "Tempo de sessão",
   "@sessionDuration": {},
-  "scanDepthLabel": "Profundidade de varredura:",
-  "@scanDepthLabel": {},
-  "scanDepthAll": "Todos os níveis",
-  "@scanDepthAll": {},
-  "scanDepthOne": "1 nível",
-  "@scanDepthOne": {},
-  "scanDepthTwo": "2 níveis",
-  "@scanDepthTwo": {},
-  "scanDepthAllTooltip": "Varre todas as subpastas recursivamente. Ideal para estruturas simples; pode ser lento em drives grandes.",
-  "@scanDepthAllTooltip": {},
-  "scanDepthOneTooltip": "Varre apenas as subpastas imediatas desta pasta raiz. Cada subpasta vira um projeto.",
-  "@scanDepthOneTooltip": {},
-  "scanDepthTwoTooltip": "Varre dois níveis de profundidade. Subpastas diretas e seus filhos são exibidos em árvore.",
-  "@scanDepthTwoTooltip": {}
+    "scanModeLabel": "Modo de varredura:",
+  "@scanModeLabel": {},
+  "scanModeFlat": "Simples",
+  "@scanModeFlat": {},
+  "scanModeSmartFolder": "Pasta inteligente",
+  "@scanModeSmartFolder": {},
+  "scanModeFlatDescription": "Mostra cada projeto como uma lista simples. Simples e rápido.",
+  "@scanModeFlatDescription": {},
+  "scanModeSmartFolderDescription": "Agrupa projetos por pasta quando uma pasta contém mais de um projeto.",
+  "@scanModeSmartFolderDescription": {},
+  "skip": "Pular",
+  "@skip": {}
 }

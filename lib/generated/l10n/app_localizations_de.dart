@@ -2837,6 +2837,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get collapse => 'Einklappen';
 
   @override
+  String get lastModifiedColors => 'Last Modified date colors';
+
+  @override
+  String get lastModifiedColorsDescription =>
+      'Colors the Last Modified date based on age and status. Green = Finished. Older dates fade from yellow to red — stronger red means the project hasn\'t been touched in longer.';
+
+  @override
   String get sessionMode => 'Sitzungsmodus';
 
   @override
@@ -2869,26 +2876,29 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sessionDuration => 'Sitzungsdauer';
 
   @override
-  String get scanDepthLabel => 'Scantiefe:';
+  String get scanModeLabel => 'Scanmodus:';
 
   @override
-  String get scanDepthAll => 'Alle Ebenen';
+  String get scanModeSectionTitle => 'Scan Mode';
 
   @override
-  String get scanDepthOne => '1 Ebene';
+  String get scanModeSectionDescription =>
+      'Controls how projects in each folder are displayed in the table — as a plain flat list or grouped by subfolder.';
 
   @override
-  String get scanDepthTwo => '2 Ebenen';
+  String get scanModeFlat => 'Einfach';
 
   @override
-  String get scanDepthAllTooltip =>
-      'Scannt alle Unterordner rekursiv. Für einfache Strukturen; kann bei großen Laufwerken langsam sein.';
+  String get scanModeSmartFolder => 'Intelligenter Ordner';
 
   @override
-  String get scanDepthOneTooltip =>
-      'Scannt nur die direkten Unterordner dieses Stammordners. Jeder Unterordner wird ein Projekteintrag.';
+  String get scanModeFlatDescription =>
+      'Zeigt alle Projekte als einfache Liste. Simpel und schnell.';
 
   @override
-  String get scanDepthTwoTooltip =>
-      'Scannt zwei Ebenen tief. Direkte Unterordner und deren Unterordner werden als Baumstruktur angezeigt.';
+  String get scanModeSmartFolderDescription =>
+      'Gruppiert Projekte nach Ordner, wenn ein Ordner mehr als ein Projekt enthält.';
+
+  @override
+  String get skip => 'Überspringen';
 }

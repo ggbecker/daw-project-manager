@@ -1,4 +1,4 @@
-{
+﻿{
   "@@locale": "zh",
   "appTitle": "DAW项目管理器",
   "@appTitle": {
@@ -1857,18 +1857,16 @@
   "@switchSessionNew": {"placeholders": {"project": {"type": "String"}}},
   "sessionDuration": "会话时长",
   "@sessionDuration": {},
-  "scanDepthLabel": "扫描深度：",
-  "@scanDepthLabel": {},
-  "scanDepthAll": "全部层级",
-  "@scanDepthAll": {},
-  "scanDepthOne": "1层",
-  "@scanDepthOne": {},
-  "scanDepthTwo": "2层",
-  "@scanDepthTwo": {},
-  "scanDepthAllTooltip": "递归扫描所有子文件夹。适合简单结构；大型驱动器上可能较慢。",
-  "@scanDepthAllTooltip": {},
-  "scanDepthOneTooltip": "仅扫描此根文件夹的直接子文件夹，每个子文件夹成为一个项目。",
-  "@scanDepthOneTooltip": {},
-  "scanDepthTwoTooltip": "扫描两层深度。直接子文件夹及其子项以树形视图显示。",
-  "@scanDepthTwoTooltip": {}
+    "scanModeLabel": "扫描模式：",
+  "@scanModeLabel": {},
+  "scanModeFlat": "平铺",
+  "@scanModeFlat": {},
+  "scanModeSmartFolder": "智能文件夹",
+  "@scanModeSmartFolder": {},
+  "scanModeFlatDescription": "将所有项目显示为平铺列表。简单快速。",
+  "@scanModeFlatDescription": {},
+  "scanModeSmartFolderDescription": "当文件夹包含多个项目时，按文件夹分组显示。",
+  "@scanModeSmartFolderDescription": {},
+  "skip": "跳过",
+  "@skip": {}
 }

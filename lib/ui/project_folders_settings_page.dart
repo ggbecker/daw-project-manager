@@ -10,6 +10,8 @@ import 'widgets/update_available_dialog.dart';
 import 'dashboard_page.dart' show appVersion;
 
 import '../generated/l10n/app_localizations.dart';
+import '../models/scan_mode.dart';
+import 'onboarding_wizard_page.dart';
 import '../providers/providers.dart';
 import '../repository/project_repository.dart';
 import '../services/scanner_service.dart';
@@ -53,35 +55,19 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
 
   bool get _isDesktop => !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux);
 
-  Future<void> _scanOnlyFolder(ProjectRepository repo, String folderId, String folderPath, {int scanDepth = 0}) async {
+  Future<void> _scanOnlyFolder(ProjectRepository repo, String folderId, String folderPath) async {
     final scanner = ScannerService();
     final excluded = repo.getIgnoredPaths().map((p) => p.path).toList(growable: false);
     final scanTime = DateTime.now();
     int found = 0;
+    final foundPaths = <String>{};
 
-    if (scanDepth > 0) {
-      final allResults = await scanner.scanDirectoryShallow(folderPath, maxDepth: scanDepth, ignoredPaths: excluded).toList();
-      final folderToId = <String, String>{};
-      final foundPaths = <String>{};
-      for (final result in allResults.where((r) => r.parentFolderPath == null)) {
-        await repo.upsertFromFileSystemEntity(result.file, fullMetadata: false);
-        foundPaths.add(result.file.path);
-        final saved = repo.getByPath(result.file.path);
-        if (saved != null) folderToId[result.folderPath] = saved.id;
-        found++;
-      }
-      for (final result in allResults.where((r) => r.parentFolderPath != null)) {
-        await repo.upsertFromFileSystemEntity(result.file, fullMetadata: false, parentProjectId: folderToId[result.parentFolderPath]);
-        foundPaths.add(result.file.path);
-        found++;
-      }
-      await repo.removeOrphanedProjectsFromRoot(folderPath, foundPaths);
-    } else {
-      await for (final entity in scanner.scanDirectory(folderPath, ignoredPaths: excluded)) {
-        await repo.upsertFromFileSystemEntity(entity, fullMetadata: false);
-        found++;
-      }
+    await for (final entity in scanner.scanDirectory(folderPath, ignoredPaths: excluded)) {
+      await repo.upsertFromFileSystemEntity(entity, fullMetadata: false);
+      foundPaths.add(entity.path);
+      found++;
     }
+    await repo.removeOrphanedProjectsFromRoot(folderPath, foundPaths);
     await repo.updateRootLastScanAt(folderId, scanTime);
 
     if (!mounted) return;
@@ -302,6 +288,7 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
 
     final sessionMode = ref.watch(sessionModeProvider);
     final checkUpdates = ref.watch(checkForUpdatesProvider);
+    final lastModifiedColors = ref.watch(lastModifiedColorProvider);
 
     final listBody = ListView(
       padding: MobileUtils.getResponsivePadding(context),
@@ -336,6 +323,15 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
                   onChanged: (v) => ref.read(checkForUpdatesProvider.notifier).toggle(),
                   title: Text(l10n.checkForUpdates),
                   subtitle: Text(l10n.checkForUpdatesDescription,
+                      style: Theme.of(context).textTheme.bodySmall),
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                ),
+                SwitchListTile(
+                  value: lastModifiedColors,
+                  onChanged: (_) => ref.read(lastModifiedColorProvider.notifier).toggle(),
+                  title: Text(l10n.lastModifiedColors),
+                  subtitle: Text(l10n.lastModifiedColorsDescription,
                       style: Theme.of(context).textTheme.bodySmall),
                   contentPadding: EdgeInsets.zero,
                   dense: true,
@@ -386,10 +382,32 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
                 ),
                 const Divider(height: 20),
                 TextButton.icon(
-                  onPressed: () {
+                  onPressed: () async {
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: Text(l10n.resetOnboarding),
+                        content: const Text('This will restart the setup wizard. Continue?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(ctx).pop(false),
+                            child: Text(l10n.cancel),
+                          ),
+                          FilledButton(
+                            onPressed: () => Navigator.of(ctx).pop(true),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: Theme.of(context).colorScheme.error,
+                            ),
+                            child: Text(l10n.resetOnboarding),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirmed != true || !context.mounted) return;
                     ref.read(onboardingCompleteProvider.notifier).reset();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(l10n.resetOnboarding)),
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (_) => const OnboardingWizardPage()),
+                      (route) => false,
                     );
                   },
                   icon: Icon(Icons.restart_alt, size: 16,
@@ -448,93 +466,109 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
                   )
                 else
                   ...projectFolders.map((f) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: const Icon(Icons.folder),
-                          title: Text(f.path),
-                          subtitle: f.lastScanAt == null
-                              ? Text(l10n.notScannedYet)
-                              : Text(l10n.lastScan(f.lastScanAt.toString())),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                tooltip: l10n.relocateFolderDialogTitle,
-                                onPressed: _busy ? null : () => _relocateProjectFolder(f.id, f.path),
-                                icon: const Icon(Icons.drive_file_move_outline),
-                              ),
-                              IconButton(
-                                tooltip: l10n.remove,
-                                onPressed: _busy ? null : () => _removeProjectFolder(f.id),
-                                icon: const Icon(Icons.delete_outline),
-                              ),
-                            ],
+                    return ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.folder),
+                      title: Text(f.path),
+                      subtitle: f.lastScanAt == null
+                          ? Text(l10n.notScannedYet)
+                          : Text(l10n.lastScan(f.lastScanAt.toString())),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            tooltip: l10n.relocateFolderDialogTitle,
+                            onPressed: _busy ? null : () => _relocateProjectFolder(f.id, f.path),
+                            icon: const Icon(Icons.drive_file_move_outline),
                           ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 40, bottom: 8),
-                          child: Row(
-                            children: [
-                              Text(l10n.scanDepthLabel, style: Theme.of(context).textTheme.bodySmall),
-                              const SizedBox(width: 8),
-                              SegmentedButton<int>(
-                                segments: [
-                                  ButtonSegment(
-                                    value: 0,
-                                    label: Tooltip(
-                                      message: l10n.scanDepthAllTooltip,
-                                      child: Text(l10n.scanDepthAll),
-                                    ),
-                                  ),
-                                  ButtonSegment(
-                                    value: 1,
-                                    label: Tooltip(
-                                      message: l10n.scanDepthOneTooltip,
-                                      child: Text(l10n.scanDepthOne),
-                                    ),
-                                  ),
-                                  ButtonSegment(
-                                    value: 2,
-                                    label: Tooltip(
-                                      message: l10n.scanDepthTwoTooltip,
-                                      child: Text(l10n.scanDepthTwo),
-                                    ),
-                                  ),
-                                ],
-                                selected: {f.scanDepth},
-                                showSelectedIcon: false,
-                                style: ButtonStyle(
-                                  visualDensity: VisualDensity.compact,
-                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                ),
-                                onSelectionChanged: _busy ? null : (selected) async {
-                                  final newDepth = selected.first;
-                                  if (newDepth == f.scanDepth) return;
-                                  setState(() => _busy = true);
-                                  try {
-                                    final repo = await ref.read(repositoryProvider.future);
-                                    await repo.updateRootScanDepth(f.id, newDepth);
-                                    ref.invalidate(scanRootsProvider);
-                                    await _scanOnlyFolder(repo, f.id, f.path, scanDepth: newDepth);
-                                    ref.invalidate(allProjectsStreamProvider);
-                                  } finally {
-                                    if (mounted) setState(() => _busy = false);
-                                  }
-                                },
-                              ),
-                            ],
+                          IconButton(
+                            tooltip: l10n.remove,
+                            onPressed: _busy ? null : () => _removeProjectFolder(f.id),
+                            icon: const Icon(Icons.delete_outline),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     );
                   }),
               ],
             ),
           ),
         ),
+
+        const SizedBox(height: 12),
+
+        // Scan Mode card — one selector per folder
+        if (projectFolders.isNotEmpty)
+          Card(
+            clipBehavior: Clip.antiAlias,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.view_agenda_outlined),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(l10n.scanModeSectionTitle,
+                                style: Theme.of(context).textTheme.titleMedium),
+                            const SizedBox(height: 2),
+                            Text(
+                              l10n.scanModeSectionDescription,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  for (final entry in projectFolders.asMap().entries) ...[
+                    if (projectFolders.length > 1) ...[
+                      if (entry.key > 0) const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          const Icon(Icons.folder, size: 14),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              entry.value.path,
+                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                    _ScanModeSelector(
+                      currentMode: entry.value.scanMode,
+                      disabled: _busy,
+                      onChanged: (newMode) async {
+                        final newDepth = newMode == ScanMode.smartFolder ? 1 : 0;
+                        if (newDepth == entry.value.scanDepth) return;
+                        setState(() => _busy = true);
+                        try {
+                          final repo = await ref.read(repositoryProvider.future);
+                          await repo.updateRootScanDepth(entry.value.id, newDepth);
+                          ref.invalidate(scanRootsProvider);
+                          ref.invalidate(allProjectsStreamProvider);
+                        } finally {
+                          if (mounted) setState(() => _busy = false);
+                        }
+                      },
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
 
         const SizedBox(height: 12),
 
@@ -908,6 +942,268 @@ class _EmptyState extends StatelessWidget {
                   ),
                 ],
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Scan mode selector — two side-by-side cards with visual previews
+// ---------------------------------------------------------------------------
+
+class _ScanModeSelector extends StatelessWidget {
+  final ScanMode currentMode;
+  final bool disabled;
+  final ValueChanged<ScanMode> onChanged;
+
+  const _ScanModeSelector({
+    required this.currentMode,
+    required this.disabled,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.view_agenda_outlined, size: 14, color: cs.primary),
+            const SizedBox(width: 6),
+            Text(
+              l10n.scanModeLabel,
+              style: tt.labelMedium?.copyWith(color: cs.primary, fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+        const SizedBox(height: 2),
+        Text(
+          currentMode == ScanMode.flat
+              ? l10n.scanModeFlatDescription
+              : l10n.scanModeSmartFolderDescription,
+          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant, fontSize: 11),
+        ),
+        const SizedBox(height: 8),
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: _ScanModeCard(
+                  mode: ScanMode.flat,
+                  label: l10n.scanModeFlat,
+                  description: l10n.scanModeFlatDescription,
+                  preview: const _FlatModePreview(),
+                  selected: currentMode == ScanMode.flat,
+                  disabled: disabled,
+                  onTap: () => onChanged(ScanMode.flat),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _ScanModeCard(
+                  mode: ScanMode.smartFolder,
+                  label: l10n.scanModeSmartFolder,
+                  description: l10n.scanModeSmartFolderDescription,
+                  preview: const _SmartFolderModePreview(),
+                  selected: currentMode == ScanMode.smartFolder,
+                  disabled: disabled,
+                  onTap: () => onChanged(ScanMode.smartFolder),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ScanModeCard extends StatelessWidget {
+  final ScanMode mode;
+  final String label;
+  final String description;
+  final Widget preview;
+  final bool selected;
+  final bool disabled;
+  final VoidCallback onTap;
+
+  const _ScanModeCard({
+    required this.mode,
+    required this.label,
+    required this.description,
+    required this.preview,
+    required this.selected,
+    required this.disabled,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final borderColor = selected ? colorScheme.primary : colorScheme.outlineVariant;
+    final bgColor = selected
+        ? colorScheme.primaryContainer.withValues(alpha: 0.25)
+        : colorScheme.surfaceContainerHighest.withValues(alpha: 0.4);
+
+    return GestureDetector(
+      onTap: disabled ? null : onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: borderColor,
+            width: selected ? 2 : 1,
+          ),
+        ),
+        padding: const EdgeInsets.all(10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                if (selected)
+                  Icon(Icons.radio_button_checked, size: 14, color: colorScheme.primary)
+                else
+                  Icon(Icons.radio_button_unchecked, size: 14, color: colorScheme.outline),
+                const SizedBox(width: 5),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                      color: selected ? colorScheme.primary : null,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            preview,
+            const SizedBox(height: 6),
+            Text(
+              description,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+                fontSize: 10,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Flat mode preview — simple rows, no grouping
+class _FlatModePreview extends StatelessWidget {
+  const _FlatModePreview();
+
+  @override
+  Widget build(BuildContext context) {
+    const rows = ['Song Alpha', 'Song Beta', 'Remix Final', 'Dark Ambient'];
+    return _PreviewFrame(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: rows
+            .map((name) => _PreviewRow(icon: Icons.music_note, label: name))
+            .toList(),
+      ),
+    );
+  }
+}
+
+// Smart Folder mode preview — groups when >1, flat otherwise
+class _SmartFolderModePreview extends StatelessWidget {
+  const _SmartFolderModePreview();
+
+  @override
+  Widget build(BuildContext context) {
+    return _PreviewFrame(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _PreviewRow(icon: Icons.folder_open, label: 'EP Project', bold: true),
+          _PreviewRow(icon: Icons.music_note, label: 'Track 01', indent: true),
+          _PreviewRow(icon: Icons.music_note, label: 'Track 02', indent: true, last: true),
+          _PreviewRow(icon: Icons.music_note, label: 'Song Alpha'),
+          _PreviewRow(icon: Icons.folder_open, label: 'Album', bold: true),
+          _PreviewRow(icon: Icons.music_note, label: 'Intro', indent: true),
+          _PreviewRow(icon: Icons.music_note, label: 'Chorus', indent: true, last: true),
+        ],
+      ),
+    );
+  }
+}
+
+class _PreviewFrame extends StatelessWidget {
+  final Widget child;
+  const _PreviewFrame({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5)),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      child: child,
+    );
+  }
+}
+
+class _PreviewRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool indent;
+  final bool bold;
+  final bool last;
+
+  const _PreviewRow({
+    required this.icon,
+    required this.label,
+    this.indent = false,
+    this.bold = false,
+    this.last = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.onSurface;
+    return Padding(
+      padding: EdgeInsets.only(left: indent ? 14.0 : 0, bottom: 2),
+      child: Row(
+        children: [
+          if (indent) ...[
+            Text(
+              last ? '└ ' : '├ ',
+              style: TextStyle(fontSize: 11, color: color.withValues(alpha: 0.4), fontFamily: 'monospace'),
+            ),
+          ],
+          Icon(icon, size: 12, color: color.withValues(alpha: 0.6)),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                color: color.withValues(alpha: bold ? 0.9 : 0.7),
+                fontWeight: bold ? FontWeight.w600 : FontWeight.normal,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],

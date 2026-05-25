@@ -1,4 +1,4 @@
-{
+﻿{
   "@@locale": "it",
   "appTitle": "Gestore Progetti DAW",
   "@appTitle": {
@@ -1857,18 +1857,16 @@
   "@switchSessionNew": {"placeholders": {"project": {"type": "String"}}},
   "sessionDuration": "Durata sessione",
   "@sessionDuration": {},
-  "scanDepthLabel": "Profondità scansione:",
-  "@scanDepthLabel": {},
-  "scanDepthAll": "Tutti i livelli",
-  "@scanDepthAll": {},
-  "scanDepthOne": "1 livello",
-  "@scanDepthOne": {},
-  "scanDepthTwo": "2 livelli",
-  "@scanDepthTwo": {},
-  "scanDepthAllTooltip": "Scansiona tutte le sottocartelle in modo ricorsivo. Ideale per strutture semplici; può essere lento su drive grandi.",
-  "@scanDepthAllTooltip": {},
-  "scanDepthOneTooltip": "Scansiona solo le sottocartelle dirette di questa cartella radice. Ogni sottocartella diventa un progetto.",
-  "@scanDepthOneTooltip": {},
-  "scanDepthTwoTooltip": "Scansiona due livelli in profondità. Le sottocartelle dirette e i loro figli vengono mostrati ad albero.",
-  "@scanDepthTwoTooltip": {}
+    "scanModeLabel": "Modalità scansione:",
+  "@scanModeLabel": {},
+  "scanModeFlat": "Piatto",
+  "@scanModeFlat": {},
+  "scanModeSmartFolder": "Cartella intelligente",
+  "@scanModeSmartFolder": {},
+  "scanModeFlatDescription": "Mostra ogni progetto come lista semplice. Semplice e veloce.",
+  "@scanModeFlatDescription": {},
+  "scanModeSmartFolderDescription": "Raggruppa i progetti per cartella quando una cartella contiene più di un progetto.",
+  "@scanModeSmartFolderDescription": {},
+  "skip": "Salta",
+  "@skip": {}
 }

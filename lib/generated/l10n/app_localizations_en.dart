@@ -2821,6 +2821,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get collapse => 'Collapse';
 
   @override
+  String get lastModifiedColors => 'Last Modified date colors';
+
+  @override
+  String get lastModifiedColorsDescription =>
+      'Colors the Last Modified date based on age and status. Green = Finished. Older dates fade from yellow to red — stronger red means the project hasn\'t been touched in longer.';
+
+  @override
   String get sessionMode => 'Session mode';
 
   @override
@@ -2828,7 +2835,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Subscribe to a project before launching, to track work time and manage it from the toolbar';
 
   @override
-  String get startSession => 'Start session';
+  String get startSession => 'Start Session';
 
   @override
   String get endSession => 'End session';
@@ -2854,26 +2861,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionDuration => 'Session time';
 
   @override
-  String get scanDepthLabel => 'Scan depth:';
+  String get scanModeLabel => 'Scan mode:';
 
   @override
-  String get scanDepthAll => 'All levels';
+  String get scanModeSectionTitle => 'Scan Mode';
 
   @override
-  String get scanDepthOne => '1 level';
+  String get scanModeSectionDescription =>
+      'Controls how projects in each folder are displayed in the table — as a plain flat list or grouped by subfolder.';
 
   @override
-  String get scanDepthTwo => '2 levels';
+  String get scanModeFlat => 'Flat';
 
   @override
-  String get scanDepthAllTooltip =>
-      'Recursively scans every subfolder. Best for simple structures; may be slow on large drives.';
+  String get scanModeSmartFolder => 'Smart Folder';
 
   @override
-  String get scanDepthOneTooltip =>
-      'Scans only the immediate child folders of this root. Each subfolder becomes one project entry.';
+  String get scanModeFlatDescription =>
+      'Shows every project as a flat list. Simple and fast.';
 
   @override
-  String get scanDepthTwoTooltip =>
-      'Scans two levels deep. Direct subfolders and their children are shown as a grouped tree.';
+  String get scanModeSmartFolderDescription =>
+      'Groups projects by folder when a folder contains more than one project.';
+
+  @override
+  String get skip => 'Skip';
 }

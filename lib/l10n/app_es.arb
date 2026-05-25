@@ -1,4 +1,4 @@
-{
+﻿{
   "@@locale": "es",
   "appTitle": "Gestor de Proyectos DAW",
   "@appTitle": {
@@ -1857,18 +1857,16 @@
   "@switchSessionNew": {"placeholders": {"project": {"type": "String"}}},
   "sessionDuration": "Tiempo de sesión",
   "@sessionDuration": {},
-  "scanDepthLabel": "Profundidad de escaneo:",
-  "@scanDepthLabel": {},
-  "scanDepthAll": "Todos los niveles",
-  "@scanDepthAll": {},
-  "scanDepthOne": "1 nivel",
-  "@scanDepthOne": {},
-  "scanDepthTwo": "2 niveles",
-  "@scanDepthTwo": {},
-  "scanDepthAllTooltip": "Escanea todas las subcarpetas de forma recursiva. Ideal para estructuras simples; puede ser lento en unidades grandes.",
-  "@scanDepthAllTooltip": {},
-  "scanDepthOneTooltip": "Escanea solo las subcarpetas inmediatas de esta carpeta raíz. Cada subcarpeta se convierte en un proyecto.",
-  "@scanDepthOneTooltip": {},
-  "scanDepthTwoTooltip": "Escanea dos niveles de profundidad. Las subcarpetas directas y sus hijos se muestran en vista de árbol.",
-  "@scanDepthTwoTooltip": {}
+    "scanModeLabel": "Modo de escaneo:",
+  "@scanModeLabel": {},
+  "scanModeFlat": "Simple",
+  "@scanModeFlat": {},
+  "scanModeSmartFolder": "Carpeta inteligente",
+  "@scanModeSmartFolder": {},
+  "scanModeFlatDescription": "Muestra cada proyecto como una lista simple. Sencillo y rápido.",
+  "@scanModeFlatDescription": {},
+  "scanModeSmartFolderDescription": "Agrupa los proyectos por carpeta cuando una carpeta contiene más de un proyecto.",
+  "@scanModeSmartFolderDescription": {},
+  "skip": "Omitir",
+  "@skip": {}
 }

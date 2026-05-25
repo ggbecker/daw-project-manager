@@ -1,4 +1,4 @@
-{
+﻿{
   "@@locale": "de",
   "appTitle": "DAW Projektmanager",
   "@appTitle": {
@@ -1857,18 +1857,16 @@
   "@switchSessionNew": {"placeholders": {"project": {"type": "String"}}},
   "sessionDuration": "Sitzungsdauer",
   "@sessionDuration": {},
-  "scanDepthLabel": "Scantiefe:",
-  "@scanDepthLabel": {},
-  "scanDepthAll": "Alle Ebenen",
-  "@scanDepthAll": {},
-  "scanDepthOne": "1 Ebene",
-  "@scanDepthOne": {},
-  "scanDepthTwo": "2 Ebenen",
-  "@scanDepthTwo": {},
-  "scanDepthAllTooltip": "Scannt alle Unterordner rekursiv. Für einfache Strukturen; kann bei großen Laufwerken langsam sein.",
-  "@scanDepthAllTooltip": {},
-  "scanDepthOneTooltip": "Scannt nur die direkten Unterordner dieses Stammordners. Jeder Unterordner wird ein Projekteintrag.",
-  "@scanDepthOneTooltip": {},
-  "scanDepthTwoTooltip": "Scannt zwei Ebenen tief. Direkte Unterordner und deren Unterordner werden als Baumstruktur angezeigt.",
-  "@scanDepthTwoTooltip": {}
+    "scanModeLabel": "Scanmodus:",
+  "@scanModeLabel": {},
+  "scanModeFlat": "Einfach",
+  "@scanModeFlat": {},
+  "scanModeSmartFolder": "Intelligenter Ordner",
+  "@scanModeSmartFolder": {},
+  "scanModeFlatDescription": "Zeigt alle Projekte als einfache Liste. Simpel und schnell.",
+  "@scanModeFlatDescription": {},
+  "scanModeSmartFolderDescription": "Gruppiert Projekte nach Ordner, wenn ein Ordner mehr als ein Projekt enthält.",
+  "@scanModeSmartFolderDescription": {},
+  "skip": "Überspringen",
+  "@skip": {}
 }

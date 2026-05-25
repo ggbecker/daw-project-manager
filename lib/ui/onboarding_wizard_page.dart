@@ -7,9 +7,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../generated/l10n/app_localizations.dart';
 import '../providers/providers.dart';
-import 'google_drive_sync_page.dart';
+import '../providers/theme_provider.dart';
+import '../utils/mobile_utils.dart';
+import 'dashboard_page.dart' show DashboardPage;
 import 'widgets/language_switcher.dart';
-import 'widgets/theme_switcher.dart';
 
 class OnboardingWizardPage extends ConsumerStatefulWidget {
   const OnboardingWizardPage({super.key});
@@ -43,6 +44,11 @@ class _OnboardingWizardPageState extends ConsumerState<OnboardingWizardPage> {
 
   Future<void> _finish() async {
     await ref.read(onboardingCompleteProvider.notifier).complete();
+    if (!mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const DashboardPage()),
+      (route) => false,
+    );
   }
 
   @override
@@ -64,8 +70,8 @@ class _OnboardingWizardPageState extends ConsumerState<OnboardingWizardPage> {
                 _WelcomePage(l10n: l10n),
                 _LanguagePage(l10n: l10n),
                 _ThemePage(l10n: l10n),
+                _TabsPage(l10n: l10n),
                 _FoldersPage(l10n: l10n),
-                _DrivePage(l10n: l10n, onNext: _next),
                 _UpdatesPage(l10n: l10n),
                 _DonePage(l10n: l10n),
               ],
@@ -77,6 +83,7 @@ class _OnboardingWizardPageState extends ConsumerState<OnboardingWizardPage> {
             onBack: _back,
             onNext: _next,
             onFinish: _finish,
+            onSkip: _finish,
             l10n: l10n,
             theme: theme,
           ),
@@ -113,6 +120,7 @@ class _WizardNav extends StatelessWidget {
   final VoidCallback onBack;
   final VoidCallback onNext;
   final VoidCallback onFinish;
+  final VoidCallback onSkip;
   final AppLocalizations l10n;
   final ThemeData theme;
 
@@ -122,6 +130,7 @@ class _WizardNav extends StatelessWidget {
     required this.onBack,
     required this.onNext,
     required this.onFinish,
+    required this.onSkip,
     required this.l10n,
     required this.theme,
   });
@@ -131,8 +140,8 @@ class _WizardNav extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          // Back button
           if (page > 0)
             TextButton.icon(
               onPressed: onBack,
@@ -141,6 +150,22 @@ class _WizardNav extends StatelessWidget {
             )
           else
             const SizedBox.shrink(),
+
+          const Spacer(),
+
+          // Skip link (hidden on last page)
+          if (!isLast)
+            TextButton(
+              onPressed: onSkip,
+              style: TextButton.styleFrom(
+                foregroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+              ),
+              child: Text(l10n.skip),
+            ),
+
+          if (!isLast) const SizedBox(width: 8),
+
+          // Next / Finish button
           if (isLast)
             FilledButton.icon(
               onPressed: onFinish,
@@ -309,16 +334,46 @@ class _LanguageGrid extends ConsumerWidget {
 
 // ── Page 2: Theme ─────────────────────────────────────────────────────────────
 
-class _ThemePage extends StatelessWidget {
+class _ThemePage extends ConsumerWidget {
   final AppLocalizations l10n;
   const _ThemePage({required this.l10n});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final current = ref.watch(themeTypeProvider);
     return _WizardStep(
       icon: Icons.palette_outlined,
       title: l10n.onboardingThemeTitle,
-      child: Center(child: const ThemeSwitcher()),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: _ThemeCard(
+              themeType: AppThemeType.classicDark,
+              label: l10n.classicDarkThemeName,
+              bg: const Color(0xFF1E1F22),
+              card: const Color(0xFF2B2D31),
+              primary: const Color(0xFF5A6B7A),
+              accent: const Color(0xFF7E8C99),
+              selected: current == AppThemeType.classicDark,
+              onTap: () => ref.read(themeTypeProvider.notifier).setThemeType(AppThemeType.classicDark),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _ThemeCard(
+              themeType: AppThemeType.neonDark,
+              label: l10n.neonDarkThemeName,
+              bg: const Color(0xFF0A0A14),
+              card: const Color(0xFF1A1A2E),
+              primary: const Color(0xFF00D4FF),
+              accent: const Color(0xFF7B2CBF),
+              selected: current == AppThemeType.neonDark,
+              onTap: () => ref.read(themeTypeProvider.notifier).setThemeType(AppThemeType.neonDark),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -406,47 +461,6 @@ class _FoldersPageState extends ConsumerState<_FoldersPage> {
   }
 }
 
-// ── Page 4: Google Drive ──────────────────────────────────────────────────────
-
-class _DrivePage extends StatelessWidget {
-  final AppLocalizations l10n;
-  final VoidCallback onNext;
-  const _DrivePage({required this.l10n, required this.onNext});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return _WizardStep(
-      icon: Icons.cloud_outlined,
-      title: l10n.onboardingDriveTitle,
-      subtitle: l10n.onboardingDriveBody,
-      child: Column(
-        children: [
-          _ActionCard(
-            icon: Icons.cloud_upload_outlined,
-            title: l10n.startupGoogleDriveTitle,
-            subtitle: l10n.startupGoogleDriveSubtitle,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const GoogleDriveSyncPage()),
-              ).then((_) => onNext());
-            },
-          ),
-          const SizedBox(height: 12),
-          TextButton(
-            onPressed: onNext,
-            child: Text(
-              l10n.onboardingNext,
-              style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 // ── Page 5: Update checks ─────────────────────────────────────────────────────
 
 class _UpdatesPage extends ConsumerWidget {
@@ -491,54 +505,444 @@ class _DonePage extends StatelessWidget {
   }
 }
 
-// ── Reusable action card ──────────────────────────────────────────────────────
+// ── Theme card ────────────────────────────────────────────────────────────────
 
-class _ActionCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback? onTap;
+class _ThemeCard extends StatelessWidget {
+  final AppThemeType themeType;
+  final String label;
+  final Color bg;
+  final Color card;
+  final Color primary;
+  final Color accent;
+  final bool selected;
+  final VoidCallback onTap;
 
-  const _ActionCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    this.onTap,
+  const _ThemeCard({
+    required this.themeType,
+    required this.label,
+    required this.bg,
+    required this.card,
+    required this.primary,
+    required this.accent,
+    required this.selected,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return InkWell(
+    final cs = Theme.of(context).colorScheme;
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
         decoration: BoxDecoration(
-          border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.4)),
-          borderRadius: BorderRadius.circular(8),
-          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+          color: cs.surfaceContainerHighest.withValues(alpha: 0.4),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selected ? cs.primary : cs.outlineVariant,
+            width: selected ? 2 : 1,
+          ),
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Icon(icon, size: 28, color: theme.colorScheme.primary),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            // Mini app preview
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+              child: _ThemePreviewMockup(bg: bg, card: card, primary: primary, accent: accent),
+            ),
+            // Label + selection indicator
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              child: Row(
                 children: [
-                  Text(title,
-                      style: theme.textTheme.titleSmall
-                          ?.copyWith(fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 2),
-                  Text(subtitle, style: theme.textTheme.bodySmall),
+                  if (selected)
+                    Icon(Icons.radio_button_checked, size: 14, color: cs.primary)
+                  else
+                    Icon(Icons.radio_button_unchecked, size: 14, color: cs.outline),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      label,
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        fontWeight: selected ? FontWeight.w700 : FontWeight.normal,
+                        color: selected ? cs.primary : null,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
-            Icon(Icons.chevron_right, color: theme.colorScheme.outline),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ThemePreviewMockup extends StatelessWidget {
+  final Color bg;
+  final Color card;
+  final Color primary;
+  final Color accent;
+
+  const _ThemePreviewMockup({
+    required this.bg,
+    required this.card,
+    required this.primary,
+    required this.accent,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    const textColor = Colors.white;
+    const dimText = Color(0xFFAAAAAA);
+
+    final rows = [
+      ('Song Alpha',    'In Progress', '120'),
+      ('Dark Ambient',  'Done',        '90'),
+      ('Remix Final',   'In Progress', '128'),
+    ];
+
+    return Container(
+      color: bg,
+      padding: const EdgeInsets.all(8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Fake sidebar + header bar
+          Container(
+            height: 20,
+            decoration: BoxDecoration(
+              color: card,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: Row(
+              children: [
+                Container(width: 8, height: 8, decoration: BoxDecoration(color: primary, shape: BoxShape.circle)),
+                const SizedBox(width: 5),
+                Container(width: 40, height: 5, color: textColor.withValues(alpha: 0.3)),
+                const Spacer(),
+                Container(width: 24, height: 5, decoration: BoxDecoration(color: accent.withValues(alpha: 0.7), borderRadius: BorderRadius.circular(3))),
+              ],
+            ),
+          ),
+          const SizedBox(height: 5),
+          // Column headers
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2),
+            child: Row(
+              children: [
+                _previewText('Name', dimText, flex: 3),
+                _previewText('Status', dimText, flex: 2),
+                _previewText('BPM', dimText, flex: 1),
+              ],
+            ),
+          ),
+          const SizedBox(height: 3),
+          // Fake project rows
+          ...rows.map((r) => Container(
+            margin: const EdgeInsets.only(bottom: 3),
+            decoration: BoxDecoration(
+              color: card,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),
+            child: Row(
+              children: [
+                Container(
+                  width: 6, height: 6,
+                  decoration: BoxDecoration(
+                    color: r.$2 == 'Done' ? Colors.greenAccent.shade400 : primary,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                _previewText(r.$1, textColor, flex: 3),
+                _previewText(r.$2, dimText, flex: 2),
+                _previewText(r.$3, dimText, flex: 1),
+              ],
+            ),
+          )),
+        ],
+      ),
+    );
+  }
+
+  Widget _previewText(String text, Color color, {required int flex}) {
+    return Expanded(
+      flex: flex,
+      child: Text(
+        text,
+        style: TextStyle(fontSize: 10, color: color),
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
+}
+
+// ── Page 3: Tab layout ────────────────────────────────────────────────────────
+
+class _TabsPage extends ConsumerWidget {
+  final AppLocalizations l10n;
+  const _TabsPage({required this.l10n});
+
+  static const _icons = {
+    AppTab.projects:   Icons.library_music,
+    AppTab.releases:   Icons.album,
+    AppTab.playlists:  Icons.playlist_play,
+    AppTab.queue:      Icons.checklist,
+    AppTab.statistics: Icons.bar_chart_rounded,
+    AppTab.player:     Icons.headphones,
+  };
+
+  String _label(AppTab tab, AppLocalizations l10n) => switch (tab) {
+    AppTab.projects   => l10n.projectsTab,
+    AppTab.releases   => l10n.releasesTab,
+    AppTab.playlists  => l10n.playlists,
+    AppTab.queue      => l10n.queueTab,
+    AppTab.statistics => l10n.statisticsTab,
+    AppTab.player     => 'Music Player',
+  };
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tabPos = ref.watch(tabPositionProvider);
+    final visibleSet = ref.watch(visibleTabsProvider);
+    final isMobile = MobileUtils.isMobile();
+
+    final allTabs = VisibleTabsNotifier.canonicalOrder
+        .where((t) => isMobile || t != AppTab.playlists)  // playlists is mobile-only
+        .where((t) => !isMobile || t != AppTab.player)    // player is desktop-only
+        .toList();
+
+    return _WizardStep(
+      icon: Icons.tab_outlined,
+      title: l10n.customizeTabs,
+      subtitle: l10n.customizeTabsDescription,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Tab position cards (desktop only)
+          if (!isMobile) ...[
+            Text(l10n.tabPosition, style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: _TabPositionCard(
+                    position: TabPosition.top,
+                    label: l10n.tabPositionTop,
+                    selected: tabPos == TabPosition.top,
+                    onTap: () => ref.read(tabPositionProvider.notifier).set(TabPosition.top),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _TabPositionCard(
+                    position: TabPosition.left,
+                    label: l10n.tabPositionLeft,
+                    selected: tabPos == TabPosition.left,
+                    onTap: () => ref.read(tabPositionProvider.notifier).set(TabPosition.left),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+          ],
+
+          // Tab visibility toggles
+          Text(l10n.customizeTabs, style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: allTabs.map((tab) {
+              final isProjects = tab == AppTab.projects;
+              final visible = visibleSet.contains(tab);
+              return FilterChip(
+                avatar: Icon(_icons[tab], size: 16),
+                label: Text(_label(tab, l10n)),
+                selected: visible,
+                onSelected: isProjects ? null : (v) =>
+                    ref.read(visibleTabsProvider.notifier).setTabVisible(tab, v),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TabPositionCard extends StatelessWidget {
+  final TabPosition position;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _TabPositionCard({
+    required this.position,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: selected ? cs.primaryContainer.withValues(alpha: 0.25) : cs.surfaceContainerHighest.withValues(alpha: 0.4),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: selected ? cs.primary : cs.outlineVariant, width: selected ? 2 : 1),
+        ),
+        child: Column(
+          children: [
+            _TabLayoutDiagram(position: position, primary: cs.primary),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (selected)
+                  Icon(Icons.radio_button_checked, size: 13, color: cs.primary)
+                else
+                  Icon(Icons.radio_button_unchecked, size: 13, color: cs.outline),
+                const SizedBox(width: 4),
+                Text(label, style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.normal,
+                  color: selected ? cs.primary : null,
+                )),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TabLayoutDiagram extends StatelessWidget {
+  final TabPosition position;
+  final Color primary;
+
+  const _TabLayoutDiagram({required this.position, required this.primary});
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.6);
+    final tabColor = primary.withValues(alpha: 0.8);
+    final contentColor = Colors.white.withValues(alpha: 0.12);
+
+    if (position == TabPosition.top) {
+      return Container(
+        height: 84,
+        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(6)),
+        child: Column(
+          children: [
+            // Tab bar at top
+            Container(
+              height: 20,
+              decoration: BoxDecoration(
+                color: primary.withValues(alpha: 0.15),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+              child: Row(
+                children: [
+                  _tabChip(tabColor, active: true),
+                  const SizedBox(width: 4),
+                  _tabChip(tabColor.withValues(alpha: 0.35)),
+                  const SizedBox(width: 4),
+                  _tabChip(tabColor.withValues(alpha: 0.35)),
+                ],
+              ),
+            ),
+            // Content area
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(6),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(height: 5, width: double.infinity, color: contentColor),
+                    Container(height: 5, width: 120, color: contentColor),
+                    Container(height: 5, width: double.infinity, color: contentColor),
+                    Container(height: 5, width: 80, color: contentColor),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      // Left rail layout
+      return Container(
+        height: 84,
+        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(6)),
+        child: Row(
+          children: [
+            // Left rail
+            Container(
+              width: 26,
+              decoration: BoxDecoration(
+                color: primary.withValues(alpha: 0.15),
+                borderRadius: const BorderRadius.horizontal(left: Radius.circular(6)),
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  _tabDot(tabColor, active: true),
+                  const SizedBox(height: 5),
+                  _tabDot(tabColor.withValues(alpha: 0.35)),
+                  const SizedBox(height: 5),
+                  _tabDot(tabColor.withValues(alpha: 0.35)),
+                ],
+              ),
+            ),
+            // Content area
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(6),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(height: 5, width: double.infinity, color: contentColor),
+                    Container(height: 5, width: 60, color: contentColor),
+                    Container(height: 5, width: double.infinity, color: contentColor),
+                    Container(height: 5, width: 40, color: contentColor),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  Widget _tabChip(Color color, {bool active = false}) {
+    return Container(
+      width: active ? 30 : 20,
+      height: 12,
+      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(3)),
+    );
+  }
+
+  Widget _tabDot(Color color, {bool active = false}) {
+    return Container(
+      width: 14,
+      height: active ? 14 : 12,
+      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(3)),
     );
   }
 }

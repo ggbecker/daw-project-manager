@@ -4796,6 +4796,18 @@ abstract class AppLocalizations {
   /// **'Collapse'**
   String get collapse;
 
+  /// No description provided for @lastModifiedColors.
+  ///
+  /// In en, this message translates to:
+  /// **'Last Modified date colors'**
+  String get lastModifiedColors;
+
+  /// No description provided for @lastModifiedColorsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Colors the Last Modified date based on age and status. Green = Finished. Older dates fade from yellow to red — stronger red means the project hasn\'t been touched in longer.'**
+  String get lastModifiedColorsDescription;
+
   /// No description provided for @sessionMode.
   ///
   /// In en, this message translates to:
@@ -4811,7 +4823,7 @@ abstract class AppLocalizations {
   /// No description provided for @startSession.
   ///
   /// In en, this message translates to:
-  /// **'Start session'**
+  /// **'Start Session'**
   String get startSession;
 
   /// No description provided for @endSession.
@@ -4850,47 +4862,53 @@ abstract class AppLocalizations {
   /// **'Session time'**
   String get sessionDuration;
 
-  /// No description provided for @scanDepthLabel.
+  /// No description provided for @scanModeLabel.
   ///
   /// In en, this message translates to:
-  /// **'Scan depth:'**
-  String get scanDepthLabel;
+  /// **'Scan mode:'**
+  String get scanModeLabel;
 
-  /// No description provided for @scanDepthAll.
+  /// No description provided for @scanModeSectionTitle.
   ///
   /// In en, this message translates to:
-  /// **'All levels'**
-  String get scanDepthAll;
+  /// **'Scan Mode'**
+  String get scanModeSectionTitle;
 
-  /// No description provided for @scanDepthOne.
+  /// No description provided for @scanModeSectionDescription.
   ///
   /// In en, this message translates to:
-  /// **'1 level'**
-  String get scanDepthOne;
+  /// **'Controls how projects in each folder are displayed in the table — as a plain flat list or grouped by subfolder.'**
+  String get scanModeSectionDescription;
 
-  /// No description provided for @scanDepthTwo.
+  /// No description provided for @scanModeFlat.
   ///
   /// In en, this message translates to:
-  /// **'2 levels'**
-  String get scanDepthTwo;
+  /// **'Flat'**
+  String get scanModeFlat;
 
-  /// No description provided for @scanDepthAllTooltip.
+  /// No description provided for @scanModeSmartFolder.
   ///
   /// In en, this message translates to:
-  /// **'Recursively scans every subfolder. Best for simple structures; may be slow on large drives.'**
-  String get scanDepthAllTooltip;
+  /// **'Smart Folder'**
+  String get scanModeSmartFolder;
 
-  /// No description provided for @scanDepthOneTooltip.
+  /// No description provided for @scanModeFlatDescription.
   ///
   /// In en, this message translates to:
-  /// **'Scans only the immediate child folders of this root. Each subfolder becomes one project entry.'**
-  String get scanDepthOneTooltip;
+  /// **'Shows every project as a flat list. Simple and fast.'**
+  String get scanModeFlatDescription;
 
-  /// No description provided for @scanDepthTwoTooltip.
+  /// No description provided for @scanModeSmartFolderDescription.
   ///
   /// In en, this message translates to:
-  /// **'Scans two levels deep. Direct subfolders and their children are shown as a grouped tree.'**
-  String get scanDepthTwoTooltip;
+  /// **'Groups projects by folder when a folder contains more than one project.'**
+  String get scanModeSmartFolderDescription;
+
+  /// No description provided for @skip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get skip;
 }
 
 class _AppLocalizationsDelegate

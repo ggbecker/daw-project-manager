@@ -2823,6 +2823,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get collapse => 'Свернуть';
 
   @override
+  String get lastModifiedColors => 'Last Modified date colors';
+
+  @override
+  String get lastModifiedColorsDescription =>
+      'Colors the Last Modified date based on age and status. Green = Finished. Older dates fade from yellow to red — stronger red means the project hasn\'t been touched in longer.';
+
+  @override
   String get sessionMode => 'Режим сессии';
 
   @override
@@ -2855,26 +2862,29 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionDuration => 'Время сессии';
 
   @override
-  String get scanDepthLabel => 'Глубина сканирования:';
+  String get scanModeLabel => 'Режим сканирования:';
 
   @override
-  String get scanDepthAll => 'Все уровни';
+  String get scanModeSectionTitle => 'Scan Mode';
 
   @override
-  String get scanDepthOne => '1 уровень';
+  String get scanModeSectionDescription =>
+      'Controls how projects in each folder are displayed in the table — as a plain flat list or grouped by subfolder.';
 
   @override
-  String get scanDepthTwo => '2 уровня';
+  String get scanModeFlat => 'Простой';
 
   @override
-  String get scanDepthAllTooltip =>
-      'Рекурсивно сканирует все подпапки. Лучше для простых структур; может быть медленным на больших дисках.';
+  String get scanModeSmartFolder => 'Умная папка';
 
   @override
-  String get scanDepthOneTooltip =>
-      'Сканирует только прямые подпапки корневой папки. Каждая подпапка становится проектом.';
+  String get scanModeFlatDescription =>
+      'Отображает все проекты в виде простого списка. Просто и быстро.';
 
   @override
-  String get scanDepthTwoTooltip =>
-      'Сканирует два уровня вглубь. Прямые подпапки и их дочерние элементы отображаются деревом.';
+  String get scanModeSmartFolderDescription =>
+      'Группирует проекты по папке, если папка содержит более одного проекта.';
+
+  @override
+  String get skip => 'Пропустить';
 }

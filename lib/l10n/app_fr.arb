@@ -1,4 +1,4 @@
-{
+﻿{
   "@@locale": "fr",
   "appTitle": "Gestionnaire de Projets DAW",
   "@appTitle": {
@@ -1857,18 +1857,16 @@
   "@switchSessionNew": {"placeholders": {"project": {"type": "String"}}},
   "sessionDuration": "Durée de la session",
   "@sessionDuration": {},
-  "scanDepthLabel": "Profondeur de scan :",
-  "@scanDepthLabel": {},
-  "scanDepthAll": "Tous les niveaux",
-  "@scanDepthAll": {},
-  "scanDepthOne": "1 niveau",
-  "@scanDepthOne": {},
-  "scanDepthTwo": "2 niveaux",
-  "@scanDepthTwo": {},
-  "scanDepthAllTooltip": "Analyse tous les sous-dossiers de manière récursive. Idéal pour les structures simples ; peut être lent sur les grands disques.",
-  "@scanDepthAllTooltip": {},
-  "scanDepthOneTooltip": "Analyse uniquement les sous-dossiers directs de ce dossier racine. Chaque sous-dossier devient un projet.",
-  "@scanDepthOneTooltip": {},
-  "scanDepthTwoTooltip": "Analyse deux niveaux de profondeur. Les sous-dossiers directs et leurs enfants sont affichés en arborescence.",
-  "@scanDepthTwoTooltip": {}
+    "scanModeLabel": "Mode de scan :",
+  "@scanModeLabel": {},
+  "scanModeFlat": "Plat",
+  "@scanModeFlat": {},
+  "scanModeSmartFolder": "Dossier intelligent",
+  "@scanModeSmartFolder": {},
+  "scanModeFlatDescription": "Affiche tous les projets sous forme de liste simple. Simple et rapide.",
+  "@scanModeFlatDescription": {},
+  "scanModeSmartFolderDescription": "Regroupe les projets par dossier quand un dossier contient plus d'un projet.",
+  "@scanModeSmartFolderDescription": {},
+  "skip": "Passer",
+  "@skip": {}
 }

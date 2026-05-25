@@ -2761,6 +2761,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get collapse => '折りたたむ';
 
   @override
+  String get lastModifiedColors => 'Last Modified date colors';
+
+  @override
+  String get lastModifiedColorsDescription =>
+      'Colors the Last Modified date based on age and status. Green = Finished. Older dates fade from yellow to red — stronger red means the project hasn\'t been touched in longer.';
+
+  @override
   String get sessionMode => 'セッションモード';
 
   @override
@@ -2792,26 +2799,28 @@ class AppLocalizationsJa extends AppLocalizations {
   String get sessionDuration => 'セッション時間';
 
   @override
-  String get scanDepthLabel => 'スキャン深度:';
+  String get scanModeLabel => 'スキャンモード:';
 
   @override
-  String get scanDepthAll => '全階層';
+  String get scanModeSectionTitle => 'Scan Mode';
 
   @override
-  String get scanDepthOne => '1階層';
+  String get scanModeSectionDescription =>
+      'Controls how projects in each folder are displayed in the table — as a plain flat list or grouped by subfolder.';
 
   @override
-  String get scanDepthTwo => '2階層';
+  String get scanModeFlat => 'フラット';
 
   @override
-  String get scanDepthAllTooltip =>
-      'すべてのサブフォルダを再帰的にスキャンします。シンプルな構造に最適ですが、大きなドライブでは遅い場合があります。';
+  String get scanModeSmartFolder => 'スマートフォルダー';
 
   @override
-  String get scanDepthOneTooltip =>
-      'このルートフォルダの直接の子フォルダのみスキャンします。各サブフォルダがプロジェクトになります。';
+  String get scanModeFlatDescription => 'すべてのプロジェクトをフラットリストで表示します。シンプルで高速。';
 
   @override
-  String get scanDepthTwoTooltip =>
-      '2階層の深さでスキャンします。直接のサブフォルダとその子フォルダがツリー表示されます。';
+  String get scanModeSmartFolderDescription =>
+      'フォルダに複数のプロジェクトがある場合、フォルダでグループ化します。';
+
+  @override
+  String get skip => 'スキップ';
 }

@@ -1,4 +1,4 @@
-{
+﻿{
   "@@locale": "ru",
   "appTitle": "Менеджер проектов DAW",
   "@appTitle": {
@@ -1857,18 +1857,16 @@
   "@switchSessionNew": {"placeholders": {"project": {"type": "String"}}},
   "sessionDuration": "Время сессии",
   "@sessionDuration": {},
-  "scanDepthLabel": "Глубина сканирования:",
-  "@scanDepthLabel": {},
-  "scanDepthAll": "Все уровни",
-  "@scanDepthAll": {},
-  "scanDepthOne": "1 уровень",
-  "@scanDepthOne": {},
-  "scanDepthTwo": "2 уровня",
-  "@scanDepthTwo": {},
-  "scanDepthAllTooltip": "Рекурсивно сканирует все подпапки. Лучше для простых структур; может быть медленным на больших дисках.",
-  "@scanDepthAllTooltip": {},
-  "scanDepthOneTooltip": "Сканирует только прямые подпапки корневой папки. Каждая подпапка становится проектом.",
-  "@scanDepthOneTooltip": {},
-  "scanDepthTwoTooltip": "Сканирует два уровня вглубь. Прямые подпапки и их дочерние элементы отображаются деревом.",
-  "@scanDepthTwoTooltip": {}
+    "scanModeLabel": "Режим сканирования:",
+  "@scanModeLabel": {},
+  "scanModeFlat": "Простой",
+  "@scanModeFlat": {},
+  "scanModeSmartFolder": "Умная папка",
+  "@scanModeSmartFolder": {},
+  "scanModeFlatDescription": "Отображает все проекты в виде простого списка. Просто и быстро.",
+  "@scanModeFlatDescription": {},
+  "scanModeSmartFolderDescription": "Группирует проекты по папке, если папка содержит более одного проекта.",
+  "@scanModeSmartFolderDescription": {},
+  "skip": "Пропустить",
+  "@skip": {}
 }

@@ -2838,6 +2838,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get collapse => 'Contraer';
 
   @override
+  String get lastModifiedColors => 'Last Modified date colors';
+
+  @override
+  String get lastModifiedColorsDescription =>
+      'Colors the Last Modified date based on age and status. Green = Finished. Older dates fade from yellow to red — stronger red means the project hasn\'t been touched in longer.';
+
+  @override
   String get sessionMode => 'Modo sesión';
 
   @override
@@ -2871,26 +2878,29 @@ class AppLocalizationsEs extends AppLocalizations {
   String get sessionDuration => 'Tiempo de sesión';
 
   @override
-  String get scanDepthLabel => 'Profundidad de escaneo:';
+  String get scanModeLabel => 'Modo de escaneo:';
 
   @override
-  String get scanDepthAll => 'Todos los niveles';
+  String get scanModeSectionTitle => 'Scan Mode';
 
   @override
-  String get scanDepthOne => '1 nivel';
+  String get scanModeSectionDescription =>
+      'Controls how projects in each folder are displayed in the table — as a plain flat list or grouped by subfolder.';
 
   @override
-  String get scanDepthTwo => '2 niveles';
+  String get scanModeFlat => 'Simple';
 
   @override
-  String get scanDepthAllTooltip =>
-      'Escanea todas las subcarpetas de forma recursiva. Ideal para estructuras simples; puede ser lento en unidades grandes.';
+  String get scanModeSmartFolder => 'Carpeta inteligente';
 
   @override
-  String get scanDepthOneTooltip =>
-      'Escanea solo las subcarpetas inmediatas de esta carpeta raíz. Cada subcarpeta se convierte en un proyecto.';
+  String get scanModeFlatDescription =>
+      'Muestra cada proyecto como una lista simple. Sencillo y rápido.';
 
   @override
-  String get scanDepthTwoTooltip =>
-      'Escanea dos niveles de profundidad. Las subcarpetas directas y sus hijos se muestran en vista de árbol.';
+  String get scanModeSmartFolderDescription =>
+      'Agrupa los proyectos por carpeta cuando una carpeta contiene más de un proyecto.';
+
+  @override
+  String get skip => 'Omitir';
 }

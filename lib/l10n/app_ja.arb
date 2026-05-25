@@ -1,4 +1,4 @@
-{
+﻿{
   "@@locale": "ja",
   "appTitle": "DAWプロジェクトマネージャー",
   "@appTitle": {
@@ -1857,18 +1857,16 @@
   "@switchSessionNew": {"placeholders": {"project": {"type": "String"}}},
   "sessionDuration": "セッション時間",
   "@sessionDuration": {},
-  "scanDepthLabel": "スキャン深度:",
-  "@scanDepthLabel": {},
-  "scanDepthAll": "全階層",
-  "@scanDepthAll": {},
-  "scanDepthOne": "1階層",
-  "@scanDepthOne": {},
-  "scanDepthTwo": "2階層",
-  "@scanDepthTwo": {},
-  "scanDepthAllTooltip": "すべてのサブフォルダを再帰的にスキャンします。シンプルな構造に最適ですが、大きなドライブでは遅い場合があります。",
-  "@scanDepthAllTooltip": {},
-  "scanDepthOneTooltip": "このルートフォルダの直接の子フォルダのみスキャンします。各サブフォルダがプロジェクトになります。",
-  "@scanDepthOneTooltip": {},
-  "scanDepthTwoTooltip": "2階層の深さでスキャンします。直接のサブフォルダとその子フォルダがツリー表示されます。",
-  "@scanDepthTwoTooltip": {}
+    "scanModeLabel": "スキャンモード:",
+  "@scanModeLabel": {},
+  "scanModeFlat": "フラット",
+  "@scanModeFlat": {},
+  "scanModeSmartFolder": "スマートフォルダー",
+  "@scanModeSmartFolder": {},
+  "scanModeFlatDescription": "すべてのプロジェクトをフラットリストで表示します。シンプルで高速。",
+  "@scanModeFlatDescription": {},
+  "scanModeSmartFolderDescription": "フォルダに複数のプロジェクトがある場合、フォルダでグループ化します。",
+  "@scanModeSmartFolderDescription": {},
+  "skip": "スキップ",
+  "@skip": {}
 }
