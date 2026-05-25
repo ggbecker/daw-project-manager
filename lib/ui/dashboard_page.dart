@@ -3143,6 +3143,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   }
 
   Future<void> _launchProject(MusicProject project) async {
+    if (ref.read(sessionModeProvider)) return;
     final exists = File(project.filePath).existsSync() || Directory(project.filePath).existsSync();
     if (!exists) {
       if (mounted) {

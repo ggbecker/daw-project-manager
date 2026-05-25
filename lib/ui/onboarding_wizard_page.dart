@@ -732,19 +732,19 @@ class _TabsPage extends ConsumerWidget {
               children: [
                 Expanded(
                   child: _TabPositionCard(
-                    position: TabPosition.top,
-                    label: l10n.tabPositionTop,
-                    selected: tabPos == TabPosition.top,
-                    onTap: () => ref.read(tabPositionProvider.notifier).set(TabPosition.top),
+                    position: TabPosition.left,
+                    label: l10n.tabPositionLeft,
+                    selected: tabPos == TabPosition.left,
+                    onTap: () => ref.read(tabPositionProvider.notifier).set(TabPosition.left),
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: _TabPositionCard(
-                    position: TabPosition.left,
-                    label: l10n.tabPositionLeft,
-                    selected: tabPos == TabPosition.left,
-                    onTap: () => ref.read(tabPositionProvider.notifier).set(TabPosition.left),
+                    position: TabPosition.top,
+                    label: l10n.tabPositionTop,
+                    selected: tabPos == TabPosition.top,
+                    onTap: () => ref.read(tabPositionProvider.notifier).set(TabPosition.top),
                   ),
                 ),
               ],

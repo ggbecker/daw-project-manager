@@ -70,8 +70,8 @@ class TabCustomizationDialog extends ConsumerWidget {
               const SizedBox(height: 4),
               SegmentedButton<TabPosition>(
                 segments: [
-                  ButtonSegment(value: TabPosition.top, icon: const Icon(Icons.tab, size: 16), label: Text(l10n.tabPositionTop)),
                   ButtonSegment(value: TabPosition.left, icon: const Icon(Icons.view_sidebar_outlined, size: 16), label: Text(l10n.tabPositionLeft)),
+                  ButtonSegment(value: TabPosition.top, icon: const Icon(Icons.tab, size: 16), label: Text(l10n.tabPositionTop)),
                 ],
                 selected: {tabPos},
                 onSelectionChanged: (s) => ref.read(tabPositionProvider.notifier).set(s.first),
