@@ -16,7 +16,7 @@ import 'package:window_manager/window_manager.dart'
 /// This widget reserves 28 pt at the top when [showBack] is false, or renders
 /// a slim back-navigation bar when [showBack] is true.
 ///
-/// **Mobile / web / debug mode:** Returns an empty widget.
+/// **Mobile / web:** Returns an empty widget.
 class DesktopTitleBar extends StatefulWidget {
   final String title;
 
@@ -113,9 +113,7 @@ class _DesktopTitleBarState extends State<DesktopTitleBar> {
       );
     }
 
-    // Windows / Linux: full custom title bar (release mode only).
-    if (kDebugMode) return const SizedBox.shrink();
-
+    // Windows / Linux: full custom title bar.
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,

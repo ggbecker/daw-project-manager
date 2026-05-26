@@ -121,7 +121,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
   bool _extractingMetadata = false;
   bool _isSearchingMobile = false;
   bool _isSearchingDesktop = false;
-  bool _railCollapsed = false;
   double _railWidth = 130.0;
   late TabController _tabController;
 
@@ -784,6 +783,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     final isScanning = _scanning || initialScanning;
     final isAnyOperation = isScanning || isProfileSwitching || _extractingMetadata;
     final isLeftRail = !MobileUtils.isMobile() && ref.watch(tabPositionProvider) == TabPosition.left;
+    final railCollapsed = ref.watch(railCollapsedProvider);
     
     // Sync search controller with provider state
     if (_searchController.text != currentSearch) {
@@ -1794,25 +1794,25 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                     NavigationRail(
                       selectedIndex: _tabController.index,
                       onDestinationSelected: (i) => _tabController.animateTo(i),
-                      minWidth: _railCollapsed ? 64.0 : _railWidth,
-                      labelType: _railCollapsed
+                      minWidth: railCollapsed ? 64.0 : _railWidth,
+                      labelType: railCollapsed
                           ? NavigationRailLabelType.none
                           : NavigationRailLabelType.all,
                       leading: Column(
                         children: [
                           // Collapse/expand toggle
                           Tooltip(
-                            message: _railCollapsed
+                            message: railCollapsed
                                 ? AppLocalizations.of(context)!.expand
                                 : AppLocalizations.of(context)!.collapse,
                             child: IconButton(
-                              icon: Icon(_railCollapsed
+                              icon: Icon(railCollapsed
                                   ? Icons.chevron_right
                                   : Icons.chevron_left),
-                              onPressed: () => setState(() {
-                                if (_railCollapsed) _railWidth = 130.0;
-                                _railCollapsed = !_railCollapsed;
-                              }),
+                              onPressed: () {
+                                if (railCollapsed) setState(() => _railWidth = 130.0);
+                                ref.read(railCollapsedProvider.notifier).set(!railCollapsed);
+                              },
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -1854,7 +1854,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(
                                       vertical: 4, horizontal: 4),
-                                  child: _railCollapsed
+                                  child: railCollapsed
                                       ? avatar
                                       : Column(
                                           children: [
@@ -1930,7 +1930,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                     ),
                                   ),
                                 ),
-                                if (!_railCollapsed)
+                                if (!railCollapsed)
                                   Text(
                                     AppLocalizations.of(context)!.googleDriveSync,
                                     style: Theme.of(context).textTheme.labelSmall,
@@ -1952,7 +1952,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                     onPressed: isAnyOperation ? null : () => _scanAll(),
                                   ),
                                 ),
-                                if (!_railCollapsed)
+                                if (!railCollapsed)
                                   Text(
                                     isAnyOperation
                                         ? AppLocalizations.of(context)!.scanning
@@ -1994,7 +1994,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                           },
                                   ),
                                 ),
-                                if (!_railCollapsed)
+                                if (!railCollapsed)
                                   Text(
                                     AppLocalizations.of(context)!.deepScan,
                                     style: Theme.of(context).textTheme.labelSmall,
@@ -2012,7 +2012,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                     ),
                                   ),
                                 ),
-                                if (!_railCollapsed)
+                                if (!railCollapsed)
                                   Text(
                                     AppLocalizations.of(context)!.settings,
                                     style: Theme.of(context).textTheme.labelSmall,
@@ -2027,7 +2027,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                     MouseRegion(
                       cursor: SystemMouseCursors.resizeColumn,
                       child: GestureDetector(
-                        onHorizontalDragUpdate: _railCollapsed
+                        onHorizontalDragUpdate: railCollapsed
                             ? null
                             : (details) => setState(() {
                                   _railWidth = (_railWidth + details.delta.dx)

@@ -1173,6 +1173,32 @@ final tabPositionProvider = NotifierProvider<TabPositionNotifier, TabPosition>((
   return TabPositionNotifier();
 });
 
+class RailCollapsedNotifier extends Notifier<bool> {
+  static const _key = 'railCollapsed';
+
+  @override
+  bool build() {
+    _load();
+    return false;
+  }
+
+  void _load() async {
+    final box = await Hive.openBox<String>('settings');
+    final saved = box.get(_key);
+    if (saved != null) state = saved == 'true';
+  }
+
+  void set(bool collapsed) async {
+    state = collapsed;
+    final box = await Hive.openBox<String>('settings');
+    await box.put(_key, collapsed ? 'true' : 'false');
+  }
+}
+
+final railCollapsedProvider = NotifierProvider<RailCollapsedNotifier, bool>(() {
+  return RailCollapsedNotifier();
+});
+
 // ---------------------------------------------------------------------------
 // Statistics — Event Providers + GlobalStats
 // ---------------------------------------------------------------------------
