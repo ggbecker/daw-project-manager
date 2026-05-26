@@ -27,6 +27,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get cancel => 'Отмена';
 
   @override
+  String get confirm => 'Подтвердить';
+
+  @override
+  String get customInterval => 'Произвольный';
+
+  @override
   String get close => 'Закрыть';
 
   @override
@@ -2439,6 +2445,15 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get shortcutGoBack => 'Назад';
+
+  @override
+  String get shortcutGroupProjectsTableStandardMode => 'Стандартный режим';
+
+  @override
+  String get shortcutGroupProjectsTableSessionMode => 'Режим сессии';
+
+  @override
+  String get shortcutToggleSession => 'Начать / Завершить сессию';
 
   @override
   String get shortcutGroupPreviewPlayer => 'Плеер предпросмотра';

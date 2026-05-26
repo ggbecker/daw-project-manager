@@ -602,25 +602,71 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
 }
 
 /// Work timer notification settings — shown on all platforms.
-class _WorkTimerSection extends ConsumerWidget {
+class _WorkTimerSection extends ConsumerStatefulWidget {
   final AppLocalizations l10n;
   const _WorkTimerSection({required this.l10n});
 
-  // Intervals stored in seconds. 10 = testing; rest are minute multiples.
-  static const _intervalSeconds = [10, 900, 1800, 2700, 3600, 5400, 7200];
+  @override
+  ConsumerState<_WorkTimerSection> createState() => _WorkTimerSectionState();
+}
 
-  String _label(int seconds, AppLocalizations l10n) {
-    if (seconds < 60) return '$seconds s (test)';
+class _WorkTimerSectionState extends ConsumerState<_WorkTimerSection> {
+  static const _intervalSeconds = [900, 1800, 2700, 3600, 5400, 7200];
+  static const _customSentinel = -1;
+
+  AppLocalizations get l10n => widget.l10n;
+
+  String _label(int seconds) {
     final m = seconds ~/ 60;
     return '$m ${l10n.minutes}';
   }
 
+  Future<void> _showCustomDialog(int currentInterval) async {
+    final isCurrentCustom = !_intervalSeconds.contains(currentInterval);
+    final controller = TextEditingController(
+      text: isCurrentCustom ? (currentInterval ~/ 60).toString() : '',
+    );
+    final result = await showDialog<int>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.customInterval),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            labelText: l10n.minutes,
+            suffixText: l10n.minutes,
+          ),
+          autofocus: true,
+          onSubmitted: (_) {
+            final m = int.tryParse(controller.text.trim());
+            if (m != null && m > 0) Navigator.of(ctx).pop(m * 60);
+          },
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: Text(l10n.cancel)),
+          ElevatedButton(
+            onPressed: () {
+              final m = int.tryParse(controller.text.trim());
+              if (m != null && m > 0) Navigator.of(ctx).pop(m * 60);
+            },
+            child: Text(l10n.confirm),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (result != null && mounted) {
+      ref.read(workTimerNotifIntervalProvider.notifier).set(result);
+    }
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final enabled = ref.watch(workTimerNotifEnabledProvider);
     final interval = ref.watch(workTimerNotifIntervalProvider);
-    final safeInterval =
-        _intervalSeconds.contains(interval) ? interval : 3600;
+    final isCustom = !_intervalSeconds.contains(interval);
+    final dropdownValue = isCustom ? _customSentinel : interval;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -646,20 +692,28 @@ class _WorkTimerSection extends ConsumerWidget {
             contentPadding: EdgeInsets.zero,
             title: Text(l10n.workTimerIntervalLabel),
             trailing: DropdownButton<int>(
-              value: safeInterval,
+              value: dropdownValue,
               underline: const SizedBox.shrink(),
-              items: _intervalSeconds
-                  .map((s) => DropdownMenuItem(
-                        value: s,
-                        child: Text(_label(s, l10n)),
-                      ))
-                  .toList(),
+              selectedItemBuilder: (_) => [
+                ..._intervalSeconds.map((s) => Text(_label(s))),
+                Text(isCustom ? _label(interval) : l10n.customInterval),
+              ],
+              items: [
+                ..._intervalSeconds.map((s) => DropdownMenuItem(
+                      value: s,
+                      child: Text(_label(s)),
+                    )),
+                DropdownMenuItem(
+                  value: _customSentinel,
+                  child: Text(l10n.customInterval),
+                ),
+              ],
               onChanged: enabled
                   ? (v) {
-                      if (v != null) {
-                        ref
-                            .read(workTimerNotifIntervalProvider.notifier)
-                            .set(v);
+                      if (v == _customSentinel) {
+                        _showCustomDialog(interval);
+                      } else if (v != null) {
+                        ref.read(workTimerNotifIntervalProvider.notifier).set(v);
                       }
                     }
                   : null,

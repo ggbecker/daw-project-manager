@@ -148,6 +148,18 @@ abstract class AppLocalizations {
   /// **'Cancel'**
   String get cancel;
 
+  /// No description provided for @confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get confirm;
+
+  /// No description provided for @customInterval.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get customInterval;
+
   /// No description provided for @close.
   ///
   /// In en, this message translates to:
@@ -4123,6 +4135,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Go back'**
   String get shortcutGoBack;
+
+  /// No description provided for @shortcutGroupProjectsTableStandardMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard mode'**
+  String get shortcutGroupProjectsTableStandardMode;
+
+  /// No description provided for @shortcutGroupProjectsTableSessionMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Session mode'**
+  String get shortcutGroupProjectsTableSessionMode;
+
+  /// No description provided for @shortcutToggleSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Start / End session'**
+  String get shortcutToggleSession;
 
   /// No description provided for @shortcutGroupPreviewPlayer.
   ///

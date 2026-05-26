@@ -27,6 +27,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get cancel => 'キャンセル';
 
   @override
+  String get confirm => '確認';
+
+  @override
+  String get customInterval => 'カスタム';
+
+  @override
   String get close => '閉じる';
 
   @override
@@ -2390,6 +2396,15 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get shortcutGoBack => '戻る';
+
+  @override
+  String get shortcutGroupProjectsTableStandardMode => '標準モード';
+
+  @override
+  String get shortcutGroupProjectsTableSessionMode => 'セッションモード';
+
+  @override
+  String get shortcutToggleSession => 'セッション開始 / 終了';
 
   @override
   String get shortcutGroupPreviewPlayer => 'プレビュープレーヤー';

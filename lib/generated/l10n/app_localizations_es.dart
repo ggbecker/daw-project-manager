@@ -27,6 +27,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get cancel => 'Cancelar';
 
   @override
+  String get confirm => 'Confirmar';
+
+  @override
+  String get customInterval => 'Personalizado';
+
+  @override
   String get close => 'Cerrar';
 
   @override
@@ -2455,6 +2461,15 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get shortcutGoBack => 'Volver';
+
+  @override
+  String get shortcutGroupProjectsTableStandardMode => 'Modo estándar';
+
+  @override
+  String get shortcutGroupProjectsTableSessionMode => 'Modo sesión';
+
+  @override
+  String get shortcutToggleSession => 'Iniciar / Terminar sesión';
 
   @override
   String get shortcutGroupPreviewPlayer => 'Reproductor de vista previa';

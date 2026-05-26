@@ -27,6 +27,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cancel => '取消';
 
   @override
+  String get confirm => '确认';
+
+  @override
+  String get customInterval => '自定义';
+
+  @override
   String get close => '关闭';
 
   @override
@@ -2367,6 +2373,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get shortcutGoBack => '返回';
+
+  @override
+  String get shortcutGroupProjectsTableStandardMode => '标准模式';
+
+  @override
+  String get shortcutGroupProjectsTableSessionMode => '会话模式';
+
+  @override
+  String get shortcutToggleSession => '开始 / 结束会话';
 
   @override
   String get shortcutGroupPreviewPlayer => '预览播放器';
