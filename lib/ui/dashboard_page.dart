@@ -3913,36 +3913,39 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           final project = rendererContext.row.cells['data']?.value as MusicProject?;
           if (project == null) return const SizedBox.shrink();
 
-          final colorEnabled = ref.watch(lastModifiedColorProvider);
-          final defaultColor = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
+          return Consumer(
+            builder: (context, ref, _) {
+              final colorEnabled = ref.watch(lastModifiedColorProvider);
+              final defaultColor = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
 
-          Color textColor;
-          if (!colorEnabled) {
-            textColor = defaultColor;
-          } else {
-            final status = project.status;
-            if (status == 'Finished') {
-              textColor = Colors.green;
-            } else {
-              final now = DateTime.now();
-              final lastModified = project.lastModifiedAt;
-              final daysSinceModified = now.difference(lastModified).inDays;
-
-              if (daysSinceModified < 21) {
+              Color textColor;
+              if (!colorEnabled) {
                 textColor = defaultColor;
-              } else if (daysSinceModified < 60) {
-                final ratio = (daysSinceModified - 21) / 39.0;
-                textColor = Color.lerp(Colors.yellow.shade300, Colors.orange.shade400, ratio)!;
               } else {
-                final ratio = ((daysSinceModified - 60) / 60.0).clamp(0.0, 1.0);
-                textColor = Color.lerp(Colors.orange.shade400, Colors.red.shade400, ratio)!;
-              }
-            }
-          }
+                final status = project.status;
+                if (status == 'Finished') {
+                  textColor = Colors.green;
+                } else {
+                  final now = DateTime.now();
+                  final daysSinceModified = now.difference(project.lastModifiedAt).inDays;
 
-          return Text(
-            rendererContext.cell.value.toString(),
-            style: TextStyle(color: textColor),
+                  if (daysSinceModified < 21) {
+                    textColor = defaultColor;
+                  } else if (daysSinceModified < 60) {
+                    final ratio = (daysSinceModified - 21) / 39.0;
+                    textColor = Color.lerp(Colors.yellow.shade300, Colors.orange.shade400, ratio)!;
+                  } else {
+                    final ratio = ((daysSinceModified - 60) / 60.0).clamp(0.0, 1.0);
+                    textColor = Color.lerp(Colors.orange.shade400, Colors.red.shade400, ratio)!;
+                  }
+                }
+              }
+
+              return Text(
+                rendererContext.cell.value.toString(),
+                style: TextStyle(color: textColor),
+              );
+            },
           );
         },
       ),
