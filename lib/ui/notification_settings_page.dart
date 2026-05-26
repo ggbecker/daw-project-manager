@@ -623,39 +623,13 @@ class _WorkTimerSectionState extends ConsumerState<_WorkTimerSection> {
 
   Future<void> _showCustomDialog(int currentInterval) async {
     final isCurrentCustom = !_intervalSeconds.contains(currentInterval);
-    final controller = TextEditingController(
-      text: isCurrentCustom ? (currentInterval ~/ 60).toString() : '',
-    );
     final result = await showDialog<int>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.customInterval),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            labelText: l10n.minutes,
-            suffixText: l10n.minutes,
-          ),
-          autofocus: true,
-          onSubmitted: (_) {
-            final m = int.tryParse(controller.text.trim());
-            if (m != null && m > 0) Navigator.of(ctx).pop(m * 60);
-          },
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: Text(l10n.cancel)),
-          ElevatedButton(
-            onPressed: () {
-              final m = int.tryParse(controller.text.trim());
-              if (m != null && m > 0) Navigator.of(ctx).pop(m * 60);
-            },
-            child: Text(l10n.confirm),
-          ),
-        ],
+      builder: (ctx) => _CustomIntervalDialog(
+        initialMinutes: isCurrentCustom ? currentInterval ~/ 60 : 0,
+        l10n: l10n,
       ),
     );
-    controller.dispose();
     if (result != null && mounted) {
       ref.read(workTimerNotifIntervalProvider.notifier).set(result);
     }
@@ -719,6 +693,68 @@ class _WorkTimerSectionState extends ConsumerState<_WorkTimerSection> {
                   : null,
             ),
           ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CustomIntervalDialog extends StatefulWidget {
+  final int initialMinutes;
+  final AppLocalizations l10n;
+
+  const _CustomIntervalDialog({required this.initialMinutes, required this.l10n});
+
+  @override
+  State<_CustomIntervalDialog> createState() => _CustomIntervalDialogState();
+}
+
+class _CustomIntervalDialogState extends State<_CustomIntervalDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(
+      text: widget.initialMinutes > 0 ? widget.initialMinutes.toString() : '',
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = widget.l10n;
+    return AlertDialog(
+      title: Text(l10n.customInterval),
+      content: TextField(
+        controller: _controller,
+        keyboardType: TextInputType.number,
+        decoration: InputDecoration(
+          labelText: l10n.minutes,
+          suffixText: l10n.minutes,
+        ),
+        autofocus: true,
+        onSubmitted: (_) {
+          final m = int.tryParse(_controller.text.trim());
+          if (m != null && m > 0) Navigator.of(context).pop(m * 60);
+        },
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l10n.cancel),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            final m = int.tryParse(_controller.text.trim());
+            if (m != null && m > 0) Navigator.of(context).pop(m * 60);
+          },
+          child: Text(l10n.confirm),
         ),
       ],
     );
