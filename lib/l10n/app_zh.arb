@@ -1,4 +1,4 @@
-﻿{
+{
   "@@locale": "zh",
   "appTitle": "DAW项目管理器",
   "@appTitle": {
@@ -1844,6 +1844,10 @@
   "@expand": {},
   "collapse": "折叠",
   "@collapse": {},
+  "lastModifiedColors": "最后修改日期颜色",
+  "@lastModifiedColors": {},
+  "lastModifiedColorsDescription": "根据时间和状态为最后修改日期着色。绿色 = 已完成。较旧的日期从黄色渐变为红色——红色越深表示项目越长时间未被修改。",
+  "@lastModifiedColorsDescription": {},
   "sessionMode": "会话模式",
   "@sessionMode": {},
   "sessionModeDescription": "启动前订阅项目，以跟踪工作时间并从工具栏管理",
@@ -1864,6 +1868,10 @@
   "@sessionDuration": {},
     "scanModeLabel": "扫描模式：",
   "@scanModeLabel": {},
+  "scanModeSectionTitle": "扫描模式",
+  "@scanModeSectionTitle": {},
+  "scanModeSectionDescription": "控制每个文件夹中的项目在表格中的显示方式——作为简单的平铺列表或按子文件夹分组。",
+  "@scanModeSectionDescription": {},
   "scanModeFlat": "平铺",
   "@scanModeFlat": {},
   "scanModeSmartFolder": "智能文件夹",

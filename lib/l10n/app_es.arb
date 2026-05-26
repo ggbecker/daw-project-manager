@@ -1,4 +1,4 @@
-﻿{
+{
   "@@locale": "es",
   "appTitle": "Gestor de Proyectos DAW",
   "@appTitle": {
@@ -1844,6 +1844,10 @@
   "@expand": {},
   "collapse": "Contraer",
   "@collapse": {},
+  "lastModifiedColors": "Colores de fecha de última modificación",
+  "@lastModifiedColors": {},
+  "lastModifiedColorsDescription": "Colorea la fecha de última modificación según la antigüedad y el estado. Verde = Terminado. Las fechas más antiguas se desvanecen de amarillo a rojo — un rojo más intenso significa que el proyecto no ha sido modificado en más tiempo.",
+  "@lastModifiedColorsDescription": {},
   "sessionMode": "Modo sesión",
   "@sessionMode": {},
   "sessionModeDescription": "Suscríbete a un proyecto antes de lanzarlo para rastrear el tiempo de trabajo y gestionarlo desde la barra de herramientas",
@@ -1864,6 +1868,10 @@
   "@sessionDuration": {},
     "scanModeLabel": "Modo de escaneo:",
   "@scanModeLabel": {},
+  "scanModeSectionTitle": "Modo de escaneo",
+  "@scanModeSectionTitle": {},
+  "scanModeSectionDescription": "Controla cómo se muestran los proyectos de cada carpeta en la tabla: como una lista plana o agrupados por subcarpeta.",
+  "@scanModeSectionDescription": {},
   "scanModeFlat": "Simple",
   "@scanModeFlat": {},
   "scanModeSmartFolder": "Carpeta inteligente",

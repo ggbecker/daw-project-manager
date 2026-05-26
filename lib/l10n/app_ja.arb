@@ -1,4 +1,4 @@
-﻿{
+{
   "@@locale": "ja",
   "appTitle": "DAWプロジェクトマネージャー",
   "@appTitle": {
@@ -1844,6 +1844,10 @@
   "@expand": {},
   "collapse": "折りたたむ",
   "@collapse": {},
+  "lastModifiedColors": "最終更新日の色",
+  "@lastModifiedColors": {},
+  "lastModifiedColorsDescription": "最終更新日を経過時間とステータスに基づいて色分けします。緑 = 完成。古い日付は黄色から赤色に変化し、赤が濃いほどプロジェクトが長期間手付かずであることを示します。",
+  "@lastModifiedColorsDescription": {},
   "sessionMode": "セッションモード",
   "@sessionMode": {},
   "sessionModeDescription": "起動前にプロジェクトを購読して、作業時間を追跡し、ツールバーから管理します",
@@ -1864,6 +1868,10 @@
   "@sessionDuration": {},
     "scanModeLabel": "スキャンモード:",
   "@scanModeLabel": {},
+  "scanModeSectionTitle": "スキャンモード",
+  "@scanModeSectionTitle": {},
+  "scanModeSectionDescription": "各フォルダー内のプロジェクトをテーブルに表示する方法を制御します — 単純なフラットリストまたはサブフォルダーでグループ化。",
+  "@scanModeSectionDescription": {},
   "scanModeFlat": "フラット",
   "@scanModeFlat": {},
   "scanModeSmartFolder": "スマートフォルダー",

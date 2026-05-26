@@ -1,4 +1,4 @@
-﻿{
+{
   "@@locale": "de",
   "appTitle": "DAW Projektmanager",
   "@appTitle": {
@@ -1844,6 +1844,10 @@
   "@expand": {},
   "collapse": "Einklappen",
   "@collapse": {},
+  "lastModifiedColors": "Farben des Änderungsdatums",
+  "@lastModifiedColors": {},
+  "lastModifiedColorsDescription": "Färbt das Änderungsdatum basierend auf Alter und Status. Grün = Fertig. Ältere Daten verblassen von Gelb zu Rot — stärkeres Rot bedeutet, dass das Projekt länger nicht bearbeitet wurde.",
+  "@lastModifiedColorsDescription": {},
   "sessionMode": "Sitzungsmodus",
   "@sessionMode": {},
   "sessionModeDescription": "Projekt abonnieren vor dem Start, um Arbeitszeit zu verfolgen und über die Symbolleiste zu verwalten",
@@ -1864,6 +1868,10 @@
   "@sessionDuration": {},
     "scanModeLabel": "Scanmodus:",
   "@scanModeLabel": {},
+  "scanModeSectionTitle": "Scanmodus",
+  "@scanModeSectionTitle": {},
+  "scanModeSectionDescription": "Steuert, wie Projekte in jedem Ordner in der Tabelle angezeigt werden — als einfache Liste oder nach Unterordner gruppiert.",
+  "@scanModeSectionDescription": {},
   "scanModeFlat": "Einfach",
   "@scanModeFlat": {},
   "scanModeSmartFolder": "Intelligenter Ordner",

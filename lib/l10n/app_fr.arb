@@ -1,4 +1,4 @@
-﻿{
+{
   "@@locale": "fr",
   "appTitle": "Gestionnaire de Projets DAW",
   "@appTitle": {
@@ -1844,6 +1844,10 @@
   "@expand": {},
   "collapse": "Réduire",
   "@collapse": {},
+  "lastModifiedColors": "Couleurs de la date de dernière modification",
+  "@lastModifiedColors": {},
+  "lastModifiedColorsDescription": "Colore la date de dernière modification en fonction de l’ancienneté et du statut. Vert = Terminé. Les dates plus anciennes passent progressivement du jaune au rouge — un rouge plus intense signifie que le projet n’a pas été touché depuis plus longtemps.",
+  "@lastModifiedColorsDescription": {},
   "sessionMode": "Mode session",
   "@sessionMode": {},
   "sessionModeDescription": "Abonnez-vous à un projet avant de le lancer pour suivre le temps de travail et le gérer depuis la barre d'outils",
@@ -1864,6 +1868,10 @@
   "@sessionDuration": {},
     "scanModeLabel": "Mode de scan :",
   "@scanModeLabel": {},
+  "scanModeSectionTitle": "Mode de scan",
+  "@scanModeSectionTitle": {},
+  "scanModeSectionDescription": "Contrôle comment les projets de chaque dossier sont affichés dans le tableau — sous forme de liste simple ou regroupés par sous-dossier.",
+  "@scanModeSectionDescription": {},
   "scanModeFlat": "Plat",
   "@scanModeFlat": {},
   "scanModeSmartFolder": "Dossier intelligent",

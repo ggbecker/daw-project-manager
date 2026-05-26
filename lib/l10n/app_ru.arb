@@ -1,4 +1,4 @@
-﻿{
+{
   "@@locale": "ru",
   "appTitle": "Менеджер проектов DAW",
   "@appTitle": {
@@ -1844,6 +1844,10 @@
   "@expand": {},
   "collapse": "Свернуть",
   "@collapse": {},
+  "lastModifiedColors": "Цвета даты последнего изменения",
+  "@lastModifiedColors": {},
+  "lastModifiedColorsDescription": "Окрашивает дату последнего изменения в зависимости от возраста и статуса. Зелёный = Завершено. Более старые даты плавно переходят от жёлтого к красному — более насыщенный красный означает, что проект не трогали дольше.",
+  "@lastModifiedColorsDescription": {},
   "sessionMode": "Режим сессии",
   "@sessionMode": {},
   "sessionModeDescription": "Подпишитесь на проект перед запуском, чтобы отслеживать рабочее время и управлять им с панели инструментов",
@@ -1864,6 +1868,10 @@
   "@sessionDuration": {},
     "scanModeLabel": "Режим сканирования:",
   "@scanModeLabel": {},
+  "scanModeSectionTitle": "Режим сканирования",
+  "@scanModeSectionTitle": {},
+  "scanModeSectionDescription": "Управляет отображением проектов в каждой папке в таблице — в виде обычного плоского списка или сгруппированных по подпапке.",
+  "@scanModeSectionDescription": {},
   "scanModeFlat": "Простой",
   "@scanModeFlat": {},
   "scanModeSmartFolder": "Умная папка",

@@ -1,4 +1,4 @@
-﻿{
+{
   "@@locale": "pt",
   "appTitle": "Gerenciador de Projetos DAW",
   "@appTitle": {
@@ -1868,6 +1868,10 @@
   "@expand": {},
   "collapse": "Recolher",
   "@collapse": {},
+  "lastModifiedColors": "Cores da data de última modificação",
+  "@lastModifiedColors": {},
+  "lastModifiedColorsDescription": "Colore a data de última modificação com base na idade e no estado. Verde = Concluído. Datas mais antigas desvanecem de amarelo para vermelho — vermelho mais intenso significa que o projeto não foi tocado há mais tempo.",
+  "@lastModifiedColorsDescription": {},
   "sessionMode": "Modo sessão",
   "@sessionMode": {},
   "sessionModeDescription": "Inscreva-se em um projeto antes de lançá-lo para rastrear o tempo de trabalho e gerenciá-lo pela barra de ferramentas",
@@ -1888,6 +1892,10 @@
   "@sessionDuration": {},
     "scanModeLabel": "Modo de varredura:",
   "@scanModeLabel": {},
+  "scanModeSectionTitle": "Modo de varredura",
+  "@scanModeSectionTitle": {},
+  "scanModeSectionDescription": "Controla como os projetos em cada pasta são exibidos na tabela — como uma lista simples ou agrupados por subpasta.",
+  "@scanModeSectionDescription": {},
   "scanModeFlat": "Simples",
   "@scanModeFlat": {},
   "scanModeSmartFolder": "Pasta inteligente",
