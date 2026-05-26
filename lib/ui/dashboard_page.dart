@@ -3615,6 +3615,13 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         });
       }
     });
+    ref.listen(lastModifiedColorProvider, (prev, next) {
+      if (prev != next) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) stateManager?.notifyListeners();
+        });
+      }
+    });
     final columns = [
       TrinaColumn(
         title: '',
