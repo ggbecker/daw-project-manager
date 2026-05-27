@@ -2859,11 +2859,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get collapse => 'Réduire';
 
   @override
-  String get lastModifiedColors => 'Last Modified date colors';
+  String get lastModifiedColors =>
+      'Couleurs de la date de dernière modification';
 
   @override
   String get lastModifiedColorsDescription =>
-      'Colors the Last Modified date based on age and status. Green = Finished. Older dates fade from yellow to red — stronger red means the project hasn\'t been touched in longer.';
+      'Colore la date de dernière modification en fonction de l’ancienneté et du statut. Vert = Terminé. Les dates plus anciennes passent progressivement du jaune au rouge — un rouge plus intense signifie que le projet n’a pas été touché depuis plus longtemps.';
 
   @override
   String get sessionMode => 'Mode session';
@@ -2902,11 +2903,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get scanModeLabel => 'Mode de scan :';
 
   @override
-  String get scanModeSectionTitle => 'Scan Mode';
+  String get scanModeSectionTitle => 'Mode de scan';
 
   @override
   String get scanModeSectionDescription =>
-      'Controls how projects in each folder are displayed in the table — as a plain flat list or grouped by subfolder.';
+      'Contrôle comment les projets de chaque dossier sont affichés dans le tableau — sous forme de liste simple ou regroupés par sous-dossier.';
 
   @override
   String get scanModeFlat => 'Plat';

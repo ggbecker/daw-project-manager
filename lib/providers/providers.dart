@@ -1615,6 +1615,36 @@ final sessionModeProvider =
     NotifierProvider<SessionModeNotifier, bool>(SessionModeNotifier.new);
 
 // ---------------------------------------------------------------------------
+// Session Suggestions Enabled
+// ---------------------------------------------------------------------------
+
+class SuggestionsEnabledNotifier extends Notifier<bool> {
+  static const _key = 'suggestionsEnabled';
+
+  @override
+  bool build() {
+    _load();
+    return true;
+  }
+
+  Future<void> _load() async {
+    final box = await Hive.openBox<String>('settings');
+    final saved = box.get(_key);
+    if (saved != null) state = saved == 'true';
+  }
+
+  Future<void> set(bool value) async {
+    state = value;
+    final box = await Hive.openBox<String>('settings');
+    await box.put(_key, value.toString());
+  }
+}
+
+final suggestionsEnabledProvider =
+    NotifierProvider<SuggestionsEnabledNotifier, bool>(
+        SuggestionsEnabledNotifier.new);
+
+// ---------------------------------------------------------------------------
 // Work Timer Notification Settings
 // ---------------------------------------------------------------------------
 
@@ -1864,3 +1894,26 @@ class LastModifiedColorNotifier extends Notifier<bool> {
 
 final lastModifiedColorProvider =
     NotifierProvider<LastModifiedColorNotifier, bool>(LastModifiedColorNotifier.new);
+
+// ── Session idle suggestions panel ──────────────────────────────────────────
+
+class SuggestionsPanelExpandedNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+  void set(bool v) => state = v;
+}
+
+final suggestionsPanelExpandedProvider =
+    NotifierProvider<SuggestionsPanelExpandedNotifier, bool>(
+        SuggestionsPanelExpandedNotifier.new);
+
+class DismissedSuggestionsNotifier extends Notifier<Set<String>> {
+  @override
+  Set<String> build() => const {};
+  void dismiss(String id) => state = {...state, id};
+  void clear() => state = const {};
+}
+
+final dismissedSuggestionsProvider =
+    NotifierProvider<DismissedSuggestionsNotifier, Set<String>>(
+        DismissedSuggestionsNotifier.new);

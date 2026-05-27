@@ -2749,11 +2749,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get collapse => '折叠';
 
   @override
-  String get lastModifiedColors => 'Last Modified date colors';
+  String get lastModifiedColors => '最后修改日期颜色';
 
   @override
   String get lastModifiedColorsDescription =>
-      'Colors the Last Modified date based on age and status. Green = Finished. Older dates fade from yellow to red — stronger red means the project hasn\'t been touched in longer.';
+      '根据时间和状态为最后修改日期着色。绿色 = 已完成。较旧的日期从黄色渐变为红色——红色越深表示项目越长时间未被修改。';
 
   @override
   String get sessionMode => '会话模式';
@@ -2790,11 +2790,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get scanModeLabel => '扫描模式：';
 
   @override
-  String get scanModeSectionTitle => 'Scan Mode';
+  String get scanModeSectionTitle => '扫描模式';
 
   @override
   String get scanModeSectionDescription =>
-      'Controls how projects in each folder are displayed in the table — as a plain flat list or grouped by subfolder.';
+      '控制每个文件夹中的项目在表格中的显示方式——作为简单的平铺列表或按子文件夹分组。';
 
   @override
   String get scanModeFlat => '平铺';

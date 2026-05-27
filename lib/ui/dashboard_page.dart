@@ -1634,8 +1634,19 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                       ),
                     ),
                   const SizedBox(width: 16),
-                  // Active DAW session chip
-                  const _ActiveProjectChip(),
+                  // Active DAW session chip / idle suggestions
+                  Consumer(
+                    builder: (ctx, cRef, _) {
+                      final active = cRef.watch(activeProjectProvider);
+                      final suggestionsOn =
+                          cRef.watch(suggestionsEnabledProvider);
+                      if (active != null) return const _ActiveProjectChip();
+                      if (suggestionsOn) {
+                        return const _SessionIdleSuggestions();
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
                   const SizedBox(width: 8),
                   // Search bar (desktop only — hidden on Playlists tab)
                   if (!MobileUtils.isMobile())
@@ -1708,6 +1719,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
             );
             },
           ),
+
+            // Zero-height anchor used to position the suggestions overlay.
+            if (!MobileUtils.isMobile())
+              SizedBox(key: _suggestionsPanelAnchorKey, height: 0),
 
             // Project folders are managed in the dedicated desktop-only settings page.
             // Tab Bar (desktop only - mobile uses AppBar bottom)
@@ -6866,6 +6881,28 @@ Future<void> _confirmEndSession(BuildContext context, WidgetRef ref) async {
 
 /// Shows a confirmation dialog before starting a session on a project.
 /// If another session is already active, offers to switch instead.
+Future<void> _launchSuggestionProject(
+    BuildContext context, MusicProject project) async {
+  final exists = File(project.filePath).existsSync() ||
+      Directory(project.filePath).existsSync();
+  if (!exists) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppLocalizations.of(context)!.fileMissing)));
+    }
+    return;
+  }
+  final success = await FileLauncher.launchProject(project.filePath);
+  if (context.mounted) {
+    final l10n = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(success
+          ? l10n.launchingProject(project.displayName)
+          : l10n.failedToLaunchProject(project.displayName)),
+    ));
+  }
+}
+
 Future<void> _confirmStartSession(
     BuildContext context, WidgetRef ref, MusicProject project) async {
   final l10n = AppLocalizations.of(context)!;
@@ -7003,6 +7040,539 @@ Future<void> _confirmStartSession(
 
   if (confirmed == true && context.mounted) {
     ref.read(activeProjectProvider.notifier).set(project);
+  }
+}
+
+// ── Session idle suggestions ────────────────────────────────────────────────
+
+enum _SuggestionType { deadlineOverdue, deadlineSoon, lastWorked, recentlyModified }
+
+class _Suggestion {
+  final _SuggestionType type;
+  final MusicProject project;
+  const _Suggestion({required this.type, required this.project});
+}
+
+// Anchor key: zero-height SizedBox in the column at the exact toolbar bottom.
+// _SessionIdleSuggestionsState reads this to position the overlay correctly.
+final _suggestionsPanelAnchorKey = GlobalKey();
+
+List<_Suggestion> _buildIdleSuggestions(
+    List<MusicProject> all, Set<String> dismissed) {
+  final visible = all.where((p) => !p.hidden).toList();
+  final result = <_Suggestion>[];
+  final seen = <String>{};
+
+  void add(_SuggestionType type, MusicProject p) {
+    if (dismissed.contains(p.id)) return;
+    if (seen.add(p.id)) result.add(_Suggestion(type: type, project: p));
+  }
+
+  // Overdue & due-today, non-finished (most overdue first)
+  final urgentDeadlines = visible
+      .where((p) =>
+          p.status != 'Finished' &&
+          p.daysUntilDeadline != null &&
+          p.daysUntilDeadline! <= 0)
+      .toList()
+    ..sort((a, b) => a.daysUntilDeadline!.compareTo(b.daysUntilDeadline!));
+  for (final p in urgentDeadlines.take(3)) {
+    add(_SuggestionType.deadlineOverdue, p);
+  }
+
+  // Due soon (1–7 days), non-finished
+  final dueSoon = visible
+      .where((p) =>
+          p.status != 'Finished' &&
+          p.daysUntilDeadline != null &&
+          p.daysUntilDeadline! > 0 &&
+          p.daysUntilDeadline! <= 7)
+      .toList()
+    ..sort((a, b) => a.daysUntilDeadline!.compareTo(b.daysUntilDeadline!));
+  for (final p in dueSoon.take(2)) {
+    add(_SuggestionType.deadlineSoon, p);
+  }
+
+  // Last worked (project with the most recently ended session)
+  MusicProject? lastWorked;
+  DateTime? latestEnd;
+  for (final p in visible) {
+    if (p.sessions.isEmpty) continue;
+    final end = p.sessions.last.endedAt;
+    if (latestEnd == null || end.isAfter(latestEnd)) {
+      latestEnd = end;
+      lastWorked = p;
+    }
+  }
+  if (lastWorked != null) add(_SuggestionType.lastWorked, lastWorked);
+
+  // Most recently modified non-finished (if not already listed)
+  final recent = visible
+      .where((p) => p.status != 'Finished')
+      .toList()
+    ..sort((a, b) => b.lastModifiedAt.compareTo(a.lastModifiedAt));
+  if (recent.isNotEmpty) add(_SuggestionType.recentlyModified, recent.first);
+
+  return result;
+}
+
+(Color, IconData, String) _suggestionVisuals(
+    _Suggestion s, ThemeData theme, AppLocalizations l10n) =>
+    switch (s.type) {
+      _SuggestionType.deadlineOverdue => (
+        const Color(0xFFFF6B6B),
+        Icons.alarm,
+        s.project.daysUntilDeadline! == 0
+            ? '${l10n.dueToday}: ${s.project.displayName}'
+            : '${l10n.daysLate(-s.project.daysUntilDeadline!)}: ${s.project.displayName}',
+      ),
+      _SuggestionType.deadlineSoon => (
+        const Color(0xFFFBBF24),
+        Icons.alarm_outlined,
+        '${l10n.daysLeft(s.project.daysUntilDeadline!)}: ${s.project.displayName}',
+      ),
+      _SuggestionType.lastWorked => (
+        theme.colorScheme.primary,
+        Icons.history,
+        '${l10n.resume}: ${s.project.displayName}',
+      ),
+      _SuggestionType.recentlyModified => (
+        theme.colorScheme.secondary,
+        Icons.edit_outlined,
+        '${l10n.continueButton}: ${s.project.displayName}',
+      ),
+    };
+
+/// Carousel chip row shown in the toolbar when session mode is on and idle.
+/// The expand/collapse button toggles [_SuggestionsPanelBar] via provider.
+class _SessionIdleSuggestions extends ConsumerStatefulWidget {
+  const _SessionIdleSuggestions();
+
+  @override
+  ConsumerState<_SessionIdleSuggestions> createState() =>
+      _SessionIdleSuggestionsState();
+}
+
+class _SessionIdleSuggestionsState
+    extends ConsumerState<_SessionIdleSuggestions> {
+  int _index = 0;
+  OverlayEntry? _overlayEntry;
+  final GlobalKey _toggleKey = GlobalKey();
+
+  @override
+  void dispose() {
+    _hideOverlay();
+    super.dispose();
+  }
+
+  void _hideOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+  }
+
+  void _showOverlay() {
+    _hideOverlay();
+    final anchorBox = _suggestionsPanelAnchorKey.currentContext
+        ?.findRenderObject() as RenderBox?;
+    final toggleBox =
+        _toggleKey.currentContext?.findRenderObject() as RenderBox?;
+    if (anchorBox == null || toggleBox == null || !mounted) return;
+
+    final anchorPos = anchorBox.localToGlobal(Offset.zero);
+    final togglePos = toggleBox.localToGlobal(Offset.zero);
+    final screenWidth = MediaQuery.of(context).size.width;
+    const popupWidth = 360.0;
+
+    // Right-align popup to the toggle button; clamp within screen bounds.
+    double left =
+        (togglePos.dx + toggleBox.size.width - popupWidth).clamp(8.0, screenWidth - popupWidth - 8.0);
+
+    _overlayEntry = OverlayEntry(
+      builder: (_) => Stack(
+        children: [
+          // Transparent barrier — tap anywhere outside to close.
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: () => ref
+                  .read(suggestionsPanelExpandedProvider.notifier)
+                  .set(false),
+            ),
+          ),
+          Positioned(
+            top: anchorPos.dy + 4,
+            left: left,
+            width: popupWidth,
+            child: Material(
+              elevation: 8,
+              borderRadius: BorderRadius.circular(8),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: const _SuggestionsPanelBar(),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    Overlay.of(context).insert(_overlayEntry!);
+  }
+
+  void _openDetails(MusicProject p) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => ProjectDetailPage(projectId: p.id)),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final all = ref.watch(allProjectsStreamProvider).value ?? [];
+    final dismissed = ref.watch(dismissedSuggestionsProvider);
+    final panelExpanded = ref.watch(suggestionsPanelExpandedProvider);
+    final suggestions = _buildIdleSuggestions(all, dismissed);
+    final total = suggestions.length;
+    final idx = total > 0 ? _index.clamp(0, total - 1) : 0;
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+
+    ref.listen(suggestionsPanelExpandedProvider, (_, next) {
+      if (next) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _showOverlay();
+        });
+      } else {
+        _hideOverlay();
+      }
+    });
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // ← prev
+        if (total > 1)
+          SizedBox(
+            width: 24,
+            height: 24,
+            child: IconButton(
+              padding: EdgeInsets.zero,
+              iconSize: 16,
+              icon: Icon(Icons.chevron_left,
+                  color: theme.textTheme.bodySmall?.color),
+              onPressed: () =>
+                  setState(() => _index = (idx - 1 + total) % total),
+            ),
+          ),
+
+        // Chip
+        if (total > 0)
+          _buildChip(suggestions[idx], theme, l10n,
+              ref.watch(sessionModeProvider)),
+
+        // → next + counter
+        if (total > 1) ...[
+          SizedBox(
+            width: 24,
+            height: 24,
+            child: IconButton(
+              padding: EdgeInsets.zero,
+              iconSize: 16,
+              icon: Icon(Icons.chevron_right,
+                  color: theme.textTheme.bodySmall?.color),
+              onPressed: () => setState(() => _index = (idx + 1) % total),
+            ),
+          ),
+          Text(
+            '${idx + 1}/$total',
+            style: TextStyle(
+              fontSize: 10,
+              color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.5),
+            ),
+          ),
+        ],
+
+        // Toggle: shows "Suggestions ▾" label only when no chips are showing
+        const SizedBox(width: 4),
+        InkWell(
+          key: _toggleKey,
+          borderRadius: BorderRadius.circular(4),
+          onTap: () => ref
+              .read(suggestionsPanelExpandedProvider.notifier)
+              .set(!panelExpanded),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (!panelExpanded && total == 0) ...[
+                  Icon(Icons.lightbulb_outline,
+                      size: 13,
+                      color: theme.textTheme.bodySmall?.color),
+                  const SizedBox(width: 3),
+                  Text(
+                    'Suggestions',
+                    style: TextStyle(
+                        fontSize: 11,
+                        color: theme.textTheme.bodySmall?.color),
+                  ),
+                  const SizedBox(width: 2),
+                ],
+                Icon(
+                  panelExpanded ? Icons.expand_less : Icons.expand_more,
+                  size: 16,
+                  color: panelExpanded
+                      ? theme.colorScheme.primary
+                      : theme.textTheme.bodySmall?.color,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildChip(_Suggestion s, ThemeData theme, AppLocalizations l10n,
+      bool sessionMode) {
+    final (accent, icon, label) = _suggestionVisuals(s, theme, l10n);
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 340),
+      padding: const EdgeInsets.only(left: 8, right: 4, top: 3, bottom: 3),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: accent.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: accent),
+          const SizedBox(width: 5),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                  fontSize: 12, color: accent, fontWeight: FontWeight.w500),
+            ),
+          ),
+          const SizedBox(width: 4),
+          Tooltip(
+            message:
+                sessionMode ? l10n.startSession : l10n.openInDaw,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(10),
+              onTap: () => sessionMode
+                  ? _confirmStartSession(context, ref, s.project)
+                  : _launchSuggestionProject(context, s.project),
+              child: Padding(
+                padding: const EdgeInsets.all(3),
+                child: Icon(
+                  sessionMode
+                      ? Icons.bookmark_add_outlined
+                      : Icons.open_in_new,
+                  size: 14,
+                  color: accent,
+                ),
+              ),
+            ),
+          ),
+          Tooltip(
+            message: l10n.tooltipViewDetails,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(10),
+              onTap: () => _openDetails(s.project),
+              child: Padding(
+                padding: const EdgeInsets.all(3),
+                child: Icon(Icons.assignment,
+                    size: 12,
+                    color: theme.textTheme.bodySmall?.color
+                        ?.withValues(alpha: 0.7)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Overlay suggestions panel shown when the user expands the toolbar toggle.
+/// Rendered inside an [OverlayEntry] by [_SessionIdleSuggestionsState].
+class _SuggestionsPanelBar extends ConsumerWidget {
+  const _SuggestionsPanelBar();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final all = ref.watch(allProjectsStreamProvider).value ?? [];
+    final dismissed = ref.watch(dismissedSuggestionsProvider);
+    final sessionMode = ref.watch(sessionModeProvider);
+    final suggestions = _buildIdleSuggestions(all, dismissed);
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+
+    return Container(
+      width: double.infinity,
+      color: theme.cardColor,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Header ────────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 6, 8, 4),
+            child: Row(
+              children: [
+                Icon(Icons.lightbulb_outline,
+                    size: 15, color: theme.textTheme.bodySmall?.color),
+                const SizedBox(width: 6),
+                Text(
+                  'Suggestions',
+                  style: theme.textTheme.titleSmall
+                      ?.copyWith(fontWeight: FontWeight.w600),
+                ),
+                const Spacer(),
+                TextButton.icon(
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 2),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  icon: const Icon(Icons.refresh, size: 13),
+                  label:
+                      const Text('Refresh', style: TextStyle(fontSize: 12)),
+                  onPressed: () =>
+                      ref.read(dismissedSuggestionsProvider.notifier).clear(),
+                ),
+                IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints:
+                      const BoxConstraints(minWidth: 28, minHeight: 28),
+                  icon: const Icon(Icons.expand_less, size: 15),
+                  onPressed: () => ref
+                      .read(suggestionsPanelExpandedProvider.notifier)
+                      .set(false),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          // ── Items / empty state ────────────────────────────────────
+          if (suggestions.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 14, vertical: 12),
+              child: Text(
+                'No suggestions right now. Tap Refresh to reset dismissed items.',
+                style: theme.textTheme.bodySmall,
+              ),
+            )
+          else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              itemCount: suggestions.length,
+              separatorBuilder: (_, i) =>
+                  const Divider(height: 1, indent: 14, endIndent: 14),
+              itemBuilder: (ctx, i) {
+                final s = suggestions[i];
+                final (accent, icon, label) =
+                    _suggestionVisuals(s, theme, l10n);
+                return Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 8),
+                  child: Row(
+                    children: [
+                      Icon(icon, size: 16, color: accent),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          label,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: accent,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Tooltip(
+                        message: sessionMode
+                            ? l10n.startSession
+                            : l10n.openInDaw,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(6),
+                          onTap: () {
+                            ref
+                                .read(suggestionsPanelExpandedProvider
+                                    .notifier)
+                                .set(false);
+                            if (sessionMode) {
+                              _confirmStartSession(context, ref, s.project);
+                            } else {
+                              _launchSuggestionProject(context, s.project);
+                            }
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(4),
+                            child: Icon(
+                              sessionMode
+                                  ? Icons.bookmark_add_outlined
+                                  : Icons.open_in_new,
+                              size: 18,
+                              color: accent,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Tooltip(
+                        message: l10n.tooltipViewDetails,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(6),
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => ProjectDetailPage(
+                                  projectId: s.project.id),
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(4),
+                            child: Icon(Icons.assignment,
+                                size: 16,
+                                color: theme.textTheme.bodySmall?.color),
+                          ),
+                        ),
+                      ),
+                      Tooltip(
+                        message: l10n.close,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(6),
+                          onTap: () => ref
+                              .read(dismissedSuggestionsProvider.notifier)
+                              .dismiss(s.project.id),
+                          child: Padding(
+                            padding: const EdgeInsets.all(4),
+                            child: Icon(
+                              Icons.close,
+                              size: 14,
+                              color: theme.textTheme.bodySmall?.color
+                                  ?.withValues(alpha: 0.5),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+        ],
+      ),
+    );
   }
 }
 

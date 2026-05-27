@@ -287,6 +287,7 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
     final excludedFolders = ref.watch(ignoredPathsProvider);
 
     final sessionMode = ref.watch(sessionModeProvider);
+    final suggestionsEnabled = ref.watch(suggestionsEnabledProvider);
     final checkUpdates = ref.watch(checkForUpdatesProvider);
     final lastModifiedColors = ref.watch(lastModifiedColorProvider);
 
@@ -315,6 +316,18 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
                   title: Text(l10n.sessionMode),
                   subtitle: Text(l10n.sessionModeDescription,
                       style: Theme.of(context).textTheme.bodySmall),
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                ),
+                SwitchListTile(
+                  value: suggestionsEnabled,
+                  onChanged: (v) =>
+                      ref.read(suggestionsEnabledProvider.notifier).set(v),
+                  title: const Text('Show suggestions'),
+                  subtitle: Text(
+                    'Show smart suggestions in the toolbar when no session is running',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
                   contentPadding: EdgeInsets.zero,
                   dense: true,
                 ),
