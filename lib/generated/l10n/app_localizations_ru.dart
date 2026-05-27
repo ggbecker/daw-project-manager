@@ -2902,4 +2902,46 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get skip => 'Пропустить';
+
+  @override
+  String get suggestionsLabel => 'Предложения';
+
+  @override
+  String get suggestionsRefresh => 'Обновить';
+
+  @override
+  String get suggestionsEmptyState =>
+      'Нет предложений. Нажмите «Обновить», чтобы сбросить скрытые элементы.';
+
+  @override
+  String get showSuggestions => 'Показывать предложения';
+
+  @override
+  String get showSuggestionsDescription =>
+      'Показывает умные предложения на панели инструментов, когда сессия не запущена';
+
+  @override
+  String get onboardingSuggestionsTitle => 'Умные предложения';
+
+  @override
+  String get onboardingSuggestionsBody =>
+      'Получайте персонализированные рекомендации проектов на панели инструментов во время работы';
+
+  @override
+  String get suggestionsFeatureDeadlines =>
+      'Напоминания о дедлайнах для предстоящих проектов';
+
+  @override
+  String get suggestionsFeatureResume =>
+      'Продолжить последний проект, над которым вы работали';
+
+  @override
+  String get suggestionsFeatureRecentlyModified =>
+      'Продолжить недавно изменённые треки';
+
+  @override
+  String get suggestionsEnableToggle => 'Включить умные предложения';
+
+  @override
+  String get canBeChangedInSettings => 'Можно изменить позже в Настройках';
 }

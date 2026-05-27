@@ -2838,4 +2838,41 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get skip => 'スキップ';
+
+  @override
+  String get suggestionsLabel => 'おすすめ';
+
+  @override
+  String get suggestionsRefresh => '更新';
+
+  @override
+  String get suggestionsEmptyState =>
+      '現在おすすめはありません。更新をタップして非表示アイテムをリセットしてください。';
+
+  @override
+  String get showSuggestions => 'おすすめを表示';
+
+  @override
+  String get showSuggestionsDescription => 'セッションが実行されていないときにツールバーにスマートな提案を表示';
+
+  @override
+  String get onboardingSuggestionsTitle => 'スマートなおすすめ';
+
+  @override
+  String get onboardingSuggestionsBody => '作業中にツールバーにパーソナライズされたプロジェクトのおすすめを取得';
+
+  @override
+  String get suggestionsFeatureDeadlines => '今後のプロジェクトの締め切りリマインダー';
+
+  @override
+  String get suggestionsFeatureResume => '最後に作業したプロジェクトを再開';
+
+  @override
+  String get suggestionsFeatureRecentlyModified => '最近変更したトラックを続ける';
+
+  @override
+  String get suggestionsEnableToggle => 'スマートなおすすめを有効にする';
+
+  @override
+  String get canBeChangedInSettings => '設定で後から変更できます';
 }

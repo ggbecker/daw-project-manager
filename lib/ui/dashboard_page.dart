@@ -7303,13 +7303,13 @@ class _SessionIdleSuggestionsState
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (!panelExpanded && total == 0) ...[
+                if (total == 0) ...[
                   Icon(Icons.lightbulb_outline,
                       size: 13,
                       color: theme.textTheme.bodySmall?.color),
                   const SizedBox(width: 3),
                   Text(
-                    'Suggestions',
+                    l10n.suggestionsLabel,
                     style: TextStyle(
                         fontSize: 11,
                         color: theme.textTheme.bodySmall?.color),
@@ -7427,7 +7427,7 @@ class _SuggestionsPanelBar extends ConsumerWidget {
                     size: 15, color: theme.textTheme.bodySmall?.color),
                 const SizedBox(width: 6),
                 Text(
-                  'Suggestions',
+                  l10n.suggestionsLabel,
                   style: theme.textTheme.titleSmall
                       ?.copyWith(fontWeight: FontWeight.w600),
                 ),
@@ -7441,7 +7441,7 @@ class _SuggestionsPanelBar extends ConsumerWidget {
                   ),
                   icon: const Icon(Icons.refresh, size: 13),
                   label:
-                      const Text('Refresh', style: TextStyle(fontSize: 12)),
+                      Text(l10n.suggestionsRefresh, style: const TextStyle(fontSize: 12)),
                   onPressed: () =>
                       ref.read(dismissedSuggestionsProvider.notifier).clear(),
                 ),
@@ -7464,7 +7464,7 @@ class _SuggestionsPanelBar extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(
                   horizontal: 14, vertical: 12),
               child: Text(
-                'No suggestions right now. Tap Refresh to reset dismissed items.',
+                l10n.suggestionsEmptyState,
                 style: theme.textTheme.bodySmall,
               ),
             )

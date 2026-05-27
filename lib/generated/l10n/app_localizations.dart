@@ -4939,6 +4939,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Skip'**
   String get skip;
+
+  /// No description provided for @suggestionsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggestions'**
+  String get suggestionsLabel;
+
+  /// No description provided for @suggestionsRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get suggestionsRefresh;
+
+  /// No description provided for @suggestionsEmptyState.
+  ///
+  /// In en, this message translates to:
+  /// **'No suggestions right now. Tap Refresh to reset dismissed items.'**
+  String get suggestionsEmptyState;
+
+  /// No description provided for @showSuggestions.
+  ///
+  /// In en, this message translates to:
+  /// **'Show suggestions'**
+  String get showSuggestions;
+
+  /// No description provided for @showSuggestionsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Show smart suggestions in the toolbar when no session is running'**
+  String get showSuggestionsDescription;
+
+  /// No description provided for @onboardingSuggestionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart Suggestions'**
+  String get onboardingSuggestionsTitle;
+
+  /// No description provided for @onboardingSuggestionsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Get personalized project recommendations in the toolbar while you work'**
+  String get onboardingSuggestionsBody;
+
+  /// No description provided for @suggestionsFeatureDeadlines.
+  ///
+  /// In en, this message translates to:
+  /// **'Deadline reminders for upcoming projects'**
+  String get suggestionsFeatureDeadlines;
+
+  /// No description provided for @suggestionsFeatureResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume the last project you worked on'**
+  String get suggestionsFeatureResume;
+
+  /// No description provided for @suggestionsFeatureRecentlyModified.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue recently modified tracks'**
+  String get suggestionsFeatureRecentlyModified;
+
+  /// No description provided for @suggestionsEnableToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable smart suggestions'**
+  String get suggestionsEnableToggle;
+
+  /// No description provided for @canBeChangedInSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Can be changed later in Settings'**
+  String get canBeChangedInSettings;
 }
 
 class _AppLocalizationsDelegate

@@ -2916,4 +2916,47 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get skip => 'Überspringen';
+
+  @override
+  String get suggestionsLabel => 'Vorschläge';
+
+  @override
+  String get suggestionsRefresh => 'Aktualisieren';
+
+  @override
+  String get suggestionsEmptyState =>
+      'Momentan keine Vorschläge. Tippe auf Aktualisieren, um ausgeblendete Elemente zurückzusetzen.';
+
+  @override
+  String get showSuggestions => 'Vorschläge anzeigen';
+
+  @override
+  String get showSuggestionsDescription =>
+      'Zeigt intelligente Vorschläge in der Symbolleiste an, wenn keine Sitzung läuft';
+
+  @override
+  String get onboardingSuggestionsTitle => 'Smarte Vorschläge';
+
+  @override
+  String get onboardingSuggestionsBody =>
+      'Erhalte personalisierte Projektempfehlungen in der Symbolleiste während du arbeitest';
+
+  @override
+  String get suggestionsFeatureDeadlines =>
+      'Fristenhinweise für bevorstehende Projekte';
+
+  @override
+  String get suggestionsFeatureResume =>
+      'Zuletzt bearbeitetes Projekt fortsetzen';
+
+  @override
+  String get suggestionsFeatureRecentlyModified =>
+      'Zuletzt geänderte Tracks fortsetzen';
+
+  @override
+  String get suggestionsEnableToggle => 'Smarte Vorschläge aktivieren';
+
+  @override
+  String get canBeChangedInSettings =>
+      'Kann später in den Einstellungen geändert werden';
 }

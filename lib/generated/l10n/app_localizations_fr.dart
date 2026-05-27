@@ -2925,4 +2925,47 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get skip => 'Passer';
+
+  @override
+  String get suggestionsLabel => 'Suggestions';
+
+  @override
+  String get suggestionsRefresh => 'Actualiser';
+
+  @override
+  String get suggestionsEmptyState =>
+      'Aucune suggestion pour le moment. Appuyez sur Actualiser pour réinitialiser les éléments ignorés.';
+
+  @override
+  String get showSuggestions => 'Afficher les suggestions';
+
+  @override
+  String get showSuggestionsDescription =>
+      'Affiche des suggestions intelligentes dans la barre d\'outils quand aucune session n\'est en cours';
+
+  @override
+  String get onboardingSuggestionsTitle => 'Suggestions intelligentes';
+
+  @override
+  String get onboardingSuggestionsBody =>
+      'Obtenez des recommandations de projets personnalisées dans la barre d\'outils pendant votre travail';
+
+  @override
+  String get suggestionsFeatureDeadlines =>
+      'Rappels d\'échéances pour les projets à venir';
+
+  @override
+  String get suggestionsFeatureResume =>
+      'Reprendre le dernier projet sur lequel vous avez travaillé';
+
+  @override
+  String get suggestionsFeatureRecentlyModified =>
+      'Continuer les pistes récemment modifiées';
+
+  @override
+  String get suggestionsEnableToggle => 'Activer les suggestions intelligentes';
+
+  @override
+  String get canBeChangedInSettings =>
+      'Peut être modifié plus tard dans les Paramètres';
 }

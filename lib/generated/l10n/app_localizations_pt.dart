@@ -2903,4 +2903,47 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get skip => 'Pular';
+
+  @override
+  String get suggestionsLabel => 'Sugestões';
+
+  @override
+  String get suggestionsRefresh => 'Atualizar';
+
+  @override
+  String get suggestionsEmptyState =>
+      'Sem sugestões no momento. Toque em Atualizar para redefinir os itens descartados.';
+
+  @override
+  String get showSuggestions => 'Mostrar sugestões';
+
+  @override
+  String get showSuggestionsDescription =>
+      'Exibe sugestões inteligentes na barra de ferramentas quando nenhuma sessão está em execução';
+
+  @override
+  String get onboardingSuggestionsTitle => 'Sugestões inteligentes';
+
+  @override
+  String get onboardingSuggestionsBody =>
+      'Receba recomendações de projetos personalizadas na barra de ferramentas enquanto trabalha';
+
+  @override
+  String get suggestionsFeatureDeadlines =>
+      'Lembretes de prazo para projetos futuros';
+
+  @override
+  String get suggestionsFeatureResume =>
+      'Retomar o último projeto em que você trabalhou';
+
+  @override
+  String get suggestionsFeatureRecentlyModified =>
+      'Continuar as faixas modificadas recentemente';
+
+  @override
+  String get suggestionsEnableToggle => 'Ativar sugestões inteligentes';
+
+  @override
+  String get canBeChangedInSettings =>
+      'Pode ser alterado mais tarde nas Configurações';
 }

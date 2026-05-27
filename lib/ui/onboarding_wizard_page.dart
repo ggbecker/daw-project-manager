@@ -22,7 +22,7 @@ class OnboardingWizardPage extends ConsumerStatefulWidget {
 class _OnboardingWizardPageState extends ConsumerState<OnboardingWizardPage> {
   final _controller = PageController();
   int _page = 0;
-  static const _totalPages = 7;
+  static const _totalPages = 8;
 
   @override
   void dispose() {
@@ -73,6 +73,7 @@ class _OnboardingWizardPageState extends ConsumerState<OnboardingWizardPage> {
                 _TabsPage(l10n: l10n),
                 _FoldersPage(l10n: l10n),
                 _UpdatesPage(l10n: l10n),
+                _SuggestionsPage(l10n: l10n),
                 _DonePage(l10n: l10n),
               ],
             ),
@@ -487,7 +488,200 @@ class _UpdatesPage extends ConsumerWidget {
   }
 }
 
-// ── Page 6: Done ──────────────────────────────────────────────────────────────
+// ── Page 6: Smart Suggestions ─────────────────────────────────────────────────
+
+class _SuggestionsPage extends ConsumerWidget {
+  final AppLocalizations l10n;
+  const _SuggestionsPage({required this.l10n});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final enabled = ref.watch(suggestionsEnabledProvider);
+    final theme = Theme.of(context);
+    return _WizardStep(
+      icon: Icons.lightbulb_outline,
+      title: l10n.onboardingSuggestionsTitle,
+      subtitle: l10n.onboardingSuggestionsBody,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SuggestionsPreviewMockup(
+              theme: theme, suggestionsLabel: l10n.suggestionsLabel),
+          const SizedBox(height: 20),
+          ...[
+            (Icons.alarm_outlined, l10n.suggestionsFeatureDeadlines),
+            (Icons.history, l10n.suggestionsFeatureResume),
+            (Icons.edit_outlined, l10n.suggestionsFeatureRecentlyModified),
+          ].map(
+            (e) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 5),
+              child: Row(
+                children: [
+                  Icon(e.$1, size: 18, color: theme.colorScheme.primary),
+                  const SizedBox(width: 12),
+                  Expanded(
+                      child: Text(e.$2, style: theme.textTheme.bodyMedium)),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          SwitchListTile(
+            value: enabled,
+            onChanged: (v) =>
+                ref.read(suggestionsEnabledProvider.notifier).set(v),
+            title: Text(l10n.suggestionsEnableToggle),
+            subtitle: Text(
+              l10n.canBeChangedInSettings,
+              style: theme.textTheme.bodySmall,
+            ),
+            contentPadding: EdgeInsets.zero,
+            dense: true,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SuggestionsPreviewMockup extends StatelessWidget {
+  final ThemeData theme;
+  final String suggestionsLabel;
+  const _SuggestionsPreviewMockup(
+      {required this.theme, required this.suggestionsLabel});
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = theme.colorScheme.primary;
+    final cardColor = theme.cardColor;
+    final divider = theme.dividerColor;
+    final dim = theme.textTheme.bodySmall?.color ?? Colors.grey;
+    const deadline = Color(0xFFFBBF24);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: divider),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Simulated toolbar row ──────────────────────────────────
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration:
+                BoxDecoration(border: Border(bottom: BorderSide(color: divider))),
+            child: Row(
+              children: [
+                // Suggestion chip
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: deadline.withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: deadline.withValues(alpha: 0.4)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.alarm_outlined,
+                          size: 11, color: deadline),
+                      const SizedBox(width: 4),
+                      const Text('2d left: My Track',
+                          style: TextStyle(
+                              fontSize: 10,
+                              color: deadline,
+                              fontWeight: FontWeight.w500)),
+                      const SizedBox(width: 6),
+                      const Icon(Icons.bookmark_add_outlined,
+                          size: 11, color: deadline),
+                      const SizedBox(width: 3),
+                      Icon(Icons.assignment,
+                          size: 10, color: dim.withValues(alpha: 0.6)),
+                    ],
+                  ),
+                ),
+                const Spacer(),
+                Icon(Icons.expand_more, size: 14, color: dim),
+              ],
+            ),
+          ),
+          // ── Simulated popup panel ──────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(10, 6, 10, 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.lightbulb_outline, size: 12, color: dim),
+                    const SizedBox(width: 4),
+                    Text(suggestionsLabel,
+                        style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: dim)),
+                    const Spacer(),
+                    Icon(Icons.refresh, size: 11, color: primary),
+                    const SizedBox(width: 6),
+                    Icon(Icons.expand_less, size: 11, color: dim),
+                  ],
+                ),
+                const SizedBox(height: 5),
+                Divider(height: 1, color: divider),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    const Icon(Icons.alarm_outlined,
+                        size: 13, color: deadline),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text('2d left: My Track',
+                          style: TextStyle(
+                              fontSize: 11,
+                              color: deadline,
+                              fontWeight: FontWeight.w500)),
+                    ),
+                    Icon(Icons.bookmark_add_outlined, size: 14, color: primary),
+                    const SizedBox(width: 4),
+                    Icon(Icons.assignment, size: 13, color: dim),
+                    const SizedBox(width: 4),
+                    Icon(Icons.close,
+                        size: 12, color: dim.withValues(alpha: 0.5)),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(Icons.history, size: 13, color: primary),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text('Resume: Summer Beat',
+                          style: TextStyle(
+                              fontSize: 11,
+                              color: primary,
+                              fontWeight: FontWeight.w500)),
+                    ),
+                    Icon(Icons.bookmark_add_outlined, size: 14, color: primary),
+                    const SizedBox(width: 4),
+                    Icon(Icons.assignment, size: 13, color: dim),
+                    const SizedBox(width: 4),
+                    Icon(Icons.close,
+                        size: 12, color: dim.withValues(alpha: 0.5)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Page 7: Done ──────────────────────────────────────────────────────────────
 
 class _DonePage extends StatelessWidget {
   final AppLocalizations l10n;

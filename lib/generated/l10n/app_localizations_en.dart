@@ -2901,4 +2901,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get skip => 'Skip';
+
+  @override
+  String get suggestionsLabel => 'Suggestions';
+
+  @override
+  String get suggestionsRefresh => 'Refresh';
+
+  @override
+  String get suggestionsEmptyState =>
+      'No suggestions right now. Tap Refresh to reset dismissed items.';
+
+  @override
+  String get showSuggestions => 'Show suggestions';
+
+  @override
+  String get showSuggestionsDescription =>
+      'Show smart suggestions in the toolbar when no session is running';
+
+  @override
+  String get onboardingSuggestionsTitle => 'Smart Suggestions';
+
+  @override
+  String get onboardingSuggestionsBody =>
+      'Get personalized project recommendations in the toolbar while you work';
+
+  @override
+  String get suggestionsFeatureDeadlines =>
+      'Deadline reminders for upcoming projects';
+
+  @override
+  String get suggestionsFeatureResume =>
+      'Resume the last project you worked on';
+
+  @override
+  String get suggestionsFeatureRecentlyModified =>
+      'Continue recently modified tracks';
+
+  @override
+  String get suggestionsEnableToggle => 'Enable smart suggestions';
+
+  @override
+  String get canBeChangedInSettings => 'Can be changed later in Settings';
 }

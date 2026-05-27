@@ -2810,4 +2810,40 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get skip => '跳过';
+
+  @override
+  String get suggestionsLabel => '建议';
+
+  @override
+  String get suggestionsRefresh => '刷新';
+
+  @override
+  String get suggestionsEmptyState => '暂无建议。点击刷新以重置已忽略的项目。';
+
+  @override
+  String get showSuggestions => '显示建议';
+
+  @override
+  String get showSuggestionsDescription => '在没有会话运行时在工具栏中显示智能建议';
+
+  @override
+  String get onboardingSuggestionsTitle => '智能建议';
+
+  @override
+  String get onboardingSuggestionsBody => '在工作时在工具栏中获取个性化项目推荐';
+
+  @override
+  String get suggestionsFeatureDeadlines => '即将截止项目的提醒';
+
+  @override
+  String get suggestionsFeatureResume => '恢复您上次处理的项目';
+
+  @override
+  String get suggestionsFeatureRecentlyModified => '继续最近修改的曲目';
+
+  @override
+  String get suggestionsEnableToggle => '启用智能建议';
+
+  @override
+  String get canBeChangedInSettings => '可以稍后在设置中更改';
 }

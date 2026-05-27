@@ -323,9 +323,9 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
                   value: suggestionsEnabled,
                   onChanged: (v) =>
                       ref.read(suggestionsEnabledProvider.notifier).set(v),
-                  title: const Text('Show suggestions'),
+                  title: Text(l10n.showSuggestions),
                   subtitle: Text(
-                    'Show smart suggestions in the toolbar when no session is running',
+                    l10n.showSuggestionsDescription,
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                   contentPadding: EdgeInsets.zero,
