@@ -327,15 +327,6 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
                   contentPadding: EdgeInsets.zero,
                   dense: true,
                 ),
-                SwitchListTile(
-                  value: lastModifiedColors,
-                  onChanged: (_) => ref.read(lastModifiedColorProvider.notifier).toggle(),
-                  title: Text(l10n.lastModifiedColors),
-                  subtitle: Text(l10n.lastModifiedColorsDescription,
-                      style: Theme.of(context).textTheme.bodySmall),
-                  contentPadding: EdgeInsets.zero,
-                  dense: true,
-                ),
                 Align(
                   alignment: Alignment.centerLeft,
                   child: TextButton.icon(
@@ -365,6 +356,15 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
                     label: Text(l10n.checkNow),
                     style: TextButton.styleFrom(padding: EdgeInsets.zero),
                   ),
+                ),
+                SwitchListTile(
+                  value: lastModifiedColors,
+                  onChanged: (_) => ref.read(lastModifiedColorProvider.notifier).toggle(),
+                  title: Text(l10n.lastModifiedColors),
+                  subtitle: Text(l10n.lastModifiedColorsDescription,
+                      style: Theme.of(context).textTheme.bodySmall),
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
                 ),
                 const Divider(height: 20),
                 ListTile(
