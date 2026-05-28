@@ -4417,6 +4417,7 @@ class GoogleDriveSyncService {
       'statusChangedAt': project.statusChangedAt?.toIso8601String(),
       'deadline': project.deadline?.toIso8601String(),
       'totalWorkSeconds': project.totalWorkSeconds,
+      'sessions': project.sessions.map((s) => s.toMap()).toList(),
     };
   }
 
@@ -4458,6 +4459,10 @@ class GoogleDriveSyncService {
           ? DateTime.parse(data['deadline'] as String)
           : null,
       totalWorkSeconds: data['totalWorkSeconds'] as int? ?? 0,
+      sessions: (data['sessions'] as List?)
+              ?.map((e) => SessionRecord.fromMap(e as Map))
+              .toList() ??
+          const [],
     );
   }
 

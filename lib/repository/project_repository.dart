@@ -437,6 +437,8 @@ class ProjectRepository {
       statusChangedAt: existing?.statusChangedAt,     // <--- PRESERVA STATUS CHANGE DATE
       deadline: existing?.deadline,                   // <--- PRESERVA DEADLINE
       parentProjectId: parentProjectId ?? existing?.parentProjectId,
+      totalWorkSeconds: existing?.totalWorkSeconds ?? 0, // <--- CRITICAL: PRESERVA SESSION TIME
+      sessions: existing?.sessions ?? const [],          // <--- CRITICAL: PRESERVA SESSION HISTORY
     );
 
     await projectsBox.put(projectToSave.id, projectToSave);

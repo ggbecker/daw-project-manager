@@ -229,12 +229,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tryDifferentSearch => '尝试不同的搜索词';
 
   @override
-  String get deepScanTooltip =>
-      '深度扫描从项目文件中提取完整的元数据：\n• BPM（每分钟节拍数）\n• 音乐调性\n• DAW版本\n目前支持：Ableton Live 和 Cubase。\n这较慢，但提供完整信息。';
-
-  @override
   String get deepScanConfirm =>
-      '这将扫描所有项目并提取完整的元数据（BPM、调性、DAW版本）。这可能需要一些时间。继续吗？';
+      '深度扫描从项目文件中提取完整的元数据：\n• BPM（每分钟节拍数）\n• 音乐调性\n• DAW版本\n目前支持：Ableton Live 和 Cubase。\n\n这比常规扫描慢，可能需要一些时间。继续吗？';
 
   @override
   String get metadataExtractedSuccessfully => '元数据提取成功';

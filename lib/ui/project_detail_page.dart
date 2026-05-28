@@ -2809,7 +2809,7 @@ class _SessionHistorySection extends StatelessWidget {
   final List<SessionRecord> sessions;
   const _SessionHistorySection({required this.sessions});
 
-  static String _fmt(int seconds) {
+  static String _fmtDuration(int seconds) {
     final h = seconds ~/ 3600;
     final m = (seconds % 3600) ~/ 60;
     final s = seconds % 60;
@@ -2818,35 +2818,19 @@ class _SessionHistorySection extends StatelessWidget {
     return '${s}s';
   }
 
-  /// Groups sessions by calendar day, returns list sorted oldest→newest.
-  List<MapEntry<DateTime, int>> _groupByDay() {
-    final totals = <String, int>{};
-    final dates = <String, DateTime>{};
-    for (final s in sessions) {
-      final key = DateFormat('yyyy-MM-dd').format(s.startedAt);
-      totals[key] = (totals[key] ?? 0) + s.durationSeconds;
-      dates[key] ??=
-          DateTime(s.startedAt.year, s.startedAt.month, s.startedAt.day);
-    }
-    return (totals.entries.toList()..sort((a, b) => a.key.compareTo(b.key)))
-        .map((e) => MapEntry(dates[e.key]!, e.value))
-        .toList();
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final grouped = _groupByDay();
-    final totalSeconds =
-        sessions.fold<int>(0, (a, b) => a + b.durationSeconds);
+    // Newest first
+    final sorted = [...sessions]..sort((a, b) => b.startedAt.compareTo(a.startedAt));
+    final totalSeconds = sessions.fold<int>(0, (a, b) => a + b.durationSeconds);
     final dateFmt = DateFormat('MMM d, yyyy');
+    final timeFmt = DateFormat('HH:mm');
     final bodySmall = theme.textTheme.bodySmall;
     final divider = theme.dividerColor.withValues(alpha: 0.4);
 
-    Widget cell(String text,
-            {bool bold = false, Color? color, CrossAxisAlignment? align}) =>
-        Padding(
+    Widget cell(String text, {bool bold = false, Color? color}) => Padding(
           padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
           child: Text(
             text,
@@ -2885,6 +2869,7 @@ class _SessionHistorySection extends StatelessWidget {
               columnWidths: const {
                 0: FlexColumnWidth(3),
                 1: FlexColumnWidth(2),
+                2: FlexColumnWidth(2),
               },
               border: TableBorder(
                 horizontalInside: BorderSide(color: divider, width: 1),
@@ -2898,15 +2883,17 @@ class _SessionHistorySection extends StatelessWidget {
                   ),
                   children: [
                     cell('Date', bold: true),
-                    cell('Time worked', bold: true),
+                    cell('Time', bold: true),
+                    cell('Duration', bold: true),
                   ],
                 ),
-                // Data rows — one per calendar day
-                for (final g in grouped)
+                // One row per individual session
+                for (final s in sorted)
                   TableRow(
                     children: [
-                      cell(dateFmt.format(g.key)),
-                      cell(_fmt(g.value)),
+                      cell(dateFmt.format(s.startedAt)),
+                      cell('${timeFmt.format(s.startedAt)}–${timeFmt.format(s.endedAt)}'),
+                      cell(_fmtDuration(s.durationSeconds)),
                     ],
                   ),
                 // Total row
@@ -2915,9 +2902,10 @@ class _SessionHistorySection extends StatelessWidget {
                     color: theme.colorScheme.primary.withValues(alpha: 0.10),
                   ),
                   children: [
-                    cell('Total', bold: true,
+                    cell('Total', bold: true, color: theme.colorScheme.primary),
+                    cell('${sessions.length} session${sessions.length == 1 ? '' : 's'}',
                         color: theme.colorScheme.primary),
-                    cell(_fmt(totalSeconds), bold: true,
+                    cell(_fmtDuration(totalSeconds), bold: true,
                         color: theme.colorScheme.primary),
                   ],
                 ),

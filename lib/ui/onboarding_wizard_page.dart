@@ -44,6 +44,8 @@ class _OnboardingWizardPageState extends ConsumerState<OnboardingWizardPage> {
 
   Future<void> _finish() async {
     await ref.read(onboardingCompleteProvider.notifier).complete();
+    // Stop any active player so the fresh dashboard doesn't auto-play.
+    ref.read(desktopPlayerProvider.notifier).close();
     if (!mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const DashboardPage()),

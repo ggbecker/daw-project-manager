@@ -237,12 +237,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tryDifferentSearch => 'Versuchen Sie einen anderen Suchbegriff';
 
   @override
-  String get deepScanTooltip =>
-      'Der Tiefenscan extrahiert vollständige Metadaten aus Projektdateien:\n• BPM (Schläge Pro Minute)\n• Tonart\n• DAW-Version\nDerzeit unterstützt: Ableton Live und Cubase.\nDies ist langsamer, liefert aber vollständige Informationen.';
-
-  @override
   String get deepScanConfirm =>
-      'Dies scannt alle Projekte und extrahiert vollständige Metadaten (BPM, Tonart, DAW-Version). Dies kann eine Weile dauern. Fortfahren?';
+      'Der Tiefenscan extrahiert vollständige Metadaten aus Projektdateien:\n• BPM (Schläge Pro Minute)\n• Tonart\n• DAW-Version\nDerzeit unterstützt: Ableton Live und Cubase.\n\nDies ist langsamer als ein regulärer Scan und kann eine Weile dauern. Fortfahren?';
 
   @override
   String get metadataExtractedSuccessfully =>

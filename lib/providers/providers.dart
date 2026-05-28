@@ -1792,6 +1792,7 @@ class WorkTimerNotifier extends Notifier<int> {
     final elapsedSeconds = end.difference(start).inSeconds;
     if (elapsedSeconds <= 0) return;
     final record = SessionRecord(
+      id: start.toIso8601String(),
       startedAt: start,
       endedAt: end,
       durationSeconds: elapsedSeconds,

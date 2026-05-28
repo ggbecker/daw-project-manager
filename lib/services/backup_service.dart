@@ -295,6 +295,8 @@ class BackupService {
       'previewSongFileName': project.previewSongFileName,
       'uploadedPreviewSongHash': project.uploadedPreviewSongHash,
       'deadline': project.deadline?.toIso8601String(),
+      'totalWorkSeconds': project.totalWorkSeconds,
+      'sessions': project.sessions.map((s) => s.toMap()).toList(),
     };
   }
 
@@ -324,6 +326,11 @@ class BackupService {
       previewSongFileName: json['previewSongFileName'] as String?,
       uploadedPreviewSongHash: json['uploadedPreviewSongHash'] as String?,
       deadline: json['deadline'] != null ? DateTime.parse(json['deadline'] as String) : null,
+      totalWorkSeconds: json['totalWorkSeconds'] as int? ?? 0,
+      sessions: (json['sessions'] as List?)
+              ?.map((e) => SessionRecord.fromMap(e as Map))
+              .toList() ??
+          const [],
     );
   }
 

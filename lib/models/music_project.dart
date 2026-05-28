@@ -4,27 +4,36 @@ import 'todo_item.dart';
 
 /// A single work session on a project.
 class SessionRecord {
+  /// Unique ID for this session — ISO8601 string of startedAt (millisecond precision).
+  /// Existing records without an 'id' field fall back to startedAt string on deserialization.
+  final String id;
   final DateTime startedAt;
   final DateTime endedAt;
   final int durationSeconds;
 
   const SessionRecord({
+    required this.id,
     required this.startedAt,
     required this.endedAt,
     required this.durationSeconds,
   });
 
   Map<String, dynamic> toMap() => {
+        'id': id,
         'startedAt': startedAt.toIso8601String(),
         'endedAt': endedAt.toIso8601String(),
         'durationSeconds': durationSeconds,
       };
 
-  factory SessionRecord.fromMap(Map map) => SessionRecord(
-        startedAt: DateTime.parse(map['startedAt'] as String),
-        endedAt: DateTime.parse(map['endedAt'] as String),
-        durationSeconds: map['durationSeconds'] as int,
-      );
+  factory SessionRecord.fromMap(Map map) {
+    final startedAt = DateTime.parse(map['startedAt'] as String);
+    return SessionRecord(
+      id: map['id'] as String? ?? startedAt.toIso8601String(),
+      startedAt: startedAt,
+      endedAt: DateTime.parse(map['endedAt'] as String),
+      durationSeconds: map['durationSeconds'] as int,
+    );
+  }
 }
 
 @HiveType(typeId: 1)

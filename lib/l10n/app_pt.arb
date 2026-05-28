@@ -108,8 +108,7 @@
   "noReleasesFound": "Nenhum lançamento encontrado",
   "noPlaylistsFound": "Nenhuma playlist encontrada",
   "tryDifferentSearch": "Tente um termo de busca diferente",
-  "deepScanTooltip": "A Varredura Profunda extrai metadados completos dos arquivos de projeto:\n• BPM (Batidas Por Minuto)\n• Tom Musical\n• Versão do DAW\nSuportado atualmente: Ableton Live e Cubase.\nIsso é mais lento, mas fornece informações completas.",
-  "deepScanConfirm": "Isso escaneará todos os projetos e extrairá metadados completos (BPM, Tom, Versão do DAW). Isso pode levar um tempo. Continuar?",
+  "deepScanConfirm": "A Varredura Profunda extrai metadados completos dos arquivos de projeto:\n• BPM (Batidas Por Minuto)\n• Tom Musical\n• Versão do DAW\nSuportado atualmente: Ableton Live e Cubase.\n\nIsso é mais lento que uma varredura comum e pode levar um tempo. Continuar?",
   "metadataExtractedSuccessfully": "Metadados extraídos com sucesso",
   "failedToExtractMetadata": "Falha ao extrair metadados: {error}",
   "@failedToExtractMetadata": {

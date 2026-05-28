@@ -1573,49 +1573,47 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                         ),
                         if (!isLeftRail) ...[
                           const SizedBox(width: 12),
-                          Tooltip(
-                            message: AppLocalizations.of(context)!.deepScanTooltip,
-                            waitDuration: const Duration(milliseconds: 500),
-                            child: ElevatedButton.icon(
-                              onPressed: isAnyOperation
-                                  ? null
-                                  : () async {
-                                        final confirm = await showDialog<bool>(
-                                          context: context,
-                                          builder: (ctx) => AlertDialog(
-                                            backgroundColor: Theme.of(context).cardColor,
-                                            title: Text(AppLocalizations.of(context)!.deepScan),
-                                            content: Text(AppLocalizations.of(context)!.deepScanConfirm),
-                                            actions: [
-                                              TextButton(
-                                                onPressed: () => Navigator.pop(ctx, false),
-                                                child: Text(AppLocalizations.of(context)!.cancel),
-                                              ),
-                                              ElevatedButton(
-                                                onPressed: () => Navigator.pop(ctx, true),
-                                                style: ElevatedButton.styleFrom(
-                                                  backgroundColor: Theme.of(context).colorScheme.primary,
-                                                ),
-                                                child: Text(AppLocalizations.of(context)!.deepScan),
-                                              ),
-                                            ],
+                          ElevatedButton.icon(
+                            onPressed: isAnyOperation
+                                ? null
+                                : () async {
+                                      final confirm = await showDialog<bool>(
+                                        context: context,
+                                        builder: (ctx) => AlertDialog(
+                                          backgroundColor: Theme.of(context).cardColor,
+                                          title: Text(AppLocalizations.of(context)!.deepScan),
+                                          content: SingleChildScrollView(
+                                            child: Text(AppLocalizations.of(context)!.deepScanConfirm),
                                           ),
-                                        );
-                                        if (confirm == true) {
-                                          await _fullScanAll();
-                                        }
-                                      },
-                              icon: isAnyOperation
-                                  ? const SizedBox(
-                                        width: 16,
-                                        height: 16,
-                                        child: CircularProgressIndicator(strokeWidth: 2),
-                                      )
-                                  : const Icon(Icons.search),
-                              label: Text(isAnyOperation ? AppLocalizations.of(context)!.scanning : AppLocalizations.of(context)!.deepScan),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Theme.of(context).colorScheme.primary,
-                              ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () => Navigator.pop(ctx, false),
+                                              child: Text(AppLocalizations.of(context)!.cancel),
+                                            ),
+                                            ElevatedButton(
+                                              onPressed: () => Navigator.pop(ctx, true),
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: Theme.of(context).colorScheme.primary,
+                                              ),
+                                              child: Text(AppLocalizations.of(context)!.deepScan),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                      if (confirm == true) {
+                                        await _fullScanAll();
+                                      }
+                                    },
+                            icon: isAnyOperation
+                                ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    )
+                                : const Icon(Icons.search),
+                            label: Text(isAnyOperation ? AppLocalizations.of(context)!.scanning : AppLocalizations.of(context)!.deepScan),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Theme.of(context).colorScheme.primary,
                             ),
                           ),
                         ],
@@ -1856,10 +1854,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                     ),
                                     child: const Icon(Icons.person, size: 26),
                                   );
-                            return Tooltip(
-                              message: profile?.name ??
-                                  AppLocalizations.of(context)!.profileManager,
-                              child: InkWell(
+                            final inkWell = InkWell(
                                 borderRadius: BorderRadius.circular(8),
                                 onTap: () => Navigator.of(context).push(
                                   MaterialPageRoute(
@@ -1893,8 +1888,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                           ],
                                         ),
                                 ),
-                              ),
-                            );
+                              );
+                            return inkWell;
                           }),
                           // Quick profile switch (multiple profiles only)
                           Consumer(builder: (ctx, ref, _) {
@@ -1903,14 +1898,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                             if (allProfiles == null || allProfiles.length < 2) {
                               return const SizedBox.shrink();
                             }
-                            return Tooltip(
-                              message: AppLocalizations.of(context)!
-                                  .switchProfile,
-                              child: IconButton(
-                                icon: const Icon(Icons.swap_horiz, size: 18),
-                                onPressed: () =>
-                                    _quickSwitchProfile(context),
-                              ),
+                            return IconButton(
+                              icon: const Icon(Icons.swap_horiz, size: 18),
+                              onPressed: () => _quickSwitchProfile(context),
                             );
                           }),
                           const SizedBox(height: 8),
@@ -1919,12 +1909,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                       destinations: [
                         for (final tab in _currentVisibleTabs)
                           switch (tab) {
-                            AppTab.projects   => NavigationRailDestination(icon: Tooltip(message: AppLocalizations.of(context)!.projectsTab, child: const Icon(Icons.library_music)), label: Text(AppLocalizations.of(context)!.projectsTab)),
-                            AppTab.releases   => NavigationRailDestination(icon: Tooltip(message: AppLocalizations.of(context)!.releasesTab, child: const Icon(Icons.album)), label: Text(AppLocalizations.of(context)!.releasesTab)),
-                            AppTab.playlists  => NavigationRailDestination(icon: Tooltip(message: AppLocalizations.of(context)!.playlists, child: const Icon(Icons.playlist_play)), label: Text(AppLocalizations.of(context)!.playlists)),
-                            AppTab.queue      => NavigationRailDestination(icon: Tooltip(message: AppLocalizations.of(context)!.queueTab, child: const Icon(Icons.checklist)), label: Text(AppLocalizations.of(context)!.queueTab)),
-                            AppTab.statistics => NavigationRailDestination(icon: Tooltip(message: AppLocalizations.of(context)!.statisticsTab, child: const Icon(Icons.bar_chart_rounded)), label: Text(AppLocalizations.of(context)!.statisticsTab)),
-                            AppTab.player     => NavigationRailDestination(icon: const Tooltip(message: 'Music Player', child: Icon(Icons.headphones)), label: const Text('Music Player')),
+                            AppTab.projects   => NavigationRailDestination(icon: const Icon(Icons.library_music), label: Text(AppLocalizations.of(context)!.projectsTab)),
+                            AppTab.releases   => NavigationRailDestination(icon: const Icon(Icons.album), label: Text(AppLocalizations.of(context)!.releasesTab)),
+                            AppTab.playlists  => NavigationRailDestination(icon: const Icon(Icons.playlist_play), label: Text(AppLocalizations.of(context)!.playlists)),
+                            AppTab.queue      => NavigationRailDestination(icon: const Icon(Icons.checklist), label: Text(AppLocalizations.of(context)!.queueTab)),
+                            AppTab.statistics => NavigationRailDestination(icon: const Icon(Icons.bar_chart_rounded), label: Text(AppLocalizations.of(context)!.statisticsTab)),
+                            AppTab.player     => NavigationRailDestination(icon: const Icon(Icons.headphones), label: const Text('Music Player')),
                           },
                       ],
                       trailing: Expanded(
@@ -1936,13 +1926,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 // Google Drive sync
-                                Tooltip(
-                                  message: AppLocalizations.of(context)!.googleDriveSync,
-                                  child: IconButton(
-                                    icon: const Icon(Icons.cloud_outlined),
-                                    onPressed: () => Navigator.of(context).push(
-                                      MaterialPageRoute(builder: (_) => const GoogleDriveSyncPage()),
-                                    ),
+                                IconButton(
+                                  icon: const Icon(Icons.cloud_outlined),
+                                  onPressed: () => Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (_) => const GoogleDriveSyncPage()),
                                   ),
                                 ),
                                 if (!railCollapsed)
@@ -1953,19 +1940,14 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                   ),
                                 const SizedBox(height: 8),
                                 // Rescan
-                                Tooltip(
-                                  message: isAnyOperation
-                                      ? AppLocalizations.of(context)!.scanning
-                                      : AppLocalizations.of(context)!.rescan,
-                                  child: IconButton(
-                                    icon: isAnyOperation
-                                        ? const SizedBox(
-                                            width: 18, height: 18,
-                                            child: CircularProgressIndicator(strokeWidth: 2),
-                                          )
-                                        : const Icon(Icons.refresh),
-                                    onPressed: isAnyOperation ? null : () => _scanAll(),
-                                  ),
+                                IconButton(
+                                  icon: isAnyOperation
+                                      ? const SizedBox(
+                                          width: 18, height: 18,
+                                          child: CircularProgressIndicator(strokeWidth: 2),
+                                        )
+                                      : const Icon(Icons.refresh),
+                                  onPressed: isAnyOperation ? null : () => _scanAll(),
                                 ),
                                 if (!railCollapsed)
                                   Text(
@@ -1976,38 +1958,36 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                   ),
                                 const SizedBox(height: 8),
                                 // Deep scan
-                                Tooltip(
-                                  message: AppLocalizations.of(context)!.deepScanTooltip,
-                                  waitDuration: const Duration(milliseconds: 500),
-                                  child: IconButton(
-                                    icon: isAnyOperation
-                                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                                        : const Icon(Icons.search),
-                                    onPressed: isAnyOperation
-                                        ? null
-                                        : () async {
-                                            final confirm = await showDialog<bool>(
-                                              context: context,
-                                              builder: (ctx) => AlertDialog(
-                                                backgroundColor: Theme.of(context).cardColor,
-                                                title: Text(AppLocalizations.of(context)!.deepScan),
-                                                content: Text(AppLocalizations.of(context)!.deepScanConfirm),
-                                                actions: [
-                                                  TextButton(
-                                                    onPressed: () => Navigator.pop(ctx, false),
-                                                    child: Text(AppLocalizations.of(context)!.cancel),
-                                                  ),
-                                                  ElevatedButton(
-                                                    onPressed: () => Navigator.pop(ctx, true),
-                                                    style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary),
-                                                    child: Text(AppLocalizations.of(context)!.deepScan),
-                                                  ),
-                                                ],
+                                IconButton(
+                                  icon: isAnyOperation
+                                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                                      : const Icon(Icons.search),
+                                  onPressed: isAnyOperation
+                                      ? null
+                                      : () async {
+                                          final confirm = await showDialog<bool>(
+                                            context: context,
+                                            builder: (ctx) => AlertDialog(
+                                              backgroundColor: Theme.of(context).cardColor,
+                                              title: Text(AppLocalizations.of(context)!.deepScan),
+                                              content: SingleChildScrollView(
+                                                child: Text(AppLocalizations.of(context)!.deepScanConfirm),
                                               ),
-                                            );
-                                            if (confirm == true) await _fullScanAll();
-                                          },
-                                  ),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () => Navigator.pop(ctx, false),
+                                                  child: Text(AppLocalizations.of(context)!.cancel),
+                                                ),
+                                                ElevatedButton(
+                                                  onPressed: () => Navigator.pop(ctx, true),
+                                                  style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary),
+                                                  child: Text(AppLocalizations.of(context)!.deepScan),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                          if (confirm == true) await _fullScanAll();
+                                        },
                                 ),
                                 if (!railCollapsed)
                                   Text(
@@ -2016,14 +1996,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                   ),
                                 const SizedBox(height: 8),
                                 // Settings
-                                Tooltip(
-                                  message: AppLocalizations.of(context)!.settings,
-                                  child: IconButton(
-                                    icon: const Icon(Icons.settings_outlined),
-                                    onPressed: () => Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) => const ProjectFoldersSettingsPage(),
-                                      ),
+                                IconButton(
+                                  icon: const Icon(Icons.settings_outlined),
+                                  onPressed: () => Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => const ProjectFoldersSettingsPage(),
                                     ),
                                   ),
                                 ),
@@ -3225,6 +3202,8 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     } else {
       await _confirmStartSession(context, ref, project);
     }
+    // Explicitly repaint rows so the green/yellow session color applies immediately.
+    if (mounted) stateManager?.notifyListeners();
   }
 
   Future<void> _showPhaseMenu(

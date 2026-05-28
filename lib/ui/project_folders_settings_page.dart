@@ -16,6 +16,7 @@ import '../providers/providers.dart';
 import '../repository/project_repository.dart';
 import '../services/scanner_service.dart';
 import '../services/update_check_service.dart';
+import '../utils/file_launcher.dart';
 import '../utils/mobile_utils.dart';
 
 class ProjectFoldersSettingsPage extends ConsumerStatefulWidget {
@@ -490,6 +491,11 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
+                            tooltip: l10n.openFolder,
+                            onPressed: () => FileLauncher.openFolder(f.path),
+                            icon: const Icon(Icons.folder_open_outlined),
+                          ),
+                          IconButton(
                             tooltip: l10n.relocateFolderDialogTitle,
                             onPressed: _busy ? null : () => _relocateProjectFolder(f.id, f.path),
                             icon: const Icon(Icons.drive_file_move_outline),
@@ -555,6 +561,15 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
+                          ),
+                          IconButton(
+                            tooltip: l10n.openFolder,
+                            onPressed: () => FileLauncher.openFolder(entry.value.path),
+                            icon: const Icon(Icons.folder_open_outlined),
+                            iconSize: 16,
+                            visualDensity: VisualDensity.compact,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
                           ),
                         ],
                       ),
