@@ -27,6 +27,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cancel => '取消';
 
   @override
+  String get confirm => '确认';
+
+  @override
+  String get customInterval => '自定义';
+
+  @override
   String get close => '关闭';
 
   @override
@@ -223,12 +229,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tryDifferentSearch => '尝试不同的搜索词';
 
   @override
-  String get deepScanTooltip =>
-      '深度扫描从项目文件中提取完整的元数据：\n• BPM（每分钟节拍数）\n• 音乐调性\n• DAW版本\n目前支持：Ableton Live 和 Cubase。\n这较慢，但提供完整信息。';
+  String get deepScanConfirm =>
+      '深度扫描从项目文件中提取完整的元数据：\n• BPM（每分钟节拍数）\n• 音乐调性\n• DAW版本\n目前支持：Ableton Live 和 Cubase。\n\n这比常规扫描慢，可能需要一些时间。继续吗？';
 
   @override
-  String get deepScanConfirm =>
-      '这将扫描所有项目并提取完整的元数据（BPM、调性、DAW版本）。这可能需要一些时间。继续吗？';
+  String get deepScanOnlyUnscanned => '仅扫描没有元数据的项目';
 
   @override
   String get metadataExtractedSuccessfully => '元数据提取成功';
@@ -2369,6 +2374,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get shortcutGoBack => '返回';
 
   @override
+  String get shortcutGroupProjectsTableStandardMode => '标准模式';
+
+  @override
+  String get shortcutGroupProjectsTableSessionMode => '会话模式';
+
+  @override
+  String get shortcutToggleSession => '开始 / 结束会话';
+
+  @override
   String get shortcutGroupPreviewPlayer => '预览播放器';
 
   @override
@@ -2545,5 +2559,390 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String playerCompletedTasks(int count) {
     return '已完成 $count 项';
+  }
+
+  @override
+  String get playerPreviousTrack => '上一曲';
+
+  @override
+  String get playerNextTrack => '下一曲';
+
+  @override
+  String get playerOpenProject => '打开项目';
+
+  @override
+  String get volumeMute => '静音';
+
+  @override
+  String get volumeUnmute => '取消静音';
+
+  @override
+  String totalWorkTime(String time) {
+    return '总工作时间: $time';
+  }
+
+  @override
+  String sessionTime(String time) {
+    return '会话: $time';
+  }
+
+  @override
+  String get sessionHistory => '会话历史';
+
+  @override
+  String get noSessionsYet => '尚未记录任何会话';
+
+  @override
+  String get tabPosition => '标签位置';
+
+  @override
+  String get tabPositionTop => '顶部';
+
+  @override
+  String get tabPositionLeft => '左侧';
+
+  @override
+  String updateAvailableMessage(String version) {
+    return '版本 $version 已可用';
+  }
+
+  @override
+  String get dismiss => '关闭';
+
+  @override
+  String get checkForUpdates => '检查更新';
+
+  @override
+  String get checkForUpdatesDescription => '当有新版本时获得通知。';
+
+  @override
+  String get checkNow => '立即检查';
+
+  @override
+  String updateAvailable(String version) {
+    return '有可用更新：v$version';
+  }
+
+  @override
+  String get upToDate => '应用已是最新版本';
+
+  @override
+  String get updateAvailableTitle => '有可用更新';
+
+  @override
+  String updateAvailableVersion(String version) {
+    return '版本 $version 已就绪。';
+  }
+
+  @override
+  String updateCurrentVersion(String version) {
+    return '您当前使用的是 v$version。';
+  }
+
+  @override
+  String get viewUpdateDetails => '查看详情';
+
+  @override
+  String get getOnMicrosoftStore => '在 Microsoft Store 获取';
+
+  @override
+  String get downloadFromGitHub => '从 GitHub 下载';
+
+  @override
+  String get updateWindowsInstructions =>
+      '打开 Microsoft Store 更新 DAW Project Manager，或点击下方按钮。';
+
+  @override
+  String get updateMacInstructions => '从 GitHub 下载最新版本并替换当前应用。';
+
+  @override
+  String get resetOnboarding => '重置引导设置';
+
+  @override
+  String get onboardingWelcomeTitle => '欢迎使用 DAW Project Manager';
+
+  @override
+  String get onboardingWelcomeBody => '在一个地方管理您所有的音乐项目。';
+
+  @override
+  String get onboardingLanguageTitle => '选择语言';
+
+  @override
+  String get onboardingThemeTitle => '选择主题';
+
+  @override
+  String get onboardingFoldersTitle => '添加项目文件夹';
+
+  @override
+  String get onboardingFoldersBody => '添加存储 DAW 项目的根文件夹。';
+
+  @override
+  String get onboardingDriveTitle => 'Google Drive 同步';
+
+  @override
+  String get onboardingDriveBody => '将项目元数据备份并同步到 Google Drive。';
+
+  @override
+  String get onboardingUpdatesTitle => '更新检查';
+
+  @override
+  String get onboardingUpdatesBody => '当有新版本时获得通知。';
+
+  @override
+  String get onboardingDoneTitle => '一切就绪！';
+
+  @override
+  String get onboardingDoneBody => '开始探索您的项目。';
+
+  @override
+  String get onboardingNext => '下一步';
+
+  @override
+  String get onboardingBack => '返回';
+
+  @override
+  String get onboardingGetStarted => '开始使用';
+
+  @override
+  String get dawSession => 'DAW会话';
+
+  @override
+  String get clearDawSession => '清除会话';
+
+  @override
+  String get stop => '停止';
+
+  @override
+  String get pause => '暂停';
+
+  @override
+  String get resume => '继续';
+
+  @override
+  String get workTimerSection => '工作会话提醒';
+
+  @override
+  String get workTimerSectionDesc => '在订阅项目上工作时获取通知';
+
+  @override
+  String get workTimerEnabled => '启用工作会话提醒';
+
+  @override
+  String get workTimerIntervalLabel => '每隔通知';
+
+  @override
+  String get minutes => '分钟';
+
+  @override
+  String workTimerNotifBody(String time) {
+    return '您已工作 $time';
+  }
+
+  @override
+  String get general => '常规';
+
+  @override
+  String get expand => '展开';
+
+  @override
+  String get collapse => '折叠';
+
+  @override
+  String get lastModifiedColors => '最后修改日期颜色';
+
+  @override
+  String get lastModifiedColorsDescription =>
+      '根据时间和状态为最后修改日期着色。绿色 = 已完成。较旧的日期从黄色渐变为红色——红色越深表示项目越长时间未被修改。';
+
+  @override
+  String get sessionMode => '会话模式';
+
+  @override
+  String get sessionModeDescription => '启动前订阅项目，以跟踪工作时间并从工具栏管理';
+
+  @override
+  String get startSession => '开始会话';
+
+  @override
+  String get endSession => '结束会话';
+
+  @override
+  String get switchSession => '切换会话';
+
+  @override
+  String get switchSessionBody => '停止当前会话并开始新会话？';
+
+  @override
+  String switchSessionCurrent(String project) {
+    return '当前：$project';
+  }
+
+  @override
+  String switchSessionNew(String project) {
+    return '新建：$project';
+  }
+
+  @override
+  String get sessionDuration => '会话时长';
+
+  @override
+  String get scanModeLabel => '扫描模式：';
+
+  @override
+  String get scanModeSectionTitle => '扫描模式';
+
+  @override
+  String get scanModeSectionDescription =>
+      '控制每个文件夹中的项目在表格中的显示方式——作为简单的平铺列表或按子文件夹分组。';
+
+  @override
+  String get scanModeFlat => '平铺';
+
+  @override
+  String get scanModeSmartFolder => '智能文件夹';
+
+  @override
+  String get scanModeFlatDescription => '将所有项目显示为平铺列表。简单快速。';
+
+  @override
+  String get scanModeSmartFolderDescription => '当文件夹包含多个项目时，按文件夹分组显示。';
+
+  @override
+  String get skip => '跳过';
+
+  @override
+  String get suggestionsLabel => '建议';
+
+  @override
+  String get suggestionsRefresh => '刷新';
+
+  @override
+  String get suggestionsEmptyState => '暂无建议。点击刷新以重置已忽略的项目。';
+
+  @override
+  String get showSuggestions => '显示建议';
+
+  @override
+  String get showSuggestionsDescription => '在没有会话运行时在工具栏中显示智能建议';
+
+  @override
+  String get onboardingSuggestionsTitle => '智能建议';
+
+  @override
+  String get onboardingSuggestionsBody => '在工作时在工具栏中获取个性化项目推荐';
+
+  @override
+  String get suggestionsFeatureDeadlines => '即将截止项目的提醒';
+
+  @override
+  String get suggestionsFeatureResume => '恢复您上次处理的项目';
+
+  @override
+  String get suggestionsFeatureRecentlyModified => '继续最近修改的曲目';
+
+  @override
+  String get suggestionsEnableToggle => '启用智能建议';
+
+  @override
+  String get canBeChangedInSettings => '可以稍后在设置中更改';
+
+  @override
+  String get next => '下一步';
+
+  @override
+  String get createProject => '创建';
+
+  @override
+  String get createProjectTooltip => '创建新的项目文件夹';
+
+  @override
+  String get createProjectSelectFolder => '选择位置';
+
+  @override
+  String get createProjectSelectFolderHint => '选择要在哪个项目文件夹中创建新项目';
+
+  @override
+  String get createProjectNameTitle => '为您的项目命名';
+
+  @override
+  String get createProjectNameHint => '为新项目文件夹选择命名方案';
+
+  @override
+  String get createProjectSchemeArtistTrack => '艺术家 — 曲目';
+
+  @override
+  String get createProjectSchemeCollab => '合作';
+
+  @override
+  String get createProjectSchemeDate => '日期 — 曲目';
+
+  @override
+  String get createProjectSchemeCustom => '自定义';
+
+  @override
+  String get createProjectArtistName => '艺术家名称';
+
+  @override
+  String get createProjectTrackName => '曲目名称';
+
+  @override
+  String get createProjectCustomName => '文件夹名称';
+
+  @override
+  String get createProjectAddArtist => '添加艺术家';
+
+  @override
+  String get createProjectSelectDaw => '在DAW中打开';
+
+  @override
+  String get createProjectSelectDawHint => '选择要打开哪个DAW来开始处理此项目';
+
+  @override
+  String get createProjectDetectDaws => '检测已安装的DAW';
+
+  @override
+  String get createProjectSkipDaw => '仅创建文件夹';
+
+  @override
+  String get createProjectNoDawsFound => '未找到任何DAW。文件夹仍将被创建。';
+
+  @override
+  String get createProjectCreateOnly => '创建文件夹';
+
+  @override
+  String get createProjectCreateAndOpen => '创建并打开';
+
+  @override
+  String get createProjectFolderExists => '已存在同名文件夹';
+
+  @override
+  String get createProjectInvalidChars => '文件夹名称包含无效字符';
+
+  @override
+  String get createProjectError => '创建文件夹失败';
+
+  @override
+  String get pendingProjectWaiting => '等待项目文件…';
+
+  @override
+  String get pendingProjectDelete => '删除空文件夹';
+
+  @override
+  String get pendingProjectDeleteTitle => '删除文件夹？';
+
+  @override
+  String pendingProjectDeleteBody(String folderName) {
+    return '删除\"$folderName\"及其内容？';
+  }
+
+  @override
+  String get pendingProjectDismiss => '停止跟踪此文件夹';
+
+  @override
+  String get pendingProjectDeleteNotEmptyTitle => '文件夹不为空';
+
+  @override
+  String pendingProjectDeleteNotEmptyBody(String folderName) {
+    return '\"$folderName\" 包含文件。永久删除所有内容？';
   }
 }

@@ -27,6 +27,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get cancel => 'Cancelar';
 
   @override
+  String get confirm => 'Confirmar';
+
+  @override
+  String get customInterval => 'Personalizado';
+
+  @override
   String get close => 'Cerrar';
 
   @override
@@ -232,12 +238,11 @@ class AppLocalizationsEs extends AppLocalizations {
       'Intenta con un término de búsqueda diferente';
 
   @override
-  String get deepScanTooltip =>
-      'El Escaneo Profundo extrae metadatos completos de los archivos de proyecto:\n• BPM (Pulsos Por Minuto)\n• Tonalidad Musical\n• Versión del DAW\nCompatible actualmente: Ableton Live y Cubase.\nEsto es más lento pero proporciona información completa.';
+  String get deepScanConfirm =>
+      'El Escaneo Profundo extrae metadatos completos de los archivos de proyecto:\n• BPM (Pulsos Por Minuto)\n• Tonalidad Musical\n• Versión del DAW\nCompatible actualmente: Ableton Live y Cubase.\n\nEsto es más lento que un escaneo regular y puede tardar un tiempo. ¿Continuar?';
 
   @override
-  String get deepScanConfirm =>
-      'Esto escaneará todos los proyectos y extraerá metadatos completos (BPM, Tonalidad, Versión del DAW). Esto puede tardar un tiempo. ¿Continuar?';
+  String get deepScanOnlyUnscanned => 'Solo escanear proyectos sin metadatos';
 
   @override
   String get metadataExtractedSuccessfully =>
@@ -2457,6 +2462,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get shortcutGoBack => 'Volver';
 
   @override
+  String get shortcutGroupProjectsTableStandardMode => 'Modo estándar';
+
+  @override
+  String get shortcutGroupProjectsTableSessionMode => 'Modo sesión';
+
+  @override
+  String get shortcutToggleSession => 'Iniciar / Terminar sesión';
+
+  @override
   String get shortcutGroupPreviewPlayer => 'Reproductor de vista previa';
 
   @override
@@ -2642,5 +2656,414 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String playerCompletedTasks(int count) {
     return '$count completada(s)';
+  }
+
+  @override
+  String get playerPreviousTrack => 'Pista anterior';
+
+  @override
+  String get playerNextTrack => 'Siguiente pista';
+
+  @override
+  String get playerOpenProject => 'Abrir proyecto';
+
+  @override
+  String get volumeMute => 'Silenciar';
+
+  @override
+  String get volumeUnmute => 'Activar sonido';
+
+  @override
+  String totalWorkTime(String time) {
+    return 'Trabajo total: $time';
+  }
+
+  @override
+  String sessionTime(String time) {
+    return 'Sesión: $time';
+  }
+
+  @override
+  String get sessionHistory => 'Historial de sesiones';
+
+  @override
+  String get noSessionsYet => 'Aún no hay sesiones registradas';
+
+  @override
+  String get tabPosition => 'Posición de pestañas';
+
+  @override
+  String get tabPositionTop => 'Arriba';
+
+  @override
+  String get tabPositionLeft => 'Izquierda';
+
+  @override
+  String updateAvailableMessage(String version) {
+    return 'Versión $version disponible';
+  }
+
+  @override
+  String get dismiss => 'Descartar';
+
+  @override
+  String get checkForUpdates => 'Buscar actualizaciones';
+
+  @override
+  String get checkForUpdatesDescription =>
+      'Recibe notificaciones cuando haya una nueva versión disponible.';
+
+  @override
+  String get checkNow => 'Verificar ahora';
+
+  @override
+  String updateAvailable(String version) {
+    return 'Actualización disponible: v$version';
+  }
+
+  @override
+  String get upToDate => 'La app está actualizada';
+
+  @override
+  String get updateAvailableTitle => 'Actualización disponible';
+
+  @override
+  String updateAvailableVersion(String version) {
+    return 'La versión $version está lista.';
+  }
+
+  @override
+  String updateCurrentVersion(String version) {
+    return 'Estás usando v$version.';
+  }
+
+  @override
+  String get viewUpdateDetails => 'Ver detalles';
+
+  @override
+  String get getOnMicrosoftStore => 'Obtener en Microsoft Store';
+
+  @override
+  String get downloadFromGitHub => 'Descargar desde GitHub';
+
+  @override
+  String get updateWindowsInstructions =>
+      'Abre Microsoft Store y actualiza DAW Project Manager, o haz clic abajo.';
+
+  @override
+  String get updateMacInstructions =>
+      'Descarga la última versión desde GitHub y reemplaza la app actual.';
+
+  @override
+  String get resetOnboarding => 'Restablecer configuración inicial';
+
+  @override
+  String get onboardingWelcomeTitle => 'Bienvenido a DAW Project Manager';
+
+  @override
+  String get onboardingWelcomeBody =>
+      'Organiza todos tus proyectos musicales en un solo lugar.';
+
+  @override
+  String get onboardingLanguageTitle => 'Elige tu idioma';
+
+  @override
+  String get onboardingThemeTitle => 'Elige un tema';
+
+  @override
+  String get onboardingFoldersTitle => 'Añadir carpetas de proyectos';
+
+  @override
+  String get onboardingFoldersBody =>
+      'Añade la carpeta raíz donde se almacenan tus proyectos DAW.';
+
+  @override
+  String get onboardingDriveTitle => 'Sincronización con Google Drive';
+
+  @override
+  String get onboardingDriveBody =>
+      'Haz copias de seguridad y sincroniza los metadatos con Google Drive.';
+
+  @override
+  String get onboardingUpdatesTitle => 'Buscar actualizaciones';
+
+  @override
+  String get onboardingUpdatesBody =>
+      'Recibe notificaciones cuando haya una nueva versión disponible.';
+
+  @override
+  String get onboardingDoneTitle => '¡Todo listo!';
+
+  @override
+  String get onboardingDoneBody => 'Empieza a explorar tus proyectos.';
+
+  @override
+  String get onboardingNext => 'Siguiente';
+
+  @override
+  String get onboardingBack => 'Atrás';
+
+  @override
+  String get onboardingGetStarted => 'Comenzar';
+
+  @override
+  String get dawSession => 'Sesión DAW';
+
+  @override
+  String get clearDawSession => 'Cerrar sesión';
+
+  @override
+  String get stop => 'Parar';
+
+  @override
+  String get pause => 'Pausar';
+
+  @override
+  String get resume => 'Reanudar';
+
+  @override
+  String get workTimerSection => 'Recordatorios de sesión de trabajo';
+
+  @override
+  String get workTimerSectionDesc =>
+      'Recibe notificaciones mientras trabajas en un proyecto suscrito';
+
+  @override
+  String get workTimerEnabled => 'Activar recordatorios de sesión de trabajo';
+
+  @override
+  String get workTimerIntervalLabel => 'Notificar cada';
+
+  @override
+  String get minutes => 'minutos';
+
+  @override
+  String workTimerNotifBody(String time) {
+    return 'Llevas trabajando $time';
+  }
+
+  @override
+  String get general => 'General';
+
+  @override
+  String get expand => 'Expandir';
+
+  @override
+  String get collapse => 'Contraer';
+
+  @override
+  String get lastModifiedColors => 'Colores de fecha de última modificación';
+
+  @override
+  String get lastModifiedColorsDescription =>
+      'Colorea la fecha de última modificación según la antigüedad y el estado. Verde = Terminado. Las fechas más antiguas se desvanecen de amarillo a rojo — un rojo más intenso significa que el proyecto no ha sido modificado en más tiempo.';
+
+  @override
+  String get sessionMode => 'Modo sesión';
+
+  @override
+  String get sessionModeDescription =>
+      'Suscríbete a un proyecto antes de lanzarlo para rastrear el tiempo de trabajo y gestionarlo desde la barra de herramientas';
+
+  @override
+  String get startSession => 'Iniciar sesión';
+
+  @override
+  String get endSession => 'Finalizar sesión';
+
+  @override
+  String get switchSession => 'Cambiar sesión';
+
+  @override
+  String get switchSessionBody =>
+      '¿Detener la sesión actual e iniciar una nueva?';
+
+  @override
+  String switchSessionCurrent(String project) {
+    return 'Actual: $project';
+  }
+
+  @override
+  String switchSessionNew(String project) {
+    return 'Nueva: $project';
+  }
+
+  @override
+  String get sessionDuration => 'Tiempo de sesión';
+
+  @override
+  String get scanModeLabel => 'Modo de escaneo:';
+
+  @override
+  String get scanModeSectionTitle => 'Modo de escaneo';
+
+  @override
+  String get scanModeSectionDescription =>
+      'Controla cómo se muestran los proyectos de cada carpeta en la tabla: como una lista plana o agrupados por subcarpeta.';
+
+  @override
+  String get scanModeFlat => 'Simple';
+
+  @override
+  String get scanModeSmartFolder => 'Carpeta inteligente';
+
+  @override
+  String get scanModeFlatDescription =>
+      'Muestra cada proyecto como una lista simple. Sencillo y rápido.';
+
+  @override
+  String get scanModeSmartFolderDescription =>
+      'Agrupa los proyectos por carpeta cuando una carpeta contiene más de un proyecto.';
+
+  @override
+  String get skip => 'Omitir';
+
+  @override
+  String get suggestionsLabel => 'Sugerencias';
+
+  @override
+  String get suggestionsRefresh => 'Actualizar';
+
+  @override
+  String get suggestionsEmptyState =>
+      'No hay sugerencias por ahora. Toca Actualizar para restablecer los elementos descartados.';
+
+  @override
+  String get showSuggestions => 'Mostrar sugerencias';
+
+  @override
+  String get showSuggestionsDescription =>
+      'Muestra sugerencias inteligentes en la barra de herramientas cuando no hay sesión activa';
+
+  @override
+  String get onboardingSuggestionsTitle => 'Sugerencias inteligentes';
+
+  @override
+  String get onboardingSuggestionsBody =>
+      'Obtén recomendaciones personalizadas de proyectos en la barra de herramientas mientras trabajas';
+
+  @override
+  String get suggestionsFeatureDeadlines =>
+      'Recordatorios de plazos para proyectos próximos';
+
+  @override
+  String get suggestionsFeatureResume =>
+      'Retomar el último proyecto en el que trabajaste';
+
+  @override
+  String get suggestionsFeatureRecentlyModified =>
+      'Continuar con las pistas modificadas recientemente';
+
+  @override
+  String get suggestionsEnableToggle => 'Activar sugerencias inteligentes';
+
+  @override
+  String get canBeChangedInSettings =>
+      'Se puede cambiar más tarde en Configuración';
+
+  @override
+  String get next => 'Siguiente';
+
+  @override
+  String get createProject => 'Crear';
+
+  @override
+  String get createProjectTooltip => 'Crear una nueva carpeta de proyecto';
+
+  @override
+  String get createProjectSelectFolder => 'Elegir ubicación';
+
+  @override
+  String get createProjectSelectFolderHint =>
+      'Selecciona en qué carpeta crear el nuevo proyecto';
+
+  @override
+  String get createProjectNameTitle => 'Nombra tu proyecto';
+
+  @override
+  String get createProjectNameHint =>
+      'Elige un esquema de nomenclatura para la nueva carpeta';
+
+  @override
+  String get createProjectSchemeArtistTrack => 'Artista — Pista';
+
+  @override
+  String get createProjectSchemeCollab => 'Colaboración';
+
+  @override
+  String get createProjectSchemeDate => 'Fecha — Pista';
+
+  @override
+  String get createProjectSchemeCustom => 'Personalizado';
+
+  @override
+  String get createProjectArtistName => 'Nombre del artista';
+
+  @override
+  String get createProjectTrackName => 'Nombre de la pista';
+
+  @override
+  String get createProjectCustomName => 'Nombre de carpeta';
+
+  @override
+  String get createProjectAddArtist => 'Añadir artista';
+
+  @override
+  String get createProjectSelectDaw => 'Abrir en DAW';
+
+  @override
+  String get createProjectSelectDawHint =>
+      'Elige qué DAW abrir para trabajar en este proyecto';
+
+  @override
+  String get createProjectDetectDaws => 'Detectar DAWs instaladas';
+
+  @override
+  String get createProjectSkipDaw => 'Solo crear la carpeta';
+
+  @override
+  String get createProjectNoDawsFound =>
+      'No se encontraron DAWs. La carpeta se creará de todas formas.';
+
+  @override
+  String get createProjectCreateOnly => 'Crear carpeta';
+
+  @override
+  String get createProjectCreateAndOpen => 'Crear y abrir';
+
+  @override
+  String get createProjectFolderExists =>
+      'Ya existe una carpeta con este nombre';
+
+  @override
+  String get createProjectInvalidChars =>
+      'El nombre contiene caracteres no válidos';
+
+  @override
+  String get createProjectError => 'No se pudo crear la carpeta';
+
+  @override
+  String get pendingProjectWaiting => 'Esperando archivo de proyecto…';
+
+  @override
+  String get pendingProjectDelete => 'Eliminar carpeta vacía';
+
+  @override
+  String get pendingProjectDeleteTitle => '¿Eliminar carpeta?';
+
+  @override
+  String pendingProjectDeleteBody(String folderName) {
+    return '¿Eliminar \"$folderName\" y su contenido?';
+  }
+
+  @override
+  String get pendingProjectDismiss => 'Dejar de rastrear esta carpeta';
+
+  @override
+  String get pendingProjectDeleteNotEmptyTitle => 'La carpeta no está vacía';
+
+  @override
+  String pendingProjectDeleteNotEmptyBody(String folderName) {
+    return '\"$folderName\" contiene archivos. ¿Eliminar todo permanentemente?';
   }
 }

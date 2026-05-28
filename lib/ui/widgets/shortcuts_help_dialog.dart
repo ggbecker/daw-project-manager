@@ -49,11 +49,22 @@ class ShortcutsHelpDialog extends StatelessWidget {
                 label: l10n.shortcutGroupProjectsTable,
                 entries: [
                   ShortcutEntry(keys: ['P'], description: l10n.shortcutPlayPause),
-                  ShortcutEntry(keys: ['O'], description: l10n.shortcutOpenInDaw),
                   ShortcutEntry(keys: ['D'], description: l10n.shortcutViewDetails),
                   ShortcutEntry(keys: ['F'], description: l10n.shortcutOpenFolder),
                   ShortcutEntry(keys: ['↑ / ↓'], description: l10n.shortcutNavigateRows),
                   ShortcutEntry(keys: ['Enter'], description: l10n.shortcutEditCell),
+                ],
+              ),
+              ShortcutGroup(
+                label: '↳ ${l10n.shortcutGroupProjectsTableStandardMode}',
+                entries: [
+                  ShortcutEntry(keys: ['O'], description: l10n.shortcutOpenInDaw),
+                ],
+              ),
+              ShortcutGroup(
+                label: '↳ ${l10n.shortcutGroupProjectsTableSessionMode}',
+                entries: [
+                  ShortcutEntry(keys: ['S'], description: l10n.shortcutToggleSession),
                 ],
               ),
               ShortcutGroup(

@@ -8,6 +8,7 @@ import 'package:daw_project_manager/models/music_project.dart';
 import 'package:daw_project_manager/models/notification_preferences.dart';
 import 'package:daw_project_manager/models/playlist.dart';
 import 'package:daw_project_manager/models/profile.dart';
+import 'package:daw_project_manager/models/project_event.dart';
 import 'package:daw_project_manager/models/release.dart';
 import 'package:daw_project_manager/models/release_file.dart';
 import 'package:daw_project_manager/models/scan_root.dart';
@@ -21,6 +22,7 @@ extension HiveRegistrar on HiveInterface {
     registerAdapter(NotificationPreferencesAdapter());
     registerAdapter(PlaylistAdapter());
     registerAdapter(ProfileAdapter());
+    registerAdapter(ProjectEventAdapter());
     registerAdapter(ReleaseAdapter());
     registerAdapter(ReleaseFileAdapter());
     registerAdapter(ScanRootAdapter());
@@ -36,6 +38,7 @@ extension IsolatedHiveRegistrar on IsolatedHiveInterface {
     registerAdapter(NotificationPreferencesAdapter());
     registerAdapter(PlaylistAdapter());
     registerAdapter(ProfileAdapter());
+    registerAdapter(ProjectEventAdapter());
     registerAdapter(ReleaseAdapter());
     registerAdapter(ReleaseFileAdapter());
     registerAdapter(ScanRootAdapter());

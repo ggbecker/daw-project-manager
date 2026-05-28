@@ -5,6 +5,7 @@ import '../../generated/l10n/app_localizations.dart';
 import '../../providers/providers.dart';
 import '../../utils/mobile_utils.dart';
 
+
 void showTabCustomizationDialog(BuildContext context) {
   showDialog(
     context: context,
@@ -38,10 +39,11 @@ class TabCustomizationDialog extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final visibleSet = ref.watch(visibleTabsProvider);
     final isMobile = MobileUtils.isMobile();
+    final tabPos = ref.watch(tabPositionProvider);
 
     final allTabs = VisibleTabsNotifier.canonicalOrder
-        .where((t) => isMobile || t != AppTab.playlists)
-        .where((t) => !isMobile || t != AppTab.player) // player is desktop-only
+        .where((t) => isMobile || t != AppTab.playlists)  // playlists is mobile-only
+        .where((t) => !isMobile || t != AppTab.player)    // player is desktop-only (always visible, not toggleable)
         .toList();
 
     return AlertDialog(
@@ -62,7 +64,20 @@ class TabCustomizationDialog extends ConsumerWidget {
               l10n.customizeTabsDescription,
               style: Theme.of(context).textTheme.bodySmall,
             ),
-            const SizedBox(height: 12),
+            if (!isMobile) ...[
+              const SizedBox(height: 12),
+              Text(l10n.tabPosition, style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
+              const SizedBox(height: 4),
+              SegmentedButton<TabPosition>(
+                segments: [
+                  ButtonSegment(value: TabPosition.left, icon: const Icon(Icons.view_sidebar_outlined, size: 16), label: Text(l10n.tabPositionLeft)),
+                  ButtonSegment(value: TabPosition.top, icon: const Icon(Icons.tab, size: 16), label: Text(l10n.tabPositionTop)),
+                ],
+                selected: {tabPos},
+                onSelectionChanged: (s) => ref.read(tabPositionProvider.notifier).set(s.first),
+              ),
+            ],
+            const Divider(height: 24),
             for (final tab in allTabs)
               CheckboxListTile(
                 value: visibleSet.contains(tab),

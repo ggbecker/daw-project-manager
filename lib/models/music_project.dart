@@ -2,6 +2,40 @@ import 'package:hive_ce/hive.dart';
 import 'package:path/path.dart' as p;
 import 'todo_item.dart';
 
+/// A single work session on a project.
+class SessionRecord {
+  /// Unique ID for this session — ISO8601 string of startedAt (millisecond precision).
+  /// Existing records without an 'id' field fall back to startedAt string on deserialization.
+  final String id;
+  final DateTime startedAt;
+  final DateTime endedAt;
+  final int durationSeconds;
+
+  const SessionRecord({
+    required this.id,
+    required this.startedAt,
+    required this.endedAt,
+    required this.durationSeconds,
+  });
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'startedAt': startedAt.toIso8601String(),
+        'endedAt': endedAt.toIso8601String(),
+        'durationSeconds': durationSeconds,
+      };
+
+  factory SessionRecord.fromMap(Map map) {
+    final startedAt = DateTime.parse(map['startedAt'] as String);
+    return SessionRecord(
+      id: map['id'] as String? ?? startedAt.toIso8601String(),
+      startedAt: startedAt,
+      endedAt: DateTime.parse(map['endedAt'] as String),
+      durationSeconds: map['durationSeconds'] as int,
+    );
+  }
+}
+
 @HiveType(typeId: 1)
 class MusicProject {
   @HiveField(0)
@@ -81,6 +115,18 @@ class MusicProject {
   @HiveField(24)
   final String? previewSongAutoPath; // Auto-detected mixdown path (not manually set by user)
 
+  @HiveField(25)
+  final String? parentProjectId; // Parent project ID when using shallow scan with depth ≥ 2
+
+  @HiveField(26)
+  final int totalWorkSeconds; // Cumulative seconds; derived from sessions sum
+
+  @HiveField(27)
+  final List<SessionRecord> sessions; // Ordered list of work sessions
+
+  @HiveField(28)
+  final bool metadataScanned; // True once a full metadata (deep) scan has been run
+
   const MusicProject({
     required this.id,
     required this.filePath,
@@ -107,6 +153,10 @@ class MusicProject {
     this.uploadedPreviewSongHash,
     this.deadline,
     this.previewSongAutoPath,
+    this.parentProjectId,
+    this.totalWorkSeconds = 0,
+    this.sessions = const [],
+    this.metadataScanned = false,
   });
 
   String get displayName => (customDisplayName != null && customDisplayName!.trim().isNotEmpty)
@@ -363,6 +413,11 @@ class MusicProject {
     bool clearDeadline = false,
     String? previewSongAutoPath,
     bool clearPreviewSongAutoPath = false,
+    String? parentProjectId,
+    bool clearParentProjectId = false,
+    int? totalWorkSeconds,
+    List<SessionRecord>? sessions,
+    bool? metadataScanned,
   }) {
     return MusicProject(
       id: id ?? this.id,
@@ -390,6 +445,10 @@ class MusicProject {
       uploadedPreviewSongHash: clearUploadedPreviewSongHash ? null : (uploadedPreviewSongHash ?? this.uploadedPreviewSongHash),
       deadline: clearDeadline ? null : (deadline ?? this.deadline),
       previewSongAutoPath: clearPreviewSongAutoPath ? null : (previewSongAutoPath ?? this.previewSongAutoPath),
+      parentProjectId: clearParentProjectId ? null : (parentProjectId ?? this.parentProjectId),
+      totalWorkSeconds: totalWorkSeconds ?? this.totalWorkSeconds,
+      sessions: sessions ?? this.sessions,
+      metadataScanned: metadataScanned ?? this.metadataScanned,
     );
   }
 }
@@ -434,13 +493,21 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
       uploadedPreviewSongHash: fields.containsKey(22) ? fields[22] as String? : null,
       deadline: fields.containsKey(23) ? fields[23] as DateTime? : null,
       previewSongAutoPath: fields.containsKey(24) ? fields[24] as String? : null,
+      parentProjectId: fields.containsKey(25) ? fields[25] as String? : null,
+      totalWorkSeconds: fields.containsKey(26) ? (fields[26] as int? ?? 0) : 0,
+      sessions: fields.containsKey(27)
+          ? (fields[27] as List? ?? [])
+              .map((e) => SessionRecord.fromMap(e as Map))
+              .toList()
+          : const [],
+      metadataScanned: fields.containsKey(28) ? (fields[28] as bool? ?? false) : false,
     );
   }
 
   @override
   void write(BinaryWriter writer, MusicProject obj) {
     writer
-      ..writeByte(25) // 25 fields (0-24)
+      ..writeByte(29) // 29 fields (0-28)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -490,6 +557,14 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
       ..writeByte(23)
       ..write(obj.deadline)
       ..writeByte(24)
-      ..write(obj.previewSongAutoPath);
+      ..write(obj.previewSongAutoPath)
+      ..writeByte(25)
+      ..write(obj.parentProjectId)
+      ..writeByte(26)
+      ..write(obj.totalWorkSeconds)
+      ..writeByte(27)
+      ..write(obj.sessions.map((s) => s.toMap()).toList())
+      ..writeByte(28)
+      ..write(obj.metadataScanned);
   }
 }

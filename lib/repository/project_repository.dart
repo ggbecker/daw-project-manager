@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 import 'dart:convert';
 
 import '../models/music_project.dart';
+import '../models/pending_folder.dart';
 import '../models/scan_root.dart';
 import '../models/ignored_path.dart';
 import '../models/release.dart';
@@ -54,6 +55,46 @@ class ProjectRepository {
     } else {
       await appSettingsBox.put(_keyCustomMixdownFolder, value.trim());
     }
+  }
+
+  // Pending Folders — stored as JSON list in the per-profile app_settings slot
+  String get _pendingFoldersKey => '${profileId}_pending_folders';
+
+  List<PendingFolder> getPendingFolders() {
+    final raw = appSettingsBox.get(_pendingFoldersKey);
+    if (raw == null) return [];
+    try {
+      final list = jsonDecode(raw) as List;
+      return list.map((e) => PendingFolder.fromJson(e as Map<String, dynamic>)).toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<void> addPendingFolder(PendingFolder folder) async {
+    final current = getPendingFolders()..removeWhere((f) => f.path == folder.path);
+    current.add(folder);
+    await appSettingsBox.put(_pendingFoldersKey, jsonEncode(current.map((f) => f.toJson()).toList()));
+  }
+
+  Future<void> removePendingFolder(String id) async {
+    final current = getPendingFolders()..removeWhere((f) => f.id == id);
+    await appSettingsBox.put(_pendingFoldersKey, jsonEncode(current.map((f) => f.toJson()).toList()));
+  }
+
+  /// Removes pending folders that now contain a real DAW project file, or whose
+  /// folder no longer exists on disk. Returns the removed IDs.
+  Future<List<String>> resolveCompletedPendingFolders() async {
+    final current = getPendingFolders();
+    final toRemove = current
+        .where((pf) => !pf.folderExists || pf.hasProjectFile())
+        .map((pf) => pf.id)
+        .toList();
+    if (toRemove.isNotEmpty) {
+      final remaining = current.where((f) => !toRemove.contains(f.id)).toList();
+      await appSettingsBox.put(_pendingFoldersKey, jsonEncode(remaining.map((f) => f.toJson()).toList()));
+    }
+    return toRemove;
   }
 
   static Future<ProjectRepository> init(ProfileRepository profileRepo) async {
@@ -216,6 +257,38 @@ class ProjectRepository {
     }
   }
 
+  Future<void> updateRootScanDepth(String rootId, int depth) async {
+    final root = rootsBox.get(rootId);
+    if (root != null) {
+      await rootsBox.put(rootId, root.copyWith(scanDepth: depth));
+    }
+  }
+
+  /// Removes projects under [rootPath] whose filePath is NOT in [foundPaths],
+  /// except those referenced by a release. Call this after a shallow rescan to
+  /// prune stale entries (e.g. individual files from a previous deep scan) while
+  /// preserving metadata on projects that were matched and upserted in-place.
+  Future<void> removeOrphanedProjectsFromRoot(String rootPath, Set<String> foundPaths) async {
+    final normalized = p.normalize(rootPath);
+    final prefix = normalized.endsWith(p.separator) ? normalized : normalized + p.separator;
+    final releases = getAllReleases();
+    final protectedIds = <String>{for (final r in releases) ...r.trackIds};
+
+    final normalizedFound = foundPaths.map(p.normalize).toSet();
+    final toDelete = projectsBox.values
+        .where((proj) {
+          final projPath = p.normalize(proj.filePath);
+          final inRoot = projPath.startsWith(prefix) || projPath == normalized;
+          return inRoot &&
+              !normalizedFound.contains(projPath) &&
+              !protectedIds.contains(proj.id);
+        })
+        .map((proj) => proj.id)
+        .toList();
+
+    if (toDelete.isNotEmpty) await projectsBox.deleteAll(toDelete);
+  }
+
   List<ScanRoot> getRoots() => rootsBox.values.toList(growable: false);
 
   /// Updates the stored path for a scan root and rewrites the `filePath`,
@@ -323,7 +396,7 @@ class ProjectRepository {
   /// Upserts a project from a file system entity
   /// [fullMetadata] if true, extracts full metadata (BPM, key, DAW version) - slower
   /// if false, only extracts DAW type from extension - faster
-  Future<void> upsertFromFileSystemEntity(FileSystemEntity entity, {bool fullMetadata = false}) async {
+  Future<void> upsertFromFileSystemEntity(FileSystemEntity entity, {bool fullMetadata = false, String? parentProjectId}) async {
     final isLogicBundle = entity is Directory && entity.path.toLowerCase().endsWith('.logicx');
     final filePath = entity.path;
     final stat = await entity.stat();
@@ -404,6 +477,10 @@ class ProjectRepository {
       fileCreatedAt: fileCreatedAt,                   // <--- FILE CREATION DATE (never override once set)
       statusChangedAt: existing?.statusChangedAt,     // <--- PRESERVA STATUS CHANGE DATE
       deadline: existing?.deadline,                   // <--- PRESERVA DEADLINE
+      parentProjectId: parentProjectId ?? existing?.parentProjectId,
+      totalWorkSeconds: existing?.totalWorkSeconds ?? 0, // <--- CRITICAL: PRESERVA SESSION TIME
+      sessions: existing?.sessions ?? const [],          // <--- CRITICAL: PRESERVA SESSION HISTORY
+      metadataScanned: fullMetadata ? true : (existing?.metadataScanned ?? false),
     );
 
     await projectsBox.put(projectToSave.id, projectToSave);

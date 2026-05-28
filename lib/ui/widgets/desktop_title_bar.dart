@@ -16,8 +16,8 @@ import 'package:window_manager/window_manager.dart'
 /// This widget reserves 28 pt at the top when [showBack] is false, or renders
 /// a slim back-navigation bar when [showBack] is true.
 ///
-/// **Mobile / web / debug mode:** Returns an empty widget.
-class DesktopTitleBar extends StatelessWidget {
+/// **Mobile / web:** Returns an empty widget.
+class DesktopTitleBar extends StatefulWidget {
   final String title;
 
   /// Show a back button that calls [Navigator.pop].
@@ -36,6 +36,35 @@ class DesktopTitleBar extends StatelessWidget {
   });
 
   @override
+  State<DesktopTitleBar> createState() => _DesktopTitleBarState();
+}
+
+class _DesktopTitleBarState extends State<DesktopTitleBar> {
+  // Manual double-tap detection for the drag area — avoids placing a
+  // DoubleTapGestureRecognizer over the entire bar (which would delay the
+  // window-control buttons by the double-tap timeout).
+  DateTime? _lastDragAreaTap;
+
+  void _handleDragAreaTap() {
+    final now = DateTime.now();
+    if (_lastDragAreaTap != null &&
+        now.difference(_lastDragAreaTap!) < const Duration(milliseconds: 350)) {
+      _lastDragAreaTap = null;
+      _toggleMaximize();
+    } else {
+      _lastDragAreaTap = now;
+    }
+  }
+
+  Future<void> _toggleMaximize() async {
+    if (await windowManager.isMaximized()) {
+      windowManager.restore();
+    } else {
+      windowManager.maximize();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     if (kIsWeb || Platform.isAndroid || Platform.isIOS) {
       return const SizedBox.shrink();
@@ -45,7 +74,7 @@ class DesktopTitleBar extends StatelessWidget {
     // starts at y=0, with the traffic lights floating over the top-left area.
     // Reserve 28pt at the top so content doesn't slide under the buttons.
     if (Platform.isMacOS) {
-      if (!showBack) {
+      if (!widget.showBack) {
         // Drag and double-click-to-maximize are handled natively in
         // MainFlutterWindow.swift via NSEvent monitors — no Flutter
         // gesture detection needed here.
@@ -73,7 +102,7 @@ class DesktopTitleBar extends StatelessWidget {
               tooltip: 'Back',
             ),
             Text(
-              title,
+              widget.title,
               style: TextStyle(
                 color: Theme.of(context).textTheme.titleMedium?.color,
                 fontSize: 15,
@@ -84,54 +113,60 @@ class DesktopTitleBar extends StatelessWidget {
       );
     }
 
-    // Windows / Linux: full custom title bar (release mode only).
-    if (kDebugMode) return const SizedBox.shrink();
-
-    return GestureDetector(
-      onPanStart: (_) => windowManager.startDragging(),
-      onDoubleTap: () async {
-        if (await windowManager.isMaximized()) {
-          windowManager.restore();
-        } else {
-          windowManager.maximize();
-        }
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          border: Border(
-            bottom: BorderSide(color: Theme.of(context).dividerColor, width: 1),
-          ),
+    // Windows / Linux: full custom title bar.
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        border: Border(
+          bottom: BorderSide(color: Theme.of(context).dividerColor, width: 1),
         ),
-        height: 40,
-        child: Row(
-          children: [
-            if (showBack)
-              IconButton(
-                icon: Icon(
-                  Icons.arrow_back,
-                  size: 20,
-                  color: Theme.of(context).textTheme.bodyMedium?.color,
-                ),
-                onPressed: () => Navigator.pop(context),
-              ),
-            Padding(
-              padding: EdgeInsets.only(left: showBack ? 4 : 12),
-              child: Text(
-                title,
-                style: TextStyle(
-                  color: Theme.of(context).textTheme.titleMedium?.color,
-                  fontSize: 16,
-                  fontWeight:
-                      showBack ? FontWeight.normal : FontWeight.w600,
+      ),
+      height: 40,
+      child: Row(
+        children: [
+          // ── Drag area: pan-to-drag + manual double-tap-to-maximize ──────────
+          // The GestureDetector here covers only the title/drag region, NOT the
+          // window-control buttons. This prevents DoubleTapGestureRecognizer
+          // from delaying button tap callbacks.
+          Expanded(
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onPanStart: (_) => windowManager.startDragging(),
+              onTapDown: (_) => _handleDragAreaTap(),
+              child: SizedBox.expand(
+                child: Row(
+                  children: [
+                    if (widget.showBack)
+                      IconButton(
+                        icon: Icon(
+                          Icons.arrow_back,
+                          size: 20,
+                          color: Theme.of(context).textTheme.bodyMedium?.color,
+                        ),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    Padding(
+                      padding: EdgeInsets.only(left: widget.showBack ? 4 : 12),
+                      child: Text(
+                        widget.title,
+                        style: TextStyle(
+                          color: Theme.of(context).textTheme.titleMedium?.color,
+                          fontSize: 16,
+                          fontWeight: widget.showBack
+                              ? FontWeight.normal
+                              : FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-            const Spacer(),
-            ...actions,
-            _WindowControlButtons(),
-          ],
-        ),
+          ),
+          // ── Window controls: completely outside the drag-area detector ──────
+          ...widget.actions,
+          _WindowControlButtons(onToggleMaximize: _toggleMaximize),
+        ],
       ),
     );
   }
@@ -139,6 +174,10 @@ class DesktopTitleBar extends StatelessWidget {
 
 /// Minimize / Maximize / Close buttons for Windows and Linux only.
 class _WindowControlButtons extends StatelessWidget {
+  final VoidCallback onToggleMaximize;
+
+  const _WindowControlButtons({required this.onToggleMaximize});
+
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -152,13 +191,7 @@ class _WindowControlButtons extends StatelessWidget {
         IconButton(
           icon: Icon(Icons.crop_square_sharp, size: 18,
               color: Theme.of(context).textTheme.bodyMedium?.color),
-          onPressed: () async {
-            if (await windowManager.isMaximized()) {
-              windowManager.restore();
-            } else {
-              windowManager.maximize();
-            }
-          },
+          onPressed: onToggleMaximize,
         ),
         IconButton(
           icon: Icon(Icons.close, size: 18,

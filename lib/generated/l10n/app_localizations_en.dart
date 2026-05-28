@@ -27,6 +27,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cancel => 'Cancel';
 
   @override
+  String get confirm => 'Confirm';
+
+  @override
+  String get customInterval => 'Custom';
+
+  @override
   String get close => 'Close';
 
   @override
@@ -231,12 +237,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tryDifferentSearch => 'Try a different search term';
 
   @override
-  String get deepScanTooltip =>
-      'Deep Scan extracts full metadata from project files:\n• BPM (Beats Per Minute)\n• Musical Key\n• DAW Version\nCurrently supported: Ableton Live and Cubase.\nThis is slower but provides complete information.';
+  String get deepScanConfirm =>
+      'Deep Scan extracts full metadata from project files:\n• BPM (Beats Per Minute)\n• Musical Key\n• DAW Version\nCurrently supported: Ableton Live and Cubase.\n\nThis is slower than a regular scan and may take a while. Continue?';
 
   @override
-  String get deepScanConfirm =>
-      'This will scan all projects and extract full metadata (BPM, Key, DAW Version). This may take a while. Continue?';
+  String get deepScanOnlyUnscanned => 'Only scan projects without metadata';
 
   @override
   String get metadataExtractedSuccessfully => 'Metadata extracted successfully';
@@ -2441,6 +2446,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shortcutGoBack => 'Go back';
 
   @override
+  String get shortcutGroupProjectsTableStandardMode => 'Standard mode';
+
+  @override
+  String get shortcutGroupProjectsTableSessionMode => 'Session mode';
+
+  @override
+  String get shortcutToggleSession => 'Start / End session';
+
+  @override
   String get shortcutGroupPreviewPlayer => 'Preview Player';
 
   @override
@@ -2625,5 +2639,413 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String playerCompletedTasks(int count) {
     return '$count completed';
+  }
+
+  @override
+  String get playerPreviousTrack => 'Previous track';
+
+  @override
+  String get playerNextTrack => 'Next track';
+
+  @override
+  String get playerOpenProject => 'Open project';
+
+  @override
+  String get volumeMute => 'Mute';
+
+  @override
+  String get volumeUnmute => 'Unmute';
+
+  @override
+  String totalWorkTime(String time) {
+    return 'Total work: $time';
+  }
+
+  @override
+  String sessionTime(String time) {
+    return 'Session: $time';
+  }
+
+  @override
+  String get sessionHistory => 'Session History';
+
+  @override
+  String get noSessionsYet => 'No sessions recorded yet';
+
+  @override
+  String get tabPosition => 'Tab position';
+
+  @override
+  String get tabPositionTop => 'Top';
+
+  @override
+  String get tabPositionLeft => 'Left';
+
+  @override
+  String updateAvailableMessage(String version) {
+    return 'Version $version is available';
+  }
+
+  @override
+  String get dismiss => 'Dismiss';
+
+  @override
+  String get checkForUpdates => 'Check for updates';
+
+  @override
+  String get checkForUpdatesDescription =>
+      'Get notified when a new version of the app is available.';
+
+  @override
+  String get checkNow => 'Check now';
+
+  @override
+  String updateAvailable(String version) {
+    return 'Update available: v$version';
+  }
+
+  @override
+  String get upToDate => 'App is up to date';
+
+  @override
+  String get updateAvailableTitle => 'Update Available';
+
+  @override
+  String updateAvailableVersion(String version) {
+    return 'A new version $version is ready.';
+  }
+
+  @override
+  String updateCurrentVersion(String version) {
+    return 'You are running v$version.';
+  }
+
+  @override
+  String get viewUpdateDetails => 'View Details';
+
+  @override
+  String get getOnMicrosoftStore => 'Get on Microsoft Store';
+
+  @override
+  String get downloadFromGitHub => 'Download from GitHub';
+
+  @override
+  String get updateWindowsInstructions =>
+      'Open the Microsoft Store and update DAW Project Manager, or click the button below.';
+
+  @override
+  String get updateMacInstructions =>
+      'Download the latest release from GitHub and replace the current app.';
+
+  @override
+  String get resetOnboarding => 'Reset onboarding';
+
+  @override
+  String get onboardingWelcomeTitle => 'Welcome to DAW Project Manager';
+
+  @override
+  String get onboardingWelcomeBody =>
+      'Organize all your music projects across every DAW in one place.';
+
+  @override
+  String get onboardingLanguageTitle => 'Choose Your Language';
+
+  @override
+  String get onboardingThemeTitle => 'Choose a Theme';
+
+  @override
+  String get onboardingFoldersTitle => 'Add Project Folders';
+
+  @override
+  String get onboardingFoldersBody =>
+      'Add the root folder where your DAW projects are stored.';
+
+  @override
+  String get onboardingDriveTitle => 'Google Drive Sync';
+
+  @override
+  String get onboardingDriveBody =>
+      'Optionally back up and sync project metadata to Google Drive.';
+
+  @override
+  String get onboardingUpdatesTitle => 'Update Checks';
+
+  @override
+  String get onboardingUpdatesBody =>
+      'Get notified when a new version is available.';
+
+  @override
+  String get onboardingDoneTitle => 'You\'re All Set!';
+
+  @override
+  String get onboardingDoneBody => 'Start exploring your projects.';
+
+  @override
+  String get onboardingNext => 'Next';
+
+  @override
+  String get onboardingBack => 'Back';
+
+  @override
+  String get onboardingGetStarted => 'Get Started';
+
+  @override
+  String get dawSession => 'DAW Session';
+
+  @override
+  String get clearDawSession => 'Clear session';
+
+  @override
+  String get stop => 'Stop';
+
+  @override
+  String get pause => 'Pause';
+
+  @override
+  String get resume => 'Resume';
+
+  @override
+  String get workTimerSection => 'Work Session Reminders';
+
+  @override
+  String get workTimerSectionDesc =>
+      'Get notified while working on a subscribed project';
+
+  @override
+  String get workTimerEnabled => 'Enable work session reminders';
+
+  @override
+  String get workTimerIntervalLabel => 'Notify every';
+
+  @override
+  String get minutes => 'minutes';
+
+  @override
+  String workTimerNotifBody(String time) {
+    return 'You have been working for $time';
+  }
+
+  @override
+  String get general => 'General';
+
+  @override
+  String get expand => 'Expand';
+
+  @override
+  String get collapse => 'Collapse';
+
+  @override
+  String get lastModifiedColors => 'Last Modified date colors';
+
+  @override
+  String get lastModifiedColorsDescription =>
+      'Colors the Last Modified date based on age and status. Green = Finished. Older dates fade from yellow to red — stronger red means the project hasn\'t been touched in longer.';
+
+  @override
+  String get sessionMode => 'Session mode';
+
+  @override
+  String get sessionModeDescription =>
+      'Subscribe to a project before launching, to track work time and manage it from the toolbar';
+
+  @override
+  String get startSession => 'Start Session';
+
+  @override
+  String get endSession => 'End session';
+
+  @override
+  String get switchSession => 'Switch session';
+
+  @override
+  String get switchSessionBody =>
+      'Stop the current session and start a new one?';
+
+  @override
+  String switchSessionCurrent(String project) {
+    return 'Current: $project';
+  }
+
+  @override
+  String switchSessionNew(String project) {
+    return 'New: $project';
+  }
+
+  @override
+  String get sessionDuration => 'Session time';
+
+  @override
+  String get scanModeLabel => 'Scan mode:';
+
+  @override
+  String get scanModeSectionTitle => 'Scan Mode';
+
+  @override
+  String get scanModeSectionDescription =>
+      'Controls how projects in each folder are displayed in the table — as a plain flat list or grouped by subfolder.';
+
+  @override
+  String get scanModeFlat => 'Flat';
+
+  @override
+  String get scanModeSmartFolder => 'Smart Folder';
+
+  @override
+  String get scanModeFlatDescription =>
+      'Shows every project as a flat list. Simple and fast.';
+
+  @override
+  String get scanModeSmartFolderDescription =>
+      'Groups projects by folder when a folder contains more than one project.';
+
+  @override
+  String get skip => 'Skip';
+
+  @override
+  String get suggestionsLabel => 'Suggestions';
+
+  @override
+  String get suggestionsRefresh => 'Refresh';
+
+  @override
+  String get suggestionsEmptyState =>
+      'No suggestions right now. Tap Refresh to reset dismissed items.';
+
+  @override
+  String get showSuggestions => 'Show suggestions';
+
+  @override
+  String get showSuggestionsDescription =>
+      'Show smart suggestions in the toolbar when no session is running';
+
+  @override
+  String get onboardingSuggestionsTitle => 'Smart Suggestions';
+
+  @override
+  String get onboardingSuggestionsBody =>
+      'Get personalized project recommendations in the toolbar while you work';
+
+  @override
+  String get suggestionsFeatureDeadlines =>
+      'Deadline reminders for upcoming projects';
+
+  @override
+  String get suggestionsFeatureResume =>
+      'Resume the last project you worked on';
+
+  @override
+  String get suggestionsFeatureRecentlyModified =>
+      'Continue recently modified tracks';
+
+  @override
+  String get suggestionsEnableToggle => 'Enable smart suggestions';
+
+  @override
+  String get canBeChangedInSettings => 'Can be changed later in Settings';
+
+  @override
+  String get next => 'Next';
+
+  @override
+  String get createProject => 'Create';
+
+  @override
+  String get createProjectTooltip => 'Create a new project folder';
+
+  @override
+  String get createProjectSelectFolder => 'Choose Location';
+
+  @override
+  String get createProjectSelectFolderHint =>
+      'Select which project folder to create the new project in';
+
+  @override
+  String get createProjectNameTitle => 'Name Your Project';
+
+  @override
+  String get createProjectNameHint =>
+      'Choose a naming scheme for the new project folder';
+
+  @override
+  String get createProjectSchemeArtistTrack => 'Artist — Track';
+
+  @override
+  String get createProjectSchemeCollab => 'Collab';
+
+  @override
+  String get createProjectSchemeDate => 'Date — Track';
+
+  @override
+  String get createProjectSchemeCustom => 'Custom';
+
+  @override
+  String get createProjectArtistName => 'Artist Name';
+
+  @override
+  String get createProjectTrackName => 'Track Name';
+
+  @override
+  String get createProjectCustomName => 'Folder Name';
+
+  @override
+  String get createProjectAddArtist => 'Add artist';
+
+  @override
+  String get createProjectSelectDaw => 'Open in DAW';
+
+  @override
+  String get createProjectSelectDawHint =>
+      'Choose which DAW to open to start working on this project';
+
+  @override
+  String get createProjectDetectDaws => 'Detect Installed DAWs';
+
+  @override
+  String get createProjectSkipDaw => 'Just create the folder';
+
+  @override
+  String get createProjectNoDawsFound =>
+      'No DAWs were found on this system. The folder will still be created.';
+
+  @override
+  String get createProjectCreateOnly => 'Create Folder';
+
+  @override
+  String get createProjectCreateAndOpen => 'Create & Open';
+
+  @override
+  String get createProjectFolderExists =>
+      'A folder with this name already exists';
+
+  @override
+  String get createProjectInvalidChars =>
+      'Folder name contains invalid characters';
+
+  @override
+  String get createProjectError => 'Failed to create folder';
+
+  @override
+  String get pendingProjectWaiting => 'Waiting for project file…';
+
+  @override
+  String get pendingProjectDelete => 'Delete empty folder';
+
+  @override
+  String get pendingProjectDeleteTitle => 'Delete Folder?';
+
+  @override
+  String pendingProjectDeleteBody(String folderName) {
+    return 'Delete \"$folderName\" and its contents?';
+  }
+
+  @override
+  String get pendingProjectDismiss => 'Stop tracking this folder';
+
+  @override
+  String get pendingProjectDeleteNotEmptyTitle => 'Folder is not empty';
+
+  @override
+  String pendingProjectDeleteNotEmptyBody(String folderName) {
+    return '\"$folderName\" contains files. Delete everything permanently?';
   }
 }
