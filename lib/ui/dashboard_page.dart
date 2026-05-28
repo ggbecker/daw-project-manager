@@ -212,9 +212,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
   @override
   void initState() {
     super.initState();
-    if (MobileUtils.isMobile()) {
-      _currentVisibleTabs = [...VisibleTabsNotifier.canonicalOrder];
-    }
+    _currentVisibleTabs = _orderedFrom(ref.read(visibleTabsProvider));
     _tabController = TabController(length: _currentVisibleTabs.length, vsync: this);
     _searchController = TextEditingController();
     if (!MobileUtils.isMobile()) {
