@@ -547,7 +547,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     }
   }
 
-  Future<void> _scanAll({bool fullMetadata = false}) async {
+  Future<void> _scanAll({bool fullMetadata = false, bool onlyUnscanned = false}) async {
     if (_scanning) return;
     final repo = await ref.read(repositoryProvider.future);
     setState(() => _scanning = true);
@@ -560,7 +560,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       for (final root in repo.getRoots()) {
         final foundPaths = <String>{};
         await for (final entity in scanner.scanDirectory(root.path, ignoredPaths: ignoredPaths)) {
-          await repo.upsertFromFileSystemEntity(entity, fullMetadata: fullMetadata);
+          final useFullMetadata = fullMetadata && (!onlyUnscanned || repo.getByPath(entity.path)?.metadataScanned != true);
+          await repo.upsertFromFileSystemEntity(entity, fullMetadata: useFullMetadata);
           foundPaths.add(entity.path);
           foundCount++;
         }
@@ -599,11 +600,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     }
   }
 
-  Future<void> _fullScanAll() async {
+  Future<void> _fullScanAll({bool onlyUnscanned = true}) async {
     if (_scanning || _deepScanning) return;
     setState(() => _deepScanning = true);
     try {
-      await _scanAll(fullMetadata: true);
+      await _scanAll(fullMetadata: true, onlyUnscanned: onlyUnscanned);
     } finally {
       if (mounted) setState(() => _deepScanning = false);
     }
@@ -1606,31 +1607,46 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                             onPressed: isAnyOperation
                                 ? null
                                 : () async {
+                                      bool onlyUnscanned = true;
                                       final confirm = await showDialog<bool>(
                                         context: context,
-                                        builder: (ctx) => AlertDialog(
-                                          backgroundColor: Theme.of(context).cardColor,
-                                          title: Text(AppLocalizations.of(context)!.deepScan),
-                                          content: SingleChildScrollView(
-                                            child: Text(AppLocalizations.of(context)!.deepScanConfirm),
-                                          ),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () => Navigator.pop(ctx, false),
-                                              child: Text(AppLocalizations.of(context)!.cancel),
+                                        builder: (ctx) => StatefulBuilder(
+                                          builder: (ctx, setDialogState) => AlertDialog(
+                                            backgroundColor: Theme.of(context).cardColor,
+                                            title: Text(AppLocalizations.of(context)!.deepScan),
+                                            content: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(AppLocalizations.of(context)!.deepScanConfirm),
+                                                const SizedBox(height: 12),
+                                                CheckboxListTile(
+                                                  value: onlyUnscanned,
+                                                  onChanged: (v) => setDialogState(() => onlyUnscanned = v ?? true),
+                                                  title: Text(AppLocalizations.of(context)!.deepScanOnlyUnscanned),
+                                                  controlAffinity: ListTileControlAffinity.leading,
+                                                  contentPadding: EdgeInsets.zero,
+                                                ),
+                                              ],
                                             ),
-                                            ElevatedButton(
-                                              onPressed: () => Navigator.pop(ctx, true),
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: Theme.of(context).colorScheme.primary,
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(ctx, false),
+                                                child: Text(AppLocalizations.of(context)!.cancel),
                                               ),
-                                              child: Text(AppLocalizations.of(context)!.deepScan),
-                                            ),
-                                          ],
+                                              ElevatedButton(
+                                                onPressed: () => Navigator.pop(ctx, true),
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: Theme.of(context).colorScheme.primary,
+                                                ),
+                                                child: Text(AppLocalizations.of(context)!.deepScan),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       );
                                       if (confirm == true) {
-                                        await _fullScanAll();
+                                        await _fullScanAll(onlyUnscanned: onlyUnscanned);
                                       }
                                     },
                             icon: _deepScanning
@@ -2020,28 +2036,43 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                   onPressed: isAnyOperation
                                       ? null
                                       : () async {
+                                          bool onlyUnscanned = true;
                                           final confirm = await showDialog<bool>(
                                             context: context,
-                                            builder: (ctx) => AlertDialog(
-                                              backgroundColor: Theme.of(context).cardColor,
-                                              title: Text(AppLocalizations.of(context)!.deepScan),
-                                              content: SingleChildScrollView(
-                                                child: Text(AppLocalizations.of(context)!.deepScanConfirm),
+                                            builder: (ctx) => StatefulBuilder(
+                                              builder: (ctx, setDialogState) => AlertDialog(
+                                                backgroundColor: Theme.of(context).cardColor,
+                                                title: Text(AppLocalizations.of(context)!.deepScan),
+                                                content: Column(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(AppLocalizations.of(context)!.deepScanConfirm),
+                                                    const SizedBox(height: 12),
+                                                    CheckboxListTile(
+                                                      value: onlyUnscanned,
+                                                      onChanged: (v) => setDialogState(() => onlyUnscanned = v ?? true),
+                                                      title: Text(AppLocalizations.of(context)!.deepScanOnlyUnscanned),
+                                                      controlAffinity: ListTileControlAffinity.leading,
+                                                      contentPadding: EdgeInsets.zero,
+                                                    ),
+                                                  ],
+                                                ),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () => Navigator.pop(ctx, false),
+                                                    child: Text(AppLocalizations.of(context)!.cancel),
+                                                  ),
+                                                  ElevatedButton(
+                                                    onPressed: () => Navigator.pop(ctx, true),
+                                                    style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary),
+                                                    child: Text(AppLocalizations.of(context)!.deepScan),
+                                                  ),
+                                                ],
                                               ),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed: () => Navigator.pop(ctx, false),
-                                                  child: Text(AppLocalizations.of(context)!.cancel),
-                                                ),
-                                                ElevatedButton(
-                                                  onPressed: () => Navigator.pop(ctx, true),
-                                                  style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary),
-                                                  child: Text(AppLocalizations.of(context)!.deepScan),
-                                                ),
-                                              ],
                                             ),
                                           );
-                                          if (confirm == true) await _fullScanAll();
+                                          if (confirm == true) await _fullScanAll(onlyUnscanned: onlyUnscanned);
                                         },
                                 ),
                                 if (!railCollapsed)

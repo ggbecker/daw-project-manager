@@ -241,6 +241,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'La Scansione Approfondita estrae metadati completi dai file di progetto:\n• BPM (Battiti Per Minuto)\n• Tonalità Musicale\n• Versione del DAW\nAttualmente supportati: Ableton Live e Cubase.\n\nÈ più lenta di una scansione normale e potrebbe richiedere del tempo. Continuare?';
 
   @override
+  String get deepScanOnlyUnscanned =>
+      'Scansiona solo i progetti senza metadati';
+
+  @override
   String get metadataExtractedSuccessfully => 'Metadati estratti con successo';
 
   @override

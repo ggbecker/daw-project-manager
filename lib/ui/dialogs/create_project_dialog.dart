@@ -343,9 +343,12 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
                                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                         fontWeight: isSelected ? FontWeight.bold : null,
                                       )),
-                              Text(root.path,
-                                  style: Theme.of(context).textTheme.bodySmall,
-                                  overflow: TextOverflow.ellipsis),
+                              Tooltip(
+                                message: root.path,
+                                child: Text(root.path,
+                                    style: Theme.of(context).textTheme.bodySmall,
+                                    overflow: TextOverflow.ellipsis),
+                              ),
                             ],
                           ),
                         ),
@@ -645,9 +648,12 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
                                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                           fontWeight: isSelected ? FontWeight.bold : null,
                                         )),
-                                Text(daw.executablePath,
-                                    style: Theme.of(context).textTheme.bodySmall,
-                                    overflow: TextOverflow.ellipsis),
+                                Tooltip(
+                                  message: daw.executablePath,
+                                  child: Text(daw.executablePath,
+                                      style: Theme.of(context).textTheme.bodySmall,
+                                      overflow: TextOverflow.ellipsis),
+                                ),
                               ],
                             ),
                           ),
@@ -837,15 +843,18 @@ class _FolderPreview extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(
-                  displayPath,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontFamily: 'monospace',
-                        color: error != null
-                            ? Theme.of(context).colorScheme.error
-                            : null,
-                      ),
-                  overflow: TextOverflow.ellipsis,
+                child: Tooltip(
+                  message: displayPath,
+                  child: Text(
+                    displayPath,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontFamily: 'monospace',
+                          color: error != null
+                              ? Theme.of(context).colorScheme.error
+                              : null,
+                        ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ),
             ],

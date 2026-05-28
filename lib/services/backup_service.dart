@@ -297,6 +297,7 @@ class BackupService {
       'deadline': project.deadline?.toIso8601String(),
       'totalWorkSeconds': project.totalWorkSeconds,
       'sessions': project.sessions.map((s) => s.toMap()).toList(),
+      'metadataScanned': project.metadataScanned,
     };
   }
 
@@ -331,6 +332,7 @@ class BackupService {
               ?.map((e) => SessionRecord.fromMap(e as Map))
               .toList() ??
           const [],
+      metadataScanned: json['metadataScanned'] as bool? ?? false,
     );
   }
 

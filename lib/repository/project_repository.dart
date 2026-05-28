@@ -480,6 +480,7 @@ class ProjectRepository {
       parentProjectId: parentProjectId ?? existing?.parentProjectId,
       totalWorkSeconds: existing?.totalWorkSeconds ?? 0, // <--- CRITICAL: PRESERVA SESSION TIME
       sessions: existing?.sessions ?? const [],          // <--- CRITICAL: PRESERVA SESSION HISTORY
+      metadataScanned: fullMetadata ? true : (existing?.metadataScanned ?? false),
     );
 
     await projectsBox.put(projectToSave.id, projectToSave);

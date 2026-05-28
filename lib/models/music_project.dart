@@ -124,6 +124,9 @@ class MusicProject {
   @HiveField(27)
   final List<SessionRecord> sessions; // Ordered list of work sessions
 
+  @HiveField(28)
+  final bool metadataScanned; // True once a full metadata (deep) scan has been run
+
   const MusicProject({
     required this.id,
     required this.filePath,
@@ -153,6 +156,7 @@ class MusicProject {
     this.parentProjectId,
     this.totalWorkSeconds = 0,
     this.sessions = const [],
+    this.metadataScanned = false,
   });
 
   String get displayName => (customDisplayName != null && customDisplayName!.trim().isNotEmpty)
@@ -413,6 +417,7 @@ class MusicProject {
     bool clearParentProjectId = false,
     int? totalWorkSeconds,
     List<SessionRecord>? sessions,
+    bool? metadataScanned,
   }) {
     return MusicProject(
       id: id ?? this.id,
@@ -443,6 +448,7 @@ class MusicProject {
       parentProjectId: clearParentProjectId ? null : (parentProjectId ?? this.parentProjectId),
       totalWorkSeconds: totalWorkSeconds ?? this.totalWorkSeconds,
       sessions: sessions ?? this.sessions,
+      metadataScanned: metadataScanned ?? this.metadataScanned,
     );
   }
 }
@@ -494,13 +500,14 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
               .map((e) => SessionRecord.fromMap(e as Map))
               .toList()
           : const [],
+      metadataScanned: fields.containsKey(28) ? (fields[28] as bool? ?? false) : false,
     );
   }
 
   @override
   void write(BinaryWriter writer, MusicProject obj) {
     writer
-      ..writeByte(28) // 28 fields (0-27)
+      ..writeByte(29) // 29 fields (0-28)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -556,6 +563,8 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
       ..writeByte(26)
       ..write(obj.totalWorkSeconds)
       ..writeByte(27)
-      ..write(obj.sessions.map((s) => s.toMap()).toList());
+      ..write(obj.sessions.map((s) => s.toMap()).toList())
+      ..writeByte(28)
+      ..write(obj.metadataScanned);
   }
 }

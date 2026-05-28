@@ -4418,6 +4418,7 @@ class GoogleDriveSyncService {
       'deadline': project.deadline?.toIso8601String(),
       'totalWorkSeconds': project.totalWorkSeconds,
       'sessions': project.sessions.map((s) => s.toMap()).toList(),
+      'metadataScanned': project.metadataScanned,
     };
   }
 
@@ -4463,6 +4464,7 @@ class GoogleDriveSyncService {
               ?.map((e) => SessionRecord.fromMap(e as Map))
               .toList() ??
           const [],
+      metadataScanned: data['metadataScanned'] as bool? ?? false,
     );
   }
 

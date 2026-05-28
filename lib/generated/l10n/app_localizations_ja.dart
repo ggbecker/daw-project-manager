@@ -237,6 +237,9 @@ class AppLocalizationsJa extends AppLocalizations {
       '詳細スキャンは、プロジェクトファイルから完全なメタデータを抽出します：\n• BPM（1分あたりのビート数）\n• 音楽キー\n• DAWバージョン\n現在対応: Ableton LiveとCubase。\n\n通常のスキャンより時間がかかります。続行しますか？';
 
   @override
+  String get deepScanOnlyUnscanned => 'メタデータのないプロジェクトのみスキャン';
+
+  @override
   String get metadataExtractedSuccessfully => 'メタデータの抽出に成功しました';
 
   @override

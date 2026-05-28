@@ -109,6 +109,7 @@
   "noPlaylistsFound": "Плейлисты не найдены",
   "tryDifferentSearch": "Попробуйте другой поисковый запрос",
   "deepScanConfirm": "Глубокое сканирование извлекает полные метаданные из файлов проекта:\n• BPM (ударов в минуту)\n• Музыкальная тональность\n• Версия DAW\nПоддерживается: Ableton Live и Cubase.\n\nЭто медленнее обычного сканирования и может занять некоторое время. Продолжить?",
+  "deepScanOnlyUnscanned": "Сканировать только проекты без метаданных",
   "metadataExtractedSuccessfully": "Метаданные успешно извлечены",
   "failedToExtractMetadata": "Ошибка извлечения метаданных: {error}",
   "@failedToExtractMetadata": {

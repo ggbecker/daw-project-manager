@@ -109,6 +109,7 @@
   "noPlaylistsFound": "Keine Playlists gefunden",
   "tryDifferentSearch": "Versuchen Sie einen anderen Suchbegriff",
   "deepScanConfirm": "Der Tiefenscan extrahiert vollständige Metadaten aus Projektdateien:\n• BPM (Schläge Pro Minute)\n• Tonart\n• DAW-Version\nDerzeit unterstützt: Ableton Live und Cubase.\n\nDies ist langsamer als ein regulärer Scan und kann eine Weile dauern. Fortfahren?",
+  "deepScanOnlyUnscanned": "Nur Projekte ohne Metadaten scannen",
   "metadataExtractedSuccessfully": "Metadaten erfolgreich extrahiert",
   "failedToExtractMetadata": "Metadatenextraktion fehlgeschlagen: {error}",
   "@failedToExtractMetadata": {

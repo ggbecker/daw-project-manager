@@ -538,6 +538,12 @@ abstract class AppLocalizations {
   /// **'Deep Scan extracts full metadata from project files:\n• BPM (Beats Per Minute)\n• Musical Key\n• DAW Version\nCurrently supported: Ableton Live and Cubase.\n\nThis is slower than a regular scan and may take a while. Continue?'**
   String get deepScanConfirm;
 
+  /// No description provided for @deepScanOnlyUnscanned.
+  ///
+  /// In en, this message translates to:
+  /// **'Only scan projects without metadata'**
+  String get deepScanOnlyUnscanned;
+
   /// No description provided for @metadataExtractedSuccessfully.
   ///
   /// In en, this message translates to:

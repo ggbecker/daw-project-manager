@@ -241,6 +241,9 @@ class AppLocalizationsPt extends AppLocalizations {
       'A Varredura Profunda extrai metadados completos dos arquivos de projeto:\n• BPM (Batidas Por Minuto)\n• Tom Musical\n• Versão do DAW\nSuportado atualmente: Ableton Live e Cubase.\n\nIsso é mais lento que uma varredura comum e pode levar um tempo. Continuar?';
 
   @override
+  String get deepScanOnlyUnscanned => 'Escanear apenas projetos sem metadados';
+
+  @override
   String get metadataExtractedSuccessfully => 'Metadados extraídos com sucesso';
 
   @override
