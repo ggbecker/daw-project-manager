@@ -120,6 +120,7 @@ class DashboardPage extends ConsumerStatefulWidget {
 class _DashboardPageState extends ConsumerState<DashboardPage>
     with TickerProviderStateMixin, RouteAware {
   bool _scanning = false;
+  bool _deepScanning = false;
   bool _extractingMetadata = false;
   bool _isSearchingMobile = false;
   bool _isSearchingDesktop = false;
@@ -599,7 +600,13 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
   }
 
   Future<void> _fullScanAll() async {
-    await _scanAll(fullMetadata: true);
+    if (_scanning || _deepScanning) return;
+    setState(() => _deepScanning = true);
+    try {
+      await _scanAll(fullMetadata: true);
+    } finally {
+      if (mounted) setState(() => _deepScanning = false);
+    }
   }
 
   Future<void> _createReleaseFromSelectedProjects(BuildContext context, WidgetRef ref, List<MusicProject> selectedProjects) async {
@@ -1584,14 +1591,14 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                               : () async {
                                     await _scanAll();
                                   },
-                          icon: isAnyOperation
+                          icon: (isScanning && !_deepScanning)
                               ? const SizedBox(
                                     width: 16,
                                     height: 16,
                                     child: CircularProgressIndicator(strokeWidth: 2),
                                   )
                               : const Icon(Icons.refresh),
-                          label: Text(isAnyOperation ? AppLocalizations.of(context)!.scanning : AppLocalizations.of(context)!.rescan),
+                          label: Text((isScanning && !_deepScanning) ? AppLocalizations.of(context)!.scanning : AppLocalizations.of(context)!.rescan),
                         ),
                         if (!isLeftRail) ...[
                           const SizedBox(width: 12),
@@ -1626,14 +1633,14 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                         await _fullScanAll();
                                       }
                                     },
-                            icon: isAnyOperation
+                            icon: _deepScanning
                                 ? const SizedBox(
                                       width: 16,
                                       height: 16,
                                       child: CircularProgressIndicator(strokeWidth: 2),
                                     )
                                 : const Icon(Icons.search),
-                            label: Text(isAnyOperation ? AppLocalizations.of(context)!.scanning : AppLocalizations.of(context)!.deepScan),
+                            label: Text(_deepScanning ? AppLocalizations.of(context)!.scanning : AppLocalizations.of(context)!.deepScan),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Theme.of(context).colorScheme.primary,
                             ),
@@ -1989,7 +1996,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                 const SizedBox(height: 8),
                                 // Rescan
                                 IconButton(
-                                  icon: isAnyOperation
+                                  icon: (isScanning && !_deepScanning)
                                       ? const SizedBox(
                                           width: 18, height: 18,
                                           child: CircularProgressIndicator(strokeWidth: 2),
@@ -1999,7 +2006,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                 ),
                                 if (!railCollapsed)
                                   Text(
-                                    isAnyOperation
+                                    (isScanning && !_deepScanning)
                                         ? AppLocalizations.of(context)!.scanning
                                         : AppLocalizations.of(context)!.rescan,
                                     style: Theme.of(context).textTheme.labelSmall,
@@ -2007,7 +2014,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                 const SizedBox(height: 8),
                                 // Deep scan
                                 IconButton(
-                                  icon: isAnyOperation
+                                  icon: _deepScanning
                                       ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
                                       : const Icon(Icons.search),
                                   onPressed: isAnyOperation
