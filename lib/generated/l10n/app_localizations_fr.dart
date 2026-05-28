@@ -2964,4 +2964,109 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get canBeChangedInSettings =>
       'Peut être modifié plus tard dans les Paramètres';
+
+  @override
+  String get next => 'Suivant';
+
+  @override
+  String get createProject => 'Créer';
+
+  @override
+  String get createProjectTooltip => 'Créer un nouveau dossier de projet';
+
+  @override
+  String get createProjectSelectFolder => 'Choisir l\'emplacement';
+
+  @override
+  String get createProjectSelectFolderHint =>
+      'Sélectionnez dans quel dossier créer le nouveau projet';
+
+  @override
+  String get createProjectNameTitle => 'Nommez votre projet';
+
+  @override
+  String get createProjectNameHint =>
+      'Choisissez un schéma de nommage pour le nouveau dossier';
+
+  @override
+  String get createProjectSchemeArtistTrack => 'Artiste — Piste';
+
+  @override
+  String get createProjectSchemeCollab => 'Collaboration';
+
+  @override
+  String get createProjectSchemeDate => 'Date — Piste';
+
+  @override
+  String get createProjectSchemeCustom => 'Personnalisé';
+
+  @override
+  String get createProjectArtistName => 'Nom de l\'artiste';
+
+  @override
+  String get createProjectTrackName => 'Nom de la piste';
+
+  @override
+  String get createProjectCustomName => 'Nom du dossier';
+
+  @override
+  String get createProjectAddArtist => 'Ajouter un artiste';
+
+  @override
+  String get createProjectSelectDaw => 'Ouvrir dans le DAW';
+
+  @override
+  String get createProjectSelectDawHint =>
+      'Choisissez quel DAW ouvrir pour ce projet';
+
+  @override
+  String get createProjectDetectDaws => 'Détecter les DAWs installés';
+
+  @override
+  String get createProjectSkipDaw => 'Créer le dossier uniquement';
+
+  @override
+  String get createProjectNoDawsFound =>
+      'Aucun DAW trouvé. Le dossier sera quand même créé.';
+
+  @override
+  String get createProjectCreateOnly => 'Créer le dossier';
+
+  @override
+  String get createProjectCreateAndOpen => 'Créer et ouvrir';
+
+  @override
+  String get createProjectFolderExists => 'Un dossier avec ce nom existe déjà';
+
+  @override
+  String get createProjectInvalidChars =>
+      'Le nom contient des caractères invalides';
+
+  @override
+  String get createProjectError => 'Impossible de créer le dossier';
+
+  @override
+  String get pendingProjectWaiting => 'En attente du fichier de projet…';
+
+  @override
+  String get pendingProjectDelete => 'Supprimer le dossier vide';
+
+  @override
+  String get pendingProjectDeleteTitle => 'Supprimer le dossier ?';
+
+  @override
+  String pendingProjectDeleteBody(String folderName) {
+    return 'Supprimer \"$folderName\" et son contenu ?';
+  }
+
+  @override
+  String get pendingProjectDismiss => 'Ne plus suivre ce dossier';
+
+  @override
+  String get pendingProjectDeleteNotEmptyTitle => 'Le dossier n\'est pas vide';
+
+  @override
+  String pendingProjectDeleteNotEmptyBody(String folderName) {
+    return '\"$folderName\" contient des fichiers. Tout supprimer définitivement ?';
+  }
 }

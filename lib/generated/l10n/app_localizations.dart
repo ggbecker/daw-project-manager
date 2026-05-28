@@ -5005,6 +5005,198 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Can be changed later in Settings'**
   String get canBeChangedInSettings;
+
+  /// No description provided for @next.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get next;
+
+  /// No description provided for @createProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get createProject;
+
+  /// No description provided for @createProjectTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a new project folder'**
+  String get createProjectTooltip;
+
+  /// No description provided for @createProjectSelectFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Location'**
+  String get createProjectSelectFolder;
+
+  /// No description provided for @createProjectSelectFolderHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select which project folder to create the new project in'**
+  String get createProjectSelectFolderHint;
+
+  /// No description provided for @createProjectNameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Name Your Project'**
+  String get createProjectNameTitle;
+
+  /// No description provided for @createProjectNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a naming scheme for the new project folder'**
+  String get createProjectNameHint;
+
+  /// No description provided for @createProjectSchemeArtistTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'Artist — Track'**
+  String get createProjectSchemeArtistTrack;
+
+  /// No description provided for @createProjectSchemeCollab.
+  ///
+  /// In en, this message translates to:
+  /// **'Collab'**
+  String get createProjectSchemeCollab;
+
+  /// No description provided for @createProjectSchemeDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date — Track'**
+  String get createProjectSchemeDate;
+
+  /// No description provided for @createProjectSchemeCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get createProjectSchemeCustom;
+
+  /// No description provided for @createProjectArtistName.
+  ///
+  /// In en, this message translates to:
+  /// **'Artist Name'**
+  String get createProjectArtistName;
+
+  /// No description provided for @createProjectTrackName.
+  ///
+  /// In en, this message translates to:
+  /// **'Track Name'**
+  String get createProjectTrackName;
+
+  /// No description provided for @createProjectCustomName.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder Name'**
+  String get createProjectCustomName;
+
+  /// No description provided for @createProjectAddArtist.
+  ///
+  /// In en, this message translates to:
+  /// **'Add artist'**
+  String get createProjectAddArtist;
+
+  /// No description provided for @createProjectSelectDaw.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in DAW'**
+  String get createProjectSelectDaw;
+
+  /// No description provided for @createProjectSelectDawHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which DAW to open to start working on this project'**
+  String get createProjectSelectDawHint;
+
+  /// No description provided for @createProjectDetectDaws.
+  ///
+  /// In en, this message translates to:
+  /// **'Detect Installed DAWs'**
+  String get createProjectDetectDaws;
+
+  /// No description provided for @createProjectSkipDaw.
+  ///
+  /// In en, this message translates to:
+  /// **'Just create the folder'**
+  String get createProjectSkipDaw;
+
+  /// No description provided for @createProjectNoDawsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No DAWs were found on this system. The folder will still be created.'**
+  String get createProjectNoDawsFound;
+
+  /// No description provided for @createProjectCreateOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Folder'**
+  String get createProjectCreateOnly;
+
+  /// No description provided for @createProjectCreateAndOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Create & Open'**
+  String get createProjectCreateAndOpen;
+
+  /// No description provided for @createProjectFolderExists.
+  ///
+  /// In en, this message translates to:
+  /// **'A folder with this name already exists'**
+  String get createProjectFolderExists;
+
+  /// No description provided for @createProjectInvalidChars.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder name contains invalid characters'**
+  String get createProjectInvalidChars;
+
+  /// No description provided for @createProjectError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to create folder'**
+  String get createProjectError;
+
+  /// No description provided for @pendingProjectWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for project file…'**
+  String get pendingProjectWaiting;
+
+  /// No description provided for @pendingProjectDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete empty folder'**
+  String get pendingProjectDelete;
+
+  /// No description provided for @pendingProjectDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Folder?'**
+  String get pendingProjectDeleteTitle;
+
+  /// No description provided for @pendingProjectDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{folderName}\" and its contents?'**
+  String pendingProjectDeleteBody(String folderName);
+
+  /// No description provided for @pendingProjectDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop tracking this folder'**
+  String get pendingProjectDismiss;
+
+  /// No description provided for @pendingProjectDeleteNotEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder is not empty'**
+  String get pendingProjectDeleteNotEmptyTitle;
+
+  /// No description provided for @pendingProjectDeleteNotEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{folderName}\" contains files. Delete everything permanently?'**
+  String pendingProjectDeleteNotEmptyBody(String folderName);
 }
 
 class _AppLocalizationsDelegate

@@ -2940,4 +2940,108 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get canBeChangedInSettings => 'Можно изменить позже в Настройках';
+
+  @override
+  String get next => 'Далее';
+
+  @override
+  String get createProject => 'Создать';
+
+  @override
+  String get createProjectTooltip => 'Создать новую папку проекта';
+
+  @override
+  String get createProjectSelectFolder => 'Выбрать расположение';
+
+  @override
+  String get createProjectSelectFolderHint =>
+      'Выберите папку для нового проекта';
+
+  @override
+  String get createProjectNameTitle => 'Назовите проект';
+
+  @override
+  String get createProjectNameHint =>
+      'Выберите схему именования для новой папки';
+
+  @override
+  String get createProjectSchemeArtistTrack => 'Исполнитель — Трек';
+
+  @override
+  String get createProjectSchemeCollab => 'Совместная работа';
+
+  @override
+  String get createProjectSchemeDate => 'Дата — Трек';
+
+  @override
+  String get createProjectSchemeCustom => 'Произвольное';
+
+  @override
+  String get createProjectArtistName => 'Имя исполнителя';
+
+  @override
+  String get createProjectTrackName => 'Название трека';
+
+  @override
+  String get createProjectCustomName => 'Имя папки';
+
+  @override
+  String get createProjectAddArtist => 'Добавить исполнителя';
+
+  @override
+  String get createProjectSelectDaw => 'Открыть в DAW';
+
+  @override
+  String get createProjectSelectDawHint => 'Выберите DAW для этого проекта';
+
+  @override
+  String get createProjectDetectDaws => 'Найти установленные DAW';
+
+  @override
+  String get createProjectSkipDaw => 'Только создать папку';
+
+  @override
+  String get createProjectNoDawsFound =>
+      'DAW не найдены. Папка всё равно будет создана.';
+
+  @override
+  String get createProjectCreateOnly => 'Создать папку';
+
+  @override
+  String get createProjectCreateAndOpen => 'Создать и открыть';
+
+  @override
+  String get createProjectFolderExists => 'Папка с таким именем уже существует';
+
+  @override
+  String get createProjectInvalidChars =>
+      'Имя папки содержит недопустимые символы';
+
+  @override
+  String get createProjectError => 'Не удалось создать папку';
+
+  @override
+  String get pendingProjectWaiting => 'Ожидание файла проекта…';
+
+  @override
+  String get pendingProjectDelete => 'Удалить пустую папку';
+
+  @override
+  String get pendingProjectDeleteTitle => 'Удалить папку?';
+
+  @override
+  String pendingProjectDeleteBody(String folderName) {
+    return 'Удалить «$folderName» и её содержимое?';
+  }
+
+  @override
+  String get pendingProjectDismiss => 'Прекратить отслеживание папки';
+
+  @override
+  String get pendingProjectDeleteNotEmptyTitle => 'Папка не пуста';
+
+  @override
+  String pendingProjectDeleteNotEmptyBody(String folderName) {
+    return 'Папка «$folderName» содержит файлы. Удалить всё безвозвратно?';
+  }
 }

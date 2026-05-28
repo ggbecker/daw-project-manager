@@ -2948,4 +2948,110 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get canBeChangedInSettings =>
       'Può essere modificato in seguito nelle Impostazioni';
+
+  @override
+  String get next => 'Avanti';
+
+  @override
+  String get createProject => 'Crea';
+
+  @override
+  String get createProjectTooltip => 'Crea una nuova cartella di progetto';
+
+  @override
+  String get createProjectSelectFolder => 'Scegli posizione';
+
+  @override
+  String get createProjectSelectFolderHint =>
+      'Seleziona in quale cartella creare il nuovo progetto';
+
+  @override
+  String get createProjectNameTitle => 'Nomina il progetto';
+
+  @override
+  String get createProjectNameHint =>
+      'Scegli uno schema di denominazione per la nuova cartella';
+
+  @override
+  String get createProjectSchemeArtistTrack => 'Artista — Traccia';
+
+  @override
+  String get createProjectSchemeCollab => 'Collaborazione';
+
+  @override
+  String get createProjectSchemeDate => 'Data — Traccia';
+
+  @override
+  String get createProjectSchemeCustom => 'Personalizzato';
+
+  @override
+  String get createProjectArtistName => 'Nome artista';
+
+  @override
+  String get createProjectTrackName => 'Nome traccia';
+
+  @override
+  String get createProjectCustomName => 'Nome cartella';
+
+  @override
+  String get createProjectAddArtist => 'Aggiungi artista';
+
+  @override
+  String get createProjectSelectDaw => 'Apri nel DAW';
+
+  @override
+  String get createProjectSelectDawHint =>
+      'Scegli quale DAW aprire per questo progetto';
+
+  @override
+  String get createProjectDetectDaws => 'Rileva DAW installati';
+
+  @override
+  String get createProjectSkipDaw => 'Crea solo la cartella';
+
+  @override
+  String get createProjectNoDawsFound =>
+      'Nessun DAW trovato. La cartella verrà comunque creata.';
+
+  @override
+  String get createProjectCreateOnly => 'Crea cartella';
+
+  @override
+  String get createProjectCreateAndOpen => 'Crea e apri';
+
+  @override
+  String get createProjectFolderExists =>
+      'Esiste già una cartella con questo nome';
+
+  @override
+  String get createProjectInvalidChars =>
+      'Il nome contiene caratteri non validi';
+
+  @override
+  String get createProjectError => 'Impossibile creare la cartella';
+
+  @override
+  String get pendingProjectWaiting => 'In attesa del file di progetto…';
+
+  @override
+  String get pendingProjectDelete => 'Elimina cartella vuota';
+
+  @override
+  String get pendingProjectDeleteTitle => 'Eliminare la cartella?';
+
+  @override
+  String pendingProjectDeleteBody(String folderName) {
+    return 'Eliminare \"$folderName\" e il suo contenuto?';
+  }
+
+  @override
+  String get pendingProjectDismiss => 'Smetti di tracciare questa cartella';
+
+  @override
+  String get pendingProjectDeleteNotEmptyTitle => 'La cartella non è vuota';
+
+  @override
+  String pendingProjectDeleteNotEmptyBody(String folderName) {
+    return '\"$folderName\" contiene file. Eliminare tutto definitivamente?';
+  }
 }

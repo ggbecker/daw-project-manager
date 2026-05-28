@@ -44,6 +44,8 @@ import 'widgets/desktop_title_bar.dart';
 import 'widgets/language_switcher.dart';
 import 'widgets/theme_switcher.dart';
 import '../generated/l10n/app_localizations.dart';
+import 'dialogs/create_project_dialog.dart';
+import '../models/pending_folder.dart';
 
 import 'package:hive_ce_flutter/hive_flutter.dart';
 
@@ -565,6 +567,13 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
         await repo.updateRootLastScanAt(root.id, scanTime);
       }
 
+      // Resolve pending folders: remove entries whose folder now has a real project
+      // file (the scan just upserted it) or whose folder no longer exists.
+      final resolved = await repo.resolveCompletedPendingFolders();
+      if (resolved.isNotEmpty) {
+        ref.read(pendingFoldersDirtyProvider.notifier).bump();
+      }
+
       // Auto-detect preview songs for projects that have neither a manual nor
       // a previously auto-detected path. Runs after the full scan so all upserts
       // are committed before we read back the project list.
@@ -940,6 +949,19 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                       );
                                     },
                                     tooltip: AppLocalizations.of(context)!.notificationSettings,
+                                  ),
+                                // Create new project (hidden when left rail — shown there instead)
+                                if (!isLeftRail)
+                                  IconButton(
+                                    icon: const Icon(Icons.create_new_folder_outlined),
+                                    tooltip: AppLocalizations.of(context)!.createProjectTooltip,
+                                    onPressed: () {
+                                      showDialog<String>(
+                                        context: context,
+                                        barrierDismissible: false,
+                                        builder: (_) => const CreateProjectDialog(),
+                                      );
+                                    },
                                   ),
                                 // Google Drive sync (hidden when left rail — shown there instead)
                                 if (!isLeftRail)
@@ -1752,42 +1774,49 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                   children: [
                     for (final tab in _currentVisibleTabs)
                       switch (tab) {
-                        AppTab.projects => MobileUtils.isMobile()
-                          ? _MobileProjectsList(
-                              projects: projects,
-                              dateFormat: dateFormat,
-                              onCreateRelease: (selectedProjects) {
-                                _createReleaseFromSelectedProjects(context, ref, selectedProjects);
-                              },
-                              onHideProjects: (selectedProjectIds) async {
-                                await _hideProjects(context, ref, selectedProjectIds);
-                              },
-                              onUnhideProjects: (selectedProjectIds) async {
-                                await _unhideProjects(context, ref, selectedProjectIds);
-                              },
-                              showHidden: hiddenMode == 1 || hiddenMode == 2,
-                            )
-                          : _PlutoProjectsTableWithSelection(
-                              key: _tableKey,
-                              projects: projects,
-                              dateFormat: dateFormat,
-                              onCreateRelease: (selectedProjects) {
-                                _createReleaseFromSelectedProjects(context, ref, selectedProjects);
-                              },
-                              onHideProjects: (selectedProjectIds) async {
-                                await _hideProjects(context, ref, selectedProjectIds);
-                              },
-                              onUnhideProjects: (selectedProjectIds) async {
-                                await _unhideProjects(context, ref, selectedProjectIds);
-                              },
-                              showHidden: hiddenMode == 1 || hiddenMode == 2,
-                              onExtractingMetadataChanged: (extracting) {
-                                setState(() => _extractingMetadata = extracting);
-                              },
-                              isAnyOperation: isAnyOperation,
-                              visibleCount: visibleCount,
-                              hiddenCount: hiddenCount,
-                            ),
+                        AppTab.projects => Column(
+                            children: [
+                              const _PendingFoldersSection(),
+                              Expanded(
+                                child: MobileUtils.isMobile()
+                                  ? _MobileProjectsList(
+                                      projects: projects,
+                                      dateFormat: dateFormat,
+                                      onCreateRelease: (selectedProjects) {
+                                        _createReleaseFromSelectedProjects(context, ref, selectedProjects);
+                                      },
+                                      onHideProjects: (selectedProjectIds) async {
+                                        await _hideProjects(context, ref, selectedProjectIds);
+                                      },
+                                      onUnhideProjects: (selectedProjectIds) async {
+                                        await _unhideProjects(context, ref, selectedProjectIds);
+                                      },
+                                      showHidden: hiddenMode == 1 || hiddenMode == 2,
+                                    )
+                                  : _PlutoProjectsTableWithSelection(
+                                      key: _tableKey,
+                                      projects: projects,
+                                      dateFormat: dateFormat,
+                                      onCreateRelease: (selectedProjects) {
+                                        _createReleaseFromSelectedProjects(context, ref, selectedProjects);
+                                      },
+                                      onHideProjects: (selectedProjectIds) async {
+                                        await _hideProjects(context, ref, selectedProjectIds);
+                                      },
+                                      onUnhideProjects: (selectedProjectIds) async {
+                                        await _unhideProjects(context, ref, selectedProjectIds);
+                                      },
+                                      showHidden: hiddenMode == 1 || hiddenMode == 2,
+                                      onExtractingMetadataChanged: (extracting) {
+                                        setState(() => _extractingMetadata = extracting);
+                                      },
+                                      isAnyOperation: isAnyOperation,
+                                      visibleCount: visibleCount,
+                                      hiddenCount: hiddenCount,
+                                    ),
+                              ),
+                            ],
+                          ),
                       AppTab.releases   => const ReleasesTabPage(),
                       AppTab.playlists  => const PlaylistsPage(),
                       AppTab.queue      => const QueuePage(),
@@ -1900,6 +1929,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                             }
                             return IconButton(
                               icon: const Icon(Icons.swap_horiz, size: 18),
+                              tooltip: AppLocalizations.of(context)!.switchProfile,
                               onPressed: () => _quickSwitchProfile(context),
                             );
                           }),
@@ -1925,6 +1955,24 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
+                                // Create new project
+                                IconButton(
+                                  icon: const Icon(Icons.create_new_folder_outlined),
+                                  onPressed: () {
+                                    showDialog<String>(
+                                      context: context,
+                                      barrierDismissible: false,
+                                      builder: (_) => const CreateProjectDialog(),
+                                    );
+                                  },
+                                ),
+                                if (!railCollapsed)
+                                  Text(
+                                    AppLocalizations.of(context)!.createProject,
+                                    style: Theme.of(context).textTheme.labelSmall,
+                                    textAlign: TextAlign.center,
+                                  ),
+                                const SizedBox(height: 8),
                                 // Google Drive sync
                                 IconButton(
                                   icon: const Icon(Icons.cloud_outlined),
@@ -8058,6 +8106,147 @@ class _FolderNameCellState extends State<_FolderNameCell> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Pending Folders Section — shown above the projects table
+// ---------------------------------------------------------------------------
+
+class _PendingFoldersSection extends ConsumerWidget {
+  const _PendingFoldersSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final pending = ref.watch(pendingFoldersProvider);
+    if (pending.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 6, 8, 0),
+      child: Column(
+        children: pending
+            .map((pf) => _PendingFolderRow(pendingFolder: pf))
+            .toList(),
+      ),
+    );
+  }
+}
+
+class _PendingFolderRow extends ConsumerWidget {
+  final PendingFolder pendingFolder;
+
+  const _PendingFolderRow({required this.pendingFolder});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final pf = pendingFolder;
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 4),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.35),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        child: Row(
+          children: [
+            Icon(Icons.folder_special_outlined,
+                size: 18, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(pf.folderName,
+                      style: Theme.of(context).textTheme.bodyMedium),
+                  Row(
+                    children: [
+                      Text(
+                        l10n.pendingProjectWaiting,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              fontStyle: FontStyle.italic,
+                              color: Theme.of(context).colorScheme.secondary,
+                            ),
+                      ),
+                      if (pf.intendedDawName != null) ...[
+                        Text(' · ',
+                            style: Theme.of(context).textTheme.bodySmall),
+                        Text(pf.intendedDawName!,
+                            style: Theme.of(context).textTheme.bodySmall),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            // Open folder
+            IconButton(
+              icon: const Icon(Icons.folder_open_outlined, size: 18),
+              tooltip: l10n.openFolder,
+              visualDensity: VisualDensity.compact,
+              onPressed: () => FileLauncher.openFolder(pf.path),
+            ),
+            // Delete — always visible; dialog content varies based on whether
+            // user files exist inside the folder.
+            IconButton(
+              icon: const Icon(Icons.delete_outline, size: 18),
+              tooltip: l10n.pendingProjectDelete,
+              visualDensity: VisualDensity.compact,
+              onPressed: () async {
+                final hasUserFiles = !pf.isEmptyOrOnlyMarker;
+                final ok = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: Text(hasUserFiles
+                        ? l10n.pendingProjectDeleteNotEmptyTitle
+                        : l10n.pendingProjectDeleteTitle),
+                    content: Text(hasUserFiles
+                        ? l10n.pendingProjectDeleteNotEmptyBody(pf.folderName)
+                        : l10n.pendingProjectDeleteBody(pf.folderName)),
+                    actions: [
+                      TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: Text(l10n.cancel)),
+                      FilledButton(
+                          style: hasUserFiles
+                              ? FilledButton.styleFrom(
+                                  backgroundColor: Theme.of(ctx).colorScheme.error)
+                              : null,
+                          onPressed: () => Navigator.pop(ctx, true),
+                          child: Text(l10n.delete)),
+                    ],
+                  ),
+                );
+                if (ok == true && context.mounted) {
+                  try {
+                    await Directory(pf.path).delete(recursive: true);
+                  } catch (_) {}
+                  final repo = await ref.read(repositoryProvider.future);
+                  await repo.removePendingFolder(pf.id);
+                  ref.read(pendingFoldersDirtyProvider.notifier).bump();
+                }
+              },
+            ),
+            // Dismiss (stop tracking without deleting)
+            IconButton(
+              icon: const Icon(Icons.close, size: 18),
+              tooltip: l10n.pendingProjectDismiss,
+              visualDensity: VisualDensity.compact,
+              onPressed: () async {
+                final repo = await ref.read(repositoryProvider.future);
+                await repo.removePendingFolder(pf.id);
+                ref.read(pendingFoldersDirtyProvider.notifier).bump();
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

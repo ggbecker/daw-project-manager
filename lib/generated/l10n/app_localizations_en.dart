@@ -2939,4 +2939,110 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get canBeChangedInSettings => 'Can be changed later in Settings';
+
+  @override
+  String get next => 'Next';
+
+  @override
+  String get createProject => 'Create';
+
+  @override
+  String get createProjectTooltip => 'Create a new project folder';
+
+  @override
+  String get createProjectSelectFolder => 'Choose Location';
+
+  @override
+  String get createProjectSelectFolderHint =>
+      'Select which project folder to create the new project in';
+
+  @override
+  String get createProjectNameTitle => 'Name Your Project';
+
+  @override
+  String get createProjectNameHint =>
+      'Choose a naming scheme for the new project folder';
+
+  @override
+  String get createProjectSchemeArtistTrack => 'Artist — Track';
+
+  @override
+  String get createProjectSchemeCollab => 'Collab';
+
+  @override
+  String get createProjectSchemeDate => 'Date — Track';
+
+  @override
+  String get createProjectSchemeCustom => 'Custom';
+
+  @override
+  String get createProjectArtistName => 'Artist Name';
+
+  @override
+  String get createProjectTrackName => 'Track Name';
+
+  @override
+  String get createProjectCustomName => 'Folder Name';
+
+  @override
+  String get createProjectAddArtist => 'Add artist';
+
+  @override
+  String get createProjectSelectDaw => 'Open in DAW';
+
+  @override
+  String get createProjectSelectDawHint =>
+      'Choose which DAW to open to start working on this project';
+
+  @override
+  String get createProjectDetectDaws => 'Detect Installed DAWs';
+
+  @override
+  String get createProjectSkipDaw => 'Just create the folder';
+
+  @override
+  String get createProjectNoDawsFound =>
+      'No DAWs were found on this system. The folder will still be created.';
+
+  @override
+  String get createProjectCreateOnly => 'Create Folder';
+
+  @override
+  String get createProjectCreateAndOpen => 'Create & Open';
+
+  @override
+  String get createProjectFolderExists =>
+      'A folder with this name already exists';
+
+  @override
+  String get createProjectInvalidChars =>
+      'Folder name contains invalid characters';
+
+  @override
+  String get createProjectError => 'Failed to create folder';
+
+  @override
+  String get pendingProjectWaiting => 'Waiting for project file…';
+
+  @override
+  String get pendingProjectDelete => 'Delete empty folder';
+
+  @override
+  String get pendingProjectDeleteTitle => 'Delete Folder?';
+
+  @override
+  String pendingProjectDeleteBody(String folderName) {
+    return 'Delete \"$folderName\" and its contents?';
+  }
+
+  @override
+  String get pendingProjectDismiss => 'Stop tracking this folder';
+
+  @override
+  String get pendingProjectDeleteNotEmptyTitle => 'Folder is not empty';
+
+  @override
+  String pendingProjectDeleteNotEmptyBody(String folderName) {
+    return '\"$folderName\" contains files. Delete everything permanently?';
+  }
 }

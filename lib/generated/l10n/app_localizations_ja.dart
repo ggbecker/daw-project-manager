@@ -2871,4 +2871,104 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get canBeChangedInSettings => '設定で後から変更できます';
+
+  @override
+  String get next => '次へ';
+
+  @override
+  String get createProject => '作成';
+
+  @override
+  String get createProjectTooltip => '新しいプロジェクトフォルダを作成';
+
+  @override
+  String get createProjectSelectFolder => '場所を選択';
+
+  @override
+  String get createProjectSelectFolderHint => '新しいプロジェクトを作成するフォルダを選択してください';
+
+  @override
+  String get createProjectNameTitle => 'プロジェクト名を設定';
+
+  @override
+  String get createProjectNameHint => '新しいフォルダの命名規則を選択してください';
+
+  @override
+  String get createProjectSchemeArtistTrack => 'アーティスト — トラック';
+
+  @override
+  String get createProjectSchemeCollab => 'コラボ';
+
+  @override
+  String get createProjectSchemeDate => '日付 — トラック';
+
+  @override
+  String get createProjectSchemeCustom => 'カスタム';
+
+  @override
+  String get createProjectArtistName => 'アーティスト名';
+
+  @override
+  String get createProjectTrackName => 'トラック名';
+
+  @override
+  String get createProjectCustomName => 'フォルダ名';
+
+  @override
+  String get createProjectAddArtist => 'アーティストを追加';
+
+  @override
+  String get createProjectSelectDaw => 'DAWで開く';
+
+  @override
+  String get createProjectSelectDawHint => 'このプロジェクトで使用するDAWを選択してください';
+
+  @override
+  String get createProjectDetectDaws => 'インストール済みDAWを検出';
+
+  @override
+  String get createProjectSkipDaw => 'フォルダのみ作成';
+
+  @override
+  String get createProjectNoDawsFound => 'DAWが見つかりませんでした。フォルダは作成されます。';
+
+  @override
+  String get createProjectCreateOnly => 'フォルダを作成';
+
+  @override
+  String get createProjectCreateAndOpen => '作成して開く';
+
+  @override
+  String get createProjectFolderExists => '同じ名前のフォルダが既に存在します';
+
+  @override
+  String get createProjectInvalidChars => 'フォルダ名に無効な文字が含まれています';
+
+  @override
+  String get createProjectError => 'フォルダの作成に失敗しました';
+
+  @override
+  String get pendingProjectWaiting => 'プロジェクトファイルを待っています…';
+
+  @override
+  String get pendingProjectDelete => '空のフォルダを削除';
+
+  @override
+  String get pendingProjectDeleteTitle => 'フォルダを削除しますか？';
+
+  @override
+  String pendingProjectDeleteBody(String folderName) {
+    return '「$folderName」とその内容を削除しますか？';
+  }
+
+  @override
+  String get pendingProjectDismiss => 'このフォルダの追跡を停止';
+
+  @override
+  String get pendingProjectDeleteNotEmptyTitle => 'フォルダが空ではありません';
+
+  @override
+  String pendingProjectDeleteNotEmptyBody(String folderName) {
+    return '「$folderName」にはファイルが含まれています。すべて完全に削除しますか？';
+  }
 }

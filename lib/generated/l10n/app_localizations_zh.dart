@@ -2842,4 +2842,104 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get canBeChangedInSettings => '可以稍后在设置中更改';
+
+  @override
+  String get next => '下一步';
+
+  @override
+  String get createProject => '创建';
+
+  @override
+  String get createProjectTooltip => '创建新的项目文件夹';
+
+  @override
+  String get createProjectSelectFolder => '选择位置';
+
+  @override
+  String get createProjectSelectFolderHint => '选择要在哪个项目文件夹中创建新项目';
+
+  @override
+  String get createProjectNameTitle => '为您的项目命名';
+
+  @override
+  String get createProjectNameHint => '为新项目文件夹选择命名方案';
+
+  @override
+  String get createProjectSchemeArtistTrack => '艺术家 — 曲目';
+
+  @override
+  String get createProjectSchemeCollab => '合作';
+
+  @override
+  String get createProjectSchemeDate => '日期 — 曲目';
+
+  @override
+  String get createProjectSchemeCustom => '自定义';
+
+  @override
+  String get createProjectArtistName => '艺术家名称';
+
+  @override
+  String get createProjectTrackName => '曲目名称';
+
+  @override
+  String get createProjectCustomName => '文件夹名称';
+
+  @override
+  String get createProjectAddArtist => '添加艺术家';
+
+  @override
+  String get createProjectSelectDaw => '在DAW中打开';
+
+  @override
+  String get createProjectSelectDawHint => '选择要打开哪个DAW来开始处理此项目';
+
+  @override
+  String get createProjectDetectDaws => '检测已安装的DAW';
+
+  @override
+  String get createProjectSkipDaw => '仅创建文件夹';
+
+  @override
+  String get createProjectNoDawsFound => '未找到任何DAW。文件夹仍将被创建。';
+
+  @override
+  String get createProjectCreateOnly => '创建文件夹';
+
+  @override
+  String get createProjectCreateAndOpen => '创建并打开';
+
+  @override
+  String get createProjectFolderExists => '已存在同名文件夹';
+
+  @override
+  String get createProjectInvalidChars => '文件夹名称包含无效字符';
+
+  @override
+  String get createProjectError => '创建文件夹失败';
+
+  @override
+  String get pendingProjectWaiting => '等待项目文件…';
+
+  @override
+  String get pendingProjectDelete => '删除空文件夹';
+
+  @override
+  String get pendingProjectDeleteTitle => '删除文件夹？';
+
+  @override
+  String pendingProjectDeleteBody(String folderName) {
+    return '删除\"$folderName\"及其内容？';
+  }
+
+  @override
+  String get pendingProjectDismiss => '停止跟踪此文件夹';
+
+  @override
+  String get pendingProjectDeleteNotEmptyTitle => '文件夹不为空';
+
+  @override
+  String pendingProjectDeleteNotEmptyBody(String folderName) {
+    return '\"$folderName\" 包含文件。永久删除所有内容？';
+  }
 }

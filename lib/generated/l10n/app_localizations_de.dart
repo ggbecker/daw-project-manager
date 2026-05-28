@@ -2955,4 +2955,110 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get canBeChangedInSettings =>
       'Kann später in den Einstellungen geändert werden';
+
+  @override
+  String get next => 'Weiter';
+
+  @override
+  String get createProject => 'Erstellen';
+
+  @override
+  String get createProjectTooltip => 'Neuen Projektordner erstellen';
+
+  @override
+  String get createProjectSelectFolder => 'Speicherort wählen';
+
+  @override
+  String get createProjectSelectFolderHint =>
+      'Wählen Sie den Projektordner für das neue Projekt';
+
+  @override
+  String get createProjectNameTitle => 'Projekt benennen';
+
+  @override
+  String get createProjectNameHint =>
+      'Wählen Sie ein Benennungsschema für den neuen Projektordner';
+
+  @override
+  String get createProjectSchemeArtistTrack => 'Künstler — Track';
+
+  @override
+  String get createProjectSchemeCollab => 'Kollaboration';
+
+  @override
+  String get createProjectSchemeDate => 'Datum — Track';
+
+  @override
+  String get createProjectSchemeCustom => 'Benutzerdefiniert';
+
+  @override
+  String get createProjectArtistName => 'Künstlername';
+
+  @override
+  String get createProjectTrackName => 'Track-Name';
+
+  @override
+  String get createProjectCustomName => 'Ordnername';
+
+  @override
+  String get createProjectAddArtist => 'Künstler hinzufügen';
+
+  @override
+  String get createProjectSelectDaw => 'In DAW öffnen';
+
+  @override
+  String get createProjectSelectDawHint =>
+      'Wählen Sie die DAW für dieses Projekt';
+
+  @override
+  String get createProjectDetectDaws => 'Installierte DAWs erkennen';
+
+  @override
+  String get createProjectSkipDaw => 'Nur Ordner erstellen';
+
+  @override
+  String get createProjectNoDawsFound =>
+      'Keine DAWs gefunden. Der Ordner wird trotzdem erstellt.';
+
+  @override
+  String get createProjectCreateOnly => 'Ordner erstellen';
+
+  @override
+  String get createProjectCreateAndOpen => 'Erstellen & Öffnen';
+
+  @override
+  String get createProjectFolderExists =>
+      'Ein Ordner mit diesem Namen existiert bereits';
+
+  @override
+  String get createProjectInvalidChars =>
+      'Ordnername enthält ungültige Zeichen';
+
+  @override
+  String get createProjectError => 'Ordner konnte nicht erstellt werden';
+
+  @override
+  String get pendingProjectWaiting => 'Warte auf Projektdatei…';
+
+  @override
+  String get pendingProjectDelete => 'Leeren Ordner löschen';
+
+  @override
+  String get pendingProjectDeleteTitle => 'Ordner löschen?';
+
+  @override
+  String pendingProjectDeleteBody(String folderName) {
+    return '\"$folderName\" und seinen Inhalt löschen?';
+  }
+
+  @override
+  String get pendingProjectDismiss => 'Diesen Ordner nicht mehr verfolgen';
+
+  @override
+  String get pendingProjectDeleteNotEmptyTitle => 'Ordner ist nicht leer';
+
+  @override
+  String pendingProjectDeleteNotEmptyBody(String folderName) {
+    return '\"$folderName\" enthält Dateien. Alles dauerhaft löschen?';
+  }
 }

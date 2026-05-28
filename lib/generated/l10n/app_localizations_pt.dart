@@ -2942,4 +2942,108 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get canBeChangedInSettings =>
       'Pode ser alterado mais tarde nas Configurações';
+
+  @override
+  String get next => 'Próximo';
+
+  @override
+  String get createProject => 'Criar';
+
+  @override
+  String get createProjectTooltip => 'Criar uma nova pasta de projeto';
+
+  @override
+  String get createProjectSelectFolder => 'Escolher local';
+
+  @override
+  String get createProjectSelectFolderHint =>
+      'Selecione em qual pasta criar o novo projeto';
+
+  @override
+  String get createProjectNameTitle => 'Nomeie seu projeto';
+
+  @override
+  String get createProjectNameHint =>
+      'Escolha um esquema de nomenclatura para a nova pasta';
+
+  @override
+  String get createProjectSchemeArtistTrack => 'Artista — Faixa';
+
+  @override
+  String get createProjectSchemeCollab => 'Colaboração';
+
+  @override
+  String get createProjectSchemeDate => 'Data — Faixa';
+
+  @override
+  String get createProjectSchemeCustom => 'Personalizado';
+
+  @override
+  String get createProjectArtistName => 'Nome do artista';
+
+  @override
+  String get createProjectTrackName => 'Nome da faixa';
+
+  @override
+  String get createProjectCustomName => 'Nome da pasta';
+
+  @override
+  String get createProjectAddArtist => 'Adicionar artista';
+
+  @override
+  String get createProjectSelectDaw => 'Abrir no DAW';
+
+  @override
+  String get createProjectSelectDawHint =>
+      'Escolha qual DAW abrir para trabalhar neste projeto';
+
+  @override
+  String get createProjectDetectDaws => 'Detectar DAWs instalados';
+
+  @override
+  String get createProjectSkipDaw => 'Apenas criar a pasta';
+
+  @override
+  String get createProjectNoDawsFound =>
+      'Nenhum DAW encontrado. A pasta ainda será criada.';
+
+  @override
+  String get createProjectCreateOnly => 'Criar pasta';
+
+  @override
+  String get createProjectCreateAndOpen => 'Criar e abrir';
+
+  @override
+  String get createProjectFolderExists => 'Já existe uma pasta com este nome';
+
+  @override
+  String get createProjectInvalidChars => 'O nome contém caracteres inválidos';
+
+  @override
+  String get createProjectError => 'Falha ao criar pasta';
+
+  @override
+  String get pendingProjectWaiting => 'Aguardando arquivo de projeto…';
+
+  @override
+  String get pendingProjectDelete => 'Excluir pasta vazia';
+
+  @override
+  String get pendingProjectDeleteTitle => 'Excluir pasta?';
+
+  @override
+  String pendingProjectDeleteBody(String folderName) {
+    return 'Excluir \"$folderName\" e seu conteúdo?';
+  }
+
+  @override
+  String get pendingProjectDismiss => 'Parar de rastrear esta pasta';
+
+  @override
+  String get pendingProjectDeleteNotEmptyTitle => 'A pasta não está vazia';
+
+  @override
+  String pendingProjectDeleteNotEmptyBody(String folderName) {
+    return '\"$folderName\" contém arquivos. Excluir tudo permanentemente?';
+  }
 }

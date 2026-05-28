@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 import 'dart:convert';
 
 import '../models/music_project.dart';
+import '../models/pending_folder.dart';
 import '../models/scan_root.dart';
 import '../models/ignored_path.dart';
 import '../models/release.dart';
@@ -54,6 +55,46 @@ class ProjectRepository {
     } else {
       await appSettingsBox.put(_keyCustomMixdownFolder, value.trim());
     }
+  }
+
+  // Pending Folders — stored as JSON list in the per-profile app_settings slot
+  String get _pendingFoldersKey => '${profileId}_pending_folders';
+
+  List<PendingFolder> getPendingFolders() {
+    final raw = appSettingsBox.get(_pendingFoldersKey);
+    if (raw == null) return [];
+    try {
+      final list = jsonDecode(raw) as List;
+      return list.map((e) => PendingFolder.fromJson(e as Map<String, dynamic>)).toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<void> addPendingFolder(PendingFolder folder) async {
+    final current = getPendingFolders()..removeWhere((f) => f.path == folder.path);
+    current.add(folder);
+    await appSettingsBox.put(_pendingFoldersKey, jsonEncode(current.map((f) => f.toJson()).toList()));
+  }
+
+  Future<void> removePendingFolder(String id) async {
+    final current = getPendingFolders()..removeWhere((f) => f.id == id);
+    await appSettingsBox.put(_pendingFoldersKey, jsonEncode(current.map((f) => f.toJson()).toList()));
+  }
+
+  /// Removes pending folders that now contain a real DAW project file, or whose
+  /// folder no longer exists on disk. Returns the removed IDs.
+  Future<List<String>> resolveCompletedPendingFolders() async {
+    final current = getPendingFolders();
+    final toRemove = current
+        .where((pf) => !pf.folderExists || pf.hasProjectFile())
+        .map((pf) => pf.id)
+        .toList();
+    if (toRemove.isNotEmpty) {
+      final remaining = current.where((f) => !toRemove.contains(f.id)).toList();
+      await appSettingsBox.put(_pendingFoldersKey, jsonEncode(remaining.map((f) => f.toJson()).toList()));
+    }
+    return toRemove;
   }
 
   static Future<ProjectRepository> init(ProfileRepository profileRepo) async {

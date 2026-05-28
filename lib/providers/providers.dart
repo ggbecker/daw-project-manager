@@ -29,6 +29,7 @@ import '../repository/profile_repository.dart';
 import '../services/google_drive_sync_service.dart';
 import '../services/deadline_notification_service.dart';
 import '../models/auto_backup_interval.dart';
+import '../models/pending_folder.dart';
 
 // Profile Repository Provider
 final profileRepositoryProvider = FutureProvider<ProfileRepository>((ref) async {
@@ -1918,3 +1919,22 @@ class DismissedSuggestionsNotifier extends Notifier<Set<String>> {
 final dismissedSuggestionsProvider =
     NotifierProvider<DismissedSuggestionsNotifier, Set<String>>(
         DismissedSuggestionsNotifier.new);
+
+// Bumped whenever pending folders are added/removed so the UI rebuilds.
+class _PendingFoldersDirtyNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+  void bump() => state = state + 1;
+}
+
+final pendingFoldersDirtyProvider =
+    NotifierProvider<_PendingFoldersDirtyNotifier, int>(_PendingFoldersDirtyNotifier.new);
+
+final pendingFoldersProvider = Provider<List<PendingFolder>>((ref) {
+  ref.watch(pendingFoldersDirtyProvider);
+  final repoAsync = ref.watch(repositoryProvider);
+  return repoAsync.maybeWhen(
+    data: (repo) => repo.getPendingFolders(),
+    orElse: () => const [],
+  );
+});
