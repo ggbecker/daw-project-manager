@@ -2805,12 +2805,13 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     final sm = stateManager;
     if (sm == null) return;
     final scrollOffset = sm.scroll.bodyRowsVertical?.offset ?? 0;
+    final rowTotalHeight = sm.rowTotalHeight;
     final rowIndex =
-        ((localPos.dy - _gridHeaderHeight + scrollOffset) / _gridRowHeight)
+        ((localPos.dy - _gridHeaderHeight + scrollOffset) / rowTotalHeight)
             .floor();
     if (rowIndex >= 0 && rowIndex < sm.rows.length) {
       final rowTop =
-          _gridHeaderHeight + rowIndex * _gridRowHeight - scrollOffset;
+          _gridHeaderHeight + rowIndex * rowTotalHeight - scrollOffset;
       setState(() {
         _dragOverRowTop = rowTop;
       });
@@ -4425,7 +4426,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         MusicProject? targetProject;
         if (sm != null) {
           final scrollOffset = sm.scroll.bodyRowsVertical?.offset ?? 0;
-          final rowIndex = ((detail.localPosition.dy - _gridHeaderHeight + scrollOffset) / _gridRowHeight).floor();
+          final rowIndex = ((detail.localPosition.dy - _gridHeaderHeight + scrollOffset) / sm.rowTotalHeight).floor();
           if (rowIndex >= 0 && rowIndex < sm.rows.length) {
             targetProject = sm.rows[rowIndex].cells['data']?.value as MusicProject?;
           }
@@ -4451,7 +4452,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               top: _dragOverRowTop!,
               left: 0,
               right: 0,
-              height: _gridRowHeight,
+              height: stateManager?.rowTotalHeight ?? _gridRowHeight,
               child: IgnorePointer(
                 child: Container(
                   decoration: BoxDecoration(
