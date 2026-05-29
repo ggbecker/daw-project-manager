@@ -1719,12 +1719,17 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                               focusNode: _searchFocusNode,
                               controller: _searchController,
                               decoration: InputDecoration(
-                                hintText: switch (_currentTab) {
-                                  AppTab.projects   => AppLocalizations.of(context)!.searchProjects,
-                                  AppTab.releases   => AppLocalizations.of(context)!.searchReleases,
-                                  AppTab.queue      => AppLocalizations.of(context)!.queueSearchHint,
-                                  _                 => AppLocalizations.of(context)!.statsSearchProjects,
-                                },
+                                hintText: () {
+                                  final base = switch (_currentTab) {
+                                    AppTab.projects   => AppLocalizations.of(context)!.searchProjects,
+                                    AppTab.releases   => AppLocalizations.of(context)!.searchReleases,
+                                    AppTab.queue      => AppLocalizations.of(context)!.queueSearchHint,
+                                    _                 => AppLocalizations.of(context)!.statsSearchProjects,
+                                  };
+                                  if (!isLeftRail) return base;
+                                  final shortcut = Platform.isMacOS ? '⌘F' : 'Ctrl+F';
+                                  return '$base ($shortcut)';
+                                }(),
                                 isDense: true,
                                 border: const OutlineInputBorder(),
                                 prefixIcon: const Icon(Icons.search),
