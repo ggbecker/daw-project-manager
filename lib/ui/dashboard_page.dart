@@ -1674,18 +1674,25 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                       ),
                     ),
                   const SizedBox(width: 16),
-                  // Active DAW session chip / idle suggestions
-                  Consumer(
-                    builder: (ctx, cRef, _) {
-                      final active = cRef.watch(activeProjectProvider);
-                      final suggestionsOn =
-                          cRef.watch(suggestionsEnabledProvider);
-                      if (active != null) return const _ActiveProjectChip();
-                      if (suggestionsOn) {
-                        return const _SessionIdleSuggestions();
-                      }
-                      return const SizedBox.shrink();
-                    },
+                  // Active DAW session chip / idle suggestions.
+                  // Fixed height prevents the bar from resizing when the chip appears.
+                  SizedBox(
+                    height: 48,
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: Consumer(
+                        builder: (ctx, cRef, _) {
+                          final active = cRef.watch(activeProjectProvider);
+                          final suggestionsOn =
+                              cRef.watch(suggestionsEnabledProvider);
+                          if (active != null) return const _ActiveProjectChip();
+                          if (suggestionsOn) {
+                            return const _SessionIdleSuggestions();
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 8),
                   // Search bar (desktop only — hidden on Playlists tab)
@@ -2191,6 +2198,15 @@ class _PlutoProjectsTableWithSelection extends ConsumerStatefulWidget {
 
 class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjectsTableWithSelection> {
   final _innerTableKey = GlobalKey<_PlutoProjectsTableState>();
+  final _groupExpandState = ValueNotifier<({bool hasGroups, bool anyExpanded})>(
+    (hasGroups: false, anyExpanded: false),
+  );
+
+  @override
+  void dispose() {
+    _groupExpandState.dispose();
+    super.dispose();
+  }
 
   void focusTable() => _innerTableKey.currentState?.focusTable();
 
@@ -2589,6 +2605,32 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
                     ref.read(phaseFilterProvider.notifier).setPhase(value);
                   },
                 ),
+                const Spacer(),
+                ValueListenableBuilder<({bool hasGroups, bool anyExpanded})>(
+                  valueListenable: _groupExpandState,
+                  builder: (context, state, _) {
+                    if (!state.hasGroups) return const SizedBox.shrink();
+                    return TextButton.icon(
+                      icon: Icon(
+                        state.anyExpanded ? Icons.unfold_less : Icons.unfold_more,
+                        size: 16,
+                      ),
+                      label: Text(
+                        state.anyExpanded
+                            ? '${l10n.collapse} All'
+                            : '${l10n.expand} All',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                      onPressed: () {
+                        if (state.anyExpanded) {
+                          _innerTableKey.currentState?._collapseAll();
+                        } else {
+                          _innerTableKey.currentState?._expandAll();
+                        }
+                      },
+                    );
+                  },
+                ),
               ],
           ),
         ),
@@ -2610,6 +2652,7 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
               }
             },
             onExtractingMetadataChanged: widget.onExtractingMetadataChanged,
+            groupExpandNotifier: _groupExpandState,
           ),
         ),
         // Selection action bar
@@ -2798,6 +2841,7 @@ class _PlutoProjectsTable extends ConsumerStatefulWidget {
   final bool areAllSelected;
   final VoidCallback onToggleSelectAll;
   final Function(bool) onExtractingMetadataChanged;
+  final ValueNotifier<({bool hasGroups, bool anyExpanded})>? groupExpandNotifier;
   const _PlutoProjectsTable({
     super.key,
     required this.projects,
@@ -2809,6 +2853,7 @@ class _PlutoProjectsTable extends ConsumerStatefulWidget {
     required this.areAllSelected,
     required this.onToggleSelectAll,
     required this.onExtractingMetadataChanged,
+    this.groupExpandNotifier,
   });
 
   @override
@@ -2827,8 +2872,20 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     }
   }
 
+  void _updateGroupExpandNotifier() {
+    final sm = stateManager;
+    final notifier = widget.groupExpandNotifier;
+    if (notifier == null) return;
+    notifier.value = (
+      hasGroups: sm?.rows.any((r) => r.type.isGroup) ?? false,
+      anyExpanded: sm?.rows.any((r) => r.type.isGroup && r.type.group.expanded) ?? false,
+    );
+  }
+
   void _onStateManagerChanged() {
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    setState(() {});
+    _updateGroupExpandNotifier();
   }
 
   void _collapseAll() {
@@ -4372,6 +4429,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               ),
             );
             stateManager!.addListener(_onStateManagerChanged);
+            _updateGroupExpandNotifier();
           },
       onRowSecondaryTap: (TrinaGridOnRowSecondaryTapEvent event) {
         final project = event.row.cells['data']?.value as MusicProject?;
@@ -4552,35 +4610,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       ),
     );
 
-    final sm = stateManager;
-    final hasGroups = sm != null && sm.rows.any((r) => r.type.isGroup);
-    if (!hasGroups) return dropTarget;
-
-    final anyExpanded = sm.rows.any((r) => r.type.isGroup && r.type.group.expanded);
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton.icon(
-                icon: Icon(
-                  anyExpanded ? Icons.unfold_less : Icons.unfold_more,
-                  size: 16,
-                ),
-                label: Text(
-                  anyExpanded ? '${l10n.collapse} All' : '${l10n.expand} All',
-                  style: const TextStyle(fontSize: 12),
-                ),
-                onPressed: anyExpanded ? _collapseAll : _expandAll,
-              ),
-            ],
-          ),
-        ),
-        Expanded(child: dropTarget),
-      ],
-    );
+    return dropTarget;
   }
 
   @override
@@ -7737,7 +7767,6 @@ class _ActiveProjectChipState extends ConsumerState<_ActiveProjectChip>
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
-      margin: const EdgeInsets.symmetric(vertical: 3),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: chipColor.withValues(alpha: 0.15),
