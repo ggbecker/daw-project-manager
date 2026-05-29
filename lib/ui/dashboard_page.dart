@@ -2652,6 +2652,7 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
               }
             },
             onExtractingMetadataChanged: widget.onExtractingMetadataChanged,
+            isScanning: widget.isAnyOperation,
             groupExpandNotifier: _groupExpandState,
           ),
         ),
@@ -2842,6 +2843,7 @@ class _PlutoProjectsTable extends ConsumerStatefulWidget {
   final VoidCallback onToggleSelectAll;
   final Function(bool) onExtractingMetadataChanged;
   final ValueNotifier<({bool hasGroups, bool anyExpanded})>? groupExpandNotifier;
+  final bool isScanning;
   const _PlutoProjectsTable({
     super.key,
     required this.projects,
@@ -2853,6 +2855,7 @@ class _PlutoProjectsTable extends ConsumerStatefulWidget {
     required this.areAllSelected,
     required this.onToggleSelectAll,
     required this.onExtractingMetadataChanged,
+    required this.isScanning,
     this.groupExpandNotifier,
   });
 
@@ -2862,6 +2865,7 @@ class _PlutoProjectsTable extends ConsumerStatefulWidget {
 
 class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   TrinaGridStateManager? stateManager;
+  bool _isRebuildingRows = false;
 
   void focusTable() {
     final sm = stateManager;
@@ -2885,6 +2889,31 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   void _onStateManagerChanged() {
     if (!mounted) return;
     setState(() {});
+    if (!_isRebuildingRows) _updateGroupExpandNotifier();
+  }
+
+  void _rebuildRows() {
+    final sm = stateManager;
+    if (sm == null) return;
+    _isRebuildingRows = true;
+    final wasCollapsed = <String, bool>{};
+    for (final row in sm.rows) {
+      if (row.type.isGroup) {
+        wasCollapsed[row.cells['name']?.value as String? ?? ''] =
+            !row.type.group.expanded;
+      }
+    }
+    final newRows = _mapProjectsToRows(widget.projects);
+    sm.removeRows(sm.rows, notify: false);
+    sm.insertRows(0, newRows);
+    for (final row in sm.rows) {
+      if (row.type.isGroup) {
+        final name = row.cells['name']?.value as String? ?? '';
+        if (wasCollapsed[name] == true) sm.toggleExpandedRowGroup(rowGroup: row);
+      }
+    }
+    sm.notifyListeners();
+    _isRebuildingRows = false;
     _updateGroupExpandNotifier();
   }
 
@@ -3639,37 +3668,14 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   @override
   void didUpdateWidget(_PlutoProjectsTable oldWidget) {
     super.didUpdateWidget(oldWidget);
-    
-    if (oldWidget.projects != widget.projects) {
-      if (stateManager != null) {
-        // Snapshot collapsed state of group rows before replacing, so Smart
-        // Folder groups that the user collapsed stay collapsed after a data
-        // refresh (e.g. metadata extraction).
-        final wasCollapsed = <String, bool>{};
-        for (final row in stateManager!.rows) {
-          if (row.type.isGroup) {
-            final name = row.cells['name']?.value as String? ?? '';
-            wasCollapsed[name] = !row.type.group.expanded;
-          }
-        }
 
-        final newRows = _mapProjectsToRows(widget.projects);
-        stateManager!.removeRows(stateManager!.rows, notify: false);
-        stateManager!.insertRows(0, newRows);
+    final projectsChanged = oldWidget.projects != widget.projects;
+    final scanJustFinished = oldWidget.isScanning && !widget.isScanning;
 
-        // Restore collapsed state — new group rows default to expanded,
-        // so only toggle the ones that were collapsed.
-        for (final row in stateManager!.rows) {
-          if (row.type.isGroup) {
-            final name = row.cells['name']?.value as String? ?? '';
-            if (wasCollapsed[name] == true) {
-              stateManager!.toggleExpandedRowGroup(rowGroup: row);
-            }
-          }
-        }
-
-        stateManager!.notifyListeners();
-      }
+    if (projectsChanged || scanJustFinished) {
+      // While scanning, skip every intermediate update — the blocking overlay
+      // covers the table. Do one clean rebuild when the scan finishes.
+      if (!widget.isScanning) _rebuildRows();
     } else if (oldWidget.selectedIds != widget.selectedIds) {
       // Selection changed only — update cell values to invalidate renderer cache
       // without destroying rows (which would reset folder expanded/collapsed state).
