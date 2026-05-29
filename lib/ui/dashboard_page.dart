@@ -2914,7 +2914,12 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     }
     sm.notifyListeners();
     _isRebuildingRows = false;
-    _updateGroupExpandNotifier();
+    // _rebuildRows is called from didUpdateWidget (i.e. during the build phase).
+    // Setting ValueNotifier.value synchronously here would call setState on the
+    // ValueListenableBuilder in the parent tree mid-build. Defer to post-frame.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _updateGroupExpandNotifier();
+    });
   }
 
   void _collapseAll() {
