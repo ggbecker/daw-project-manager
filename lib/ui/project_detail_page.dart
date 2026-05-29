@@ -1374,6 +1374,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
   int _playerGen = 0;       // incremented on each swap; stale listeners self-cancel
   final FocusNode _focusNode = FocusNode();
   bool _isPlaying = false;
+  bool _playbackEnded = false;
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
   bool _isDraggingOver = false;
@@ -1445,7 +1446,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
     });
     player.onPlayerComplete.listen((_) {
       if (gen != _playerGen || !mounted) return;
-      setState(() { _isPlaying = false; _position = Duration.zero; });
+      setState(() { _isPlaying = false; _position = Duration.zero; _playbackEnded = true; });
     });
   }
 
@@ -1471,6 +1472,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
       _audioPlayer.stop();
       setState(() {
         _isPlaying = false;
+        _playbackEnded = false;
         _position = Duration.zero;
         _duration = Duration.zero;
         _isMono = false;
@@ -1757,8 +1759,16 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
             }
           }
 
-          // Play from current source (stereo or pre-mixed mono)
-          if (_position == Duration.zero || _position >= _duration) {
+          // Play from current source (stereo or pre-mixed mono).
+          // After natural completion the native player is in "completed" state;
+          // stop() resets it so play() works again. If the user seeked to a
+          // non-zero position after completion, play from that position.
+          if (_playbackEnded) {
+            setState(() => _playbackEnded = false);
+            await _audioPlayer.stop();
+            await _audioPlayer.play(_currentSource(),
+                position: _position > Duration.zero ? _position : null);
+          } else if (_position == Duration.zero || _position >= _duration) {
             await _audioPlayer.play(_currentSource());
           } else {
             await _audioPlayer.resume();
@@ -2467,9 +2477,11 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                                   ? _position.inMilliseconds / _duration.inMilliseconds
                                   : 0.0,
                               height: 80,
-                              onSeek: (p) => _audioPlayer.seek(Duration(
-                                milliseconds: (p * _duration.inMilliseconds).round(),
-                              )),
+                              onSeek: (p) {
+                                final target = Duration(milliseconds: (p * _duration.inMilliseconds).round());
+                                setState(() => _position = target);
+                                _audioPlayer.seek(target);
+                              },
                             ),
                           ],
                         ),

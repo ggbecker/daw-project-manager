@@ -2101,6 +2101,7 @@ class _AudioFileItemState extends ConsumerState<_AudioFileItem> {
   AudioPlayer? _warmPlayer;
   int _playerGen = 0;
   bool _isPlaying = false;
+  bool _playbackEnded = false;
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
   double _volume = 1.0;
@@ -2125,7 +2126,7 @@ class _AudioFileItemState extends ConsumerState<_AudioFileItem> {
     });
     player.onPlayerComplete.listen((_) {
       if (gen != _playerGen || !mounted) return;
-      setState(() { _isPlaying = false; _position = Duration.zero; });
+      setState(() { _isPlaying = false; _position = Duration.zero; _playbackEnded = true; });
     });
   }
 
@@ -2275,7 +2276,12 @@ class _AudioFileItemState extends ConsumerState<_AudioFileItem> {
       if (_isPlaying) {
         await _audioPlayer.pause();
       } else {
-        if (_position == Duration.zero || _position >= _duration) {
+        if (_playbackEnded) {
+          setState(() => _playbackEnded = false);
+          await _audioPlayer.stop();
+          await _audioPlayer.play(_currentSource(),
+              position: _position > Duration.zero ? _position : null);
+        } else if (_position == Duration.zero || _position >= _duration) {
           await _audioPlayer.play(_currentSource());
         } else {
           await _audioPlayer.resume();
@@ -2294,6 +2300,7 @@ class _AudioFileItemState extends ConsumerState<_AudioFileItem> {
     await _audioPlayer.stop();
     setState(() {
       _position = Duration.zero;
+      _playbackEnded = false;
     });
   }
 
@@ -2434,9 +2441,11 @@ class _AudioFileItemState extends ConsumerState<_AudioFileItem> {
                             ? _position.inMilliseconds / _duration.inMilliseconds
                             : 0.0,
                         height: 64,
-                        onSeek: (p) => _audioPlayer.seek(Duration(
-                          milliseconds: (p * _duration.inMilliseconds).round(),
-                        )),
+                        onSeek: (p) {
+                          final target = Duration(milliseconds: (p * _duration.inMilliseconds).round());
+                          setState(() => _position = target);
+                          _audioPlayer.seek(target);
+                        },
                       ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,

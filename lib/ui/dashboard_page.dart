@@ -5577,6 +5577,7 @@ class _DesktopPlayerBar extends ConsumerStatefulWidget {
 class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
   late AudioPlayer _player;
   bool _isPlaying = false;
+  bool _playbackEnded = false;
   Duration _position = Duration.zero;
   Duration _duration = Duration.zero;
   double _volume = 1.0;
@@ -5662,7 +5663,7 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
     });
     _player.onPlayerComplete.listen((_) {
       if (!mounted) return;
-      setState(() { _isPlaying = false; _position = Duration.zero; });
+      setState(() { _isPlaying = false; _position = Duration.zero; _playbackEnded = true; });
       if (widget.request.isQueuedPlayback) {
         ref.read(desktopPlayerCompletedProvider.notifier).increment();
       }
@@ -5679,6 +5680,7 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
       _player.stop();
       setState(() {
         _isPlaying = false;
+        _playbackEnded = false;
         _position = Duration.zero;
         _duration = Duration.zero;
         _isMono = false;
@@ -5771,7 +5773,12 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
     if (_isPlaying) {
       await _player.pause();
     } else {
-      if (_duration > Duration.zero && _position >= _duration) {
+      if (_playbackEnded) {
+        setState(() => _playbackEnded = false);
+        await _player.stop();
+        await _player.play(DeviceFileSource(_activePath),
+            position: _position > Duration.zero ? _position : null);
+      } else if (_position == Duration.zero || _position >= _duration) {
         await _player.play(DeviceFileSource(_activePath));
       } else {
         await _player.resume();
@@ -6075,9 +6082,9 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
                   onSeek: (p) {
                     _focusNode.requestFocus();
                     if (_duration > Duration.zero) {
-                      _player.seek(Duration(
-                        milliseconds: (p * _duration.inMilliseconds).round(),
-                      ));
+                      final target = Duration(milliseconds: (p * _duration.inMilliseconds).round());
+                      setState(() => _position = target);
+                      _player.seek(target);
                     }
                   },
                 ),
