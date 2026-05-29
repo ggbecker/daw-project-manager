@@ -2491,31 +2491,34 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                         const SizedBox(height: 8),
                         Row(
                           children: [
-                            _isGeneratingMono
-                                ? const SizedBox(
+                            Tooltip(
+                              message: AppLocalizations.of(context)!.monoToggleTooltip,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  SizedBox(
                                     width: 18, height: 18,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                  )
-                                : FilterChip(
-                                    avatar: Icon(
-                                      _isMono ? Icons.check_box : Icons.check_box_outline_blank,
-                                      size: 16,
-                                      color: _isMono ? Colors.red : null,
-                                    ),
-                                    label: Text(
-                                      AppLocalizations.of(context)!.monoLabel,
-                                      style: TextStyle(
-                                        color: _isMono ? Colors.red : null,
-                                        fontWeight: _isMono ? FontWeight.bold : null,
-                                      ),
-                                    ),
-                                    tooltip: AppLocalizations.of(context)!.monoToggleTooltip,
-                                    selected: _isMono,
-                                    showCheckmark: false,
-                                    selectedColor: Colors.red.withValues(alpha: 0.15),
-                                    onSelected: (_) => _toggleMono(),
-                                    visualDensity: VisualDensity.compact,
+                                    child: _isGeneratingMono
+                                        ? const CircularProgressIndicator(strokeWidth: 2)
+                                        : Checkbox(
+                                            value: _isMono,
+                                            onChanged: (_) => _toggleMono(),
+                                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                            visualDensity: VisualDensity.compact,
+                                            activeColor: Colors.red,
+                                          ),
                                   ),
+                                  const SizedBox(width: 6),
+                                  GestureDetector(
+                                    onTap: _isGeneratingMono ? null : _toggleMono,
+                                    child: Text(
+                                      AppLocalizations.of(context)!.monoLabel,
+                                      style: TextStyle(color: _isMono ? Colors.red : null),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
                       ],

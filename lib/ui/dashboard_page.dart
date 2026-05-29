@@ -5110,22 +5110,31 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
               ),
             ),
             const SizedBox(width: 8),
-            _isGeneratingMono
-                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                : FilterChip(
-                    avatar: Icon(
-                      _isMono ? Icons.check_box : Icons.check_box_outline_blank,
-                      size: 16,
-                      color: _isMono ? Colors.red : null,
-                    ),
-                    label: Text('Mono', style: TextStyle(color: _isMono ? Colors.red : null, fontWeight: _isMono ? FontWeight.bold : null)),
-                    tooltip: 'Toggle mono playback',
-                    selected: _isMono,
-                    showCheckmark: false,
-                    selectedColor: Colors.red.withValues(alpha: 0.15),
-                    onSelected: (_) => _toggleMono(),
-                    visualDensity: VisualDensity.compact,
+            Tooltip(
+              message: 'Toggle mono playback',
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 18, height: 18,
+                    child: _isGeneratingMono
+                        ? const CircularProgressIndicator(strokeWidth: 2)
+                        : Checkbox(
+                            value: _isMono,
+                            onChanged: (_) => _toggleMono(),
+                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            visualDensity: VisualDensity.compact,
+                            activeColor: Colors.red,
+                          ),
                   ),
+                  const SizedBox(width: 6),
+                  GestureDetector(
+                    onTap: _isGeneratingMono ? null : _toggleMono,
+                    child: Text('Mono', style: TextStyle(color: _isMono ? Colors.red : null)),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ],
@@ -5241,22 +5250,31 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
         const SizedBox(height: 4),
         Row(
           children: [
-            _isGeneratingMono
-                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                : FilterChip(
-                    avatar: Icon(
-                      _isMono ? Icons.check_box : Icons.check_box_outline_blank,
-                      size: 16,
-                      color: _isMono ? Colors.red : null,
-                    ),
-                    label: Text('Mono', style: TextStyle(color: _isMono ? Colors.red : null, fontWeight: _isMono ? FontWeight.bold : null)),
-                    tooltip: 'Toggle mono playback',
-                    selected: _isMono,
-                    showCheckmark: false,
-                    selectedColor: Colors.red.withValues(alpha: 0.15),
-                    onSelected: (_) => _toggleMono(),
-                    visualDensity: VisualDensity.compact,
+            Tooltip(
+              message: 'Toggle mono playback',
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 18, height: 18,
+                    child: _isGeneratingMono
+                        ? const CircularProgressIndicator(strokeWidth: 2)
+                        : Checkbox(
+                            value: _isMono,
+                            onChanged: (_) => _toggleMono(),
+                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            visualDensity: VisualDensity.compact,
+                            activeColor: Colors.red,
+                          ),
                   ),
+                  const SizedBox(width: 6),
+                  GestureDetector(
+                    onTap: _isGeneratingMono ? null : _toggleMono,
+                    child: Text('Mono', style: TextStyle(color: _isMono ? Colors.red : null)),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(width: 12),
             Builder(builder: (ctx) {
               final dim = Theme.of(ctx).textTheme.bodySmall?.color;
@@ -5992,21 +6010,31 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
                   const SizedBox(width: 8),
                   // Mono toggle
                   if (_supportsMonoMix())
-                    _isGeneratingMono
-                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                        : FilterChip(
-                            avatar: Icon(
-                              _isMono ? Icons.check_box : Icons.check_box_outline_blank,
-                              size: 16,
-                              color: _isMono ? Colors.red : null,
-                            ),
-                            label: Text('Mono', style: TextStyle(fontSize: 11, color: _isMono ? Colors.red : null, fontWeight: _isMono ? FontWeight.bold : null)),
-                            selected: _isMono, showCheckmark: false,
-                            selectedColor: Colors.red.withValues(alpha: 0.15),
-                            onSelected: (_) => _toggleMono(),
-                            visualDensity: VisualDensity.compact,
-                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    Tooltip(
+                      message: 'Toggle mono playback',
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            width: 18, height: 18,
+                            child: _isGeneratingMono
+                                ? const CircularProgressIndicator(strokeWidth: 2)
+                                : Checkbox(
+                                    value: _isMono,
+                                    onChanged: (_) => _toggleMono(),
+                                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                    visualDensity: VisualDensity.compact,
+                                    activeColor: Colors.red,
+                                  ),
                           ),
+                          const SizedBox(width: 6),
+                          GestureDetector(
+                            onTap: _isGeneratingMono ? null : _toggleMono,
+                            child: Text('Mono', style: TextStyle(fontSize: 11, color: _isMono ? Colors.red : null)),
+                          ),
+                        ],
+                      ),
+                    ),
                   const SizedBox(width: 8),
                   // File info
                   Text(

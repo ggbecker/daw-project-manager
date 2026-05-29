@@ -2490,22 +2490,31 @@ class _AudioFileItemState extends ConsumerState<_AudioFileItem> {
               const SizedBox(height: 4),
               Row(
                 children: [
-                  FilterChip(
-                    label: Text(AppLocalizations.of(context)!.monoLabel),
-                    avatar: Icon(
-                      Icons.check_box_outlined,
-                      size: 16,
-                      color: _isMono ? Colors.red.shade400 : Theme.of(context).textTheme.bodySmall?.color,
-                    ),
-                    selected: _isMono,
-                    showCheckmark: false,
-                    selectedColor: Colors.red.withValues(alpha: 0.15),
-                    onSelected: _isGeneratingMono ? null : (val) => _toggleMono(val),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 18, height: 18,
+                        child: _isGeneratingMono
+                            ? const CircularProgressIndicator(strokeWidth: 2)
+                            : Checkbox(
+                                value: _isMono,
+                                onChanged: (val) => _toggleMono(val ?? false),
+                                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                visualDensity: VisualDensity.compact,
+                                activeColor: Colors.red,
+                              ),
+                      ),
+                      const SizedBox(width: 6),
+                      GestureDetector(
+                        onTap: _isGeneratingMono ? null : () => _toggleMono(!_isMono),
+                        child: Text(
+                          AppLocalizations.of(context)!.monoLabel,
+                          style: TextStyle(color: _isMono ? Colors.red : null),
+                        ),
+                      ),
+                    ],
                   ),
-                  if (_isGeneratingMono) ...[
-                    const SizedBox(width: 8),
-                    const SizedBox(width: 12, height: 12, child: CircularProgressIndicator(strokeWidth: 1.5)),
-                  ],
                 ],
               ),
             ],
