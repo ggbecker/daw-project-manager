@@ -1677,7 +1677,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                   // Active DAW session chip / idle suggestions.
                   // Fixed height prevents the bar from resizing when the chip appears.
                   SizedBox(
-                    height: 48,
+                    height: 56,
                     child: Align(
                       alignment: Alignment.center,
                       child: Consumer(
