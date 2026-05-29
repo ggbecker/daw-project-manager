@@ -2009,7 +2009,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                 ),
                                 if (!railCollapsed)
                                   Text(
-                                    AppLocalizations.of(context)!.googleDriveSync,
+                                    AppLocalizations.of(context)!.googleDrive,
                                     style: Theme.of(context).textTheme.labelSmall,
                                     textAlign: TextAlign.center,
                                   ),
@@ -3480,6 +3480,17 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         ),
         if (File(project.filePath).existsSync() || Directory(project.filePath).existsSync())
           PopupMenuItem<String>(
+            value: 'refresh',
+            child: Row(
+              children: [
+                const Icon(Icons.refresh, size: 20),
+                const SizedBox(width: 8),
+                Text(l10n.refreshProject),
+              ],
+            ),
+          ),
+        if (File(project.filePath).existsSync() || Directory(project.filePath).existsSync())
+          PopupMenuItem<String>(
             value: 'extractMetadata',
             child: Row(
               children: [
@@ -3532,6 +3543,22 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           break;
         case 'unhide':
           widget.onUnhideProjects([project.id]);
+          break;
+        case 'refresh':
+          try {
+            final repo = await ref.read(repositoryProvider.future);
+            final entity = Directory(project.filePath).existsSync()
+                ? Directory(project.filePath) as FileSystemEntity
+                : File(project.filePath);
+            await repo.upsertFromFileSystemEntity(entity, fullMetadata: true);
+            ref.invalidate(allProjectsStreamProvider);
+          } catch (e) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('${l10n.error}: $e')),
+              );
+            }
+          }
           break;
         case 'extractMetadata':
           widget.onExtractingMetadataChanged(true);
