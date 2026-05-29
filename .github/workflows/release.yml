@@ -228,7 +228,8 @@ jobs:
         run: |
           if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
             VERSION_NAME="${GITHUB_REF#refs/tags/v}"
-            VERSION_CODE="$(echo "${VERSION_NAME}" | tr -d '.' | cut -c1-9)"
+            IFS='.' read -r MAJOR MINOR PATCH <<< "${VERSION_NAME}"
+            VERSION_CODE=$((MAJOR * 10000 + MINOR * 100 + PATCH))
           else
             VERSION_NAME="0.0.0"
             VERSION_CODE="${GITHUB_RUN_NUMBER}"
@@ -553,9 +554,9 @@ jobs:
         id: version
         run: |
           if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
-            TAG_NAME="${GITHUB_REF#refs/tags/v}"
-            VERSION_NAME="${TAG_NAME}"
-            VERSION_CODE="$(echo "${TAG_NAME}" | tr -d '.' | cut -c1-9)"
+            VERSION_NAME="${GITHUB_REF#refs/tags/v}"
+            IFS='.' read -r MAJOR MINOR PATCH <<< "${VERSION_NAME}"
+            VERSION_CODE=$((MAJOR * 10000 + MINOR * 100 + PATCH))
           else
             VERSION_NAME="0.0.0"
             VERSION_CODE="${GITHUB_RUN_NUMBER}"

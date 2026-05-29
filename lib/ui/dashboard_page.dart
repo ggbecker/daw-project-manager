@@ -212,9 +212,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
   @override
   void initState() {
     super.initState();
-    if (MobileUtils.isMobile()) {
-      _currentVisibleTabs = [...VisibleTabsNotifier.canonicalOrder];
-    }
+    _currentVisibleTabs = _orderedFrom(ref.read(visibleTabsProvider));
     _tabController = TabController(length: _currentVisibleTabs.length, vsync: this);
     _searchController = TextEditingController();
     if (!MobileUtils.isMobile()) {
@@ -958,19 +956,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                     },
                                     tooltip: AppLocalizations.of(context)!.notificationSettings,
                                   ),
-                                // Create new project (hidden when left rail — shown there instead)
-                                if (!isLeftRail)
-                                  IconButton(
-                                    icon: const Icon(Icons.create_new_folder_outlined),
-                                    tooltip: AppLocalizations.of(context)!.createProjectTooltip,
-                                    onPressed: () {
-                                      showDialog<String>(
-                                        context: context,
-                                        barrierDismissible: false,
-                                        builder: (_) => const CreateProjectDialog(),
-                                      );
-                                    },
-                                  ),
                                 // Google Drive sync (hidden when left rail — shown there instead)
                                 if (!isLeftRail)
                                   IconButton(
@@ -1673,6 +1658,18 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                         icon: const Icon(Icons.cloud_outlined),
                         onPressed: () => Navigator.of(context).push(
                           MaterialPageRoute(builder: (_) => const GoogleDriveSyncPage()),
+                        ),
+                      ),
+                    ),
+                  if (!MobileUtils.isMobile() && !isLeftRail)
+                    Tooltip(
+                      message: AppLocalizations.of(context)!.createProjectTooltip,
+                      child: IconButton(
+                        icon: const Icon(Icons.create_new_folder_outlined),
+                        onPressed: () => showDialog<String>(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (_) => const CreateProjectDialog(),
                         ),
                       ),
                     ),
