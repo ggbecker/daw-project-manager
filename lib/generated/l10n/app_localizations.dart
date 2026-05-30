@@ -220,6 +220,12 @@ abstract class AppLocalizations {
   /// **'Rescan'**
   String get rescan;
 
+  /// No description provided for @refreshProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get refreshProject;
+
   /// No description provided for @scanning.
   ///
   /// In en, this message translates to:
@@ -2120,6 +2126,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Google Drive Sync'**
   String get googleDriveSync;
+
+  /// Short label for the Google Drive navigation button
+  ///
+  /// In en, this message translates to:
+  /// **'Google Drive'**
+  String get googleDrive;
 
   /// Description text for Google Drive sync feature
   ///
@@ -5203,6 +5215,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'\"{folderName}\" contains files. Delete everything permanently?'**
   String pendingProjectDeleteNotEmptyBody(String folderName);
+
+  /// No description provided for @pendingProjectRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for project file'**
+  String get pendingProjectRefresh;
+
+  /// No description provided for @pendingProjectNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No project file found yet'**
+  String get pendingProjectNotFound;
 }
 
 class _AppLocalizationsDelegate

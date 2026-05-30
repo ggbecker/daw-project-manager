@@ -1979,5 +1979,9 @@
     "placeholders": {
       "folderName": { "type": "String" }
     }
-  }
+  },
+  "pendingProjectRefresh": "Проверить файл проекта",
+  "@pendingProjectRefresh": {},
+  "pendingProjectNotFound": "Файл проекта пока не найден",
+  "@pendingProjectNotFound": {}
 }

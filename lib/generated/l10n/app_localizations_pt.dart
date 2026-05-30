@@ -63,6 +63,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get rescan => 'Reescanear';
 
   @override
+  String get refreshProject => 'Atualizar';
+
+  @override
   String get scanning => 'Escaneando…';
 
   @override
@@ -1249,6 +1252,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get googleDriveSync => 'Sincronização Google Drive';
+
+  @override
+  String get googleDrive => 'Google Drive';
 
   @override
   String get googleDriveSyncDescription =>
@@ -3049,4 +3055,11 @@ class AppLocalizationsPt extends AppLocalizations {
   String pendingProjectDeleteNotEmptyBody(String folderName) {
     return '\"$folderName\" contém arquivos. Excluir tudo permanentemente?';
   }
+
+  @override
+  String get pendingProjectRefresh => 'Verificar arquivo de projeto';
+
+  @override
+  String get pendingProjectNotFound =>
+      'Nenhum arquivo de projeto encontrado ainda';
 }

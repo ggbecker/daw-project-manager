@@ -3065,5 +3065,9 @@
     "placeholders": {
       "folderName": { "type": "String" }
     }
-  }
+  },
+  "pendingProjectRefresh": "Check for project file",
+  "@pendingProjectRefresh": {},
+  "pendingProjectNotFound": "No project file found yet",
+  "@pendingProjectNotFound": {}
 }

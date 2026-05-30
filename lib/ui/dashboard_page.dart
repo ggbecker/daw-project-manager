@@ -8335,6 +8335,23 @@ class _PendingFolderRow extends ConsumerWidget {
               visualDensity: VisualDensity.compact,
               onPressed: () => FileLauncher.openFolder(pf.path),
             ),
+            // Refresh — re-check whether a project file has appeared
+            IconButton(
+              icon: const Icon(Icons.refresh, size: 18),
+              tooltip: l10n.pendingProjectRefresh,
+              visualDensity: VisualDensity.compact,
+              onPressed: () async {
+                final repo = await ref.read(repositoryProvider.future);
+                final resolved = await repo.resolveCompletedPendingFolders();
+                if (resolved.contains(pf.id)) {
+                  ref.read(pendingFoldersDirtyProvider.notifier).bump();
+                } else if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(l10n.pendingProjectNotFound)),
+                  );
+                }
+              },
+            ),
             // Delete — always visible; dialog content varies based on whether
             // user files exist inside the folder.
             IconButton(

@@ -2003,5 +2003,9 @@
     "placeholders": {
       "folderName": { "type": "String" }
     }
-  }
+  },
+  "pendingProjectRefresh": "Verificar arquivo de projeto",
+  "@pendingProjectRefresh": {},
+  "pendingProjectNotFound": "Nenhum arquivo de projeto encontrado ainda",
+  "@pendingProjectNotFound": {}
 }

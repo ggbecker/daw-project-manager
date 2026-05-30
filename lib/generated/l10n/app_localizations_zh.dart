@@ -63,6 +63,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get rescan => '重新扫描';
 
   @override
+  String get refreshProject => '刷新';
+
+  @override
   String get scanning => '扫描中…';
 
   @override
@@ -1223,6 +1226,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get googleDriveSync => 'Google Drive 同步';
+
+  @override
+  String get googleDrive => 'Google Drive';
 
   @override
   String get googleDriveSyncDescription =>
@@ -2945,4 +2951,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String pendingProjectDeleteNotEmptyBody(String folderName) {
     return '\"$folderName\" 包含文件。永久删除所有内容？';
   }
+
+  @override
+  String get pendingProjectRefresh => '检查项目文件';
+
+  @override
+  String get pendingProjectNotFound => '尚未找到项目文件';
 }
