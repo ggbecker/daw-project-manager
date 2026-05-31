@@ -2872,6 +2872,71 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   TrinaGridStateManager? stateManager;
   bool _isRebuildingRows = false;
 
+  // Returns true when the project set is identical (same IDs) — only cell
+  // values may have changed (BPM, key, lastModified, etc.). In that case we
+  // can update cells in-place instead of rebuilding the entire row tree, which
+  // avoids disturbing group expansion state.
+  bool _sameProjectIds(List<MusicProject> a, List<MusicProject> b) {
+    if (a.length != b.length) return false;
+    final aIds = a.map((p) => p.id).toSet();
+    final bIds = b.map((p) => p.id).toSet();
+    return aIds.length == bIds.length && aIds.containsAll(bIds);
+  }
+
+  void _updateCellsInPlace(List<MusicProject> newProjects) {
+    final sm = stateManager;
+    if (sm == null) return;
+
+    final projectById = {for (final p in newProjects) p.id: p};
+
+    String dawDisplay(MusicProject p) {
+      if (p.dawType == null) return '';
+      if (p.dawVersion?.isNotEmpty == true) return '${p.dawType} ${p.dawVersion}';
+      return p.dawType!;
+    }
+
+    void updateProjectRow(TrinaRow row) {
+      final project = row.cells['data']?.value as MusicProject?;
+      if (project == null) return;
+      final updated = projectById[project.id];
+      if (updated == null) return;
+      row.cells['data']!.value = updated;
+      row.cells['name']?.value = updated.displayName;
+      row.cells['status']?.value = updated.status;
+      row.cells['dawType']?.value = dawDisplay(updated);
+      row.cells['bpm']?.value = updated.bpm?.toString() ?? '';
+      row.cells['key']?.value = updated.musicalKey ?? '';
+      row.cells['lastModified']?.value = widget.dateFormat.format(updated.lastModifiedAt);
+      row.cells['deadline']?.value = updated.deadlineStatus ?? '';
+    }
+
+    // Walk top-level rows; for group rows also update their children (including
+    // children of collapsed groups that are not in refRows directly).
+    final topLevel = sm.refRows.originalList.where((r) => r.isMain).toList();
+    for (final row in topLevel) {
+      if (row.type.isGroup) {
+        DateTime? latestModified;
+        for (final child in row.type.group.children.originalList) {
+          updateProjectRow(child);
+          final p = projectById[(child.cells['data']?.value as MusicProject?)?.id];
+          if (p != null && (latestModified == null || p.lastModifiedAt.isAfter(latestModified))) {
+            latestModified = p.lastModifiedAt;
+          }
+        }
+        if (latestModified != null) {
+          row.cells['lastModified']?.value = widget.dateFormat.format(latestModified);
+        }
+      } else {
+        updateProjectRow(row);
+      }
+    }
+
+    sm.notifyListeners();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _updateGroupExpandNotifier();
+    });
+  }
+
   void focusTable() {
     final sm = stateManager;
     if (sm == null) return;
@@ -3712,7 +3777,17 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     if (projectsChanged || scanJustFinished) {
       // While scanning, skip every intermediate update — the blocking overlay
       // covers the table. Do one clean rebuild when the scan finishes.
-      if (!widget.isScanning) _rebuildRows();
+      if (!widget.isScanning) {
+        // If the set of project IDs hasn't changed (only cell values like BPM,
+        // key, lastModified, etc. were updated), update cells in-place so group
+        // expansion state is never disturbed. Fall back to _rebuildRows() when
+        // projects are structurally added or removed.
+        if (_sameProjectIds(oldWidget.projects, widget.projects)) {
+          _updateCellsInPlace(widget.projects);
+        } else {
+          _rebuildRows();
+        }
+      }
     } else if (oldWidget.selectedIds != widget.selectedIds) {
       // Selection changed only — update cell values to invalidate renderer cache
       // without destroying rows (which would reset folder expanded/collapsed state).
