@@ -1098,8 +1098,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                 body: Builder(builder: (context) {
                   final col = Column(
           children: [
-            // Custom title bar – Windows/Linux only.
-            // macOS uses the native title bar + MacOSMenuBar for Theme/Language/Support.
+            // macOS left-rail: DesktopTitleBar is hoisted above the Row so
+            // the rail background doesn't start behind the traffic lights.
+            // All other cases: it sits at the top of this content column.
+            if (!(Platform.isMacOS && isLeftRail))
             DesktopTitleBar(
               title: AppLocalizations.of(context)!.appTitleWithVersion(appVersion),
               actions: [
@@ -1865,7 +1867,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
           ],
                 );
                 if (!isLeftRail) return col;
-                return Row(
+                final row = Row(
                   children: [
                     NavigationRail(
                       selectedIndex: _tabController.index,
@@ -1876,8 +1878,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                           : NavigationRailLabelType.all,
                       leading: Column(
                         children: [
-                          // Reserve space for macOS traffic-light buttons.
-                          if (Platform.isMacOS) const SizedBox(height: 28),
                           // Collapse/expand toggle
                           Tooltip(
                             message: railCollapsed
@@ -2137,6 +2137,17 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                       ),
                     ),
                     Expanded(child: col),
+                  ],
+                );
+                // macOS: hoist a full-width 28pt spacer above the Row so the
+                // NavigationRail background never starts behind the traffic lights.
+                if (!Platform.isMacOS) return row;
+                return Column(
+                  children: [
+                    DesktopTitleBar(
+                      title: AppLocalizations.of(context)!.appTitleWithVersion(appVersion),
+                    ),
+                    Expanded(child: row),
                   ],
                 );
                 }),
