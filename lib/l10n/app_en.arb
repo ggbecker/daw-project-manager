@@ -21,6 +21,7 @@
   "extractingMetadata": "Extracting metadata...",
   "deepScan": "Deep Scan",
   "rescan": "Rescan",
+  "refreshProject": "Refresh",
   "scanning": "Scanning…",
   "projectName": "Project Name",
   "bpm": "BPM",
@@ -1246,6 +1247,10 @@
   "googleDriveSync": "Google Drive Sync",
   "@googleDriveSync": {
     "description": "Title for Google Drive sync section"
+  },
+  "googleDrive": "Google Drive",
+  "@googleDrive": {
+    "description": "Short label for the Google Drive navigation button"
   },
   "googleDriveSyncDescription": "Sync your data with Google Drive to backup and restore across devices.",
   "@googleDriveSyncDescription": {
@@ -3060,5 +3065,9 @@
     "placeholders": {
       "folderName": { "type": "String" }
     }
-  }
+  },
+  "pendingProjectRefresh": "Check for project file",
+  "@pendingProjectRefresh": {},
+  "pendingProjectNotFound": "No project file found yet",
+  "@pendingProjectNotFound": {}
 }

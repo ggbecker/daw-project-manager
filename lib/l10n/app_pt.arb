@@ -21,6 +21,7 @@
   "extractingMetadata": "Extraindo metadados...",
   "deepScan": "Varredura Profunda",
   "rescan": "Reescanear",
+  "refreshProject": "Atualizar",
   "scanning": "Escaneando…",
   "projectName": "Nome do Projeto",
   "bpm": "BPM",
@@ -890,6 +891,7 @@
   "ageLessThanHour": "Menos de uma hora",
   "viewProfile": "Ver Perfil",
   "googleDriveSync": "Sincronização Google Drive",
+  "googleDrive": "Google Drive",
   "googleDriveSyncDescription": "Sincronize seus dados com o Google Drive para fazer backup e restaurar entre dispositivos.",
   "manageGoogleDriveSync": "Gerenciar Sincronização Google Drive",
   "signInToGoogleDrive": "Entrar no Google Drive",
@@ -2001,5 +2003,9 @@
     "placeholders": {
       "folderName": { "type": "String" }
     }
-  }
+  },
+  "pendingProjectRefresh": "Verificar arquivo de projeto",
+  "@pendingProjectRefresh": {},
+  "pendingProjectNotFound": "Nenhum arquivo de projeto encontrado ainda",
+  "@pendingProjectNotFound": {}
 }

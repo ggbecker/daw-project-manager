@@ -1096,77 +1096,16 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                         );
                       }(),
                 body: Builder(builder: (context) {
-                  final col = Column(
-          children: [
-            // Custom title bar – Windows/Linux only.
-            // macOS uses the native title bar + MacOSMenuBar for Theme/Language/Support.
-            DesktopTitleBar(
-              title: AppLocalizations.of(context)!.appTitleWithVersion(appVersion),
-              actions: [
-                // Donate button
-                Consumer(
-                  builder: (context, ref, child) {
-                    final l10n = AppLocalizations.of(context)!;
-                    return Tooltip(
-                      message: l10n.supportTheProject,
-                      child: TextButton.icon(
-                        icon: const Icon(Icons.card_giftcard, size: 18, color: Colors.white70),
-                        label: Text(
-                          l10n.support,
-                          style: const TextStyle(color: Colors.white70, fontSize: 14),
-                        ),
-                        onPressed: () async {
-                          final uri = Uri.parse('https://www.paypal.com/donate/?hosted_button_id=QHVVZ3LAF39BL');
-                          if (await canLaunchUrl(uri)) {
-                            await launchUrl(uri, mode: LaunchMode.externalApplication);
-                          }
-                        },
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(width: 8),
-                const ThemeSwitcher(),
-                const SizedBox(width: 8),
-                const LanguageSwitcher(),
-                const SizedBox(width: 8),
-                Tooltip(
-                  message: AppLocalizations.of(context)!.menuDocumentation,
-                  child: IconButton(
-                    icon: const Icon(Icons.menu_book_outlined, size: 18, color: Colors.white70),
-                    onPressed: () => launchUrl(
-                      Uri.parse('https://dpm.bandpassrecords.com/docs.html'),
-                      mode: LaunchMode.externalApplication,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Tooltip(
-                  message: AppLocalizations.of(context)!.keyboardShortcuts,
-                  child: IconButton(
-                    icon: const Icon(Icons.keyboard_outlined, size: 18, color: Colors.white70),
-                    onPressed: () => showShortcutsHelpDialog(context),
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Tooltip(
-                  message: AppLocalizations.of(context)!.customizeTabs,
-                  child: IconButton(
-                    icon: const Icon(Icons.tab_outlined, size: 18, color: Colors.white70),
-                    onPressed: () => showTabCustomizationDialog(context),
-                  ),
-                ),
-                const SizedBox(width: 4),
-              ],
-            ),
-            
-            // CONTEÚDO DA BARRA DE AÇÕES E PESQUISA
-            Builder(
+
+                  // Action bar: search field and filter toolbar.
+                  final actionBar = Builder(
               builder: (context) {
                 final isMobile = MobileUtils.isMobile();
                 if (isMobile) return const SizedBox.shrink();
                 return Padding(
-                  padding: MobileUtils.getResponsivePadding(context),
+                  padding: Platform.isMacOS
+                      ? const EdgeInsets.fromLTRB(16, 8, 16, 16)
+                      : MobileUtils.getResponsivePadding(context),
                   child: isMobile
                       ? Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1674,18 +1613,25 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                       ),
                     ),
                   const SizedBox(width: 16),
-                  // Active DAW session chip / idle suggestions
-                  Consumer(
-                    builder: (ctx, cRef, _) {
-                      final active = cRef.watch(activeProjectProvider);
-                      final suggestionsOn =
-                          cRef.watch(suggestionsEnabledProvider);
-                      if (active != null) return const _ActiveProjectChip();
-                      if (suggestionsOn) {
-                        return const _SessionIdleSuggestions();
-                      }
-                      return const SizedBox.shrink();
-                    },
+                  // Active DAW session chip / idle suggestions.
+                  // Fixed height prevents the bar from resizing when the chip appears.
+                  SizedBox(
+                    height: 56,
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: Consumer(
+                        builder: (ctx, cRef, _) {
+                          final active = cRef.watch(activeProjectProvider);
+                          final suggestionsOn =
+                              cRef.watch(suggestionsEnabledProvider);
+                          if (active != null) return const _ActiveProjectChip();
+                          if (suggestionsOn) {
+                            return const _SessionIdleSuggestions();
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 8),
                   // Search bar (desktop only — hidden on Playlists tab)
@@ -1712,12 +1658,17 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                               focusNode: _searchFocusNode,
                               controller: _searchController,
                               decoration: InputDecoration(
-                                hintText: switch (_currentTab) {
-                                  AppTab.projects   => AppLocalizations.of(context)!.searchProjects,
-                                  AppTab.releases   => AppLocalizations.of(context)!.searchReleases,
-                                  AppTab.queue      => AppLocalizations.of(context)!.queueSearchHint,
-                                  _                 => AppLocalizations.of(context)!.statsSearchProjects,
-                                },
+                                hintText: () {
+                                  final base = switch (_currentTab) {
+                                    AppTab.projects   => AppLocalizations.of(context)!.searchProjects,
+                                    AppTab.releases   => AppLocalizations.of(context)!.searchReleases,
+                                    AppTab.queue      => AppLocalizations.of(context)!.queueSearchHint,
+                                    _                 => AppLocalizations.of(context)!.statsSearchProjects,
+                                  };
+                                  if (!isLeftRail) return base;
+                                  final shortcut = Platform.isMacOS ? '⌘F' : 'Ctrl+F';
+                                  return '$base ($shortcut)';
+                                }(),
                                 isDense: true,
                                 border: const OutlineInputBorder(),
                                 prefixIcon: const Icon(Icons.search),
@@ -1758,10 +1709,81 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
               ),
             );
             },
-          ),
+                  );
+
+
+                  // Title bar (Windows/Linux) or traffic-light spacer (macOS).
+                  final titleBar = DesktopTitleBar(
+                    title: AppLocalizations.of(context)!.appTitleWithVersion(appVersion),
+                    actions: [
+                      // Donate button
+                      Consumer(
+                        builder: (context, ref, child) {
+                          final l10n = AppLocalizations.of(context)!;
+                          return Tooltip(
+                            message: l10n.supportTheProject,
+                            child: TextButton.icon(
+                              icon: const Icon(Icons.card_giftcard, size: 18, color: Colors.white70),
+                              label: Text(
+                                l10n.support,
+                                style: const TextStyle(color: Colors.white70, fontSize: 14),
+                              ),
+                              onPressed: () async {
+                                final uri = Uri.parse('https://www.paypal.com/donate/?hosted_button_id=QHVVZ3LAF39BL');
+                                if (await canLaunchUrl(uri)) {
+                                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                }
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      const ThemeSwitcher(),
+                      const SizedBox(width: 8),
+                      const LanguageSwitcher(),
+                      const SizedBox(width: 8),
+                      Tooltip(
+                        message: AppLocalizations.of(context)!.menuDocumentation,
+                        child: IconButton(
+                          icon: const Icon(Icons.menu_book_outlined, size: 18, color: Colors.white70),
+                          onPressed: () => launchUrl(
+                            Uri.parse('https://dpm.bandpassrecords.com/docs.html'),
+                            mode: LaunchMode.externalApplication,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Tooltip(
+                        message: AppLocalizations.of(context)!.keyboardShortcuts,
+                        child: IconButton(
+                          icon: const Icon(Icons.keyboard_outlined, size: 18, color: Colors.white70),
+                          onPressed: () => showShortcutsHelpDialog(context),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Tooltip(
+                        message: AppLocalizations.of(context)!.customizeTabs,
+                        child: IconButton(
+                          icon: const Icon(Icons.tab_outlined, size: 18, color: Colors.white70),
+                          onPressed: () => showTabCustomizationDialog(context),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                    ],
+                  );
+
+                  final col = Column(
+          children: [
+            // Hoisted above the Row when left rail is active; kept here otherwise.
+            if (!isLeftRail) titleBar,
+
+            // On macOS+left-rail the action bar is hoisted full-width
+            // above the Row. All other configs keep it here.
+            if (!(Platform.isMacOS && isLeftRail)) actionBar,
 
             // Zero-height anchor used to position the suggestions overlay.
-            if (!MobileUtils.isMobile())
+            if (!MobileUtils.isMobile() && !(Platform.isMacOS && isLeftRail))
               SizedBox(key: _suggestionsPanelAnchorKey, height: 0),
 
             // Project folders are managed in the dedicated desktop-only settings page.
@@ -1851,7 +1873,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
           ],
                 );
                 if (!isLeftRail) return col;
-                return Row(
+                final row = Row(
                   children: [
                     NavigationRail(
                       selectedIndex: _tabController.index,
@@ -2002,7 +2024,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                 ),
                                 if (!railCollapsed)
                                   Text(
-                                    AppLocalizations.of(context)!.googleDriveSync,
+                                    AppLocalizations.of(context)!.googleDrive,
                                     style: Theme.of(context).textTheme.labelSmall,
                                     textAlign: TextAlign.center,
                                   ),
@@ -2123,6 +2145,20 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                     Expanded(child: col),
                   ],
                 );
+                // Hoist the title bar above the Row on all desktop platforms so
+                // the NavigationRail background starts below the window chrome.
+                // On macOS the action bar is also hoisted (traffic-light geometry).
+                return Column(
+                  children: [
+                    titleBar,
+                    if (Platform.isMacOS) ...[
+                      actionBar,
+                      if (!MobileUtils.isMobile())
+                        SizedBox(key: _suggestionsPanelAnchorKey, height: 0),
+                    ],
+                    Expanded(child: row),
+                  ],
+                );
                 }),
               ),
               // Loading overlay
@@ -2191,6 +2227,15 @@ class _PlutoProjectsTableWithSelection extends ConsumerStatefulWidget {
 
 class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjectsTableWithSelection> {
   final _innerTableKey = GlobalKey<_PlutoProjectsTableState>();
+  final _groupExpandState = ValueNotifier<({bool hasGroups, bool anyExpanded})>(
+    (hasGroups: false, anyExpanded: false),
+  );
+
+  @override
+  void dispose() {
+    _groupExpandState.dispose();
+    super.dispose();
+  }
 
   void focusTable() => _innerTableKey.currentState?.focusTable();
 
@@ -2589,6 +2634,32 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
                     ref.read(phaseFilterProvider.notifier).setPhase(value);
                   },
                 ),
+                const Spacer(),
+                ValueListenableBuilder<({bool hasGroups, bool anyExpanded})>(
+                  valueListenable: _groupExpandState,
+                  builder: (context, state, _) {
+                    if (!state.hasGroups) return const SizedBox.shrink();
+                    return TextButton.icon(
+                      icon: Icon(
+                        state.anyExpanded ? Icons.unfold_less : Icons.unfold_more,
+                        size: 16,
+                      ),
+                      label: Text(
+                        state.anyExpanded
+                            ? '${l10n.collapse} All'
+                            : '${l10n.expand} All',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                      onPressed: () {
+                        if (state.anyExpanded) {
+                          _innerTableKey.currentState?._collapseAll();
+                        } else {
+                          _innerTableKey.currentState?._expandAll();
+                        }
+                      },
+                    );
+                  },
+                ),
               ],
           ),
         ),
@@ -2610,6 +2681,8 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
               }
             },
             onExtractingMetadataChanged: widget.onExtractingMetadataChanged,
+            isScanning: widget.isAnyOperation,
+            groupExpandNotifier: _groupExpandState,
           ),
         ),
         // Selection action bar
@@ -2798,6 +2871,8 @@ class _PlutoProjectsTable extends ConsumerStatefulWidget {
   final bool areAllSelected;
   final VoidCallback onToggleSelectAll;
   final Function(bool) onExtractingMetadataChanged;
+  final ValueNotifier<({bool hasGroups, bool anyExpanded})>? groupExpandNotifier;
+  final bool isScanning;
   const _PlutoProjectsTable({
     super.key,
     required this.projects,
@@ -2809,6 +2884,8 @@ class _PlutoProjectsTable extends ConsumerStatefulWidget {
     required this.areAllSelected,
     required this.onToggleSelectAll,
     required this.onExtractingMetadataChanged,
+    required this.isScanning,
+    this.groupExpandNotifier,
   });
 
   @override
@@ -2817,6 +2894,90 @@ class _PlutoProjectsTable extends ConsumerStatefulWidget {
 
 class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   TrinaGridStateManager? stateManager;
+  bool _isRebuildingRows = false;
+
+  // Returns true when the project set is identical (same IDs) — only cell
+  // values may have changed (BPM, key, lastModified, etc.). In that case we
+  // can update cells in-place instead of rebuilding the entire row tree, which
+  // avoids disturbing group expansion state.
+  bool _sameProjectIds(List<MusicProject> a, List<MusicProject> b) {
+    if (a.length != b.length) return false;
+    final aIds = a.map((p) => p.id).toSet();
+    final bIds = b.map((p) => p.id).toSet();
+    return aIds.length == bIds.length && aIds.containsAll(bIds);
+  }
+
+  // Returns true when the table rows already reflect the given project list.
+  // Used to detect when the table is stale after a profile switch: the widget's
+  // oldProjects and newProjects both hold the new-profile data (the in-flight
+  // update was suppressed by isScanning), but the rendered rows still contain
+  // the previous profile's IDs — so _sameProjectIds(old, new) would incorrectly
+  // green-light an in-place update that matches nothing.
+  bool _tableRowsMatchProjects(List<MusicProject> projects) {
+    final sm = stateManager;
+    if (sm == null) return false;
+    final rowIds = sm.refRows.originalList
+        .where((r) => r.isMain)
+        .map((r) => (r.cells['data']?.value as MusicProject?)?.id)
+        .whereType<String>()
+        .toSet();
+    final projectIds = projects.map((p) => p.id).toSet();
+    return rowIds.length == projectIds.length && rowIds.containsAll(projectIds);
+  }
+
+  void _updateCellsInPlace(List<MusicProject> newProjects) {
+    final sm = stateManager;
+    if (sm == null) return;
+
+    final projectById = {for (final p in newProjects) p.id: p};
+
+    String dawDisplay(MusicProject p) {
+      if (p.dawType == null) return '';
+      if (p.dawVersion?.isNotEmpty == true) return '${p.dawType} ${p.dawVersion}';
+      return p.dawType!;
+    }
+
+    void updateProjectRow(TrinaRow row) {
+      final project = row.cells['data']?.value as MusicProject?;
+      if (project == null) return;
+      final updated = projectById[project.id];
+      if (updated == null) return;
+      row.cells['data']!.value = updated;
+      row.cells['name']?.value = updated.displayName;
+      row.cells['status']?.value = updated.status;
+      row.cells['dawType']?.value = dawDisplay(updated);
+      row.cells['bpm']?.value = updated.bpm?.toString() ?? '';
+      row.cells['key']?.value = updated.musicalKey ?? '';
+      row.cells['lastModified']?.value = widget.dateFormat.format(updated.lastModifiedAt);
+      row.cells['deadline']?.value = updated.deadlineStatus ?? '';
+    }
+
+    // Walk top-level rows; for group rows also update their children (including
+    // children of collapsed groups that are not in refRows directly).
+    final topLevel = sm.refRows.originalList.where((r) => r.isMain).toList();
+    for (final row in topLevel) {
+      if (row.type.isGroup) {
+        DateTime? latestModified;
+        for (final child in row.type.group.children.originalList) {
+          updateProjectRow(child);
+          final p = projectById[(child.cells['data']?.value as MusicProject?)?.id];
+          if (p != null && (latestModified == null || p.lastModifiedAt.isAfter(latestModified))) {
+            latestModified = p.lastModifiedAt;
+          }
+        }
+        if (latestModified != null) {
+          row.cells['lastModified']?.value = widget.dateFormat.format(latestModified);
+        }
+      } else {
+        updateProjectRow(row);
+      }
+    }
+
+    sm.notifyListeners();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _updateGroupExpandNotifier();
+    });
+  }
 
   void focusTable() {
     final sm = stateManager;
@@ -2827,8 +2988,50 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     }
   }
 
+  void _updateGroupExpandNotifier() {
+    final sm = stateManager;
+    final notifier = widget.groupExpandNotifier;
+    if (notifier == null) return;
+    notifier.value = (
+      hasGroups: sm?.rows.any((r) => r.type.isGroup) ?? false,
+      anyExpanded: sm?.rows.any((r) => r.type.isGroup && r.type.group.expanded) ?? false,
+    );
+  }
+
   void _onStateManagerChanged() {
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    setState(() {});
+    if (!_isRebuildingRows) _updateGroupExpandNotifier();
+  }
+
+  void _rebuildRows() {
+    final sm = stateManager;
+    if (sm == null) return;
+    _isRebuildingRows = true;
+    final wasCollapsed = <String, bool>{};
+    for (final row in sm.rows) {
+      if (row.type.isGroup) {
+        wasCollapsed[row.cells['name']?.value as String? ?? ''] =
+            !row.type.group.expanded;
+      }
+    }
+    final newRows = _mapProjectsToRows(widget.projects);
+    sm.removeRows(sm.rows, notify: false);
+    sm.insertRows(0, newRows);
+    for (final row in sm.rows) {
+      if (row.type.isGroup) {
+        final name = row.cells['name']?.value as String? ?? '';
+        if (wasCollapsed[name] == true) sm.toggleExpandedRowGroup(rowGroup: row);
+      }
+    }
+    sm.notifyListeners();
+    _isRebuildingRows = false;
+    // _rebuildRows is called from didUpdateWidget (i.e. during the build phase).
+    // Setting ValueNotifier.value synchronously here would call setState on the
+    // ValueListenableBuilder in the parent tree mid-build. Defer to post-frame.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _updateGroupExpandNotifier();
+    });
   }
 
   void _collapseAll() {
@@ -3394,6 +3597,17 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         ),
         if (File(project.filePath).existsSync() || Directory(project.filePath).existsSync())
           PopupMenuItem<String>(
+            value: 'refresh',
+            child: Row(
+              children: [
+                const Icon(Icons.refresh, size: 20),
+                const SizedBox(width: 8),
+                Text(l10n.refreshProject),
+              ],
+            ),
+          ),
+        if (File(project.filePath).existsSync() || Directory(project.filePath).existsSync())
+          PopupMenuItem<String>(
             value: 'extractMetadata',
             child: Row(
               children: [
@@ -3446,6 +3660,22 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           break;
         case 'unhide':
           widget.onUnhideProjects([project.id]);
+          break;
+        case 'refresh':
+          try {
+            final repo = await ref.read(repositoryProvider.future);
+            final entity = Directory(project.filePath).existsSync()
+                ? Directory(project.filePath) as FileSystemEntity
+                : File(project.filePath);
+            await repo.upsertFromFileSystemEntity(entity, fullMetadata: true);
+            ref.invalidate(allProjectsStreamProvider);
+          } catch (e) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('${l10n.error}: $e')),
+              );
+            }
+          }
           break;
         case 'extractMetadata':
           widget.onExtractingMetadataChanged(true);
@@ -3582,36 +3812,24 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   @override
   void didUpdateWidget(_PlutoProjectsTable oldWidget) {
     super.didUpdateWidget(oldWidget);
-    
-    if (oldWidget.projects != widget.projects) {
-      if (stateManager != null) {
-        // Snapshot collapsed state of group rows before replacing, so Smart
-        // Folder groups that the user collapsed stay collapsed after a data
-        // refresh (e.g. metadata extraction).
-        final wasCollapsed = <String, bool>{};
-        for (final row in stateManager!.rows) {
-          if (row.type.isGroup) {
-            final name = row.cells['name']?.value as String? ?? '';
-            wasCollapsed[name] = !row.type.group.expanded;
-          }
+
+    final projectsChanged = oldWidget.projects != widget.projects;
+    final scanJustFinished = oldWidget.isScanning && !widget.isScanning;
+
+    if (projectsChanged || scanJustFinished) {
+      // While scanning, skip every intermediate update — the blocking overlay
+      // covers the table. Do one clean rebuild when the scan finishes.
+      if (!widget.isScanning) {
+        // If the set of project IDs hasn't changed (only cell values like BPM,
+        // key, lastModified, etc. were updated), update cells in-place so group
+        // expansion state is never disturbed. Fall back to _rebuildRows() when
+        // projects are structurally added or removed.
+        if (_sameProjectIds(oldWidget.projects, widget.projects) &&
+            _tableRowsMatchProjects(widget.projects)) {
+          _updateCellsInPlace(widget.projects);
+        } else {
+          _rebuildRows();
         }
-
-        final newRows = _mapProjectsToRows(widget.projects);
-        stateManager!.removeRows(stateManager!.rows, notify: false);
-        stateManager!.insertRows(0, newRows);
-
-        // Restore collapsed state — new group rows default to expanded,
-        // so only toggle the ones that were collapsed.
-        for (final row in stateManager!.rows) {
-          if (row.type.isGroup) {
-            final name = row.cells['name']?.value as String? ?? '';
-            if (wasCollapsed[name] == true) {
-              stateManager!.toggleExpandedRowGroup(rowGroup: row);
-            }
-          }
-        }
-
-        stateManager!.notifyListeners();
       }
     } else if (oldWidget.selectedIds != widget.selectedIds) {
       // Selection changed only — update cell values to invalidate renderer cache
@@ -4372,6 +4590,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               ),
             );
             stateManager!.addListener(_onStateManagerChanged);
+            _updateGroupExpandNotifier();
           },
       onRowSecondaryTap: (TrinaGridOnRowSecondaryTapEvent event) {
         final project = event.row.cells['data']?.value as MusicProject?;
@@ -4552,35 +4771,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       ),
     );
 
-    final sm = stateManager;
-    final hasGroups = sm != null && sm.rows.any((r) => r.type.isGroup);
-    if (!hasGroups) return dropTarget;
-
-    final anyExpanded = sm.rows.any((r) => r.type.isGroup && r.type.group.expanded);
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton.icon(
-                icon: Icon(
-                  anyExpanded ? Icons.unfold_less : Icons.unfold_more,
-                  size: 16,
-                ),
-                label: Text(
-                  anyExpanded ? '${l10n.collapse} All' : '${l10n.expand} All',
-                  style: const TextStyle(fontSize: 12),
-                ),
-                onPressed: anyExpanded ? _collapseAll : _expandAll,
-              ),
-            ],
-          ),
-        ),
-        Expanded(child: dropTarget),
-      ],
-    );
+    return dropTarget;
   }
 
   @override
@@ -5110,22 +5301,31 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
               ),
             ),
             const SizedBox(width: 8),
-            _isGeneratingMono
-                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                : FilterChip(
-                    avatar: Icon(
-                      _isMono ? Icons.check_box : Icons.check_box_outline_blank,
-                      size: 16,
-                      color: _isMono ? Colors.red : null,
-                    ),
-                    label: Text('Mono', style: TextStyle(color: _isMono ? Colors.red : null, fontWeight: _isMono ? FontWeight.bold : null)),
-                    tooltip: 'Toggle mono playback',
-                    selected: _isMono,
-                    showCheckmark: false,
-                    selectedColor: Colors.red.withValues(alpha: 0.15),
-                    onSelected: (_) => _toggleMono(),
-                    visualDensity: VisualDensity.compact,
+            Tooltip(
+              message: 'Toggle mono playback',
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 18, height: 18,
+                    child: _isGeneratingMono
+                        ? const CircularProgressIndicator(strokeWidth: 2)
+                        : Checkbox(
+                            value: _isMono,
+                            onChanged: (_) => _toggleMono(),
+                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            visualDensity: VisualDensity.compact,
+                            activeColor: Colors.red,
+                          ),
                   ),
+                  const SizedBox(width: 6),
+                  GestureDetector(
+                    onTap: _isGeneratingMono ? null : _toggleMono,
+                    child: Text('Mono', style: TextStyle(color: _isMono ? Colors.red : null)),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ],
@@ -5241,22 +5441,31 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
         const SizedBox(height: 4),
         Row(
           children: [
-            _isGeneratingMono
-                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                : FilterChip(
-                    avatar: Icon(
-                      _isMono ? Icons.check_box : Icons.check_box_outline_blank,
-                      size: 16,
-                      color: _isMono ? Colors.red : null,
-                    ),
-                    label: Text('Mono', style: TextStyle(color: _isMono ? Colors.red : null, fontWeight: _isMono ? FontWeight.bold : null)),
-                    tooltip: 'Toggle mono playback',
-                    selected: _isMono,
-                    showCheckmark: false,
-                    selectedColor: Colors.red.withValues(alpha: 0.15),
-                    onSelected: (_) => _toggleMono(),
-                    visualDensity: VisualDensity.compact,
+            Tooltip(
+              message: 'Toggle mono playback',
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 18, height: 18,
+                    child: _isGeneratingMono
+                        ? const CircularProgressIndicator(strokeWidth: 2)
+                        : Checkbox(
+                            value: _isMono,
+                            onChanged: (_) => _toggleMono(),
+                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            visualDensity: VisualDensity.compact,
+                            activeColor: Colors.red,
+                          ),
                   ),
+                  const SizedBox(width: 6),
+                  GestureDetector(
+                    onTap: _isGeneratingMono ? null : _toggleMono,
+                    child: Text('Mono', style: TextStyle(color: _isMono ? Colors.red : null)),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(width: 12),
             Builder(builder: (ctx) {
               final dim = Theme.of(ctx).textTheme.bodySmall?.color;
@@ -5577,6 +5786,7 @@ class _DesktopPlayerBar extends ConsumerStatefulWidget {
 class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
   late AudioPlayer _player;
   bool _isPlaying = false;
+  bool _playbackEnded = false;
   Duration _position = Duration.zero;
   Duration _duration = Duration.zero;
   double _volume = 1.0;
@@ -5662,7 +5872,7 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
     });
     _player.onPlayerComplete.listen((_) {
       if (!mounted) return;
-      setState(() { _isPlaying = false; _position = Duration.zero; });
+      setState(() { _isPlaying = false; _position = Duration.zero; _playbackEnded = true; });
       if (widget.request.isQueuedPlayback) {
         ref.read(desktopPlayerCompletedProvider.notifier).increment();
       }
@@ -5679,6 +5889,7 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
       _player.stop();
       setState(() {
         _isPlaying = false;
+        _playbackEnded = false;
         _position = Duration.zero;
         _duration = Duration.zero;
         _isMono = false;
@@ -5771,7 +5982,12 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
     if (_isPlaying) {
       await _player.pause();
     } else {
-      if (_duration > Duration.zero && _position >= _duration) {
+      if (_playbackEnded) {
+        setState(() => _playbackEnded = false);
+        await _player.stop();
+        await _player.play(DeviceFileSource(_activePath),
+            position: _position > Duration.zero ? _position : null);
+      } else if (_position == Duration.zero || _position >= _duration) {
         await _player.play(DeviceFileSource(_activePath));
       } else {
         await _player.resume();
@@ -5985,21 +6201,31 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
                   const SizedBox(width: 8),
                   // Mono toggle
                   if (_supportsMonoMix())
-                    _isGeneratingMono
-                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                        : FilterChip(
-                            avatar: Icon(
-                              _isMono ? Icons.check_box : Icons.check_box_outline_blank,
-                              size: 16,
-                              color: _isMono ? Colors.red : null,
-                            ),
-                            label: Text('Mono', style: TextStyle(fontSize: 11, color: _isMono ? Colors.red : null, fontWeight: _isMono ? FontWeight.bold : null)),
-                            selected: _isMono, showCheckmark: false,
-                            selectedColor: Colors.red.withValues(alpha: 0.15),
-                            onSelected: (_) => _toggleMono(),
-                            visualDensity: VisualDensity.compact,
-                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    Tooltip(
+                      message: 'Toggle mono playback',
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            width: 18, height: 18,
+                            child: _isGeneratingMono
+                                ? const CircularProgressIndicator(strokeWidth: 2)
+                                : Checkbox(
+                                    value: _isMono,
+                                    onChanged: (_) => _toggleMono(),
+                                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                    visualDensity: VisualDensity.compact,
+                                    activeColor: Colors.red,
+                                  ),
                           ),
+                          const SizedBox(width: 6),
+                          GestureDetector(
+                            onTap: _isGeneratingMono ? null : _toggleMono,
+                            child: Text('Mono', style: TextStyle(fontSize: 11, color: _isMono ? Colors.red : null)),
+                          ),
+                        ],
+                      ),
+                    ),
                   const SizedBox(width: 8),
                   // File info
                   Text(
@@ -6075,9 +6301,9 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
                   onSeek: (p) {
                     _focusNode.requestFocus();
                     if (_duration > Duration.zero) {
-                      _player.seek(Duration(
-                        milliseconds: (p * _duration.inMilliseconds).round(),
-                      ));
+                      final target = Duration(milliseconds: (p * _duration.inMilliseconds).round());
+                      setState(() => _position = target);
+                      _player.seek(target);
                     }
                   },
                 ),
@@ -7702,7 +7928,6 @@ class _ActiveProjectChipState extends ConsumerState<_ActiveProjectChip>
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
-      margin: const EdgeInsets.symmetric(vertical: 3),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: chipColor.withValues(alpha: 0.15),
@@ -8227,6 +8452,23 @@ class _PendingFolderRow extends ConsumerWidget {
               tooltip: l10n.openFolder,
               visualDensity: VisualDensity.compact,
               onPressed: () => FileLauncher.openFolder(pf.path),
+            ),
+            // Refresh — re-check whether a project file has appeared
+            IconButton(
+              icon: const Icon(Icons.refresh, size: 18),
+              tooltip: l10n.pendingProjectRefresh,
+              visualDensity: VisualDensity.compact,
+              onPressed: () async {
+                final repo = await ref.read(repositoryProvider.future);
+                final resolved = await repo.resolveCompletedPendingFolders();
+                if (resolved.contains(pf.id)) {
+                  ref.read(pendingFoldersDirtyProvider.notifier).bump();
+                } else if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(l10n.pendingProjectNotFound)),
+                  );
+                }
+              },
             ),
             // Delete — always visible; dialog content varies based on whether
             // user files exist inside the folder.

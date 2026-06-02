@@ -63,6 +63,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get rescan => 'Повторное сканирование';
 
   @override
+  String get refreshProject => 'Обновить';
+
+  @override
   String get scanning => 'Сканирование…';
 
   @override
@@ -1254,6 +1257,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get googleDriveSync => 'Синхронизация Google Drive';
+
+  @override
+  String get googleDrive => 'Google Drive';
 
   @override
   String get googleDriveSyncDescription =>
@@ -3048,4 +3054,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String pendingProjectDeleteNotEmptyBody(String folderName) {
     return 'Папка «$folderName» содержит файлы. Удалить всё безвозвратно?';
   }
+
+  @override
+  String get pendingProjectRefresh => 'Проверить файл проекта';
+
+  @override
+  String get pendingProjectNotFound => 'Файл проекта пока не найден';
 }

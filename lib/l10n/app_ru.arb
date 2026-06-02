@@ -21,6 +21,7 @@
   "extractingMetadata": "Извлечение метаданных...",
   "deepScan": "Глубокое сканирование",
   "rescan": "Повторное сканирование",
+  "refreshProject": "Обновить",
   "scanning": "Сканирование…",
   "projectName": "Название проекта",
   "bpm": "BPM",
@@ -890,6 +891,7 @@
   "ageLessThanHour": "Менее часа",
   "viewProfile": "Просмотр профиля",
   "googleDriveSync": "Синхронизация Google Drive",
+  "googleDrive": "Google Drive",
   "googleDriveSyncDescription": "Синхронизируйте свои данные с Google Drive для резервного копирования и восстановления между устройствами.",
   "manageGoogleDriveSync": "Управление синхронизацией Google Drive",
   "signInToGoogleDrive": "Войти в Google Drive",
@@ -1977,5 +1979,9 @@
     "placeholders": {
       "folderName": { "type": "String" }
     }
-  }
+  },
+  "pendingProjectRefresh": "Проверить файл проекта",
+  "@pendingProjectRefresh": {},
+  "pendingProjectNotFound": "Файл проекта пока не найден",
+  "@pendingProjectNotFound": {}
 }
