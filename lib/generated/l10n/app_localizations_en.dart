@@ -3095,4 +3095,7 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get selectPhaseColor => 'Select color';
 }

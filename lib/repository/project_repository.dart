@@ -74,6 +74,22 @@ class ProjectRepository {
   Future<void> setCustomPhases(List<String> phases) async =>
       appSettingsBox.put(_customPhasesKey, jsonEncode(phases));
 
+  // Phase Colors — per-profile map of phase name → '#RRGGBB' hex string
+  String get _phaseColorsKey => '${profileId}_phase_colors';
+
+  Map<String, String> getPhaseColors() {
+    final raw = appSettingsBox.get(_phaseColorsKey);
+    if (raw == null) return const {};
+    try {
+      return Map<String, String>.from(jsonDecode(raw) as Map);
+    } catch (_) {
+      return const {};
+    }
+  }
+
+  Future<void> setPhaseColors(Map<String, String> colors) async =>
+      appSettingsBox.put(_phaseColorsKey, jsonEncode(colors));
+
   // Pending Folders — stored as JSON list in the per-profile app_settings slot
   String get _pendingFoldersKey => '${profileId}_pending_folders';
 

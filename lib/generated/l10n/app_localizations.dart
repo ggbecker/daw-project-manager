@@ -5281,6 +5281,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 project uses this phase} other{{count} projects use this phase}}'**
   String deletePhaseWarning(int count);
+
+  /// No description provided for @selectPhaseColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Select color'**
+  String get selectPhaseColor;
 }
 
 class _AppLocalizationsDelegate

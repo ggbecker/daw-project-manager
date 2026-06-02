@@ -26,6 +26,7 @@ import 'widgets/startup_dialog.dart';
 import 'widgets/tab_customization_dialog.dart';
 import '../services/dock_menu_service.dart';
 import '../utils/mobile_utils.dart';
+import '../utils/phase_colors.dart';
 import '../providers/theme_provider.dart';
 import '../utils/file_launcher.dart';
 import '../utils/search_utils.dart';
@@ -3317,34 +3318,11 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     }
   }
 
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'Idea':
-        return Colors.blue.shade300;
-      case 'Arranging':
-        return Colors.orange.shade300;
-      case 'Mixing':
-        return Colors.purple.shade300;
-      case 'Mastering':
-        return Colors.pink.shade300;
-      case 'Finished':
-        return Colors.green.shade300;
-      default:
-        const palette = [
-          Color(0xFF4DB6AC), // teal
-          Color(0xFF4DD0E1), // cyan
-          Color(0xFFFFD54F), // amber
-          Color(0xFFFF8A65), // deepOrange
-          Color(0xFF7986CB), // indigo
-          Color(0xFFA5D6A7), // lightGreen
-          Color(0xFFF48FB1), // pinkLight
-          Color(0xFFCE93D8), // purpleLight
-        ];
-        final phases = ref.read(customPhasesProvider);
-        final idx = phases.indexOf(status);
-        return idx >= 0 ? palette[idx % palette.length] : Colors.grey.shade400;
-    }
-  }
+  Color _getStatusColor(String status) => resolvePhaseColor(
+        status,
+        ref.read(phaseColorsProvider),
+        ref.read(customPhasesProvider),
+      );
 
   String? _getDawLogoPath(String? dawType) {
     if (dawType == null || dawType.isEmpty) return null;
@@ -3468,7 +3446,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     Offset position,
     TrinaColumnRendererContext rendererContext,
   ) async {
-    const phases = ['Idea', 'Arranging', 'Mixing', 'Mastering', 'Finished'];
+    final phases = ref.read(customPhasesProvider);
     final selected = await showMenu<String>(
       context: context,
       position: RelativeRect.fromLTRB(position.dx, position.dy, position.dx, position.dy),
@@ -3845,6 +3823,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    ref.watch(phaseColorsProvider); // rebuild when phase colors change
     // When the search query changes, ask TrinaGrid to repaint so the
     // "matched in description" icon in the name renderer reflects the new query.
     ref.listen(projectsSearchProvider, (prev, next) {
@@ -6591,38 +6570,16 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
     }
   }
 
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'Idea':
-        return Colors.blue.shade300;
-      case 'Arranging':
-        return Colors.orange.shade300;
-      case 'Mixing':
-        return Colors.purple.shade300;
-      case 'Mastering':
-        return Colors.pink.shade300;
-      case 'Finished':
-        return Colors.green.shade300;
-      default:
-        const palette = [
-          Color(0xFF4DB6AC),
-          Color(0xFF4DD0E1),
-          Color(0xFFFFD54F),
-          Color(0xFFFF8A65),
-          Color(0xFF7986CB),
-          Color(0xFFA5D6A7),
-          Color(0xFFF48FB1),
-          Color(0xFFCE93D8),
-        ];
-        final phases = ref.read(customPhasesProvider);
-        final idx = phases.indexOf(status);
-        return idx >= 0 ? palette[idx % palette.length] : Colors.grey.shade400;
-    }
-  }
+  Color _getStatusColor(String status) => resolvePhaseColor(
+        status,
+        ref.read(phaseColorsProvider),
+        ref.read(customPhasesProvider),
+      );
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    ref.watch(phaseColorsProvider); // rebuild when colors change
 
     if (widget.projects.isEmpty) {
       final allProjectsAsync = ref.watch(allProjectsStreamProvider);

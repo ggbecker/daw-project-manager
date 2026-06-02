@@ -8,6 +8,7 @@ import '../generated/l10n/app_localizations.dart';
 import '../models/project_event.dart';
 import '../models/music_project.dart';
 import '../providers/providers.dart';
+import '../utils/phase_colors.dart';
 import 'project_detail_page.dart';
 import 'widgets/project_event_chart.dart';
 
@@ -290,6 +291,7 @@ class _PhaseDistributionChart extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final phases = ref.watch(customPhasesProvider);
+    final storedColors = ref.watch(phaseColorsProvider);
     final counts = stats.countPerPhase;
     final total = counts.values.fold(0, (a, b) => a + b);
     if (total == 0) {
@@ -304,7 +306,7 @@ class _PhaseDistributionChart extends ConsumerWidget {
         barRods: [
           BarChartRodData(
             toY: (counts[phase] ?? 0).toDouble(),
-            color: _phaseColor(phase),
+            color: resolvePhaseColor(phase, storedColors, phases),
             width: 22,
             borderRadius: BorderRadius.circular(4),
           ),
@@ -387,6 +389,7 @@ class _AvgTimePerPhaseChart extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final phases = ref.watch(customPhasesProvider);
+    final storedColors = ref.watch(phaseColorsProvider);
     final avgDays = stats.avgDaysPerPhase;
     if (avgDays.isEmpty) {
       return _NoDataPlaceholder(message: l10n.statsNoPhaseData);
@@ -400,7 +403,7 @@ class _AvgTimePerPhaseChart extends ConsumerWidget {
         barRods: [
           BarChartRodData(
             toY: avgDays[phase] ?? 0.0,
-            color: _phaseColor(phase).withOpacity(0.7),
+            color: resolvePhaseColor(phase, storedColors, phases).withValues(alpha: 0.7),
             width: 22,
             borderRadius: BorderRadius.circular(4),
           ),

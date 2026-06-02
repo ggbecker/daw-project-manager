@@ -3086,31 +3086,35 @@ class AppLocalizationsEs extends AppLocalizations {
   String get pendingProjectNotFound => 'Aún no se encontró archivo de proyecto';
 
   @override
-  String get phases => 'Phases';
+  String get phases => 'Fases';
 
   @override
-  String get phasesSubtitle => 'Add, remove, and reorder project phases';
+  String get phasesSubtitle =>
+      'Agregar, eliminar y reordenar fases del proyecto';
 
   @override
-  String get resetToDefaults => 'Reset to defaults';
+  String get resetToDefaults => 'Restablecer predeterminados';
 
   @override
-  String get addPhase => 'Add phase';
+  String get addPhase => 'Agregar fase';
 
   @override
-  String get phaseNameHint => 'Phase name';
+  String get phaseNameHint => 'Nombre de fase';
 
   @override
-  String get phaseDuplicateError => 'A phase with that name already exists';
+  String get phaseDuplicateError => 'Ya existe una fase con ese nombre';
 
   @override
   String deletePhaseWarning(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count projects use this phase',
-      one: '1 project uses this phase',
+      other: '$count proyectos usan esta fase',
+      one: '1 proyecto usa esta fase',
     );
     return '$_temp0';
   }
+
+  @override
+  String get selectPhaseColor => 'Seleccionar color';
 }

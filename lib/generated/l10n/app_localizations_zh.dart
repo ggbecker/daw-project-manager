@@ -2965,31 +2965,34 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pendingProjectNotFound => '尚未找到项目文件';
 
   @override
-  String get phases => 'Phases';
+  String get phases => '阶段';
 
   @override
-  String get phasesSubtitle => 'Add, remove, and reorder project phases';
+  String get phasesSubtitle => '添加、删除和重新排序项目阶段';
 
   @override
-  String get resetToDefaults => 'Reset to defaults';
+  String get resetToDefaults => '恢复默认设置';
 
   @override
-  String get addPhase => 'Add phase';
+  String get addPhase => '添加阶段';
 
   @override
-  String get phaseNameHint => 'Phase name';
+  String get phaseNameHint => '阶段名称';
 
   @override
-  String get phaseDuplicateError => 'A phase with that name already exists';
+  String get phaseDuplicateError => '已存在同名阶段';
 
   @override
   String deletePhaseWarning(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count projects use this phase',
-      one: '1 project uses this phase',
+      other: '$count个项目使用此阶段',
+      one: '1个项目使用此阶段',
     );
     return '$_temp0';
   }
+
+  @override
+  String get selectPhaseColor => '选择颜色';
 }

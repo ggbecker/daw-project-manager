@@ -3097,28 +3097,32 @@ class AppLocalizationsFr extends AppLocalizations {
   String get phases => 'Phases';
 
   @override
-  String get phasesSubtitle => 'Add, remove, and reorder project phases';
+  String get phasesSubtitle =>
+      'Ajouter, supprimer et réorganiser les phases du projet';
 
   @override
-  String get resetToDefaults => 'Reset to defaults';
+  String get resetToDefaults => 'Réinitialiser par défaut';
 
   @override
-  String get addPhase => 'Add phase';
+  String get addPhase => 'Ajouter une phase';
 
   @override
-  String get phaseNameHint => 'Phase name';
+  String get phaseNameHint => 'Nom de la phase';
 
   @override
-  String get phaseDuplicateError => 'A phase with that name already exists';
+  String get phaseDuplicateError => 'Une phase avec ce nom existe déjà';
 
   @override
   String deletePhaseWarning(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count projects use this phase',
-      one: '1 project uses this phase',
+      other: '$count projets utilisent cette phase',
+      one: '1 projet utilise cette phase',
     );
     return '$_temp0';
   }
+
+  @override
+  String get selectPhaseColor => 'Sélectionner une couleur';
 }

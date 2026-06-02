@@ -3091,5 +3091,7 @@
     "placeholders": {
       "count": { "type": "int" }
     }
-  }
+  },
+  "selectPhaseColor": "Select color",
+  "@selectPhaseColor": {}
 }

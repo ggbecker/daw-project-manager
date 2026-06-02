@@ -1987,5 +1987,13 @@
   "pendingProjectRefresh": "Cerca il file di progetto",
   "@pendingProjectRefresh": {},
   "pendingProjectNotFound": "Nessun file di progetto trovato ancora",
-  "@pendingProjectNotFound": {}
+  "@pendingProjectNotFound": {},
+  "phases": "Fasi",
+  "phasesSubtitle": "Aggiungi, rimuovi e riordina le fasi del progetto",
+  "resetToDefaults": "Ripristina predefiniti",
+  "addPhase": "Aggiungi fase",
+  "phaseNameHint": "Nome della fase",
+  "phaseDuplicateError": "Esiste già una fase con quel nome",
+  "deletePhaseWarning": "{count, plural, =1{1 progetto usa questa fase} other{{count} progetti usano questa fase}}",
+  "selectPhaseColor": "Seleziona colore"
 }

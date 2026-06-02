@@ -1987,5 +1987,13 @@
   "pendingProjectRefresh": "Проверить файл проекта",
   "@pendingProjectRefresh": {},
   "pendingProjectNotFound": "Файл проекта пока не найден",
-  "@pendingProjectNotFound": {}
+  "@pendingProjectNotFound": {},
+  "phases": "Фазы",
+  "phasesSubtitle": "Добавление, удаление и изменение порядка фаз проекта",
+  "resetToDefaults": "Сбросить до стандартных",
+  "addPhase": "Добавить фазу",
+  "phaseNameHint": "Название фазы",
+  "phaseDuplicateError": "Фаза с таким названием уже существует",
+  "deletePhaseWarning": "{count, plural, one{{count} проект использует эту фазу} few{{count} проекта используют эту фазу} many{{count} проектов используют эту фазу} other{{count} проектов используют эту фазу}}",
+  "selectPhaseColor": "Выбрать цвет"
 }

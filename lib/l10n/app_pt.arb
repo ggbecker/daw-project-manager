@@ -2011,5 +2011,13 @@
   "pendingProjectRefresh": "Verificar arquivo de projeto",
   "@pendingProjectRefresh": {},
   "pendingProjectNotFound": "Nenhum arquivo de projeto encontrado ainda",
-  "@pendingProjectNotFound": {}
+  "@pendingProjectNotFound": {},
+  "phases": "Fases",
+  "phasesSubtitle": "Adicionar, remover e reordenar fases do projeto",
+  "resetToDefaults": "Restaurar padrões",
+  "addPhase": "Adicionar fase",
+  "phaseNameHint": "Nome da fase",
+  "phaseDuplicateError": "Já existe uma fase com esse nome",
+  "deletePhaseWarning": "{count, plural, =1{1 projeto usa esta fase} other{{count} projetos usam esta fase}}",
+  "selectPhaseColor": "Selecionar cor"
 }

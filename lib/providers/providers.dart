@@ -11,6 +11,7 @@ import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import '../utils/app_paths.dart';
 import '../utils/mobile_utils.dart';
+import '../utils/phase_colors.dart';
 
 import '../generated/l10n/app_localizations.dart';
 import '../models/music_project.dart';
@@ -658,6 +659,15 @@ final customPhasesProvider = Provider<List<String>>((ref) {
   final repo = ref.watch(repositoryProvider).asData?.value;
   return repo?.getCustomPhases() ??
       const ['Idea', 'Arranging', 'Mixing', 'Mastering', 'Finished'];
+});
+
+// Phase color provider — per-profile map of phase name → Color
+final phaseColorsProvider = Provider<Map<String, Color>>((ref) {
+  final repo = ref.watch(repositoryProvider).asData?.value;
+  if (repo == null) return const {};
+  return repo.getPhaseColors().map(
+    (phase, hex) => MapEntry(phase, hexToColor(hex)),
+  );
 });
 
 // Deadline Filter Enum

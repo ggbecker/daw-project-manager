@@ -3068,31 +3068,37 @@ class AppLocalizationsRu extends AppLocalizations {
   String get pendingProjectNotFound => 'Файл проекта пока не найден';
 
   @override
-  String get phases => 'Phases';
+  String get phases => 'Фазы';
 
   @override
-  String get phasesSubtitle => 'Add, remove, and reorder project phases';
+  String get phasesSubtitle =>
+      'Добавление, удаление и изменение порядка фаз проекта';
 
   @override
-  String get resetToDefaults => 'Reset to defaults';
+  String get resetToDefaults => 'Сбросить до стандартных';
 
   @override
-  String get addPhase => 'Add phase';
+  String get addPhase => 'Добавить фазу';
 
   @override
-  String get phaseNameHint => 'Phase name';
+  String get phaseNameHint => 'Название фазы';
 
   @override
-  String get phaseDuplicateError => 'A phase with that name already exists';
+  String get phaseDuplicateError => 'Фаза с таким названием уже существует';
 
   @override
   String deletePhaseWarning(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count projects use this phase',
-      one: '1 project uses this phase',
+      other: '$count проектов используют эту фазу',
+      many: '$count проектов используют эту фазу',
+      few: '$count проекта используют эту фазу',
+      one: '$count проект использует эту фазу',
     );
     return '$_temp0';
   }
+
+  @override
+  String get selectPhaseColor => 'Выбрать цвет';
 }
