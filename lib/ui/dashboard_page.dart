@@ -2383,6 +2383,7 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
     final finishedMode = ref.watch(showFinishedProjectsProvider);
     final finishedNotifier = ref.read(showFinishedProjectsProvider.notifier);
     final phaseFilter = ref.watch(phaseFilterProvider);
+    final customPhases = ref.watch(customPhasesProvider);
     final l10n = AppLocalizations.of(context)!;
 
     return Column(
@@ -2569,11 +2570,10 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
                   icon: Icon(Icons.filter_list, size: 16, color: Theme.of(context).textTheme.bodyMedium?.color),
                   items: [
                     DropdownMenuItem<String>(value: null, child: Text(l10n.allPhases)),
-                    DropdownMenuItem<String>(value: 'Idea', child: Text(l10n.projectPhaseIdea)),
-                    DropdownMenuItem<String>(value: 'Arranging', child: Text(l10n.projectPhaseArranging)),
-                    DropdownMenuItem<String>(value: 'Mixing', child: Text(l10n.projectPhaseMixing)),
-                    DropdownMenuItem<String>(value: 'Mastering', child: Text(l10n.projectPhaseMastering)),
-                    DropdownMenuItem<String>(value: 'Finished', child: Text(l10n.projectPhaseFinished)),
+                    ...customPhases.map((phase) => DropdownMenuItem<String>(
+                      value: phase,
+                      child: Text(_translateStatus(context, phase)),
+                    )),
                   ],
                   onChanged: (String? value) {
                     ref.read(phaseFilterProvider.notifier).setPhase(value);

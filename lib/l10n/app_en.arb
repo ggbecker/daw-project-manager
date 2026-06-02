@@ -2796,6 +2796,10 @@
   "@playerNextTrack": {},
   "playerOpenProject": "Open project",
   "@playerOpenProject": {},
+  "playerRepeatAll": "Repeat all",
+  "@playerRepeatAll": {},
+  "playerShuffle": "Shuffle",
+  "@playerShuffle": {},
   "volumeMute": "Mute",
   "@volumeMute": {},
   "volumeUnmute": "Unmute",
@@ -3069,5 +3073,23 @@
   "pendingProjectRefresh": "Check for project file",
   "@pendingProjectRefresh": {},
   "pendingProjectNotFound": "No project file found yet",
-  "@pendingProjectNotFound": {}
+  "@pendingProjectNotFound": {},
+  "phases": "Phases",
+  "@phases": {},
+  "phasesSubtitle": "Add, remove, and reorder project phases",
+  "@phasesSubtitle": {},
+  "resetToDefaults": "Reset to defaults",
+  "@resetToDefaults": {},
+  "addPhase": "Add phase",
+  "@addPhase": {},
+  "phaseNameHint": "Phase name",
+  "@phaseNameHint": {},
+  "phaseDuplicateError": "A phase with that name already exists",
+  "@phaseDuplicateError": {},
+  "deletePhaseWarning": "{count, plural, =1{1 project uses this phase} other{{count} projects use this phase}}",
+  "@deletePhaseWarning": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  }
 }

@@ -1111,6 +1111,7 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
                             Consumer(
                               builder: (context, ref, _) {
                                 final phaseFilter = ref.watch(phaseFilterProvider);
+                                final customPhases = ref.watch(customPhasesProvider);
                                 final l10n = AppLocalizations.of(context)!;
                                 return Row(
                                   children: [
@@ -1123,11 +1124,10 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
                                       hint: Text(l10n.allPhases),
                                       items: [
                                         DropdownMenuItem(value: null, child: Text(l10n.allPhases)),
-                                        DropdownMenuItem(value: 'Idea', child: Text(l10n.projectPhaseIdea)),
-                                        DropdownMenuItem(value: 'Arranging', child: Text(l10n.projectPhaseArranging)),
-                                        DropdownMenuItem(value: 'Mixing', child: Text(l10n.projectPhaseMixing)),
-                                        DropdownMenuItem(value: 'Mastering', child: Text(l10n.projectPhaseMastering)),
-                                        DropdownMenuItem(value: 'Finished', child: Text(l10n.projectPhaseFinished)),
+                                        ...customPhases.map((phase) => DropdownMenuItem(
+                                          value: phase,
+                                          child: Text(phase),
+                                        )),
                                       ],
                                       onChanged: (v) => ref.read(phaseFilterProvider.notifier).setPhase(v),
                                     ),

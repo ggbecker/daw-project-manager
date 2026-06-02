@@ -2603,6 +2603,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get playerOpenProject => 'プロジェクトを開く';
 
   @override
+  String get playerRepeatAll => 'すべて繰り返す';
+
+  @override
+  String get playerShuffle => 'シャッフル';
+
+  @override
   String get volumeMute => 'ミュート';
 
   @override
@@ -2986,4 +2992,33 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get pendingProjectNotFound => 'プロジェクトファイルはまだ見つかりません';
+
+  @override
+  String get phases => 'Phases';
+
+  @override
+  String get phasesSubtitle => 'Add, remove, and reorder project phases';
+
+  @override
+  String get resetToDefaults => 'Reset to defaults';
+
+  @override
+  String get addPhase => 'Add phase';
+
+  @override
+  String get phaseNameHint => 'Phase name';
+
+  @override
+  String get phaseDuplicateError => 'A phase with that name already exists';
+
+  @override
+  String deletePhaseWarning(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count projects use this phase',
+      one: '1 project uses this phase',
+    );
+    return '$_temp0';
+  }
 }

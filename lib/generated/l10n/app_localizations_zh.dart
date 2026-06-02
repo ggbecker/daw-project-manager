@@ -2577,6 +2577,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playerOpenProject => '打开项目';
 
   @override
+  String get playerRepeatAll => '全部重复';
+
+  @override
+  String get playerShuffle => '随机';
+
+  @override
   String get volumeMute => '静音';
 
   @override
@@ -2957,4 +2963,33 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pendingProjectNotFound => '尚未找到项目文件';
+
+  @override
+  String get phases => 'Phases';
+
+  @override
+  String get phasesSubtitle => 'Add, remove, and reorder project phases';
+
+  @override
+  String get resetToDefaults => 'Reset to defaults';
+
+  @override
+  String get addPhase => 'Add phase';
+
+  @override
+  String get phaseNameHint => 'Phase name';
+
+  @override
+  String get phaseDuplicateError => 'A phase with that name already exists';
+
+  @override
+  String deletePhaseWarning(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count projects use this phase',
+      one: '1 project uses this phase',
+    );
+    return '$_temp0';
+  }
 }

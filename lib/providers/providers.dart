@@ -653,6 +653,13 @@ class PhaseFilterNotifier extends Notifier<String?> {
   }
 }
 
+// Custom phases provider — reads per-profile phases from repository
+final customPhasesProvider = Provider<List<String>>((ref) {
+  final repo = ref.watch(repositoryProvider).asData?.value;
+  return repo?.getCustomPhases() ??
+      const ['Idea', 'Arranging', 'Mixing', 'Mastering', 'Finished'];
+});
+
 // Deadline Filter Enum
 enum DeadlineFilter {
   all,           // Show all projects
@@ -1364,7 +1371,7 @@ final globalStatsProvider = Provider<GlobalStats>((ref) {
   }
 
   // Count per phase
-  const phases = ['Idea', 'Arranging', 'Mixing', 'Mastering', 'Finished'];
+  final phases = ref.watch(customPhasesProvider);
   final countPerPhase = <String, int>{for (final ph in phases) ph: 0};
   for (final p in projects) {
     final ph = p.status;

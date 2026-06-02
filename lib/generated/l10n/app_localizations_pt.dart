@@ -2660,6 +2660,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get playerOpenProject => 'Abrir projeto';
 
   @override
+  String get playerRepeatAll => 'Repetir tudo';
+
+  @override
+  String get playerShuffle => 'Aleatório';
+
+  @override
   String get volumeMute => 'Silenciar';
 
   @override
@@ -3062,4 +3068,33 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get pendingProjectNotFound =>
       'Nenhum arquivo de projeto encontrado ainda';
+
+  @override
+  String get phases => 'Phases';
+
+  @override
+  String get phasesSubtitle => 'Add, remove, and reorder project phases';
+
+  @override
+  String get resetToDefaults => 'Reset to defaults';
+
+  @override
+  String get addPhase => 'Add phase';
+
+  @override
+  String get phaseNameHint => 'Phase name';
+
+  @override
+  String get phaseDuplicateError => 'A phase with that name already exists';
+
+  @override
+  String deletePhaseWarning(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count projects use this phase',
+      one: '1 project uses this phase',
+    );
+    return '$_temp0';
+  }
 }

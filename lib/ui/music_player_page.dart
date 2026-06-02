@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
@@ -7,6 +9,8 @@ import '../models/music_project.dart';
 import '../models/todo_item.dart';
 import '../providers/providers.dart';
 import 'project_detail_page.dart';
+
+enum _PlayerLoopMode { none, repeatAll, shuffle }
 
 class MusicPlayerPage extends ConsumerStatefulWidget {
   const MusicPlayerPage({super.key});
@@ -29,6 +33,7 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
   final List<MusicProject> _playlist = [];
   int _playlistIndex = -1;
   bool _playingFromPlaylist = false;
+  _PlayerLoopMode _loopMode = _PlayerLoopMode.none;
 
   int _selectedIndex = -1;
   final TextEditingController _addTodoController = TextEditingController();
@@ -165,21 +170,75 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
     _selectTrack(idx, keepPlaylistState: true);
   }
 
+  int _randomIndex(int length, int exclude) {
+    if (length <= 1) return 0;
+    int next;
+    do {
+      next = math.Random().nextInt(length);
+    } while (next == exclude);
+    return next;
+  }
+
+  void _stopPlayback() {
+    ref.read(desktopPlayerProvider.notifier).close();
+    setState(() {
+      _currentIndex = -1;
+      _playlistIndex = -1;
+      _playingFromPlaylist = false;
+    });
+  }
+
   void _playNext() {
     if (_playingFromPlaylist && _playlist.isNotEmpty) {
-      _selectFromPlaylist((_playlistIndex + 1) % _playlist.length);
+      switch (_loopMode) {
+        case _PlayerLoopMode.shuffle:
+          _selectFromPlaylist(_randomIndex(_playlist.length, _playlistIndex));
+        case _PlayerLoopMode.repeatAll:
+          _selectFromPlaylist((_playlistIndex + 1) % _playlist.length);
+        case _PlayerLoopMode.none:
+          if (_playlistIndex >= _playlist.length - 1) {
+            _stopPlayback();
+          } else {
+            _selectFromPlaylist(_playlistIndex + 1);
+          }
+      }
     } else {
       if (_tracks.isEmpty) return;
-      _selectTrack((_currentIndex + 1) % _tracks.length);
+      switch (_loopMode) {
+        case _PlayerLoopMode.shuffle:
+          _selectTrack(_randomIndex(_tracks.length, _currentIndex));
+        case _PlayerLoopMode.repeatAll:
+          _selectTrack((_currentIndex + 1) % _tracks.length);
+        case _PlayerLoopMode.none:
+          if (_currentIndex >= _tracks.length - 1) {
+            _stopPlayback();
+          } else {
+            _selectTrack(_currentIndex + 1);
+          }
+      }
     }
   }
 
   void _playPrev() {
     if (_playingFromPlaylist && _playlist.isNotEmpty) {
-      _selectFromPlaylist((_playlistIndex - 1 + _playlist.length) % _playlist.length);
+      switch (_loopMode) {
+        case _PlayerLoopMode.shuffle:
+          _selectFromPlaylist(_randomIndex(_playlist.length, _playlistIndex));
+        case _PlayerLoopMode.repeatAll:
+          _selectFromPlaylist((_playlistIndex - 1 + _playlist.length) % _playlist.length);
+        case _PlayerLoopMode.none:
+          _selectFromPlaylist((_playlistIndex - 1).clamp(0, _playlist.length - 1));
+      }
     } else {
       if (_tracks.isEmpty) return;
-      _selectTrack((_currentIndex - 1 + _tracks.length) % _tracks.length);
+      switch (_loopMode) {
+        case _PlayerLoopMode.shuffle:
+          _selectTrack(_randomIndex(_tracks.length, _currentIndex));
+        case _PlayerLoopMode.repeatAll:
+          _selectTrack((_currentIndex - 1 + _tracks.length) % _tracks.length);
+        case _PlayerLoopMode.none:
+          _selectTrack((_currentIndex - 1).clamp(0, _tracks.length - 1));
+      }
     }
   }
 
@@ -745,6 +804,32 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
                       ),
                     ),
                     const Spacer(),
+                    if (_tracks.isNotEmpty) ...[
+                      IconButton(
+                        icon: Icon(Icons.shuffle, size: 16,
+                            color: _loopMode == _PlayerLoopMode.shuffle
+                                ? cs.primary
+                                : cs.onSurface.withValues(alpha: 0.35)),
+                        tooltip: l10n.playerShuffle,
+                        visualDensity: VisualDensity.compact,
+                        onPressed: () => setState(() => _loopMode =
+                            _loopMode == _PlayerLoopMode.shuffle
+                                ? _PlayerLoopMode.none
+                                : _PlayerLoopMode.shuffle),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.repeat, size: 16,
+                            color: _loopMode == _PlayerLoopMode.repeatAll
+                                ? cs.primary
+                                : cs.onSurface.withValues(alpha: 0.35)),
+                        tooltip: l10n.playerRepeatAll,
+                        visualDensity: VisualDensity.compact,
+                        onPressed: () => setState(() => _loopMode =
+                            _loopMode == _PlayerLoopMode.repeatAll
+                                ? _PlayerLoopMode.none
+                                : _PlayerLoopMode.repeatAll),
+                      ),
+                    ],
                     if (_playlist.isNotEmpty) ...[
                       IconButton(
                         icon: const Icon(Icons.skip_previous, size: 18),

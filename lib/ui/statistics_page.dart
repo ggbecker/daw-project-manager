@@ -282,28 +282,21 @@ class _StatCard extends StatelessWidget {
 // Phase Distribution Bar Chart
 // ---------------------------------------------------------------------------
 
-class _PhaseDistributionChart extends StatelessWidget {
+class _PhaseDistributionChart extends ConsumerWidget {
   final GlobalStats stats;
   final AppLocalizations l10n;
   const _PhaseDistributionChart({required this.stats, required this.l10n});
 
-  static const _phases = [
-    'Idea',
-    'Arranging',
-    'Mixing',
-    'Mastering',
-    'Finished'
-  ];
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final phases = ref.watch(customPhasesProvider);
     final counts = stats.countPerPhase;
     final total = counts.values.fold(0, (a, b) => a + b);
     if (total == 0) {
       return _NoDataPlaceholder(message: l10n.statsNoData);
     }
 
-    final groups = _phases.asMap().entries.map((e) {
+    final groups = phases.asMap().entries.map((e) {
       final idx = e.key;
       final phase = e.value;
       return BarChartGroupData(
@@ -352,10 +345,11 @@ class _PhaseDistributionChart extends StatelessWidget {
               sideTitles: SideTitles(
                 showTitles: true,
                 getTitlesWidget: (v, _) {
-                  const abbr = ['Idea', 'Arr.', 'Mix.', 'Mast.', 'Fin.'];
                   final idx = v.toInt();
-                  if (idx < 0 || idx >= abbr.length) return const SizedBox();
-                  return Text(abbr[idx],
+                  if (idx < 0 || idx >= phases.length) return const SizedBox();
+                  final p = phases[idx];
+                  final label = p.length > 5 ? '${p.substring(0, 4)}.' : p;
+                  return Text(label,
                       style: Theme.of(context).textTheme.bodySmall);
                 },
               ),
@@ -366,7 +360,8 @@ class _PhaseDistributionChart extends StatelessWidget {
               getTooltipColor: (_) =>
                   Theme.of(context).cardColor.withOpacity(0.95),
               getTooltipItem: (group, _, rod, __) {
-                final phase = _phases[group.x];
+                final idx = group.x;
+                final phase = idx < phases.length ? phases[idx] : '';
                 return BarTooltipItem(
                   '$phase\n${rod.toY.toInt()}',
                   Theme.of(context).textTheme.bodySmall!,
@@ -384,27 +379,20 @@ class _PhaseDistributionChart extends StatelessWidget {
 // Avg. Days per Phase Chart
 // ---------------------------------------------------------------------------
 
-class _AvgTimePerPhaseChart extends StatelessWidget {
+class _AvgTimePerPhaseChart extends ConsumerWidget {
   final GlobalStats stats;
   final AppLocalizations l10n;
   const _AvgTimePerPhaseChart({required this.stats, required this.l10n});
 
-  static const _phases = [
-    'Idea',
-    'Arranging',
-    'Mixing',
-    'Mastering',
-    'Finished'
-  ];
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final phases = ref.watch(customPhasesProvider);
     final avgDays = stats.avgDaysPerPhase;
     if (avgDays.isEmpty) {
       return _NoDataPlaceholder(message: l10n.statsNoPhaseData);
     }
 
-    final groups = _phases.asMap().entries.map((e) {
+    final groups = phases.asMap().entries.map((e) {
       final idx = e.key;
       final phase = e.value;
       return BarChartGroupData(
@@ -453,10 +441,11 @@ class _AvgTimePerPhaseChart extends StatelessWidget {
               sideTitles: SideTitles(
                 showTitles: true,
                 getTitlesWidget: (v, _) {
-                  const abbr = ['Idea', 'Arr.', 'Mix.', 'Mast.', 'Fin.'];
                   final idx = v.toInt();
-                  if (idx < 0 || idx >= abbr.length) return const SizedBox();
-                  return Text(abbr[idx],
+                  if (idx < 0 || idx >= phases.length) return const SizedBox();
+                  final p = phases[idx];
+                  final label = p.length > 5 ? '${p.substring(0, 4)}.' : p;
+                  return Text(label,
                       style: Theme.of(context).textTheme.bodySmall);
                 },
               ),
@@ -467,7 +456,8 @@ class _AvgTimePerPhaseChart extends StatelessWidget {
               getTooltipColor: (_) =>
                   Theme.of(context).cardColor.withOpacity(0.95),
               getTooltipItem: (group, _, rod, __) {
-                final phase = _phases[group.x];
+                final idx = group.x;
+                final phase = idx < phases.length ? phases[idx] : '';
                 return BarTooltipItem(
                   '$phase\n${rod.toY.toStringAsFixed(1)}d',
                   Theme.of(context).textTheme.bodySmall!,

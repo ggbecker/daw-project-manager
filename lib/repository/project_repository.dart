@@ -57,6 +57,23 @@ class ProjectRepository {
     }
   }
 
+  // Custom Phases — ordered list of phase names, per-profile
+  static const _defaultPhases = ['Idea', 'Arranging', 'Mixing', 'Mastering', 'Finished'];
+  String get _customPhasesKey => '${profileId}_phases';
+
+  List<String> getCustomPhases() {
+    final raw = appSettingsBox.get(_customPhasesKey);
+    if (raw == null) return List.unmodifiable(_defaultPhases);
+    try {
+      return List.unmodifiable((jsonDecode(raw) as List).cast<String>());
+    } catch (_) {
+      return List.unmodifiable(_defaultPhases);
+    }
+  }
+
+  Future<void> setCustomPhases(List<String> phases) async =>
+      appSettingsBox.put(_customPhasesKey, jsonEncode(phases));
+
   // Pending Folders — stored as JSON list in the per-profile app_settings slot
   String get _pendingFoldersKey => '${profileId}_pending_folders';
 
