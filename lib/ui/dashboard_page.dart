@@ -1096,74 +1096,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                         );
                       }(),
                 body: Builder(builder: (context) {
-                  final col = Column(
-          children: [
-            // macOS left-rail: DesktopTitleBar is hoisted above the Row so
-            // the rail background doesn't start behind the traffic lights.
-            // All other cases: it sits at the top of this content column.
-            if (!(Platform.isMacOS && isLeftRail))
-            DesktopTitleBar(
-              title: AppLocalizations.of(context)!.appTitleWithVersion(appVersion),
-              actions: [
-                // Donate button
-                Consumer(
-                  builder: (context, ref, child) {
-                    final l10n = AppLocalizations.of(context)!;
-                    return Tooltip(
-                      message: l10n.supportTheProject,
-                      child: TextButton.icon(
-                        icon: const Icon(Icons.card_giftcard, size: 18, color: Colors.white70),
-                        label: Text(
-                          l10n.support,
-                          style: const TextStyle(color: Colors.white70, fontSize: 14),
-                        ),
-                        onPressed: () async {
-                          final uri = Uri.parse('https://www.paypal.com/donate/?hosted_button_id=QHVVZ3LAF39BL');
-                          if (await canLaunchUrl(uri)) {
-                            await launchUrl(uri, mode: LaunchMode.externalApplication);
-                          }
-                        },
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(width: 8),
-                const ThemeSwitcher(),
-                const SizedBox(width: 8),
-                const LanguageSwitcher(),
-                const SizedBox(width: 8),
-                Tooltip(
-                  message: AppLocalizations.of(context)!.menuDocumentation,
-                  child: IconButton(
-                    icon: const Icon(Icons.menu_book_outlined, size: 18, color: Colors.white70),
-                    onPressed: () => launchUrl(
-                      Uri.parse('https://dpm.bandpassrecords.com/docs.html'),
-                      mode: LaunchMode.externalApplication,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Tooltip(
-                  message: AppLocalizations.of(context)!.keyboardShortcuts,
-                  child: IconButton(
-                    icon: const Icon(Icons.keyboard_outlined, size: 18, color: Colors.white70),
-                    onPressed: () => showShortcutsHelpDialog(context),
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Tooltip(
-                  message: AppLocalizations.of(context)!.customizeTabs,
-                  child: IconButton(
-                    icon: const Icon(Icons.tab_outlined, size: 18, color: Colors.white70),
-                    onPressed: () => showTabCustomizationDialog(context),
-                  ),
-                ),
-                const SizedBox(width: 4),
-              ],
-            ),
-            
-            // CONTEÚDO DA BARRA DE AÇÕES E PESQUISA
-            Builder(
+
+                  // Action bar: search field and filter toolbar.
+                  final actionBar = Builder(
               builder: (context) {
                 final isMobile = MobileUtils.isMobile();
                 if (isMobile) return const SizedBox.shrink();
@@ -1774,10 +1709,80 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
               ),
             );
             },
-          ),
+                  );
+
+                  final col = Column(
+          children: [
+            // macOS left-rail: DesktopTitleBar is hoisted above the Row so
+            // the rail background doesn't start behind the traffic lights.
+            // All other cases: it sits at the top of this content column.
+            if (!(Platform.isMacOS && isLeftRail))
+            DesktopTitleBar(
+              title: AppLocalizations.of(context)!.appTitleWithVersion(appVersion),
+              actions: [
+                // Donate button
+                Consumer(
+                  builder: (context, ref, child) {
+                    final l10n = AppLocalizations.of(context)!;
+                    return Tooltip(
+                      message: l10n.supportTheProject,
+                      child: TextButton.icon(
+                        icon: const Icon(Icons.card_giftcard, size: 18, color: Colors.white70),
+                        label: Text(
+                          l10n.support,
+                          style: const TextStyle(color: Colors.white70, fontSize: 14),
+                        ),
+                        onPressed: () async {
+                          final uri = Uri.parse('https://www.paypal.com/donate/?hosted_button_id=QHVVZ3LAF39BL');
+                          if (await canLaunchUrl(uri)) {
+                            await launchUrl(uri, mode: LaunchMode.externalApplication);
+                          }
+                        },
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(width: 8),
+                const ThemeSwitcher(),
+                const SizedBox(width: 8),
+                const LanguageSwitcher(),
+                const SizedBox(width: 8),
+                Tooltip(
+                  message: AppLocalizations.of(context)!.menuDocumentation,
+                  child: IconButton(
+                    icon: const Icon(Icons.menu_book_outlined, size: 18, color: Colors.white70),
+                    onPressed: () => launchUrl(
+                      Uri.parse('https://dpm.bandpassrecords.com/docs.html'),
+                      mode: LaunchMode.externalApplication,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Tooltip(
+                  message: AppLocalizations.of(context)!.keyboardShortcuts,
+                  child: IconButton(
+                    icon: const Icon(Icons.keyboard_outlined, size: 18, color: Colors.white70),
+                    onPressed: () => showShortcutsHelpDialog(context),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Tooltip(
+                  message: AppLocalizations.of(context)!.customizeTabs,
+                  child: IconButton(
+                    icon: const Icon(Icons.tab_outlined, size: 18, color: Colors.white70),
+                    onPressed: () => showTabCustomizationDialog(context),
+                  ),
+                ),
+                const SizedBox(width: 4),
+              ],
+            ),
+
+            // On macOS+left-rail the action bar is hoisted full-width
+            // above the Row. All other configs keep it here.
+            if (!(Platform.isMacOS && isLeftRail)) actionBar,
 
             // Zero-height anchor used to position the suggestions overlay.
-            if (!MobileUtils.isMobile())
+            if (!MobileUtils.isMobile() && !(Platform.isMacOS && isLeftRail))
               SizedBox(key: _suggestionsPanelAnchorKey, height: 0),
 
             // Project folders are managed in the dedicated desktop-only settings page.
@@ -2147,6 +2152,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                     DesktopTitleBar(
                       title: AppLocalizations.of(context)!.appTitleWithVersion(appVersion),
                     ),
+                    actionBar,
+                    if (!MobileUtils.isMobile())
+                      SizedBox(key: _suggestionsPanelAnchorKey, height: 0),
                     Expanded(child: row),
                   ],
                 );
