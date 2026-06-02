@@ -1166,7 +1166,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                 final isMobile = MobileUtils.isMobile();
                 if (isMobile) return const SizedBox.shrink();
                 return Padding(
-                  padding: MobileUtils.getResponsivePadding(context),
+                  padding: Platform.isMacOS
+                      ? const EdgeInsets.fromLTRB(16, 8, 16, 16)
+                      : MobileUtils.getResponsivePadding(context),
                   child: isMobile
                       ? Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1874,6 +1876,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                           : NavigationRailLabelType.all,
                       leading: Column(
                         children: [
+                          // Reserve space for macOS traffic-light buttons.
+                          if (Platform.isMacOS) const SizedBox(height: 28),
                           // Collapse/expand toggle
                           Tooltip(
                             message: railCollapsed
