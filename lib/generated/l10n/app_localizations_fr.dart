@@ -3125,4 +3125,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get selectPhaseColor => 'Sélectionner une couleur';
+
+  @override
+  String get markAsFinished => 'Marquer comme phase terminée';
 }

@@ -1995,5 +1995,6 @@
   "phaseNameHint": "Nome della fase",
   "phaseDuplicateError": "Esiste già una fase con quel nome",
   "deletePhaseWarning": "{count, plural, =1{1 progetto usa questa fase} other{{count} progetti usano questa fase}}",
-  "selectPhaseColor": "Seleziona colore"
+  "selectPhaseColor": "Seleziona colore",
+  "markAsFinished": "Segna come fase completata"
 }

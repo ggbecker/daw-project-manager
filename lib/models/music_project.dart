@@ -347,10 +347,11 @@ class MusicProject {
     }
   }
 
-  /// Returns the time it took to complete the project (from creation to finished status)
-  /// Returns null if status is not 'Finished' or dates are not available
-  Duration? get timeToCompletion {
-    if (status != 'Finished' || statusChangedAt == null) {
+  /// Returns the time it took to complete the project (from creation to finished status).
+  /// [finishedPhase] is the phase name that counts as "done" (defaults to 'Finished').
+  Duration? timeToCompletion([Set<String>? finishedPhases]) {
+    final phases = finishedPhases ?? {'Finished'};
+    if (!phases.contains(status) || statusChangedAt == null) {
       return null;
     }
     final startDate = fileCreatedAt ?? createdAt;
@@ -358,8 +359,8 @@ class MusicProject {
   }
 
   /// Returns a human-readable time to completion string
-  String? get timeToCompletionFormatted {
-    final duration = timeToCompletion;
+  String? timeToCompletionFormatted([Set<String>? finishedPhases]) {
+    final duration = timeToCompletion(finishedPhases);
     if (duration == null) return null;
     
     final years = duration.inDays ~/ 365;

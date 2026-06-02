@@ -642,13 +642,14 @@ class _ProjectHealthList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final projectsAsync = ref.watch(allProjectsStreamProvider);
     final hideFinished = ref.watch(statsHideFinishedProvider);
+    final finishedPhases = ref.watch(finishedPhaseProvider);
     final allProjects = projectsAsync.asData?.value ?? [];
     final projects = hideFinished
-        ? allProjects.where((p) => p.status != 'Finished').toList()
+        ? allProjects.where((p) => !finishedPhases.contains(p.status)).toList()
         : allProjects;
 
     final inProgress = projects
-        .where((p) => p.status != 'Finished' && !p.hidden)
+        .where((p) => !finishedPhases.contains(p.status) && !p.hidden)
         .toList()
       ..sort((a, b) => a.lastModifiedAt.compareTo(b.lastModifiedAt));
 
@@ -716,9 +717,10 @@ class _CatalogInsights extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final projectsAsync = ref.watch(allProjectsStreamProvider);
     final hideFinished = ref.watch(statsHideFinishedProvider);
+    final finishedPhases = ref.watch(finishedPhaseProvider);
     final allProjects = projectsAsync.asData?.value ?? [];
     final projects = hideFinished
-        ? allProjects.where((p) => p.status != 'Finished').toList()
+        ? allProjects.where((p) => !finishedPhases.contains(p.status)).toList()
         : allProjects;
 
     // BPM buckets

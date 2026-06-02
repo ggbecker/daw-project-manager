@@ -528,6 +528,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                   formatCompletionDuration: _formatCompletionDuration,
                   isSessionActive: ref.watch(activeProjectProvider)?.id == widget.projectId,
                   liveSessionSeconds: ref.watch(workTimerProvider),
+                  finishedPhase: ref.watch(finishedPhaseProvider),
                 ),
                 _ProjectDetailActionBar(
                   project: updatedProject,
@@ -1085,6 +1086,8 @@ class _ProjectDetailHeader extends StatelessWidget {
   final bool isSessionActive;
   final int liveSessionSeconds;
 
+  final Set<String> finishedPhase;
+
   const _ProjectDetailHeader({
     required this.project,
     required this.isMobile,
@@ -1093,6 +1096,7 @@ class _ProjectDetailHeader extends StatelessWidget {
     required this.formatCompletionDuration,
     required this.isSessionActive,
     required this.liveSessionSeconds,
+    required this.finishedPhase,
   });
 
   String _formatTotalWork(int seconds) {
@@ -1122,8 +1126,8 @@ class _ProjectDetailHeader extends StatelessWidget {
   }
 
   Color _phaseColor(String status) {
+    if (finishedPhase.contains(status)) return Colors.green;
     switch (status) {
-      case 'Finished': return Colors.green;
       case 'Mastering': return Colors.purple;
       case 'Mixing': return Colors.blue;
       case 'Arranging': return Colors.orange;
@@ -1206,10 +1210,10 @@ class _ProjectDetailHeader extends StatelessWidget {
                 ),
               if (project.musicalKey != null)
                 _InfoChip(icon: Icons.music_note, label: project.musicalKey!),
-              if (project.timeToCompletion != null)
+              if (project.timeToCompletion(finishedPhase) != null)
                 _InfoChip(
                   icon: Icons.emoji_events,
-                  label: l10n.completedIn(formatCompletionDuration(project.timeToCompletion)!),
+                  label: l10n.completedIn(formatCompletionDuration(project.timeToCompletion(finishedPhase))!),
                   color: Colors.amber,
                 ),
               if (project.fileCreatedAt != null)

@@ -1995,5 +1995,6 @@
   "phaseNameHint": "Название фазы",
   "phaseDuplicateError": "Фаза с таким названием уже существует",
   "deletePhaseWarning": "{count, plural, one{{count} проект использует эту фазу} few{{count} проекта используют эту фазу} many{{count} проектов используют эту фазу} other{{count} проектов используют эту фазу}}",
-  "selectPhaseColor": "Выбрать цвет"
+  "selectPhaseColor": "Выбрать цвет",
+  "markAsFinished": "Отметить как завершённую фазу"
 }

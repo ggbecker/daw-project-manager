@@ -3093,5 +3093,7 @@
     }
   },
   "selectPhaseColor": "Select color",
-  "@selectPhaseColor": {}
+  "@selectPhaseColor": {},
+  "markAsFinished": "Mark as finished phase",
+  "@markAsFinished": {}
 }

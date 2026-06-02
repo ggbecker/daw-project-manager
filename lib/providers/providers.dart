@@ -411,9 +411,10 @@ final projectsProvider = Provider<List<MusicProject>>((ref) {
     
     // --- Filter finished projects ---
     final finishedMode = ref.watch(showFinishedProjectsProvider);
+    final finishedPhases = ref.watch(finishedPhaseProvider);
     if (finishedMode == 1) {
       // Hide finished projects
-      projects = projects.where((p) => p.status != 'Finished').toList();
+      projects = projects.where((p) => !finishedPhases.contains(p.status)).toList();
     }
     
     // --- Show only projects with deadline ---
@@ -668,6 +669,12 @@ final phaseColorsProvider = Provider<Map<String, Color>>((ref) {
   return repo.getPhaseColors().map(
     (phase, hex) => MapEntry(phase, hexToColor(hex)),
   );
+});
+
+// Finished phases provider — which phase names are treated as "done"
+final finishedPhaseProvider = Provider<Set<String>>((ref) {
+  final repo = ref.watch(repositoryProvider).asData?.value;
+  return repo?.getFinishedPhases() ?? {'Finished'};
 });
 
 // Deadline Filter Enum
@@ -1288,10 +1295,11 @@ final projectsWithRecentActivityProvider =
   final projectsAsync = ref.watch(allProjectsStreamProvider);
   final eventsAsync = ref.watch(allEventsStreamProvider);
   final hideFinished = ref.watch(statsHideFinishedProvider);
+  final finishedPhases = ref.watch(finishedPhaseProvider);
 
   final allProjects = projectsAsync.asData?.value ?? [];
   final projects = hideFinished
-      ? allProjects.where((p) => p.status != 'Finished').toList()
+      ? allProjects.where((p) => !finishedPhases.contains(p.status)).toList()
       : allProjects;
   final events = eventsAsync.asData?.value ?? [];
 
@@ -1354,24 +1362,25 @@ final globalStatsProvider = Provider<GlobalStats>((ref) {
   final projectsAsync = ref.watch(allProjectsStreamProvider);
   final eventsAsync = ref.watch(allEventsStreamProvider);
   final hideFinished = ref.watch(statsHideFinishedProvider);
+  final finishedPhases = ref.watch(finishedPhaseProvider);
 
   final allProjects = projectsAsync.asData?.value;
   final events = eventsAsync.asData?.value;
   if (allProjects == null || events == null) return GlobalStats.empty;
 
   final projects = hideFinished
-      ? allProjects.where((p) => p.status != 'Finished').toList()
+      ? allProjects.where((p) => !finishedPhases.contains(p.status)).toList()
       : allProjects;
 
   // Basic counts
   final total = projects.length;
-  final finished = projects.where((p) => p.status == 'Finished').toList();
-  final inProgress = projects.where((p) => p.status != 'Finished').toList();
+  final finished = projects.where((p) => finishedPhases.contains(p.status)).toList();
+  final inProgress = projects.where((p) => !finishedPhases.contains(p.status)).toList();
 
   // Average completion time (from model field, only for finished projects)
   Duration? avgCompletion;
   final completionTimes = finished
-      .map((p) => p.timeToCompletion)
+      .map((p) => p.timeToCompletion(finishedPhases))
       .whereType<Duration>()
       .toList();
   if (completionTimes.isNotEmpty) {

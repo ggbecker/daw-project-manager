@@ -4161,6 +4161,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           return Consumer(
             builder: (context, ref, _) {
               final colorEnabled = ref.watch(lastModifiedColorProvider);
+              final finishedPhases = ref.watch(finishedPhaseProvider);
               final defaultColor = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
 
               Color textColor;
@@ -4168,7 +4169,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                 textColor = defaultColor;
               } else {
                 final status = project.status;
-                if (status == 'Finished') {
+                if (finishedPhases.contains(status)) {
                   textColor = Colors.green;
                 } else {
                   final now = DateTime.now();
@@ -4203,66 +4204,66 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         minWidth: 100,
         renderer: (rendererContext) {
           final project = rendererContext.row.cells['data']?.value as MusicProject?;
-          if (project == null || project.deadline == null || project.status == 'Finished') {
+          if (project == null || project.deadline == null) {
             return const SizedBox.shrink();
           }
+          return Consumer(
+            builder: (context, ref, _) {
+              final finishedPhases = ref.watch(finishedPhaseProvider);
+              if (finishedPhases.contains(project.status)) return const SizedBox.shrink();
 
-          final daysUntil = project.daysUntilDeadline ?? 0;
+              final daysUntil = project.daysUntilDeadline ?? 0;
 
-          Color iconColor;
-          IconData iconData;
-          String text;
+              Color iconColor;
+              IconData iconData;
+              String text;
 
-          if (daysUntil < 0) {
-            iconColor = Colors.red;
-            iconData = Icons.warning;
-            text = AppLocalizations.of(context)!.daysLate(daysUntil.abs());
-          } else if (daysUntil == 0) {
-            iconColor = Colors.red;
-            iconData = Icons.today;
-            text = AppLocalizations.of(context)!.dueToday;
-          } else if (daysUntil <= 7) {
-            iconColor = Colors.orange;
-            iconData = Icons.schedule;
-            text = AppLocalizations.of(context)!.daysLeft(daysUntil);
-          } else {
-            iconColor = Colors.blue;
-            iconData = Icons.calendar_today;
-            text = '${daysUntil}d left';
-          }
+              if (daysUntil < 0) {
+                iconColor = Colors.red;
+                iconData = Icons.warning;
+                text = AppLocalizations.of(context)!.daysLate(daysUntil.abs());
+              } else if (daysUntil == 0) {
+                iconColor = Colors.red;
+                iconData = Icons.today;
+                text = AppLocalizations.of(context)!.dueToday;
+              } else if (daysUntil <= 7) {
+                iconColor = Colors.orange;
+                iconData = Icons.schedule;
+                text = AppLocalizations.of(context)!.daysLeft(daysUntil);
+              } else {
+                iconColor = Colors.blue;
+                iconData = Icons.calendar_today;
+                text = '${daysUntil}d left';
+              }
 
-          final deadlineWidget = Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(4),
-              border: Border.all(
-                color: iconColor.withOpacity(0.3),
-                width: 1,
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  iconData,
-                  size: 12,
-                  color: iconColor,
-                ),
-                const SizedBox(width: 3),
-                Text(
-                  text,
-                  style: TextStyle(
-                    color: iconColor,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 11,
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: iconColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(
+                    color: iconColor.withOpacity(0.3),
+                    width: 1,
                   ),
                 ),
-              ],
-            ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(iconData, size: 12, color: iconColor),
+                    const SizedBox(width: 3),
+                    Text(
+                      text,
+                      style: TextStyle(
+                        color: iconColor,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
           );
-
-          return deadlineWidget;
         },
       ),
       TrinaColumn(
@@ -6780,7 +6781,7 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                               ),
                             ),
                           ),
-                          if (project.deadline != null && project.status != 'Finished')
+                          if (project.deadline != null && !ref.watch(finishedPhaseProvider).contains(project.status))
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
@@ -7296,7 +7297,7 @@ class _Suggestion {
 final _suggestionsPanelAnchorKey = GlobalKey();
 
 List<_Suggestion> _buildIdleSuggestions(
-    List<MusicProject> all, Set<String> dismissed) {
+    List<MusicProject> all, Set<String> dismissed, Set<String> finishedPhases) {
   final visible = all.where((p) => !p.hidden).toList();
   final result = <_Suggestion>[];
   final seen = <String>{};
@@ -7309,7 +7310,7 @@ List<_Suggestion> _buildIdleSuggestions(
   // Overdue & due-today, non-finished (most overdue first)
   final urgentDeadlines = visible
       .where((p) =>
-          p.status != 'Finished' &&
+          !finishedPhases.contains(p.status) &&
           p.daysUntilDeadline != null &&
           p.daysUntilDeadline! <= 0)
       .toList()
@@ -7321,7 +7322,7 @@ List<_Suggestion> _buildIdleSuggestions(
   // Due soon (1–7 days), non-finished
   final dueSoon = visible
       .where((p) =>
-          p.status != 'Finished' &&
+          !finishedPhases.contains(p.status) &&
           p.daysUntilDeadline != null &&
           p.daysUntilDeadline! > 0 &&
           p.daysUntilDeadline! <= 7)
@@ -7346,7 +7347,7 @@ List<_Suggestion> _buildIdleSuggestions(
 
   // Most recently modified non-finished (if not already listed)
   final recent = visible
-      .where((p) => p.status != 'Finished')
+      .where((p) => !finishedPhases.contains(p.status))
       .toList()
     ..sort((a, b) => b.lastModifiedAt.compareTo(a.lastModifiedAt));
   if (recent.isNotEmpty) add(_SuggestionType.recentlyModified, recent.first);
@@ -7467,7 +7468,8 @@ class _SessionIdleSuggestionsState
     final all = ref.watch(allProjectsStreamProvider).value ?? [];
     final dismissed = ref.watch(dismissedSuggestionsProvider);
     final panelExpanded = ref.watch(suggestionsPanelExpandedProvider);
-    final suggestions = _buildIdleSuggestions(all, dismissed);
+    final finishedPhases = ref.watch(finishedPhaseProvider);
+    final suggestions = _buildIdleSuggestions(all, dismissed, finishedPhases);
     final total = suggestions.length;
     final idx = total > 0 ? _index.clamp(0, total - 1) : 0;
     final theme = Theme.of(context);
@@ -7645,7 +7647,8 @@ class _SuggestionsPanelBar extends ConsumerWidget {
     final all = ref.watch(allProjectsStreamProvider).value ?? [];
     final dismissed = ref.watch(dismissedSuggestionsProvider);
     final sessionMode = ref.watch(sessionModeProvider);
-    final suggestions = _buildIdleSuggestions(all, dismissed);
+    final finishedPhases = ref.watch(finishedPhaseProvider);
+    final suggestions = _buildIdleSuggestions(all, dismissed, finishedPhases);
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
 

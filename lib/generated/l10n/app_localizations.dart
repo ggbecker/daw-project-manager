@@ -5287,6 +5287,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select color'**
   String get selectPhaseColor;
+
+  /// No description provided for @markAsFinished.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as finished phase'**
+  String get markAsFinished;
 }
 
 class _AppLocalizationsDelegate

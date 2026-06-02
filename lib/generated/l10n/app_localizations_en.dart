@@ -3098,4 +3098,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get selectPhaseColor => 'Select color';
+
+  @override
+  String get markAsFinished => 'Mark as finished phase';
 }

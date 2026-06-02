@@ -47,8 +47,23 @@ class _PhasesSettingsPageState extends ConsumerState<PhasesSettingsPage> {
     if (repo == null) return;
     await repo.setCustomPhases(defaults);
     await repo.setPhaseColors({});
+    await repo.setFinishedPhases({'Finished'});
     ref.invalidate(customPhasesProvider);
     ref.invalidate(phaseColorsProvider);
+    ref.invalidate(finishedPhaseProvider);
+  }
+
+  Future<void> _toggleFinishedPhase(String phase, Set<String> current) async {
+    final repo = ref.read(repositoryProvider).asData?.value;
+    if (repo == null) return;
+    final updated = Set<String>.from(current);
+    if (updated.contains(phase)) {
+      if (updated.length > 1) updated.remove(phase);
+    } else {
+      updated.add(phase);
+    }
+    await repo.setFinishedPhases(updated);
+    ref.invalidate(finishedPhaseProvider);
   }
 
   Future<void> _deletePhase(String phase, List<String> current) async {
@@ -97,6 +112,7 @@ class _PhasesSettingsPageState extends ConsumerState<PhasesSettingsPage> {
     final l10n = AppLocalizations.of(context)!;
     final phases = ref.watch(customPhasesProvider);
     final storedColors = ref.watch(phaseColorsProvider);
+    final finishedPhase = ref.watch(finishedPhaseProvider);
     final isDesktop = !kIsWeb && MobileUtils.isDesktop();
 
     return Scaffold(
@@ -189,14 +205,32 @@ class _PhasesSettingsPageState extends ConsumerState<PhasesSettingsPage> {
                                   ],
                                 ),
                                 title: Text(phase),
-                                trailing: IconButton(
-                                  icon: const Icon(Icons.delete_outline),
-                                  color:
-                                      Theme.of(context).colorScheme.error,
-                                  tooltip: 'Delete',
-                                  onPressed: phases.length > 1
-                                      ? () => _deletePhase(phase, phases)
-                                      : null,
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Tooltip(
+                                      message: l10n.markAsFinished,
+                                      child: IconButton(
+                                        icon: Icon(
+                                          finishedPhase.contains(phase)
+                                              ? Icons.flag
+                                              : Icons.flag_outlined,
+                                          color: finishedPhase.contains(phase)
+                                              ? Colors.green
+                                              : null,
+                                        ),
+                                        onPressed: () => _toggleFinishedPhase(phase, finishedPhase),
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.delete_outline),
+                                      color: Theme.of(context).colorScheme.error,
+                                      tooltip: 'Delete',
+                                      onPressed: phases.length > 1
+                                          ? () => _deletePhase(phase, phases)
+                                          : null,
+                                    ),
+                                  ],
                                 ),
                               );
                             },

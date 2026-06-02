@@ -22,7 +22,7 @@ class OnboardingWizardPage extends ConsumerStatefulWidget {
 class _OnboardingWizardPageState extends ConsumerState<OnboardingWizardPage> {
   final _controller = PageController();
   int _page = 0;
-  static const _totalPages = 8;
+  static const _totalPages = 9;
 
   @override
   void dispose() {
@@ -76,6 +76,7 @@ class _OnboardingWizardPageState extends ConsumerState<OnboardingWizardPage> {
                 _FoldersPage(l10n: l10n),
                 _UpdatesPage(l10n: l10n),
                 _SuggestionsPage(l10n: l10n),
+                _PhasesPage(l10n: l10n),
                 _DonePage(l10n: l10n),
               ],
             ),
@@ -683,7 +684,154 @@ class _SuggestionsPreviewMockup extends StatelessWidget {
   }
 }
 
-// ── Page 7: Done ──────────────────────────────────────────────────────────────
+// ── Page 7: Phases ────────────────────────────────────────────────────────────
+
+class _PhasesPage extends ConsumerStatefulWidget {
+  final AppLocalizations l10n;
+  const _PhasesPage({required this.l10n});
+
+  @override
+  ConsumerState<_PhasesPage> createState() => _PhasesPageState();
+}
+
+class _PhasesPageState extends ConsumerState<_PhasesPage> {
+  final _addCtrl = TextEditingController();
+  String? _addError;
+
+  @override
+  void dispose() {
+    _addCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _toggleFinished(String phase, Set<String> current) async {
+    final repo = ref.read(repositoryProvider).asData?.value;
+    if (repo == null) return;
+    final updated = Set<String>.from(current);
+    if (updated.contains(phase)) {
+      if (updated.length > 1) updated.remove(phase);
+    } else {
+      updated.add(phase);
+    }
+    await repo.setFinishedPhases(updated);
+    ref.invalidate(finishedPhaseProvider);
+  }
+
+  Future<void> _addPhase(List<String> current) async {
+    final name = _addCtrl.text.trim();
+    if (name.isEmpty) return;
+    if (current.any((p) => p.toLowerCase() == name.toLowerCase())) {
+      setState(() => _addError = widget.l10n.phaseDuplicateError);
+      return;
+    }
+    setState(() => _addError = null);
+    _addCtrl.clear();
+    final repo = ref.read(repositoryProvider).asData?.value;
+    if (repo == null) return;
+    await repo.setCustomPhases([...current, name]);
+    ref.invalidate(customPhasesProvider);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = widget.l10n;
+    final phases = ref.watch(customPhasesProvider);
+    final finishedPhases = ref.watch(finishedPhaseProvider);
+    final theme = Theme.of(context);
+
+    return _WizardStep(
+      icon: Icons.tune,
+      title: l10n.phases,
+      subtitle: l10n.phasesSubtitle,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.markAsFinished,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Card(
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                for (int i = 0; i < phases.length; i++) ...[
+                  if (i > 0) const Divider(height: 1),
+                  ListTile(
+                    dense: true,
+                    leading: Icon(
+                      finishedPhases.contains(phases[i])
+                          ? Icons.flag
+                          : Icons.flag_outlined,
+                      size: 20,
+                      color: finishedPhases.contains(phases[i])
+                          ? Colors.green
+                          : theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                    ),
+                    title: Text(phases[i]),
+                    trailing: finishedPhases.contains(phases[i])
+                        ? Chip(
+                            label: Text(
+                              'done',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.green.shade200,
+                              ),
+                            ),
+                            backgroundColor:
+                                Colors.green.withValues(alpha: 0.15),
+                            side: BorderSide.none,
+                            visualDensity: VisualDensity.compact,
+                            padding: EdgeInsets.zero,
+                          )
+                        : null,
+                    onTap: () => _toggleFinished(phases[i], finishedPhases),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _addCtrl,
+                  decoration: InputDecoration(
+                    labelText: l10n.phaseNameHint,
+                    errorText: _addError,
+                    border: const OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  onSubmitted: (_) => _addPhase(phases),
+                  textInputAction: TextInputAction.done,
+                ),
+              ),
+              const SizedBox(width: 8),
+              FilledButton.tonalIcon(
+                onPressed: () => _addPhase(phases),
+                icon: const Icon(Icons.add, size: 18),
+                label: Text(l10n.addPhase),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.canBeChangedInSettings,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Page 8: Done ──────────────────────────────────────────────────────────────
 
 class _DonePage extends StatelessWidget {
   final AppLocalizations l10n;

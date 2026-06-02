@@ -3024,4 +3024,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get selectPhaseColor => '色を選択';
+
+  @override
+  String get markAsFinished => '完了フェーズとしてマーク';
 }

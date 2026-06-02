@@ -2995,4 +2995,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get selectPhaseColor => '选择颜色';
+
+  @override
+  String get markAsFinished => '标记为完成阶段';
 }

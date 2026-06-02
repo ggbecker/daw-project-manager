@@ -3101,4 +3101,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get selectPhaseColor => 'Выбрать цвет';
+
+  @override
+  String get markAsFinished => 'Отметить как завершённую фазу';
 }

@@ -1995,5 +1995,6 @@
   "phaseNameHint": "フェーズ名",
   "phaseDuplicateError": "同じ名前のフェーズが既に存在します",
   "deletePhaseWarning": "{count, plural, =1{このフェーズを使用しているプロジェクトが1件あります} other{このフェーズを使用しているプロジェクトが{count}件あります}}",
-  "selectPhaseColor": "色を選択"
+  "selectPhaseColor": "色を選択",
+  "markAsFinished": "完了フェーズとしてマーク"
 }

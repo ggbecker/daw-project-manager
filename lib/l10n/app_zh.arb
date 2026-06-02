@@ -1995,5 +1995,6 @@
   "phaseNameHint": "阶段名称",
   "phaseDuplicateError": "已存在同名阶段",
   "deletePhaseWarning": "{count, plural, =1{1个项目使用此阶段} other{{count}个项目使用此阶段}}",
-  "selectPhaseColor": "选择颜色"
+  "selectPhaseColor": "选择颜色",
+  "markAsFinished": "标记为完成阶段"
 }

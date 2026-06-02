@@ -90,6 +90,27 @@ class ProjectRepository {
   Future<void> setPhaseColors(Map<String, String> colors) async =>
       appSettingsBox.put(_phaseColorsKey, jsonEncode(colors));
 
+  // Finished Phases — which phase names are treated as "done" for filters/stats
+  String get _finishedPhasesKey => '${profileId}_finished_phases';
+
+  Set<String> getFinishedPhases() {
+    final raw = appSettingsBox.get(_finishedPhasesKey);
+    if (raw != null) {
+      try { return (jsonDecode(raw) as List).cast<String>().toSet(); }
+      catch (_) {}
+    }
+    // Migrate legacy single-phase key
+    final legacy = appSettingsBox.get('${profileId}_finished_phase');
+    if (legacy != null) return {legacy};
+    return {'Finished'};
+  }
+
+  Future<void> setFinishedPhases(Set<String> phases) async =>
+      appSettingsBox.put(_finishedPhasesKey, jsonEncode(phases.toList()));
+
+  Future<void> setFinishedPhase(String phase) async =>
+      setFinishedPhases({phase});
+
   // Pending Folders — stored as JSON list in the per-profile app_settings slot
   String get _pendingFoldersKey => '${profileId}_pending_folders';
 
