@@ -69,7 +69,11 @@ class MixdownDetectorService {
   /// Returns the newest audio file in the same directory as [currentPath] if it
   /// is strictly newer than [currentPath] itself and is a different file.
   /// Returns null if [currentPath] is already the newest, doesn't exist, or on mobile.
-  static File? findNewerFileInSameFolder(String currentPath) {
+  ///
+  /// [ignoredPath] is a path the user has previously rejected ("Keep Current").
+  /// If the newest file matches it, the prompt is suppressed until a genuinely
+  /// different (even newer) file appears.
+  static File? findNewerFileInSameFolder(String currentPath, {String? ignoredPath}) {
     if (MobileUtils.isMobile()) return null;
     final current = File(currentPath);
     if (!current.existsSync()) return null;
@@ -83,6 +87,7 @@ class MixdownDetectorService {
     files.sort((a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));
     final newest = files.first;
     if (p.equals(newest.path, current.path)) return null;
+    if (ignoredPath != null && p.equals(newest.path, ignoredPath)) return null;
     if (newest.lastModifiedSync().isAfter(currentModified)) return newest;
     return null;
   }

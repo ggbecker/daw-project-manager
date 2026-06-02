@@ -1731,7 +1731,11 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
           
           // Check for a newer audio file in the same folder as the current preview,
           // regardless of whether the path was manually set or auto-detected.
-          final newer = MixdownDetectorService.findNewerFileInSameFolder(_effectivePreviewPath!);
+          // Skip the prompt if the user previously rejected this specific file.
+          final newer = MixdownDetectorService.findNewerFileInSameFolder(
+            _effectivePreviewPath!,
+            ignoredPath: widget.project.ignoredNewerSongPath,
+          );
           if (newer != null && mounted) {
             final l10n = AppLocalizations.of(context)!;
             final replace = await showDialog<bool>(
@@ -1756,6 +1760,13 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
               widget.onSongChanged(newer.path);
               await _audioPlayer.play(DeviceFileSource(newer.path));
               return;
+            } else {
+              // "Keep Current" — remember the user rejected this specific file so
+              // we don't ask again unless an even newer file appears.
+              final repo = await ref.read(repositoryProvider.future);
+              await repo.updateProject(
+                widget.project.copyWith(ignoredNewerSongPath: newer.path),
+              );
             }
           }
 
