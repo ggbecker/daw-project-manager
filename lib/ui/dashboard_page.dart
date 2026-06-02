@@ -2907,6 +2907,24 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     return aIds.length == bIds.length && aIds.containsAll(bIds);
   }
 
+  // Returns true when the table rows already reflect the given project list.
+  // Used to detect when the table is stale after a profile switch: the widget's
+  // oldProjects and newProjects both hold the new-profile data (the in-flight
+  // update was suppressed by isScanning), but the rendered rows still contain
+  // the previous profile's IDs — so _sameProjectIds(old, new) would incorrectly
+  // green-light an in-place update that matches nothing.
+  bool _tableRowsMatchProjects(List<MusicProject> projects) {
+    final sm = stateManager;
+    if (sm == null) return false;
+    final rowIds = sm.refRows.originalList
+        .where((r) => r.isMain)
+        .map((r) => (r.cells['data']?.value as MusicProject?)?.id)
+        .whereType<String>()
+        .toSet();
+    final projectIds = projects.map((p) => p.id).toSet();
+    return rowIds.length == projectIds.length && rowIds.containsAll(projectIds);
+  }
+
   void _updateCellsInPlace(List<MusicProject> newProjects) {
     final sm = stateManager;
     if (sm == null) return;
@@ -3806,7 +3824,8 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         // key, lastModified, etc. were updated), update cells in-place so group
         // expansion state is never disturbed. Fall back to _rebuildRows() when
         // projects are structurally added or removed.
-        if (_sameProjectIds(oldWidget.projects, widget.projects)) {
+        if (_sameProjectIds(oldWidget.projects, widget.projects) &&
+            _tableRowsMatchProjects(widget.projects)) {
           _updateCellsInPlace(widget.projects);
         } else {
           _rebuildRows();
