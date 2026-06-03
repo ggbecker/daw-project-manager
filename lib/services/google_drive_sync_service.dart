@@ -195,14 +195,16 @@ class GoogleDriveSyncService {
               _authEventsSubscription?.onError(_handleAuthenticationError);
             }
 
-            // Attempt lightweight authentication only once per session
-            // This happens automatically on app start, not every time the page is opened
-            if (!_sessionInitialized) {
-              if (kDebugMode) print('Attempting lightweight authentication (first time this session)...');
+            // Attempt lightweight authentication to restore the current signed-in user.
+            // We call this whenever _currentUser is null (i.e. a new instance was created
+            // after page navigation) so the auth event fires and populates _currentUser.
+            // It's non-interactive, so calling it more than once per session is safe.
+            if (!_sessionInitialized || _currentUser == null) {
+              if (kDebugMode) print('Attempting lightweight authentication...');
               signIn.attemptLightweightAuthentication();
               _sessionInitialized = true;
             } else {
-              if (kDebugMode) print('Lightweight auth already attempted this session, skipping...');
+              if (kDebugMode) print('Lightweight auth skipped — user already set on this instance');
             }
           }),
         );
