@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'generated/l10n/app_localizations.dart';
-import 'dart:io' show Platform, Process, ServerSocket, InternetAddress, SocketException, File, Directory, exit;
+import 'dart:io' show Platform, Process, ServerSocket, InternetAddress, SocketException, File, Directory, FileSystemException, exit;
 import 'package:window_manager/window_manager.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 
@@ -40,29 +40,11 @@ bool _autoBackupRunning = false;
 ServerSocket? _singleInstanceSocket;
 
 Future<void> _showAlreadyRunningMessage() async {
-  if (Platform.isMacOS) {
-    await Process.run('osascript', [
-      '-e',
-      'display dialog "DAW Project Manager is already running. Please close the existing window before opening a new one." buttons {"OK"} default button "OK" with title "DAW Project Manager"',
-    ]);
-  } else if (Platform.isWindows) {
+  if (Platform.isWindows) {
     await Process.run('powershell', [
       '-Command',
       'Add-Type -AssemblyName PresentationFramework; [System.Windows.MessageBox]::Show("DAW Project Manager is already running. Please close the existing window before opening a new one.", "DAW Project Manager")',
     ]);
-  } else if (Platform.isLinux) {
-    try {
-      await Process.run('zenity', [
-        '--info',
-        '--title=DAW Project Manager',
-        '--text=DAW Project Manager is already running. Please close the existing window before opening a new one.',
-      ]);
-    } catch (_) {
-      await Process.run('kdialog', [
-        '--title=DAW Project Manager',
-        '--msgbox=DAW Project Manager is already running. Please close the existing window before opening a new one.',
-      ]);
-    }
   }
 }
 
@@ -208,8 +190,9 @@ void main() async {
   // 1. Inicialização do Flutter
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 1b. Single-instance guard (desktop only)
-  if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
+  // 1b. Single-instance guard (Windows/Linux only).
+  // macOS is handled natively in AppDelegate.swift before Dart starts.
+  if (!kIsWeb && Platform.isWindows) {
     try {
       _singleInstanceSocket = await ServerSocket.bind(InternetAddress.loopbackIPv4, 57321);
     } on SocketException {
@@ -277,7 +260,14 @@ void main() async {
   
   // Pre-open the settings box so providers can read it synchronously on first build.
   await ensureHiveInitialized();
-  await Hive.openBox<String>('settings');
+  try {
+    await Hive.openBox<String>('settings');
+  } on FileSystemException catch (e) {
+    // Another instance already holds the Hive lock (errno 35 on macOS).
+    // The native AppDelegate check should prevent reaching here, but guard anyway.
+    if (kDebugMode) print('[main] Hive lock held by another instance: $e');
+    exit(0);
+  }
 
   // NOVO: 4. Configuração do Riverpod e Auto-Scan
   final container = ProviderContainer();
