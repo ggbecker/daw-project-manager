@@ -2605,6 +2605,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noSessionsYet => '尚未记录任何会话';
 
   @override
+  String get removeSessionTitle => '删除会话？';
+
+  @override
   String get tabPosition => '标签位置';
 
   @override

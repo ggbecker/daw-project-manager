@@ -1740,6 +1740,8 @@
   "@sessionHistory": {},
   "noSessionsYet": "Aucune session enregistrée",
   "@noSessionsYet": {},
+  "removeSessionTitle": "Supprimer la session ?",
+  "@removeSessionTitle": {},
   "tabPosition": "Position des onglets",
   "@tabPosition": {},
   "tabPositionTop": "Haut",

@@ -4562,6 +4562,12 @@ abstract class AppLocalizations {
   /// **'No sessions recorded yet'**
   String get noSessionsYet;
 
+  /// No description provided for @removeSessionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove session?'**
+  String get removeSessionTitle;
+
   /// No description provided for @tabPosition.
   ///
   /// In en, this message translates to:

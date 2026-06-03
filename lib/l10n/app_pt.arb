@@ -1764,6 +1764,8 @@
   "@sessionHistory": {},
   "noSessionsYet": "Nenhuma sessão registrada ainda",
   "@noSessionsYet": {},
+  "removeSessionTitle": "Remover sessão?",
+  "@removeSessionTitle": {},
   "tabPosition": "Posição das abas",
   "@tabPosition": {},
   "tabPositionTop": "Topo",

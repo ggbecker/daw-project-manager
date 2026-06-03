@@ -2688,6 +2688,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get noSessionsYet => 'Сессии ещё не записаны';
 
   @override
+  String get removeSessionTitle => 'Удалить сессию?';
+
+  @override
   String get tabPosition => 'Расположение вкладок';
 
   @override

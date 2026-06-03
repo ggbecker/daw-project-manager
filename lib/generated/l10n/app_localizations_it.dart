@@ -2694,6 +2694,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get noSessionsYet => 'Nessuna sessione registrata';
 
   @override
+  String get removeSessionTitle => 'Rimuovere la sessione?';
+
+  @override
   String get tabPosition => 'Posizione schede';
 
   @override

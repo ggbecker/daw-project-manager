@@ -2709,6 +2709,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get noSessionsYet => 'Aucune session enregistrée';
 
   @override
+  String get removeSessionTitle => 'Supprimer la session ?';
+
+  @override
   String get tabPosition => 'Position des onglets';
 
   @override

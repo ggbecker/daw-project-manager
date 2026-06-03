@@ -2816,6 +2816,8 @@
   "@sessionHistory": {},
   "noSessionsYet": "No sessions recorded yet",
   "@noSessionsYet": {},
+  "removeSessionTitle": "Remove session?",
+  "@removeSessionTitle": {},
   "tabPosition": "Tab position",
   "@tabPosition": {},
   "tabPositionTop": "Top",

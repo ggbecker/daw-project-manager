@@ -1740,6 +1740,8 @@
   "@sessionHistory": {},
   "noSessionsYet": "尚未记录任何会话",
   "@noSessionsYet": {},
+  "removeSessionTitle": "删除会话？",
+  "@removeSessionTitle": {},
   "tabPosition": "标签位置",
   "@tabPosition": {},
   "tabPositionTop": "顶部",

@@ -2631,6 +2631,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get noSessionsYet => 'セッションはまだ記録されていません';
 
   @override
+  String get removeSessionTitle => 'セッションを削除しますか？';
+
+  @override
   String get tabPosition => 'タブの位置';
 
   @override

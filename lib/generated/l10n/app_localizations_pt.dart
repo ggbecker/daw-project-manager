@@ -2688,6 +2688,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get noSessionsYet => 'Nenhuma sessão registrada ainda';
 
   @override
+  String get removeSessionTitle => 'Remover sessão?';
+
+  @override
   String get tabPosition => 'Posição das abas';
 
   @override

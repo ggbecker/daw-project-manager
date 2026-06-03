@@ -2685,6 +2685,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noSessionsYet => 'No sessions recorded yet';
 
   @override
+  String get removeSessionTitle => 'Remove session?';
+
+  @override
   String get tabPosition => 'Tab position';
 
   @override

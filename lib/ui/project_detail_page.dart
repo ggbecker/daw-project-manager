@@ -2817,6 +2817,38 @@ class _SessionHistorySection extends StatefulWidget {
 class _SessionHistorySectionState extends State<_SessionHistorySection> {
   bool _expanded = true;
 
+  void _confirmRemove(BuildContext context, SessionRecord session) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final dateFmt = DateFormat('MMM d, yyyy');
+    final timeFmt = DateFormat('HH:mm');
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.removeSessionTitle),
+        content: Text(
+          '${dateFmt.format(session.startedAt)}  '
+          '${timeFmt.format(session.startedAt)}–${timeFmt.format(session.endedAt)}  '
+          '(${_fmtDuration(session.durationSeconds)})',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              widget.onRemove(session);
+            },
+            child: Text(l10n.delete,
+                style: TextStyle(color: theme.colorScheme.error)),
+          ),
+        ],
+      ),
+    );
+  }
+
   static String _fmtDuration(int seconds) {
     final h = seconds ~/ 3600;
     final m = (seconds % 3600) ~/ 60;
@@ -2902,7 +2934,6 @@ class _SessionHistorySectionState extends State<_SessionHistorySection> {
                 0: FlexColumnWidth(3),
                 1: FlexColumnWidth(2),
                 2: FlexColumnWidth(2),
-                3: IntrinsicColumnWidth(),
               },
               border: TableBorder(
                 horizontalInside: BorderSide(color: divider, width: 1),
@@ -2918,7 +2949,6 @@ class _SessionHistorySectionState extends State<_SessionHistorySection> {
                     cell('Date', bold: true),
                     cell('Time', bold: true),
                     cell('Duration', bold: true),
-                    const SizedBox.shrink(),
                   ],
                 ),
                 // One row per individual session
@@ -2928,15 +2958,23 @@ class _SessionHistorySectionState extends State<_SessionHistorySection> {
                       cell(dateFmt.format(s.startedAt)),
                       cell(
                           '${timeFmt.format(s.startedAt)}–${timeFmt.format(s.endedAt)}'),
-                      cell(_fmtDuration(s.durationSeconds)),
                       TableRowInkWell(
-                        onTap: () => widget.onRemove(s),
+                        onTap: () => _confirmRemove(context, s),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: Icon(
-                            Icons.delete_outline,
-                            size: 16,
-                            color: theme.colorScheme.error.withValues(alpha: 0.7),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 6, horizontal: 8),
+                          child: Row(
+                            children: [
+                              Text(_fmtDuration(s.durationSeconds),
+                                  style: bodySmall),
+                              const Spacer(),
+                              Icon(
+                                Icons.delete_outline,
+                                size: 14,
+                                color: theme.colorScheme.error
+                                    .withValues(alpha: 0.6),
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -2955,7 +2993,6 @@ class _SessionHistorySectionState extends State<_SessionHistorySection> {
                         color: theme.colorScheme.primary),
                     cell(_fmtDuration(totalSeconds),
                         bold: true, color: theme.colorScheme.primary),
-                    const SizedBox.shrink(),
                   ],
                 ),
               ],

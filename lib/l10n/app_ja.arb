@@ -1740,6 +1740,8 @@
   "@sessionHistory": {},
   "noSessionsYet": "セッションはまだ記録されていません",
   "@noSessionsYet": {},
+  "removeSessionTitle": "セッションを削除しますか？",
+  "@removeSessionTitle": {},
   "tabPosition": "タブの位置",
   "@tabPosition": {},
   "tabPositionTop": "上",

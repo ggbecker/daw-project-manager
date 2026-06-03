@@ -1740,6 +1740,8 @@
   "@sessionHistory": {},
   "noSessionsYet": "Сессии ещё не записаны",
   "@noSessionsYet": {},
+  "removeSessionTitle": "Удалить сессию?",
+  "@removeSessionTitle": {},
   "tabPosition": "Расположение вкладок",
   "@tabPosition": {},
   "tabPositionTop": "Сверху",

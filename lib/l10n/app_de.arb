@@ -1740,6 +1740,8 @@
   "@sessionHistory": {},
   "noSessionsYet": "Noch keine Sitzungen aufgezeichnet",
   "@noSessionsYet": {},
+  "removeSessionTitle": "Sitzung entfernen?",
+  "@removeSessionTitle": {},
   "tabPosition": "Tab-Position",
   "@tabPosition": {},
   "tabPositionTop": "Oben",

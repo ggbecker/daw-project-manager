@@ -1740,6 +1740,8 @@
   "@sessionHistory": {},
   "noSessionsYet": "Aún no hay sesiones registradas",
   "@noSessionsYet": {},
+  "removeSessionTitle": "¿Eliminar sesión?",
+  "@removeSessionTitle": {},
   "tabPosition": "Posición de pestañas",
   "@tabPosition": {},
   "tabPositionTop": "Arriba",

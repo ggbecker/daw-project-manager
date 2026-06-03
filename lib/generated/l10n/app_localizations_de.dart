@@ -2701,6 +2701,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get noSessionsYet => 'Noch keine Sitzungen aufgezeichnet';
 
   @override
+  String get removeSessionTitle => 'Sitzung entfernen?';
+
+  @override
   String get tabPosition => 'Tab-Position';
 
   @override

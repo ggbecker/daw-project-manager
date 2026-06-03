@@ -1740,6 +1740,8 @@
   "@sessionHistory": {},
   "noSessionsYet": "Nessuna sessione registrata",
   "@noSessionsYet": {},
+  "removeSessionTitle": "Rimuovere la sessione?",
+  "@removeSessionTitle": {},
   "tabPosition": "Posizione schede",
   "@tabPosition": {},
   "tabPositionTop": "In alto",
