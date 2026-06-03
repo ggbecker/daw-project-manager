@@ -568,11 +568,137 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
         await repo.updateRootLastScanAt(root.id, scanTime);
       }
 
+      // Snapshot pending folders with active session tracking before resolving,
+      // so we can reconcile sessions for any that get resolved by this scan.
+      final pendingWithSession = repo
+          .getPendingFolders()
+          .where((pf) => pf.sessionStartedAt != null)
+          .toList(growable: false);
+      if (kDebugMode) {
+        print('[_scanAll] pendingWithSession count=${pendingWithSession.length}');
+      }
+
       // Resolve pending folders: remove entries whose folder now has a real project
       // file (the scan just upserted it) or whose folder no longer exists.
       final resolved = await repo.resolveCompletedPendingFolders();
+      if (kDebugMode) {
+        print('[_scanAll] resolved=${resolved.toList()}');
+      }
       if (resolved.isNotEmpty) {
         ref.read(pendingFoldersDirtyProvider.notifier).bump();
+      }
+
+      // Show session-reconciliation dialogs for any resolved folders that had
+      // an active session stamp.
+      for (final pf in pendingWithSession) {
+        if (!resolved.contains(pf.id)) continue;
+        if (!mounted) break;
+        final sessionStart = pf.sessionStartedAt!;
+        final project = repo
+            .getAllProjects()
+            .where((p) => p.filePath.startsWith(pf.path))
+            .firstOrNull;
+        if (kDebugMode) {
+          print('[_scanAll] session pf=${pf.id} project=${project?.displayName}');
+        }
+        if (project == null || !mounted) continue;
+
+        final elapsed = DateTime.now().difference(sessionStart);
+        final h = elapsed.inHours;
+        final m = elapsed.inMinutes.remainder(60);
+        final durationLabel = h > 0 ? '${h}h ${m}m' : '${m}m';
+        final l10n = AppLocalizations.of(context)!;
+
+        final choice = await showDialog<_SessionChoice>(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            title: Text(l10n.pendingFolderSessionTitle),
+            content: Text(l10n.pendingFolderSessionBody(
+                project.displayName.isNotEmpty
+                    ? project.displayName
+                    : pf.folderName,
+                durationLabel)),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(l10n.cancel),
+              ),
+              OutlinedButton(
+                onPressed: () =>
+                    Navigator.pop(ctx, _SessionChoice.endAndRecord),
+                child: Text(l10n.pendingFolderSessionEndRecord),
+              ),
+              FilledButton(
+                onPressed: () =>
+                    Navigator.pop(ctx, _SessionChoice.continueSession),
+                child: Text(l10n.pendingFolderSessionContinue),
+              ),
+            ],
+          ),
+        );
+        if (choice == null || !mounted) continue;
+        if (kDebugMode) {
+          print('[_scanAll] sessionChoice=$choice for ${project.id}');
+        }
+
+        if (choice == _SessionChoice.endAndRecord) {
+          final now = DateTime.now();
+          final elapsedSecs = now.difference(sessionStart).inSeconds;
+          if (elapsedSecs > 0) {
+            final latest = repo.getById(project.id) ?? project;
+            final record = SessionRecord(
+              id: sessionStart.toIso8601String(),
+              startedAt: sessionStart,
+              endedAt: now,
+              durationSeconds: elapsedSecs,
+              phase: latest.status,
+            );
+            await repo.updateProject(latest.copyWith(
+              totalWorkSeconds: latest.totalWorkSeconds + elapsedSecs,
+              sessions: [...latest.sessions, record],
+              updatedAt: now,
+            ));
+            if (kDebugMode) {
+              print('[_scanAll] session saved elapsedSecs=$elapsedSecs for ${project.id}');
+            }
+          }
+        } else if (mounted) {
+          // Continue session — WorkTimerNotifier saves it when the project
+          // is eventually deactivated. Don't record a duplicate now.
+          final updated = repo.getById(project.id) ?? project;
+          final currentActive = ref.read(activeProjectProvider);
+          if (currentActive != null && currentActive.id != updated.id && mounted) {
+            final l = AppLocalizations.of(context)!;
+            final confirmSwitch = await showDialog<bool>(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                title: Text(l.activeSessionSwitchTitle),
+                content: Text(l.activeSessionSwitchBody(
+                  currentActive.displayName.isNotEmpty
+                      ? currentActive.displayName
+                      : currentActive.fileName,
+                  updated.displayName.isNotEmpty
+                      ? updated.displayName
+                      : updated.fileName,
+                )),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    child: Text(l.cancel),
+                  ),
+                  FilledButton(
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child: Text(l.activeSessionSwitch),
+                  ),
+                ],
+              ),
+            );
+            if (confirmSwitch != true || !mounted) continue;
+          }
+          ref.read(activeProjectProvider.notifier).set(updated);
+          ref.read(workTimerProvider.notifier).continueFrom(sessionStart);
+        }
       }
 
       // Auto-detect preview songs for projects that have neither a manual nor
@@ -1106,7 +1232,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                 if (isMobile) return const SizedBox.shrink();
                 return Padding(
                   padding: Platform.isMacOS
-                      ? const EdgeInsets.fromLTRB(16, 8, 16, 16)
+                      ? const EdgeInsets.fromLTRB(16, 14, 16, 16)
                       : MobileUtils.getResponsivePadding(context),
                   child: isMobile
                       ? Column(
@@ -1761,15 +1887,16 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
 
                   final col = Column(
           children: [
-            // Hoisted above the Row when left rail is active; kept here otherwise.
+            // Kept here when not using the left rail. When the left rail is
+            // active, the title bar is either hoisted (Windows/Linux) or omitted
+            // from the content column entirely (macOS — traffic-light clearance is
+            // in the rail's leading instead).
             if (!isLeftRail) titleBar,
 
-            // On macOS+left-rail the action bar is hoisted full-width
-            // above the Row. All other configs keep it here.
-            if (!(Platform.isMacOS && isLeftRail)) actionBar,
+            actionBar,
 
             // Zero-height anchor used to position the suggestions overlay.
-            if (!MobileUtils.isMobile() && !(Platform.isMacOS && isLeftRail))
+            if (!MobileUtils.isMobile())
               SizedBox(key: _suggestionsPanelAnchorKey, height: 0),
 
             // Project folders are managed in the dedicated desktop-only settings page.
@@ -1864,12 +1991,14 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                     NavigationRail(
                       selectedIndex: _tabController.index,
                       onDestinationSelected: (i) => _tabController.animateTo(i),
-                      minWidth: railCollapsed ? 64.0 : _railWidth,
+                      minWidth: railCollapsed ? (Platform.isMacOS ? 80.0 : 64.0) : _railWidth,
                       labelType: railCollapsed
                           ? NavigationRailLabelType.none
                           : NavigationRailLabelType.all,
                       leading: Column(
                         children: [
+                          // Clear macOS traffic-light buttons (float over top-left).
+                          if (Platform.isMacOS) const SizedBox(height: 28),
                           // Collapse/expand toggle
                           Tooltip(
                             message: railCollapsed
@@ -2131,17 +2260,13 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                     Expanded(child: col),
                   ],
                 );
-                // Hoist the title bar above the Row on all desktop platforms so
-                // the NavigationRail background starts below the window chrome.
-                // On macOS the action bar is also hoisted (traffic-light geometry).
+                // On Windows/Linux hoist the title bar above the Row so the
+                // NavigationRail background starts below the window chrome.
+                // On macOS the rail extends to the top — the traffic-light
+                // clearance SizedBox is in the rail's leading instead.
                 return Column(
                   children: [
-                    titleBar,
-                    if (Platform.isMacOS) ...[
-                      actionBar,
-                      if (!MobileUtils.isMobile())
-                        SizedBox(key: _suggestionsPanelAnchorKey, height: 0),
-                    ],
+                    if (!Platform.isMacOS) titleBar,
                     Expanded(child: row),
                   ],
                 );
@@ -8337,6 +8462,10 @@ class _FolderNameCellState extends State<_FolderNameCell> {
 // Pending Folders Section — shown above the projects table
 // ---------------------------------------------------------------------------
 
+enum _DismissChoice { keepAndDismiss, deleteAndDismiss }
+
+enum _SessionChoice { continueSession, endAndRecord }
+
 class _PendingFoldersSection extends ConsumerWidget {
   const _PendingFoldersSection();
 
@@ -8405,8 +8534,52 @@ class _PendingFolderRow extends ConsumerWidget {
                       ],
                     ],
                   ),
+                  if (pf.sessionStartedAt != null)
+                    StreamBuilder<int>(
+                      stream: Stream.periodic(
+                          const Duration(seconds: 1), (i) => i),
+                      builder: (context, _) {
+                        final elapsed =
+                            DateTime.now().difference(pf.sessionStartedAt!);
+                        final h = elapsed.inHours;
+                        final m = elapsed.inMinutes.remainder(60);
+                        final s = elapsed.inSeconds.remainder(60);
+                        final label = h > 0
+                            ? '⏱ ${h}h ${m}m'
+                            : m > 0
+                                ? '⏱ ${m}m ${s}s'
+                                : '⏱ ${s}s';
+                        return Text(
+                          label,
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                        );
+                      },
+                    ),
                 ],
               ),
+            ),
+            // Copy folder name
+            IconButton(
+              icon: const Icon(Icons.copy_outlined, size: 18),
+              tooltip: l10n.createProjectCopyName,
+              visualDensity: VisualDensity.compact,
+              onPressed: () async {
+                await Clipboard.setData(ClipboardData(text: pf.folderName));
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(l10n.createProjectNameCopied),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                }
+              },
             ),
             // Open folder
             IconButton(
@@ -8415,20 +8588,197 @@ class _PendingFolderRow extends ConsumerWidget {
               visualDensity: VisualDensity.compact,
               onPressed: () => FileLauncher.openFolder(pf.path),
             ),
-            // Refresh — re-check whether a project file has appeared
+            // Refresh — scan the folder then resolve pending entry
             IconButton(
               icon: const Icon(Icons.refresh, size: 18),
               tooltip: l10n.pendingProjectRefresh,
               visualDensity: VisualDensity.compact,
               onPressed: () async {
                 final repo = await ref.read(repositoryProvider.future);
+                // Re-read the pending folder from the repository so we get the
+                // latest sessionStartedAt even if the widget hasn't rebuilt yet.
+                final livePf = repo
+                        .getPendingFolders()
+                        .where((f) => f.id == pf.id)
+                        .firstOrNull ??
+                    pf;
+                final sessionStart = livePf.sessionStartedAt;
+                if (kDebugMode) {
+                  print('[PendingRefresh] id=${pf.id} sessionStart=$sessionStart');
+                }
+
+                final scanner = ScannerService();
+                final ignoredPaths =
+                    repo.getIgnoredPaths().map((p) => p.path).toList(growable: false);
+                int scanned = 0;
+                await for (final entity
+                    in scanner.scanDirectory(pf.path, ignoredPaths: ignoredPaths)) {
+                  await repo.upsertFromFileSystemEntity(entity, fullMetadata: true);
+                  scanned++;
+                }
+                if (kDebugMode) {
+                  print('[PendingRefresh] scanned $scanned entities in ${pf.path}');
+                }
+
                 final resolved = await repo.resolveCompletedPendingFolders();
-                if (resolved.contains(pf.id)) {
-                  ref.read(pendingFoldersDirtyProvider.notifier).bump();
-                } else if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(l10n.pendingProjectNotFound)),
-                  );
+                if (kDebugMode) {
+                  print('[PendingRefresh] resolved=${resolved.toList()} contains(${pf.id})=${resolved.contains(pf.id)}');
+                }
+                if (!resolved.contains(pf.id)) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(l10n.pendingProjectNotFound)),
+                    );
+                  }
+                  return;
+                }
+
+                // --- Session dialogs BEFORE bump() ---
+                // bump() removes this widget from the tree, making context
+                // invalid. All dialogs must be shown while the widget is still
+                // mounted, then we bump and do the async work without context.
+                _SessionChoice? sessionChoice;
+                MusicProject? sessionProject;
+                bool shouldSetActive = false;
+
+                if (sessionStart != null && context.mounted) {
+                  sessionProject = repo
+                      .getAllProjects()
+                      .where((p) => p.filePath.startsWith(pf.path))
+                      .firstOrNull;
+                  if (kDebugMode) {
+                    print('[PendingRefresh] project=${sessionProject?.displayName} (searching in ${pf.path})');
+                  }
+
+                  if (sessionProject != null) {
+                    final elapsed = DateTime.now().difference(sessionStart);
+                    final h = elapsed.inHours;
+                    final m = elapsed.inMinutes.remainder(60);
+                    final durationLabel = h > 0 ? '${h}h ${m}m' : '${m}m';
+
+                    sessionChoice = await showDialog<_SessionChoice>(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (ctx) => AlertDialog(
+                        title: Text(l10n.pendingFolderSessionTitle),
+                        content: Text(l10n.pendingFolderSessionBody(
+                            sessionProject!.displayName.isNotEmpty
+                                ? sessionProject.displayName
+                                : pf.folderName,
+                            durationLabel)),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            child: Text(l10n.cancel),
+                          ),
+                          OutlinedButton(
+                            onPressed: () =>
+                                Navigator.pop(ctx, _SessionChoice.endAndRecord),
+                            child: Text(l10n.pendingFolderSessionEndRecord),
+                          ),
+                          FilledButton(
+                            onPressed: () =>
+                                Navigator.pop(ctx, _SessionChoice.continueSession),
+                            child: Text(l10n.pendingFolderSessionContinue),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (kDebugMode) {
+                      print('[PendingRefresh] sessionChoice=$sessionChoice');
+                    }
+
+                    if (sessionChoice == _SessionChoice.continueSession &&
+                        context.mounted) {
+                      final currentActive = ref.read(activeProjectProvider);
+                      if (currentActive != null &&
+                          currentActive.id != sessionProject.id) {
+                        final confirmSwitch = await showDialog<bool>(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: Text(l10n.activeSessionSwitchTitle),
+                            content: Text(l10n.activeSessionSwitchBody(
+                              currentActive.displayName.isNotEmpty
+                                  ? currentActive.displayName
+                                  : currentActive.fileName,
+                              sessionProject!.displayName.isNotEmpty
+                                  ? sessionProject.displayName
+                                  : sessionProject.fileName,
+                            )),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx, false),
+                                child: Text(l10n.cancel),
+                              ),
+                              FilledButton(
+                                onPressed: () => Navigator.pop(ctx, true),
+                                child: Text(l10n.activeSessionSwitch),
+                              ),
+                            ],
+                          ),
+                        );
+                        shouldSetActive = confirmSwitch == true;
+                      } else {
+                        shouldSetActive = true;
+                      }
+                    }
+                  }
+                }
+
+                // Capture ref-dependent notifiers BEFORE bump() disposes
+                // this widget. After bump() the widget is unmounted and ref
+                // reads would throw "Using ref when widget is unmounted".
+                final dirtyNotifier =
+                    ref.read(pendingFoldersDirtyProvider.notifier);
+                final activeNotifier =
+                    ref.read(activeProjectProvider.notifier);
+                final workTimerNotifier =
+                    ref.read(workTimerProvider.notifier);
+
+                // NOW bump — removes this widget from the tree.
+                // No context or ref access after this point.
+                dirtyNotifier.bump();
+
+                // Handle session outcome (no context/ref reads after this point).
+                if (sessionProject != null && sessionChoice != null) {
+                  if (sessionChoice == _SessionChoice.endAndRecord) {
+                    // Record the elapsed time as a completed historical session.
+                    final now = DateTime.now();
+                    final elapsedSecs = now.difference(sessionStart!).inSeconds;
+                    if (kDebugMode) {
+                      print('[PendingRefresh] endAndRecord elapsedSecs=$elapsedSecs for project ${sessionProject.id}');
+                    }
+                    if (elapsedSecs > 0) {
+                      final latest =
+                          repo.getById(sessionProject.id) ?? sessionProject;
+                      final record = SessionRecord(
+                        id: sessionStart.toIso8601String(),
+                        startedAt: sessionStart,
+                        endedAt: now,
+                        durationSeconds: elapsedSecs,
+                        phase: latest.status,
+                      );
+                      await repo.updateProject(latest.copyWith(
+                        totalWorkSeconds: latest.totalWorkSeconds + elapsedSecs,
+                        sessions: [...latest.sessions, record],
+                        updatedAt: now,
+                      ));
+                      if (kDebugMode) {
+                        print('[PendingRefresh] session saved to project ${sessionProject.id}');
+                      }
+                    }
+                  } else if (shouldSetActive) {
+                    // Continue session — do NOT record now; WorkTimerNotifier
+                    // will save it when the project is eventually deactivated.
+                    final updated =
+                        repo.getById(sessionProject.id) ?? sessionProject;
+                    // Set the project active (triggers WorkTimerNotifier._start()).
+                    activeNotifier.set(updated);
+                    // Override the start time so the timer shows the full
+                    // duration since the original session start, not just
+                    // the time since "Refresh" was pressed.
+                    workTimerNotifier.continueFrom(sessionStart!);
+                  }
                 }
               },
             ),
@@ -8473,12 +8823,44 @@ class _PendingFolderRow extends ConsumerWidget {
                 }
               },
             ),
-            // Dismiss (stop tracking without deleting)
+            // Dismiss (stop tracking, with option to delete)
             IconButton(
               icon: const Icon(Icons.close, size: 18),
               tooltip: l10n.pendingProjectDismiss,
               visualDensity: VisualDensity.compact,
               onPressed: () async {
+                final choice = await showDialog<_DismissChoice>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: Text(l10n.pendingProjectDismissTitle),
+                    content: Text(pf.folderName),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: Text(l10n.cancel),
+                      ),
+                      OutlinedButton.icon(
+                        icon: const Icon(Icons.delete_outline, size: 18),
+                        label: Text(l10n.pendingProjectDismissDelete),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Theme.of(ctx).colorScheme.error,
+                          side: BorderSide(color: Theme.of(ctx).colorScheme.error),
+                        ),
+                        onPressed: () => Navigator.pop(ctx, _DismissChoice.deleteAndDismiss),
+                      ),
+                      FilledButton(
+                        onPressed: () => Navigator.pop(ctx, _DismissChoice.keepAndDismiss),
+                        child: Text(l10n.pendingProjectDismissKeep),
+                      ),
+                    ],
+                  ),
+                );
+                if (choice == null || !context.mounted) return;
+                if (choice == _DismissChoice.deleteAndDismiss) {
+                  try {
+                    await Directory(pf.path).delete(recursive: true);
+                  } catch (_) {}
+                }
                 final repo = await ref.read(repositoryProvider.future);
                 await repo.removePendingFolder(pf.id);
                 ref.read(pendingFoldersDirtyProvider.notifier).bump();
