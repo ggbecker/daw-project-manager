@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'generated/l10n/app_localizations.dart';
-import 'dart:io' show Platform, ServerSocket, InternetAddress, SocketException, File, Directory, exit;
+import 'dart:io' show Platform, Process, ServerSocket, InternetAddress, SocketException, File, Directory, exit;
 import 'package:window_manager/window_manager.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 
@@ -38,6 +38,33 @@ bool _autoBackupRunning = false;
 // Keeps the single-instance socket alive for the app's lifetime.
 // ignore: unused_element
 ServerSocket? _singleInstanceSocket;
+
+Future<void> _showAlreadyRunningMessage() async {
+  if (Platform.isMacOS) {
+    await Process.run('osascript', [
+      '-e',
+      'display dialog "DAW Project Manager is already running. Please close the existing window before opening a new one." buttons {"OK"} default button "OK" with title "DAW Project Manager"',
+    ]);
+  } else if (Platform.isWindows) {
+    await Process.run('powershell', [
+      '-Command',
+      'Add-Type -AssemblyName PresentationFramework; [System.Windows.MessageBox]::Show("DAW Project Manager is already running. Please close the existing window before opening a new one.", "DAW Project Manager")',
+    ]);
+  } else if (Platform.isLinux) {
+    try {
+      await Process.run('zenity', [
+        '--info',
+        '--title=DAW Project Manager',
+        '--text=DAW Project Manager is already running. Please close the existing window before opening a new one.',
+      ]);
+    } catch (_) {
+      await Process.run('kdialog', [
+        '--title=DAW Project Manager',
+        '--msgbox=DAW Project Manager is already running. Please close the existing window before opening a new one.',
+      ]);
+    }
+  }
+}
 
 /// Reads the update-check preference directly from Hive (bypassing the provider
 /// which defers its Hive load to after the first frame) and, if enabled, checks
@@ -186,7 +213,8 @@ void main() async {
     try {
       _singleInstanceSocket = await ServerSocket.bind(InternetAddress.loopbackIPv4, 57321);
     } on SocketException {
-      // Port is already bound — another instance is running. Exit silently.
+      // Port is already bound — another instance is running.
+      await _showAlreadyRunningMessage();
       exit(0);
     }
   }
