@@ -1035,7 +1035,7 @@ class WarnBeforeQuitNotifier extends Notifier<bool> {
   @override
   bool build() {
     SchedulerBinding.instance.addPostFrameCallback((_) => _load());
-    return false;
+    return true;
   }
 
   Future<void> _load() async {
@@ -1838,6 +1838,8 @@ class WorkTimerNotifier extends Notifier<int> {
     if (_startTime == null) return;
     final elapsed = DateTime.now().difference(_startTime!);
     state = elapsed.inSeconds;
+
+    if (Platform.isAndroid || Platform.isIOS) return;
 
     final enabled = ref.read(workTimerNotifEnabledProvider);
     if (!enabled) return;
