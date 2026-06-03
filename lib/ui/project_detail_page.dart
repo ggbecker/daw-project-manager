@@ -505,12 +505,11 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                   ),
                 ),
                 Expanded(
-                  child: Padding(
-                    padding: MobileUtils.getResponsivePadding(context),
-                    child: Form(
-                      key: _formKey,
-                      child: ListView(
-                        children: [
+                  child: Form(
+                    key: _formKey,
+                    child: ListView(
+                      padding: MobileUtils.getResponsivePadding(context),
+                      children: [
                     if (!sourceFileExists && !MobileUtils.isMobile())
                       Container(
                         margin: const EdgeInsets.only(bottom: 12),
@@ -1001,7 +1000,6 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                             _ProjectStatsButton(projectId: updatedProject.id),
                             const SizedBox(height: 16),
                         ],
-                      ),
                     ),
                   ),
                 ),
