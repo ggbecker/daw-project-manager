@@ -26,6 +26,7 @@ import 'widgets/startup_dialog.dart';
 import 'widgets/tab_customization_dialog.dart';
 import '../services/dock_menu_service.dart';
 import '../utils/mobile_utils.dart';
+import '../utils/phase_colors.dart';
 import '../providers/theme_provider.dart';
 import '../utils/file_launcher.dart';
 import '../utils/search_utils.dart';
@@ -792,6 +793,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     final finishedMode = ref.watch(showFinishedProjectsProvider);
     final finishedNotifier = ref.read(showFinishedProjectsProvider.notifier);
     final phaseFilter = ref.watch(phaseFilterProvider);
+    final customPhases = ref.watch(customPhasesProvider);
     final deadlineFilter = ref.watch(deadlineFilterProvider);
     final initialScanning = ref.watch(initialScanStateProvider);
     final isProfileSwitching = ref.watch(profileSwitchingProvider);
@@ -1299,26 +1301,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                       value: null,
                                       child: Text(AppLocalizations.of(context)!.allPhases),
                                     ),
-                                    DropdownMenuItem<String>(
-                                      value: 'Idea',
-                                      child: Text(AppLocalizations.of(context)!.projectPhaseIdea),
-                                    ),
-                                    DropdownMenuItem<String>(
-                                      value: 'Arranging',
-                                      child: Text(AppLocalizations.of(context)!.projectPhaseArranging),
-                                    ),
-                                    DropdownMenuItem<String>(
-                                      value: 'Mixing',
-                                      child: Text(AppLocalizations.of(context)!.projectPhaseMixing),
-                                    ),
-                                    DropdownMenuItem<String>(
-                                      value: 'Mastering',
-                                      child: Text(AppLocalizations.of(context)!.projectPhaseMastering),
-                                    ),
-                                    DropdownMenuItem<String>(
-                                      value: 'Finished',
-                                      child: Text(AppLocalizations.of(context)!.projectPhaseFinished),
-                                    ),
+                                    ...customPhases.map((phase) => DropdownMenuItem<String>(
+                                      value: phase,
+                                      child: Text(phase),
+                                    )),
                                   ],
                           onChanged: (String? value) {
                             ref.read(phaseFilterProvider.notifier).setPhase(value);
@@ -2272,56 +2258,16 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
             children: [
               Text(AppLocalizations.of(context)!.selectNewStatus),
               const SizedBox(height: 16),
-              RadioListTile<String>(
-                title: Text(AppLocalizations.of(context)!.projectPhaseIdea),
-                value: 'Idea',
+              ...ref.read(customPhasesProvider).map((phase) => RadioListTile<String>(
+                title: Text(phase),
+                value: phase,
                 groupValue: selectedStatus,
                 onChanged: (value) {
                   setState(() {
                     selectedStatus = value;
                   });
                 },
-              ),
-              RadioListTile<String>(
-                title: Text(AppLocalizations.of(context)!.projectPhaseArranging),
-                value: 'Arranging',
-                groupValue: selectedStatus,
-                onChanged: (value) {
-                  setState(() {
-                    selectedStatus = value;
-                  });
-                },
-              ),
-              RadioListTile<String>(
-                title: Text(AppLocalizations.of(context)!.projectPhaseMixing),
-                value: 'Mixing',
-                groupValue: selectedStatus,
-                onChanged: (value) {
-                  setState(() {
-                    selectedStatus = value;
-                  });
-                },
-              ),
-              RadioListTile<String>(
-                title: Text(AppLocalizations.of(context)!.projectPhaseMastering),
-                value: 'Mastering',
-                groupValue: selectedStatus,
-                onChanged: (value) {
-                  setState(() {
-                    selectedStatus = value;
-                  });
-                },
-              ),
-              RadioListTile<String>(
-                title: Text(AppLocalizations.of(context)!.projectPhaseFinished),
-                value: 'Finished',
-                groupValue: selectedStatus,
-                onChanged: (value) {
-                  setState(() {
-                    selectedStatus = value;
-                  });
-                },
-              ),
+              )),
             ],
           ),
           actions: [
@@ -2438,6 +2384,7 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
     final finishedMode = ref.watch(showFinishedProjectsProvider);
     final finishedNotifier = ref.read(showFinishedProjectsProvider.notifier);
     final phaseFilter = ref.watch(phaseFilterProvider);
+    final customPhases = ref.watch(customPhasesProvider);
     final l10n = AppLocalizations.of(context)!;
 
     return Column(
@@ -2624,11 +2571,10 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
                   icon: Icon(Icons.filter_list, size: 16, color: Theme.of(context).textTheme.bodyMedium?.color),
                   items: [
                     DropdownMenuItem<String>(value: null, child: Text(l10n.allPhases)),
-                    DropdownMenuItem<String>(value: 'Idea', child: Text(l10n.projectPhaseIdea)),
-                    DropdownMenuItem<String>(value: 'Arranging', child: Text(l10n.projectPhaseArranging)),
-                    DropdownMenuItem<String>(value: 'Mixing', child: Text(l10n.projectPhaseMixing)),
-                    DropdownMenuItem<String>(value: 'Mastering', child: Text(l10n.projectPhaseMastering)),
-                    DropdownMenuItem<String>(value: 'Finished', child: Text(l10n.projectPhaseFinished)),
+                    ...customPhases.map((phase) => DropdownMenuItem<String>(
+                      value: phase,
+                      child: Text(_translateStatus(context, phase)),
+                    )),
                   ],
                   onChanged: (String? value) {
                     ref.read(phaseFilterProvider.notifier).setPhase(value);
@@ -2950,6 +2896,9 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       row.cells['key']?.value = updated.musicalKey ?? '';
       row.cells['lastModified']?.value = widget.dateFormat.format(updated.lastModifiedAt);
       row.cells['deadline']?.value = updated.deadlineStatus ?? '';
+      // Update the launch cell's own value so TrinaGrid re-renders the action
+      // column (play button) when preview song data changes.
+      row.cells['launch']?.value = updated.previewSongPath ?? updated.previewSongAutoPath ?? '';
     }
 
     // Walk top-level rows; for group rows also update their children (including
@@ -3245,7 +3194,11 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
 
     // Check for a newer audio file in the same folder as the current preview,
     // regardless of whether the path was manually set or auto-detected.
-    final newer = MixdownDetectorService.findNewerFileInSameFolder(effectivePath);
+    // Skip the prompt if the user previously rejected this specific file.
+    final newer = MixdownDetectorService.findNewerFileInSameFolder(
+      effectivePath,
+      ignoredPath: project.ignoredNewerSongPath,
+    );
     if (newer != null && mounted) {
       final l10n = AppLocalizations.of(context)!;
       final replace = await showDialog<bool>(
@@ -3262,8 +3215,8 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       );
       if (!mounted) return;
       if (replace == null) return;
+      final repo = await ref.read(repositoryProvider.future);
       if (replace) {
-        final repo = await ref.read(repositoryProvider.future);
         final isManual = project.previewSongPath?.isNotEmpty == true;
         final updated = isManual
             ? project.copyWith(
@@ -3273,6 +3226,12 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             : project.copyWith(previewSongAutoPath: newer.path);
         await repo.updateProject(updated);
         effectivePath = newer.path;
+      } else {
+        // "Keep Current" — remember the user rejected this specific file so
+        // we don't ask again unless an even newer file appears.
+        await repo.updateProject(
+          project.copyWith(ignoredNewerSongPath: newer.path),
+        );
       }
     }
 
@@ -3359,22 +3318,11 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     }
   }
 
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'Idea':
-        return Colors.blue.shade300;
-      case 'Arranging':
-        return Colors.orange.shade300;
-      case 'Mixing':
-        return Colors.purple.shade300;
-      case 'Mastering':
-        return Colors.pink.shade300;
-      case 'Finished':
-        return Colors.green.shade300;
-      default:
-        return Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
-    }
-  }
+  Color _getStatusColor(String status) => resolvePhaseColor(
+        status,
+        ref.read(phaseColorsProvider),
+        ref.read(customPhasesProvider),
+      );
 
   String? _getDawLogoPath(String? dawType) {
     if (dawType == null || dawType.isEmpty) return null;
@@ -3498,7 +3446,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     Offset position,
     TrinaColumnRendererContext rendererContext,
   ) async {
-    const phases = ['Idea', 'Arranging', 'Mixing', 'Mastering', 'Finished'];
+    final phases = ref.read(customPhasesProvider);
     final selected = await showMenu<String>(
       context: context,
       position: RelativeRect.fromLTRB(position.dx, position.dy, position.dx, position.dy),
@@ -3875,6 +3823,17 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    // Rebuild rows when phase config changes so renderer closures re-run
+    // with fresh colors/names. notifyListeners() alone only repaints cells
+    // whose values changed; _rebuildRows() forces a full renderer re-invoke.
+    void rebuildForPhaseConfig() {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _rebuildRows();
+      });
+    }
+    ref.listen(phaseColorsProvider, (_, _) => rebuildForPhaseConfig());
+    ref.listen(customPhasesProvider, (_, _) => rebuildForPhaseConfig());
+    ref.listen(finishedPhaseProvider, (_, _) => rebuildForPhaseConfig());
     // When the search query changes, ask TrinaGrid to repaint so the
     // "matched in description" icon in the name renderer reflects the new query.
     ref.listen(projectsSearchProvider, (prev, next) {
@@ -4212,6 +4171,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           return Consumer(
             builder: (context, ref, _) {
               final colorEnabled = ref.watch(lastModifiedColorProvider);
+              final finishedPhases = ref.watch(finishedPhaseProvider);
               final defaultColor = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
 
               Color textColor;
@@ -4219,7 +4179,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                 textColor = defaultColor;
               } else {
                 final status = project.status;
-                if (status == 'Finished') {
+                if (finishedPhases.contains(status)) {
                   textColor = Colors.green;
                 } else {
                   final now = DateTime.now();
@@ -4254,66 +4214,66 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         minWidth: 100,
         renderer: (rendererContext) {
           final project = rendererContext.row.cells['data']?.value as MusicProject?;
-          if (project == null || project.deadline == null || project.status == 'Finished') {
+          if (project == null || project.deadline == null) {
             return const SizedBox.shrink();
           }
+          return Consumer(
+            builder: (context, ref, _) {
+              final finishedPhases = ref.watch(finishedPhaseProvider);
+              if (finishedPhases.contains(project.status)) return const SizedBox.shrink();
 
-          final daysUntil = project.daysUntilDeadline ?? 0;
+              final daysUntil = project.daysUntilDeadline ?? 0;
 
-          Color iconColor;
-          IconData iconData;
-          String text;
+              Color iconColor;
+              IconData iconData;
+              String text;
 
-          if (daysUntil < 0) {
-            iconColor = Colors.red;
-            iconData = Icons.warning;
-            text = AppLocalizations.of(context)!.daysLate(daysUntil.abs());
-          } else if (daysUntil == 0) {
-            iconColor = Colors.red;
-            iconData = Icons.today;
-            text = AppLocalizations.of(context)!.dueToday;
-          } else if (daysUntil <= 7) {
-            iconColor = Colors.orange;
-            iconData = Icons.schedule;
-            text = AppLocalizations.of(context)!.daysLeft(daysUntil);
-          } else {
-            iconColor = Colors.blue;
-            iconData = Icons.calendar_today;
-            text = '${daysUntil}d left';
-          }
+              if (daysUntil < 0) {
+                iconColor = Colors.red;
+                iconData = Icons.warning;
+                text = AppLocalizations.of(context)!.daysLate(daysUntil.abs());
+              } else if (daysUntil == 0) {
+                iconColor = Colors.red;
+                iconData = Icons.today;
+                text = AppLocalizations.of(context)!.dueToday;
+              } else if (daysUntil <= 7) {
+                iconColor = Colors.orange;
+                iconData = Icons.schedule;
+                text = AppLocalizations.of(context)!.daysLeft(daysUntil);
+              } else {
+                iconColor = Colors.blue;
+                iconData = Icons.calendar_today;
+                text = '${daysUntil}d left';
+              }
 
-          final deadlineWidget = Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(4),
-              border: Border.all(
-                color: iconColor.withOpacity(0.3),
-                width: 1,
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  iconData,
-                  size: 12,
-                  color: iconColor,
-                ),
-                const SizedBox(width: 3),
-                Text(
-                  text,
-                  style: TextStyle(
-                    color: iconColor,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 11,
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: iconColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(
+                    color: iconColor.withOpacity(0.3),
+                    width: 1,
                   ),
                 ),
-              ],
-            ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(iconData, size: 12, color: iconColor),
+                    const SizedBox(width: 3),
+                    Text(
+                      text,
+                      style: TextStyle(
+                        color: iconColor,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
           );
-
-          return deadlineWidget;
         },
       ),
       TrinaColumn(
@@ -6543,7 +6503,11 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
 
     // Check for a newer audio file in the same folder as the current preview,
     // regardless of whether the path was manually set or auto-detected.
-    final newer = MixdownDetectorService.findNewerFileInSameFolder(effectivePath);
+    // Skip the prompt if the user previously rejected this specific file.
+    final newer = MixdownDetectorService.findNewerFileInSameFolder(
+      effectivePath,
+      ignoredPath: project.ignoredNewerSongPath,
+    );
     if (newer != null && mounted) {
       final l10n = AppLocalizations.of(context)!;
       final replace = await showDialog<bool>(
@@ -6560,8 +6524,8 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
       );
       if (!mounted) return;
       if (replace == null) return;
+      final repo = await ref.read(repositoryProvider.future);
       if (replace) {
-        final repo = await ref.read(repositoryProvider.future);
         final isManual = project.previewSongPath?.isNotEmpty == true;
         final updated = isManual
             ? project.copyWith(
@@ -6571,6 +6535,12 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
             : project.copyWith(previewSongAutoPath: newer.path);
         await repo.updateProject(updated);
         effectivePath = newer.path;
+      } else {
+        // "Keep Current" — remember the user rejected this specific file so
+        // we don't ask again unless an even newer file appears.
+        await repo.updateProject(
+          project.copyWith(ignoredNewerSongPath: newer.path),
+        );
       }
     }
 
@@ -6611,27 +6581,17 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
     }
   }
 
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'Idea':
-        return Colors.blue.shade300;
-      case 'Arranging':
-        return Colors.orange.shade300;
-      case 'Mixing':
-        return Colors.purple.shade300;
-      case 'Mastering':
-        return Colors.pink.shade300;
-      case 'Finished':
-        return Colors.green.shade300;
-      default:
-        return Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
-    }
-  }
+  Color _getStatusColor(String status) => resolvePhaseColor(
+        status,
+        ref.read(phaseColorsProvider),
+        ref.read(customPhasesProvider),
+      );
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    
+    ref.watch(phaseColorsProvider); // rebuild when colors change
+
     if (widget.projects.isEmpty) {
       final allProjectsAsync = ref.watch(allProjectsStreamProvider);
       final totalProjects = allProjectsAsync.value?.length ?? 0;
@@ -6831,7 +6791,7 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                               ),
                             ),
                           ),
-                          if (project.deadline != null && project.status != 'Finished')
+                          if (project.deadline != null && !ref.watch(finishedPhaseProvider).contains(project.status))
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
@@ -7347,7 +7307,7 @@ class _Suggestion {
 final _suggestionsPanelAnchorKey = GlobalKey();
 
 List<_Suggestion> _buildIdleSuggestions(
-    List<MusicProject> all, Set<String> dismissed) {
+    List<MusicProject> all, Set<String> dismissed, Set<String> finishedPhases) {
   final visible = all.where((p) => !p.hidden).toList();
   final result = <_Suggestion>[];
   final seen = <String>{};
@@ -7360,7 +7320,7 @@ List<_Suggestion> _buildIdleSuggestions(
   // Overdue & due-today, non-finished (most overdue first)
   final urgentDeadlines = visible
       .where((p) =>
-          p.status != 'Finished' &&
+          !finishedPhases.contains(p.status) &&
           p.daysUntilDeadline != null &&
           p.daysUntilDeadline! <= 0)
       .toList()
@@ -7372,7 +7332,7 @@ List<_Suggestion> _buildIdleSuggestions(
   // Due soon (1–7 days), non-finished
   final dueSoon = visible
       .where((p) =>
-          p.status != 'Finished' &&
+          !finishedPhases.contains(p.status) &&
           p.daysUntilDeadline != null &&
           p.daysUntilDeadline! > 0 &&
           p.daysUntilDeadline! <= 7)
@@ -7397,7 +7357,7 @@ List<_Suggestion> _buildIdleSuggestions(
 
   // Most recently modified non-finished (if not already listed)
   final recent = visible
-      .where((p) => p.status != 'Finished')
+      .where((p) => !finishedPhases.contains(p.status))
       .toList()
     ..sort((a, b) => b.lastModifiedAt.compareTo(a.lastModifiedAt));
   if (recent.isNotEmpty) add(_SuggestionType.recentlyModified, recent.first);
@@ -7518,7 +7478,8 @@ class _SessionIdleSuggestionsState
     final all = ref.watch(allProjectsStreamProvider).value ?? [];
     final dismissed = ref.watch(dismissedSuggestionsProvider);
     final panelExpanded = ref.watch(suggestionsPanelExpandedProvider);
-    final suggestions = _buildIdleSuggestions(all, dismissed);
+    final finishedPhases = ref.watch(finishedPhaseProvider);
+    final suggestions = _buildIdleSuggestions(all, dismissed, finishedPhases);
     final total = suggestions.length;
     final idx = total > 0 ? _index.clamp(0, total - 1) : 0;
     final theme = Theme.of(context);
@@ -7696,7 +7657,8 @@ class _SuggestionsPanelBar extends ConsumerWidget {
     final all = ref.watch(allProjectsStreamProvider).value ?? [];
     final dismissed = ref.watch(dismissedSuggestionsProvider);
     final sessionMode = ref.watch(sessionModeProvider);
-    final suggestions = _buildIdleSuggestions(all, dismissed);
+    final finishedPhases = ref.watch(finishedPhaseProvider);
+    final suggestions = _buildIdleSuggestions(all, dismissed, finishedPhases);
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
 

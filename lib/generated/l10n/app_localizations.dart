@@ -4514,6 +4514,18 @@ abstract class AppLocalizations {
   /// **'Open project'**
   String get playerOpenProject;
 
+  /// No description provided for @playerRepeatAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat all'**
+  String get playerRepeatAll;
+
+  /// No description provided for @playerShuffle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shuffle'**
+  String get playerShuffle;
+
   /// No description provided for @volumeMute.
   ///
   /// In en, this message translates to:
@@ -5227,6 +5239,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No project file found yet'**
   String get pendingProjectNotFound;
+
+  /// No description provided for @phases.
+  ///
+  /// In en, this message translates to:
+  /// **'Phases'**
+  String get phases;
+
+  /// No description provided for @phasesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add, remove, and reorder project phases'**
+  String get phasesSubtitle;
+
+  /// No description provided for @resetToDefaults.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset to defaults'**
+  String get resetToDefaults;
+
+  /// No description provided for @addPhase.
+  ///
+  /// In en, this message translates to:
+  /// **'Add phase'**
+  String get addPhase;
+
+  /// No description provided for @phaseNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Phase name'**
+  String get phaseNameHint;
+
+  /// No description provided for @phaseDuplicateError.
+  ///
+  /// In en, this message translates to:
+  /// **'A phase with that name already exists'**
+  String get phaseDuplicateError;
+
+  /// No description provided for @deletePhaseWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 project uses this phase} other{{count} projects use this phase}}'**
+  String deletePhaseWarning(int count);
+
+  /// No description provided for @selectPhaseColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Select color'**
+  String get selectPhaseColor;
+
+  /// No description provided for @markAsFinished.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as finished phase'**
+  String get markAsFinished;
+
+  /// No description provided for @resetPhasesWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 project uses a phase that will no longer exist.} other{{count} projects use phases that will no longer exist.}}'**
+  String resetPhasesWarning(int count);
+
+  /// No description provided for @resetPhasesWarningNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Those projects will keep their current status but won\'t appear in phase filters. You can always re-add those phases later.'**
+  String get resetPhasesWarningNote;
 }
 
 class _AppLocalizationsDelegate

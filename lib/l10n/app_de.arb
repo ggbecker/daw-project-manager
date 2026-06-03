@@ -1720,6 +1720,10 @@
   "@playerNextTrack": {},
   "playerOpenProject": "Projekt öffnen",
   "@playerOpenProject": {},
+  "playerRepeatAll": "Alle wiederholen",
+  "@playerRepeatAll": {},
+  "playerShuffle": "Zufällig",
+  "@playerShuffle": {},
   "volumeMute": "Stummschalten",
   "@volumeMute": {},
   "volumeUnmute": "Stummschaltung aufheben",
@@ -1983,5 +1987,16 @@
   "pendingProjectRefresh": "Nach Projektdatei suchen",
   "@pendingProjectRefresh": {},
   "pendingProjectNotFound": "Noch keine Projektdatei gefunden",
-  "@pendingProjectNotFound": {}
+  "@pendingProjectNotFound": {},
+  "phases": "Phasen",
+  "phasesSubtitle": "Projektphasen hinzufügen, entfernen und neu anordnen",
+  "resetToDefaults": "Auf Standard zurücksetzen",
+  "addPhase": "Phase hinzufügen",
+  "phaseNameHint": "Phasenname",
+  "phaseDuplicateError": "Eine Phase mit diesem Namen existiert bereits",
+  "deletePhaseWarning": "{count, plural, =1{1 Projekt verwendet diese Phase} other{{count} Projekte verwenden diese Phase}}",
+  "selectPhaseColor": "Farbe auswählen",
+  "markAsFinished": "Als abgeschlossene Phase markieren",
+  "resetPhasesWarning": "{count, plural, =1{1 Projekt verwendet eine Phase, die nicht mehr existiert.} other{{count} Projekte verwenden Phasen, die nicht mehr existieren.}}",
+  "resetPhasesWarningNote": "Diese Projekte behalten ihren aktuellen Status, erscheinen aber nicht in Phasenfiltern. Du kannst diese Phasen jederzeit wieder hinzufügen."
 }

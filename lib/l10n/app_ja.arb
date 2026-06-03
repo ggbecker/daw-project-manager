@@ -1720,6 +1720,10 @@
   "@playerNextTrack": {},
   "playerOpenProject": "プロジェクトを開く",
   "@playerOpenProject": {},
+  "playerRepeatAll": "すべて繰り返す",
+  "@playerRepeatAll": {},
+  "playerShuffle": "シャッフル",
+  "@playerShuffle": {},
   "volumeMute": "ミュート",
   "@volumeMute": {},
   "volumeUnmute": "ミュート解除",
@@ -1983,5 +1987,16 @@
   "pendingProjectRefresh": "プロジェクトファイルを確認",
   "@pendingProjectRefresh": {},
   "pendingProjectNotFound": "プロジェクトファイルはまだ見つかりません",
-  "@pendingProjectNotFound": {}
+  "@pendingProjectNotFound": {},
+  "phases": "フェーズ",
+  "phasesSubtitle": "プロジェクトフェーズの追加・削除・並べ替え",
+  "resetToDefaults": "デフォルトにリセット",
+  "addPhase": "フェーズを追加",
+  "phaseNameHint": "フェーズ名",
+  "phaseDuplicateError": "同じ名前のフェーズが既に存在します",
+  "deletePhaseWarning": "{count, plural, =1{このフェーズを使用しているプロジェクトが1件あります} other{このフェーズを使用しているプロジェクトが{count}件あります}}",
+  "selectPhaseColor": "色を選択",
+  "markAsFinished": "完了フェーズとしてマーク",
+  "resetPhasesWarning": "{count, plural, =1{1件のプロジェクトが存在しなくなるフェーズを使用しています。} other{{count}件のプロジェクトが存在しなくなるフェーズを使用しています。}}",
+  "resetPhasesWarningNote": "これらのプロジェクトは現在のステータスを保持しますが、フェーズフィルターには表示されません。後でいつでもフェーズを再追加できます。"
 }

@@ -1720,6 +1720,10 @@
   "@playerNextTrack": {},
   "playerOpenProject": "打开项目",
   "@playerOpenProject": {},
+  "playerRepeatAll": "全部重复",
+  "@playerRepeatAll": {},
+  "playerShuffle": "随机",
+  "@playerShuffle": {},
   "volumeMute": "静音",
   "@volumeMute": {},
   "volumeUnmute": "取消静音",
@@ -1983,5 +1987,16 @@
   "pendingProjectRefresh": "检查项目文件",
   "@pendingProjectRefresh": {},
   "pendingProjectNotFound": "尚未找到项目文件",
-  "@pendingProjectNotFound": {}
+  "@pendingProjectNotFound": {},
+  "phases": "阶段",
+  "phasesSubtitle": "添加、删除和重新排序项目阶段",
+  "resetToDefaults": "恢复默认设置",
+  "addPhase": "添加阶段",
+  "phaseNameHint": "阶段名称",
+  "phaseDuplicateError": "已存在同名阶段",
+  "deletePhaseWarning": "{count, plural, =1{1个项目使用此阶段} other{{count}个项目使用此阶段}}",
+  "selectPhaseColor": "选择颜色",
+  "markAsFinished": "标记为完成阶段",
+  "resetPhasesWarning": "{count, plural, =1{1个项目使用了将不再存在的阶段。} other{{count}个项目使用了将不再存在的阶段。}}",
+  "resetPhasesWarningNote": "这些项目将保留当前状态，但不会出现在阶段筛选器中。您随时可以重新添加这些阶段。"
 }

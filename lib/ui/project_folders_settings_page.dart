@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'notification_settings_page.dart';
+import 'phases_settings_page.dart';
 import 'widgets/desktop_title_bar.dart';
 import 'widgets/update_available_dialog.dart';
 import 'dashboard_page.dart' show appVersion;
@@ -379,6 +380,20 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
                       style: Theme.of(context).textTheme.bodySmall),
                   contentPadding: EdgeInsets.zero,
                   dense: true,
+                ),
+                const Divider(height: 20),
+                ListTile(
+                  leading: const Icon(Icons.tune),
+                  title: Text(l10n.phases),
+                  subtitle: Text(l10n.phasesSubtitle,
+                      style: Theme.of(context).textTheme.bodySmall),
+                  trailing: const Icon(Icons.chevron_right),
+                  contentPadding: EdgeInsets.zero,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const PhasesSettingsPage(),
+                    ),
+                  ),
                 ),
                 const Divider(height: 20),
                 ListTile(

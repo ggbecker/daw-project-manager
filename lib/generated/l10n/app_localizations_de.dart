@@ -2673,6 +2673,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get playerOpenProject => 'Projekt öffnen';
 
   @override
+  String get playerRepeatAll => 'Alle wiederholen';
+
+  @override
+  String get playerShuffle => 'Zufällig';
+
+  @override
   String get volumeMute => 'Stummschalten';
 
   @override
@@ -3076,4 +3082,56 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get pendingProjectNotFound => 'Noch keine Projektdatei gefunden';
+
+  @override
+  String get phases => 'Phasen';
+
+  @override
+  String get phasesSubtitle =>
+      'Projektphasen hinzufügen, entfernen und neu anordnen';
+
+  @override
+  String get resetToDefaults => 'Auf Standard zurücksetzen';
+
+  @override
+  String get addPhase => 'Phase hinzufügen';
+
+  @override
+  String get phaseNameHint => 'Phasenname';
+
+  @override
+  String get phaseDuplicateError =>
+      'Eine Phase mit diesem Namen existiert bereits';
+
+  @override
+  String deletePhaseWarning(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Projekte verwenden diese Phase',
+      one: '1 Projekt verwendet diese Phase',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get selectPhaseColor => 'Farbe auswählen';
+
+  @override
+  String get markAsFinished => 'Als abgeschlossene Phase markieren';
+
+  @override
+  String resetPhasesWarning(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Projekte verwenden Phasen, die nicht mehr existieren.',
+      one: '1 Projekt verwendet eine Phase, die nicht mehr existiert.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get resetPhasesWarningNote =>
+      'Diese Projekte behalten ihren aktuellen Status, erscheinen aber nicht in Phasenfiltern. Du kannst diese Phasen jederzeit wieder hinzufügen.';
 }

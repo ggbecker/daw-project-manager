@@ -127,6 +127,9 @@ class MusicProject {
   @HiveField(28)
   final bool metadataScanned; // True once a full metadata (deep) scan has been run
 
+  @HiveField(29)
+  final String? ignoredNewerSongPath; // Path offered as "newer" that the user explicitly rejected
+
   const MusicProject({
     required this.id,
     required this.filePath,
@@ -157,6 +160,7 @@ class MusicProject {
     this.totalWorkSeconds = 0,
     this.sessions = const [],
     this.metadataScanned = false,
+    this.ignoredNewerSongPath,
   });
 
   String get displayName => (customDisplayName != null && customDisplayName!.trim().isNotEmpty)
@@ -343,10 +347,11 @@ class MusicProject {
     }
   }
 
-  /// Returns the time it took to complete the project (from creation to finished status)
-  /// Returns null if status is not 'Finished' or dates are not available
-  Duration? get timeToCompletion {
-    if (status != 'Finished' || statusChangedAt == null) {
+  /// Returns the time it took to complete the project (from creation to finished status).
+  /// [finishedPhase] is the phase name that counts as "done" (defaults to 'Finished').
+  Duration? timeToCompletion([Set<String>? finishedPhases]) {
+    final phases = finishedPhases ?? {'Finished'};
+    if (!phases.contains(status) || statusChangedAt == null) {
       return null;
     }
     final startDate = fileCreatedAt ?? createdAt;
@@ -354,8 +359,8 @@ class MusicProject {
   }
 
   /// Returns a human-readable time to completion string
-  String? get timeToCompletionFormatted {
-    final duration = timeToCompletion;
+  String? timeToCompletionFormatted([Set<String>? finishedPhases]) {
+    final duration = timeToCompletion(finishedPhases);
     if (duration == null) return null;
     
     final years = duration.inDays ~/ 365;
@@ -418,6 +423,8 @@ class MusicProject {
     int? totalWorkSeconds,
     List<SessionRecord>? sessions,
     bool? metadataScanned,
+    String? ignoredNewerSongPath,
+    bool clearIgnoredNewerSongPath = false,
   }) {
     return MusicProject(
       id: id ?? this.id,
@@ -449,6 +456,7 @@ class MusicProject {
       totalWorkSeconds: totalWorkSeconds ?? this.totalWorkSeconds,
       sessions: sessions ?? this.sessions,
       metadataScanned: metadataScanned ?? this.metadataScanned,
+      ignoredNewerSongPath: clearIgnoredNewerSongPath ? null : (ignoredNewerSongPath ?? this.ignoredNewerSongPath),
     );
   }
 }
@@ -501,13 +509,14 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
               .toList()
           : const [],
       metadataScanned: fields.containsKey(28) ? (fields[28] as bool? ?? false) : false,
+      ignoredNewerSongPath: fields.containsKey(29) ? fields[29] as String? : null,
     );
   }
 
   @override
   void write(BinaryWriter writer, MusicProject obj) {
     writer
-      ..writeByte(29) // 29 fields (0-28)
+      ..writeByte(30) // 30 fields (0-29)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -565,6 +574,8 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
       ..writeByte(27)
       ..write(obj.sessions.map((s) => s.toMap()).toList())
       ..writeByte(28)
-      ..write(obj.metadataScanned);
+      ..write(obj.metadataScanned)
+      ..writeByte(29)
+      ..write(obj.ignoredNewerSongPath);
   }
 }

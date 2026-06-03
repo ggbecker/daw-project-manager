@@ -57,6 +57,60 @@ class ProjectRepository {
     }
   }
 
+  // Custom Phases — ordered list of phase names, per-profile
+  static const _defaultPhases = ['Idea', 'Arranging', 'Mixing', 'Mastering', 'Finished'];
+  String get _customPhasesKey => '${profileId}_phases';
+
+  List<String> getCustomPhases() {
+    final raw = appSettingsBox.get(_customPhasesKey);
+    if (raw == null) return List.unmodifiable(_defaultPhases);
+    try {
+      return List.unmodifiable((jsonDecode(raw) as List).cast<String>());
+    } catch (_) {
+      return List.unmodifiable(_defaultPhases);
+    }
+  }
+
+  Future<void> setCustomPhases(List<String> phases) async =>
+      appSettingsBox.put(_customPhasesKey, jsonEncode(phases));
+
+  // Phase Colors — per-profile map of phase name → '#RRGGBB' hex string
+  String get _phaseColorsKey => '${profileId}_phase_colors';
+
+  Map<String, String> getPhaseColors() {
+    final raw = appSettingsBox.get(_phaseColorsKey);
+    if (raw == null) return const {};
+    try {
+      return Map<String, String>.from(jsonDecode(raw) as Map);
+    } catch (_) {
+      return const {};
+    }
+  }
+
+  Future<void> setPhaseColors(Map<String, String> colors) async =>
+      appSettingsBox.put(_phaseColorsKey, jsonEncode(colors));
+
+  // Finished Phases — which phase names are treated as "done" for filters/stats
+  String get _finishedPhasesKey => '${profileId}_finished_phases';
+
+  Set<String> getFinishedPhases() {
+    final raw = appSettingsBox.get(_finishedPhasesKey);
+    if (raw != null) {
+      try { return (jsonDecode(raw) as List).cast<String>().toSet(); }
+      catch (_) {}
+    }
+    // Migrate legacy single-phase key
+    final legacy = appSettingsBox.get('${profileId}_finished_phase');
+    if (legacy != null) return {legacy};
+    return {'Finished'};
+  }
+
+  Future<void> setFinishedPhases(Set<String> phases) async =>
+      appSettingsBox.put(_finishedPhasesKey, jsonEncode(phases.toList()));
+
+  Future<void> setFinishedPhase(String phase) async =>
+      setFinishedPhases({phase});
+
   // Pending Folders — stored as JSON list in the per-profile app_settings slot
   String get _pendingFoldersKey => '${profileId}_pending_folders';
 

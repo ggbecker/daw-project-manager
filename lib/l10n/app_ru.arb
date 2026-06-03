@@ -1720,6 +1720,10 @@
   "@playerNextTrack": {},
   "playerOpenProject": "Открыть проект",
   "@playerOpenProject": {},
+  "playerRepeatAll": "Повторить всё",
+  "@playerRepeatAll": {},
+  "playerShuffle": "Перемешать",
+  "@playerShuffle": {},
   "volumeMute": "Отключить звук",
   "@volumeMute": {},
   "volumeUnmute": "Включить звук",
@@ -1983,5 +1987,16 @@
   "pendingProjectRefresh": "Проверить файл проекта",
   "@pendingProjectRefresh": {},
   "pendingProjectNotFound": "Файл проекта пока не найден",
-  "@pendingProjectNotFound": {}
+  "@pendingProjectNotFound": {},
+  "phases": "Фазы",
+  "phasesSubtitle": "Добавление, удаление и изменение порядка фаз проекта",
+  "resetToDefaults": "Сбросить до стандартных",
+  "addPhase": "Добавить фазу",
+  "phaseNameHint": "Название фазы",
+  "phaseDuplicateError": "Фаза с таким названием уже существует",
+  "deletePhaseWarning": "{count, plural, one{{count} проект использует эту фазу} few{{count} проекта используют эту фазу} many{{count} проектов используют эту фазу} other{{count} проектов используют эту фазу}}",
+  "selectPhaseColor": "Выбрать цвет",
+  "markAsFinished": "Отметить как завершённую фазу",
+  "resetPhasesWarning": "{count, plural, =1{1 проект использует фазу, которой больше не будет.} few{{count} проекта используют фазы, которых больше не будет.} many{{count} проектов используют фазы, которых больше не будет.} other{{count} проекта используют фазы, которых больше не будет.}}",
+  "resetPhasesWarningNote": "Эти проекты сохранят текущий статус, но не будут отображаться в фильтрах фаз. Вы всегда можете снова добавить эти фазы позже."
 }

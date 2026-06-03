@@ -2577,6 +2577,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playerOpenProject => '打开项目';
 
   @override
+  String get playerRepeatAll => '全部重复';
+
+  @override
+  String get playerShuffle => '随机';
+
+  @override
   String get volumeMute => '静音';
 
   @override
@@ -2957,4 +2963,54 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pendingProjectNotFound => '尚未找到项目文件';
+
+  @override
+  String get phases => '阶段';
+
+  @override
+  String get phasesSubtitle => '添加、删除和重新排序项目阶段';
+
+  @override
+  String get resetToDefaults => '恢复默认设置';
+
+  @override
+  String get addPhase => '添加阶段';
+
+  @override
+  String get phaseNameHint => '阶段名称';
+
+  @override
+  String get phaseDuplicateError => '已存在同名阶段';
+
+  @override
+  String deletePhaseWarning(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count个项目使用此阶段',
+      one: '1个项目使用此阶段',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get selectPhaseColor => '选择颜色';
+
+  @override
+  String get markAsFinished => '标记为完成阶段';
+
+  @override
+  String resetPhasesWarning(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count个项目使用了将不再存在的阶段。',
+      one: '1个项目使用了将不再存在的阶段。',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get resetPhasesWarningNote =>
+      '这些项目将保留当前状态，但不会出现在阶段筛选器中。您随时可以重新添加这些阶段。';
 }

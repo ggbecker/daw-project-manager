@@ -11,6 +11,7 @@ import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import '../utils/app_paths.dart';
 import '../utils/mobile_utils.dart';
+import '../utils/phase_colors.dart';
 
 import '../generated/l10n/app_localizations.dart';
 import '../models/music_project.dart';
@@ -410,9 +411,10 @@ final projectsProvider = Provider<List<MusicProject>>((ref) {
     
     // --- Filter finished projects ---
     final finishedMode = ref.watch(showFinishedProjectsProvider);
+    final finishedPhases = ref.watch(finishedPhaseProvider);
     if (finishedMode == 1) {
       // Hide finished projects
-      projects = projects.where((p) => p.status != 'Finished').toList();
+      projects = projects.where((p) => !finishedPhases.contains(p.status)).toList();
     }
     
     // --- Show only projects with deadline ---
@@ -652,6 +654,28 @@ class PhaseFilterNotifier extends Notifier<String?> {
     state = null;
   }
 }
+
+// Custom phases provider — reads per-profile phases from repository
+final customPhasesProvider = Provider<List<String>>((ref) {
+  final repo = ref.watch(repositoryProvider).asData?.value;
+  return repo?.getCustomPhases() ??
+      const ['Idea', 'Arranging', 'Mixing', 'Mastering', 'Finished'];
+});
+
+// Phase color provider — per-profile map of phase name → Color
+final phaseColorsProvider = Provider<Map<String, Color>>((ref) {
+  final repo = ref.watch(repositoryProvider).asData?.value;
+  if (repo == null) return const {};
+  return repo.getPhaseColors().map(
+    (phase, hex) => MapEntry(phase, hexToColor(hex)),
+  );
+});
+
+// Finished phases provider — which phase names are treated as "done"
+final finishedPhaseProvider = Provider<Set<String>>((ref) {
+  final repo = ref.watch(repositoryProvider).asData?.value;
+  return repo?.getFinishedPhases() ?? {'Finished'};
+});
 
 // Deadline Filter Enum
 enum DeadlineFilter {
@@ -1271,10 +1295,11 @@ final projectsWithRecentActivityProvider =
   final projectsAsync = ref.watch(allProjectsStreamProvider);
   final eventsAsync = ref.watch(allEventsStreamProvider);
   final hideFinished = ref.watch(statsHideFinishedProvider);
+  final finishedPhases = ref.watch(finishedPhaseProvider);
 
   final allProjects = projectsAsync.asData?.value ?? [];
   final projects = hideFinished
-      ? allProjects.where((p) => p.status != 'Finished').toList()
+      ? allProjects.where((p) => !finishedPhases.contains(p.status)).toList()
       : allProjects;
   final events = eventsAsync.asData?.value ?? [];
 
@@ -1337,24 +1362,25 @@ final globalStatsProvider = Provider<GlobalStats>((ref) {
   final projectsAsync = ref.watch(allProjectsStreamProvider);
   final eventsAsync = ref.watch(allEventsStreamProvider);
   final hideFinished = ref.watch(statsHideFinishedProvider);
+  final finishedPhases = ref.watch(finishedPhaseProvider);
 
   final allProjects = projectsAsync.asData?.value;
   final events = eventsAsync.asData?.value;
   if (allProjects == null || events == null) return GlobalStats.empty;
 
   final projects = hideFinished
-      ? allProjects.where((p) => p.status != 'Finished').toList()
+      ? allProjects.where((p) => !finishedPhases.contains(p.status)).toList()
       : allProjects;
 
   // Basic counts
   final total = projects.length;
-  final finished = projects.where((p) => p.status == 'Finished').toList();
-  final inProgress = projects.where((p) => p.status != 'Finished').toList();
+  final finished = projects.where((p) => finishedPhases.contains(p.status)).toList();
+  final inProgress = projects.where((p) => !finishedPhases.contains(p.status)).toList();
 
   // Average completion time (from model field, only for finished projects)
   Duration? avgCompletion;
   final completionTimes = finished
-      .map((p) => p.timeToCompletion)
+      .map((p) => p.timeToCompletion(finishedPhases))
       .whereType<Duration>()
       .toList();
   if (completionTimes.isNotEmpty) {
@@ -1364,7 +1390,7 @@ final globalStatsProvider = Provider<GlobalStats>((ref) {
   }
 
   // Count per phase
-  const phases = ['Idea', 'Arranging', 'Mixing', 'Mastering', 'Finished'];
+  final phases = ref.watch(customPhasesProvider);
   final countPerPhase = <String, int>{for (final ph in phases) ph: 0};
   for (final p in projects) {
     final ph = p.status;

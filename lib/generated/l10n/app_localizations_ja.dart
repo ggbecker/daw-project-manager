@@ -2603,6 +2603,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get playerOpenProject => 'プロジェクトを開く';
 
   @override
+  String get playerRepeatAll => 'すべて繰り返す';
+
+  @override
+  String get playerShuffle => 'シャッフル';
+
+  @override
   String get volumeMute => 'ミュート';
 
   @override
@@ -2986,4 +2992,54 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get pendingProjectNotFound => 'プロジェクトファイルはまだ見つかりません';
+
+  @override
+  String get phases => 'フェーズ';
+
+  @override
+  String get phasesSubtitle => 'プロジェクトフェーズの追加・削除・並べ替え';
+
+  @override
+  String get resetToDefaults => 'デフォルトにリセット';
+
+  @override
+  String get addPhase => 'フェーズを追加';
+
+  @override
+  String get phaseNameHint => 'フェーズ名';
+
+  @override
+  String get phaseDuplicateError => '同じ名前のフェーズが既に存在します';
+
+  @override
+  String deletePhaseWarning(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'このフェーズを使用しているプロジェクトが$count件あります',
+      one: 'このフェーズを使用しているプロジェクトが1件あります',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get selectPhaseColor => '色を選択';
+
+  @override
+  String get markAsFinished => '完了フェーズとしてマーク';
+
+  @override
+  String resetPhasesWarning(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count件のプロジェクトが存在しなくなるフェーズを使用しています。',
+      one: '1件のプロジェクトが存在しなくなるフェーズを使用しています。',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get resetPhasesWarningNote =>
+      'これらのプロジェクトは現在のステータスを保持しますが、フェーズフィルターには表示されません。後でいつでもフェーズを再追加できます。';
 }

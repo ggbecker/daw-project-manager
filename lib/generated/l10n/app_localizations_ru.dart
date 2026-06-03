@@ -2660,6 +2660,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get playerOpenProject => 'Открыть проект';
 
   @override
+  String get playerRepeatAll => 'Повторить всё';
+
+  @override
+  String get playerShuffle => 'Перемешать';
+
+  @override
   String get volumeMute => 'Отключить звук';
 
   @override
@@ -3060,4 +3066,59 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get pendingProjectNotFound => 'Файл проекта пока не найден';
+
+  @override
+  String get phases => 'Фазы';
+
+  @override
+  String get phasesSubtitle =>
+      'Добавление, удаление и изменение порядка фаз проекта';
+
+  @override
+  String get resetToDefaults => 'Сбросить до стандартных';
+
+  @override
+  String get addPhase => 'Добавить фазу';
+
+  @override
+  String get phaseNameHint => 'Название фазы';
+
+  @override
+  String get phaseDuplicateError => 'Фаза с таким названием уже существует';
+
+  @override
+  String deletePhaseWarning(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count проектов используют эту фазу',
+      many: '$count проектов используют эту фазу',
+      few: '$count проекта используют эту фазу',
+      one: '$count проект использует эту фазу',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get selectPhaseColor => 'Выбрать цвет';
+
+  @override
+  String get markAsFinished => 'Отметить как завершённую фазу';
+
+  @override
+  String resetPhasesWarning(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count проекта используют фазы, которых больше не будет.',
+      many: '$count проектов используют фазы, которых больше не будет.',
+      few: '$count проекта используют фазы, которых больше не будет.',
+      one: '1 проект использует фазу, которой больше не будет.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get resetPhasesWarningNote =>
+      'Эти проекты сохранят текущий статус, но не будут отображаться в фильтрах фаз. Вы всегда можете снова добавить эти фазы позже.';
 }
