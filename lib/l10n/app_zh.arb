@@ -1996,5 +1996,7 @@
   "phaseDuplicateError": "已存在同名阶段",
   "deletePhaseWarning": "{count, plural, =1{1个项目使用此阶段} other{{count}个项目使用此阶段}}",
   "selectPhaseColor": "选择颜色",
-  "markAsFinished": "标记为完成阶段"
+  "markAsFinished": "标记为完成阶段",
+  "resetPhasesWarning": "{count, plural, =1{1个项目使用了将不再存在的阶段。} other{{count}个项目使用了将不再存在的阶段。}}",
+  "resetPhasesWarningNote": "这些项目将保留当前状态，但不会出现在阶段筛选器中。您随时可以重新添加这些阶段。"
 }

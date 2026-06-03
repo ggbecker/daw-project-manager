@@ -1996,5 +1996,7 @@
   "phaseDuplicateError": "同じ名前のフェーズが既に存在します",
   "deletePhaseWarning": "{count, plural, =1{このフェーズを使用しているプロジェクトが1件あります} other{このフェーズを使用しているプロジェクトが{count}件あります}}",
   "selectPhaseColor": "色を選択",
-  "markAsFinished": "完了フェーズとしてマーク"
+  "markAsFinished": "完了フェーズとしてマーク",
+  "resetPhasesWarning": "{count, plural, =1{1件のプロジェクトが存在しなくなるフェーズを使用しています。} other{{count}件のプロジェクトが存在しなくなるフェーズを使用しています。}}",
+  "resetPhasesWarningNote": "これらのプロジェクトは現在のステータスを保持しますが、フェーズフィルターには表示されません。後でいつでもフェーズを再追加できます。"
 }

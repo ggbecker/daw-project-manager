@@ -3104,4 +3104,21 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get markAsFinished => 'Отметить как завершённую фазу';
+
+  @override
+  String resetPhasesWarning(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count проекта используют фазы, которых больше не будет.',
+      many: '$count проектов используют фазы, которых больше не будет.',
+      few: '$count проекта используют фазы, которых больше не будет.',
+      one: '1 проект использует фазу, которой больше не будет.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get resetPhasesWarningNote =>
+      'Эти проекты сохранят текущий статус, но не будут отображаться в фильтрах фаз. Вы всегда можете снова добавить эти фазы позже.';
 }

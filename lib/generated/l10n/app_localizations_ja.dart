@@ -3027,4 +3027,19 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get markAsFinished => '完了フェーズとしてマーク';
+
+  @override
+  String resetPhasesWarning(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count件のプロジェクトが存在しなくなるフェーズを使用しています。',
+      one: '1件のプロジェクトが存在しなくなるフェーズを使用しています。',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get resetPhasesWarningNote =>
+      'これらのプロジェクトは現在のステータスを保持しますが、フェーズフィルターには表示されません。後でいつでもフェーズを再追加できます。';
 }

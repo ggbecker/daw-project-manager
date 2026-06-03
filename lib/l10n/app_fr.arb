@@ -1996,5 +1996,7 @@
   "phaseDuplicateError": "Une phase avec ce nom existe déjà",
   "deletePhaseWarning": "{count, plural, =1{1 projet utilise cette phase} other{{count} projets utilisent cette phase}}",
   "selectPhaseColor": "Sélectionner une couleur",
-  "markAsFinished": "Marquer comme phase terminée"
+  "markAsFinished": "Marquer comme phase terminée",
+  "resetPhasesWarning": "{count, plural, =1{1 projet utilise une phase qui n'existera plus.} other{{count} projets utilisent des phases qui n'existeront plus.}}",
+  "resetPhasesWarningNote": "Ces projets conserveront leur statut actuel mais n'apparaîtront pas dans les filtres de phase. Vous pouvez toujours rajouter ces phases plus tard."
 }

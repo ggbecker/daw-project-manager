@@ -2998,4 +2998,19 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get markAsFinished => '标记为完成阶段';
+
+  @override
+  String resetPhasesWarning(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count个项目使用了将不再存在的阶段。',
+      one: '1个项目使用了将不再存在的阶段。',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get resetPhasesWarningNote =>
+      '这些项目将保留当前状态，但不会出现在阶段筛选器中。您随时可以重新添加这些阶段。';
 }

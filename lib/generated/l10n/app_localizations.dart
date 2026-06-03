@@ -5293,6 +5293,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Mark as finished phase'**
   String get markAsFinished;
+
+  /// No description provided for @resetPhasesWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 project uses a phase that will no longer exist.} other{{count} projects use phases that will no longer exist.}}'**
+  String resetPhasesWarning(int count);
+
+  /// No description provided for @resetPhasesWarningNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Those projects will keep their current status but won\'t appear in phase filters. You can always re-add those phases later.'**
+  String get resetPhasesWarningNote;
 }
 
 class _AppLocalizationsDelegate

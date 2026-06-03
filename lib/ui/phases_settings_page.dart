@@ -43,6 +43,67 @@ class _PhasesSettingsPageState extends ConsumerState<PhasesSettingsPage> {
 
   Future<void> _resetToDefaults() async {
     const defaults = ['Idea', 'Arranging', 'Mixing', 'Mastering', 'Finished'];
+    final defaultSet = defaults.toSet();
+
+    // Find projects using phases that won't exist after the reset
+    final projects = ref.read(projectsProvider);
+    final customPhases = ref.read(customPhasesProvider);
+    final orphanedPhases = customPhases
+        .where((p) => !defaultSet.contains(p))
+        .where((p) => projects.any((proj) => proj.status == p))
+        .toList();
+
+    if (orphanedPhases.isNotEmpty && mounted) {
+      final affected = projects.where((proj) => orphanedPhases.contains(proj.status)).length;
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) {
+          final theme = Theme.of(ctx);
+          return AlertDialog(
+            title: Text(AppLocalizations.of(ctx)!.resetToDefaults),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(AppLocalizations.of(ctx)!.resetPhasesWarning(affected)),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: orphanedPhases
+                      .map((p) => Chip(
+                            label: Text(p, style: const TextStyle(fontSize: 12)),
+                            visualDensity: VisualDensity.compact,
+                            side: BorderSide(color: theme.dividerColor),
+                            backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                          ))
+                      .toList(),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  AppLocalizations.of(ctx)!.resetPhasesWarningNote,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(AppLocalizations.of(ctx)!.cancel),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: Text(AppLocalizations.of(ctx)!.resetToDefaults),
+              ),
+            ],
+          );
+        },
+      );
+      if (confirmed != true) return;
+    }
+
     final repo = ref.read(repositoryProvider).asData?.value;
     if (repo == null) return;
     await repo.setCustomPhases(defaults);

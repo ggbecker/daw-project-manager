@@ -3104,4 +3104,19 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get markAsFinished => 'Marcar como fase concluída';
+
+  @override
+  String resetPhasesWarning(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count projetos usam fases que não existirão mais.',
+      one: '1 projeto usa uma fase que não existirá mais.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get resetPhasesWarningNote =>
+      'Esses projetos manterão seu status atual, mas não aparecerão nos filtros de fase. Você sempre pode adicionar essas fases novamente depois.';
 }

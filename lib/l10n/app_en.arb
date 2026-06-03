@@ -3095,5 +3095,13 @@
   "selectPhaseColor": "Select color",
   "@selectPhaseColor": {},
   "markAsFinished": "Mark as finished phase",
-  "@markAsFinished": {}
+  "@markAsFinished": {},
+  "resetPhasesWarning": "{count, plural, =1{1 project uses a phase that will no longer exist.} other{{count} projects use phases that will no longer exist.}}",
+  "@resetPhasesWarning": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "resetPhasesWarningNote": "Those projects will keep their current status but won't appear in phase filters. You can always re-add those phases later.",
+  "@resetPhasesWarningNote": {}
 }
