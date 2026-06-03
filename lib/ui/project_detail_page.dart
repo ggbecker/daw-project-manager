@@ -97,46 +97,6 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
     }
   }
 
-  List<String> _getProjectPhases(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return [
-      l10n.projectPhaseIdea,
-      l10n.projectPhaseArranging,
-      l10n.projectPhaseMixing,
-      l10n.projectPhaseMastering,
-      l10n.projectPhaseFinished,
-    ];
-  }
-
-  String _translateStatusToEnglish(String localizedStatus) {
-    // Map localized status back to English for storage
-    final l10n = AppLocalizations.of(context)!;
-    if (localizedStatus == l10n.projectPhaseIdea) return 'Idea';
-    if (localizedStatus == l10n.projectPhaseArranging) return 'Arranging';
-    if (localizedStatus == l10n.projectPhaseMixing) return 'Mixing';
-    if (localizedStatus == l10n.projectPhaseMastering) return 'Mastering';
-    if (localizedStatus == l10n.projectPhaseFinished) return 'Finished';
-    return localizedStatus; // Fallback
-  }
-
-  String _translateStatusFromEnglish(String englishStatus) {
-    // Map English status to localized for display
-    final l10n = AppLocalizations.of(context)!;
-    switch (englishStatus) {
-      case 'Idea':
-        return l10n.projectPhaseIdea;
-      case 'Arranging':
-        return l10n.projectPhaseArranging;
-      case 'Mixing':
-        return l10n.projectPhaseMixing;
-      case 'Mastering':
-        return l10n.projectPhaseMastering;
-      case 'Finished':
-        return l10n.projectPhaseFinished;
-      default:
-        return englishStatus;
-    }
-  }
 
   String _formatDuration(Duration duration) {
     final l10n = AppLocalizations.of(context)!;
@@ -246,8 +206,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
         (nameText.isEmpty || nameText == updatedProject.fileName) ? null : nameText;
     final notesText = _notesCtrl.text.trim();
     final newNotes = notesText.isEmpty ? null : notesText;
-    final newStatus =
-        _selectedPhase != null ? _translateStatusToEnglish(_selectedPhase!) : 'Idea';
+    final newStatus = _selectedPhase ?? 'Idea';
     final statusChanged = project.status != newStatus;
     final updated = project.copyWith(
       customDisplayName: newCustomDisplayName,
@@ -498,18 +457,13 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
           }
           // Sincroniza fase do projeto (only on first load)
           if (!_hasInitializedPhase) {
-            final projectStatus = updatedProject.status;
-                    // Translate English status to localized for display
-                    final localizedStatus = _translateStatusFromEnglish(
-                      projectStatus,
-                    );
-                    if (mounted) {
-                      setState(() {
-                        _selectedPhase = localizedStatus;
-                        _hasInitializedPhase = true;
-                      });
-                    }
-                  }
+            if (mounted) {
+              setState(() {
+                _selectedPhase = updatedProject.status;
+                _hasInitializedPhase = true;
+              });
+            }
+          }
                 });
 
         final isMobile = MobileUtils.isMobile();
@@ -799,13 +753,13 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                             DropdownButtonFormField<String>(
                               initialValue:
                                   _selectedPhase ??
-                                  _getProjectPhases(context).first,
+                                  ref.watch(customPhasesProvider).first,
                               decoration: InputDecoration(
                                 labelText: AppLocalizations.of(
                                   context,
                                 )!.projectPhase,
                               ),
-                              items: _getProjectPhases(context).map((phase) {
+                              items: ref.watch(customPhasesProvider).map((phase) {
                                 return DropdownMenuItem<String>(
                                   value: phase,
                                   child: Text(phase),
@@ -2835,9 +2789,16 @@ class _RenameProjectDialogState extends State<_RenameProjectDialog> {
 
 // ─── Session History Section ──────────────────────────────────────────────────
 
-class _SessionHistorySection extends StatelessWidget {
+class _SessionHistorySection extends StatefulWidget {
   final List<SessionRecord> sessions;
   const _SessionHistorySection({required this.sessions});
+
+  @override
+  State<_SessionHistorySection> createState() => _SessionHistorySectionState();
+}
+
+class _SessionHistorySectionState extends State<_SessionHistorySection> {
+  bool _expanded = true;
 
   static String _fmtDuration(int seconds) {
     final h = seconds ~/ 3600;
@@ -2852,9 +2813,10 @@ class _SessionHistorySection extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    // Newest first
-    final sorted = [...sessions]..sort((a, b) => b.startedAt.compareTo(a.startedAt));
-    final totalSeconds = sessions.fold<int>(0, (a, b) => a + b.durationSeconds);
+    final sorted = [...widget.sessions]
+      ..sort((a, b) => b.startedAt.compareTo(a.startedAt));
+    final totalSeconds =
+        widget.sessions.fold<int>(0, (a, b) => a + b.durationSeconds);
     final dateFmt = DateFormat('MMM d, yyyy');
     final timeFmt = DateFormat('HH:mm');
     final bodySmall = theme.textTheme.bodySmall;
@@ -2871,28 +2833,51 @@ class _SessionHistorySection extends StatelessWidget {
           ),
         );
 
+    final canToggle = widget.sessions.isNotEmpty;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Icon(Icons.work_history_outlined,
-                size: 16, color: theme.colorScheme.primary),
-            const SizedBox(width: 6),
-            Text(
-              l10n.sessionHistory,
-              style: theme.textTheme.titleSmall
-                  ?.copyWith(fontWeight: FontWeight.w600),
+        InkWell(
+          onTap: canToggle ? () => setState(() => _expanded = !_expanded) : null,
+          borderRadius: BorderRadius.circular(6),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2),
+            child: Row(
+              children: [
+                Icon(Icons.work_history_outlined,
+                    size: 16, color: theme.colorScheme.primary),
+                const SizedBox(width: 6),
+                Text(
+                  l10n.sessionHistory,
+                  style: theme.textTheme.titleSmall
+                      ?.copyWith(fontWeight: FontWeight.w600),
+                ),
+                if (canToggle && !_expanded) ...[
+                  const SizedBox(width: 8),
+                  Text(
+                    '${widget.sessions.length} session${widget.sessions.length == 1 ? '' : 's'} · ${_fmtDuration(totalSeconds)}',
+                    style: bodySmall?.copyWith(color: theme.disabledColor),
+                  ),
+                ],
+                const Spacer(),
+                if (canToggle)
+                  Icon(
+                    _expanded ? Icons.expand_less : Icons.expand_more,
+                    size: 18,
+                    color: theme.disabledColor,
+                  ),
+              ],
             ),
-          ],
+          ),
         ),
         const SizedBox(height: 10),
-        if (sessions.isEmpty)
+        if (widget.sessions.isEmpty)
           Text(
             l10n.noSessionsYet,
             style: bodySmall?.copyWith(color: theme.disabledColor),
           )
-        else
+        else if (_expanded)
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: Table(
@@ -2922,7 +2907,8 @@ class _SessionHistorySection extends StatelessWidget {
                   TableRow(
                     children: [
                       cell(dateFmt.format(s.startedAt)),
-                      cell('${timeFmt.format(s.startedAt)}–${timeFmt.format(s.endedAt)}'),
+                      cell(
+                          '${timeFmt.format(s.startedAt)}–${timeFmt.format(s.endedAt)}'),
                       cell(_fmtDuration(s.durationSeconds)),
                     ],
                   ),
@@ -2932,11 +2918,13 @@ class _SessionHistorySection extends StatelessWidget {
                     color: theme.colorScheme.primary.withValues(alpha: 0.10),
                   ),
                   children: [
-                    cell('Total', bold: true, color: theme.colorScheme.primary),
-                    cell('${sessions.length} session${sessions.length == 1 ? '' : 's'}',
+                    cell('Total',
+                        bold: true, color: theme.colorScheme.primary),
+                    cell(
+                        '${widget.sessions.length} session${widget.sessions.length == 1 ? '' : 's'}',
                         color: theme.colorScheme.primary),
-                    cell(_fmtDuration(totalSeconds), bold: true,
-                        color: theme.colorScheme.primary),
+                    cell(_fmtDuration(totalSeconds),
+                        bold: true, color: theme.colorScheme.primary),
                   ],
                 ),
               ],
