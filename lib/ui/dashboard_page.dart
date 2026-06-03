@@ -3823,7 +3823,17 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    ref.watch(phaseColorsProvider); // rebuild when phase colors change
+    // Rebuild rows when phase config changes so renderer closures re-run
+    // with fresh colors/names. notifyListeners() alone only repaints cells
+    // whose values changed; _rebuildRows() forces a full renderer re-invoke.
+    void rebuildForPhaseConfig() {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _rebuildRows();
+      });
+    }
+    ref.listen(phaseColorsProvider, (_, _) => rebuildForPhaseConfig());
+    ref.listen(customPhasesProvider, (_, _) => rebuildForPhaseConfig());
+    ref.listen(finishedPhaseProvider, (_, _) => rebuildForPhaseConfig());
     // When the search query changes, ask TrinaGrid to repaint so the
     // "matched in description" icon in the name renderer reflects the new query.
     ref.listen(projectsSearchProvider, (prev, next) {
