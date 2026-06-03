@@ -82,6 +82,13 @@ class DeadlineNotificationService {
       );
       await _notifications.initialize(settings: initSettings);
       _isDesktopInitialized = true;
+
+      if (Platform.isMacOS) {
+        await _notifications
+            .resolvePlatformSpecificImplementation<
+                MacOSFlutterLocalNotificationsPlugin>()
+            ?.requestPermissions(alert: true, badge: false, sound: false);
+      }
     } catch (e) {
       if (kDebugMode) print('[DeadlineNotification] Desktop init failed: $e');
     }

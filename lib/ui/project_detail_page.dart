@@ -983,7 +983,20 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                             ),
 
                             const SizedBox(height: 24),
-                            _SessionHistorySection(sessions: updatedProject.sessions),
+                            _SessionHistorySection(
+                              sessions: updatedProject.sessions,
+                              onRemove: (session) async {
+                                final updatedSessions = updatedProject.sessions
+                                    .where((s) => s.id != session.id)
+                                    .toList();
+                                final updatedTotal = updatedSessions.fold<int>(
+                                    0, (a, b) => a + b.durationSeconds);
+                                await repo.updateProject(updatedProject.copyWith(
+                                  sessions: updatedSessions,
+                                  totalWorkSeconds: updatedTotal,
+                                ));
+                              },
+                            ),
                             const SizedBox(height: 24),
                             _ProjectStatsButton(projectId: updatedProject.id),
                             const SizedBox(height: 16),
@@ -2791,7 +2804,11 @@ class _RenameProjectDialogState extends State<_RenameProjectDialog> {
 
 class _SessionHistorySection extends StatefulWidget {
   final List<SessionRecord> sessions;
-  const _SessionHistorySection({required this.sessions});
+  final void Function(SessionRecord) onRemove;
+  const _SessionHistorySection({
+    required this.sessions,
+    required this.onRemove,
+  });
 
   @override
   State<_SessionHistorySection> createState() => _SessionHistorySectionState();
@@ -2885,6 +2902,7 @@ class _SessionHistorySectionState extends State<_SessionHistorySection> {
                 0: FlexColumnWidth(3),
                 1: FlexColumnWidth(2),
                 2: FlexColumnWidth(2),
+                3: IntrinsicColumnWidth(),
               },
               border: TableBorder(
                 horizontalInside: BorderSide(color: divider, width: 1),
@@ -2900,6 +2918,7 @@ class _SessionHistorySectionState extends State<_SessionHistorySection> {
                     cell('Date', bold: true),
                     cell('Time', bold: true),
                     cell('Duration', bold: true),
+                    const SizedBox.shrink(),
                   ],
                 ),
                 // One row per individual session
@@ -2910,6 +2929,17 @@ class _SessionHistorySectionState extends State<_SessionHistorySection> {
                       cell(
                           '${timeFmt.format(s.startedAt)}–${timeFmt.format(s.endedAt)}'),
                       cell(_fmtDuration(s.durationSeconds)),
+                      TableRowInkWell(
+                        onTap: () => widget.onRemove(s),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: Icon(
+                            Icons.delete_outline,
+                            size: 16,
+                            color: theme.colorScheme.error.withValues(alpha: 0.7),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 // Total row
@@ -2925,6 +2955,7 @@ class _SessionHistorySectionState extends State<_SessionHistorySection> {
                         color: theme.colorScheme.primary),
                     cell(_fmtDuration(totalSeconds),
                         bold: true, color: theme.colorScheme.primary),
+                    const SizedBox.shrink(),
                   ],
                 ),
               ],
