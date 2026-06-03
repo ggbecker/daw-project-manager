@@ -3425,7 +3425,7 @@ abstract class AppLocalizations {
   /// macOS menu item to toggle quit warning
   ///
   /// In en, this message translates to:
-  /// **'Warn Before Quitting (Cmd+Q)'**
+  /// **'Warn Before Quitting (⌘+Q)'**
   String get menuWarnBeforeQuit;
 
   /// macOS menu item to quit the app

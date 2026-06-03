@@ -458,6 +458,16 @@ class _DawProjectManagerAppState extends ConsumerState<DawProjectManagerApp> wit
 
   @override
   void onWindowClose() async {
+    if (!kIsWeb && Platform.isMacOS) {
+      // Red X on macOS: hide in release, destroy in debug.
+      if (kDebugMode) {
+        await windowManager.destroy();
+      } else {
+        await windowManager.hide();
+      }
+      return;
+    }
+    // Windows: show quit-warning dialog.
     final warn = ref.read(warnBeforeQuitProvider);
     if (!warn) {
       await windowManager.destroy();

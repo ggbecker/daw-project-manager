@@ -2032,7 +2032,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get menuLanguage => 'Язык';
 
   @override
-  String get menuWarnBeforeQuit => 'Предупреждать перед выходом (Cmd+Q)';
+  String get menuWarnBeforeQuit => 'Предупреждать перед выходом (⌘+Q)';
 
   @override
   String get menuQuit => 'Выйти из DAW Project Manager';

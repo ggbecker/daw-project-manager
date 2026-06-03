@@ -1372,7 +1372,7 @@
   "@menuLanguage": {
     "description": "macOS menu item for language selection"
   },
-  "menuWarnBeforeQuit": "Vor dem Beenden warnen (Cmd+Q)",
+  "menuWarnBeforeQuit": "Vor dem Beenden warnen (⌘+Q)",
   "@menuWarnBeforeQuit": {
     "description": "macOS menu item to toggle quit warning"
   },

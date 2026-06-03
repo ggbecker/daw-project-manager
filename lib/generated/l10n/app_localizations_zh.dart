@@ -1970,7 +1970,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get menuLanguage => '语言';
 
   @override
-  String get menuWarnBeforeQuit => '退出前警告 (Cmd+Q)';
+  String get menuWarnBeforeQuit => '退出前警告 (⌘+Q)';
 
   @override
   String get menuQuit => '退出 DAW Project Manager';

@@ -50,6 +50,38 @@ class MacOSMenuBar extends ConsumerWidget {
     showTabCustomizationDialog(context);
   }
 
+  static Future<void> _handleQuit(WidgetRef ref) async {
+    final warn = ref.read(warnBeforeQuitProvider);
+    if (!warn) {
+      await windowManager.destroy();
+      return;
+    }
+    final context = navigatorKey.currentContext;
+    if (context == null) {
+      await windowManager.destroy();
+      return;
+    }
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Theme.of(ctx).cardColor,
+        title: const Text('Quit DAW Project Manager?'),
+        content: const Text('Are you sure you want to quit?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Quit'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) await windowManager.destroy();
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (kIsWeb || !Platform.isMacOS) return child;
@@ -59,9 +91,6 @@ class MacOSMenuBar extends ConsumerWidget {
     final warnBeforeQuit = ref.watch(warnBeforeQuitProvider);
 
     final l10n = AppLocalizations.of(context)!;
-    final themeLabel = themeType == AppThemeType.neonDark
-        ? l10n.switchToClassicDark
-        : l10n.switchToNeonDark;
 
     return PlatformMenuBar(
       menus: [
@@ -99,9 +128,22 @@ class MacOSMenuBar extends ConsumerWidget {
             ),
             PlatformMenuItemGroup(
               members: [
-                PlatformMenuItem(
-                  label: themeLabel,
-                  onSelected: () => ref.read(themeTypeProvider.notifier).cycle(),
+                PlatformMenu(
+                  label: l10n.menuTheme,
+                  menus: [
+                    PlatformMenuItemGroup(
+                      members: [
+                        PlatformMenuItem(
+                          label: '${themeType == AppThemeType.classicDark ? '✓ ' : ''}${l10n.classicDarkThemeName}',
+                          onSelected: () => ref.read(themeTypeProvider.notifier).setThemeType(AppThemeType.classicDark),
+                        ),
+                        PlatformMenuItem(
+                          label: '${themeType == AppThemeType.neonDark ? '✓ ' : ''}${l10n.neonDarkThemeName}',
+                          onSelected: () => ref.read(themeTypeProvider.notifier).setThemeType(AppThemeType.neonDark),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
                 PlatformMenu(
                   label: l10n.menuLanguage,
@@ -122,9 +164,17 @@ class MacOSMenuBar extends ConsumerWidget {
                   label: '${warnBeforeQuit ? '✓ ' : ''}${l10n.menuWarnBeforeQuit}',
                   onSelected: () => ref.read(warnBeforeQuitProvider.notifier).toggle(),
                 ),
+              ],
+            ),
+            PlatformMenuItemGroup(
+              members: [
                 PlatformMenuItem(
                   label: l10n.menuQuit,
-                  onSelected: () => windowManager.close(),
+                  shortcut: const SingleActivator(
+                    LogicalKeyboardKey.keyQ,
+                    meta: true,
+                  ),
+                  onSelected: () => _handleQuit(ref),
                 ),
               ],
             ),

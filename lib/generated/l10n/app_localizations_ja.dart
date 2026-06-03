@@ -1991,7 +1991,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get menuLanguage => '言語';
 
   @override
-  String get menuWarnBeforeQuit => '終了前に警告する (Cmd+Q)';
+  String get menuWarnBeforeQuit => '終了前に警告する (⌘+Q)';
 
   @override
   String get menuQuit => 'DAW Project Manager を終了';

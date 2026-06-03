@@ -2030,7 +2030,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get menuLanguage => 'Idioma';
 
   @override
-  String get menuWarnBeforeQuit => 'Avisar Antes de Sair (Cmd+Q)';
+  String get menuWarnBeforeQuit => 'Avisar Antes de Sair (⌘+Q)';
 
   @override
   String get menuQuit => 'Sair do DAW Project Manager';
