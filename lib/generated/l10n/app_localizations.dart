@@ -5443,6 +5443,87 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Those projects will keep their current status but won\'t appear in phase filters. You can always re-add those phases later.'**
   String get resetPhasesWarningNote;
+
+  /// No description provided for @camelotGenerateButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate Mix'**
+  String get camelotGenerateButton;
+
+  /// No description provided for @camelotDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Camelot Mix'**
+  String get camelotDialogTitle;
+
+  /// No description provided for @camelotDialogDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Orders your tracks by harmonic key compatibility using the Camelot wheel. BPM proximity is used as a tiebreaker within compatible keys.'**
+  String get camelotDialogDescription;
+
+  /// No description provided for @camelotEligibleTracks.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} tracks eligible (key set)'**
+  String camelotEligibleTracks(int count);
+
+  /// No description provided for @camelotSkippedTracks.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} will be skipped (no key set)'**
+  String camelotSkippedTracks(int count);
+
+  /// No description provided for @camelotNoEligibleTracks.
+  ///
+  /// In en, this message translates to:
+  /// **'No tracks have a musical key set. Open a project and set its key to use this feature.'**
+  String get camelotNoEligibleTracks;
+
+  /// No description provided for @camelotGenerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate'**
+  String get camelotGenerate;
+
+  /// No description provided for @camelotQueueGenerated.
+  ///
+  /// In en, this message translates to:
+  /// **'Queue filled with {count} harmonically ordered tracks'**
+  String camelotQueueGenerated(int count);
+
+  /// No description provided for @camelotWheelGuideTooltip.
+  String get camelotWheelGuideTooltip;
+
+  /// No description provided for @camelotWheelGuideTitle.
+  String get camelotWheelGuideTitle;
+
+  /// No description provided for @camelotGuideRingsTitle.
+  String get camelotGuideRingsTitle;
+
+  /// No description provided for @camelotGuideRingsBody.
+  String get camelotGuideRingsBody;
+
+  /// No description provided for @camelotGuideNumbersTitle.
+  String get camelotGuideNumbersTitle;
+
+  /// No description provided for @camelotGuideNumbersBody.
+  String get camelotGuideNumbersBody;
+
+  /// No description provided for @camelotGuideColoursTitle.
+  String get camelotGuideColoursTitle;
+
+  /// No description provided for @camelotGuideColoursBody.
+  String get camelotGuideColoursBody;
+
+  /// No description provided for @camelotGuideTransitionsTitle.
+  String get camelotGuideTransitionsTitle;
+
+  /// No description provided for @camelotGuideTransitionsBody.
+  String get camelotGuideTransitionsBody;
+
+  /// No description provided for @playerMixSuggestions.
+  String get playerMixSuggestions;
 }
 
 class _AppLocalizationsDelegate

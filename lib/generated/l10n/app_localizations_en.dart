@@ -3198,4 +3198,59 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get resetPhasesWarningNote =>
       'Those projects will keep their current status but won\'t appear in phase filters. You can always re-add those phases later.';
+
+  @override
+  String get camelotGenerateButton => 'Generate Mix';
+
+  @override
+  String get camelotDialogTitle => 'Camelot Mix';
+
+  @override
+  String get camelotDialogDescription =>
+      'Orders your tracks by harmonic key compatibility using the Camelot wheel. BPM proximity is used as a tiebreaker within compatible keys.';
+
+  @override
+  String camelotEligibleTracks(int count) {
+    return '$count tracks eligible (key set)';
+  }
+
+  @override
+  String camelotSkippedTracks(int count) {
+    return '$count will be skipped (no key set)';
+  }
+
+  @override
+  String get camelotNoEligibleTracks =>
+      'No tracks have a musical key set. Open a project and set its key to use this feature.';
+
+  @override
+  String get camelotGenerate => 'Generate';
+
+  @override
+  String camelotQueueGenerated(int count) {
+    return 'Queue filled with $count harmonically ordered tracks';
+  }
+
+  @override
+  String get camelotWheelGuideTooltip => 'Camelot wheel guide';
+  @override
+  String get camelotWheelGuideTitle => 'Camelot Wheel Guide';
+  @override
+  String get camelotGuideRingsTitle => 'The Rings';
+  @override
+  String get camelotGuideRingsBody => 'Inner ring (A)  \u2192  minor keys\nOuter ring (B)  \u2192  major keys';
+  @override
+  String get camelotGuideNumbersTitle => 'Numbers 1\u201312';
+  @override
+  String get camelotGuideNumbersBody => 'Positions arranged clockwise. Each number represents a harmonic neighbourhood \u2014 neighbours share strong tonal relationships.';
+  @override
+  String get camelotGuideColoursTitle => 'Colour Guide';
+  @override
+  String get camelotGuideColoursBody => '\u25cf Bright  \u2192  your song\'s key\n\u25cf Softly lit  \u2192  compatible for mixing\n\u25cf Dimmed  \u2192  avoid for smooth mixing';
+  @override
+  String get camelotGuideTransitionsTitle => 'Compatible Transitions';
+  @override
+  String get camelotGuideTransitionsBody => '8A \u2192 8B  (same number, switch ring)\n  Relative major / minor \u2014 virtually seamless.\n\n8A \u2192 7A or 9A  (\u00b11, same ring)\n  Adjacent key \u2014 smooth, subtle change.\n\n8A \u2192 1A or 3A  (\u00b17, same ring)\n  Energy boost or drop \u2014 more dramatic shift.';
+  @override
+  String get playerMixSuggestions => 'MIX SUGGESTIONS';
 }

@@ -3215,4 +3215,59 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get resetPhasesWarningNote =>
       'Diese Projekte behalten ihren aktuellen Status, erscheinen aber nicht in Phasenfiltern. Du kannst diese Phasen jederzeit wieder hinzufügen.';
+
+  @override
+  String get camelotGenerateButton => 'Mix generieren';
+
+  @override
+  String get camelotDialogTitle => 'Camelot-Mix';
+
+  @override
+  String get camelotDialogDescription =>
+      'Ordnet deine Tracks nach harmonischer Kompatibilität anhand des Camelot-Rads. BPM-Nähe wird als Auswahlkriterium verwendet.';
+
+  @override
+  String camelotEligibleTracks(int count) {
+    return '$count Tracks geeignet (Tonart gesetzt)';
+  }
+
+  @override
+  String camelotSkippedTracks(int count) {
+    return '$count werden übersprungen (keine Tonart)';
+  }
+
+  @override
+  String get camelotNoEligibleTracks =>
+      'Kein Track hat eine Tonart gesetzt. Öffne ein Projekt und setze die Tonart.';
+
+  @override
+  String get camelotGenerate => 'Generieren';
+
+  @override
+  String camelotQueueGenerated(int count) {
+    return 'Warteschlange mit $count harmonisch sortierten Tracks gefüllt';
+  }
+
+  @override
+  String get camelotWheelGuideTooltip => 'Camelot-Rad Anleitung';
+  @override
+  String get camelotWheelGuideTitle => 'Camelot-Rad Anleitung';
+  @override
+  String get camelotGuideRingsTitle => 'Die Ringe';
+  @override
+  String get camelotGuideRingsBody => 'Innenring (A)  \u2192  Molltonarten\nAu\u00dfenring (B)  \u2192  Durtonarten';
+  @override
+  String get camelotGuideNumbersTitle => 'Zahlen 1\u201312';
+  @override
+  String get camelotGuideNumbersBody => 'Positionen im Uhrzeigersinn angeordnet. Jede Zahl steht f\u00fcr eine harmonische Nachbarschaft \u2014 Nachbarn teilen starke tonale Beziehungen.';
+  @override
+  String get camelotGuideColoursTitle => 'Farblegende';
+  @override
+  String get camelotGuideColoursBody => '\u25cf Hell  \u2192  Tonart deines Songs\n\u25cf Weich beleuchtet  \u2192  kompatibel f\u00fcr Mixing\n\u25cf Gedimmt  \u2192  f\u00fcr fl\u00fcssiges Mixing vermeiden';
+  @override
+  String get camelotGuideTransitionsTitle => 'Kompatible \u00dcberg\u00e4nge';
+  @override
+  String get camelotGuideTransitionsBody => '8A \u2192 8B  (gleiche Zahl, Ring wechseln)\n  Relative Dur/Moll \u2014 nahezu nahtlos.\n\n8A \u2192 7A oder 9A  (\u00b11, gleicher Ring)\n  Benachbarter Ton \u2014 sanfte, dezente \u00c4nderung.\n\n8A \u2192 1A oder 3A  (\u00b17, gleicher Ring)\n  Energie-Boost oder -Drop \u2014 dramatischerer Wechsel.';
+  @override
+  String get playerMixSuggestions => 'MIX-VORSCHL\xc4GE';
 }

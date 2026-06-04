@@ -3209,4 +3209,59 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get resetPhasesWarningNote =>
       'Quei progetti manterranno il loro stato attuale ma non appariranno nei filtri di fase. Puoi sempre aggiungere nuovamente quelle fasi in seguito.';
+
+  @override
+  String get camelotGenerateButton => 'Genera mix';
+
+  @override
+  String get camelotDialogTitle => 'Mix Camelot';
+
+  @override
+  String get camelotDialogDescription =>
+      'Ordina le tracce per compatibilità armonica usando la ruota Camelot. La prossimità BPM viene usata come criterio di selezione.';
+
+  @override
+  String camelotEligibleTracks(int count) {
+    return '$count tracce idonee (tonalità impostata)';
+  }
+
+  @override
+  String camelotSkippedTracks(int count) {
+    return '$count verranno saltate (nessuna tonalità)';
+  }
+
+  @override
+  String get camelotNoEligibleTracks =>
+      'Nessuna traccia ha una tonalità impostata. Apri un progetto e imposta la tonalità.';
+
+  @override
+  String get camelotGenerate => 'Genera';
+
+  @override
+  String camelotQueueGenerated(int count) {
+    return 'Coda riempita con $count tracce in ordine armonico';
+  }
+
+  @override
+  String get camelotWheelGuideTooltip => 'Guida alla ruota Camelot';
+  @override
+  String get camelotWheelGuideTitle => 'Guida alla Ruota Camelot';
+  @override
+  String get camelotGuideRingsTitle => 'Gli Anelli';
+  @override
+  String get camelotGuideRingsBody => 'Anello interno (A)  \u2192  tonalit\u00e0 minori\nAnello esterno (B)  \u2192  tonalit\u00e0 maggiori';
+  @override
+  String get camelotGuideNumbersTitle => 'Numeri 1\u201312';
+  @override
+  String get camelotGuideNumbersBody => 'Posizioni disposte in senso orario. Ogni numero rappresenta un vicinato armonico \u2014 i vicini condividono forti relazioni tonali.';
+  @override
+  String get camelotGuideColoursTitle => 'Guida ai Colori';
+  @override
+  String get camelotGuideColoursBody => '\u25cf Luminoso  \u2192  la tonalit\u00e0 del tuo brano\n\u25cf Tenue  \u2192  compatibile per il mix\n\u25cf Attenuato  \u2192  da evitare per un mix fluido';
+  @override
+  String get camelotGuideTransitionsTitle => 'Transizioni Compatibili';
+  @override
+  String get camelotGuideTransitionsBody => '8A \u2192 8B  (stesso numero, cambio anello)\n  Maggiore/minore relativo \u2014 praticamente senza soluzione di continuit\u00e0.\n\n8A \u2192 7A o 9A  (\u00b11, stesso anello)\n  Tonalit\u00e0 adiacente \u2014 cambio morbido e sottile.\n\n8A \u2192 1A o 3A  (\u00b17, stesso anello)\n  Aumento o calo di energia \u2014 cambiamento pi\u00f9 drammatico.';
+  @override
+  String get playerMixSuggestions => 'SUGGERIMENTI MIX';
 }

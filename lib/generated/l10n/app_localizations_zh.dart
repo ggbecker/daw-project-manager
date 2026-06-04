@@ -3093,4 +3093,58 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get resetPhasesWarningNote =>
       '这些项目将保留当前状态，但不会出现在阶段筛选器中。您随时可以重新添加这些阶段。';
+
+  @override
+  String get camelotGenerateButton => '生成混音';
+
+  @override
+  String get camelotDialogTitle => 'Camelot 混音';
+
+  @override
+  String get camelotDialogDescription =>
+      '使用 Camelot 轮盘按和声兼容性排列曲目，以 BPM 接近度作为同等情况下的决胜标准。';
+
+  @override
+  String camelotEligibleTracks(int count) {
+    return '$count 首曲目符合条件（已设置调性）';
+  }
+
+  @override
+  String camelotSkippedTracks(int count) {
+    return '$count 首将被跳过（无调性）';
+  }
+
+  @override
+  String get camelotNoEligibleTracks => '没有曲目设置了调性。请打开项目并设置调性。';
+
+  @override
+  String get camelotGenerate => '生成';
+
+  @override
+  String camelotQueueGenerated(int count) {
+    return '队列已填充 $count 首按和声排序的曲目';
+  }
+
+  @override
+  String get camelotWheelGuideTooltip => 'Camelot \u8f6e\u76d8\u6307\u5357';
+  @override
+  String get camelotWheelGuideTitle => 'Camelot \u8f6e\u76d8\u6307\u5357';
+  @override
+  String get camelotGuideRingsTitle => '\u73af\u5f62';
+  @override
+  String get camelotGuideRingsBody => '\u5185\u73af\uff08A\uff09  \u2192  \u5c0f\u8c03\n\u5916\u73af\uff08B\uff09  \u2192  \u5927\u8c03';
+  @override
+  String get camelotGuideNumbersTitle => '\u6570\u5b57 1\u201312';
+  @override
+  String get camelotGuideNumbersBody => '\u4f4d\u7f6e\u6309\u987a\u65f6\u9488\u6392\u5217\u3002\u6bcf\u4e2a\u6570\u5b57\u4ee3\u8868\u4e00\u4e2a\u548c\u58f0\u90bb\u57df\u2014\u2014\u76f8\u90bb\u4f4d\u7f6e\u5171\u4eab\u5f3a\u70c8\u7684\u97f3\u8c03\u5173\u7cfb\u3002';
+  @override
+  String get camelotGuideColoursTitle => '\u989c\u8272\u8bf4\u660e';
+  @override
+  String get camelotGuideColoursBody => '\u25cf \u660e\u4eae  \u2192  \u60a8\u7684\u6b4c\u66f2\u8c03\u6027\n\u25cf \u67d4\u548c\u53d1\u5149  \u2192  \u9002\u5408\u6df7\u97f3\u7684\n\u25cf \u6697\u6de1  \u2192  \u907f\u514d\u7528\u4e8e\u6d41\u7545\u6df7\u97f3';
+  @override
+  String get camelotGuideTransitionsTitle => '\u517c\u5bb9\u7684\u8fc7\u6e21';
+  @override
+  String get camelotGuideTransitionsBody => '8A \u2192 8B  \uff08\u76f8\u540c\u6570\u5b57\uff0c\u5207\u6362\u73af\uff09\n  \u5173\u7cfb\u5927\u8c03/\u5c0f\u8c03 \u2014 \u51e0\u4e4e\u65e0\u7f1d\u8854\u63a5\u3002\n\n8A \u2192 7A \u6216 9A  \uff08\u00b11\uff0c\u76f8\u540c\u73af\uff09\n  \u76f8\u90bb\u8c03\u6027 \u2014 \u5e73\u6ed1\u3001\u7ec6\u8154\u7684\u53d8\u5316\u3002\n\n8A \u2192 1A \u6216 3A  \uff08\u00b17\uff0c\u76f8\u540c\u73af\uff09\n  \u80fd\u91cf\u63d0\u5347\u6216\u4e0b\u964d \u2014 \u66f4\u663e\u8457\u7684\u8f6c\u53d8\u3002';
+  @override
+  String get playerMixSuggestions => '\u6df7\u97f3\u5efa\u8bae';
 }

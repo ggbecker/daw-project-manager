@@ -3122,4 +3122,59 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get resetPhasesWarningNote =>
       'これらのプロジェクトは現在のステータスを保持しますが、フェーズフィルターには表示されません。後でいつでもフェーズを再追加できます。';
+
+  @override
+  String get camelotGenerateButton => 'ミックス生成';
+
+  @override
+  String get camelotDialogTitle => 'キャメロットミックス';
+
+  @override
+  String get camelotDialogDescription =>
+      'キャメロットホイールを使って和声的な互換性順にトラックを並べ替えます。同等の場合はBPMの近さを優先します。';
+
+  @override
+  String camelotEligibleTracks(int count) {
+    return '$countトラックが対象（キー設定済み）';
+  }
+
+  @override
+  String camelotSkippedTracks(int count) {
+    return '$countトラックをスキップ（キー未設定）';
+  }
+
+  @override
+  String get camelotNoEligibleTracks =>
+      '音楽キーが設定されたトラックがありません。プロジェクトを開いてキーを設定してください。';
+
+  @override
+  String get camelotGenerate => '生成';
+
+  @override
+  String camelotQueueGenerated(int count) {
+    return '$countトラックを和声的な順序でキューに追加しました';
+  }
+
+  @override
+  String get camelotWheelGuideTooltip => '\u30ad\u30e3\u30e1\u30ed\u30c3\u30c8\u30db\u30a4\u30fc\u30eb\u30ac\u30a4\u30c9';
+  @override
+  String get camelotWheelGuideTitle => '\u30ad\u30e3\u30e1\u30ed\u30c3\u30c8\u30db\u30a4\u30fc\u30eb\u30ac\u30a4\u30c9';
+  @override
+  String get camelotGuideRingsTitle => '\u30ea\u30f3\u30b0';
+  @override
+  String get camelotGuideRingsBody => '\u5185\u5074\u30ea\u30f3\u30b0\uff08A\uff09  \u2192  \u77ed\u8abf\u306e\u30ad\u30fc\n\u5916\u5074\u30ea\u30f3\u30b0\uff08B\uff09  \u2192  \u9577\u8abf\u306e\u30ad\u30fc';
+  @override
+  String get camelotGuideNumbersTitle => '\u6570\u5b57 1\u201312';
+  @override
+  String get camelotGuideNumbersBody => '\u4f4d\u7f6e\u306f\u6642\u8a08\u56de\u308a\u306b\u914d\u7f6e\u3055\u308c\u3066\u3044\u307e\u3059\u3002\u5404\u756a\u53f7\u306f\u548c\u58f0\u7684\u306a\u8fd1\u96a3\u3092\u8868\u3057\u3001\u96a3\u63a5\u3059\u308b\u756a\u53f7\u306f\u5f37\u3044\u97f3\u8abf\u95a2\u4fc2\u3092\u5171\u6709\u3057\u307e\u3059\u3002';
+  @override
+  String get camelotGuideColoursTitle => '\u30ab\u30e9\u30fc\u30ac\u30a4\u30c9';
+  @override
+  String get camelotGuideColoursBody => '\u25cf \u660e\u308b\u3044  \u2192  \u3042\u306a\u305f\u306e\u66f2\u306e\u30ad\u30fc\n\u25cf \u6de1\u304f\u5149\u308b  \u2192  \u30df\u30c3\u30af\u30b9\u306b\u9069\u3057\u3066\u3044\u308b\n\u25cf \u6697\u3044  \u2192  \u30b9\u30e0\u30fc\u30ba\u306a\u30df\u30c3\u30af\u30b9\u306b\u306f\u907f\u3051\u308b';
+  @override
+  String get camelotGuideTransitionsTitle => '\u4e92\u63db\u6027\u306e\u3042\u308b\u8ee2\u63db';
+  @override
+  String get camelotGuideTransitionsBody => '8A \u2192 8B  \uff08\u540c\u3058\u756a\u53f7\u3001\u30ea\u30f3\u30b0\u3092\u5207\u308a\u66ff\u3048\uff09\n  \u5e73\u884c\u9577\u8abf/\u77ed\u8abf \u2014 \u307b\u307c\u30b7\u30fc\u30e0\u30ec\u30b9\u3002\n\n8A \u2192 7A \u307e\u305f\u306f 9A  \uff08\u00b11\u3001\u540c\u3058\u30ea\u30f3\u30b0\uff09\n  \u96a3\u63a5\u30ad\u30fc \u2014 \u30b9\u30e0\u30fc\u30ba\u3067\u7d30\u8150\u306a\u5909\u5316\u3002\n\n8A \u2192 1A \u307e\u305f\u306f 3A  \uff08\u00b17\u3001\u540c\u3058\u30ea\u30f3\u30b0\uff09\n  \u30a8\u30cd\u30eb\u30ae\u30fc\u30d6\u30fc\u30b9\u30c8\u307e\u305f\u306f\u30c9\u30ed\u30c3\u30d7 \u2014 \u3088\u308a\u5287\u7684\u306a\u5909\u5316\u3002';
+  @override
+  String get playerMixSuggestions => '\u30df\u30c3\u30af\u30b9\u5019\u88dc';
 }

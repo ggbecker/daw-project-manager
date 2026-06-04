@@ -3201,4 +3201,59 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get resetPhasesWarningNote =>
       'Esses projetos manterão seu status atual, mas não aparecerão nos filtros de fase. Você sempre pode adicionar essas fases novamente depois.';
+
+  @override
+  String get camelotGenerateButton => 'Gerar mix';
+
+  @override
+  String get camelotDialogTitle => 'Mix Camelot';
+
+  @override
+  String get camelotDialogDescription =>
+      'Ordena suas faixas por compatibilidade harmônica usando a roda Camelot. A proximidade de BPM é usada como critério de desempate.';
+
+  @override
+  String camelotEligibleTracks(int count) {
+    return '$count faixas elegíveis (tonalidade definida)';
+  }
+
+  @override
+  String camelotSkippedTracks(int count) {
+    return '$count serão ignoradas (sem tonalidade)';
+  }
+
+  @override
+  String get camelotNoEligibleTracks =>
+      'Nenhuma faixa tem tonalidade definida. Abra um projeto e defina sua tonalidade.';
+
+  @override
+  String get camelotGenerate => 'Gerar';
+
+  @override
+  String camelotQueueGenerated(int count) {
+    return 'Fila preenchida com $count faixas em ordem harmônica';
+  }
+
+  @override
+  String get camelotWheelGuideTooltip => 'Guia da roda Camelot';
+  @override
+  String get camelotWheelGuideTitle => 'Guia da Roda Camelot';
+  @override
+  String get camelotGuideRingsTitle => 'Os An\u00e9is';
+  @override
+  String get camelotGuideRingsBody => 'Anel interno (A)  \u2192  tonalidades menores\nAnel externo (B)  \u2192  tonalidades maiores';
+  @override
+  String get camelotGuideNumbersTitle => 'N\u00fameros 1\u201312';
+  @override
+  String get camelotGuideNumbersBody => 'Posi\u00e7\u00f5es dispostas no sentido hor\u00e1rio. Cada n\u00famero representa uma vizinhan\u00e7a harm\u00f4nica \u2014 os vizinhos compartilham fortes rela\u00e7\u00f5es tonais.';
+  @override
+  String get camelotGuideColoursTitle => 'Guia de Cores';
+  @override
+  String get camelotGuideColoursBody => '\u25cf Brilhante  \u2192  a tonalidade da sua m\u00fasica\n\u25cf Suavemente iluminado  \u2192  compat\u00edvel para mixagem\n\u25cf Apagado  \u2192  evitar para uma mixagem suave';
+  @override
+  String get camelotGuideTransitionsTitle => 'Transi\u00e7\u00f5es Compat\u00edveis';
+  @override
+  String get camelotGuideTransitionsBody => '8A \u2192 8B  (mesmo n\u00famero, trocar anel)\n  Maior/menor relativo \u2014 praticamente sem emenda.\n\n8A \u2192 7A ou 9A  (\u00b11, mesmo anel)\n  Tom adjacente \u2014 mudan\u00e7a suave e sutil.\n\n8A \u2192 1A ou 3A  (\u00b17, mesmo anel)\n  Impulso ou queda de energia \u2014 mudan\u00e7a mais dram\u00e1tica.';
+  @override
+  String get playerMixSuggestions => 'SUGEST\xd5ES DE MIX';
 }

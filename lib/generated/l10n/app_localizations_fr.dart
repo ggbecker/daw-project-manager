@@ -3225,4 +3225,59 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get resetPhasesWarningNote =>
       'Ces projets conserveront leur statut actuel mais n\'apparaîtront pas dans les filtres de phase. Vous pouvez toujours rajouter ces phases plus tard.';
+
+  @override
+  String get camelotGenerateButton => 'Générer le mix';
+
+  @override
+  String get camelotDialogTitle => 'Mix Camelot';
+
+  @override
+  String get camelotDialogDescription =>
+      'Trie vos pistes par compatibilité harmonique en utilisant la roue Camelot. La proximité BPM est utilisée comme critère de départage.';
+
+  @override
+  String camelotEligibleTracks(int count) {
+    return '$count pistes éligibles (tonalité définie)';
+  }
+
+  @override
+  String camelotSkippedTracks(int count) {
+    return '$count seront ignorées (sans tonalité)';
+  }
+
+  @override
+  String get camelotNoEligibleTracks =>
+      'Aucune piste n\'a de tonalité définie. Ouvrez un projet et définissez sa tonalité.';
+
+  @override
+  String get camelotGenerate => 'Générer';
+
+  @override
+  String camelotQueueGenerated(int count) {
+    return 'File remplie avec $count pistes en ordre harmonique';
+  }
+
+  @override
+  String get camelotWheelGuideTooltip => 'Guide de la roue Camelot';
+  @override
+  String get camelotWheelGuideTitle => 'Guide de la Roue Camelot';
+  @override
+  String get camelotGuideRingsTitle => 'Les Anneaux';
+  @override
+  String get camelotGuideRingsBody => 'Anneau int\u00e9rieur (A)  \u2192  tonalit\u00e9s mineures\nAnneau ext\u00e9rieur (B)  \u2192  tonalit\u00e9s majeures';
+  @override
+  String get camelotGuideNumbersTitle => 'Chiffres 1\u201312';
+  @override
+  String get camelotGuideNumbersBody => 'Positions arrang\u00e9es dans le sens des aiguilles d\'une montre. Chaque chiffre repr\u00e9sente un voisinage harmonique \u2014 les voisins partagent de fortes relations tonales.';
+  @override
+  String get camelotGuideColoursTitle => 'Guide des Couleurs';
+  @override
+  String get camelotGuideColoursBody => '\u25cf Lumineux  \u2192  la tonalit\u00e9 de votre chanson\n\u25cf Doucement \u00e9clair\u00e9  \u2192  compatible pour le mix\n\u25cf Att\u00e9nu\u00e9  \u2192  \u00e0 \u00e9viter pour un mix fluide';
+  @override
+  String get camelotGuideTransitionsTitle => 'Transitions Compatibles';
+  @override
+  String get camelotGuideTransitionsBody => '8A \u2192 8B  (m\u00eame chiffre, changer d\'anneau)\n  Majeur/mineur relatif \u2014 pratiquement sans couture.\n\n8A \u2192 7A ou 9A  (\u00b11, m\u00eame anneau)\n  Ton adjacent \u2014 changement doux et subtil.\n\n8A \u2192 1A ou 3A  (\u00b17, m\u00eame anneau)\n  Boost ou chute d\'\u00e9nergie \u2014 changement plus dramatique.';
+  @override
+  String get playerMixSuggestions => 'SUGGESTIONS DE MIX';
 }
