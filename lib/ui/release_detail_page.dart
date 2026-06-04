@@ -2196,7 +2196,17 @@ class _AudioFileItemState extends ConsumerState<_AudioFileItem> {
     AudioAnalysisService.getFileInfo(filePath).then((info) {
       if (mounted && info != null) setState(() => _fileInfo = info);
     });
-    ref.read(waveformCacheProvider.notifier).getOrExtract(filePath).then((peaks) {
+    ref.read(waveformCacheProvider.notifier).getOrExtract(
+      filePath,
+      onStale: () {
+        if (!mounted) return;
+        setState(() => _peaks = null);
+        ScaffoldMessenger.maybeOf(context)?.showSnackBar(const SnackBar(
+          content: Text('Audio file changed on disk — refreshing waveform…'),
+          duration: Duration(seconds: 3),
+        ));
+      },
+    ).then((peaks) {
       if (mounted && peaks != null) setState(() => _peaks = peaks);
     });
     if (_supportsMonoMix()) _prepareMonoFile(filePath);
