@@ -424,8 +424,10 @@ class MetadataExtractor {
         }
 
         if (rootNote != null && scaleName != null) {
-          final rootName = _bitwigRootNotes[rootNote];
-          key = '$rootName $scaleName';
+          final rootNotes = _bitwigMinorSideScales.contains(rawScale)
+              ? _bitwigRootNotesMinor
+              : _bitwigRootNotesMajor;
+          key = '${rootNotes[rootNote]} $scaleName';
         }
       }
 
@@ -435,9 +437,35 @@ class MetadataExtractor {
     }
   }
 
-  static const _bitwigRootNotes = [
+  // Major-side scales use Db and Ab (e.g. "Ab Major", "Db Lydian").
+  static const _bitwigRootNotesMajor = [
     'C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B',
   ];
+
+  // Minor-side scales use C# and G# (e.g. "G# Minor", "C# Dorian").
+  // Only indices 1 and 8 differ from the major-side array.
+  static const _bitwigRootNotesMinor = [
+    'C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B',
+  ];
+
+  // Scales whose root notes follow the minor-side (C#, G#) spelling convention.
+  static const _bitwigMinorSideScales = {
+    0x05ad, // Minor
+    0x06ad, // Dorian
+    0x05ab, // Phrygian
+    0x056b, // Locrian
+    0x09ad, // Harmonic Minor
+    0x0aad, // Jazz Minor
+    0x029d, // Blues Major
+    0x04e9, // Blues Minor
+    0x09b3, // Double Harmonic Major
+    0x09cd, // Double Harmonic Minor
+    0x056d, // Half-diminished
+    0x06db, // Diminished HW
+    0x0b6d, // Diminished WH
+    0x04a9, // Minor Pentatonic
+    0x0089, // Minor Triad
+  };
 
   // 23 scale types in Bitwig 6. Each key is a 12-bit semitone bitmask (bit N = semitone N
   // above C is present), stored as uint16 BE in the .bwproject binary format.
