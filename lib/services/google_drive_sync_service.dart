@@ -53,31 +53,12 @@ class GoogleDriveSyncService {
   StreamSubscription? _authEventsSubscription; // Listen to authentication events
   static bool _sessionInitialized = false; // Track if lightweight auth was attempted this session
 
-  // --- Debug logging (persists across instances, viewable in-app on mobile) ---
-  static final List<String> _authDebugLogs = [];
   static final StreamController<bool> _authStateController =
       StreamController<bool>.broadcast();
 
   /// Stream that emits the new isSignedIn value whenever auth state changes.
   static Stream<bool> get authStateStream => _authStateController.stream;
 
-  /// All captured auth-flow log lines (newest at the end).
-  static List<String> get authDebugLogs => List.unmodifiable(_authDebugLogs);
-
-  static void clearAuthDebugLogs() => _authDebugLogs.clear();
-
-  static void _log(String msg) {
-    final now = DateTime.now();
-    final h = now.hour.toString().padLeft(2, '0');
-    final m = now.minute.toString().padLeft(2, '0');
-    final s = now.second.toString().padLeft(2, '0');
-    final ms = now.millisecond.toString().padLeft(3, '0');
-    final entry = '[$h:$m:$s.$ms] $msg';
-    _authDebugLogs.add(entry);
-    if (_authDebugLogs.length > 500) _authDebugLogs.removeAt(0);
-    debugPrint('[GDriveAuth] $entry');
-  }
-  
   // Stream controller for backup progress
   final _progressController = StreamController<BackupProgress>.broadcast();
   Stream<BackupProgress> get progressStream => _progressController.stream;
@@ -192,14 +173,12 @@ class GoogleDriveSyncService {
   /// Only attempts lightweight auth once per app session
   Future<void> initialize({String? serverClientId, bool forceReinitialize = false}) async {
     if (_isInitialized && !forceReinitialize) {
-      _log('initialize(): already initialized (instance), skipping');
       return;
     }
 
     if (MobileUtils.isMobile()) {
       try {
         final webClientId = serverClientId ?? _androidWebClientId;
-        _log('initialize(): starting — sessionInitialized=$_sessionInitialized, currentUser=${_currentUser?.email ?? "null"}');
 
         final GoogleSignIn signIn = GoogleSignIn.instance;
         unawaited(
@@ -207,17 +186,14 @@ class GoogleDriveSyncService {
             clientId: null, // Not needed for Android
             serverClientId: webClientId,
           ).then((_) {
-            _log('signIn.initialize() resolved');
 
             // Listen to authentication events (following official example)
             // Only set up listener once per instance
             if (_authEventsSubscription == null) {
-              _log('Setting up authenticationEvents listener on this instance');
               _authEventsSubscription = signIn.authenticationEvents
                   .listen(_handleAuthenticationEvent);
               _authEventsSubscription?.onError(_handleAuthenticationError);
             } else {
-              _log('authenticationEvents listener already set up on this instance');
             }
 
             // Attempt lightweight authentication to restore the current signed-in user.
@@ -225,19 +201,15 @@ class GoogleDriveSyncService {
             // after page navigation) so the auth event fires and populates _currentUser.
             // It's non-interactive, so calling it more than once per session is safe.
             if (!_sessionInitialized || _currentUser == null) {
-              _log('Calling attemptLightweightAuthentication() — sessionInitialized=$_sessionInitialized, currentUser=${_currentUser?.email ?? "null"}');
               signIn.attemptLightweightAuthentication();
               _sessionInitialized = true;
             } else {
-              _log('Skipping attemptLightweightAuthentication() — user already set: ${_currentUser?.email}');
             }
           }),
         );
 
         _isInitialized = true;
-        _log('initialize(): instance marked as initialized (async init still in progress)');
       } catch (e) {
-        _log('initialize() ERROR: $e');
         rethrow;
       }
     } else {
@@ -247,7 +219,6 @@ class GoogleDriveSyncService {
 
   /// Handle authentication events (following official example pattern)
   Future<void> _handleAuthenticationEvent(GoogleSignInAuthenticationEvent event) async {
-    _log('══ AUTH EVENT: ${event.runtimeType} ══');
 
     final GoogleSignInAccount? user = switch (event) {
       GoogleSignInAuthenticationEventSignIn() => event.user,
@@ -255,19 +226,15 @@ class GoogleDriveSyncService {
     };
 
     if (user != null) {
-      _log('  User: ${user.email} (${user.displayName})');
     } else {
-      _log('  → Sign-out event (user = null)');
     }
 
     // authorizationForScopes is a cache-only lookup — returns null when the
     // token is not in the local in-process cache (e.g. after a fresh page load
     // with a new service instance). This is NOT the same as "not authorized".
-    _log('  Checking authorizationForScopes (cache)...');
     GoogleSignInClientAuthorization? authorization = await user
         ?.authorizationClient
         .authorizationForScopes(_scopes);
-    _log('  authorizationForScopes: ${authorization != null ? "✓ cached" : "✗ null (not in cache)"}');
 
     _currentUser = user;
 
@@ -276,37 +243,26 @@ class GoogleDriveSyncService {
     // granted) this completes without any UI prompt. Only shows consent UI the
     // very first time scopes are requested.
     if (user != null && authorization == null) {
-      _log('  → calling authorizeScopes() for silent token refresh...');
       try {
         authorization = await user.authorizationClient.authorizeScopes(_scopes);
-        _log('  authorizeScopes() ✓ token obtained');
       } catch (e) {
-        _log('  authorizeScopes() ✗ ${e.runtimeType}: $e');
       }
     }
 
     _isAuthenticated = authorization != null;
-    _log('  isAuthenticated = $_isAuthenticated');
 
     if (user != null && _isAuthenticated) {
-      _log('  Initializing Drive API...');
       await _initializeDriveApi(user);
-      _log('  Drive API ready: ${_driveApi != null}');
     } else {
       _driveApi = null;
-      _log('  Drive API cleared');
     }
-
-    _log('══════════════════════════════════');
     _authStateController.add(_isAuthenticated);
   }
 
   /// Handle authentication errors (following official example pattern)
   Future<void> _handleAuthenticationError(Object e) async {
     if (e is GoogleSignInException) {
-      _log('AUTH ERROR: ${e.code}: ${e.description}');
     } else {
-      _log('AUTH ERROR: ${e.runtimeType}: $e');
     }
     _currentUser = null;
     _isAuthenticated = false;
@@ -593,41 +549,32 @@ class GoogleDriveSyncService {
   /// Check if user is signed in (async check) - following official example
   /// Use the getter `isSignedIn` for synchronous check
   Future<bool> checkSignedInStatus() async {
-    _log('checkSignedInStatus(): currentUser=${_currentUser?.email ?? "null"}, isAuthenticated=$_isAuthenticated');
     try {
       if (MobileUtils.isMobile()) {
         if (!_isInitialized) {
-          _log('checkSignedInStatus(): not initialized, calling initialize()');
           await initialize();
         }
 
         if (_currentUser != null) {
-          _log('checkSignedInStatus(): currentUser set, re-checking authorizationForScopes...');
           try {
             final GoogleSignInClientAuthorization? authorization = await _currentUser!
                 .authorizationClient
                 .authorizationForScopes(_scopes);
-            _log('checkSignedInStatus(): authorizationForScopes = ${authorization != null ? "✓ granted" : "✗ null"}');
             _isAuthenticated = authorization != null;
-            _log('checkSignedInStatus(): → returning $_isAuthenticated');
             return _isAuthenticated;
           } catch (e) {
-            _log('checkSignedInStatus(): authorizationForScopes ERROR: $e');
             _isAuthenticated = false;
             return false;
           }
         } else {
-          _log('checkSignedInStatus(): currentUser is null → returning false');
           _isAuthenticated = false;
           return false;
         }
       } else {
         final result = _desktopAuthClient != null && _driveApi != null;
-        _log('checkSignedInStatus(): desktop → $result');
         return result;
       }
     } catch (e) {
-      _log('checkSignedInStatus() ERROR: $e');
       _isAuthenticated = false;
       _currentUser = null;
       return false;
