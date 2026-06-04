@@ -109,7 +109,7 @@
   "noReleasesFound": "リリースが見つかりません",
   "noPlaylistsFound": "プレイリストが見つかりません",
   "tryDifferentSearch": "別の検索用語を試してください",
-  "deepScanConfirm": "詳細スキャンは、プロジェクトファイルから完全なメタデータを抽出します：\n• BPM（1分あたりのビート数）\n• 音楽キー\n• DAWバージョン\n現在対応: Ableton LiveとCubase。\n\n通常のスキャンより時間がかかります。続行しますか？",
+  "deepScanConfirm": "詳細スキャンは、プロジェクトファイルから完全なメタデータを抽出します：\n• BPM（1分あたりのビート数）\n• 音楽キー\n• DAWバージョン\n現在対応: Ableton Live、CubaseとBitwig Studio。\n\n通常のスキャンより時間がかかります。続行しますか？",
   "deepScanOnlyUnscanned": "メタデータのないプロジェクトのみスキャン",
   "metadataExtractedSuccessfully": "メタデータの抽出に成功しました",
   "failedToExtractMetadata": "メタデータの抽出に失敗しました: {error}",

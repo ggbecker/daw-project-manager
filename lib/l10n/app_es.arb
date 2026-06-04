@@ -109,7 +109,7 @@
   "noReleasesFound": "No se encontraron lanzamientos",
   "noPlaylistsFound": "No se encontraron listas de reproducción",
   "tryDifferentSearch": "Intenta con un término de búsqueda diferente",
-  "deepScanConfirm": "El Escaneo Profundo extrae metadatos completos de los archivos de proyecto:\n• BPM (Pulsos Por Minuto)\n• Tonalidad Musical\n• Versión del DAW\nCompatible actualmente: Ableton Live y Cubase.\n\nEsto es más lento que un escaneo regular y puede tardar un tiempo. ¿Continuar?",
+  "deepScanConfirm": "El Escaneo Profundo extrae metadatos completos de los archivos de proyecto:\n• BPM (Pulsos Por Minuto)\n• Tonalidad Musical\n• Versión del DAW\nCompatible actualmente: Ableton Live, Cubase y Bitwig Studio.\n\nEsto es más lento que un escaneo regular y puede tardar un tiempo. ¿Continuar?",
   "deepScanOnlyUnscanned": "Solo escanear proyectos sin metadatos",
   "metadataExtractedSuccessfully": "Metadatos extraídos exitosamente",
   "failedToExtractMetadata": "Error al extraer metadatos: {error}",
