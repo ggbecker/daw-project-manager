@@ -3101,7 +3101,8 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     for (final row in sm.rows) {
       if (row.type.isGroup) {
         final name = row.cells['name']?.value as String? ?? '';
-        if (wasCollapsed[name] == true) sm.toggleExpandedRowGroup(rowGroup: row);
+        // New group rows default to collapsed; expand the ones that were open.
+        if (wasCollapsed[name] == false) sm.toggleExpandedRowGroup(rowGroup: row);
       }
     }
     sm.notifyListeners();
@@ -3829,7 +3830,11 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       final mode = rootPath != null ? (rootModes[rootPath] ?? ScanMode.flat) : ScanMode.flat;
 
       if (mode == ScanMode.smartFolder && rootPath != null) {
-        final rel = path.relative(path.normalize(proj.filePath), from: rootPath);
+        // Normalise separators before computing relative path so Windows paths
+        // (C:\...) resolve correctly when the database is opened on macOS.
+        final normFilePath = normForward(path.normalize(proj.filePath));
+        final normRootPath = normForward(rootPath);
+        final rel = path.relative(normFilePath, from: normRootPath);
         final parts = path.split(rel);
         if (parts.length <= 1) {
           // Project sits directly in the root — no subfolder to group by.
