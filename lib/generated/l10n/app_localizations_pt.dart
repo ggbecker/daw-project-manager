@@ -474,6 +474,9 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get folderAlreadyAdded => 'Esta pasta já foi adicionada.';
+
+  @override
   String get noProjectsFoundInRoots =>
       'Nenhum projeto encontrado nas pastas de projetos selecionadas.';
 

@@ -321,6 +321,7 @@
       }
     }
   },
+  "folderAlreadyAdded": "Ce dossier a déjà été ajouté.",
   "noProjectsFoundInRoots": "Aucun projet trouvé dans les dossiers de projets sélectionnés.",
   "selectProjectsFolder": "Sélectionnez un dossier de projets",
   "enterReleaseTitle": "Entrez le Titre de la Sortie",

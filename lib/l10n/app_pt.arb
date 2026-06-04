@@ -321,6 +321,7 @@
       }
     }
   },
+  "folderAlreadyAdded": "Esta pasta já foi adicionada.",
   "noProjectsFoundInRoots": "Nenhum projeto encontrado nas pastas de projetos selecionadas.",
   "selectProjectsFolder": "Selecione uma pasta de projetos",
   "enterReleaseTitle": "Digite o Título do Lançamento",

@@ -475,6 +475,9 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get folderAlreadyAdded => 'Эта папка уже была добавлена.';
+
+  @override
   String get noProjectsFoundInRoots =>
       'Проекты не найдены в выбранных папках проектов.';
 

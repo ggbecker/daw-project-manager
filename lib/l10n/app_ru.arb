@@ -321,6 +321,7 @@
       }
     }
   },
+  "folderAlreadyAdded": "Эта папка уже была добавлена.",
   "noProjectsFoundInRoots": "Проекты не найдены в выбранных папках проектов.",
   "selectProjectsFolder": "Выберите папку проектов",
   "enterReleaseTitle": "Введите Название Релиза",

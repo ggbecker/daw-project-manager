@@ -922,6 +922,12 @@ abstract class AppLocalizations {
   /// **'Error adding folder: {error}'**
   String errorAddingFolder(String error);
 
+  /// No description provided for @folderAlreadyAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'This folder has already been added.'**
+  String get folderAlreadyAdded;
+
   /// No description provided for @noProjectsFoundInRoots.
   ///
   /// In en, this message translates to:

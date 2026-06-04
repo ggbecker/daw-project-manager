@@ -475,6 +475,9 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get folderAlreadyAdded => 'Questa cartella è già stata aggiunta.';
+
+  @override
   String get noProjectsFoundInRoots =>
       'Nessun progetto trovato nelle cartelle progetti selezionate.';
 

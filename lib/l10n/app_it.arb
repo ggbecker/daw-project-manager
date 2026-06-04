@@ -321,6 +321,7 @@
       }
     }
   },
+  "folderAlreadyAdded": "Questa cartella è già stata aggiunta.",
   "noProjectsFoundInRoots": "Nessun progetto trovato nelle cartelle progetti selezionate.",
   "selectProjectsFolder": "Seleziona una cartella di progetti",
   "enterReleaseTitle": "Inserisci il Titolo della Pubblicazione",

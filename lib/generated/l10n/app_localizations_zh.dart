@@ -465,6 +465,9 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get folderAlreadyAdded => '此文件夹已被添加。';
+
+  @override
   String get noProjectsFoundInRoots => '在选定的项目文件夹中未找到项目。';
 
   @override

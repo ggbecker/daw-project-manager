@@ -476,6 +476,9 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get folderAlreadyAdded => 'Esta carpeta ya ha sido añadida.';
+
+  @override
   String get noProjectsFoundInRoots =>
       'No se encontraron proyectos en las carpetas de proyectos seleccionadas.';
 

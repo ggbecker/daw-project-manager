@@ -321,6 +321,7 @@
       }
     }
   },
+  "folderAlreadyAdded": "此文件夹已被添加。",
   "noProjectsFoundInRoots": "在选定的项目文件夹中未找到项目。",
   "selectProjectsFolder": "选择项目文件夹",
   "enterReleaseTitle": "输入发布标题",

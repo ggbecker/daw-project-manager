@@ -321,6 +321,7 @@
       }
     }
   },
+  "folderAlreadyAdded": "Esta carpeta ya ha sido añadida.",
   "noProjectsFoundInRoots": "No se encontraron proyectos en las carpetas de proyectos seleccionadas.",
   "selectProjectsFolder": "Seleccione una carpeta de proyectos",
   "enterReleaseTitle": "Ingrese el Título del Lanzamiento",

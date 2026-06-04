@@ -321,6 +321,7 @@
       }
     }
   },
+  "folderAlreadyAdded": "このフォルダはすでに追加されています。",
   "noProjectsFoundInRoots": "選択したプロジェクトフォルダにプロジェクトが見つかりませんでした。",
   "selectProjectsFolder": "プロジェクトフォルダを選択",
   "enterReleaseTitle": "リリースタイトルを入力",

@@ -469,6 +469,9 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get folderAlreadyAdded => 'このフォルダはすでに追加されています。';
+
+  @override
   String get noProjectsFoundInRoots => '選択したプロジェクトフォルダにプロジェクトが見つかりませんでした。';
 
   @override

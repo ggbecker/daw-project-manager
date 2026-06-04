@@ -321,6 +321,7 @@
       }
     }
   },
+  "folderAlreadyAdded": "Dieser Ordner wurde bereits hinzugefügt.",
   "noProjectsFoundInRoots": "Keine Projekte in den ausgewählten Projektordnern gefunden.",
   "selectProjectsFolder": "Wählen Sie einen Projektordner",
   "enterReleaseTitle": "Veröffentlichungstitel Eingeben",
