@@ -2155,6 +2155,24 @@ class _AudioFileItemState extends ConsumerState<_AudioFileItem> {
     });
   }
 
+  Future<void> _fadeOut(AudioPlayer player) {
+    const steps = 12;
+    const stepMs = 10;
+    final startVolume = _volume;
+    int step = 0;
+    final completer = Completer<void>();
+    Timer.periodic(const Duration(milliseconds: stepMs), (timer) {
+      step++;
+      player.setVolume((startVolume * (1 - step / steps)).clamp(0.0, startVolume));
+      if (step >= steps) {
+        timer.cancel();
+        player.setVolume(0);
+        completer.complete();
+      }
+    });
+    return completer.future;
+  }
+
   bool _supportsMonoMix() {
     final ext = widget.file.filePath.toLowerCase().split('.').last;
     if (ext == 'wav') return true;
@@ -2237,6 +2255,7 @@ class _AudioFileItemState extends ConsumerState<_AudioFileItem> {
         await newActive.setVolume(0);
         await newActive.play(_currentSource(), position: savedPosition);
         _fadeIn(newActive);
+        await _fadeOut(oldActive);
       } else {
         await newActive.setVolume(_volume);
         await newActive.setSource(_currentSource());
