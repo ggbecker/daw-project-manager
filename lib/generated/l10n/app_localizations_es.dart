@@ -2045,7 +2045,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get menuLanguage => 'Idioma';
 
   @override
-  String get menuWarnBeforeQuit => 'Advertir Antes de Salir (Cmd+Q)';
+  String get menuWarnBeforeQuit => 'Advertir Antes de Salir (⌘+Q)';
 
   @override
   String get menuQuit => 'Salir de DAW Project Manager';
@@ -2702,6 +2702,35 @@ class AppLocalizationsEs extends AppLocalizations {
   String get noSessionsYet => 'Aún no hay sesiones registradas';
 
   @override
+  String get removeSessionTitle => '¿Eliminar sesión?';
+
+  @override
+  String get sessionTableDate => 'Fecha';
+
+  @override
+  String get sessionTableTime => 'Hora';
+
+  @override
+  String get sessionTableDuration => 'Duración';
+
+  @override
+  String get sessionTableTotal => 'Total';
+
+  @override
+  String sessionCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sesiones',
+      one: '1 sesión',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sessionByPhase => 'Trabajo por fase';
+
+  @override
   String get tabPosition => 'Posición de pestañas';
 
   @override
@@ -3055,6 +3084,50 @@ class AppLocalizationsEs extends AppLocalizations {
   String get createProjectError => 'No se pudo crear la carpeta';
 
   @override
+  String get createProjectIncludeDate => 'Incluir prefijo de fecha';
+
+  @override
+  String get createProjectCreatedTitle => 'Carpeta creada';
+
+  @override
+  String get createProjectCreatedMessage =>
+      'Tu carpeta de proyecto ha sido creada:';
+
+  @override
+  String get createProjectCopyName => 'Copiar nombre de carpeta';
+
+  @override
+  String get createProjectNameCopied => 'Nombre de carpeta copiado';
+
+  @override
+  String get createProjectTrackSession => 'Registrar sesión desde ahora';
+
+  @override
+  String get pendingFolderSessionTitle => 'Sesión de trabajo detectada';
+
+  @override
+  String pendingFolderSessionBody(String projectName, String duration) {
+    return 'Has trabajado en \"$projectName\" durante $duration.';
+  }
+
+  @override
+  String get pendingFolderSessionContinue => 'Continuar sesión';
+
+  @override
+  String get pendingFolderSessionEndRecord => 'Terminar y registrar';
+
+  @override
+  String get activeSessionSwitchTitle => 'Sesión ya activa';
+
+  @override
+  String activeSessionSwitchBody(String current, String next) {
+    return 'Hay una sesión activa para \"$current\". ¿Cambiar a \"$next\" y guardar la sesión actual?';
+  }
+
+  @override
+  String get activeSessionSwitch => 'Cambiar';
+
+  @override
   String get pendingProjectWaiting => 'Esperando archivo de proyecto…';
 
   @override
@@ -3070,6 +3143,15 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get pendingProjectDismiss => 'Dejar de rastrear esta carpeta';
+
+  @override
+  String get pendingProjectDismissTitle => '¿Dejar de seguir?';
+
+  @override
+  String get pendingProjectDismissKeep => 'Mantener carpeta';
+
+  @override
+  String get pendingProjectDismissDelete => 'Eliminar y cerrar';
 
   @override
   String get pendingProjectDeleteNotEmptyTitle => 'La carpeta no está vacía';
@@ -3135,4 +3217,59 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get resetPhasesWarningNote =>
       'Esos proyectos conservarán su estado actual pero no aparecerán en los filtros de fase. Siempre puedes volver a añadir esas fases.';
+
+  @override
+  String get camelotGenerateButton => 'Generar mezcla';
+
+  @override
+  String get camelotDialogTitle => 'Mezcla Camelot';
+
+  @override
+  String get camelotDialogDescription =>
+      'Ordena tus pistas por compatibilidad armónica usando la rueda Camelot. La proximidad de BPM se usa como criterio de desempate.';
+
+  @override
+  String camelotEligibleTracks(int count) {
+    return '$count pistas elegibles (tonalidad definida)';
+  }
+
+  @override
+  String camelotSkippedTracks(int count) {
+    return '$count se omitirán (sin tonalidad)';
+  }
+
+  @override
+  String get camelotNoEligibleTracks =>
+      'Ninguna pista tiene tonalidad definida. Abre un proyecto y define su tonalidad.';
+
+  @override
+  String get camelotGenerate => 'Generar';
+
+  @override
+  String camelotQueueGenerated(int count) {
+    return 'Cola llenada con $count pistas en orden armónico';
+  }
+
+  @override
+  String get camelotWheelGuideTooltip => 'Gu\u00eda de la rueda Camelot';
+  @override
+  String get camelotWheelGuideTitle => 'Gu\u00eda de la Rueda Camelot';
+  @override
+  String get camelotGuideRingsTitle => 'Los Anillos';
+  @override
+  String get camelotGuideRingsBody => 'Anillo interior (A)  \u2192  tonos menores\nAnillo exterior (B)  \u2192  tonos mayores';
+  @override
+  String get camelotGuideNumbersTitle => 'N\u00fameros 1\u201312';
+  @override
+  String get camelotGuideNumbersBody => 'Posiciones ordenadas en sentido horario. Cada n\u00famero representa un vecindario arm\u00f3nico \u2014 los vecinos comparten fuertes relaciones tonales.';
+  @override
+  String get camelotGuideColoursTitle => 'Gu\u00eda de Colores';
+  @override
+  String get camelotGuideColoursBody => '\u25cf Brillante  \u2192  el tono de tu canci\u00f3n\n\u25cf Suavemente iluminado  \u2192  compatible para mezclar\n\u25cf Tenue  \u2192  evitar para mezclas suaves';
+  @override
+  String get camelotGuideTransitionsTitle => 'Transiciones Compatibles';
+  @override
+  String get camelotGuideTransitionsBody => '8A \u2192 8B  (mismo n\u00famero, cambiar anillo)\n  Mayor/menor relativa \u2014 pr\u00e1cticamente sin costuras.\n\n8A \u2192 7A o 9A  (\u00b11, mismo anillo)\n  Tono adyacente \u2014 cambio suave y sutil.\n\n8A \u2192 1A o 3A  (\u00b17, mismo anillo)\n  Impulso o ca\u00edda de energ\u00eda \u2014 cambio m\u00e1s dram\u00e1tico.';
+  @override
+  String get playerMixSuggestions => 'SUGERENCIAS DE MIX';
 }

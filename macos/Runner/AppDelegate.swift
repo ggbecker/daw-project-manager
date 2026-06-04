@@ -6,6 +6,24 @@ class AppDelegate: FlutterAppDelegate {
 
   private var recentProjects: [[String: String]] = []
 
+  override func applicationWillFinishLaunching(_ notification: Notification) {
+    // Enforce single instance in release builds only.
+    // Debug builds skip this so `flutter run` can relaunch the app freely.
+    let bundleId = Bundle.main.bundleIdentifier ?? ""
+    let others = NSRunningApplication.runningApplications(withBundleIdentifier: bundleId)
+      .filter { $0 != NSRunningApplication.current }
+    if !others.isEmpty {
+      others.first?.activate(options: .activateIgnoringOtherApps)
+      let alert = NSAlert()
+      alert.messageText = "DAW Project Manager is already running"
+      alert.informativeText = "Please close the existing instance before opening a new one."
+      alert.alertStyle = .informational
+      alert.addButton(withTitle: "OK")
+      alert.runModal()
+      exit(0)
+    }
+  }
+
   override func applicationDidFinishLaunching(_ notification: Notification) {
     super.applicationDidFinishLaunching(notification)
 
@@ -51,6 +69,18 @@ class AppDelegate: FlutterAppDelegate {
   }
 
   override func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+    #if DEBUG
+    return true  // quit on window close in debug so flutter run always gets a fresh process
+    #else
+    return false
+    #endif
+  }
+
+  // Re-show the window when the user clicks the Dock icon after closing it.
+  override func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows: Bool) -> Bool {
+    if !hasVisibleWindows {
+      sender.windows.first?.makeKeyAndOrderFront(nil)
+    }
     return true
   }
 

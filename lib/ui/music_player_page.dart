@@ -8,6 +8,8 @@ import '../generated/l10n/app_localizations.dart';
 import '../models/music_project.dart';
 import '../models/todo_item.dart';
 import '../providers/providers.dart';
+import '../services/camelot_playlist_generator.dart';
+import 'camelot_wheel_widget.dart';
 import 'project_detail_page.dart';
 
 enum _PlayerLoopMode { none, repeatAll, shuffle }
@@ -29,6 +31,8 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
   String _searchQuery = '';
   late TextEditingController _searchController;
   double _sidebarWidth = 320.0;
+  double _queueWidth = 280.0;
+  double _wheelSize = 280.0;
 
   final List<MusicProject> _playlist = [];
   int _playlistIndex = -1;
@@ -242,6 +246,122 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
     }
   }
 
+  void _showCamelotDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final eligible = CamelotPlaylistGenerator.eligibleCount(_tracks);
+    final skipped = _tracks.length - eligible;
+
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.camelotDialogTitle),
+        content: SizedBox(
+          width: 360,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.camelotDialogDescription,
+                  style: Theme.of(ctx).textTheme.bodySmall),
+              const SizedBox(height: 16),
+              if (eligible > 0) ...[
+                _CamelotStatRow(
+                  icon: Icons.check_circle_outline,
+                  color: Colors.green.shade400,
+                  label: l10n.camelotEligibleTracks(eligible),
+                ),
+                if (skipped > 0) ...[
+                  const SizedBox(height: 6),
+                  _CamelotStatRow(
+                    icon: Icons.info_outline,
+                    color: Colors.orange.shade400,
+                    label: l10n.camelotSkippedTracks(skipped),
+                  ),
+                ],
+              ] else
+                Text(l10n.camelotNoEligibleTracks,
+                    style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(ctx).colorScheme.error,
+                    )),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(MaterialLocalizations.of(ctx).cancelButtonLabel),
+          ),
+          if (eligible > 0)
+            FilledButton.icon(
+              icon: const Icon(Icons.auto_awesome, size: 16),
+              label: Text(l10n.camelotGenerate),
+              onPressed: () {
+                final result = CamelotPlaylistGenerator.generate(_tracks);
+                Navigator.of(ctx).pop();
+                setState(() {
+                  _playlist
+                    ..clear()
+                    ..addAll(result.ordered);
+                  _playlistIndex = -1;
+                  _playingFromPlaylist = false;
+                });
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(l10n.camelotQueueGenerated(result.ordered.length)),
+                  duration: const Duration(seconds: 3),
+                ));
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _showCamelotWheelGuide(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.camelotWheelGuideTitle),
+        content: SizedBox(
+          width: 360,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _GuideSection(
+                  title: l10n.camelotGuideRingsTitle,
+                  body: l10n.camelotGuideRingsBody,
+                ),
+                const SizedBox(height: 14),
+                _GuideSection(
+                  title: l10n.camelotGuideNumbersTitle,
+                  body: l10n.camelotGuideNumbersBody,
+                ),
+                const SizedBox(height: 14),
+                _GuideSection(
+                  title: l10n.camelotGuideColoursTitle,
+                  body: l10n.camelotGuideColoursBody,
+                ),
+                const SizedBox(height: 14),
+                _GuideSection(
+                  title: l10n.camelotGuideTransitionsTitle,
+                  body: l10n.camelotGuideTransitionsBody,
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(MaterialLocalizations.of(ctx).closeButtonLabel),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showTrackContextMenu(BuildContext context, Offset globalPos, MusicProject track, int originalIndex) {
     final l10n = AppLocalizations.of(context)!;
     final RenderBox overlay = Overlay.of(context).context.findRenderObject()! as RenderBox;
@@ -256,7 +376,7 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
         PopupMenuItem(
           value: 'detail',
           child: Row(children: [
-            const Icon(Icons.open_in_new, size: 16),
+            const Icon(Icons.assignment, size: 16),
             const SizedBox(width: 10),
             Text(l10n.playerGoToProject),
           ]),
@@ -538,9 +658,25 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
               ),
             ),
           ),
-        // ── Right: queue (always visible) ───────────────────────────────
-        Container(width: 1, color: theme.dividerColor),
-        SizedBox(width: 280, child: _buildPlaylistPanel(context)),
+        // ── Queue resize handle ──────────────────────────────────────────
+        MouseRegion(
+          cursor: SystemMouseCursors.resizeColumn,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onHorizontalDragUpdate: (d) {
+              setState(() {
+                _queueWidth = (_queueWidth - d.delta.dx).clamp(200.0, 520.0);
+              });
+            },
+            child: Container(
+              width: 5,
+              color: Colors.transparent,
+              child: const VerticalDivider(width: 1),
+            ),
+          ),
+        ),
+        // ── Right: queue ─────────────────────────────────────────────────
+        SizedBox(width: _queueWidth, child: _buildPlaylistPanel(context)),
       ],
     );
   }
@@ -592,7 +728,7 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
                 _Chip(label: project.status, color: phaseColor),
                 const SizedBox(width: 4),
                 IconButton(
-                  icon: const Icon(Icons.open_in_new, size: 16),
+                  icon: const Icon(Icons.assignment, size: 16),
                   tooltip: l10n.playerGoToProject,
                   visualDensity: VisualDensity.compact,
                   onPressed: () => Navigator.of(context).push(MaterialPageRoute(
@@ -626,6 +762,11 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
                       label: project.musicalKey!,
                       color: cs.onSurface.withValues(alpha: 0.5),
                     ),
+                  if (project.camelotCode != null)
+                    _Chip(
+                      label: project.camelotCode!,
+                      color: cs.primary.withValues(alpha: 0.7),
+                    ),
                   if (project.deadline != null)
                     _Chip(
                       label: project.deadlineStatus ?? '',
@@ -642,6 +783,159 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
             child: ListView(
               padding: const EdgeInsets.only(bottom: 16),
               children: [
+                // Camelot wheel
+                if (project.camelotCode != null)
+                  LayoutBuilder(
+                    builder: (_, constraints) {
+                      final maxAllowed = constraints.maxWidth - 32;
+                      final size = _wheelSize.clamp(160.0, maxAllowed);
+                      return Column(
+                        children: [
+                          Stack(
+                            alignment: Alignment.topRight,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(0, 16, 0, 8),
+                                child: Center(
+                                  child: CamelotWheelWidget(
+                                    activeCode: project.camelotCode!,
+                                    compatibleCodes: project.compatibleCamelotCodes ?? [],
+                                    size: size,
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                top: 2,
+                                right: 4,
+                                child: IconButton(
+                                  icon: Icon(
+                                    Icons.info_outline,
+                                    size: 16,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withValues(alpha: 0.4),
+                                  ),
+                                  visualDensity: VisualDensity.compact,
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(
+                                      minWidth: 28, minHeight: 28),
+                                  tooltip: l10n.camelotWheelGuideTooltip,
+                                  onPressed: () =>
+                                      _showCamelotWheelGuide(context),
+                                ),
+                              ),
+                            ],
+                          ),
+                          // Resize handle
+                          MouseRegion(
+                            cursor: SystemMouseCursors.resizeUpDown,
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onVerticalDragUpdate: (d) => setState(() {
+                                _wheelSize = (_wheelSize + d.delta.dy)
+                                    .clamp(160.0, maxAllowed);
+                              }),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 6),
+                                child: Center(
+                                  child: Container(
+                                    width: 32,
+                                    height: 4,
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface
+                                          .withValues(alpha: 0.18),
+                                      borderRadius: BorderRadius.circular(2),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                if (project.camelotCode != null) const Divider(height: 1),
+                // Mix suggestions
+                if (project.camelotCode != null) ...[
+                  Builder(builder: (context) {
+                    final compatible = _tracks.where((t) =>
+                      t.id != project.id &&
+                      t.camelotCode != null &&
+                      (project.compatibleCamelotCodes ?? []).contains(t.camelotCode),
+                    ).toList();
+                    if (compatible.isEmpty) return const SizedBox.shrink();
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(14, 12, 14, 6),
+                          child: Text(l10n.playerMixSuggestions,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: cs.onSurface.withValues(alpha: 0.5),
+                                letterSpacing: 0.8,
+                              )),
+                        ),
+                        SizedBox(
+                          height: 32,
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsets.symmetric(horizontal: 14),
+                            itemCount: compatible.length,
+                            separatorBuilder: (_, _) => const SizedBox(width: 6),
+                            itemBuilder: (context, i) {
+                              final t = compatible[i];
+                              final idx = _tracks.indexOf(t);
+                              return InkWell(
+                                borderRadius: BorderRadius.circular(16),
+                                onTap: idx >= 0
+                                    ? () => setState(() => _selectedIndex = idx)
+                                    : null,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: cs.primary.withValues(alpha: 0.10),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: cs.primary.withValues(alpha: 0.25),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        t.camelotCode!,
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w700,
+                                          color: cs.primary,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 5),
+                                      Text(
+                                        t.displayName,
+                                        style: theme.textTheme.bodySmall?.copyWith(
+                                          fontSize: 11,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Divider(height: 1),
+                      ],
+                    );
+                  }),
+                ],
                 // Notes
                 if (project.notes != null && project.notes!.isNotEmpty) ...[
                   Padding(
@@ -806,6 +1100,13 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
                     const Spacer(),
                     if (_tracks.isNotEmpty) ...[
                       IconButton(
+                        icon: Icon(Icons.auto_awesome, size: 16,
+                            color: cs.onSurface.withValues(alpha: 0.35)),
+                        tooltip: l10n.camelotGenerateButton,
+                        visualDensity: VisualDensity.compact,
+                        onPressed: () => _showCamelotDialog(context),
+                      ),
+                      IconButton(
                         icon: Icon(Icons.shuffle, size: 16,
                             color: _loopMode == _PlayerLoopMode.shuffle
                                 ? cs.primary
@@ -902,6 +1203,10 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
                           final track = _playlist[i];
                           final isActive =
                               _playingFromPlaylist && i == _playlistIndex;
+                          final isSelected = !isActive &&
+                              _selectedIndex >= 0 &&
+                              _selectedIndex < _tracks.length &&
+                              _tracks[_selectedIndex].id == track.id;
                           final resolvedPath = _resolvedPath(track);
                           return GestureDetector(
                             key: ValueKey(track.id),
@@ -941,7 +1246,7 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
                                   PopupMenuItem(
                                     value: 'detail',
                                     child: Row(children: [
-                                      const Icon(Icons.open_in_new, size: 16),
+                                      const Icon(Icons.assignment, size: 16),
                                       const SizedBox(width: 10),
                                       Text(l10n.playerGoToProject),
                                     ]),
@@ -975,15 +1280,18 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
                             },
                             child: ListTile(
                               dense: true,
-                              selected: isActive,
-                              selectedTileColor:
-                                  cs.primary.withValues(alpha: 0.1),
+                              selected: isActive || isSelected,
+                              selectedTileColor: isActive
+                                  ? cs.primary.withValues(alpha: 0.1)
+                                  : cs.secondary.withValues(alpha: 0.08),
                               leading: Icon(
                                 isActive ? Icons.volume_up : Icons.music_note,
                                 size: 16,
                                 color: isActive
                                     ? cs.primary
-                                    : cs.onSurface.withValues(alpha: 0.4),
+                                    : isSelected
+                                        ? cs.secondary
+                                        : cs.onSurface.withValues(alpha: 0.4),
                               ),
                               title: Text(
                                 track.displayName,
@@ -991,7 +1299,11 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: isActive ? FontWeight.w600 : null,
-                                  color: isActive ? cs.primary : null,
+                                  color: isActive
+                                      ? cs.primary
+                                      : isSelected
+                                          ? cs.secondary
+                                          : null,
                                 ),
                               ),
                               subtitle: Text(
@@ -1024,6 +1336,28 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
   }
 }
 
+class _CamelotStatRow extends StatelessWidget {
+  const _CamelotStatRow({
+    required this.icon,
+    required this.color,
+    required this.label,
+  });
+  final IconData icon;
+  final Color color;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: color),
+        const SizedBox(width: 8),
+        Text(label, style: Theme.of(context).textTheme.bodySmall),
+      ],
+    );
+  }
+}
+
 class _Chip extends StatelessWidget {
   const _Chip({required this.label, required this.color});
   final String label;
@@ -1042,6 +1376,33 @@ class _Chip extends StatelessWidget {
         label,
         style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w600),
       ),
+    );
+  }
+}
+
+class _GuideSection extends StatelessWidget {
+  const _GuideSection({required this.title, required this.body});
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title.toUpperCase(),
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: cs.onSurface.withValues(alpha: 0.5),
+            letterSpacing: 0.8,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 5),
+        Text(body, style: theme.textTheme.bodySmall),
+      ],
     );
   }
 }

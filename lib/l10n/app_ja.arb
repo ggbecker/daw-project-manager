@@ -1372,7 +1372,7 @@
   "@menuLanguage": {
     "description": "macOS menu item for language selection"
   },
-  "menuWarnBeforeQuit": "終了前に警告する (Cmd+Q)",
+  "menuWarnBeforeQuit": "終了前に警告する (⌘+Q)",
   "@menuWarnBeforeQuit": {
     "description": "macOS menu item to toggle quit warning"
   },
@@ -1740,6 +1740,24 @@
   "@sessionHistory": {},
   "noSessionsYet": "セッションはまだ記録されていません",
   "@noSessionsYet": {},
+  "removeSessionTitle": "セッションを削除しますか？",
+  "@removeSessionTitle": {},
+  "sessionTableDate": "日付",
+  "@sessionTableDate": {},
+  "sessionTableTime": "時刻",
+  "@sessionTableTime": {},
+  "sessionTableDuration": "時間",
+  "@sessionTableDuration": {},
+  "sessionTableTotal": "合計",
+  "@sessionTableTotal": {},
+  "sessionCount": "{count, plural, other{{count}セッション}}",
+  "@sessionCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "sessionByPhase": "フェーズ別作業",
+  "@sessionByPhase": {},
   "tabPosition": "タブの位置",
   "@tabPosition": {},
   "tabPositionTop": "上",
@@ -1962,6 +1980,42 @@
   "@createProjectInvalidChars": {},
   "createProjectError": "フォルダの作成に失敗しました",
   "@createProjectError": {},
+  "createProjectIncludeDate": "日付プレフィックスを含める",
+  "@createProjectIncludeDate": {},
+  "createProjectCreatedTitle": "フォルダーが作成されました",
+  "@createProjectCreatedTitle": {},
+  "createProjectCreatedMessage": "プロジェクトフォルダーが作成されました：",
+  "@createProjectCreatedMessage": {},
+  "createProjectCopyName": "フォルダー名をコピー",
+  "@createProjectCopyName": {},
+  "createProjectNameCopied": "フォルダー名をコピーしました",
+  "@createProjectNameCopied": {},
+  "createProjectTrackSession": "今からセッションを記録する",
+  "@createProjectTrackSession": {},
+  "pendingFolderSessionTitle": "作業セッションを検出しました",
+  "@pendingFolderSessionTitle": {},
+  "pendingFolderSessionBody": "「{projectName}」で{duration}作業しました。",
+  "@pendingFolderSessionBody": {
+    "placeholders": {
+      "projectName": { "type": "String" },
+      "duration": { "type": "String" }
+    }
+  },
+  "pendingFolderSessionContinue": "セッションを続ける",
+  "@pendingFolderSessionContinue": {},
+  "pendingFolderSessionEndRecord": "終了して記録",
+  "@pendingFolderSessionEndRecord": {},
+  "activeSessionSwitchTitle": "セッションが実行中",
+  "@activeSessionSwitchTitle": {},
+  "activeSessionSwitchBody": "「{current}」のセッションが実行中です。「{next}」に切り替えて現在のセッションを保存しますか？",
+  "@activeSessionSwitchBody": {
+    "placeholders": {
+      "current": { "type": "String" },
+      "next": { "type": "String" }
+    }
+  },
+  "activeSessionSwitch": "切り替える",
+  "@activeSessionSwitch": {},
   "pendingProjectWaiting": "プロジェクトファイルを待っています…",
   "@pendingProjectWaiting": {},
   "pendingProjectDelete": "空のフォルダを削除",
@@ -1976,6 +2030,12 @@
   },
   "pendingProjectDismiss": "このフォルダの追跡を停止",
   "@pendingProjectDismiss": {},
+  "pendingProjectDismissTitle": "トラッキングを停止しますか？",
+  "@pendingProjectDismissTitle": {},
+  "pendingProjectDismissKeep": "フォルダーを保持",
+  "@pendingProjectDismissKeep": {},
+  "pendingProjectDismissDelete": "削除して閉じる",
+  "@pendingProjectDismissDelete": {},
   "pendingProjectDeleteNotEmptyTitle": "フォルダが空ではありません",
   "@pendingProjectDeleteNotEmptyTitle": {},
   "pendingProjectDeleteNotEmptyBody": "「{folderName}」にはファイルが含まれています。すべて完全に削除しますか？",
@@ -1998,5 +2058,25 @@
   "selectPhaseColor": "色を選択",
   "markAsFinished": "完了フェーズとしてマーク",
   "resetPhasesWarning": "{count, plural, =1{1件のプロジェクトが存在しなくなるフェーズを使用しています。} other{{count}件のプロジェクトが存在しなくなるフェーズを使用しています。}}",
-  "resetPhasesWarningNote": "これらのプロジェクトは現在のステータスを保持しますが、フェーズフィルターには表示されません。後でいつでもフェーズを再追加できます。"
+  "resetPhasesWarningNote": "これらのプロジェクトは現在のステータスを保持しますが、フェーズフィルターには表示されません。後でいつでもフェーズを再追加できます。",
+  "camelotGenerateButton": "ミックス生成",
+  "camelotDialogTitle": "キャメロットミックス",
+  "camelotDialogDescription": "キャメロットホイールを使って和声的な互換性順にトラックを並べ替えます。同等の場合はBPMの近さを優先します。",
+  "camelotEligibleTracks": "{count}トラックが対象（キー設定済み）",
+  "camelotSkippedTracks": "{count}トラックをスキップ（キー未設定）",
+  "camelotNoEligibleTracks": "音楽キーが設定されたトラックがありません。プロジェクトを開いてキーを設定してください。",
+  "camelotGenerate": "生成",
+  "camelotQueueGenerated": "{count}トラックを和声的な順序でキューに追加しました",
+  "camelotWheelGuideTooltip": "キャメロットホイールガイド",
+  "camelotWheelGuideTitle": "キャメロットホイールガイド",
+  "camelotGuideRingsTitle": "リング",
+  "camelotGuideRingsBody": "内側リング（A）  →  短調のキー\n外側リング（B）  →  長調のキー",
+  "camelotGuideNumbersTitle": "数字 1–12",
+  "camelotGuideNumbersBody": "位置は時計回りに配置されています。各番号は和声的な近隣を表し、隆接する番号は強い音調関係を共有します。",
+  "camelotGuideColoursTitle": "カラーガイド",
+  "camelotGuideColoursBody": "● 明るい  →  あなたの曲のキー\n● 淡く光る  →  ミックスに適している\n● 暗い  →  スムーズなミックスには避ける",
+  "camelotGuideTransitionsTitle": "互換性のある転換",
+  "camelotGuideTransitionsBody": "8A → 8B  （同じ番号、リングを切り替え）\n  平行長調/短調 — ほぼシームレス。\n\n8A → 7A または 9A  （±1、同じリング）\n  隣接キー — スムーズで細腐な変化。\n\n8A → 1A または 3A  （±7、同じリング）\n  エネルギーブーストまたはドロップ — より劧的な変化。",
+  "playerMixSuggestions": "ミックス候補",
+  "@playerMixSuggestions": {}
 }

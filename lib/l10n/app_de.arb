@@ -1372,7 +1372,7 @@
   "@menuLanguage": {
     "description": "macOS menu item for language selection"
   },
-  "menuWarnBeforeQuit": "Vor dem Beenden warnen (Cmd+Q)",
+  "menuWarnBeforeQuit": "Vor dem Beenden warnen (⌘+Q)",
   "@menuWarnBeforeQuit": {
     "description": "macOS menu item to toggle quit warning"
   },
@@ -1740,6 +1740,24 @@
   "@sessionHistory": {},
   "noSessionsYet": "Noch keine Sitzungen aufgezeichnet",
   "@noSessionsYet": {},
+  "removeSessionTitle": "Sitzung entfernen?",
+  "@removeSessionTitle": {},
+  "sessionTableDate": "Datum",
+  "@sessionTableDate": {},
+  "sessionTableTime": "Uhrzeit",
+  "@sessionTableTime": {},
+  "sessionTableDuration": "Dauer",
+  "@sessionTableDuration": {},
+  "sessionTableTotal": "Gesamt",
+  "@sessionTableTotal": {},
+  "sessionCount": "{count, plural, =1{1 Sitzung} other{{count} Sitzungen}}",
+  "@sessionCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "sessionByPhase": "Arbeit nach Phase",
+  "@sessionByPhase": {},
   "tabPosition": "Tab-Position",
   "@tabPosition": {},
   "tabPositionTop": "Oben",
@@ -1962,6 +1980,42 @@
   "@createProjectInvalidChars": {},
   "createProjectError": "Ordner konnte nicht erstellt werden",
   "@createProjectError": {},
+  "createProjectIncludeDate": "Datumspräfix hinzufügen",
+  "@createProjectIncludeDate": {},
+  "createProjectCreatedTitle": "Ordner erstellt",
+  "@createProjectCreatedTitle": {},
+  "createProjectCreatedMessage": "Ihr Projektordner wurde erstellt:",
+  "@createProjectCreatedMessage": {},
+  "createProjectCopyName": "Ordnernamen kopieren",
+  "@createProjectCopyName": {},
+  "createProjectNameCopied": "Ordnername kopiert",
+  "@createProjectNameCopied": {},
+  "createProjectTrackSession": "Sitzung ab jetzt verfolgen",
+  "@createProjectTrackSession": {},
+  "pendingFolderSessionTitle": "Arbeitssitzung erkannt",
+  "@pendingFolderSessionTitle": {},
+  "pendingFolderSessionBody": "Sie haben {duration} an \"{projectName}\" gearbeitet.",
+  "@pendingFolderSessionBody": {
+    "placeholders": {
+      "projectName": { "type": "String" },
+      "duration": { "type": "String" }
+    }
+  },
+  "pendingFolderSessionContinue": "Sitzung fortsetzen",
+  "@pendingFolderSessionContinue": {},
+  "pendingFolderSessionEndRecord": "Beenden & aufzeichnen",
+  "@pendingFolderSessionEndRecord": {},
+  "activeSessionSwitchTitle": "Sitzung bereits aktiv",
+  "@activeSessionSwitchTitle": {},
+  "activeSessionSwitchBody": "Eine Sitzung läuft für \"{current}\". Zu \"{next}\" wechseln und die aktuelle Sitzung speichern?",
+  "@activeSessionSwitchBody": {
+    "placeholders": {
+      "current": { "type": "String" },
+      "next": { "type": "String" }
+    }
+  },
+  "activeSessionSwitch": "Wechseln",
+  "@activeSessionSwitch": {},
   "pendingProjectWaiting": "Warte auf Projektdatei…",
   "@pendingProjectWaiting": {},
   "pendingProjectDelete": "Leeren Ordner löschen",
@@ -1976,6 +2030,12 @@
   },
   "pendingProjectDismiss": "Diesen Ordner nicht mehr verfolgen",
   "@pendingProjectDismiss": {},
+  "pendingProjectDismissTitle": "Tracking stoppen?",
+  "@pendingProjectDismissTitle": {},
+  "pendingProjectDismissKeep": "Ordner behalten",
+  "@pendingProjectDismissKeep": {},
+  "pendingProjectDismissDelete": "Löschen & Schließen",
+  "@pendingProjectDismissDelete": {},
   "pendingProjectDeleteNotEmptyTitle": "Ordner ist nicht leer",
   "@pendingProjectDeleteNotEmptyTitle": {},
   "pendingProjectDeleteNotEmptyBody": "\"{folderName}\" enthält Dateien. Alles dauerhaft löschen?",
@@ -1998,5 +2058,25 @@
   "selectPhaseColor": "Farbe auswählen",
   "markAsFinished": "Als abgeschlossene Phase markieren",
   "resetPhasesWarning": "{count, plural, =1{1 Projekt verwendet eine Phase, die nicht mehr existiert.} other{{count} Projekte verwenden Phasen, die nicht mehr existieren.}}",
-  "resetPhasesWarningNote": "Diese Projekte behalten ihren aktuellen Status, erscheinen aber nicht in Phasenfiltern. Du kannst diese Phasen jederzeit wieder hinzufügen."
+  "resetPhasesWarningNote": "Diese Projekte behalten ihren aktuellen Status, erscheinen aber nicht in Phasenfiltern. Du kannst diese Phasen jederzeit wieder hinzufügen.",
+  "camelotGenerateButton": "Mix generieren",
+  "camelotDialogTitle": "Camelot-Mix",
+  "camelotDialogDescription": "Ordnet deine Tracks nach harmonischer Kompatibilität anhand des Camelot-Rads. BPM-Nähe wird als Auswahlkriterium verwendet.",
+  "camelotEligibleTracks": "{count} Tracks geeignet (Tonart gesetzt)",
+  "camelotSkippedTracks": "{count} werden übersprungen (keine Tonart)",
+  "camelotNoEligibleTracks": "Kein Track hat eine Tonart gesetzt. Öffne ein Projekt und setze die Tonart.",
+  "camelotGenerate": "Generieren",
+  "camelotQueueGenerated": "Warteschlange mit {count} harmonisch sortierten Tracks gefüllt",
+  "camelotWheelGuideTooltip": "Camelot-Rad Anleitung",
+  "camelotWheelGuideTitle": "Camelot-Rad Anleitung",
+  "camelotGuideRingsTitle": "Die Ringe",
+  "camelotGuideRingsBody": "Innenring (A)  →  Molltonarten\nAußenring (B)  →  Durtonarten",
+  "camelotGuideNumbersTitle": "Zahlen 1–12",
+  "camelotGuideNumbersBody": "Positionen im Uhrzeigersinn angeordnet. Jede Zahl steht für eine harmonische Nachbarschaft — Nachbarn teilen starke tonale Beziehungen.",
+  "camelotGuideColoursTitle": "Farblegende",
+  "camelotGuideColoursBody": "● Hell  →  Tonart deines Songs\n● Weich beleuchtet  →  kompatibel für Mixing\n● Gedimmt  →  für flüssiges Mixing vermeiden",
+  "camelotGuideTransitionsTitle": "Kompatible Übergänge",
+  "camelotGuideTransitionsBody": "8A → 8B  (gleiche Zahl, Ring wechseln)\n  Relative Dur/Moll — nahezu nahtlos.\n\n8A → 7A oder 9A  (±1, gleicher Ring)\n  Benachbarter Ton — sanfte, dezente Änderung.\n\n8A → 1A oder 3A  (±7, gleicher Ring)\n  Energie-Boost oder -Drop — dramatischerer Wechsel.",
+  "playerMixSuggestions": "MIX-VORSCHLÄGE",
+  "@playerMixSuggestions": {}
 }

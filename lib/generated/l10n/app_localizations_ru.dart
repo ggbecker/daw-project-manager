@@ -2032,7 +2032,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get menuLanguage => 'Язык';
 
   @override
-  String get menuWarnBeforeQuit => 'Предупреждать перед выходом (Cmd+Q)';
+  String get menuWarnBeforeQuit => 'Предупреждать перед выходом (⌘+Q)';
 
   @override
   String get menuQuit => 'Выйти из DAW Project Manager';
@@ -2688,6 +2688,36 @@ class AppLocalizationsRu extends AppLocalizations {
   String get noSessionsYet => 'Сессии ещё не записаны';
 
   @override
+  String get removeSessionTitle => 'Удалить сессию?';
+
+  @override
+  String get sessionTableDate => 'Дата';
+
+  @override
+  String get sessionTableTime => 'Время';
+
+  @override
+  String get sessionTableDuration => 'Длительность';
+
+  @override
+  String get sessionTableTotal => 'Итого';
+
+  @override
+  String sessionCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count сессий',
+      few: '$count сессии',
+      one: '$count сессия',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sessionByPhase => 'Работа по фазам';
+
+  @override
   String get tabPosition => 'Расположение вкладок';
 
   @override
@@ -3037,6 +3067,49 @@ class AppLocalizationsRu extends AppLocalizations {
   String get createProjectError => 'Не удалось создать папку';
 
   @override
+  String get createProjectIncludeDate => 'Включить префикс даты';
+
+  @override
+  String get createProjectCreatedTitle => 'Папка создана';
+
+  @override
+  String get createProjectCreatedMessage => 'Папка проекта создана:';
+
+  @override
+  String get createProjectCopyName => 'Скопировать имя папки';
+
+  @override
+  String get createProjectNameCopied => 'Имя папки скопировано';
+
+  @override
+  String get createProjectTrackSession => 'Отслеживать сеанс с этого момента';
+
+  @override
+  String get pendingFolderSessionTitle => 'Обнаружен рабочий сеанс';
+
+  @override
+  String pendingFolderSessionBody(String projectName, String duration) {
+    return 'Вы работали над \"$projectName\" в течение $duration.';
+  }
+
+  @override
+  String get pendingFolderSessionContinue => 'Продолжить сеанс';
+
+  @override
+  String get pendingFolderSessionEndRecord => 'Завершить и записать';
+
+  @override
+  String get activeSessionSwitchTitle => 'Сессия уже активна';
+
+  @override
+  String activeSessionSwitchBody(String current, String next) {
+    return 'Запущена сессия для «$current». Переключиться на «$next» и сохранить текущую сессию?';
+  }
+
+  @override
+  String get activeSessionSwitch => 'Переключить';
+
+  @override
   String get pendingProjectWaiting => 'Ожидание файла проекта…';
 
   @override
@@ -3052,6 +3125,15 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get pendingProjectDismiss => 'Прекратить отслеживание папки';
+
+  @override
+  String get pendingProjectDismissTitle => 'Остановить отслеживание?';
+
+  @override
+  String get pendingProjectDismissKeep => 'Сохранить папку';
+
+  @override
+  String get pendingProjectDismissDelete => 'Удалить и закрыть';
 
   @override
   String get pendingProjectDeleteNotEmptyTitle => 'Папка не пуста';
@@ -3121,4 +3203,59 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get resetPhasesWarningNote =>
       'Эти проекты сохранят текущий статус, но не будут отображаться в фильтрах фаз. Вы всегда можете снова добавить эти фазы позже.';
+
+  @override
+  String get camelotGenerateButton => 'Создать микс';
+
+  @override
+  String get camelotDialogTitle => 'Микс Camelot';
+
+  @override
+  String get camelotDialogDescription =>
+      'Сортирует треки по гармонической совместимости с помощью колеса Camelot. Близость BPM используется как дополнительный критерий.';
+
+  @override
+  String camelotEligibleTracks(int count) {
+    return '$count треков подходят (тональность задана)';
+  }
+
+  @override
+  String camelotSkippedTracks(int count) {
+    return '$count будут пропущены (нет тональности)';
+  }
+
+  @override
+  String get camelotNoEligibleTracks =>
+      'Ни один трек не имеет заданной тональности. Откройте проект и задайте тональность.';
+
+  @override
+  String get camelotGenerate => 'Создать';
+
+  @override
+  String camelotQueueGenerated(int count) {
+    return 'Очередь заполнена $count треками в гармоническом порядке';
+  }
+
+  @override
+  String get camelotWheelGuideTooltip => '\u0420\u0443\u043a\u043e\u0432\u043e\u0434\u0441\u0442\u0432\u043e \u043f\u043e \u043a\u043e\u043b\u0435\u0441\u0443 Camelot';
+  @override
+  String get camelotWheelGuideTitle => '\u0420\u0443\u043a\u043e\u0432\u043e\u0434\u0441\u0442\u0432\u043e \u043f\u043e \u043a\u043e\u043b\u0435\u0441\u0443 Camelot';
+  @override
+  String get camelotGuideRingsTitle => '\u041a\u043e\u043b\u044c\u0446\u0430';
+  @override
+  String get camelotGuideRingsBody => '\u0412\u043d\u0443\u0442\u0440\u0435\u043d\u043d\u0435\u0435 \u043a\u043e\u043b\u044c\u0446\u043e (A)  \u2192  \u043c\u0438\u043d\u043e\u0440\u043d\u044b\u0435 \u0442\u043e\u043d\u0430\u043b\u044c\u043d\u043e\u0441\u0442\u0438\n\u0412\u043d\u0435\u0448\u043d\u0435\u0435 \u043a\u043e\u043b\u044c\u0446\u043e (B)  \u2192  \u043c\u0430\u0436\u043e\u0440\u043d\u044b\u0435 \u0442\u043e\u043d\u0430\u043b\u044c\u043d\u043e\u0441\u0442\u0438';
+  @override
+  String get camelotGuideNumbersTitle => '\u0426\u0438\u0444\u0440\u044b 1\u201312';
+  @override
+  String get camelotGuideNumbersBody => '\u041f\u043e\u0437\u0438\u0446\u0438\u0438 \u0440\u0430\u0441\u0441\u0442\u0430\u0432\u043b\u0435\u043d\u044b \u043f\u043e \u0447\u0430\u0441\u043e\u0432\u043e\u0439 \u0441\u0442\u0440\u0435\u043b\u043a\u0435. \u041a\u0430\u0436\u0434\u043e\u0435 \u0447\u0438\u0441\u043b\u043e \u043f\u0440\u0435\u0434\u0441\u0442\u0430\u0432\u043b\u044f\u0435\u0442 \u0433\u0430\u0440\u043c\u043e\u043d\u0438\u0447\u0435\u0441\u043a\u043e\u0435 \u043e\u043a\u0440\u0443\u0436\u0435\u043d\u0438\u0435 \u2014 \u0441\u043e\u0441\u0435\u0434\u0438 \u0440\u0430\u0437\u0434\u0435\u043b\u044f\u044e\u0442 \u0441\u0438\u043b\u044c\u043d\u044b\u0435 \u0442\u043e\u043d\u0430\u043b\u044c\u043d\u044b\u0435 \u0441\u0432\u044f\u0437\u0438.';
+  @override
+  String get camelotGuideColoursTitle => '\u0426\u0432\u0435\u0442\u043e\u0432\u043e\u0439 \u0433\u0438\u0434';
+  @override
+  String get camelotGuideColoursBody => '\u25cf \u042f\u0440\u043a\u0438\u0439  \u2192  \u0442\u043e\u043d\u0430\u043b\u044c\u043d\u043e\u0441\u0442\u044c \u0432\u0430\u0448\u0435\u0439 \u043f\u0435\u0441\u043d\u0438\n\u25cf \u041c\u044f\u0433\u043a\u0438\u0439  \u2192  \u0441\u043e\u0432\u043c\u0435\u0441\u0442\u0438\u043c \u0434\u043b\u044f \u0441\u0432\u0435\u0434\u0435\u043d\u0438\u044f\n\u25cf \u041f\u0440\u0438\u0433\u043b\u0443\u0448\u0451\u043d\u043d\u044b\u0439  \u2192  \u0438\u0437\u0431\u0435\u0433\u0430\u0442\u044c \u0434\u043b\u044f \u043f\u043b\u0430\u0432\u043d\u043e\u0433\u043e \u0441\u0432\u0435\u0434\u0435\u043d\u0438\u044f';
+  @override
+  String get camelotGuideTransitionsTitle => '\u0421\u043e\u0432\u043c\u0435\u0441\u0442\u0438\u043c\u044b\u0435 \u043f\u0435\u0440\u0435\u0445\u043e\u0434\u044b';
+  @override
+  String get camelotGuideTransitionsBody => '8A \u2192 8B  (\u0442\u043e\u0442 \u0436\u0435 \u043d\u043e\u043c\u0435\u0440, \u0441\u043c\u0435\u043d\u0430 \u043a\u043e\u043b\u044c\u0446\u0430)\n  \u041f\u0430\u0440\u0430\u043b\u043b\u0435\u043b\u044c\u043d\u044b\u0439 \u043c\u0430\u0436\u043e\u0440/\u043c\u0438\u043d\u043e\u0440 \u2014 \u043f\u0440\u0430\u043a\u0442\u0438\u0447\u0435\u0441\u043a\u0438 \u043d\u0435\u0437\u0430\u043c\u0435\u0442\u043d\u043e.\n\n8A \u2192 7A \u0438\u043b\u0438 9A  (\u00b11, \u0442\u043e \u0436\u0435 \u043a\u043e\u043b\u044c\u0446\u043e)\n  \u0421\u043e\u0441\u0435\u0434\u043d\u044f\u044f \u0442\u043e\u043d\u0430\u043b\u044c\u043d\u043e\u0441\u0442\u044c \u2014 \u043f\u043b\u0430\u0432\u043d\u043e\u0435, \u0442\u043e\u043d\u043a\u043e\u0435 \u0438\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u0435.\n\n8A \u2192 1A \u0438\u043b\u0438 3A  (\u00b17, \u0442\u043e \u0436\u0435 \u043a\u043e\u043b\u044c\u0446\u043e)\n  \u041f\u043e\u0434\u044a\u0451\u043c \u0438\u043b\u0438 \u043f\u0430\u0434\u0435\u043d\u0438\u0435 \u044d\u043d\u0435\u0440\u0433\u0438\u0438 \u2014 \u0431\u043e\u043b\u0435\u0435 \u0440\u0435\u0437\u043a\u0438\u0439 \u043f\u0435\u0440\u0435\u0445\u043e\u0434.';
+  @override
+  String get playerMixSuggestions => '\u041f\u0420\u0415\u0414\u041b\u041e\u0416\u0415\u041d\u0418\u042f \u041c\u0418\u041a\u0421\u0410';
 }

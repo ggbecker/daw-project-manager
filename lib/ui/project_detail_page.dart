@@ -97,46 +97,6 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
     }
   }
 
-  List<String> _getProjectPhases(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return [
-      l10n.projectPhaseIdea,
-      l10n.projectPhaseArranging,
-      l10n.projectPhaseMixing,
-      l10n.projectPhaseMastering,
-      l10n.projectPhaseFinished,
-    ];
-  }
-
-  String _translateStatusToEnglish(String localizedStatus) {
-    // Map localized status back to English for storage
-    final l10n = AppLocalizations.of(context)!;
-    if (localizedStatus == l10n.projectPhaseIdea) return 'Idea';
-    if (localizedStatus == l10n.projectPhaseArranging) return 'Arranging';
-    if (localizedStatus == l10n.projectPhaseMixing) return 'Mixing';
-    if (localizedStatus == l10n.projectPhaseMastering) return 'Mastering';
-    if (localizedStatus == l10n.projectPhaseFinished) return 'Finished';
-    return localizedStatus; // Fallback
-  }
-
-  String _translateStatusFromEnglish(String englishStatus) {
-    // Map English status to localized for display
-    final l10n = AppLocalizations.of(context)!;
-    switch (englishStatus) {
-      case 'Idea':
-        return l10n.projectPhaseIdea;
-      case 'Arranging':
-        return l10n.projectPhaseArranging;
-      case 'Mixing':
-        return l10n.projectPhaseMixing;
-      case 'Mastering':
-        return l10n.projectPhaseMastering;
-      case 'Finished':
-        return l10n.projectPhaseFinished;
-      default:
-        return englishStatus;
-    }
-  }
 
   String _formatDuration(Duration duration) {
     final l10n = AppLocalizations.of(context)!;
@@ -246,8 +206,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
         (nameText.isEmpty || nameText == updatedProject.fileName) ? null : nameText;
     final notesText = _notesCtrl.text.trim();
     final newNotes = notesText.isEmpty ? null : notesText;
-    final newStatus =
-        _selectedPhase != null ? _translateStatusToEnglish(_selectedPhase!) : 'Idea';
+    final newStatus = _selectedPhase ?? 'Idea';
     final statusChanged = project.status != newStatus;
     final updated = project.copyWith(
       customDisplayName: newCustomDisplayName,
@@ -498,18 +457,13 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
           }
           // Sincroniza fase do projeto (only on first load)
           if (!_hasInitializedPhase) {
-            final projectStatus = updatedProject.status;
-                    // Translate English status to localized for display
-                    final localizedStatus = _translateStatusFromEnglish(
-                      projectStatus,
-                    );
-                    if (mounted) {
-                      setState(() {
-                        _selectedPhase = localizedStatus;
-                        _hasInitializedPhase = true;
-                      });
-                    }
-                  }
+            if (mounted) {
+              setState(() {
+                _selectedPhase = updatedProject.status;
+                _hasInitializedPhase = true;
+              });
+            }
+          }
                 });
 
         final isMobile = MobileUtils.isMobile();
@@ -551,12 +505,11 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                   ),
                 ),
                 Expanded(
-                  child: Padding(
-                    padding: MobileUtils.getResponsivePadding(context),
-                    child: Form(
-                      key: _formKey,
-                      child: ListView(
-                        children: [
+                  child: Form(
+                    key: _formKey,
+                    child: ListView(
+                      padding: MobileUtils.getResponsivePadding(context),
+                      children: [
                     if (!sourceFileExists && !MobileUtils.isMobile())
                       Container(
                         margin: const EdgeInsets.only(bottom: 12),
@@ -799,13 +752,13 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                             DropdownButtonFormField<String>(
                               initialValue:
                                   _selectedPhase ??
-                                  _getProjectPhases(context).first,
+                                  ref.watch(customPhasesProvider).first,
                               decoration: InputDecoration(
                                 labelText: AppLocalizations.of(
                                   context,
                                 )!.projectPhase,
                               ),
-                              items: _getProjectPhases(context).map((phase) {
+                              items: ref.watch(customPhasesProvider).map((phase) {
                                 return DropdownMenuItem<String>(
                                   value: phase,
                                   child: Text(phase),
@@ -1029,12 +982,24 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                             ),
 
                             const SizedBox(height: 24),
-                            _SessionHistorySection(sessions: updatedProject.sessions),
+                            _SessionHistorySection(
+                              sessions: updatedProject.sessions,
+                              onRemove: (session) async {
+                                final updatedSessions = updatedProject.sessions
+                                    .where((s) => s.id != session.id)
+                                    .toList();
+                                final updatedTotal = updatedSessions.fold<int>(
+                                    0, (a, b) => a + b.durationSeconds);
+                                await repo.updateProject(updatedProject.copyWith(
+                                  sessions: updatedSessions,
+                                  totalWorkSeconds: updatedTotal,
+                                ));
+                              },
+                            ),
                             const SizedBox(height: 24),
                             _ProjectStatsButton(projectId: updatedProject.id),
                             const SizedBox(height: 16),
                         ],
-                      ),
                     ),
                   ),
                 ),
@@ -2835,9 +2800,52 @@ class _RenameProjectDialogState extends State<_RenameProjectDialog> {
 
 // ─── Session History Section ──────────────────────────────────────────────────
 
-class _SessionHistorySection extends StatelessWidget {
+class _SessionHistorySection extends StatefulWidget {
   final List<SessionRecord> sessions;
-  const _SessionHistorySection({required this.sessions});
+  final void Function(SessionRecord) onRemove;
+  const _SessionHistorySection({
+    required this.sessions,
+    required this.onRemove,
+  });
+
+  @override
+  State<_SessionHistorySection> createState() => _SessionHistorySectionState();
+}
+
+class _SessionHistorySectionState extends State<_SessionHistorySection> {
+  bool _expanded = true;
+
+  void _confirmRemove(BuildContext context, SessionRecord session) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final dateFmt = DateFormat('MMM d, yyyy');
+    final timeFmt = DateFormat('HH:mm');
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.removeSessionTitle),
+        content: Text(
+          '${dateFmt.format(session.startedAt)}  '
+          '${timeFmt.format(session.startedAt)}–${timeFmt.format(session.endedAt)}  '
+          '(${_fmtDuration(session.durationSeconds)})',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              widget.onRemove(session);
+            },
+            child: Text(l10n.delete,
+                style: TextStyle(color: theme.colorScheme.error)),
+          ),
+        ],
+      ),
+    );
+  }
 
   static String _fmtDuration(int seconds) {
     final h = seconds ~/ 3600;
@@ -2852,9 +2860,10 @@ class _SessionHistorySection extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    // Newest first
-    final sorted = [...sessions]..sort((a, b) => b.startedAt.compareTo(a.startedAt));
-    final totalSeconds = sessions.fold<int>(0, (a, b) => a + b.durationSeconds);
+    final sorted = [...widget.sessions]
+      ..sort((a, b) => b.startedAt.compareTo(a.startedAt));
+    final totalSeconds =
+        widget.sessions.fold<int>(0, (a, b) => a + b.durationSeconds);
     final dateFmt = DateFormat('MMM d, yyyy');
     final timeFmt = DateFormat('HH:mm');
     final bodySmall = theme.textTheme.bodySmall;
@@ -2871,76 +2880,210 @@ class _SessionHistorySection extends StatelessWidget {
           ),
         );
 
+    final canToggle = widget.sessions.isNotEmpty;
+
+    final Map<String, List<SessionRecord>> byPhase = {};
+    for (final s in widget.sessions) {
+      (byPhase[s.phase ?? '—'] ??= []).add(s);
+    }
+    final phaseEntries = byPhase.entries.toList()
+      ..sort((a, b) {
+        final durA = a.value.fold<int>(0, (acc, r) => acc + r.durationSeconds);
+        final durB = b.value.fold<int>(0, (acc, r) => acc + r.durationSeconds);
+        return durB.compareTo(durA);
+      });
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Icon(Icons.work_history_outlined,
-                size: 16, color: theme.colorScheme.primary),
-            const SizedBox(width: 6),
-            Text(
-              l10n.sessionHistory,
-              style: theme.textTheme.titleSmall
-                  ?.copyWith(fontWeight: FontWeight.w600),
+        InkWell(
+          onTap: canToggle ? () => setState(() => _expanded = !_expanded) : null,
+          borderRadius: BorderRadius.circular(6),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2),
+            child: Row(
+              children: [
+                Icon(Icons.work_history_outlined,
+                    size: 16, color: theme.colorScheme.primary),
+                const SizedBox(width: 6),
+                Text(
+                  l10n.sessionHistory,
+                  style: theme.textTheme.titleSmall
+                      ?.copyWith(fontWeight: FontWeight.w600),
+                ),
+                if (canToggle && !_expanded) ...[
+                  const SizedBox(width: 8),
+                  Text(
+                    '${l10n.sessionCount(widget.sessions.length)} · ${_fmtDuration(totalSeconds)}',
+                    style: bodySmall?.copyWith(color: theme.disabledColor),
+                  ),
+                ],
+                const Spacer(),
+                if (canToggle)
+                  Icon(
+                    _expanded ? Icons.expand_less : Icons.expand_more,
+                    size: 18,
+                    color: theme.disabledColor,
+                  ),
+              ],
             ),
-          ],
+          ),
         ),
         const SizedBox(height: 10),
-        if (sessions.isEmpty)
+        if (widget.sessions.isEmpty)
           Text(
             l10n.noSessionsYet,
             style: bodySmall?.copyWith(color: theme.disabledColor),
           )
-        else
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Table(
-              columnWidths: const {
-                0: FlexColumnWidth(3),
-                1: FlexColumnWidth(2),
-                2: FlexColumnWidth(2),
-              },
-              border: TableBorder(
-                horizontalInside: BorderSide(color: divider, width: 1),
+        else if (_expanded)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-              ),
-              children: [
-                // Header
-                TableRow(
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                child: Table(
+                  columnWidths: const {
+                    0: FlexColumnWidth(3),
+                    1: FlexColumnWidth(2),
+                    2: FlexColumnWidth(2),
+                    3: FlexColumnWidth(2),
+                  },
+                  border: TableBorder(
+                    horizontalInside: BorderSide(color: divider, width: 1),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   children: [
-                    cell('Date', bold: true),
-                    cell('Time', bold: true),
-                    cell('Duration', bold: true),
+                    // Header
+                    TableRow(
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                      ),
+                      children: [
+                        cell(l10n.sessionTableDate, bold: true),
+                        cell(l10n.sessionTableTime, bold: true),
+                        cell(l10n.phase, bold: true),
+                        cell(l10n.sessionTableDuration, bold: true),
+                      ],
+                    ),
+                    // One row per individual session
+                    for (final s in sorted)
+                      TableRow(
+                        children: [
+                          cell(dateFmt.format(s.startedAt)),
+                          cell(
+                              '${timeFmt.format(s.startedAt)}–${timeFmt.format(s.endedAt)}'),
+                          cell(s.phase ?? '—'),
+                          TableRowInkWell(
+                            onTap: () => _confirmRemove(context, s),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 6, horizontal: 8),
+                              child: Row(
+                                children: [
+                                  Text(_fmtDuration(s.durationSeconds),
+                                      style: bodySmall),
+                                  const Spacer(),
+                                  Icon(
+                                    Icons.delete_outline,
+                                    size: 14,
+                                    color: theme.colorScheme.error
+                                        .withValues(alpha: 0.6),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    // Total row
+                    TableRow(
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.10),
+                      ),
+                      children: [
+                        cell(l10n.sessionTableTotal,
+                            bold: true, color: theme.colorScheme.primary),
+                        cell(l10n.sessionCount(widget.sessions.length),
+                            color: theme.colorScheme.primary),
+                        cell(''),
+                        cell(_fmtDuration(totalSeconds),
+                            bold: true, color: theme.colorScheme.primary),
+                      ],
+                    ),
                   ],
                 ),
-                // One row per individual session
-                for (final s in sorted)
-                  TableRow(
+              ),
+              if (phaseEntries.length > 1) ...[
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Icon(Icons.bar_chart_outlined,
+                        size: 14, color: theme.colorScheme.primary),
+                    const SizedBox(width: 6),
+                    Text(
+                      l10n.sessionByPhase,
+                      style: theme.textTheme.titleSmall
+                          ?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Table(
+                    columnWidths: const {
+                      0: FlexColumnWidth(3),
+                      1: FlexColumnWidth(2),
+                    },
+                    border: TableBorder(
+                      horizontalInside: BorderSide(color: divider, width: 1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     children: [
-                      cell(dateFmt.format(s.startedAt)),
-                      cell('${timeFmt.format(s.startedAt)}–${timeFmt.format(s.endedAt)}'),
-                      cell(_fmtDuration(s.durationSeconds)),
+                      TableRow(
+                        decoration: BoxDecoration(
+                          color:
+                              theme.colorScheme.primary.withValues(alpha: 0.08),
+                        ),
+                        children: [
+                          cell(l10n.phase, bold: true),
+                          cell(l10n.sessionTableDuration, bold: true),
+                        ],
+                      ),
+                      for (final entry in phaseEntries)
+                        TableRow(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 6, horizontal: 8),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    entry.key,
+                                    style: bodySmall?.copyWith(
+                                        fontWeight: FontWeight.w500),
+                                  ),
+                                  Text(
+                                    l10n.sessionCount(entry.value.length),
+                                    style: bodySmall?.copyWith(
+                                        color: theme.disabledColor),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            cell(
+                              _fmtDuration(entry.value.fold<int>(
+                                  0, (acc, r) => acc + r.durationSeconds)),
+                              bold: true,
+                            ),
+                          ],
+                        ),
                     ],
                   ),
-                // Total row
-                TableRow(
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.10),
-                  ),
-                  children: [
-                    cell('Total', bold: true, color: theme.colorScheme.primary),
-                    cell('${sessions.length} session${sessions.length == 1 ? '' : 's'}',
-                        color: theme.colorScheme.primary),
-                    cell(_fmtDuration(totalSeconds), bold: true,
-                        color: theme.colorScheme.primary),
-                  ],
                 ),
               ],
-            ),
+            ],
           ),
       ],
     );

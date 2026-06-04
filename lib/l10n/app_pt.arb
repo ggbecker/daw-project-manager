@@ -1396,7 +1396,7 @@
   "@menuLanguage": {
     "description": "macOS menu item for language selection"
   },
-  "menuWarnBeforeQuit": "Avisar Antes de Sair (Cmd+Q)",
+  "menuWarnBeforeQuit": "Avisar Antes de Sair (⌘+Q)",
   "@menuWarnBeforeQuit": {
     "description": "macOS menu item to toggle quit warning"
   },
@@ -1764,6 +1764,24 @@
   "@sessionHistory": {},
   "noSessionsYet": "Nenhuma sessão registrada ainda",
   "@noSessionsYet": {},
+  "removeSessionTitle": "Remover sessão?",
+  "@removeSessionTitle": {},
+  "sessionTableDate": "Data",
+  "@sessionTableDate": {},
+  "sessionTableTime": "Hora",
+  "@sessionTableTime": {},
+  "sessionTableDuration": "Duração",
+  "@sessionTableDuration": {},
+  "sessionTableTotal": "Total",
+  "@sessionTableTotal": {},
+  "sessionCount": "{count, plural, =1{1 sessão} other{{count} sessões}}",
+  "@sessionCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "sessionByPhase": "Trabalho por fase",
+  "@sessionByPhase": {},
   "tabPosition": "Posição das abas",
   "@tabPosition": {},
   "tabPositionTop": "Topo",
@@ -1986,6 +2004,42 @@
   "@createProjectInvalidChars": {},
   "createProjectError": "Falha ao criar pasta",
   "@createProjectError": {},
+  "createProjectIncludeDate": "Incluir prefixo de data",
+  "@createProjectIncludeDate": {},
+  "createProjectCreatedTitle": "Pasta criada",
+  "@createProjectCreatedTitle": {},
+  "createProjectCreatedMessage": "A pasta do seu projeto foi criada:",
+  "@createProjectCreatedMessage": {},
+  "createProjectCopyName": "Copiar nome da pasta",
+  "@createProjectCopyName": {},
+  "createProjectNameCopied": "Nome da pasta copiado",
+  "@createProjectNameCopied": {},
+  "createProjectTrackSession": "Rastrear sessão a partir de agora",
+  "@createProjectTrackSession": {},
+  "pendingFolderSessionTitle": "Sessão de trabalho detectada",
+  "@pendingFolderSessionTitle": {},
+  "pendingFolderSessionBody": "Você trabalhou em \"{projectName}\" por {duration}.",
+  "@pendingFolderSessionBody": {
+    "placeholders": {
+      "projectName": { "type": "String" },
+      "duration": { "type": "String" }
+    }
+  },
+  "pendingFolderSessionContinue": "Continuar sessão",
+  "@pendingFolderSessionContinue": {},
+  "pendingFolderSessionEndRecord": "Encerrar e registrar",
+  "@pendingFolderSessionEndRecord": {},
+  "activeSessionSwitchTitle": "Sessão já ativa",
+  "@activeSessionSwitchTitle": {},
+  "activeSessionSwitchBody": "Uma sessão está ativa para \"{current}\". Mudar para \"{next}\" e salvar a sessão atual?",
+  "@activeSessionSwitchBody": {
+    "placeholders": {
+      "current": { "type": "String" },
+      "next": { "type": "String" }
+    }
+  },
+  "activeSessionSwitch": "Mudar",
+  "@activeSessionSwitch": {},
   "pendingProjectWaiting": "Aguardando arquivo de projeto…",
   "@pendingProjectWaiting": {},
   "pendingProjectDelete": "Excluir pasta vazia",
@@ -2000,6 +2054,12 @@
   },
   "pendingProjectDismiss": "Parar de rastrear esta pasta",
   "@pendingProjectDismiss": {},
+  "pendingProjectDismissTitle": "Parar de rastrear?",
+  "@pendingProjectDismissTitle": {},
+  "pendingProjectDismissKeep": "Manter pasta",
+  "@pendingProjectDismissKeep": {},
+  "pendingProjectDismissDelete": "Excluir e fechar",
+  "@pendingProjectDismissDelete": {},
   "pendingProjectDeleteNotEmptyTitle": "A pasta não está vazia",
   "@pendingProjectDeleteNotEmptyTitle": {},
   "pendingProjectDeleteNotEmptyBody": "\"{folderName}\" contém arquivos. Excluir tudo permanentemente?",
@@ -2022,5 +2082,25 @@
   "selectPhaseColor": "Selecionar cor",
   "markAsFinished": "Marcar como fase concluída",
   "resetPhasesWarning": "{count, plural, =1{1 projeto usa uma fase que não existirá mais.} other{{count} projetos usam fases que não existirão mais.}}",
-  "resetPhasesWarningNote": "Esses projetos manterão seu status atual, mas não aparecerão nos filtros de fase. Você sempre pode adicionar essas fases novamente depois."
+  "resetPhasesWarningNote": "Esses projetos manterão seu status atual, mas não aparecerão nos filtros de fase. Você sempre pode adicionar essas fases novamente depois.",
+  "camelotGenerateButton": "Gerar mix",
+  "camelotDialogTitle": "Mix Camelot",
+  "camelotDialogDescription": "Ordena suas faixas por compatibilidade harmônica usando a roda Camelot. A proximidade de BPM é usada como critério de desempate.",
+  "camelotEligibleTracks": "{count} faixas elegíveis (tonalidade definida)",
+  "camelotSkippedTracks": "{count} serão ignoradas (sem tonalidade)",
+  "camelotNoEligibleTracks": "Nenhuma faixa tem tonalidade definida. Abra um projeto e defina sua tonalidade.",
+  "camelotGenerate": "Gerar",
+  "camelotQueueGenerated": "Fila preenchida com {count} faixas em ordem harmônica",
+  "camelotWheelGuideTooltip": "Guia da roda Camelot",
+  "camelotWheelGuideTitle": "Guia da Roda Camelot",
+  "camelotGuideRingsTitle": "Os Anéis",
+  "camelotGuideRingsBody": "Anel interno (A)  →  tonalidades menores\nAnel externo (B)  →  tonalidades maiores",
+  "camelotGuideNumbersTitle": "Números 1–12",
+  "camelotGuideNumbersBody": "Posições dispostas no sentido horário. Cada número representa uma vizinhança harmônica — os vizinhos compartilham fortes relações tonais.",
+  "camelotGuideColoursTitle": "Guia de Cores",
+  "camelotGuideColoursBody": "● Brilhante  →  a tonalidade da sua música\n● Suavemente iluminado  →  compatível para mixagem\n● Apagado  →  evitar para uma mixagem suave",
+  "camelotGuideTransitionsTitle": "Transições Compatíveis",
+  "camelotGuideTransitionsBody": "8A → 8B  (mesmo número, trocar anel)\n  Maior/menor relativo — praticamente sem emenda.\n\n8A → 7A ou 9A  (±1, mesmo anel)\n  Tom adjacente — mudança suave e sutil.\n\n8A → 1A ou 3A  (±7, mesmo anel)\n  Impulso ou queda de energia — mudança mais dramática.",
+  "playerMixSuggestions": "SUGESTÕES DE MIX",
+  "@playerMixSuggestions": {}
 }

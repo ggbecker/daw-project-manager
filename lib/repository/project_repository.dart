@@ -136,6 +136,12 @@ class ProjectRepository {
     await appSettingsBox.put(_pendingFoldersKey, jsonEncode(current.map((f) => f.toJson()).toList()));
   }
 
+  Future<void> updatePendingFolder(PendingFolder folder) async {
+    final current = getPendingFolders()..removeWhere((f) => f.id == folder.id);
+    current.add(folder);
+    await appSettingsBox.put(_pendingFoldersKey, jsonEncode(current.map((f) => f.toJson()).toList()));
+  }
+
   /// Removes pending folders that now contain a real DAW project file, or whose
   /// folder no longer exists on disk. Returns the removed IDs.
   Future<List<String>> resolveCompletedPendingFolders() async {

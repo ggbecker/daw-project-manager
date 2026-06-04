@@ -7,13 +7,26 @@ class PendingFolder {
   final String path;
   final DateTime createdAt;
   final String? intendedDawName;
+  /// Set when the user opts in to session tracking at folder-creation time.
+  /// Stores the moment the DAW was launched so elapsed time can be credited
+  /// to the project once it is saved and the pending entry resolves.
+  final DateTime? sessionStartedAt;
 
   const PendingFolder({
     required this.id,
     required this.path,
     required this.createdAt,
     this.intendedDawName,
+    this.sessionStartedAt,
   });
+
+  PendingFolder copyWith({DateTime? sessionStartedAt}) => PendingFolder(
+        id: id,
+        path: path,
+        createdAt: createdAt,
+        intendedDawName: intendedDawName,
+        sessionStartedAt: sessionStartedAt ?? this.sessionStartedAt,
+      );
 
   String get folderName => p.basename(path);
 
@@ -57,6 +70,7 @@ class PendingFolder {
         'path': path,
         'createdAt': createdAt.toIso8601String(),
         if (intendedDawName != null) 'intendedDawName': intendedDawName,
+        if (sessionStartedAt != null) 'sessionStartedAt': sessionStartedAt!.toIso8601String(),
       };
 
   factory PendingFolder.fromJson(Map<String, dynamic> json) => PendingFolder(
@@ -64,6 +78,9 @@ class PendingFolder {
         path: json['path'] as String,
         createdAt: DateTime.parse(json['createdAt'] as String),
         intendedDawName: json['intendedDawName'] as String?,
+        sessionStartedAt: json['sessionStartedAt'] != null
+            ? DateTime.parse(json['sessionStartedAt'] as String)
+            : null,
       );
 
   static PendingFolder create({required String path, String? intendedDawName}) =>

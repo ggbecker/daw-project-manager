@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'generated/l10n/app_localizations.dart';
-import 'dart:io' show Platform, ServerSocket, InternetAddress, SocketException, File, Directory, exit;
+import 'dart:io' show Platform, Process, ServerSocket, InternetAddress, SocketException, File, Directory, FileSystemException, exit;
 import 'package:window_manager/window_manager.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 
@@ -38,6 +38,15 @@ bool _autoBackupRunning = false;
 // Keeps the single-instance socket alive for the app's lifetime.
 // ignore: unused_element
 ServerSocket? _singleInstanceSocket;
+
+Future<void> _showAlreadyRunningMessage() async {
+  if (Platform.isWindows) {
+    await Process.run('powershell', [
+      '-Command',
+      'Add-Type -AssemblyName PresentationFramework; [System.Windows.MessageBox]::Show("DAW Project Manager is already running. Please close the existing window before opening a new one.", "DAW Project Manager")',
+    ]);
+  }
+}
 
 /// Reads the update-check preference directly from Hive (bypassing the provider
 /// which defers its Hive load to after the first frame) and, if enabled, checks
@@ -181,12 +190,14 @@ void main() async {
   // 1. Inicialização do Flutter
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 1b. Single-instance guard (desktop only)
-  if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
+  // 1b. Single-instance guard (Windows/Linux only).
+  // macOS is handled natively in AppDelegate.swift before Dart starts.
+  if (!kIsWeb && Platform.isWindows) {
     try {
       _singleInstanceSocket = await ServerSocket.bind(InternetAddress.loopbackIPv4, 57321);
     } on SocketException {
-      // Port is already bound — another instance is running. Exit silently.
+      // Port is already bound — another instance is running.
+      await _showAlreadyRunningMessage();
       exit(0);
     }
   }
@@ -249,7 +260,14 @@ void main() async {
   
   // Pre-open the settings box so providers can read it synchronously on first build.
   await ensureHiveInitialized();
-  await Hive.openBox<String>('settings');
+  try {
+    await Hive.openBox<String>('settings');
+  } on FileSystemException catch (e) {
+    // Another instance already holds the Hive lock (errno 35 on macOS).
+    // The native AppDelegate check should prevent reaching here, but guard anyway.
+    if (kDebugMode) print('[main] Hive lock held by another instance: $e');
+    exit(0);
+  }
 
   // NOVO: 4. Configuração do Riverpod e Auto-Scan
   final container = ProviderContainer();
@@ -440,6 +458,16 @@ class _DawProjectManagerAppState extends ConsumerState<DawProjectManagerApp> wit
 
   @override
   void onWindowClose() async {
+    if (!kIsWeb && Platform.isMacOS) {
+      // Red X on macOS: hide in release, destroy in debug.
+      if (kDebugMode) {
+        await windowManager.destroy();
+      } else {
+        await windowManager.hide();
+      }
+      return;
+    }
+    // Windows: show quit-warning dialog.
     final warn = ref.read(warnBeforeQuitProvider);
     if (!warn) {
       await windowManager.destroy();

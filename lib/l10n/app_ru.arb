@@ -1372,7 +1372,7 @@
   "@menuLanguage": {
     "description": "macOS menu item for language selection"
   },
-  "menuWarnBeforeQuit": "Предупреждать перед выходом (Cmd+Q)",
+  "menuWarnBeforeQuit": "Предупреждать перед выходом (⌘+Q)",
   "@menuWarnBeforeQuit": {
     "description": "macOS menu item to toggle quit warning"
   },
@@ -1740,6 +1740,24 @@
   "@sessionHistory": {},
   "noSessionsYet": "Сессии ещё не записаны",
   "@noSessionsYet": {},
+  "removeSessionTitle": "Удалить сессию?",
+  "@removeSessionTitle": {},
+  "sessionTableDate": "Дата",
+  "@sessionTableDate": {},
+  "sessionTableTime": "Время",
+  "@sessionTableTime": {},
+  "sessionTableDuration": "Длительность",
+  "@sessionTableDuration": {},
+  "sessionTableTotal": "Итого",
+  "@sessionTableTotal": {},
+  "sessionCount": "{count, plural, one{{count} сессия} few{{count} сессии} other{{count} сессий}}",
+  "@sessionCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "sessionByPhase": "Работа по фазам",
+  "@sessionByPhase": {},
   "tabPosition": "Расположение вкладок",
   "@tabPosition": {},
   "tabPositionTop": "Сверху",
@@ -1962,6 +1980,42 @@
   "@createProjectInvalidChars": {},
   "createProjectError": "Не удалось создать папку",
   "@createProjectError": {},
+  "createProjectIncludeDate": "Включить префикс даты",
+  "@createProjectIncludeDate": {},
+  "createProjectCreatedTitle": "Папка создана",
+  "@createProjectCreatedTitle": {},
+  "createProjectCreatedMessage": "Папка проекта создана:",
+  "@createProjectCreatedMessage": {},
+  "createProjectCopyName": "Скопировать имя папки",
+  "@createProjectCopyName": {},
+  "createProjectNameCopied": "Имя папки скопировано",
+  "@createProjectNameCopied": {},
+  "createProjectTrackSession": "Отслеживать сеанс с этого момента",
+  "@createProjectTrackSession": {},
+  "pendingFolderSessionTitle": "Обнаружен рабочий сеанс",
+  "@pendingFolderSessionTitle": {},
+  "pendingFolderSessionBody": "Вы работали над \"{projectName}\" в течение {duration}.",
+  "@pendingFolderSessionBody": {
+    "placeholders": {
+      "projectName": { "type": "String" },
+      "duration": { "type": "String" }
+    }
+  },
+  "pendingFolderSessionContinue": "Продолжить сеанс",
+  "@pendingFolderSessionContinue": {},
+  "pendingFolderSessionEndRecord": "Завершить и записать",
+  "@pendingFolderSessionEndRecord": {},
+  "activeSessionSwitchTitle": "Сессия уже активна",
+  "@activeSessionSwitchTitle": {},
+  "activeSessionSwitchBody": "Запущена сессия для «{current}». Переключиться на «{next}» и сохранить текущую сессию?",
+  "@activeSessionSwitchBody": {
+    "placeholders": {
+      "current": { "type": "String" },
+      "next": { "type": "String" }
+    }
+  },
+  "activeSessionSwitch": "Переключить",
+  "@activeSessionSwitch": {},
   "pendingProjectWaiting": "Ожидание файла проекта…",
   "@pendingProjectWaiting": {},
   "pendingProjectDelete": "Удалить пустую папку",
@@ -1976,6 +2030,12 @@
   },
   "pendingProjectDismiss": "Прекратить отслеживание папки",
   "@pendingProjectDismiss": {},
+  "pendingProjectDismissTitle": "Остановить отслеживание?",
+  "@pendingProjectDismissTitle": {},
+  "pendingProjectDismissKeep": "Сохранить папку",
+  "@pendingProjectDismissKeep": {},
+  "pendingProjectDismissDelete": "Удалить и закрыть",
+  "@pendingProjectDismissDelete": {},
   "pendingProjectDeleteNotEmptyTitle": "Папка не пуста",
   "@pendingProjectDeleteNotEmptyTitle": {},
   "pendingProjectDeleteNotEmptyBody": "Папка «{folderName}» содержит файлы. Удалить всё безвозвратно?",
@@ -1998,5 +2058,25 @@
   "selectPhaseColor": "Выбрать цвет",
   "markAsFinished": "Отметить как завершённую фазу",
   "resetPhasesWarning": "{count, plural, =1{1 проект использует фазу, которой больше не будет.} few{{count} проекта используют фазы, которых больше не будет.} many{{count} проектов используют фазы, которых больше не будет.} other{{count} проекта используют фазы, которых больше не будет.}}",
-  "resetPhasesWarningNote": "Эти проекты сохранят текущий статус, но не будут отображаться в фильтрах фаз. Вы всегда можете снова добавить эти фазы позже."
+  "resetPhasesWarningNote": "Эти проекты сохранят текущий статус, но не будут отображаться в фильтрах фаз. Вы всегда можете снова добавить эти фазы позже.",
+  "camelotGenerateButton": "Создать микс",
+  "camelotDialogTitle": "Микс Camelot",
+  "camelotDialogDescription": "Сортирует треки по гармонической совместимости с помощью колеса Camelot. Близость BPM используется как дополнительный критерий.",
+  "camelotEligibleTracks": "{count} треков подходят (тональность задана)",
+  "camelotSkippedTracks": "{count} будут пропущены (нет тональности)",
+  "camelotNoEligibleTracks": "Ни один трек не имеет заданной тональности. Откройте проект и задайте тональность.",
+  "camelotGenerate": "Создать",
+  "camelotQueueGenerated": "Очередь заполнена {count} треками в гармоническом порядке",
+  "camelotWheelGuideTooltip": "Руководство по колесу Camelot",
+  "camelotWheelGuideTitle": "Руководство по колесу Camelot",
+  "camelotGuideRingsTitle": "Кольца",
+  "camelotGuideRingsBody": "Внутреннее кольцо (A)  →  минорные тональности\nВнешнее кольцо (B)  →  мажорные тональности",
+  "camelotGuideNumbersTitle": "Цифры 1–12",
+  "camelotGuideNumbersBody": "Позиции расставлены по часовой стрелке. Каждое число представляет гармоническое окружение — соседи разделяют сильные тональные связи.",
+  "camelotGuideColoursTitle": "Цветовой гид",
+  "camelotGuideColoursBody": "● Яркий  →  тональность вашей песни\n● Мягкий  →  совместим для сведения\n● Приглушённый  →  избегать для плавного сведения",
+  "camelotGuideTransitionsTitle": "Совместимые переходы",
+  "camelotGuideTransitionsBody": "8A → 8B  (тот же номер, смена кольца)\n  Параллельный мажор/минор — практически незаметно.\n\n8A → 7A или 9A  (±1, то же кольцо)\n  Соседняя тональность — плавное, тонкое изменение.\n\n8A → 1A или 3A  (±7, то же кольцо)\n  Подъём или падение энергии — более резкий переход.",
+  "playerMixSuggestions": "ПРЕДЛОЖЕНИЯ МИКСА",
+  "@playerMixSuggestions": {}
 }

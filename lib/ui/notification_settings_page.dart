@@ -108,8 +108,9 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
     final listView = ListView(
       padding: const EdgeInsets.all(16.0),
       children: [
-          // ── Work Session Reminders (all platforms) ──────────────────────
-          _WorkTimerSection(l10n: l10n),
+          // ── Work Session Reminders (desktop only) ───────────────────────
+          if (!Platform.isAndroid && !Platform.isIOS)
+            _WorkTimerSection(l10n: l10n),
 
           if (Platform.isAndroid) ...[
           const Divider(height: 32),

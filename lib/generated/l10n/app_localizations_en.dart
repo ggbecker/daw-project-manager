@@ -2030,7 +2030,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get menuLanguage => 'Language';
 
   @override
-  String get menuWarnBeforeQuit => 'Warn Before Quitting (Cmd+Q)';
+  String get menuWarnBeforeQuit => 'Warn Before Quitting (⌘+Q)';
 
   @override
   String get menuQuit => 'Quit DAW Project Manager';
@@ -2685,6 +2685,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noSessionsYet => 'No sessions recorded yet';
 
   @override
+  String get removeSessionTitle => 'Remove session?';
+
+  @override
+  String get sessionTableDate => 'Date';
+
+  @override
+  String get sessionTableTime => 'Time';
+
+  @override
+  String get sessionTableDuration => 'Duration';
+
+  @override
+  String get sessionTableTotal => 'Total';
+
+  @override
+  String sessionCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sessions',
+      one: '1 session',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sessionByPhase => 'Work by Phase';
+
+  @override
   String get tabPosition => 'Tab position';
 
   @override
@@ -3037,6 +3066,50 @@ class AppLocalizationsEn extends AppLocalizations {
   String get createProjectError => 'Failed to create folder';
 
   @override
+  String get createProjectIncludeDate => 'Include date prefix';
+
+  @override
+  String get createProjectCreatedTitle => 'Folder Created';
+
+  @override
+  String get createProjectCreatedMessage =>
+      'Your project folder has been created:';
+
+  @override
+  String get createProjectCopyName => 'Copy Folder Name';
+
+  @override
+  String get createProjectNameCopied => 'Folder name copied';
+
+  @override
+  String get createProjectTrackSession => 'Track session from now';
+
+  @override
+  String get pendingFolderSessionTitle => 'Work Session Detected';
+
+  @override
+  String pendingFolderSessionBody(String projectName, String duration) {
+    return 'You\'ve worked on \"$projectName\" for $duration.';
+  }
+
+  @override
+  String get pendingFolderSessionContinue => 'Continue Session';
+
+  @override
+  String get pendingFolderSessionEndRecord => 'End & Record';
+
+  @override
+  String get activeSessionSwitchTitle => 'Session Already Active';
+
+  @override
+  String activeSessionSwitchBody(String current, String next) {
+    return 'A session is running for \"$current\". Switch to \"$next\" and save the current session?';
+  }
+
+  @override
+  String get activeSessionSwitch => 'Switch';
+
+  @override
   String get pendingProjectWaiting => 'Waiting for project file…';
 
   @override
@@ -3052,6 +3125,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pendingProjectDismiss => 'Stop tracking this folder';
+
+  @override
+  String get pendingProjectDismissTitle => 'Stop Tracking?';
+
+  @override
+  String get pendingProjectDismissKeep => 'Keep Folder';
+
+  @override
+  String get pendingProjectDismissDelete => 'Delete & Dismiss';
 
   @override
   String get pendingProjectDeleteNotEmptyTitle => 'Folder is not empty';
@@ -3116,4 +3198,59 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get resetPhasesWarningNote =>
       'Those projects will keep their current status but won\'t appear in phase filters. You can always re-add those phases later.';
+
+  @override
+  String get camelotGenerateButton => 'Generate Mix';
+
+  @override
+  String get camelotDialogTitle => 'Camelot Mix';
+
+  @override
+  String get camelotDialogDescription =>
+      'Orders your tracks by harmonic key compatibility using the Camelot wheel. BPM proximity is used as a tiebreaker within compatible keys.';
+
+  @override
+  String camelotEligibleTracks(int count) {
+    return '$count tracks eligible (key set)';
+  }
+
+  @override
+  String camelotSkippedTracks(int count) {
+    return '$count will be skipped (no key set)';
+  }
+
+  @override
+  String get camelotNoEligibleTracks =>
+      'No tracks have a musical key set. Open a project and set its key to use this feature.';
+
+  @override
+  String get camelotGenerate => 'Generate';
+
+  @override
+  String camelotQueueGenerated(int count) {
+    return 'Queue filled with $count harmonically ordered tracks';
+  }
+
+  @override
+  String get camelotWheelGuideTooltip => 'Camelot wheel guide';
+  @override
+  String get camelotWheelGuideTitle => 'Camelot Wheel Guide';
+  @override
+  String get camelotGuideRingsTitle => 'The Rings';
+  @override
+  String get camelotGuideRingsBody => 'Inner ring (A)  \u2192  minor keys\nOuter ring (B)  \u2192  major keys';
+  @override
+  String get camelotGuideNumbersTitle => 'Numbers 1\u201312';
+  @override
+  String get camelotGuideNumbersBody => 'Positions arranged clockwise. Each number represents a harmonic neighbourhood \u2014 neighbours share strong tonal relationships.';
+  @override
+  String get camelotGuideColoursTitle => 'Colour Guide';
+  @override
+  String get camelotGuideColoursBody => '\u25cf Bright  \u2192  your song\'s key\n\u25cf Softly lit  \u2192  compatible for mixing\n\u25cf Dimmed  \u2192  avoid for smooth mixing';
+  @override
+  String get camelotGuideTransitionsTitle => 'Compatible Transitions';
+  @override
+  String get camelotGuideTransitionsBody => '8A \u2192 8B  (same number, switch ring)\n  Relative major / minor \u2014 virtually seamless.\n\n8A \u2192 7A or 9A  (\u00b11, same ring)\n  Adjacent key \u2014 smooth, subtle change.\n\n8A \u2192 1A or 3A  (\u00b17, same ring)\n  Energy boost or drop \u2014 more dramatic shift.';
+  @override
+  String get playerMixSuggestions => 'MIX SUGGESTIONS';
 }

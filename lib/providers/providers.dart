@@ -974,7 +974,18 @@ final onboardingCompleteProvider =
 /// chip in the title bar.
 class ActiveProjectNotifier extends Notifier<MusicProject?> {
   @override
-  MusicProject? build() => null;
+  MusicProject? build() {
+    // Keep the active project's data in sync with the repository. When a deep
+    // scan or metadata extraction updates the project, the new BPM, key, phase
+    // etc. are reflected here without ending or restarting the session.
+    ref.listen(allProjectsStreamProvider, (_, next) {
+      final active = state;
+      if (active == null) return;
+      final updated = next.value?.where((p) => p.id == active.id).firstOrNull;
+      if (updated != null) state = updated;
+    });
+    return null;
+  }
   void set(MusicProject project) => state = project;
   void clear() => state = null;
 }
@@ -1035,7 +1046,7 @@ class WarnBeforeQuitNotifier extends Notifier<bool> {
   @override
   bool build() {
     SchedulerBinding.instance.addPostFrameCallback((_) => _load());
-    return false;
+    return true;
   }
 
   Future<void> _load() async {
@@ -1756,10 +1767,13 @@ class WorkTimerNotifier extends Notifier<int> {
     });
 
     ref.listen<MusicProject?>(activeProjectProvider, (prev, next) {
-      if (prev != null && _startTime != null) {
+      // Only save/restart when the project actually changes (different ID or
+      // cleared). Same-ID updates are metadata refreshes — don't touch the timer.
+      final projectChanged = next == null || next.id != prev?.id;
+      if (prev != null && _startTime != null && projectChanged) {
         _saveSession(prev);
       }
-      if (next != null && prev?.id != next.id) {
+      if (next != null && projectChanged) {
         _start();
       } else if (next == null) {
         _stop();
@@ -1779,6 +1793,15 @@ class WorkTimerNotifier extends Notifier<int> {
     ref.read(workTimerPausedProvider.notifier).set(false);
     state = 0;
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
+  }
+
+  /// Call immediately after setting the active project when the session was
+  /// already in progress (e.g. resolved from a pending folder). Overrides the
+  /// start time so elapsed seconds reflect the original session start rather
+  /// than the moment the project was set active.
+  void continueFrom(DateTime from) {
+    _startTime = from;
+    state = DateTime.now().difference(from).inSeconds;
   }
 
   void _stop() {
@@ -1818,17 +1841,19 @@ class WorkTimerNotifier extends Notifier<int> {
     final end = _pausedAt ?? DateTime.now();
     final elapsedSeconds = end.difference(start).inSeconds;
     if (elapsedSeconds <= 0) return;
+    final repo = await ref.read(repositoryProvider.future);
+    final latest = repo.getById(project.id) ?? project;
     final record = SessionRecord(
       id: start.toIso8601String(),
       startedAt: start,
       endedAt: end,
       durationSeconds: elapsedSeconds,
+      phase: latest.status,
     );
-    final repo = await ref.read(repositoryProvider.future);
-    final latest = repo.getById(project.id) ?? project;
+    final newSessions = [...latest.sessions, record];
     final updated = latest.copyWith(
-      totalWorkSeconds: latest.totalWorkSeconds + elapsedSeconds,
-      sessions: [...latest.sessions, record],
+      totalWorkSeconds: newSessions.fold<int>(0, (s, r) => s + r.durationSeconds),
+      sessions: newSessions,
       updatedAt: DateTime.now(),
     );
     repo.updateProject(updated);
@@ -1838,6 +1863,8 @@ class WorkTimerNotifier extends Notifier<int> {
     if (_startTime == null) return;
     final elapsed = DateTime.now().difference(_startTime!);
     state = elapsed.inSeconds;
+
+    if (Platform.isAndroid || Platform.isIOS) return;
 
     final enabled = ref.read(workTimerNotifEnabledProvider);
     if (!enabled) return;

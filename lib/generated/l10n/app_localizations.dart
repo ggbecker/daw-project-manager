@@ -3425,7 +3425,7 @@ abstract class AppLocalizations {
   /// macOS menu item to toggle quit warning
   ///
   /// In en, this message translates to:
-  /// **'Warn Before Quitting (Cmd+Q)'**
+  /// **'Warn Before Quitting (⌘+Q)'**
   String get menuWarnBeforeQuit;
 
   /// macOS menu item to quit the app
@@ -4562,6 +4562,48 @@ abstract class AppLocalizations {
   /// **'No sessions recorded yet'**
   String get noSessionsYet;
 
+  /// No description provided for @removeSessionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove session?'**
+  String get removeSessionTitle;
+
+  /// No description provided for @sessionTableDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get sessionTableDate;
+
+  /// No description provided for @sessionTableTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get sessionTableTime;
+
+  /// No description provided for @sessionTableDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get sessionTableDuration;
+
+  /// No description provided for @sessionTableTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get sessionTableTotal;
+
+  /// No description provided for @sessionCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 session} other{{count} sessions}}'**
+  String sessionCount(int count);
+
+  /// No description provided for @sessionByPhase.
+  ///
+  /// In en, this message translates to:
+  /// **'Work by Phase'**
+  String get sessionByPhase;
+
   /// No description provided for @tabPosition.
   ///
   /// In en, this message translates to:
@@ -5186,6 +5228,84 @@ abstract class AppLocalizations {
   /// **'Failed to create folder'**
   String get createProjectError;
 
+  /// No description provided for @createProjectIncludeDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Include date prefix'**
+  String get createProjectIncludeDate;
+
+  /// No description provided for @createProjectCreatedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder Created'**
+  String get createProjectCreatedTitle;
+
+  /// No description provided for @createProjectCreatedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your project folder has been created:'**
+  String get createProjectCreatedMessage;
+
+  /// No description provided for @createProjectCopyName.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Folder Name'**
+  String get createProjectCopyName;
+
+  /// No description provided for @createProjectNameCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder name copied'**
+  String get createProjectNameCopied;
+
+  /// No description provided for @createProjectTrackSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Track session from now'**
+  String get createProjectTrackSession;
+
+  /// No description provided for @pendingFolderSessionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Work Session Detected'**
+  String get pendingFolderSessionTitle;
+
+  /// No description provided for @pendingFolderSessionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve worked on \"{projectName}\" for {duration}.'**
+  String pendingFolderSessionBody(String projectName, String duration);
+
+  /// No description provided for @pendingFolderSessionContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue Session'**
+  String get pendingFolderSessionContinue;
+
+  /// No description provided for @pendingFolderSessionEndRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'End & Record'**
+  String get pendingFolderSessionEndRecord;
+
+  /// No description provided for @activeSessionSwitchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Session Already Active'**
+  String get activeSessionSwitchTitle;
+
+  /// No description provided for @activeSessionSwitchBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A session is running for \"{current}\". Switch to \"{next}\" and save the current session?'**
+  String activeSessionSwitchBody(String current, String next);
+
+  /// No description provided for @activeSessionSwitch.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch'**
+  String get activeSessionSwitch;
+
   /// No description provided for @pendingProjectWaiting.
   ///
   /// In en, this message translates to:
@@ -5215,6 +5335,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Stop tracking this folder'**
   String get pendingProjectDismiss;
+
+  /// No description provided for @pendingProjectDismissTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop Tracking?'**
+  String get pendingProjectDismissTitle;
+
+  /// No description provided for @pendingProjectDismissKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Folder'**
+  String get pendingProjectDismissKeep;
+
+  /// No description provided for @pendingProjectDismissDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete & Dismiss'**
+  String get pendingProjectDismissDelete;
 
   /// No description provided for @pendingProjectDeleteNotEmptyTitle.
   ///
@@ -5305,6 +5443,87 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Those projects will keep their current status but won\'t appear in phase filters. You can always re-add those phases later.'**
   String get resetPhasesWarningNote;
+
+  /// No description provided for @camelotGenerateButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate Mix'**
+  String get camelotGenerateButton;
+
+  /// No description provided for @camelotDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Camelot Mix'**
+  String get camelotDialogTitle;
+
+  /// No description provided for @camelotDialogDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Orders your tracks by harmonic key compatibility using the Camelot wheel. BPM proximity is used as a tiebreaker within compatible keys.'**
+  String get camelotDialogDescription;
+
+  /// No description provided for @camelotEligibleTracks.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} tracks eligible (key set)'**
+  String camelotEligibleTracks(int count);
+
+  /// No description provided for @camelotSkippedTracks.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} will be skipped (no key set)'**
+  String camelotSkippedTracks(int count);
+
+  /// No description provided for @camelotNoEligibleTracks.
+  ///
+  /// In en, this message translates to:
+  /// **'No tracks have a musical key set. Open a project and set its key to use this feature.'**
+  String get camelotNoEligibleTracks;
+
+  /// No description provided for @camelotGenerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate'**
+  String get camelotGenerate;
+
+  /// No description provided for @camelotQueueGenerated.
+  ///
+  /// In en, this message translates to:
+  /// **'Queue filled with {count} harmonically ordered tracks'**
+  String camelotQueueGenerated(int count);
+
+  /// No description provided for @camelotWheelGuideTooltip.
+  String get camelotWheelGuideTooltip;
+
+  /// No description provided for @camelotWheelGuideTitle.
+  String get camelotWheelGuideTitle;
+
+  /// No description provided for @camelotGuideRingsTitle.
+  String get camelotGuideRingsTitle;
+
+  /// No description provided for @camelotGuideRingsBody.
+  String get camelotGuideRingsBody;
+
+  /// No description provided for @camelotGuideNumbersTitle.
+  String get camelotGuideNumbersTitle;
+
+  /// No description provided for @camelotGuideNumbersBody.
+  String get camelotGuideNumbersBody;
+
+  /// No description provided for @camelotGuideColoursTitle.
+  String get camelotGuideColoursTitle;
+
+  /// No description provided for @camelotGuideColoursBody.
+  String get camelotGuideColoursBody;
+
+  /// No description provided for @camelotGuideTransitionsTitle.
+  String get camelotGuideTransitionsTitle;
+
+  /// No description provided for @camelotGuideTransitionsBody.
+  String get camelotGuideTransitionsBody;
+
+  /// No description provided for @playerMixSuggestions.
+  String get playerMixSuggestions;
 }
 
 class _AppLocalizationsDelegate
