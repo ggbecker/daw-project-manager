@@ -1742,6 +1742,22 @@
   "@noSessionsYet": {},
   "removeSessionTitle": "Удалить сессию?",
   "@removeSessionTitle": {},
+  "sessionTableDate": "Дата",
+  "@sessionTableDate": {},
+  "sessionTableTime": "Время",
+  "@sessionTableTime": {},
+  "sessionTableDuration": "Длительность",
+  "@sessionTableDuration": {},
+  "sessionTableTotal": "Итого",
+  "@sessionTableTotal": {},
+  "sessionCount": "{count, plural, one{{count} сессия} few{{count} сессии} other{{count} сессий}}",
+  "@sessionCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "sessionByPhase": "Работа по фазам",
+  "@sessionByPhase": {},
   "tabPosition": "Расположение вкладок",
   "@tabPosition": {},
   "tabPositionTop": "Сверху",
@@ -1964,6 +1980,42 @@
   "@createProjectInvalidChars": {},
   "createProjectError": "Не удалось создать папку",
   "@createProjectError": {},
+  "createProjectIncludeDate": "Включить префикс даты",
+  "@createProjectIncludeDate": {},
+  "createProjectCreatedTitle": "Папка создана",
+  "@createProjectCreatedTitle": {},
+  "createProjectCreatedMessage": "Папка проекта создана:",
+  "@createProjectCreatedMessage": {},
+  "createProjectCopyName": "Скопировать имя папки",
+  "@createProjectCopyName": {},
+  "createProjectNameCopied": "Имя папки скопировано",
+  "@createProjectNameCopied": {},
+  "createProjectTrackSession": "Отслеживать сеанс с этого момента",
+  "@createProjectTrackSession": {},
+  "pendingFolderSessionTitle": "Обнаружен рабочий сеанс",
+  "@pendingFolderSessionTitle": {},
+  "pendingFolderSessionBody": "Вы работали над \"{projectName}\" в течение {duration}.",
+  "@pendingFolderSessionBody": {
+    "placeholders": {
+      "projectName": { "type": "String" },
+      "duration": { "type": "String" }
+    }
+  },
+  "pendingFolderSessionContinue": "Продолжить сеанс",
+  "@pendingFolderSessionContinue": {},
+  "pendingFolderSessionEndRecord": "Завершить и записать",
+  "@pendingFolderSessionEndRecord": {},
+  "activeSessionSwitchTitle": "Сессия уже активна",
+  "@activeSessionSwitchTitle": {},
+  "activeSessionSwitchBody": "Запущена сессия для «{current}». Переключиться на «{next}» и сохранить текущую сессию?",
+  "@activeSessionSwitchBody": {
+    "placeholders": {
+      "current": { "type": "String" },
+      "next": { "type": "String" }
+    }
+  },
+  "activeSessionSwitch": "Переключить",
+  "@activeSessionSwitch": {},
   "pendingProjectWaiting": "Ожидание файла проекта…",
   "@pendingProjectWaiting": {},
   "pendingProjectDelete": "Удалить пустую папку",
@@ -1978,6 +2030,12 @@
   },
   "pendingProjectDismiss": "Прекратить отслеживание папки",
   "@pendingProjectDismiss": {},
+  "pendingProjectDismissTitle": "Остановить отслеживание?",
+  "@pendingProjectDismissTitle": {},
+  "pendingProjectDismissKeep": "Сохранить папку",
+  "@pendingProjectDismissKeep": {},
+  "pendingProjectDismissDelete": "Удалить и закрыть",
+  "@pendingProjectDismissDelete": {},
   "pendingProjectDeleteNotEmptyTitle": "Папка не пуста",
   "@pendingProjectDeleteNotEmptyTitle": {},
   "pendingProjectDeleteNotEmptyBody": "Папка «{folderName}» содержит файлы. Удалить всё безвозвратно?",

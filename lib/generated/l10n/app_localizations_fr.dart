@@ -2712,6 +2712,32 @@ class AppLocalizationsFr extends AppLocalizations {
   String get removeSessionTitle => 'Supprimer la session ?';
 
   @override
+  String get sessionTableDate => 'Date';
+
+  @override
+  String get sessionTableTime => 'Heure';
+
+  @override
+  String get sessionTableDuration => 'Durée';
+
+  @override
+  String get sessionTableTotal => 'Total';
+
+  @override
+  String sessionCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sessions',
+      one: '1 session',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sessionByPhase => 'Travail par phase';
+
+  @override
   String get tabPosition => 'Position des onglets';
 
   @override
@@ -3065,6 +3091,50 @@ class AppLocalizationsFr extends AppLocalizations {
   String get createProjectError => 'Impossible de créer le dossier';
 
   @override
+  String get createProjectIncludeDate => 'Inclure le préfixe de date';
+
+  @override
+  String get createProjectCreatedTitle => 'Dossier créé';
+
+  @override
+  String get createProjectCreatedMessage =>
+      'Votre dossier de projet a été créé :';
+
+  @override
+  String get createProjectCopyName => 'Copier le nom du dossier';
+
+  @override
+  String get createProjectNameCopied => 'Nom du dossier copié';
+
+  @override
+  String get createProjectTrackSession => 'Suivre la session dès maintenant';
+
+  @override
+  String get pendingFolderSessionTitle => 'Session de travail détectée';
+
+  @override
+  String pendingFolderSessionBody(String projectName, String duration) {
+    return 'Vous avez travaillé sur \"$projectName\" pendant $duration.';
+  }
+
+  @override
+  String get pendingFolderSessionContinue => 'Continuer la session';
+
+  @override
+  String get pendingFolderSessionEndRecord => 'Terminer et enregistrer';
+
+  @override
+  String get activeSessionSwitchTitle => 'Session déjà active';
+
+  @override
+  String activeSessionSwitchBody(String current, String next) {
+    return 'Une session est en cours pour \"$current\". Passer à \"$next\" et enregistrer la session actuelle ?';
+  }
+
+  @override
+  String get activeSessionSwitch => 'Changer';
+
+  @override
   String get pendingProjectWaiting => 'En attente du fichier de projet…';
 
   @override
@@ -3080,6 +3150,15 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get pendingProjectDismiss => 'Ne plus suivre ce dossier';
+
+  @override
+  String get pendingProjectDismissTitle => 'Arrêter le suivi ?';
+
+  @override
+  String get pendingProjectDismissKeep => 'Conserver le dossier';
+
+  @override
+  String get pendingProjectDismissDelete => 'Supprimer et fermer';
 
   @override
   String get pendingProjectDeleteNotEmptyTitle => 'Le dossier n\'est pas vide';

@@ -1742,6 +1742,22 @@
   "@noSessionsYet": {},
   "removeSessionTitle": "セッションを削除しますか？",
   "@removeSessionTitle": {},
+  "sessionTableDate": "日付",
+  "@sessionTableDate": {},
+  "sessionTableTime": "時刻",
+  "@sessionTableTime": {},
+  "sessionTableDuration": "時間",
+  "@sessionTableDuration": {},
+  "sessionTableTotal": "合計",
+  "@sessionTableTotal": {},
+  "sessionCount": "{count, plural, other{{count}セッション}}",
+  "@sessionCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "sessionByPhase": "フェーズ別作業",
+  "@sessionByPhase": {},
   "tabPosition": "タブの位置",
   "@tabPosition": {},
   "tabPositionTop": "上",
@@ -1964,6 +1980,42 @@
   "@createProjectInvalidChars": {},
   "createProjectError": "フォルダの作成に失敗しました",
   "@createProjectError": {},
+  "createProjectIncludeDate": "日付プレフィックスを含める",
+  "@createProjectIncludeDate": {},
+  "createProjectCreatedTitle": "フォルダーが作成されました",
+  "@createProjectCreatedTitle": {},
+  "createProjectCreatedMessage": "プロジェクトフォルダーが作成されました：",
+  "@createProjectCreatedMessage": {},
+  "createProjectCopyName": "フォルダー名をコピー",
+  "@createProjectCopyName": {},
+  "createProjectNameCopied": "フォルダー名をコピーしました",
+  "@createProjectNameCopied": {},
+  "createProjectTrackSession": "今からセッションを記録する",
+  "@createProjectTrackSession": {},
+  "pendingFolderSessionTitle": "作業セッションを検出しました",
+  "@pendingFolderSessionTitle": {},
+  "pendingFolderSessionBody": "「{projectName}」で{duration}作業しました。",
+  "@pendingFolderSessionBody": {
+    "placeholders": {
+      "projectName": { "type": "String" },
+      "duration": { "type": "String" }
+    }
+  },
+  "pendingFolderSessionContinue": "セッションを続ける",
+  "@pendingFolderSessionContinue": {},
+  "pendingFolderSessionEndRecord": "終了して記録",
+  "@pendingFolderSessionEndRecord": {},
+  "activeSessionSwitchTitle": "セッションが実行中",
+  "@activeSessionSwitchTitle": {},
+  "activeSessionSwitchBody": "「{current}」のセッションが実行中です。「{next}」に切り替えて現在のセッションを保存しますか？",
+  "@activeSessionSwitchBody": {
+    "placeholders": {
+      "current": { "type": "String" },
+      "next": { "type": "String" }
+    }
+  },
+  "activeSessionSwitch": "切り替える",
+  "@activeSessionSwitch": {},
   "pendingProjectWaiting": "プロジェクトファイルを待っています…",
   "@pendingProjectWaiting": {},
   "pendingProjectDelete": "空のフォルダを削除",
@@ -1978,6 +2030,12 @@
   },
   "pendingProjectDismiss": "このフォルダの追跡を停止",
   "@pendingProjectDismiss": {},
+  "pendingProjectDismissTitle": "トラッキングを停止しますか？",
+  "@pendingProjectDismissTitle": {},
+  "pendingProjectDismissKeep": "フォルダーを保持",
+  "@pendingProjectDismissKeep": {},
+  "pendingProjectDismissDelete": "削除して閉じる",
+  "@pendingProjectDismissDelete": {},
   "pendingProjectDeleteNotEmptyTitle": "フォルダが空ではありません",
   "@pendingProjectDeleteNotEmptyTitle": {},
   "pendingProjectDeleteNotEmptyBody": "「{folderName}」にはファイルが含まれています。すべて完全に削除しますか？",

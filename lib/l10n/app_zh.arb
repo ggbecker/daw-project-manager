@@ -1742,6 +1742,22 @@
   "@noSessionsYet": {},
   "removeSessionTitle": "删除会话？",
   "@removeSessionTitle": {},
+  "sessionTableDate": "日期",
+  "@sessionTableDate": {},
+  "sessionTableTime": "时间",
+  "@sessionTableTime": {},
+  "sessionTableDuration": "时长",
+  "@sessionTableDuration": {},
+  "sessionTableTotal": "合计",
+  "@sessionTableTotal": {},
+  "sessionCount": "{count, plural, other{{count}个会话}}",
+  "@sessionCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "sessionByPhase": "按阶段工作",
+  "@sessionByPhase": {},
   "tabPosition": "标签位置",
   "@tabPosition": {},
   "tabPositionTop": "顶部",
@@ -1964,6 +1980,42 @@
   "@createProjectInvalidChars": {},
   "createProjectError": "创建文件夹失败",
   "@createProjectError": {},
+  "createProjectIncludeDate": "包含日期前缀",
+  "@createProjectIncludeDate": {},
+  "createProjectCreatedTitle": "文件夹已创建",
+  "@createProjectCreatedTitle": {},
+  "createProjectCreatedMessage": "您的项目文件夹已创建：",
+  "@createProjectCreatedMessage": {},
+  "createProjectCopyName": "复制文件夹名称",
+  "@createProjectCopyName": {},
+  "createProjectNameCopied": "已复制文件夹名称",
+  "@createProjectNameCopied": {},
+  "createProjectTrackSession": "从现在开始追踪会话",
+  "@createProjectTrackSession": {},
+  "pendingFolderSessionTitle": "检测到工作会话",
+  "@pendingFolderSessionTitle": {},
+  "pendingFolderSessionBody": "您已在\"{projectName}\"上工作了{duration}。",
+  "@pendingFolderSessionBody": {
+    "placeholders": {
+      "projectName": { "type": "String" },
+      "duration": { "type": "String" }
+    }
+  },
+  "pendingFolderSessionContinue": "继续会话",
+  "@pendingFolderSessionContinue": {},
+  "pendingFolderSessionEndRecord": "结束并记录",
+  "@pendingFolderSessionEndRecord": {},
+  "activeSessionSwitchTitle": "会话已激活",
+  "@activeSessionSwitchTitle": {},
+  "activeSessionSwitchBody": "「{current}」的会话正在运行。切换到「{next}」并保存当前会话？",
+  "@activeSessionSwitchBody": {
+    "placeholders": {
+      "current": { "type": "String" },
+      "next": { "type": "String" }
+    }
+  },
+  "activeSessionSwitch": "切换",
+  "@activeSessionSwitch": {},
   "pendingProjectWaiting": "等待项目文件…",
   "@pendingProjectWaiting": {},
   "pendingProjectDelete": "删除空文件夹",
@@ -1978,6 +2030,12 @@
   },
   "pendingProjectDismiss": "停止跟踪此文件夹",
   "@pendingProjectDismiss": {},
+  "pendingProjectDismissTitle": "停止跟踪？",
+  "@pendingProjectDismissTitle": {},
+  "pendingProjectDismissKeep": "保留文件夹",
+  "@pendingProjectDismissKeep": {},
+  "pendingProjectDismissDelete": "删除并关闭",
+  "@pendingProjectDismissDelete": {},
   "pendingProjectDeleteNotEmptyTitle": "文件夹不为空",
   "@pendingProjectDeleteNotEmptyTitle": {},
   "pendingProjectDeleteNotEmptyBody": "\"{folderName}\" 包含文件。永久删除所有内容？",

@@ -2697,6 +2697,32 @@ class AppLocalizationsIt extends AppLocalizations {
   String get removeSessionTitle => 'Rimuovere la sessione?';
 
   @override
+  String get sessionTableDate => 'Data';
+
+  @override
+  String get sessionTableTime => 'Ora';
+
+  @override
+  String get sessionTableDuration => 'Durata';
+
+  @override
+  String get sessionTableTotal => 'Totale';
+
+  @override
+  String sessionCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sessioni',
+      one: '1 sessione',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sessionByPhase => 'Lavoro per fase';
+
+  @override
   String get tabPosition => 'Posizione schede';
 
   @override
@@ -3050,6 +3076,50 @@ class AppLocalizationsIt extends AppLocalizations {
   String get createProjectError => 'Impossibile creare la cartella';
 
   @override
+  String get createProjectIncludeDate => 'Includi prefisso data';
+
+  @override
+  String get createProjectCreatedTitle => 'Cartella creata';
+
+  @override
+  String get createProjectCreatedMessage =>
+      'La tua cartella di progetto è stata creata:';
+
+  @override
+  String get createProjectCopyName => 'Copia nome cartella';
+
+  @override
+  String get createProjectNameCopied => 'Nome cartella copiato';
+
+  @override
+  String get createProjectTrackSession => 'Tieni traccia della sessione da ora';
+
+  @override
+  String get pendingFolderSessionTitle => 'Sessione di lavoro rilevata';
+
+  @override
+  String pendingFolderSessionBody(String projectName, String duration) {
+    return 'Hai lavorato su \"$projectName\" per $duration.';
+  }
+
+  @override
+  String get pendingFolderSessionContinue => 'Continua sessione';
+
+  @override
+  String get pendingFolderSessionEndRecord => 'Termina e registra';
+
+  @override
+  String get activeSessionSwitchTitle => 'Sessione già attiva';
+
+  @override
+  String activeSessionSwitchBody(String current, String next) {
+    return 'Una sessione è in corso per \"$current\". Passare a \"$next\" e salvare la sessione corrente?';
+  }
+
+  @override
+  String get activeSessionSwitch => 'Cambia';
+
+  @override
   String get pendingProjectWaiting => 'In attesa del file di progetto…';
 
   @override
@@ -3065,6 +3135,15 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get pendingProjectDismiss => 'Smetti di tracciare questa cartella';
+
+  @override
+  String get pendingProjectDismissTitle => 'Interrompere il tracciamento?';
+
+  @override
+  String get pendingProjectDismissKeep => 'Mantieni cartella';
+
+  @override
+  String get pendingProjectDismissDelete => 'Elimina e chiudi';
 
   @override
   String get pendingProjectDeleteNotEmptyTitle => 'La cartella non è vuota';

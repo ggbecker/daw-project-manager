@@ -2634,6 +2634,31 @@ class AppLocalizationsJa extends AppLocalizations {
   String get removeSessionTitle => 'セッションを削除しますか？';
 
   @override
+  String get sessionTableDate => '日付';
+
+  @override
+  String get sessionTableTime => '時刻';
+
+  @override
+  String get sessionTableDuration => '時間';
+
+  @override
+  String get sessionTableTotal => '合計';
+
+  @override
+  String sessionCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countセッション',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sessionByPhase => 'フェーズ別作業';
+
+  @override
   String get tabPosition => 'タブの位置';
 
   @override
@@ -2966,6 +2991,49 @@ class AppLocalizationsJa extends AppLocalizations {
   String get createProjectError => 'フォルダの作成に失敗しました';
 
   @override
+  String get createProjectIncludeDate => '日付プレフィックスを含める';
+
+  @override
+  String get createProjectCreatedTitle => 'フォルダーが作成されました';
+
+  @override
+  String get createProjectCreatedMessage => 'プロジェクトフォルダーが作成されました：';
+
+  @override
+  String get createProjectCopyName => 'フォルダー名をコピー';
+
+  @override
+  String get createProjectNameCopied => 'フォルダー名をコピーしました';
+
+  @override
+  String get createProjectTrackSession => '今からセッションを記録する';
+
+  @override
+  String get pendingFolderSessionTitle => '作業セッションを検出しました';
+
+  @override
+  String pendingFolderSessionBody(String projectName, String duration) {
+    return '「$projectName」で$duration作業しました。';
+  }
+
+  @override
+  String get pendingFolderSessionContinue => 'セッションを続ける';
+
+  @override
+  String get pendingFolderSessionEndRecord => '終了して記録';
+
+  @override
+  String get activeSessionSwitchTitle => 'セッションが実行中';
+
+  @override
+  String activeSessionSwitchBody(String current, String next) {
+    return '「$current」のセッションが実行中です。「$next」に切り替えて現在のセッションを保存しますか？';
+  }
+
+  @override
+  String get activeSessionSwitch => '切り替える';
+
+  @override
   String get pendingProjectWaiting => 'プロジェクトファイルを待っています…';
 
   @override
@@ -2981,6 +3049,15 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get pendingProjectDismiss => 'このフォルダの追跡を停止';
+
+  @override
+  String get pendingProjectDismissTitle => 'トラッキングを停止しますか？';
+
+  @override
+  String get pendingProjectDismissKeep => 'フォルダーを保持';
+
+  @override
+  String get pendingProjectDismissDelete => '削除して閉じる';
 
   @override
   String get pendingProjectDeleteNotEmptyTitle => 'フォルダが空ではありません';

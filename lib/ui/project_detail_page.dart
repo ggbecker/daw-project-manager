@@ -2882,6 +2882,17 @@ class _SessionHistorySectionState extends State<_SessionHistorySection> {
 
     final canToggle = widget.sessions.isNotEmpty;
 
+    final Map<String, List<SessionRecord>> byPhase = {};
+    for (final s in widget.sessions) {
+      (byPhase[s.phase ?? '—'] ??= []).add(s);
+    }
+    final phaseEntries = byPhase.entries.toList()
+      ..sort((a, b) {
+        final durA = a.value.fold<int>(0, (acc, r) => acc + r.durationSeconds);
+        final durB = b.value.fold<int>(0, (acc, r) => acc + r.durationSeconds);
+        return durB.compareTo(durA);
+      });
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -2903,7 +2914,7 @@ class _SessionHistorySectionState extends State<_SessionHistorySection> {
                 if (canToggle && !_expanded) ...[
                   const SizedBox(width: 8),
                   Text(
-                    '${widget.sessions.length} session${widget.sessions.length == 1 ? '' : 's'} · ${_fmtDuration(totalSeconds)}',
+                    '${l10n.sessionCount(widget.sessions.length)} · ${_fmtDuration(totalSeconds)}',
                     style: bodySmall?.copyWith(color: theme.disabledColor),
                   ),
                 ],
@@ -2925,76 +2936,154 @@ class _SessionHistorySectionState extends State<_SessionHistorySection> {
             style: bodySmall?.copyWith(color: theme.disabledColor),
           )
         else if (_expanded)
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Table(
-              columnWidths: const {
-                0: FlexColumnWidth(3),
-                1: FlexColumnWidth(2),
-                2: FlexColumnWidth(2),
-              },
-              border: TableBorder(
-                horizontalInside: BorderSide(color: divider, width: 1),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-              ),
-              children: [
-                // Header
-                TableRow(
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                child: Table(
+                  columnWidths: const {
+                    0: FlexColumnWidth(3),
+                    1: FlexColumnWidth(2),
+                    2: FlexColumnWidth(2),
+                    3: FlexColumnWidth(2),
+                  },
+                  border: TableBorder(
+                    horizontalInside: BorderSide(color: divider, width: 1),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   children: [
-                    cell('Date', bold: true),
-                    cell('Time', bold: true),
-                    cell('Duration', bold: true),
+                    // Header
+                    TableRow(
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                      ),
+                      children: [
+                        cell(l10n.sessionTableDate, bold: true),
+                        cell(l10n.sessionTableTime, bold: true),
+                        cell(l10n.phase, bold: true),
+                        cell(l10n.sessionTableDuration, bold: true),
+                      ],
+                    ),
+                    // One row per individual session
+                    for (final s in sorted)
+                      TableRow(
+                        children: [
+                          cell(dateFmt.format(s.startedAt)),
+                          cell(
+                              '${timeFmt.format(s.startedAt)}–${timeFmt.format(s.endedAt)}'),
+                          cell(s.phase ?? '—'),
+                          TableRowInkWell(
+                            onTap: () => _confirmRemove(context, s),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 6, horizontal: 8),
+                              child: Row(
+                                children: [
+                                  Text(_fmtDuration(s.durationSeconds),
+                                      style: bodySmall),
+                                  const Spacer(),
+                                  Icon(
+                                    Icons.delete_outline,
+                                    size: 14,
+                                    color: theme.colorScheme.error
+                                        .withValues(alpha: 0.6),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    // Total row
+                    TableRow(
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.10),
+                      ),
+                      children: [
+                        cell(l10n.sessionTableTotal,
+                            bold: true, color: theme.colorScheme.primary),
+                        cell(l10n.sessionCount(widget.sessions.length),
+                            color: theme.colorScheme.primary),
+                        cell(''),
+                        cell(_fmtDuration(totalSeconds),
+                            bold: true, color: theme.colorScheme.primary),
+                      ],
+                    ),
                   ],
                 ),
-                // One row per individual session
-                for (final s in sorted)
-                  TableRow(
+              ),
+              if (phaseEntries.length > 1) ...[
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Icon(Icons.bar_chart_outlined,
+                        size: 14, color: theme.colorScheme.primary),
+                    const SizedBox(width: 6),
+                    Text(
+                      l10n.sessionByPhase,
+                      style: theme.textTheme.titleSmall
+                          ?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Table(
+                    columnWidths: const {
+                      0: FlexColumnWidth(3),
+                      1: FlexColumnWidth(2),
+                    },
+                    border: TableBorder(
+                      horizontalInside: BorderSide(color: divider, width: 1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     children: [
-                      cell(dateFmt.format(s.startedAt)),
-                      cell(
-                          '${timeFmt.format(s.startedAt)}–${timeFmt.format(s.endedAt)}'),
-                      TableRowInkWell(
-                        onTap: () => _confirmRemove(context, s),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 6, horizontal: 8),
-                          child: Row(
-                            children: [
-                              Text(_fmtDuration(s.durationSeconds),
-                                  style: bodySmall),
-                              const Spacer(),
-                              Icon(
-                                Icons.delete_outline,
-                                size: 14,
-                                color: theme.colorScheme.error
-                                    .withValues(alpha: 0.6),
-                              ),
-                            ],
-                          ),
+                      TableRow(
+                        decoration: BoxDecoration(
+                          color:
+                              theme.colorScheme.primary.withValues(alpha: 0.08),
                         ),
+                        children: [
+                          cell(l10n.phase, bold: true),
+                          cell(l10n.sessionTableDuration, bold: true),
+                        ],
                       ),
+                      for (final entry in phaseEntries)
+                        TableRow(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 6, horizontal: 8),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    entry.key,
+                                    style: bodySmall?.copyWith(
+                                        fontWeight: FontWeight.w500),
+                                  ),
+                                  Text(
+                                    l10n.sessionCount(entry.value.length),
+                                    style: bodySmall?.copyWith(
+                                        color: theme.disabledColor),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            cell(
+                              _fmtDuration(entry.value.fold<int>(
+                                  0, (acc, r) => acc + r.durationSeconds)),
+                              bold: true,
+                            ),
+                          ],
+                        ),
                     ],
                   ),
-                // Total row
-                TableRow(
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.10),
-                  ),
-                  children: [
-                    cell('Total',
-                        bold: true, color: theme.colorScheme.primary),
-                    cell(
-                        '${widget.sessions.length} session${widget.sessions.length == 1 ? '' : 's'}',
-                        color: theme.colorScheme.primary),
-                    cell(_fmtDuration(totalSeconds),
-                        bold: true, color: theme.colorScheme.primary),
-                  ],
                 ),
               ],
-            ),
+            ],
           ),
       ],
     );

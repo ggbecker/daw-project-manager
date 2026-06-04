@@ -2691,6 +2691,32 @@ class AppLocalizationsPt extends AppLocalizations {
   String get removeSessionTitle => 'Remover sessão?';
 
   @override
+  String get sessionTableDate => 'Data';
+
+  @override
+  String get sessionTableTime => 'Hora';
+
+  @override
+  String get sessionTableDuration => 'Duração';
+
+  @override
+  String get sessionTableTotal => 'Total';
+
+  @override
+  String sessionCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sessões',
+      one: '1 sessão',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sessionByPhase => 'Trabalho por fase';
+
+  @override
   String get tabPosition => 'Posição das abas';
 
   @override
@@ -3041,6 +3067,50 @@ class AppLocalizationsPt extends AppLocalizations {
   String get createProjectError => 'Falha ao criar pasta';
 
   @override
+  String get createProjectIncludeDate => 'Incluir prefixo de data';
+
+  @override
+  String get createProjectCreatedTitle => 'Pasta criada';
+
+  @override
+  String get createProjectCreatedMessage =>
+      'A pasta do seu projeto foi criada:';
+
+  @override
+  String get createProjectCopyName => 'Copiar nome da pasta';
+
+  @override
+  String get createProjectNameCopied => 'Nome da pasta copiado';
+
+  @override
+  String get createProjectTrackSession => 'Rastrear sessão a partir de agora';
+
+  @override
+  String get pendingFolderSessionTitle => 'Sessão de trabalho detectada';
+
+  @override
+  String pendingFolderSessionBody(String projectName, String duration) {
+    return 'Você trabalhou em \"$projectName\" por $duration.';
+  }
+
+  @override
+  String get pendingFolderSessionContinue => 'Continuar sessão';
+
+  @override
+  String get pendingFolderSessionEndRecord => 'Encerrar e registrar';
+
+  @override
+  String get activeSessionSwitchTitle => 'Sessão já ativa';
+
+  @override
+  String activeSessionSwitchBody(String current, String next) {
+    return 'Uma sessão está ativa para \"$current\". Mudar para \"$next\" e salvar a sessão atual?';
+  }
+
+  @override
+  String get activeSessionSwitch => 'Mudar';
+
+  @override
   String get pendingProjectWaiting => 'Aguardando arquivo de projeto…';
 
   @override
@@ -3056,6 +3126,15 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get pendingProjectDismiss => 'Parar de rastrear esta pasta';
+
+  @override
+  String get pendingProjectDismissTitle => 'Parar de rastrear?';
+
+  @override
+  String get pendingProjectDismissKeep => 'Manter pasta';
+
+  @override
+  String get pendingProjectDismissDelete => 'Excluir e fechar';
 
   @override
   String get pendingProjectDeleteNotEmptyTitle => 'A pasta não está vazia';

@@ -1742,6 +1742,22 @@
   "@noSessionsYet": {},
   "removeSessionTitle": "Sitzung entfernen?",
   "@removeSessionTitle": {},
+  "sessionTableDate": "Datum",
+  "@sessionTableDate": {},
+  "sessionTableTime": "Uhrzeit",
+  "@sessionTableTime": {},
+  "sessionTableDuration": "Dauer",
+  "@sessionTableDuration": {},
+  "sessionTableTotal": "Gesamt",
+  "@sessionTableTotal": {},
+  "sessionCount": "{count, plural, =1{1 Sitzung} other{{count} Sitzungen}}",
+  "@sessionCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "sessionByPhase": "Arbeit nach Phase",
+  "@sessionByPhase": {},
   "tabPosition": "Tab-Position",
   "@tabPosition": {},
   "tabPositionTop": "Oben",
@@ -1964,6 +1980,42 @@
   "@createProjectInvalidChars": {},
   "createProjectError": "Ordner konnte nicht erstellt werden",
   "@createProjectError": {},
+  "createProjectIncludeDate": "Datumspräfix hinzufügen",
+  "@createProjectIncludeDate": {},
+  "createProjectCreatedTitle": "Ordner erstellt",
+  "@createProjectCreatedTitle": {},
+  "createProjectCreatedMessage": "Ihr Projektordner wurde erstellt:",
+  "@createProjectCreatedMessage": {},
+  "createProjectCopyName": "Ordnernamen kopieren",
+  "@createProjectCopyName": {},
+  "createProjectNameCopied": "Ordnername kopiert",
+  "@createProjectNameCopied": {},
+  "createProjectTrackSession": "Sitzung ab jetzt verfolgen",
+  "@createProjectTrackSession": {},
+  "pendingFolderSessionTitle": "Arbeitssitzung erkannt",
+  "@pendingFolderSessionTitle": {},
+  "pendingFolderSessionBody": "Sie haben {duration} an \"{projectName}\" gearbeitet.",
+  "@pendingFolderSessionBody": {
+    "placeholders": {
+      "projectName": { "type": "String" },
+      "duration": { "type": "String" }
+    }
+  },
+  "pendingFolderSessionContinue": "Sitzung fortsetzen",
+  "@pendingFolderSessionContinue": {},
+  "pendingFolderSessionEndRecord": "Beenden & aufzeichnen",
+  "@pendingFolderSessionEndRecord": {},
+  "activeSessionSwitchTitle": "Sitzung bereits aktiv",
+  "@activeSessionSwitchTitle": {},
+  "activeSessionSwitchBody": "Eine Sitzung läuft für \"{current}\". Zu \"{next}\" wechseln und die aktuelle Sitzung speichern?",
+  "@activeSessionSwitchBody": {
+    "placeholders": {
+      "current": { "type": "String" },
+      "next": { "type": "String" }
+    }
+  },
+  "activeSessionSwitch": "Wechseln",
+  "@activeSessionSwitch": {},
   "pendingProjectWaiting": "Warte auf Projektdatei…",
   "@pendingProjectWaiting": {},
   "pendingProjectDelete": "Leeren Ordner löschen",
@@ -1978,6 +2030,12 @@
   },
   "pendingProjectDismiss": "Diesen Ordner nicht mehr verfolgen",
   "@pendingProjectDismiss": {},
+  "pendingProjectDismissTitle": "Tracking stoppen?",
+  "@pendingProjectDismissTitle": {},
+  "pendingProjectDismissKeep": "Ordner behalten",
+  "@pendingProjectDismissKeep": {},
+  "pendingProjectDismissDelete": "Löschen & Schließen",
+  "@pendingProjectDismissDelete": {},
   "pendingProjectDeleteNotEmptyTitle": "Ordner ist nicht leer",
   "@pendingProjectDeleteNotEmptyTitle": {},
   "pendingProjectDeleteNotEmptyBody": "\"{folderName}\" enthält Dateien. Alles dauerhaft löschen?",

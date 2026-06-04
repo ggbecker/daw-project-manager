@@ -1742,6 +1742,22 @@
   "@noSessionsYet": {},
   "removeSessionTitle": "Supprimer la session ?",
   "@removeSessionTitle": {},
+  "sessionTableDate": "Date",
+  "@sessionTableDate": {},
+  "sessionTableTime": "Heure",
+  "@sessionTableTime": {},
+  "sessionTableDuration": "Durée",
+  "@sessionTableDuration": {},
+  "sessionTableTotal": "Total",
+  "@sessionTableTotal": {},
+  "sessionCount": "{count, plural, =1{1 session} other{{count} sessions}}",
+  "@sessionCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "sessionByPhase": "Travail par phase",
+  "@sessionByPhase": {},
   "tabPosition": "Position des onglets",
   "@tabPosition": {},
   "tabPositionTop": "Haut",
@@ -1964,6 +1980,42 @@
   "@createProjectInvalidChars": {},
   "createProjectError": "Impossible de créer le dossier",
   "@createProjectError": {},
+  "createProjectIncludeDate": "Inclure le préfixe de date",
+  "@createProjectIncludeDate": {},
+  "createProjectCreatedTitle": "Dossier créé",
+  "@createProjectCreatedTitle": {},
+  "createProjectCreatedMessage": "Votre dossier de projet a été créé :",
+  "@createProjectCreatedMessage": {},
+  "createProjectCopyName": "Copier le nom du dossier",
+  "@createProjectCopyName": {},
+  "createProjectNameCopied": "Nom du dossier copié",
+  "@createProjectNameCopied": {},
+  "createProjectTrackSession": "Suivre la session dès maintenant",
+  "@createProjectTrackSession": {},
+  "pendingFolderSessionTitle": "Session de travail détectée",
+  "@pendingFolderSessionTitle": {},
+  "pendingFolderSessionBody": "Vous avez travaillé sur \"{projectName}\" pendant {duration}.",
+  "@pendingFolderSessionBody": {
+    "placeholders": {
+      "projectName": { "type": "String" },
+      "duration": { "type": "String" }
+    }
+  },
+  "pendingFolderSessionContinue": "Continuer la session",
+  "@pendingFolderSessionContinue": {},
+  "pendingFolderSessionEndRecord": "Terminer et enregistrer",
+  "@pendingFolderSessionEndRecord": {},
+  "activeSessionSwitchTitle": "Session déjà active",
+  "@activeSessionSwitchTitle": {},
+  "activeSessionSwitchBody": "Une session est en cours pour \"{current}\". Passer à \"{next}\" et enregistrer la session actuelle ?",
+  "@activeSessionSwitchBody": {
+    "placeholders": {
+      "current": { "type": "String" },
+      "next": { "type": "String" }
+    }
+  },
+  "activeSessionSwitch": "Changer",
+  "@activeSessionSwitch": {},
   "pendingProjectWaiting": "En attente du fichier de projet…",
   "@pendingProjectWaiting": {},
   "pendingProjectDelete": "Supprimer le dossier vide",
@@ -1978,6 +2030,12 @@
   },
   "pendingProjectDismiss": "Ne plus suivre ce dossier",
   "@pendingProjectDismiss": {},
+  "pendingProjectDismissTitle": "Arrêter le suivi ?",
+  "@pendingProjectDismissTitle": {},
+  "pendingProjectDismissKeep": "Conserver le dossier",
+  "@pendingProjectDismissKeep": {},
+  "pendingProjectDismissDelete": "Supprimer et fermer",
+  "@pendingProjectDismissDelete": {},
   "pendingProjectDeleteNotEmptyTitle": "Le dossier n'est pas vide",
   "@pendingProjectDeleteNotEmptyTitle": {},
   "pendingProjectDeleteNotEmptyBody": "\"{folderName}\" contient des fichiers. Tout supprimer définitivement ?",

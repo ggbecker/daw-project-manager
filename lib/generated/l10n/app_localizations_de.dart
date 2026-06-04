@@ -2704,6 +2704,32 @@ class AppLocalizationsDe extends AppLocalizations {
   String get removeSessionTitle => 'Sitzung entfernen?';
 
   @override
+  String get sessionTableDate => 'Datum';
+
+  @override
+  String get sessionTableTime => 'Uhrzeit';
+
+  @override
+  String get sessionTableDuration => 'Dauer';
+
+  @override
+  String get sessionTableTotal => 'Gesamt';
+
+  @override
+  String sessionCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Sitzungen',
+      one: '1 Sitzung',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sessionByPhase => 'Arbeit nach Phase';
+
+  @override
   String get tabPosition => 'Tab-Position';
 
   @override
@@ -3056,6 +3082,49 @@ class AppLocalizationsDe extends AppLocalizations {
   String get createProjectError => 'Ordner konnte nicht erstellt werden';
 
   @override
+  String get createProjectIncludeDate => 'Datumspräfix hinzufügen';
+
+  @override
+  String get createProjectCreatedTitle => 'Ordner erstellt';
+
+  @override
+  String get createProjectCreatedMessage => 'Ihr Projektordner wurde erstellt:';
+
+  @override
+  String get createProjectCopyName => 'Ordnernamen kopieren';
+
+  @override
+  String get createProjectNameCopied => 'Ordnername kopiert';
+
+  @override
+  String get createProjectTrackSession => 'Sitzung ab jetzt verfolgen';
+
+  @override
+  String get pendingFolderSessionTitle => 'Arbeitssitzung erkannt';
+
+  @override
+  String pendingFolderSessionBody(String projectName, String duration) {
+    return 'Sie haben $duration an \"$projectName\" gearbeitet.';
+  }
+
+  @override
+  String get pendingFolderSessionContinue => 'Sitzung fortsetzen';
+
+  @override
+  String get pendingFolderSessionEndRecord => 'Beenden & aufzeichnen';
+
+  @override
+  String get activeSessionSwitchTitle => 'Sitzung bereits aktiv';
+
+  @override
+  String activeSessionSwitchBody(String current, String next) {
+    return 'Eine Sitzung läuft für \"$current\". Zu \"$next\" wechseln und die aktuelle Sitzung speichern?';
+  }
+
+  @override
+  String get activeSessionSwitch => 'Wechseln';
+
+  @override
   String get pendingProjectWaiting => 'Warte auf Projektdatei…';
 
   @override
@@ -3071,6 +3140,15 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get pendingProjectDismiss => 'Diesen Ordner nicht mehr verfolgen';
+
+  @override
+  String get pendingProjectDismissTitle => 'Tracking stoppen?';
+
+  @override
+  String get pendingProjectDismissKeep => 'Ordner behalten';
+
+  @override
+  String get pendingProjectDismissDelete => 'Löschen & Schließen';
 
   @override
   String get pendingProjectDeleteNotEmptyTitle => 'Ordner ist nicht leer';

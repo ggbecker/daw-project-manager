@@ -1766,6 +1766,22 @@
   "@noSessionsYet": {},
   "removeSessionTitle": "Remover sessão?",
   "@removeSessionTitle": {},
+  "sessionTableDate": "Data",
+  "@sessionTableDate": {},
+  "sessionTableTime": "Hora",
+  "@sessionTableTime": {},
+  "sessionTableDuration": "Duração",
+  "@sessionTableDuration": {},
+  "sessionTableTotal": "Total",
+  "@sessionTableTotal": {},
+  "sessionCount": "{count, plural, =1{1 sessão} other{{count} sessões}}",
+  "@sessionCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "sessionByPhase": "Trabalho por fase",
+  "@sessionByPhase": {},
   "tabPosition": "Posição das abas",
   "@tabPosition": {},
   "tabPositionTop": "Topo",
@@ -1988,6 +2004,42 @@
   "@createProjectInvalidChars": {},
   "createProjectError": "Falha ao criar pasta",
   "@createProjectError": {},
+  "createProjectIncludeDate": "Incluir prefixo de data",
+  "@createProjectIncludeDate": {},
+  "createProjectCreatedTitle": "Pasta criada",
+  "@createProjectCreatedTitle": {},
+  "createProjectCreatedMessage": "A pasta do seu projeto foi criada:",
+  "@createProjectCreatedMessage": {},
+  "createProjectCopyName": "Copiar nome da pasta",
+  "@createProjectCopyName": {},
+  "createProjectNameCopied": "Nome da pasta copiado",
+  "@createProjectNameCopied": {},
+  "createProjectTrackSession": "Rastrear sessão a partir de agora",
+  "@createProjectTrackSession": {},
+  "pendingFolderSessionTitle": "Sessão de trabalho detectada",
+  "@pendingFolderSessionTitle": {},
+  "pendingFolderSessionBody": "Você trabalhou em \"{projectName}\" por {duration}.",
+  "@pendingFolderSessionBody": {
+    "placeholders": {
+      "projectName": { "type": "String" },
+      "duration": { "type": "String" }
+    }
+  },
+  "pendingFolderSessionContinue": "Continuar sessão",
+  "@pendingFolderSessionContinue": {},
+  "pendingFolderSessionEndRecord": "Encerrar e registrar",
+  "@pendingFolderSessionEndRecord": {},
+  "activeSessionSwitchTitle": "Sessão já ativa",
+  "@activeSessionSwitchTitle": {},
+  "activeSessionSwitchBody": "Uma sessão está ativa para \"{current}\". Mudar para \"{next}\" e salvar a sessão atual?",
+  "@activeSessionSwitchBody": {
+    "placeholders": {
+      "current": { "type": "String" },
+      "next": { "type": "String" }
+    }
+  },
+  "activeSessionSwitch": "Mudar",
+  "@activeSessionSwitch": {},
   "pendingProjectWaiting": "Aguardando arquivo de projeto…",
   "@pendingProjectWaiting": {},
   "pendingProjectDelete": "Excluir pasta vazia",
@@ -2002,6 +2054,12 @@
   },
   "pendingProjectDismiss": "Parar de rastrear esta pasta",
   "@pendingProjectDismiss": {},
+  "pendingProjectDismissTitle": "Parar de rastrear?",
+  "@pendingProjectDismissTitle": {},
+  "pendingProjectDismissKeep": "Manter pasta",
+  "@pendingProjectDismissKeep": {},
+  "pendingProjectDismissDelete": "Excluir e fechar",
+  "@pendingProjectDismissDelete": {},
   "pendingProjectDeleteNotEmptyTitle": "A pasta não está vazia",
   "@pendingProjectDeleteNotEmptyTitle": {},
   "pendingProjectDeleteNotEmptyBody": "\"{folderName}\" contém arquivos. Excluir tudo permanentemente?",

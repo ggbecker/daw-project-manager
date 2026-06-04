@@ -103,27 +103,44 @@ class DawDetector {
   }
 
   static Future<List<DetectedDaw>> _detectMacOS() async {
-    final appPaths = <String, String>{
-      'Ableton Live': '/Applications/Ableton Live.app',
-      'FL Studio': '/Applications/FL Studio.app',
-      'Logic Pro': '/Applications/Logic Pro.app',
-      'Logic Pro X': '/Applications/Logic Pro X.app',
-      'GarageBand': '/Applications/GarageBand.app',
-      'Cubase': '/Applications/Cubase.app',
-      'Studio One': '/Applications/Studio One.app',
-      'Bitwig Studio': '/Applications/Bitwig Studio.app',
-      'Reaper': '/Applications/REAPER.app',
-      'Pro Tools': '/Applications/Pro Tools.app',
-      'Nuendo': '/Applications/Nuendo.app',
-      'Reason': '/Applications/Reason.app',
-    };
+    final patterns = [
+      RegExp(r'^Ableton Live', caseSensitive: false),
+      RegExp(r'^FL Studio', caseSensitive: false),
+      RegExp(r'^Logic Pro', caseSensitive: false),
+      RegExp(r'^GarageBand$', caseSensitive: false),
+      RegExp(r'^Cubase', caseSensitive: false),
+      RegExp(r'^Studio One', caseSensitive: false),
+      RegExp(r'^Bitwig Studio', caseSensitive: false),
+      RegExp(r'^REAPER', caseSensitive: false),
+      RegExp(r'^Pro Tools', caseSensitive: false),
+      RegExp(r'^Nuendo', caseSensitive: false),
+      RegExp(r'^Reason$', caseSensitive: false),
+    ];
 
     final results = <DetectedDaw>[];
-    for (final entry in appPaths.entries) {
-      if (await Directory(entry.value).exists() || await File(entry.value).exists()) {
-        results.add(DetectedDaw(name: entry.key, executablePath: entry.value));
+    final appsDir = Directory('/Applications');
+    if (!appsDir.existsSync()) return results;
+
+    try {
+      final entries = appsDir
+          .listSync()
+          .whereType<Directory>()
+          .where((d) => d.path.endsWith('.app'))
+          .toList()
+        ..sort((a, b) => a.path.compareTo(b.path));
+
+      for (final entry in entries) {
+        final basename = entry.path.split('/').last;
+        final appName = basename.substring(0, basename.length - 4);
+        for (final pattern in patterns) {
+          if (pattern.hasMatch(appName)) {
+            results.add(DetectedDaw(name: appName, executablePath: entry.path));
+            break;
+          }
+        }
       }
-    }
+    } catch (_) {}
+
     return results;
   }
 

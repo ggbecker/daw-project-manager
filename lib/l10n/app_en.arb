@@ -2818,6 +2818,22 @@
   "@noSessionsYet": {},
   "removeSessionTitle": "Remove session?",
   "@removeSessionTitle": {},
+  "sessionTableDate": "Date",
+  "@sessionTableDate": {},
+  "sessionTableTime": "Time",
+  "@sessionTableTime": {},
+  "sessionTableDuration": "Duration",
+  "@sessionTableDuration": {},
+  "sessionTableTotal": "Total",
+  "@sessionTableTotal": {},
+  "sessionCount": "{count, plural, =1{1 session} other{{count} sessions}}",
+  "@sessionCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "sessionByPhase": "Work by Phase",
+  "@sessionByPhase": {},
   "tabPosition": "Tab position",
   "@tabPosition": {},
   "tabPositionTop": "Top",
@@ -3050,6 +3066,42 @@
   "@createProjectInvalidChars": {},
   "createProjectError": "Failed to create folder",
   "@createProjectError": {},
+  "createProjectIncludeDate": "Include date prefix",
+  "@createProjectIncludeDate": {},
+  "createProjectCreatedTitle": "Folder Created",
+  "@createProjectCreatedTitle": {},
+  "createProjectCreatedMessage": "Your project folder has been created:",
+  "@createProjectCreatedMessage": {},
+  "createProjectCopyName": "Copy Folder Name",
+  "@createProjectCopyName": {},
+  "createProjectNameCopied": "Folder name copied",
+  "@createProjectNameCopied": {},
+  "createProjectTrackSession": "Track session from now",
+  "@createProjectTrackSession": {},
+  "pendingFolderSessionTitle": "Work Session Detected",
+  "@pendingFolderSessionTitle": {},
+  "pendingFolderSessionBody": "You've worked on \"{projectName}\" for {duration}.",
+  "@pendingFolderSessionBody": {
+    "placeholders": {
+      "projectName": { "type": "String" },
+      "duration": { "type": "String" }
+    }
+  },
+  "pendingFolderSessionContinue": "Continue Session",
+  "@pendingFolderSessionContinue": {},
+  "pendingFolderSessionEndRecord": "End & Record",
+  "@pendingFolderSessionEndRecord": {},
+  "activeSessionSwitchTitle": "Session Already Active",
+  "@activeSessionSwitchTitle": {},
+  "activeSessionSwitchBody": "A session is running for \"{current}\". Switch to \"{next}\" and save the current session?",
+  "@activeSessionSwitchBody": {
+    "placeholders": {
+      "current": { "type": "String" },
+      "next": { "type": "String" }
+    }
+  },
+  "activeSessionSwitch": "Switch",
+  "@activeSessionSwitch": {},
   "pendingProjectWaiting": "Waiting for project file…",
   "@pendingProjectWaiting": {},
   "pendingProjectDelete": "Delete empty folder",
@@ -3064,6 +3116,12 @@
   },
   "pendingProjectDismiss": "Stop tracking this folder",
   "@pendingProjectDismiss": {},
+  "pendingProjectDismissTitle": "Stop Tracking?",
+  "@pendingProjectDismissTitle": {},
+  "pendingProjectDismissKeep": "Keep Folder",
+  "@pendingProjectDismissKeep": {},
+  "pendingProjectDismissDelete": "Delete & Dismiss",
+  "@pendingProjectDismissDelete": {},
   "pendingProjectDeleteNotEmptyTitle": "Folder is not empty",
   "@pendingProjectDeleteNotEmptyTitle": {},
   "pendingProjectDeleteNotEmptyBody": "\"{folderName}\" contains files. Delete everything permanently?",

@@ -2608,6 +2608,31 @@ class AppLocalizationsZh extends AppLocalizations {
   String get removeSessionTitle => '删除会话？';
 
   @override
+  String get sessionTableDate => '日期';
+
+  @override
+  String get sessionTableTime => '时间';
+
+  @override
+  String get sessionTableDuration => '时长';
+
+  @override
+  String get sessionTableTotal => '合计';
+
+  @override
+  String sessionCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count个会话',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sessionByPhase => '按阶段工作';
+
+  @override
   String get tabPosition => '标签位置';
 
   @override
@@ -2937,6 +2962,49 @@ class AppLocalizationsZh extends AppLocalizations {
   String get createProjectError => '创建文件夹失败';
 
   @override
+  String get createProjectIncludeDate => '包含日期前缀';
+
+  @override
+  String get createProjectCreatedTitle => '文件夹已创建';
+
+  @override
+  String get createProjectCreatedMessage => '您的项目文件夹已创建：';
+
+  @override
+  String get createProjectCopyName => '复制文件夹名称';
+
+  @override
+  String get createProjectNameCopied => '已复制文件夹名称';
+
+  @override
+  String get createProjectTrackSession => '从现在开始追踪会话';
+
+  @override
+  String get pendingFolderSessionTitle => '检测到工作会话';
+
+  @override
+  String pendingFolderSessionBody(String projectName, String duration) {
+    return '您已在\"$projectName\"上工作了$duration。';
+  }
+
+  @override
+  String get pendingFolderSessionContinue => '继续会话';
+
+  @override
+  String get pendingFolderSessionEndRecord => '结束并记录';
+
+  @override
+  String get activeSessionSwitchTitle => '会话已激活';
+
+  @override
+  String activeSessionSwitchBody(String current, String next) {
+    return '「$current」的会话正在运行。切换到「$next」并保存当前会话？';
+  }
+
+  @override
+  String get activeSessionSwitch => '切换';
+
+  @override
   String get pendingProjectWaiting => '等待项目文件…';
 
   @override
@@ -2952,6 +3020,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pendingProjectDismiss => '停止跟踪此文件夹';
+
+  @override
+  String get pendingProjectDismissTitle => '停止跟踪？';
+
+  @override
+  String get pendingProjectDismissKeep => '保留文件夹';
+
+  @override
+  String get pendingProjectDismissDelete => '删除并关闭';
 
   @override
   String get pendingProjectDeleteNotEmptyTitle => '文件夹不为空';

@@ -1742,6 +1742,22 @@
   "@noSessionsYet": {},
   "removeSessionTitle": "¿Eliminar sesión?",
   "@removeSessionTitle": {},
+  "sessionTableDate": "Fecha",
+  "@sessionTableDate": {},
+  "sessionTableTime": "Hora",
+  "@sessionTableTime": {},
+  "sessionTableDuration": "Duración",
+  "@sessionTableDuration": {},
+  "sessionTableTotal": "Total",
+  "@sessionTableTotal": {},
+  "sessionCount": "{count, plural, =1{1 sesión} other{{count} sesiones}}",
+  "@sessionCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "sessionByPhase": "Trabajo por fase",
+  "@sessionByPhase": {},
   "tabPosition": "Posición de pestañas",
   "@tabPosition": {},
   "tabPositionTop": "Arriba",
@@ -1964,6 +1980,42 @@
   "@createProjectInvalidChars": {},
   "createProjectError": "No se pudo crear la carpeta",
   "@createProjectError": {},
+  "createProjectIncludeDate": "Incluir prefijo de fecha",
+  "@createProjectIncludeDate": {},
+  "createProjectCreatedTitle": "Carpeta creada",
+  "@createProjectCreatedTitle": {},
+  "createProjectCreatedMessage": "Tu carpeta de proyecto ha sido creada:",
+  "@createProjectCreatedMessage": {},
+  "createProjectCopyName": "Copiar nombre de carpeta",
+  "@createProjectCopyName": {},
+  "createProjectNameCopied": "Nombre de carpeta copiado",
+  "@createProjectNameCopied": {},
+  "createProjectTrackSession": "Registrar sesión desde ahora",
+  "@createProjectTrackSession": {},
+  "pendingFolderSessionTitle": "Sesión de trabajo detectada",
+  "@pendingFolderSessionTitle": {},
+  "pendingFolderSessionBody": "Has trabajado en \"{projectName}\" durante {duration}.",
+  "@pendingFolderSessionBody": {
+    "placeholders": {
+      "projectName": { "type": "String" },
+      "duration": { "type": "String" }
+    }
+  },
+  "pendingFolderSessionContinue": "Continuar sesión",
+  "@pendingFolderSessionContinue": {},
+  "pendingFolderSessionEndRecord": "Terminar y registrar",
+  "@pendingFolderSessionEndRecord": {},
+  "activeSessionSwitchTitle": "Sesión ya activa",
+  "@activeSessionSwitchTitle": {},
+  "activeSessionSwitchBody": "Hay una sesión activa para \"{current}\". ¿Cambiar a \"{next}\" y guardar la sesión actual?",
+  "@activeSessionSwitchBody": {
+    "placeholders": {
+      "current": { "type": "String" },
+      "next": { "type": "String" }
+    }
+  },
+  "activeSessionSwitch": "Cambiar",
+  "@activeSessionSwitch": {},
   "pendingProjectWaiting": "Esperando archivo de proyecto…",
   "@pendingProjectWaiting": {},
   "pendingProjectDelete": "Eliminar carpeta vacía",
@@ -1978,6 +2030,12 @@
   },
   "pendingProjectDismiss": "Dejar de rastrear esta carpeta",
   "@pendingProjectDismiss": {},
+  "pendingProjectDismissTitle": "¿Dejar de seguir?",
+  "@pendingProjectDismissTitle": {},
+  "pendingProjectDismissKeep": "Mantener carpeta",
+  "@pendingProjectDismissKeep": {},
+  "pendingProjectDismissDelete": "Eliminar y cerrar",
+  "@pendingProjectDismissDelete": {},
   "pendingProjectDeleteNotEmptyTitle": "La carpeta no está vacía",
   "@pendingProjectDeleteNotEmptyTitle": {},
   "pendingProjectDeleteNotEmptyBody": "\"{folderName}\" contiene archivos. ¿Eliminar todo permanentemente?",

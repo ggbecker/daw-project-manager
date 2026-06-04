@@ -10,12 +10,15 @@ class SessionRecord {
   final DateTime startedAt;
   final DateTime endedAt;
   final int durationSeconds;
+  /// The project phase (status) that was active when this session was recorded.
+  final String? phase;
 
   const SessionRecord({
     required this.id,
     required this.startedAt,
     required this.endedAt,
     required this.durationSeconds,
+    this.phase,
   });
 
   Map<String, dynamic> toMap() => {
@@ -23,6 +26,7 @@ class SessionRecord {
         'startedAt': startedAt.toIso8601String(),
         'endedAt': endedAt.toIso8601String(),
         'durationSeconds': durationSeconds,
+        if (phase != null) 'phase': phase,
       };
 
   factory SessionRecord.fromMap(Map map) {
@@ -32,6 +36,7 @@ class SessionRecord {
       startedAt: startedAt,
       endedAt: DateTime.parse(map['endedAt'] as String),
       durationSeconds: map['durationSeconds'] as int,
+      phase: map['phase'] as String?,
     );
   }
 }

@@ -2688,6 +2688,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get removeSessionTitle => 'Remove session?';
 
   @override
+  String get sessionTableDate => 'Date';
+
+  @override
+  String get sessionTableTime => 'Time';
+
+  @override
+  String get sessionTableDuration => 'Duration';
+
+  @override
+  String get sessionTableTotal => 'Total';
+
+  @override
+  String sessionCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sessions',
+      one: '1 session',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sessionByPhase => 'Work by Phase';
+
+  @override
   String get tabPosition => 'Tab position';
 
   @override
@@ -3040,6 +3066,50 @@ class AppLocalizationsEn extends AppLocalizations {
   String get createProjectError => 'Failed to create folder';
 
   @override
+  String get createProjectIncludeDate => 'Include date prefix';
+
+  @override
+  String get createProjectCreatedTitle => 'Folder Created';
+
+  @override
+  String get createProjectCreatedMessage =>
+      'Your project folder has been created:';
+
+  @override
+  String get createProjectCopyName => 'Copy Folder Name';
+
+  @override
+  String get createProjectNameCopied => 'Folder name copied';
+
+  @override
+  String get createProjectTrackSession => 'Track session from now';
+
+  @override
+  String get pendingFolderSessionTitle => 'Work Session Detected';
+
+  @override
+  String pendingFolderSessionBody(String projectName, String duration) {
+    return 'You\'ve worked on \"$projectName\" for $duration.';
+  }
+
+  @override
+  String get pendingFolderSessionContinue => 'Continue Session';
+
+  @override
+  String get pendingFolderSessionEndRecord => 'End & Record';
+
+  @override
+  String get activeSessionSwitchTitle => 'Session Already Active';
+
+  @override
+  String activeSessionSwitchBody(String current, String next) {
+    return 'A session is running for \"$current\". Switch to \"$next\" and save the current session?';
+  }
+
+  @override
+  String get activeSessionSwitch => 'Switch';
+
+  @override
   String get pendingProjectWaiting => 'Waiting for project file…';
 
   @override
@@ -3055,6 +3125,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pendingProjectDismiss => 'Stop tracking this folder';
+
+  @override
+  String get pendingProjectDismissTitle => 'Stop Tracking?';
+
+  @override
+  String get pendingProjectDismissKeep => 'Keep Folder';
+
+  @override
+  String get pendingProjectDismissDelete => 'Delete & Dismiss';
 
   @override
   String get pendingProjectDeleteNotEmptyTitle => 'Folder is not empty';

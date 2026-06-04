@@ -654,9 +654,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
               durationSeconds: elapsedSecs,
               phase: latest.status,
             );
+            final newSessions = [...latest.sessions, record];
             await repo.updateProject(latest.copyWith(
-              totalWorkSeconds: latest.totalWorkSeconds + elapsedSecs,
-              sessions: [...latest.sessions, record],
+              totalWorkSeconds: newSessions.fold<int>(0, (s, r) => s + r.durationSeconds),
+              sessions: newSessions,
               updatedAt: now,
             ));
             if (kDebugMode) {
@@ -8758,9 +8759,10 @@ class _PendingFolderRow extends ConsumerWidget {
                         durationSeconds: elapsedSecs,
                         phase: latest.status,
                       );
+                      final newSessions = [...latest.sessions, record];
                       await repo.updateProject(latest.copyWith(
-                        totalWorkSeconds: latest.totalWorkSeconds + elapsedSecs,
-                        sessions: [...latest.sessions, record],
+                        totalWorkSeconds: newSessions.fold<int>(0, (s, r) => s + r.durationSeconds),
+                        sessions: newSessions,
                         updatedAt: now,
                       ));
                       if (kDebugMode) {

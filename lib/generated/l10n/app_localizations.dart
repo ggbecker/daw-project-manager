@@ -4568,6 +4568,42 @@ abstract class AppLocalizations {
   /// **'Remove session?'**
   String get removeSessionTitle;
 
+  /// No description provided for @sessionTableDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get sessionTableDate;
+
+  /// No description provided for @sessionTableTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get sessionTableTime;
+
+  /// No description provided for @sessionTableDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get sessionTableDuration;
+
+  /// No description provided for @sessionTableTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get sessionTableTotal;
+
+  /// No description provided for @sessionCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 session} other{{count} sessions}}'**
+  String sessionCount(int count);
+
+  /// No description provided for @sessionByPhase.
+  ///
+  /// In en, this message translates to:
+  /// **'Work by Phase'**
+  String get sessionByPhase;
+
   /// No description provided for @tabPosition.
   ///
   /// In en, this message translates to:
@@ -5192,6 +5228,84 @@ abstract class AppLocalizations {
   /// **'Failed to create folder'**
   String get createProjectError;
 
+  /// No description provided for @createProjectIncludeDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Include date prefix'**
+  String get createProjectIncludeDate;
+
+  /// No description provided for @createProjectCreatedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder Created'**
+  String get createProjectCreatedTitle;
+
+  /// No description provided for @createProjectCreatedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your project folder has been created:'**
+  String get createProjectCreatedMessage;
+
+  /// No description provided for @createProjectCopyName.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Folder Name'**
+  String get createProjectCopyName;
+
+  /// No description provided for @createProjectNameCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder name copied'**
+  String get createProjectNameCopied;
+
+  /// No description provided for @createProjectTrackSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Track session from now'**
+  String get createProjectTrackSession;
+
+  /// No description provided for @pendingFolderSessionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Work Session Detected'**
+  String get pendingFolderSessionTitle;
+
+  /// No description provided for @pendingFolderSessionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve worked on \"{projectName}\" for {duration}.'**
+  String pendingFolderSessionBody(String projectName, String duration);
+
+  /// No description provided for @pendingFolderSessionContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue Session'**
+  String get pendingFolderSessionContinue;
+
+  /// No description provided for @pendingFolderSessionEndRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'End & Record'**
+  String get pendingFolderSessionEndRecord;
+
+  /// No description provided for @activeSessionSwitchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Session Already Active'**
+  String get activeSessionSwitchTitle;
+
+  /// No description provided for @activeSessionSwitchBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A session is running for \"{current}\". Switch to \"{next}\" and save the current session?'**
+  String activeSessionSwitchBody(String current, String next);
+
+  /// No description provided for @activeSessionSwitch.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch'**
+  String get activeSessionSwitch;
+
   /// No description provided for @pendingProjectWaiting.
   ///
   /// In en, this message translates to:
@@ -5221,6 +5335,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Stop tracking this folder'**
   String get pendingProjectDismiss;
+
+  /// No description provided for @pendingProjectDismissTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop Tracking?'**
+  String get pendingProjectDismissTitle;
+
+  /// No description provided for @pendingProjectDismissKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Folder'**
+  String get pendingProjectDismissKeep;
+
+  /// No description provided for @pendingProjectDismissDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete & Dismiss'**
+  String get pendingProjectDismissDelete;
 
   /// No description provided for @pendingProjectDeleteNotEmptyTitle.
   ///

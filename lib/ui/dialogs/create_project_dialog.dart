@@ -1,7 +1,9 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hive_ce/hive.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 
@@ -10,6 +12,7 @@ import '../../models/pending_folder.dart';
 import '../../models/scan_root.dart';
 import '../../providers/providers.dart';
 import '../../services/daw_detector.dart';
+import '../../utils/file_launcher.dart';
 
 enum _NamingScheme { artistTrack, collab, dateTrack, custom }
 
@@ -41,14 +44,26 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
   bool _detectingDaws = false;
   DetectedDaw? _selectedDaw;
 
+  // Options
+  bool _includeTimestamp = false;
+
+  // Success state
+  bool _folderCreated = false;
+  String _createdPath = '';
+  String _createdFolderName = '';
+  bool _openedInDaw = false;
+  bool _trackSessionFromNow = false;
+  PendingFolder? _createdPendingFolder;
+
   @override
   void initState() {
     super.initState();
-    // Add a blank second collab slot by default
     _collabControllers.add(TextEditingController());
     _trackNameController.addListener(_onNameChanged);
     _primaryArtistController.addListener(_onNameChanged);
     _customNameController.addListener(_onNameChanged);
+    _includeTimestamp =
+        Hive.box<String>('settings').get('createProjectIncludeDate') == 'true';
   }
 
   @override
@@ -67,15 +82,25 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
         _validateFolderName();
       });
 
+  void _toggleIncludeTimestamp(bool value) {
+    setState(() => _includeTimestamp = value);
+    Hive.box<String>('settings').put('createProjectIncludeDate', value.toString());
+    _validateFolderName();
+  }
+
   String get _folderName {
     final track = _trackNameController.text.trim();
+    final datePrefix = _includeTimestamp && _scheme != _NamingScheme.dateTrack
+        ? '${DateFormat('yyyy-MM-dd').format(DateTime.now())} - '
+        : '';
+
     switch (_scheme) {
       case _NamingScheme.artistTrack:
         final artist = _primaryArtistController.text.trim();
         if (artist.isEmpty && track.isEmpty) return '';
-        if (artist.isEmpty) return track;
-        if (track.isEmpty) return artist;
-        return '$artist - $track';
+        if (artist.isEmpty) return '$datePrefix$track';
+        if (track.isEmpty) return '$datePrefix$artist';
+        return '$datePrefix$artist - $track';
 
       case _NamingScheme.collab:
         final artists = [
@@ -84,9 +109,9 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
         ].where((s) => s.isNotEmpty).toList();
         final artistStr = artists.join(' & ');
         if (artistStr.isEmpty && track.isEmpty) return '';
-        if (artistStr.isEmpty) return track;
-        if (track.isEmpty) return artistStr;
-        return '$artistStr - $track';
+        if (artistStr.isEmpty) return '$datePrefix$track';
+        if (track.isEmpty) return '$datePrefix$artistStr';
+        return '$datePrefix$artistStr - $track';
 
       case _NamingScheme.dateTrack:
         final date = DateFormat('yyyy-MM-dd').format(DateTime.now());
@@ -94,7 +119,9 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
         return '$date - $track';
 
       case _NamingScheme.custom:
-        return _customNameController.text.trim();
+        final custom = _customNameController.text.trim();
+        if (custom.isEmpty) return '';
+        return '$datePrefix$custom';
     }
   }
 
@@ -128,10 +155,12 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
   Future<void> _startDawDetection() async {
     setState(() => _detectingDaws = true);
     final daws = await DawDetector.detectInstalledDaws();
-    if (mounted) setState(() {
-      _detectedDaws = daws;
-      _detectingDaws = false;
-    });
+    if (mounted) {
+      setState(() {
+        _detectedDaws = daws;
+        _detectingDaws = false;
+      });
+    }
   }
 
   void _goToStep(int step) {
@@ -147,6 +176,7 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
     if (_selectedRoot == null || _folderName.isEmpty || !_isFolderValid) return;
 
     final targetPath = p.join(_selectedRoot!.path, _folderName);
+    final folderName = _folderName;
 
     // Create the folder
     try {
@@ -165,7 +195,6 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
       final markerPath = p.join(targetPath, '.dawpm');
       final marker = File(markerPath);
       await marker.writeAsString('{"app":"daw_project_manager"}');
-      // On Windows the dot prefix alone does NOT hide the file — set the attribute
       if (Platform.isWindows) {
         await Process.run('attrib', ['+H', markerPath]);
       }
@@ -180,19 +209,20 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
     await repo.addPendingFolder(pf);
     ref.read(pendingFoldersDirtyProvider.notifier).bump();
 
-    // Launch the DAW — set workingDirectory to the exe's own folder so the
-    // process can find its DLLs / resources (required by many Windows DAWs).
+    // Launch the DAW
     if (openInDaw && _selectedDaw != null) {
       final exePath = _selectedDaw!.executablePath;
-      final workDir = File(exePath).parent.path;
-      if (mounted) Navigator.of(context).pop(targetPath);
       try {
-        await Process.start(
-          exePath,
-          [],
-          workingDirectory: workDir,
-          mode: ProcessStartMode.detached,
-        );
+        if (Platform.isMacOS && exePath.endsWith('.app')) {
+          await Process.start('open', [exePath], mode: ProcessStartMode.detached);
+        } else {
+          await Process.start(
+            exePath,
+            [],
+            workingDirectory: File(exePath).parent.path,
+            mode: ProcessStartMode.detached,
+          );
+        }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -203,10 +233,126 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
           );
         }
       }
-      return;
     }
 
-    if (mounted) Navigator.of(context).pop(targetPath);
+    if (mounted) {
+      setState(() {
+        _folderCreated = true;
+        _createdPath = targetPath;
+        _createdFolderName = folderName;
+        _openedInDaw = openInDaw;
+        _trackSessionFromNow = openInDaw;
+        _createdPendingFolder = pf;
+      });
+    }
+  }
+
+  /// Applies session stamping (if opted in) then closes the dialog.
+  Future<void> _closeSuccess({bool openFolder = false}) async {
+    if (_trackSessionFromNow && _createdPendingFolder != null) {
+      final repo = await ref.read(repositoryProvider.future);
+      await repo.updatePendingFolder(
+        _createdPendingFolder!.copyWith(
+          sessionStartedAt: _createdPendingFolder!.createdAt,
+        ),
+      );
+      // Bump so _PendingFoldersSection rebuilds with the fresh pf that has
+      // sessionStartedAt set — without this the row widget keeps the stale
+      // object and the Refresh handler would read sessionStartedAt == null.
+      ref.read(pendingFoldersDirtyProvider.notifier).bump();
+    }
+    if (mounted) {
+      if (openFolder) FileLauncher.openFolder(_createdPath);
+      Navigator.of(context).pop(_createdPath);
+    }
+  }
+
+  Widget _buildSuccessView(AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Align(
+            alignment: Alignment.topRight,
+            child: IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: _closeSuccess,
+              visualDensity: VisualDensity.compact,
+            ),
+          ),
+          const Icon(Icons.check_circle_outline, size: 64, color: Color(0xFF4CAF50)),
+          const SizedBox(height: 16),
+          Text(l10n.createProjectCreatedTitle,
+              style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 8),
+          Text(l10n.createProjectCreatedMessage,
+              style: Theme.of(context).textTheme.bodyMedium,
+              textAlign: TextAlign.center),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            ),
+            child: SelectableText(
+              _createdPath,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.copyWith(fontFamily: 'monospace'),
+            ),
+          ),
+          // Session tracking opt-in — only shown when the DAW was launched
+          // and session mode is active.
+          if (_openedInDaw && ref.watch(sessionModeProvider)) ...[
+            const SizedBox(height: 12),
+            CheckboxListTile.adaptive(
+              title: Text(l10n.createProjectTrackSession),
+              value: _trackSessionFromNow,
+              onChanged: (v) => setState(() => _trackSessionFromNow = v ?? false),
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+            ),
+          ],
+          const SizedBox(height: 20),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            alignment: WrapAlignment.center,
+            children: [
+              OutlinedButton.icon(
+                icon: const Icon(Icons.copy, size: 18),
+                label: Text(l10n.createProjectCopyName),
+                onPressed: () async {
+                  await Clipboard.setData(ClipboardData(text: _createdFolderName));
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(l10n.createProjectNameCopied),
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  }
+                },
+              ),
+              OutlinedButton.icon(
+                icon: const Icon(Icons.folder_open_outlined, size: 18),
+                label: Text(l10n.openFolder),
+                onPressed: () => _closeSuccess(openFolder: true),
+              ),
+              FilledButton(
+                onPressed: _closeSuccess,
+                child: Text(l10n.close),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   bool get _hasMultipleRoots {
@@ -234,6 +380,16 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
           _primaryArtistController.text = profile!.name;
         }
       });
+    }
+
+    if (_folderCreated) {
+      return Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520, maxHeight: 600),
+          child: _buildSuccessView(l10n),
+        ),
+      );
     }
 
     final totalSteps = _hasMultipleRoots ? 3 : 2;
@@ -415,7 +571,18 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 8),
+          // Date prefix toggle (hidden for dateTrack since it always includes the date)
+          if (_scheme != _NamingScheme.dateTrack)
+            CheckboxListTile.adaptive(
+              title: Text(l10n.createProjectIncludeDate),
+              value: _includeTimestamp,
+              onChanged: (v) => _toggleIncludeTimestamp(v ?? false),
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+            ),
+          const SizedBox(height: 12),
           // Fields based on scheme
           if (_scheme == _NamingScheme.artistTrack) ...[
             TextField(

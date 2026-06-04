@@ -2691,6 +2691,33 @@ class AppLocalizationsRu extends AppLocalizations {
   String get removeSessionTitle => 'Удалить сессию?';
 
   @override
+  String get sessionTableDate => 'Дата';
+
+  @override
+  String get sessionTableTime => 'Время';
+
+  @override
+  String get sessionTableDuration => 'Длительность';
+
+  @override
+  String get sessionTableTotal => 'Итого';
+
+  @override
+  String sessionCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count сессий',
+      few: '$count сессии',
+      one: '$count сессия',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sessionByPhase => 'Работа по фазам';
+
+  @override
   String get tabPosition => 'Расположение вкладок';
 
   @override
@@ -3040,6 +3067,49 @@ class AppLocalizationsRu extends AppLocalizations {
   String get createProjectError => 'Не удалось создать папку';
 
   @override
+  String get createProjectIncludeDate => 'Включить префикс даты';
+
+  @override
+  String get createProjectCreatedTitle => 'Папка создана';
+
+  @override
+  String get createProjectCreatedMessage => 'Папка проекта создана:';
+
+  @override
+  String get createProjectCopyName => 'Скопировать имя папки';
+
+  @override
+  String get createProjectNameCopied => 'Имя папки скопировано';
+
+  @override
+  String get createProjectTrackSession => 'Отслеживать сеанс с этого момента';
+
+  @override
+  String get pendingFolderSessionTitle => 'Обнаружен рабочий сеанс';
+
+  @override
+  String pendingFolderSessionBody(String projectName, String duration) {
+    return 'Вы работали над \"$projectName\" в течение $duration.';
+  }
+
+  @override
+  String get pendingFolderSessionContinue => 'Продолжить сеанс';
+
+  @override
+  String get pendingFolderSessionEndRecord => 'Завершить и записать';
+
+  @override
+  String get activeSessionSwitchTitle => 'Сессия уже активна';
+
+  @override
+  String activeSessionSwitchBody(String current, String next) {
+    return 'Запущена сессия для «$current». Переключиться на «$next» и сохранить текущую сессию?';
+  }
+
+  @override
+  String get activeSessionSwitch => 'Переключить';
+
+  @override
   String get pendingProjectWaiting => 'Ожидание файла проекта…';
 
   @override
@@ -3055,6 +3125,15 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get pendingProjectDismiss => 'Прекратить отслеживание папки';
+
+  @override
+  String get pendingProjectDismissTitle => 'Остановить отслеживание?';
+
+  @override
+  String get pendingProjectDismissKeep => 'Сохранить папку';
+
+  @override
+  String get pendingProjectDismissDelete => 'Удалить и закрыть';
 
   @override
   String get pendingProjectDeleteNotEmptyTitle => 'Папка не пуста';
