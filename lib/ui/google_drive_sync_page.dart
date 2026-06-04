@@ -1,7 +1,8 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
-import 'package:flutter/services.dart' show PlatformException;
+import 'package:flutter/services.dart' show Clipboard, ClipboardData, PlatformException;
 import 'package:google_sign_in/google_sign_in.dart' show GoogleSignInException, GoogleSignInExceptionCode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -34,18 +35,31 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
   DateTime? _remoteBackupTime;
   DateTime? _lastDownloadTime;
   DateTime? _lastUploadTime;
+  StreamSubscription<bool>? _authStateSubscription;
 
   @override
   void initState() {
     super.initState();
-    // Only check session status once when page is first created
-    // The session state persists for the entire app session
     _checkSessionStatusOnce();
     _loadSyncStatus();
+    // Keep _isSignedIn in sync with service auth events that fire asynchronously
+    // (e.g. lightweight auth completing after the initial 1500 ms timeout).
+    _authStateSubscription = GoogleDriveSyncService.authStateStream.listen((isSignedIn) {
+      if (mounted) {
+        setState(() {
+          _isSignedIn = isSignedIn;
+          if (isSignedIn && _syncStatus != AppLocalizations.of(context)!.sessionActive) {
+            _syncStatus = AppLocalizations.of(context)!.sessionActive;
+          }
+        });
+        if (isSignedIn) _loadSyncStatus();
+      }
+    });
   }
 
   @override
   void dispose() {
+    _authStateSubscription?.cancel();
     _syncService.dispose();
     super.dispose();
   }
@@ -811,6 +825,81 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
     }
   }
 
+  void _showAuthDebugLogs() {
+    final logs = GoogleDriveSyncService.authDebugLogs;
+    final scrollController = ScrollController();
+
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          final currentLogs = GoogleDriveSyncService.authDebugLogs;
+          return AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.bug_report_outlined, size: 20),
+                SizedBox(width: 8),
+                Text('Auth Debug Logs', style: TextStyle(fontSize: 16)),
+              ],
+            ),
+            contentPadding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            content: SizedBox(
+              width: double.maxFinite,
+              height: MediaQuery.of(ctx).size.height * 0.6,
+              child: currentLogs.isEmpty
+                  ? const Center(
+                      child: Text(
+                        'No logs yet.\nOpen the page and try signing in.',
+                        textAlign: TextAlign.center,
+                      ),
+                    )
+                  : ListView.builder(
+                      controller: scrollController,
+                      itemCount: currentLogs.length,
+                      itemBuilder: (_, i) => Text(
+                        currentLogs[i],
+                        style: const TextStyle(fontSize: 11, fontFamily: 'monospace'),
+                      ),
+                    ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  GoogleDriveSyncService.clearAuthDebugLogs();
+                  setDialogState(() {});
+                },
+                child: const Text('Clear'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  final text = GoogleDriveSyncService.authDebugLogs.join('\n');
+                  await Clipboard.setData(ClipboardData(text: text));
+                  if (ctx.mounted) {
+                    ScaffoldMessenger.of(ctx).showSnackBar(
+                      const SnackBar(content: Text('Logs copied to clipboard')),
+                    );
+                  }
+                },
+                child: const Text('Copy'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Close'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    // Scroll to bottom after frame renders so newest entries are visible
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (scrollController.hasClients && logs.isNotEmpty) {
+        scrollController.jumpTo(scrollController.position.maxScrollExtent);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final isMobile = MobileUtils.isMobile();
@@ -822,6 +911,13 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () => Navigator.pop(context),
               ),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.bug_report_outlined),
+                  tooltip: 'Auth debug logs',
+                  onPressed: _showAuthDebugLogs,
+                ),
+              ],
             )
           : null,
       body: Column(
