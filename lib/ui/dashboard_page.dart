@@ -2059,7 +2059,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                             if (profile?.name != null) ...[
                                               const SizedBox(height: 4),
                                               SizedBox(
-                                                width: 80,
+                                                width: _railWidth - 24,
                                                 child: Text(
                                                   profile!.name,
                                                   style: Theme.of(context)
@@ -2068,7 +2068,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                                   overflow:
                                                       TextOverflow.ellipsis,
                                                   textAlign: TextAlign.center,
-                                                  maxLines: 1,
+                                                  maxLines: 2,
                                                 ),
                                               ),
                                             ],
