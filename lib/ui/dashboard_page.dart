@@ -3807,10 +3807,15 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       for (final r in widget.scanRoots) path.normalize(r.path): r.scanMode,
     };
 
+    // Normalise a stored path to forward slashes so that Windows paths
+    // synced into the macOS database (C:\...) still match their scan root.
+    String normForward(String p) => p.replaceAll('\\', '/');
+
     String? findRoot(String filePath) {
-      final norm = path.normalize(filePath);
+      final norm = normForward(path.normalize(filePath));
       for (final rootPath in rootModes.keys) {
-        final prefix = rootPath.endsWith(path.separator) ? rootPath : rootPath + path.separator;
+        final normRoot = normForward(rootPath);
+        final prefix = normRoot.endsWith('/') ? normRoot : '$normRoot/';
         if (norm.startsWith(prefix)) return rootPath;
       }
       return null;
