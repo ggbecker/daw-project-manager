@@ -3236,24 +3236,38 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get camelotWheelGuideTooltip => 'Guia da roda Camelot';
+
   @override
   String get camelotWheelGuideTitle => 'Guia da Roda Camelot';
+
   @override
-  String get camelotGuideRingsTitle => 'Os An\u00e9is';
+  String get camelotGuideRingsTitle => 'Os Anéis';
+
   @override
-  String get camelotGuideRingsBody => 'Anel interno (A)  \u2192  tonalidades menores\nAnel externo (B)  \u2192  tonalidades maiores';
+  String get camelotGuideRingsBody =>
+      'Anel interno (A)  →  tonalidades menores\nAnel externo (B)  →  tonalidades maiores';
+
   @override
-  String get camelotGuideNumbersTitle => 'N\u00fameros 1\u201312';
+  String get camelotGuideNumbersTitle => 'Números 1–12';
+
   @override
-  String get camelotGuideNumbersBody => 'Posi\u00e7\u00f5es dispostas no sentido hor\u00e1rio. Cada n\u00famero representa uma vizinhan\u00e7a harm\u00f4nica \u2014 os vizinhos compartilham fortes rela\u00e7\u00f5es tonais.';
+  String get camelotGuideNumbersBody =>
+      'Posições dispostas no sentido horário. Cada número representa uma vizinhança harmônica — os vizinhos compartilham fortes relações tonais.';
+
   @override
   String get camelotGuideColoursTitle => 'Guia de Cores';
+
   @override
-  String get camelotGuideColoursBody => '\u25cf Brilhante  \u2192  a tonalidade da sua m\u00fasica\n\u25cf Suavemente iluminado  \u2192  compat\u00edvel para mixagem\n\u25cf Apagado  \u2192  evitar para uma mixagem suave';
+  String get camelotGuideColoursBody =>
+      '● Brilhante  →  a tonalidade da sua música\n● Suavemente iluminado  →  compatível para mixagem\n● Apagado  →  evitar para uma mixagem suave';
+
   @override
-  String get camelotGuideTransitionsTitle => 'Transi\u00e7\u00f5es Compat\u00edveis';
+  String get camelotGuideTransitionsTitle => 'Transições Compatíveis';
+
   @override
-  String get camelotGuideTransitionsBody => '8A \u2192 8B  (mesmo n\u00famero, trocar anel)\n  Maior/menor relativo \u2014 praticamente sem emenda.\n\n8A \u2192 7A ou 9A  (\u00b11, mesmo anel)\n  Tom adjacente \u2014 mudan\u00e7a suave e sutil.\n\n8A \u2192 1A ou 3A  (\u00b17, mesmo anel)\n  Impulso ou queda de energia \u2014 mudan\u00e7a mais dram\u00e1tica.';
+  String get camelotGuideTransitionsBody =>
+      '8A → 8B  (mesmo número, trocar anel)\n  Maior/menor relativo — praticamente sem emenda.\n\n8A → 7A ou 9A  (±1, mesmo anel)\n  Tom adjacente — mudança suave e sutil.\n\n8A → 1A ou 3A  (±7, mesmo anel)\n  Impulso ou queda de energia — mudança mais dramática.';
+
   @override
-  String get playerMixSuggestions => 'SUGEST\xd5ES DE MIX';
+  String get playerMixSuggestions => 'SUGESTÕES DE MIX';
 }
