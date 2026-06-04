@@ -53,6 +53,7 @@ import 'package:hive_ce_flutter/hive_flutter.dart';
 import '../models/music_project.dart';
 import '../models/release.dart';
 import '../models/scan_mode.dart';
+import '../models/scan_root.dart';
 import '../providers/providers.dart';
 import 'package:uuid/uuid.dart';
 
@@ -2511,6 +2512,7 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
     final finishedNotifier = ref.read(showFinishedProjectsProvider.notifier);
     final phaseFilter = ref.watch(phaseFilterProvider);
     final customPhases = ref.watch(customPhasesProvider);
+    final scanRoots = ref.watch(scanRootsProvider);
     final l10n = AppLocalizations.of(context)!;
 
     return Column(
@@ -2739,6 +2741,7 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
           child: _PlutoProjectsTable(
             key: _innerTableKey,
             projects: widget.projects,
+            scanRoots: scanRoots,
             dateFormat: widget.dateFormat,
             selectedIds: _selectedProjectIds,
             onToggleSelection: _toggleProjectSelection,
@@ -2935,6 +2938,7 @@ enum _FileNotFoundAction { selectNew, remove }
 
 class _PlutoProjectsTable extends ConsumerStatefulWidget {
   final List<MusicProject> projects;
+  final List<ScanRoot> scanRoots;
   final DateFormat dateFormat;
   final Set<String> selectedIds;
   final Function(String) onToggleSelection;
@@ -2948,6 +2952,7 @@ class _PlutoProjectsTable extends ConsumerStatefulWidget {
   const _PlutoProjectsTable({
     super.key,
     required this.projects,
+    required this.scanRoots,
     required this.dateFormat,
     required this.selectedIds,
     required this.onToggleSelection,
@@ -3797,11 +3802,9 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   }
 
   List<TrinaRow> _mapProjectsToRows(List<MusicProject> projects) {
-    final roots = ref.read(scanRootsProvider);
-
     // Build normalized root path → ScanMode lookup.
     final rootModes = <String, ScanMode>{
-      for (final r in roots) path.normalize(r.path): r.scanMode,
+      for (final r in widget.scanRoots) path.normalize(r.path): r.scanMode,
     };
 
     String? findRoot(String filePath) {
@@ -3889,6 +3892,12 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
 
     final projectsChanged = oldWidget.projects != widget.projects;
     final scanJustFinished = oldWidget.isScanning && !widget.isScanning;
+    final rootsChanged = oldWidget.scanRoots != widget.scanRoots;
+
+    if (rootsChanged && !widget.isScanning) {
+      _rebuildRows();
+      return;
+    }
 
     if (projectsChanged || scanJustFinished) {
       // While scanning, skip every intermediate update — the blocking overlay
