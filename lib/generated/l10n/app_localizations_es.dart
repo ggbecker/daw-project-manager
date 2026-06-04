@@ -242,7 +242,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get deepScanConfirm =>
-      'El Escaneo Profundo extrae metadatos completos de los archivos de proyecto:\n• BPM (Pulsos Por Minuto)\n• Tonalidad Musical\n• Versión del DAW\nCompatible actualmente: Ableton Live y Cubase.\n\nEsto es más lento que un escaneo regular y puede tardar un tiempo. ¿Continuar?';
+      'El Escaneo Profundo extrae metadatos completos de los archivos de proyecto:\n• BPM (Pulsos Por Minuto)\n• Tonalidad Musical\n• Versión del DAW\nCompatible actualmente: Ableton Live, Cubase y Bitwig Studio.\n\nEsto es más lento que un escaneo regular y puede tardar un tiempo. ¿Continuar?';
 
   @override
   String get deepScanOnlyUnscanned => 'Solo escanear proyectos sin metadatos';
@@ -474,6 +474,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String errorAddingFolder(String error) {
     return 'Error al agregar carpeta: $error';
   }
+
+  @override
+  String get folderAlreadyAdded => 'Esta carpeta ya ha sido añadida.';
 
   @override
   String get noProjectsFoundInRoots =>
@@ -3251,25 +3254,39 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get camelotWheelGuideTooltip => 'Gu\u00eda de la rueda Camelot';
+  String get camelotWheelGuideTooltip => 'Guía de la rueda Camelot';
+
   @override
-  String get camelotWheelGuideTitle => 'Gu\u00eda de la Rueda Camelot';
+  String get camelotWheelGuideTitle => 'Guía de la Rueda Camelot';
+
   @override
   String get camelotGuideRingsTitle => 'Los Anillos';
+
   @override
-  String get camelotGuideRingsBody => 'Anillo interior (A)  \u2192  tonos menores\nAnillo exterior (B)  \u2192  tonos mayores';
+  String get camelotGuideRingsBody =>
+      'Anillo interior (A)  →  tonos menores\nAnillo exterior (B)  →  tonos mayores';
+
   @override
-  String get camelotGuideNumbersTitle => 'N\u00fameros 1\u201312';
+  String get camelotGuideNumbersTitle => 'Números 1–12';
+
   @override
-  String get camelotGuideNumbersBody => 'Posiciones ordenadas en sentido horario. Cada n\u00famero representa un vecindario arm\u00f3nico \u2014 los vecinos comparten fuertes relaciones tonales.';
+  String get camelotGuideNumbersBody =>
+      'Posiciones ordenadas en sentido horario. Cada número representa un vecindario armónico — los vecinos comparten fuertes relaciones tonales.';
+
   @override
-  String get camelotGuideColoursTitle => 'Gu\u00eda de Colores';
+  String get camelotGuideColoursTitle => 'Guía de Colores';
+
   @override
-  String get camelotGuideColoursBody => '\u25cf Brillante  \u2192  el tono de tu canci\u00f3n\n\u25cf Suavemente iluminado  \u2192  compatible para mezclar\n\u25cf Tenue  \u2192  evitar para mezclas suaves';
+  String get camelotGuideColoursBody =>
+      '● Brillante  →  el tono de tu canción\n● Suavemente iluminado  →  compatible para mezclar\n● Tenue  →  evitar para mezclas suaves';
+
   @override
   String get camelotGuideTransitionsTitle => 'Transiciones Compatibles';
+
   @override
-  String get camelotGuideTransitionsBody => '8A \u2192 8B  (mismo n\u00famero, cambiar anillo)\n  Mayor/menor relativa \u2014 pr\u00e1cticamente sin costuras.\n\n8A \u2192 7A o 9A  (\u00b11, mismo anillo)\n  Tono adyacente \u2014 cambio suave y sutil.\n\n8A \u2192 1A o 3A  (\u00b17, mismo anillo)\n  Impulso o ca\u00edda de energ\u00eda \u2014 cambio m\u00e1s dram\u00e1tico.';
+  String get camelotGuideTransitionsBody =>
+      '8A → 8B  (mismo número, cambiar anillo)\n  Mayor/menor relativa — prácticamente sin costuras.\n\n8A → 7A o 9A  (±1, mismo anillo)\n  Tono adyacente — cambio suave y sutil.\n\n8A → 1A o 3A  (±7, mismo anillo)\n  Impulso o caída de energía — cambio más dramático.';
+
   @override
   String get playerMixSuggestions => 'SUGERENCIAS DE MIX';
 }

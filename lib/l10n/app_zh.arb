@@ -109,7 +109,7 @@
   "noReleasesFound": "未找到发布",
   "noPlaylistsFound": "未找到播放列表",
   "tryDifferentSearch": "尝试不同的搜索词",
-  "deepScanConfirm": "深度扫描从项目文件中提取完整的元数据：\n• BPM（每分钟节拍数）\n• 音乐调性\n• DAW版本\n目前支持：Ableton Live 和 Cubase。\n\n这比常规扫描慢，可能需要一些时间。继续吗？",
+  "deepScanConfirm": "深度扫描从项目文件中提取完整的元数据：\n• BPM（每分钟节拍数）\n• 音乐调性\n• DAW版本\n目前支持：Ableton Live、Cubase 和 Bitwig Studio。\n\n这比常规扫描慢，可能需要一些时间。继续吗？",
   "deepScanOnlyUnscanned": "仅扫描没有元数据的项目",
   "metadataExtractedSuccessfully": "元数据提取成功",
   "failedToExtractMetadata": "元数据提取失败: {error}",
@@ -321,6 +321,7 @@
       }
     }
   },
+  "folderAlreadyAdded": "此文件夹已被添加。",
   "noProjectsFoundInRoots": "在选定的项目文件夹中未找到项目。",
   "selectProjectsFolder": "选择项目文件夹",
   "enterReleaseTitle": "输入发布标题",

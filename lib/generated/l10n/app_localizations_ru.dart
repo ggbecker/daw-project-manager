@@ -241,7 +241,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get deepScanConfirm =>
-      'Глубокое сканирование извлекает полные метаданные из файлов проекта:\n• BPM (ударов в минуту)\n• Музыкальная тональность\n• Версия DAW\nПоддерживается: Ableton Live и Cubase.\n\nЭто медленнее обычного сканирования и может занять некоторое время. Продолжить?';
+      'Глубокое сканирование извлекает полные метаданные из файлов проекта:\n• BPM (ударов в минуту)\n• Музыкальная тональность\n• Версия DAW\nПоддерживается: Ableton Live, Cubase и Bitwig Studio.\n\nЭто медленнее обычного сканирования и может занять некоторое время. Продолжить?';
 
   @override
   String get deepScanOnlyUnscanned =>
@@ -473,6 +473,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String errorAddingFolder(String error) {
     return 'Ошибка добавления папки: $error';
   }
+
+  @override
+  String get folderAlreadyAdded => 'Эта папка уже была добавлена.';
 
   @override
   String get noProjectsFoundInRoots =>
@@ -3237,25 +3240,39 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get camelotWheelGuideTooltip => '\u0420\u0443\u043a\u043e\u0432\u043e\u0434\u0441\u0442\u0432\u043e \u043f\u043e \u043a\u043e\u043b\u0435\u0441\u0443 Camelot';
+  String get camelotWheelGuideTooltip => 'Руководство по колесу Camelot';
+
   @override
-  String get camelotWheelGuideTitle => '\u0420\u0443\u043a\u043e\u0432\u043e\u0434\u0441\u0442\u0432\u043e \u043f\u043e \u043a\u043e\u043b\u0435\u0441\u0443 Camelot';
+  String get camelotWheelGuideTitle => 'Руководство по колесу Camelot';
+
   @override
-  String get camelotGuideRingsTitle => '\u041a\u043e\u043b\u044c\u0446\u0430';
+  String get camelotGuideRingsTitle => 'Кольца';
+
   @override
-  String get camelotGuideRingsBody => '\u0412\u043d\u0443\u0442\u0440\u0435\u043d\u043d\u0435\u0435 \u043a\u043e\u043b\u044c\u0446\u043e (A)  \u2192  \u043c\u0438\u043d\u043e\u0440\u043d\u044b\u0435 \u0442\u043e\u043d\u0430\u043b\u044c\u043d\u043e\u0441\u0442\u0438\n\u0412\u043d\u0435\u0448\u043d\u0435\u0435 \u043a\u043e\u043b\u044c\u0446\u043e (B)  \u2192  \u043c\u0430\u0436\u043e\u0440\u043d\u044b\u0435 \u0442\u043e\u043d\u0430\u043b\u044c\u043d\u043e\u0441\u0442\u0438';
+  String get camelotGuideRingsBody =>
+      'Внутреннее кольцо (A)  →  минорные тональности\nВнешнее кольцо (B)  →  мажорные тональности';
+
   @override
-  String get camelotGuideNumbersTitle => '\u0426\u0438\u0444\u0440\u044b 1\u201312';
+  String get camelotGuideNumbersTitle => 'Цифры 1–12';
+
   @override
-  String get camelotGuideNumbersBody => '\u041f\u043e\u0437\u0438\u0446\u0438\u0438 \u0440\u0430\u0441\u0441\u0442\u0430\u0432\u043b\u0435\u043d\u044b \u043f\u043e \u0447\u0430\u0441\u043e\u0432\u043e\u0439 \u0441\u0442\u0440\u0435\u043b\u043a\u0435. \u041a\u0430\u0436\u0434\u043e\u0435 \u0447\u0438\u0441\u043b\u043e \u043f\u0440\u0435\u0434\u0441\u0442\u0430\u0432\u043b\u044f\u0435\u0442 \u0433\u0430\u0440\u043c\u043e\u043d\u0438\u0447\u0435\u0441\u043a\u043e\u0435 \u043e\u043a\u0440\u0443\u0436\u0435\u043d\u0438\u0435 \u2014 \u0441\u043e\u0441\u0435\u0434\u0438 \u0440\u0430\u0437\u0434\u0435\u043b\u044f\u044e\u0442 \u0441\u0438\u043b\u044c\u043d\u044b\u0435 \u0442\u043e\u043d\u0430\u043b\u044c\u043d\u044b\u0435 \u0441\u0432\u044f\u0437\u0438.';
+  String get camelotGuideNumbersBody =>
+      'Позиции расставлены по часовой стрелке. Каждое число представляет гармоническое окружение — соседи разделяют сильные тональные связи.';
+
   @override
-  String get camelotGuideColoursTitle => '\u0426\u0432\u0435\u0442\u043e\u0432\u043e\u0439 \u0433\u0438\u0434';
+  String get camelotGuideColoursTitle => 'Цветовой гид';
+
   @override
-  String get camelotGuideColoursBody => '\u25cf \u042f\u0440\u043a\u0438\u0439  \u2192  \u0442\u043e\u043d\u0430\u043b\u044c\u043d\u043e\u0441\u0442\u044c \u0432\u0430\u0448\u0435\u0439 \u043f\u0435\u0441\u043d\u0438\n\u25cf \u041c\u044f\u0433\u043a\u0438\u0439  \u2192  \u0441\u043e\u0432\u043c\u0435\u0441\u0442\u0438\u043c \u0434\u043b\u044f \u0441\u0432\u0435\u0434\u0435\u043d\u0438\u044f\n\u25cf \u041f\u0440\u0438\u0433\u043b\u0443\u0448\u0451\u043d\u043d\u044b\u0439  \u2192  \u0438\u0437\u0431\u0435\u0433\u0430\u0442\u044c \u0434\u043b\u044f \u043f\u043b\u0430\u0432\u043d\u043e\u0433\u043e \u0441\u0432\u0435\u0434\u0435\u043d\u0438\u044f';
+  String get camelotGuideColoursBody =>
+      '● Яркий  →  тональность вашей песни\n● Мягкий  →  совместим для сведения\n● Приглушённый  →  избегать для плавного сведения';
+
   @override
-  String get camelotGuideTransitionsTitle => '\u0421\u043e\u0432\u043c\u0435\u0441\u0442\u0438\u043c\u044b\u0435 \u043f\u0435\u0440\u0435\u0445\u043e\u0434\u044b';
+  String get camelotGuideTransitionsTitle => 'Совместимые переходы';
+
   @override
-  String get camelotGuideTransitionsBody => '8A \u2192 8B  (\u0442\u043e\u0442 \u0436\u0435 \u043d\u043e\u043c\u0435\u0440, \u0441\u043c\u0435\u043d\u0430 \u043a\u043e\u043b\u044c\u0446\u0430)\n  \u041f\u0430\u0440\u0430\u043b\u043b\u0435\u043b\u044c\u043d\u044b\u0439 \u043c\u0430\u0436\u043e\u0440/\u043c\u0438\u043d\u043e\u0440 \u2014 \u043f\u0440\u0430\u043a\u0442\u0438\u0447\u0435\u0441\u043a\u0438 \u043d\u0435\u0437\u0430\u043c\u0435\u0442\u043d\u043e.\n\n8A \u2192 7A \u0438\u043b\u0438 9A  (\u00b11, \u0442\u043e \u0436\u0435 \u043a\u043e\u043b\u044c\u0446\u043e)\n  \u0421\u043e\u0441\u0435\u0434\u043d\u044f\u044f \u0442\u043e\u043d\u0430\u043b\u044c\u043d\u043e\u0441\u0442\u044c \u2014 \u043f\u043b\u0430\u0432\u043d\u043e\u0435, \u0442\u043e\u043d\u043a\u043e\u0435 \u0438\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u0435.\n\n8A \u2192 1A \u0438\u043b\u0438 3A  (\u00b17, \u0442\u043e \u0436\u0435 \u043a\u043e\u043b\u044c\u0446\u043e)\n  \u041f\u043e\u0434\u044a\u0451\u043c \u0438\u043b\u0438 \u043f\u0430\u0434\u0435\u043d\u0438\u0435 \u044d\u043d\u0435\u0440\u0433\u0438\u0438 \u2014 \u0431\u043e\u043b\u0435\u0435 \u0440\u0435\u0437\u043a\u0438\u0439 \u043f\u0435\u0440\u0435\u0445\u043e\u0434.';
+  String get camelotGuideTransitionsBody =>
+      '8A → 8B  (тот же номер, смена кольца)\n  Параллельный мажор/минор — практически незаметно.\n\n8A → 7A или 9A  (±1, то же кольцо)\n  Соседняя тональность — плавное, тонкое изменение.\n\n8A → 1A или 3A  (±7, то же кольцо)\n  Подъём или падение энергии — более резкий переход.';
+
   @override
-  String get playerMixSuggestions => '\u041f\u0420\u0415\u0414\u041b\u041e\u0416\u0415\u041d\u0418\u042f \u041c\u0418\u041a\u0421\u0410';
+  String get playerMixSuggestions => 'ПРЕДЛОЖЕНИЯ МИКСА';
 }

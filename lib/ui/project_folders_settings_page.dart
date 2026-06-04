@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:path/path.dart' as p;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -86,6 +87,18 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
 
     final picked = await FilePicker.platform.getDirectoryPath(dialogTitle: l10n.selectProjectsFolder);
     if (picked == null) return;
+
+    // Reject if this exact folder is already a scan root.
+    final existingRoots = ref.read(scanRootsProvider);
+    final pickedNorm = p.normalize(picked);
+    if (existingRoots.any((r) => p.normalize(r.path) == pickedNorm)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.folderAlreadyAdded)),
+        );
+      }
+      return;
+    }
 
     setState(() => _busy = true);
     try {

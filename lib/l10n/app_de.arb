@@ -109,7 +109,7 @@
   "noReleasesFound": "Keine Veröffentlichungen gefunden",
   "noPlaylistsFound": "Keine Playlists gefunden",
   "tryDifferentSearch": "Versuchen Sie einen anderen Suchbegriff",
-  "deepScanConfirm": "Der Tiefenscan extrahiert vollständige Metadaten aus Projektdateien:\n• BPM (Schläge Pro Minute)\n• Tonart\n• DAW-Version\nDerzeit unterstützt: Ableton Live und Cubase.\n\nDies ist langsamer als ein regulärer Scan und kann eine Weile dauern. Fortfahren?",
+  "deepScanConfirm": "Der Tiefenscan extrahiert vollständige Metadaten aus Projektdateien:\n• BPM (Schläge Pro Minute)\n• Tonart\n• DAW-Version\nDerzeit unterstützt: Ableton Live, Cubase und Bitwig Studio.\n\nDies ist langsamer als ein regulärer Scan und kann eine Weile dauern. Fortfahren?",
   "deepScanOnlyUnscanned": "Nur Projekte ohne Metadaten scannen",
   "metadataExtractedSuccessfully": "Metadaten erfolgreich extrahiert",
   "failedToExtractMetadata": "Metadatenextraktion fehlgeschlagen: {error}",
@@ -321,6 +321,7 @@
       }
     }
   },
+  "folderAlreadyAdded": "Dieser Ordner wurde bereits hinzugefügt.",
   "noProjectsFoundInRoots": "Keine Projekte in den ausgewählten Projektordnern gefunden.",
   "selectProjectsFolder": "Wählen Sie einen Projektordner",
   "enterReleaseTitle": "Veröffentlichungstitel Eingeben",

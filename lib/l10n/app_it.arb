@@ -109,7 +109,7 @@
   "noReleasesFound": "Nessuna pubblicazione trovata",
   "noPlaylistsFound": "Nessuna playlist trovata",
   "tryDifferentSearch": "Prova un termine di ricerca diverso",
-  "deepScanConfirm": "La Scansione Approfondita estrae metadati completi dai file di progetto:\n• BPM (Battiti Per Minuto)\n• Tonalità Musicale\n• Versione del DAW\nAttualmente supportati: Ableton Live e Cubase.\n\nÈ più lenta di una scansione normale e potrebbe richiedere del tempo. Continuare?",
+  "deepScanConfirm": "La Scansione Approfondita estrae metadati completi dai file di progetto:\n• BPM (Battiti Per Minuto)\n• Tonalità Musicale\n• Versione del DAW\nAttualmente supportati: Ableton Live, Cubase e Bitwig Studio.\n\nÈ più lenta di una scansione normale e potrebbe richiedere del tempo. Continuare?",
   "deepScanOnlyUnscanned": "Scansiona solo i progetti senza metadati",
   "metadataExtractedSuccessfully": "Metadati estratti con successo",
   "failedToExtractMetadata": "Estrazione metadati fallita: {error}",
@@ -321,6 +321,7 @@
       }
     }
   },
+  "folderAlreadyAdded": "Questa cartella è già stata aggiunta.",
   "noProjectsFoundInRoots": "Nessun progetto trovato nelle cartelle progetti selezionate.",
   "selectProjectsFolder": "Seleziona una cartella di progetti",
   "enterReleaseTitle": "Inserisci il Titolo della Pubblicazione",

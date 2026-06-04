@@ -541,7 +541,7 @@ abstract class AppLocalizations {
   /// No description provided for @deepScanConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Deep Scan extracts full metadata from project files:\n• BPM (Beats Per Minute)\n• Musical Key\n• DAW Version\nCurrently supported: Ableton Live and Cubase.\n\nThis is slower than a regular scan and may take a while. Continue?'**
+  /// **'Deep Scan extracts full metadata from project files:\n• BPM (Beats Per Minute)\n• Musical Key\n• DAW Version\nCurrently supported: Ableton Live, Cubase and Bitwig Studio.\n\nThis is slower than a regular scan and may take a while. Continue?'**
   String get deepScanConfirm;
 
   /// No description provided for @deepScanOnlyUnscanned.
@@ -921,6 +921,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Error adding folder: {error}'**
   String errorAddingFolder(String error);
+
+  /// No description provided for @folderAlreadyAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'This folder has already been added.'**
+  String get folderAlreadyAdded;
 
   /// No description provided for @noProjectsFoundInRoots.
   ///
@@ -5493,36 +5499,69 @@ abstract class AppLocalizations {
   String camelotQueueGenerated(int count);
 
   /// No description provided for @camelotWheelGuideTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Camelot wheel guide'**
   String get camelotWheelGuideTooltip;
 
   /// No description provided for @camelotWheelGuideTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Camelot Wheel Guide'**
   String get camelotWheelGuideTitle;
 
   /// No description provided for @camelotGuideRingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The Rings'**
   String get camelotGuideRingsTitle;
 
   /// No description provided for @camelotGuideRingsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Inner ring (A)  →  minor keys\nOuter ring (B)  →  major keys'**
   String get camelotGuideRingsBody;
 
   /// No description provided for @camelotGuideNumbersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Numbers 1–12'**
   String get camelotGuideNumbersTitle;
 
   /// No description provided for @camelotGuideNumbersBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Positions arranged clockwise. Each number represents a harmonic neighbourhood — neighbours share strong tonal relationships.'**
   String get camelotGuideNumbersBody;
 
   /// No description provided for @camelotGuideColoursTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Colour Guide'**
   String get camelotGuideColoursTitle;
 
   /// No description provided for @camelotGuideColoursBody.
+  ///
+  /// In en, this message translates to:
+  /// **'● Bright  →  your song\'s key\n● Softly lit  →  compatible for mixing\n● Dimmed  →  avoid for smooth mixing'**
   String get camelotGuideColoursBody;
 
   /// No description provided for @camelotGuideTransitionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Compatible Transitions'**
   String get camelotGuideTransitionsTitle;
 
   /// No description provided for @camelotGuideTransitionsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'8A → 8B  (same number, switch ring)\n  Relative major / minor — virtually seamless.\n\n8A → 7A or 9A  (±1, same ring)\n  Adjacent key — smooth, subtle change.\n\n8A → 1A or 3A  (±7, same ring)\n  Energy boost or drop — more dramatic shift.'**
   String get camelotGuideTransitionsBody;
 
   /// No description provided for @playerMixSuggestions.
+  ///
+  /// In en, this message translates to:
+  /// **'MIX SUGGESTIONS'**
   String get playerMixSuggestions;
 }
 

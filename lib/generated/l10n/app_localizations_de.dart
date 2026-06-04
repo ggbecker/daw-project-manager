@@ -241,7 +241,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get deepScanConfirm =>
-      'Der Tiefenscan extrahiert vollständige Metadaten aus Projektdateien:\n• BPM (Schläge Pro Minute)\n• Tonart\n• DAW-Version\nDerzeit unterstützt: Ableton Live und Cubase.\n\nDies ist langsamer als ein regulärer Scan und kann eine Weile dauern. Fortfahren?';
+      'Der Tiefenscan extrahiert vollständige Metadaten aus Projektdateien:\n• BPM (Schläge Pro Minute)\n• Tonart\n• DAW-Version\nDerzeit unterstützt: Ableton Live, Cubase und Bitwig Studio.\n\nDies ist langsamer als ein regulärer Scan und kann eine Weile dauern. Fortfahren?';
 
   @override
   String get deepScanOnlyUnscanned => 'Nur Projekte ohne Metadaten scannen';
@@ -474,6 +474,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String errorAddingFolder(String error) {
     return 'Fehler beim Hinzufügen des Ordners: $error';
   }
+
+  @override
+  String get folderAlreadyAdded => 'Dieser Ordner wurde bereits hinzugefügt.';
 
   @override
   String get noProjectsFoundInRoots =>
@@ -3250,24 +3253,38 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get camelotWheelGuideTooltip => 'Camelot-Rad Anleitung';
+
   @override
   String get camelotWheelGuideTitle => 'Camelot-Rad Anleitung';
+
   @override
   String get camelotGuideRingsTitle => 'Die Ringe';
+
   @override
-  String get camelotGuideRingsBody => 'Innenring (A)  \u2192  Molltonarten\nAu\u00dfenring (B)  \u2192  Durtonarten';
+  String get camelotGuideRingsBody =>
+      'Innenring (A)  →  Molltonarten\nAußenring (B)  →  Durtonarten';
+
   @override
-  String get camelotGuideNumbersTitle => 'Zahlen 1\u201312';
+  String get camelotGuideNumbersTitle => 'Zahlen 1–12';
+
   @override
-  String get camelotGuideNumbersBody => 'Positionen im Uhrzeigersinn angeordnet. Jede Zahl steht f\u00fcr eine harmonische Nachbarschaft \u2014 Nachbarn teilen starke tonale Beziehungen.';
+  String get camelotGuideNumbersBody =>
+      'Positionen im Uhrzeigersinn angeordnet. Jede Zahl steht für eine harmonische Nachbarschaft — Nachbarn teilen starke tonale Beziehungen.';
+
   @override
   String get camelotGuideColoursTitle => 'Farblegende';
+
   @override
-  String get camelotGuideColoursBody => '\u25cf Hell  \u2192  Tonart deines Songs\n\u25cf Weich beleuchtet  \u2192  kompatibel f\u00fcr Mixing\n\u25cf Gedimmt  \u2192  f\u00fcr fl\u00fcssiges Mixing vermeiden';
+  String get camelotGuideColoursBody =>
+      '● Hell  →  Tonart deines Songs\n● Weich beleuchtet  →  kompatibel für Mixing\n● Gedimmt  →  für flüssiges Mixing vermeiden';
+
   @override
-  String get camelotGuideTransitionsTitle => 'Kompatible \u00dcberg\u00e4nge';
+  String get camelotGuideTransitionsTitle => 'Kompatible Übergänge';
+
   @override
-  String get camelotGuideTransitionsBody => '8A \u2192 8B  (gleiche Zahl, Ring wechseln)\n  Relative Dur/Moll \u2014 nahezu nahtlos.\n\n8A \u2192 7A oder 9A  (\u00b11, gleicher Ring)\n  Benachbarter Ton \u2014 sanfte, dezente \u00c4nderung.\n\n8A \u2192 1A oder 3A  (\u00b17, gleicher Ring)\n  Energie-Boost oder -Drop \u2014 dramatischerer Wechsel.';
+  String get camelotGuideTransitionsBody =>
+      '8A → 8B  (gleiche Zahl, Ring wechseln)\n  Relative Dur/Moll — nahezu nahtlos.\n\n8A → 7A oder 9A  (±1, gleicher Ring)\n  Benachbarter Ton — sanfte, dezente Änderung.\n\n8A → 1A oder 3A  (±7, gleicher Ring)\n  Energie-Boost oder -Drop — dramatischerer Wechsel.';
+
   @override
-  String get playerMixSuggestions => 'MIX-VORSCHL\xc4GE';
+  String get playerMixSuggestions => 'MIX-VORSCHLÄGE';
 }

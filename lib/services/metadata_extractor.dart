@@ -75,6 +75,11 @@ class MetadataExtractor {
       bpm = metadata.bpm ?? bpm;
       key = metadata.key ?? key;
       dawVersion = metadata.dawVersion ?? dawVersion;
+    } else if (ext == '.bwproject') {
+      final metadata = await _extractFromBitwigFile(filePath);
+      bpm = metadata.bpm ?? bpm;
+      key = metadata.key ?? key;
+      dawVersion = metadata.dawVersion ?? dawVersion;
     }
 
     // Also search for bpm and key files in the project directory
@@ -321,6 +326,174 @@ class MetadataExtractor {
       return ProjectMetadata();
     }
   }
+
+  /// Extracts version, BPM, and key signature from Bitwig Studio .bwproject file.
+  /// The format is a custom binary format with a "BtWg" magic header.
+  /// Meta section: key-value pairs where version is under "application_version_name".
+  /// BPM: stored as a big-endian IEEE 754 double (type byte 0x07) near the "TEMPO" label.
+  /// Key signature: available in Bitwig 6+ via node 0x0001c9:
+  ///   - sub-type 0x01 = root note (0=C, 1=Db, ..., 11=B)
+  ///   - sub-type 0x02 = scale type as uint16 BE bitmask (bit N = semitone N included),
+  ///     looked up in _bitwigScaleMasks to identify the 23 possible scale types.
+  static Future<ProjectMetadata> _extractFromBitwigFile(String filePath) async {
+    try {
+      final file = File(filePath);
+      if (!await file.exists()) {
+        return ProjectMetadata();
+      }
+
+      final bytes = await file.readAsBytes();
+
+      // Validate BtWg magic header
+      if (bytes.length < 4 ||
+          bytes[0] != 0x42 || bytes[1] != 0x74 ||
+          bytes[2] != 0x57 || bytes[3] != 0x67) {
+        return ProjectMetadata();
+      }
+
+      String? dawVersion;
+      double? bpm;
+      String? key;
+
+      // === Extract version from meta section ===
+      // The key "application_version_name" is followed by: 0x08 [4-byte BE length] [string]
+      final versionKey = utf8.encode('application_version_name');
+      final versionKeyPos = _findPattern(bytes, versionKey);
+      if (versionKeyPos != null) {
+        final valueStart = versionKeyPos + versionKey.length;
+        if (valueStart + 5 < bytes.length && bytes[valueStart] == 0x08) {
+          final strLen = ByteData.sublistView(bytes, valueStart + 1, valueStart + 5)
+              .getUint32(0, Endian.big);
+          if (strLen > 0 && strLen < 32 && valueStart + 5 + strLen <= bytes.length) {
+            final versionStr = utf8.decode(
+              bytes.sublist(valueStart + 5, valueStart + 5 + strLen),
+            );
+            // Store major version only (e.g., "5.3.8" -> "5")
+            final parts = versionStr.split('.');
+            dawVersion = parts.isNotEmpty ? parts[0].trim() : versionStr;
+          }
+        }
+      }
+
+      // === Extract BPM from TEMPO parameter ===
+      // The project structure contains a "TEMPO" label followed within ~200 bytes by
+      // a type-0x07 byte and an 8-byte big-endian double holding the BPM value.
+      final tempoLabel = utf8.encode('TEMPO');
+      final tempoPos = _findPattern(bytes, tempoLabel);
+      if (tempoPos != null) {
+        final searchEnd = (tempoPos + 200).clamp(0, bytes.length - 8);
+        for (int i = tempoPos + tempoLabel.length; i < searchEnd; i++) {
+          if (bytes[i] == 0x07 && i + 9 <= bytes.length) {
+            final value = ByteData.sublistView(bytes, i + 1, i + 9)
+                .getFloat64(0, Endian.big);
+            if (value >= 20.0 && value <= 999.0) {
+              bpm = double.parse(value.toStringAsFixed(2));
+              break;
+            }
+          }
+        }
+      }
+
+      // === Extract key signature (Bitwig 6+ only) ===
+      // Node 0x0001c9 with sub-type 0x02 holds the scale type as a signed int16 BE.
+      // The same node with sub-type 0x01, found just before, holds the root note (0-11).
+      // Validated against 13 project files covering all root notes and Major/Minor.
+      final scaleNodePattern = <int>[0x00, 0x01, 0xc9, 0x02];
+      final rootNodePattern  = <int>[0x00, 0x01, 0xc9, 0x01];
+      final scaleNodePos = _findPattern(bytes, scaleNodePattern);
+      if (scaleNodePos != null && scaleNodePos + 6 <= bytes.length) {
+        // Decode scale type: uint16 BE bitmask, looked up in _bitwigScaleMasks
+        final rawScale = ByteData.sublistView(bytes, scaleNodePos + 4, scaleNodePos + 6)
+            .getUint16(0, Endian.big);
+        final scaleName = _bitwigScaleMasks[rawScale];
+
+        // Search backward (up to 150 bytes) for the root note node
+        int? rootNote;
+        for (int i = scaleNodePos - 1; i >= (scaleNodePos - 150).clamp(0, scaleNodePos); i--) {
+          if (i + 5 <= bytes.length &&
+              bytes[i] == rootNodePattern[0] &&
+              bytes[i + 1] == rootNodePattern[1] &&
+              bytes[i + 2] == rootNodePattern[2] &&
+              bytes[i + 3] == rootNodePattern[3]) {
+            final val = bytes[i + 4];
+            if (val <= 11) {
+              rootNote = val;
+              break;
+            }
+          }
+        }
+
+        if (rootNote != null && scaleName != null) {
+          final rootNotes = _bitwigMinorSideScales.contains(rawScale)
+              ? _bitwigRootNotesMinor
+              : _bitwigRootNotesMajor;
+          key = '${rootNotes[rootNote]} $scaleName';
+        }
+      }
+
+      return ProjectMetadata(bpm: bpm, key: key, dawVersion: dawVersion);
+    } catch (e) {
+      return ProjectMetadata();
+    }
+  }
+
+  // Major-side scales use Db and Ab (e.g. "Ab Major", "Db Lydian").
+  static const _bitwigRootNotesMajor = [
+    'C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B',
+  ];
+
+  // Minor-side scales use C# and G# (e.g. "G# Minor", "C# Dorian").
+  // Only indices 1 and 8 differ from the major-side array.
+  static const _bitwigRootNotesMinor = [
+    'C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B',
+  ];
+
+  // Scales whose root notes follow the minor-side (C#, G#) spelling convention.
+  static const _bitwigMinorSideScales = {
+    0x05ad, // Minor
+    0x06ad, // Dorian
+    0x05ab, // Phrygian
+    0x056b, // Locrian
+    0x09ad, // Harmonic Minor
+    0x0aad, // Jazz Minor
+    0x029d, // Blues Major
+    0x04e9, // Blues Minor
+    0x09b3, // Double Harmonic Major
+    0x09cd, // Double Harmonic Minor
+    0x056d, // Half-diminished
+    0x06db, // Diminished HW
+    0x0b6d, // Diminished WH
+    0x04a9, // Minor Pentatonic
+    0x0089, // Minor Triad
+  };
+
+  // 23 scale types in Bitwig 6. Each key is a 12-bit semitone bitmask (bit N = semitone N
+  // above C is present), stored as uint16 BE in the .bwproject binary format.
+  static const _bitwigScaleMasks = <int, String>{
+    0x0ab5: 'Major',
+    0x05ad: 'Minor',
+    0x06ad: 'Dorian',
+    0x05ab: 'Phrygian',
+    0x0ad5: 'Lydian',
+    0x06b5: 'Mixolydian',
+    0x056b: 'Locrian',
+    0x09b5: 'Harmonic Major',
+    0x09ad: 'Harmonic Minor',
+    0x06d5: 'Overtone Scale',
+    0x0aad: 'Jazz Minor',
+    0x029d: 'Blues Major',
+    0x04e9: 'Blues Minor',
+    0x09b3: 'Double Harmonic Major',
+    0x09cd: 'Double Harmonic Minor',
+    0x0555: 'Whole Tone',
+    0x056d: 'Half-diminished',
+    0x06db: 'Diminished HW',
+    0x0b6d: 'Diminished WH',
+    0x0295: 'Major Pentatonic',
+    0x04a9: 'Minor Pentatonic',
+    0x0091: 'Major Triad',
+    0x0089: 'Minor Triad',
+  };
 
   /// Extracts version and BPM from Cubase .cpr file
   /// Version: Looks for hex pattern: 00 10 56 65 72 73 69 6F 6E (which is "00 10 Version")

@@ -241,7 +241,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deepScanConfirm =>
-      'Deep Scan extracts full metadata from project files:\n• BPM (Beats Per Minute)\n• Musical Key\n• DAW Version\nCurrently supported: Ableton Live and Cubase.\n\nThis is slower than a regular scan and may take a while. Continue?';
+      'Deep Scan extracts full metadata from project files:\n• BPM (Beats Per Minute)\n• Musical Key\n• DAW Version\nCurrently supported: Ableton Live, Cubase and Bitwig Studio.\n\nThis is slower than a regular scan and may take a while. Continue?';
 
   @override
   String get deepScanOnlyUnscanned => 'Only scan projects without metadata';
@@ -472,6 +472,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String errorAddingFolder(String error) {
     return 'Error adding folder: $error';
   }
+
+  @override
+  String get folderAlreadyAdded => 'This folder has already been added.';
 
   @override
   String get noProjectsFoundInRoots =>
@@ -3233,24 +3236,38 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get camelotWheelGuideTooltip => 'Camelot wheel guide';
+
   @override
   String get camelotWheelGuideTitle => 'Camelot Wheel Guide';
+
   @override
   String get camelotGuideRingsTitle => 'The Rings';
+
   @override
-  String get camelotGuideRingsBody => 'Inner ring (A)  \u2192  minor keys\nOuter ring (B)  \u2192  major keys';
+  String get camelotGuideRingsBody =>
+      'Inner ring (A)  →  minor keys\nOuter ring (B)  →  major keys';
+
   @override
-  String get camelotGuideNumbersTitle => 'Numbers 1\u201312';
+  String get camelotGuideNumbersTitle => 'Numbers 1–12';
+
   @override
-  String get camelotGuideNumbersBody => 'Positions arranged clockwise. Each number represents a harmonic neighbourhood \u2014 neighbours share strong tonal relationships.';
+  String get camelotGuideNumbersBody =>
+      'Positions arranged clockwise. Each number represents a harmonic neighbourhood — neighbours share strong tonal relationships.';
+
   @override
   String get camelotGuideColoursTitle => 'Colour Guide';
+
   @override
-  String get camelotGuideColoursBody => '\u25cf Bright  \u2192  your song\'s key\n\u25cf Softly lit  \u2192  compatible for mixing\n\u25cf Dimmed  \u2192  avoid for smooth mixing';
+  String get camelotGuideColoursBody =>
+      '● Bright  →  your song\'s key\n● Softly lit  →  compatible for mixing\n● Dimmed  →  avoid for smooth mixing';
+
   @override
   String get camelotGuideTransitionsTitle => 'Compatible Transitions';
+
   @override
-  String get camelotGuideTransitionsBody => '8A \u2192 8B  (same number, switch ring)\n  Relative major / minor \u2014 virtually seamless.\n\n8A \u2192 7A or 9A  (\u00b11, same ring)\n  Adjacent key \u2014 smooth, subtle change.\n\n8A \u2192 1A or 3A  (\u00b17, same ring)\n  Energy boost or drop \u2014 more dramatic shift.';
+  String get camelotGuideTransitionsBody =>
+      '8A → 8B  (same number, switch ring)\n  Relative major / minor — virtually seamless.\n\n8A → 7A or 9A  (±1, same ring)\n  Adjacent key — smooth, subtle change.\n\n8A → 1A or 3A  (±7, same ring)\n  Energy boost or drop — more dramatic shift.';
+
   @override
   String get playerMixSuggestions => 'MIX SUGGESTIONS';
 }

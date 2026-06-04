@@ -119,7 +119,7 @@
   "noReleasesFound": "No releases found",
   "noPlaylistsFound": "No playlists found",
   "tryDifferentSearch": "Try a different search term",
-  "deepScanConfirm": "Deep Scan extracts full metadata from project files:\n• BPM (Beats Per Minute)\n• Musical Key\n• DAW Version\nCurrently supported: Ableton Live and Cubase.\n\nThis is slower than a regular scan and may take a while. Continue?",
+  "deepScanConfirm": "Deep Scan extracts full metadata from project files:\n• BPM (Beats Per Minute)\n• Musical Key\n• DAW Version\nCurrently supported: Ableton Live, Cubase and Bitwig Studio.\n\nThis is slower than a regular scan and may take a while. Continue?",
   "deepScanOnlyUnscanned": "Only scan projects without metadata",
   "metadataExtractedSuccessfully": "Metadata extracted successfully",
   "failedToExtractMetadata": "Failed to extract metadata: {error}",
@@ -371,6 +371,7 @@
     
 }
   },
+  "folderAlreadyAdded": "This folder has already been added.",
   "noProjectsFoundInRoots": "No projects found in selected project folders.",
   "selectProjectsFolder": "Select a projects folder",
   "enterReleaseTitle": "Enter Release Title",
