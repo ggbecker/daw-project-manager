@@ -4734,7 +4734,6 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       },
       configuration: TrinaGridConfiguration(
         style: TrinaGridStyleConfig(
-          // Neon Dark: card colour for header area, scaffold bg used only for odd rows via rowColorCallback
           gridBackgroundColor: activeTheme.cardColor,
           gridBorderColor: isNeon
               ? activeTheme.colorScheme.primary.withValues(alpha: 0.25)
@@ -4743,7 +4742,9 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               ? activeTheme.colorScheme.primary.withValues(alpha: 0.15)
               : activeTheme.dividerColor.withValues(alpha: 0.25),
           gridBorderRadius: BorderRadius.zero,
-          rowColor: oddColor,
+          // Match gridBackgroundColor so the empty area below rows is uniform
+          // across frozen (checkbox+name) and scrollable columns.
+          rowColor: activeTheme.cardColor,
           cellColorInEditState: Colors.transparent,
           cellColorInReadOnlyState: Colors.transparent,
           columnTextStyle: TextStyle(
