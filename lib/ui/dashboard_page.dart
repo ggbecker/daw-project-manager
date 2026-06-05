@@ -2972,6 +2972,10 @@ class _PlutoProjectsTable extends ConsumerStatefulWidget {
 class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   TrinaGridStateManager? stateManager;
   bool _isRebuildingRows = false;
+  // Set to true when the theme changes so onLoaded can schedule a _rebuildRows()
+  // call that busts TrinaGrid's renderer cache (which only invalidates on cell/
+  // row/selection changes, not on theme changes).
+  bool _needsThemeRefresh = false;
 
   // Returns true when the project set is identical (same IDs) — only cell
   // values may have changed (BPM, key, lastModified, etc.). In that case we
@@ -3979,6 +3983,11 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     ref.listen(phaseColorsProvider, (_, _) => rebuildForPhaseConfig());
     ref.listen(customPhasesProvider, (_, _) => rebuildForPhaseConfig());
     ref.listen(finishedPhaseProvider, (_, _) => rebuildForPhaseConfig());
+    // Flag that the grid (recreated via key change) needs a full row rebuild
+    // once onLoaded fires, to bust TrinaGrid's renderer cache on theme switch.
+    ref.listen(themeTypeProvider, (prev, next) {
+      if (prev != next) _needsThemeRefresh = true;
+    });
     // When the search query changes, ask TrinaGrid to repaint so the
     // "matched in description" icon in the name renderer reflects the new query.
     ref.listen(projectsSearchProvider, (prev, next) {
@@ -4696,6 +4705,14 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             );
             stateManager!.addListener(_onStateManagerChanged);
             _updateGroupExpandNotifier();
+            // If the grid was recreated due to a theme change, bust the
+            // renderer cache now that the new stateManager is live.
+            if (_needsThemeRefresh) {
+              _needsThemeRefresh = false;
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) _rebuildRows();
+              });
+            }
           },
       onRowSecondaryTap: (TrinaGridOnRowSecondaryTapEvent event) {
         final project = event.row.cells['data']?.value as MusicProject?;
