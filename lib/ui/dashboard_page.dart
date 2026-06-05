@@ -1050,9 +1050,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                     _                 => AppLocalizations.of(context)!.statsSearchProjects,
                                   },
                                   border: InputBorder.none,
-                                  hintStyle: const TextStyle(color: Colors.white54),
+                                  hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
                                 ),
-                                style: const TextStyle(color: Colors.white),
+                                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                                 onChanged: _updateCurrentTabSearch,
                               )
                             : Image.asset('app_icon.png', height: 32),
@@ -1837,10 +1837,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                           return Tooltip(
                             message: l10n.supportTheProject,
                             child: TextButton.icon(
-                              icon: const Icon(Icons.card_giftcard, size: 18, color: Colors.white70),
+                              icon: Icon(Icons.card_giftcard, size: 18, color: Theme.of(context).textTheme.bodySmall?.color),
                               label: Text(
                                 l10n.support,
-                                style: const TextStyle(color: Colors.white70, fontSize: 14),
+                                style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color, fontSize: 14),
                               ),
                               onPressed: () async {
                                 final uri = Uri.parse('https://www.paypal.com/donate/?hosted_button_id=QHVVZ3LAF39BL');
@@ -1860,7 +1860,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                       Tooltip(
                         message: AppLocalizations.of(context)!.menuDocumentation,
                         child: IconButton(
-                          icon: const Icon(Icons.menu_book_outlined, size: 18, color: Colors.white70),
+                          icon: Icon(Icons.menu_book_outlined, size: 18, color: Theme.of(context).textTheme.bodySmall?.color),
                           onPressed: () => launchUrl(
                             Uri.parse('https://dpm.bandpassrecords.com/docs.html'),
                             mode: LaunchMode.externalApplication,
@@ -1871,7 +1871,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                       Tooltip(
                         message: AppLocalizations.of(context)!.keyboardShortcuts,
                         child: IconButton(
-                          icon: const Icon(Icons.keyboard_outlined, size: 18, color: Colors.white70),
+                          icon: Icon(Icons.keyboard_outlined, size: 18, color: Theme.of(context).textTheme.bodySmall?.color),
                           onPressed: () => showShortcutsHelpDialog(context),
                         ),
                       ),
@@ -1879,7 +1879,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                       Tooltip(
                         message: AppLocalizations.of(context)!.customizeTabs,
                         child: IconButton(
-                          icon: const Icon(Icons.tab_outlined, size: 18, color: Colors.white70),
+                          icon: Icon(Icons.tab_outlined, size: 18, color: Theme.of(context).textTheme.bodySmall?.color),
                           onPressed: () => showTabCustomizationDialog(context),
                         ),
                       ),
