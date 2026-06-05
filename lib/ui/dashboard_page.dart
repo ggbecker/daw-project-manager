@@ -4660,7 +4660,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             : Color.alphaBlend(Colors.black.withValues(alpha: 0.04), activeTheme.cardColor);
 
     final grid = TrinaGrid(
-          key: ValueKey('trina_grid_${l10n.localeName}_${isNeon ? "neon" : "classic"}'),
+          key: ValueKey('trina_grid_${l10n.localeName}_${ref.watch(themeTypeProvider).name}'),
           columnMenuDelegate: _FitAllColumnsMenuDelegate(),
           columns: columns,
           rows: initialRows,
