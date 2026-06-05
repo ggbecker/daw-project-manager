@@ -5054,6 +5054,18 @@ abstract class AppLocalizations {
   /// **'Get personalized project recommendations in the toolbar while you work'**
   String get onboardingSuggestionsBody;
 
+  /// No description provided for @onboardingSessionModeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Session Mode'**
+  String get onboardingSessionModeTitle;
+
+  /// No description provided for @onboardingSessionModeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Start focused work sessions and automatically track time spent on each project'**
+  String get onboardingSessionModeBody;
+
   /// No description provided for @suggestionsFeatureDeadlines.
   ///
   /// In en, this message translates to:

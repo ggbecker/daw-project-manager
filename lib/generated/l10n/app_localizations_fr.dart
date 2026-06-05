@@ -2995,6 +2995,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Obtenez des recommandations de projets personnalisées dans la barre d\'outils pendant votre travail';
 
   @override
+  String get onboardingSessionModeTitle => 'Mode session';
+
+  @override
+  String get onboardingSessionModeBody =>
+      'Démarrez des sessions de travail ciblées et suivez automatiquement le temps passé sur chaque projet';
+
+  @override
   String get suggestionsFeatureDeadlines =>
       'Rappels d\'échéances pour les projets à venir';
 

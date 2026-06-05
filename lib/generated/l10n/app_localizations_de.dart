@@ -2985,6 +2985,13 @@ class AppLocalizationsDe extends AppLocalizations {
       'Erhalte personalisierte Projektempfehlungen in der Symbolleiste während du arbeitest';
 
   @override
+  String get onboardingSessionModeTitle => 'Sitzungsmodus';
+
+  @override
+  String get onboardingSessionModeBody =>
+      'Starte fokussierte Arbeitssitzungen und verfolge automatisch die für jedes Projekt aufgewendete Zeit';
+
+  @override
   String get suggestionsFeatureDeadlines =>
       'Fristenhinweise für bevorstehende Projekte';
 

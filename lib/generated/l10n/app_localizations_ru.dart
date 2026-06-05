@@ -2973,6 +2973,13 @@ class AppLocalizationsRu extends AppLocalizations {
       'Получайте персонализированные рекомендации проектов на панели инструментов во время работы';
 
   @override
+  String get onboardingSessionModeTitle => 'Режим сессии';
+
+  @override
+  String get onboardingSessionModeBody =>
+      'Начинайте сфокусированные рабочие сессии и автоматически отслеживайте время, затраченное на каждый проект';
+
+  @override
   String get suggestionsFeatureDeadlines =>
       'Напоминания о дедлайнах для предстоящих проектов';
 

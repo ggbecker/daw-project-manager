@@ -22,7 +22,7 @@ class OnboardingWizardPage extends ConsumerStatefulWidget {
 class _OnboardingWizardPageState extends ConsumerState<OnboardingWizardPage> {
   final _controller = PageController();
   int _page = 0;
-  static const _totalPages = 9;
+  static const _totalPages = 10;
 
   @override
   void dispose() {
@@ -76,6 +76,7 @@ class _OnboardingWizardPageState extends ConsumerState<OnboardingWizardPage> {
                 _FoldersPage(l10n: l10n),
                 _UpdatesPage(l10n: l10n),
                 _SuggestionsPage(l10n: l10n),
+                _SessionModePage(l10n: l10n),
                 _PhasesPage(l10n: l10n),
                 _DonePage(l10n: l10n),
               ],
@@ -684,7 +685,58 @@ class _SuggestionsPreviewMockup extends StatelessWidget {
   }
 }
 
-// ── Page 7: Phases ────────────────────────────────────────────────────────────
+// ── Page 7: Session Mode ──────────────────────────────────────────────────────
+
+class _SessionModePage extends ConsumerWidget {
+  final AppLocalizations l10n;
+  const _SessionModePage({required this.l10n});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final enabled = ref.watch(sessionModeProvider);
+    final theme = Theme.of(context);
+    return _WizardStep(
+      icon: Icons.timer_outlined,
+      title: l10n.onboardingSessionModeTitle,
+      subtitle: l10n.onboardingSessionModeBody,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ...[
+            (Icons.play_circle_outline, l10n.startSession),
+            (Icons.access_time_outlined, l10n.sessionActive),
+            (Icons.history, l10n.sessionHistory),
+          ].map(
+            (e) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 5),
+              child: Row(
+                children: [
+                  Icon(e.$1, size: 18, color: theme.colorScheme.primary),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text(e.$2, style: theme.textTheme.bodyMedium)),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          SwitchListTile(
+            value: enabled,
+            onChanged: (v) => ref.read(sessionModeProvider.notifier).set(v),
+            title: Text(l10n.sessionMode),
+            subtitle: Text(
+              l10n.canBeChangedInSettings,
+              style: theme.textTheme.bodySmall,
+            ),
+            contentPadding: EdgeInsets.zero,
+            dense: true,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Page 8: Phases ────────────────────────────────────────────────────────────
 
 class _PhasesPage extends ConsumerStatefulWidget {
   final AppLocalizations l10n;

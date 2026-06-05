@@ -2875,6 +2875,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onboardingSuggestionsBody => '在工作时在工具栏中获取个性化项目推荐';
 
   @override
+  String get onboardingSessionModeTitle => '会话模式';
+
+  @override
+  String get onboardingSessionModeBody => '开始专注的工作会话，并自动跟踪每个项目花费的时间';
+
+  @override
   String get suggestionsFeatureDeadlines => '即将截止项目的提醒';
 
   @override

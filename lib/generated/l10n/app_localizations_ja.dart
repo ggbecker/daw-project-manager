@@ -2904,6 +2904,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get onboardingSuggestionsBody => '作業中にツールバーにパーソナライズされたプロジェクトのおすすめを取得';
 
   @override
+  String get onboardingSessionModeTitle => 'セッションモード';
+
+  @override
+  String get onboardingSessionModeBody =>
+      '集中した作業セッションを開始し、各プロジェクトの作業時間を自動的に記録します';
+
+  @override
   String get suggestionsFeatureDeadlines => '今後のプロジェクトの締め切りリマインダー';
 
   @override

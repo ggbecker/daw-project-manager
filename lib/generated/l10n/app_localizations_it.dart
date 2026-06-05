@@ -2979,6 +2979,13 @@ class AppLocalizationsIt extends AppLocalizations {
       'Ricevi raccomandazioni di progetti personalizzate nella barra degli strumenti mentre lavori';
 
   @override
+  String get onboardingSessionModeTitle => 'Modalità sessione';
+
+  @override
+  String get onboardingSessionModeBody =>
+      'Avvia sessioni di lavoro mirate e tieni traccia automaticamente del tempo dedicato a ogni progetto';
+
+  @override
   String get suggestionsFeatureDeadlines =>
       'Promemoria delle scadenze per i prossimi progetti';
 
