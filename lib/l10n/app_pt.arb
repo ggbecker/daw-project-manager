@@ -1433,6 +1433,7 @@
   "@switchToNeonTheme": {
     "description": "Tooltip to switch to neon theme"
   },
+  "switchToStudioLight": "Switch to Studio Light",
   "menuTheme": "Tema",
   "@menuTheme": {
     "description": "macOS menu item for theme switching"
@@ -1440,6 +1441,7 @@
   "appDescription": "Um gerenciador de projetos para produtores musicais e designers de som.",
   "neonDarkThemeName": "Neon Escuro",
   "classicDarkThemeName": "Clássico Escuro",
+  "studioLightThemeName": "Studio Light",
   "statisticsTab": "Estatísticas",
   "statsTotalProjects": "Total de Projetos",
   "statsInProgress": "Em andamento",

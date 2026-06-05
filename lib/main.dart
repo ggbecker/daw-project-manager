@@ -430,8 +430,11 @@ class _DawProjectManagerAppState extends ConsumerState<DawProjectManagerApp> wit
   static bool get _isDesktop =>
       !kIsWeb && (Platform.isMacOS || Platform.isWindows || Platform.isLinux);
 
-  static Color _bgForTheme(AppThemeType t) =>
-      t == AppThemeType.neonDark ? const Color(0xFF0A0A14) : const Color(0xFF1E1F22);
+  static Color _bgForTheme(AppThemeType t) => switch (t) {
+    AppThemeType.neonDark    => const Color(0xFF0A0A14),
+    AppThemeType.studioLight => const Color(0xFFF8F4EE),
+    AppThemeType.classicDark => const Color(0xFF1E1F22),
+  };
 
   @override
   void initState() {

@@ -2406,6 +2406,10 @@
   "@switchToNeonTheme": {
     "description": "Tooltip to switch to neon theme"
   },
+  "switchToStudioLight": "Switch to Studio Light",
+  "@switchToStudioLight": {
+    "description": "Tooltip to switch to studio light theme"
+  },
   "menuTheme": "Theme",
   "@menuTheme": {
     "description": "macOS menu item for theme switching"
@@ -2421,6 +2425,10 @@
   "classicDarkThemeName": "Classic Dark",
   "@classicDarkThemeName": {
     "description": "Display name for the Classic Dark theme"
+  },
+  "studioLightThemeName": "Studio Light",
+  "@studioLightThemeName": {
+    "description": "Display name for the Studio Light theme"
   },
   "statisticsTab": "Statistics",
   "statsTotalProjects": "Total Projects",

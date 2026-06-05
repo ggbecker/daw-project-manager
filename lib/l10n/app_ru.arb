@@ -1409,6 +1409,7 @@
   "@switchToNeonTheme": {
     "description": "Tooltip to switch to neon theme"
   },
+  "switchToStudioLight": "Switch to Studio Light",
   "menuTheme": "Тема",
   "@menuTheme": {
     "description": "macOS menu item for theme switching"
@@ -1416,6 +1417,7 @@
   "appDescription": "Менеджер проектов для музыкальных продюсеров и звуковых дизайнеров.",
   "neonDarkThemeName": "Неоновая тёмная",
   "classicDarkThemeName": "Классическая тёмная",
+  "studioLightThemeName": "Studio Light",
   "statisticsTab": "Статистика",
   "statsTotalProjects": "Всего проектов",
   "statsInProgress": "В работе",

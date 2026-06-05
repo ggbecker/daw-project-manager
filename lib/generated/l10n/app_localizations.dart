@@ -3482,6 +3482,12 @@ abstract class AppLocalizations {
   /// **'Switch to Neon Theme'**
   String get switchToNeonTheme;
 
+  /// Tooltip to switch to studio light theme
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to Studio Light'**
+  String get switchToStudioLight;
+
   /// macOS menu item for theme switching
   ///
   /// In en, this message translates to:
@@ -3505,6 +3511,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Classic Dark'**
   String get classicDarkThemeName;
+
+  /// Display name for the Studio Light theme
+  ///
+  /// In en, this message translates to:
+  /// **'Studio Light'**
+  String get studioLightThemeName;
 
   /// No description provided for @statisticsTab.
   ///

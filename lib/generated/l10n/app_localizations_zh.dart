@@ -2000,6 +2000,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get switchToNeonTheme => '切换到霓虹主题';
 
   @override
+  String get switchToStudioLight => 'Switch to Studio Light';
+
+  @override
   String get menuTheme => '主题';
 
   @override
@@ -2010,6 +2013,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get classicDarkThemeName => '经典暗色';
+
+  @override
+  String get studioLightThemeName => 'Studio Light';
 
   @override
   String get statisticsTab => '统计';

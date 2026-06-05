@@ -2074,6 +2074,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get switchToNeonTheme => 'Zu Neon-Theme wechseln';
 
   @override
+  String get switchToStudioLight => 'Switch to Studio Light';
+
+  @override
   String get menuTheme => 'Design';
 
   @override
@@ -2085,6 +2088,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get classicDarkThemeName => 'Klassisch Dunkel';
+
+  @override
+  String get studioLightThemeName => 'Studio Light';
 
   @override
   String get statisticsTab => 'Statistiken';

@@ -2021,6 +2021,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get switchToNeonTheme => 'Neon テーマに切り替え';
 
   @override
+  String get switchToStudioLight => 'Switch to Studio Light';
+
+  @override
   String get menuTheme => 'テーマ';
 
   @override
@@ -2031,6 +2034,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get classicDarkThemeName => 'クラシックダーク';
+
+  @override
+  String get studioLightThemeName => 'Studio Light';
 
   @override
   String get statisticsTab => '統計';
