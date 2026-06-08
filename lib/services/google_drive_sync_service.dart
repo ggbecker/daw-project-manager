@@ -4563,6 +4563,166 @@ class GoogleDriveSyncService {
       updatedAt: DateTime.parse(data['updatedAt'] as String),
     );
   }
+
+  /// Restores a single project from the Google Drive backup.
+  /// Downloads and merges the project's metadata, preview song, and any related
+  /// release artwork. Preserves local filesystem fields (filePath, fileName, etc.).
+  Future<void> restoreSingleProject({
+    required String projectId,
+    required ProfileRepository profileRepo,
+  }) async {
+    if (!isSignedIn) {
+      throw Exception('Not signed in to Google Drive');
+    }
+
+    final remoteData = await downloadDatabase();
+
+    final projectsList = remoteData['projects'] as List?;
+    if (projectsList == null || projectsList.isEmpty) {
+      throw Exception('No projects found in backup');
+    }
+
+    Map<String, dynamic>? projectMap;
+    for (final p in projectsList) {
+      if ((p as Map<String, dynamic>)['id'] == projectId) {
+        projectMap = p;
+        break;
+      }
+    }
+    if (projectMap == null) {
+      throw Exception('Project not found in backup');
+    }
+
+    final remoteProject = _deserializeProject(projectMap);
+
+    // Locate the Hive box that holds this project, guided by the profile mapping if present
+    final projectToProfileMap = remoteData['projectToProfile'] as Map<String, dynamic>?;
+    final profileId = projectToProfileMap?[projectId] as String?;
+
+    Box<MusicProject>? profileProjectsBox;
+    MusicProject? localProject;
+
+    if (profileId != null) {
+      profileProjectsBox = await Hive.openBox<MusicProject>('${profileId}_projects');
+      localProject = profileProjectsBox.get(projectId);
+    } else {
+      for (final profile in profileRepo.getAllProfiles()) {
+        final box = await Hive.openBox<MusicProject>('${profile.id}_projects');
+        final found = box.get(projectId);
+        if (found != null) {
+          profileProjectsBox = box;
+          localProject = found;
+          break;
+        }
+      }
+      if (profileProjectsBox == null) {
+        final profiles = profileRepo.getAllProfiles();
+        if (profiles.isEmpty) throw Exception('No profiles found');
+        profileProjectsBox = await Hive.openBox<MusicProject>('${profiles.first.id}_projects');
+      }
+    }
+
+    // Download preview song if available
+    final previewSongFiles = remoteData['previewSongFiles'] as Map<String, dynamic>?;
+    final previewSongHashes = remoteData['previewSongHashes'] as Map<String, dynamic>?;
+    final previewSongFileNames = remoteData['previewSongFileNames'] as Map<String, dynamic>?;
+
+    String? previewSongPath = localProject?.previewSongPath;
+    String? previewSongFileName;
+    String? uploadedPreviewSongHash;
+
+    if (previewSongFiles != null && previewSongFiles.containsKey(projectId)) {
+      final driveFileId = previewSongFiles[projectId] as String;
+      String? originalFileName = previewSongFileNames?[projectId] as String?;
+      originalFileName ??= (remoteProject.previewSongPath != null &&
+              !_isDriveFileReference(remoteProject.previewSongPath!))
+          ? path.basename(remoteProject.previewSongPath!)
+          : null;
+      final expectedHash = previewSongHashes?[projectId] as String?;
+      final fileExtension =
+          originalFileName != null ? path.extension(originalFileName) : null;
+
+      final downloadedPath = await downloadPreviewSongFile(
+        driveFileId: driveFileId,
+        projectId: projectId,
+        expectedHash: expectedHash,
+        fileExtension: fileExtension,
+      );
+      previewSongPath = downloadedPath ?? _createDriveFileReference(driveFileId);
+      previewSongFileName = originalFileName;
+      uploadedPreviewSongHash = expectedHash;
+    }
+
+    // Merge into local project or use remote directly for a new project
+    final MusicProject projectToSave;
+    if (localProject != null) {
+      projectToSave = localProject.copyWith(
+        notes: remoteProject.notes,
+        todos: remoteProject.todos,
+        bpm: remoteProject.bpm,
+        musicalKey: remoteProject.musicalKey,
+        status: remoteProject.status,
+        customDisplayName: remoteProject.customDisplayName,
+        hidden: remoteProject.hidden,
+        deadline: remoteProject.deadline,
+        clearDeadline: remoteProject.deadline == null,
+        statusChangedAt: remoteProject.statusChangedAt,
+        previewSongPath: previewSongPath,
+        previewSongFileName:
+            previewSongFileName ?? remoteProject.previewSongFileName,
+        uploadedPreviewSongHash:
+            uploadedPreviewSongHash ?? remoteProject.uploadedPreviewSongHash,
+        updatedAt: remoteProject.updatedAt,
+        lastModifiedAt: remoteProject.lastModifiedAt,
+        fileCreatedAt: remoteProject.fileCreatedAt,
+      );
+    } else {
+      projectToSave = remoteProject.copyWith(
+        previewSongPath: previewSongPath ?? remoteProject.previewSongPath,
+        previewSongFileName:
+            previewSongFileName ?? remoteProject.previewSongFileName,
+        uploadedPreviewSongHash:
+            uploadedPreviewSongHash ?? remoteProject.uploadedPreviewSongHash,
+      );
+    }
+
+    await profileProjectsBox.put(projectToSave.id, projectToSave);
+    await profileProjectsBox.flush();
+    // Second put forces Hive to emit a BoxEvent even if the object reference is unchanged
+    await profileProjectsBox.put(projectToSave.id, projectToSave.copyWith());
+    await profileProjectsBox.flush();
+
+    // Download related release artwork for any release that contains this project
+    final releaseArtworkFiles = remoteData['releaseArtworkFiles'] as Map<String, dynamic>?;
+    final releaseArtworkHashes = remoteData['releaseArtworkHashes'] as Map<String, dynamic>?;
+
+    if (releaseArtworkFiles != null) {
+      final releasesList = remoteData['releases'] as List?;
+      if (releasesList != null) {
+        for (final releaseMap in releasesList.cast<Map<String, dynamic>>()) {
+          final trackIds =
+              (releaseMap['trackIds'] as List?)?.cast<String>() ?? <String>[];
+          if (trackIds.contains(projectId)) {
+            final releaseId = releaseMap['id'] as String;
+            if (releaseArtworkFiles.containsKey(releaseId)) {
+              final driveFileId = releaseArtworkFiles[releaseId] as String;
+              final expectedHash = releaseArtworkHashes?[releaseId] as String?;
+              final artworkPath = releaseMap['artworkImagePath'] as String?;
+              final fileExtension =
+                  artworkPath != null ? path.extension(artworkPath) : null;
+              await downloadReleaseArtworkFile(
+                driveFileId: driveFileId,
+                releaseId: releaseId,
+                expectedHash: expectedHash,
+                fileExtension: fileExtension,
+              );
+            }
+            break;
+          }
+        }
+      }
+    }
+  }
 }
 
 /// Custom HTTP client that adds Google authentication headers to requests

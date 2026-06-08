@@ -3625,6 +3625,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
 
   Future<void> _showContextMenu(BuildContext context, MusicProject project, Offset position) async {
     final l10n = AppLocalizations.of(context)!;
+    final driveService = ref.read(googleDriveSyncServiceProvider);
 
     final result = await showMenu<String>(
       context: context,
@@ -3701,6 +3702,16 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               ],
             ),
           ),
+        PopupMenuItem<String>(
+          value: 'restoreFromDrive',
+          child: Row(
+            children: [
+              const Icon(Icons.cloud_download, size: 20),
+              const SizedBox(width: 8),
+              Text(l10n.restoreProjectFromDrive),
+            ],
+          ),
+        ),
       ],
       color: Theme.of(context).cardColor,
     );
@@ -3778,6 +3789,60 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             }
           } finally {
             widget.onExtractingMetadataChanged(false);
+          }
+          break;
+        case 'restoreFromDrive':
+          if (!mounted) break;
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) => AlertDialog(
+              backgroundColor: Theme.of(context).cardColor,
+              content: Row(
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(width: 16),
+                  Text(l10n.restoringProjectFromDrive),
+                ],
+              ),
+            ),
+          );
+          try {
+            // Restore session if not already authenticated (e.g. Drive page was never opened)
+            if (!driveService.isSignedIn) {
+              await driveService.restoreSession();
+            }
+            if (!driveService.isSignedIn) {
+              throw Exception('not_signed_in');
+            }
+            final profileRepo = await ref.read(profileRepositoryProvider.future);
+            await driveService.restoreSingleProject(
+              projectId: project.id,
+              profileRepo: profileRepo,
+            );
+            if (mounted) {
+              Navigator.of(this.context, rootNavigator: true).pop();
+              ref.invalidate(allProjectsStreamProvider);
+              ScaffoldMessenger.of(this.context).showSnackBar(
+                SnackBar(content: Text(l10n.projectRestoredFromDrive)),
+              );
+            }
+          } catch (e) {
+            if (mounted) {
+              Navigator.of(this.context, rootNavigator: true).pop();
+              final errStr = e.toString();
+              final String msg;
+              if (errStr.contains('not_signed_in') || errStr.contains('Not signed in')) {
+                msg = l10n.signInToGoogleDriveFirst;
+              } else if (errStr.contains('not found in backup')) {
+                msg = l10n.projectNotFoundInBackup;
+              } else {
+                msg = '${l10n.error}: $e';
+              }
+              ScaffoldMessenger.of(this.context).showSnackBar(
+                SnackBar(content: Text(msg)),
+              );
+            }
           }
           break;
       }
@@ -4452,24 +4517,36 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Play Preview Song button (always show, but disabled if no preview)
-              IconButton(
-                icon: Icon(
-                  project.previewSongPath?.isNotEmpty == true || project.previewSongAutoPath != null
-                      ? Icons.play_circle
-                      : Icons.play_circle_outline,
-                ),
-                iconSize: 24,
-                padding: const EdgeInsets.all(4),
-                constraints: const BoxConstraints(),
-                tooltip: project.previewSongAutoPath != null && project.previewSongPath?.isNotEmpty != true
-                    ? '${AppLocalizations.of(context)!.playPreview} (P)\n⚡ ${AppLocalizations.of(context)!.autoDetected}: ${path.basename(project.previewSongAutoPath!)}'
-                    : '${AppLocalizations.of(context)!.playPreview} (P)',
-                onPressed: () => _playPreviewSong(project),
-                color: project.previewSongPath?.isNotEmpty == true
-                    ? Colors.green
-                    : project.previewSongAutoPath != null
-                        ? Colors.amber
-                        : Colors.grey,
+              Consumer(
+                builder: (context, ref, _) {
+                  final playerRequest = ref.watch(desktopPlayerProvider);
+                  final isPlaying = ref.watch(desktopIsPlayingProvider);
+                  final isActive = isPlaying && playerRequest?.project.id == project.id;
+                  final iconColor = project.previewSongPath?.isNotEmpty == true
+                      ? Colors.green
+                      : project.previewSongAutoPath != null
+                          ? Colors.amber
+                          : Colors.grey;
+                  return _PlayButtonWithGlow(
+                    isActive: isActive,
+                    glowColor: iconColor,
+                    child: IconButton(
+                      icon: Icon(
+                        project.previewSongPath?.isNotEmpty == true || project.previewSongAutoPath != null
+                            ? Icons.play_circle
+                            : Icons.play_circle_outline,
+                      ),
+                      iconSize: 24,
+                      padding: const EdgeInsets.all(4),
+                      constraints: const BoxConstraints(),
+                      tooltip: project.previewSongAutoPath != null && project.previewSongPath?.isNotEmpty != true
+                          ? '${AppLocalizations.of(context)!.playPreview} (P)\n⚡ ${AppLocalizations.of(context)!.autoDetected}: ${path.basename(project.previewSongAutoPath!)}'
+                          : '${AppLocalizations.of(context)!.playPreview} (P)',
+                      onPressed: () => _playPreviewSong(project),
+                      color: iconColor,
+                    ),
+                  );
+                },
               ),
               // Separator (always show)
               Padding(
@@ -5908,6 +5985,7 @@ class _DesktopPlayerBar extends ConsumerStatefulWidget {
 
 class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
   late AudioPlayer _player;
+  late DesktopIsPlayingNotifier _isPlayingNotifier;
   bool _isPlaying = false;
   bool _playbackEnded = false;
   Duration _position = Duration.zero;
@@ -5978,12 +6056,15 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
   @override
   void initState() {
     super.initState();
+    _isPlayingNotifier = ref.read(desktopIsPlayingProvider.notifier);
     _loadBarHeight();
     HardwareKeyboard.instance.addHandler(_handleKeyboard);
     _player = AudioPlayer();
     _player.onPlayerStateChanged.listen((s) {
       if (!mounted) return;
-      setState(() => _isPlaying = s == PlayerState.playing);
+      final playing = s == PlayerState.playing;
+      setState(() => _isPlaying = playing);
+      _isPlayingNotifier.set(playing);
     });
     _player.onDurationChanged.listen((d) {
       if (!mounted) return;
@@ -5996,6 +6077,7 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
     _player.onPlayerComplete.listen((_) {
       if (!mounted) return;
       setState(() { _isPlaying = false; _position = Duration.zero; _playbackEnded = true; });
+      _isPlayingNotifier.set(false);
       if (widget.request.isQueuedPlayback) {
         ref.read(desktopPlayerCompletedProvider.notifier).increment();
       }
@@ -6010,6 +6092,11 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
     if (oldWidget.request.resolvedPath != widget.request.resolvedPath ||
         oldWidget.request.generation != widget.request.generation) {
       _player.stop();
+      // Defer provider mutation — didUpdateWidget is called during the build
+      // phase and Riverpod forbids provider writes at that point.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _isPlayingNotifier.set(false);
+      });
       setState(() {
         _isPlaying = false;
         _playbackEnded = false;
@@ -6032,6 +6119,7 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
     _focusNode.dispose();
     _player.stop();
     _player.dispose();
+    _isPlayingNotifier.set(false);
     super.dispose();
   }
 
@@ -8918,6 +9006,88 @@ class _PendingFolderRow extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _PlayButtonWithGlow extends StatefulWidget {
+  final bool isActive;
+  final Color glowColor;
+  final Widget child;
+
+  const _PlayButtonWithGlow({
+    required this.isActive,
+    required this.glowColor,
+    required this.child,
+  });
+
+  @override
+  State<_PlayButtonWithGlow> createState() => _PlayButtonWithGlowState();
+}
+
+class _PlayButtonWithGlowState extends State<_PlayButtonWithGlow>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _anim;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+    _anim = Tween<double>(begin: 0.15, end: 1.0).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
+    );
+    if (widget.isActive) _ctrl.repeat(reverse: true);
+  }
+
+  @override
+  void didUpdateWidget(_PlayButtonWithGlow old) {
+    super.didUpdateWidget(old);
+    if (widget.isActive && !old.isActive) {
+      _ctrl.repeat(reverse: true);
+    } else if (!widget.isActive && old.isActive) {
+      _ctrl.stop();
+      _ctrl.value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.isActive) return widget.child;
+
+    return AnimatedBuilder(
+      animation: _anim,
+      builder: (_, child) => Stack(
+        alignment: Alignment.center,
+        clipBehavior: Clip.none,
+        children: [
+          // Positioned so it does not affect the Stack's layout size.
+          // The glow overflows visually but the button's footprint stays constant.
+          Positioned(
+            left: -3,
+            right: -3,
+            top: -3,
+            bottom: -3,
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: widget.glowColor.withValues(alpha: _anim.value * 0.28),
+              ),
+            ),
+          ),
+          child!,
+        ],
+      ),
+      child: widget.child,
     );
   }
 }

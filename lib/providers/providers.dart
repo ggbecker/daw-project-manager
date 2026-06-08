@@ -1550,6 +1550,16 @@ final desktopPlayerProvider =
     NotifierProvider<DesktopPlayerNotifier, DesktopPlayerRequest?>(
         DesktopPlayerNotifier.new);
 
+/// True while the desktop player is actively playing (false when paused/stopped).
+class DesktopIsPlayingNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+  void set(bool value) => state = value;
+}
+
+final desktopIsPlayingProvider =
+    NotifierProvider<DesktopIsPlayingNotifier, bool>(DesktopIsPlayingNotifier.new);
+
 /// Incremented each time the desktop player finishes a track naturally.
 /// Music player listens to this to trigger queue auto-advance.
 class DesktopPlayerCompletedNotifier extends Notifier<int> {

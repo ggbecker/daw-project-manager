@@ -1285,6 +1285,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newerBackupAvailable => 'New backup available on cloud';
 
   @override
+  String get restoreProjectFromDrive => 'Restore from Drive';
+
+  @override
+  String get restoringProjectFromDrive => 'Restoring from Drive...';
+
+  @override
+  String get projectRestoredFromDrive => 'Project restored from Drive';
+
+  @override
+  String get projectNotFoundInBackup =>
+      'This project was not found in the Drive backup';
+
+  @override
+  String get signInToGoogleDriveFirst =>
+      'Please sign in to Google Drive first (open Drive Sync settings)';
+
+  @override
   String get signOut => 'Sign Out';
 
   @override

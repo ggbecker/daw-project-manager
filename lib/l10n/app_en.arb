@@ -1278,6 +1278,26 @@
   "@downloadBackup": {
     "description": "Button to download backup from Google Drive"
   },
+  "restoreProjectFromDrive": "Restore from Drive",
+  "@restoreProjectFromDrive": {
+    "description": "Context menu option to restore a single project from Google Drive backup"
+  },
+  "restoringProjectFromDrive": "Restoring from Drive...",
+  "@restoringProjectFromDrive": {
+    "description": "Progress message shown while restoring a single project from Drive"
+  },
+  "projectRestoredFromDrive": "Project restored from Drive",
+  "@projectRestoredFromDrive": {
+    "description": "Success message shown after restoring a project from Drive"
+  },
+  "projectNotFoundInBackup": "This project was not found in the Drive backup",
+  "@projectNotFoundInBackup": {
+    "description": "Error shown when the project doesn't exist in the remote backup"
+  },
+  "signInToGoogleDriveFirst": "Please sign in to Google Drive first (open Drive Sync settings)",
+  "@signInToGoogleDriveFirst": {
+    "description": "Error shown when trying to restore from Drive but not authenticated"
+  },
   "signOut": "Sign Out",
   "@signOut": {
     "description": "Button to sign out from Google Drive"

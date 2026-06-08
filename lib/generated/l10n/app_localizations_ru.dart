@@ -1287,6 +1287,23 @@ class AppLocalizationsRu extends AppLocalizations {
   String get newerBackupAvailable => 'Доступна новая резервная копия в облаке';
 
   @override
+  String get restoreProjectFromDrive => 'Восстановить из Drive';
+
+  @override
+  String get restoringProjectFromDrive => 'Восстановление из Drive...';
+
+  @override
+  String get projectRestoredFromDrive => 'Проект восстановлен из Drive';
+
+  @override
+  String get projectNotFoundInBackup =>
+      'Этот проект не найден в резервной копии Drive';
+
+  @override
+  String get signInToGoogleDriveFirst =>
+      'Сначала войдите в Google Drive (откройте настройки Drive Sync)';
+
+  @override
   String get signOut => 'Выйти';
 
   @override

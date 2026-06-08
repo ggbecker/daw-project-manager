@@ -498,7 +498,9 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
                             itemCount: _displayTracks.length,
                             itemBuilder: (context, i) {
                               final (originalIndex, track) = _displayTracks[i];
-                              final isPlaying = originalIndex == _currentIndex;
+                              final isCurrentTrack = originalIndex == _currentIndex;
+                              final isActuallyPlaying = ref.watch(desktopIsPlayingProvider);
+                              final isPlaying = isCurrentTrack && isActuallyPlaying;
                               final isPreviewing = originalIndex == _selectedIndex;
                               final resolvedPath = _resolvedPath(track)!;
                               return Draggable<MusicProject>(
@@ -582,14 +584,11 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
                                     selectedTileColor: isPlaying
                                         ? cs.primary.withValues(alpha: 0.12)
                                         : cs.secondary.withValues(alpha: 0.08),
-                                    leading: Icon(
-                                      isPlaying
-                                          ? Icons.volume_up
-                                          : Icons.music_note,
-                                      size: 18,
-                                      color: isPlaying
-                                          ? cs.primary
-                                          : (isPreviewing ? cs.secondary : null),
+                                    leading: _PulsingIcon(
+                                      isPlaying: isPlaying,
+                                      glowColor: cs.primary,
+                                      isPreviewing: isPreviewing,
+                                      previewColor: cs.secondary,
                                     ),
                                     title: Text(
                                       track.displayName,
@@ -1448,6 +1447,93 @@ class _DetailTodoItem extends ConsumerWidget {
         ref.invalidate(allProjectsStreamProvider);
         onToggled();
       },
+    );
+  }
+}
+
+class _PulsingIcon extends StatefulWidget {
+  final bool isPlaying;
+  final bool isPreviewing;
+  final Color glowColor;
+  final Color previewColor;
+
+  const _PulsingIcon({
+    required this.isPlaying,
+    required this.glowColor,
+    required this.isPreviewing,
+    required this.previewColor,
+  });
+
+  @override
+  State<_PulsingIcon> createState() => _PulsingIconState();
+}
+
+class _PulsingIconState extends State<_PulsingIcon>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _anim;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 850),
+    );
+    _anim = Tween<double>(begin: 0.25, end: 1.0).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
+    );
+    if (widget.isPlaying) _ctrl.repeat(reverse: true);
+  }
+
+  @override
+  void didUpdateWidget(_PulsingIcon old) {
+    super.didUpdateWidget(old);
+    if (widget.isPlaying && !old.isPlaying) {
+      _ctrl.repeat(reverse: true);
+    } else if (!widget.isPlaying && old.isPlaying) {
+      _ctrl.stop();
+      _ctrl.value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.isPlaying) {
+      return Icon(
+        Icons.music_note,
+        size: 18,
+        color: widget.isPreviewing ? widget.previewColor : null,
+      );
+    }
+    return AnimatedBuilder(
+      animation: _anim,
+      builder: (_, _) => Stack(
+        alignment: Alignment.center,
+        clipBehavior: Clip.none,
+        children: [
+          // Positioned keeps the glow outside the layout footprint.
+          Positioned(
+            left: -3,
+            right: -3,
+            top: -3,
+            bottom: -3,
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: widget.glowColor.withValues(alpha: _anim.value * 0.45),
+              ),
+            ),
+          ),
+          Icon(Icons.volume_up, size: 18, color: widget.glowColor),
+        ],
+      ),
     );
   }
 }

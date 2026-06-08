@@ -1266,6 +1266,22 @@ class AppLocalizationsJa extends AppLocalizations {
   String get newerBackupAvailable => 'クラウドに新しいバックアップが利用可能';
 
   @override
+  String get restoreProjectFromDrive => 'Driveから復元';
+
+  @override
+  String get restoringProjectFromDrive => 'Driveから復元中...';
+
+  @override
+  String get projectRestoredFromDrive => 'プロジェクトをDriveから復元しました';
+
+  @override
+  String get projectNotFoundInBackup => 'このプロジェクトはDriveのバックアップに見つかりませんでした';
+
+  @override
+  String get signInToGoogleDriveFirst =>
+      'まずGoogle Driveにサインインしてください（Drive Sync設定を開く）';
+
+  @override
   String get signOut => 'サインアウト';
 
   @override

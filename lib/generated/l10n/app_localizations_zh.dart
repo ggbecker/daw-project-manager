@@ -1256,6 +1256,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get newerBackupAvailable => '云端有新备份可用';
 
   @override
+  String get restoreProjectFromDrive => '从Drive恢复';
+
+  @override
+  String get restoringProjectFromDrive => '正在从Drive恢复...';
+
+  @override
+  String get projectRestoredFromDrive => '项目已从Drive恢复';
+
+  @override
+  String get projectNotFoundInBackup => '在Drive备份中未找到此项目';
+
+  @override
+  String get signInToGoogleDriveFirst => '请先登录Google Drive（打开Drive同步设置）';
+
+  @override
   String get signOut => '退出';
 
   @override

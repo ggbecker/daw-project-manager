@@ -2181,6 +2181,36 @@ abstract class AppLocalizations {
   /// **'New backup available on cloud'**
   String get newerBackupAvailable;
 
+  /// Context menu option to restore a single project from Google Drive backup
+  ///
+  /// In en, this message translates to:
+  /// **'Restore from Drive'**
+  String get restoreProjectFromDrive;
+
+  /// Progress message shown while restoring a single project from Drive
+  ///
+  /// In en, this message translates to:
+  /// **'Restoring from Drive...'**
+  String get restoringProjectFromDrive;
+
+  /// Success message shown after restoring a project from Drive
+  ///
+  /// In en, this message translates to:
+  /// **'Project restored from Drive'**
+  String get projectRestoredFromDrive;
+
+  /// Error shown when the project doesn't exist in the remote backup
+  ///
+  /// In en, this message translates to:
+  /// **'This project was not found in the Drive backup'**
+  String get projectNotFoundInBackup;
+
+  /// Error shown when trying to restore from Drive but not authenticated
+  ///
+  /// In en, this message translates to:
+  /// **'Please sign in to Google Drive first (open Drive Sync settings)'**
+  String get signInToGoogleDriveFirst;
+
   /// Button to sign out from Google Drive
   ///
   /// In en, this message translates to:
