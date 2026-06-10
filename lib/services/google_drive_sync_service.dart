@@ -1762,21 +1762,34 @@ class GoogleDriveSyncService {
         print('Downloading preview song from Drive: $driveFileId');
       }
       
-      // Download file using Drive API
-      final media = await _withRetry(() async => (await _driveApi!.files.get(
-        driveFileId,
-        downloadOptions: drive.DownloadOptions.fullMedia,
-      )) as drive.Media);
-      
-      // Read the stream and write to file
+      // Download file using Drive API, retrying the full download (including
+      // stream consumption) so transient network errors mid-stream are retried.
       final file = File(localFilePath);
-      final sink = file.openWrite();
-      
-      await for (final chunk in media.stream) {
-        sink.add(chunk);
-      }
-      await sink.close();
-      
+      await _withRetry(() async {
+        // Get a fresh Media handle on every attempt so the stream is not reused.
+        final media = (await _driveApi!.files.get(
+          driveFileId,
+          downloadOptions: drive.DownloadOptions.fullMedia,
+        )) as drive.Media;
+
+        // Delete any partial file left by a previous failed attempt.
+        if (await file.exists()) await file.delete();
+
+        final sink = file.openWrite();
+        try {
+          await for (final chunk in media.stream) {
+            sink.add(chunk);
+          }
+        } catch (e) {
+          // Always close the sink and remove the partial file before rethrowing
+          // so we never leak file handles or leave corrupt data on disk.
+          await sink.close();
+          if (await file.exists()) await file.delete();
+          rethrow;
+        }
+        await sink.close();
+      });
+
       // Verify hash if expected hash was provided
       if (expectedHash != null) {
         final downloadedHash = await _calculateFileHash(localFilePath);
@@ -1791,11 +1804,11 @@ class GoogleDriveSyncService {
           }
         }
       }
-      
+
       if (kDebugMode) {
         print('Downloaded preview song to: $localFilePath');
       }
-      
+
       return localFilePath;
     } catch (e) {
       if (kDebugMode) print('Error downloading preview song: $e');
@@ -1862,21 +1875,30 @@ class GoogleDriveSyncService {
         print('Downloading profile photo from Drive: $driveFileId');
       }
       
-      // Download file using Drive API
-      final media = await _withRetry(() async => (await _driveApi!.files.get(
-        driveFileId,
-        downloadOptions: drive.DownloadOptions.fullMedia,
-      )) as drive.Media);
-      
-      // Read the stream and write to file
+      // Download file using Drive API, retrying the full download (including
+      // stream consumption) so transient network errors mid-stream are retried.
       final file = File(localFilePath);
-      final sink = file.openWrite();
-      
-      await for (final chunk in media.stream) {
-        sink.add(chunk);
-      }
-      await sink.close();
-      
+      await _withRetry(() async {
+        final media = (await _driveApi!.files.get(
+          driveFileId,
+          downloadOptions: drive.DownloadOptions.fullMedia,
+        )) as drive.Media;
+
+        if (await file.exists()) await file.delete();
+
+        final sink = file.openWrite();
+        try {
+          await for (final chunk in media.stream) {
+            sink.add(chunk);
+          }
+        } catch (e) {
+          await sink.close();
+          if (await file.exists()) await file.delete();
+          rethrow;
+        }
+        await sink.close();
+      });
+
       // Verify hash if expected hash was provided
       if (expectedHash != null) {
         final downloadedHash = await _calculateFileHash(localFilePath);
@@ -1891,11 +1913,11 @@ class GoogleDriveSyncService {
           }
         }
       }
-      
+
       if (kDebugMode) {
         print('Downloaded profile photo to: $localFilePath');
       }
-      
+
       return localFilePath;
     } catch (e) {
       if (kDebugMode) print('Error downloading profile photo: $e');
@@ -1962,21 +1984,30 @@ class GoogleDriveSyncService {
         print('Downloading release artwork from Drive: $driveFileId');
       }
       
-      // Download file using Drive API
-      final media = await _withRetry(() async => (await _driveApi!.files.get(
-        driveFileId,
-        downloadOptions: drive.DownloadOptions.fullMedia,
-      )) as drive.Media);
-      
-      // Read the stream and write to file
+      // Download file using Drive API, retrying the full download (including
+      // stream consumption) so transient network errors mid-stream are retried.
       final file = File(localFilePath);
-      final sink = file.openWrite();
-      
-      await for (final chunk in media.stream) {
-        sink.add(chunk);
-      }
-      await sink.close();
-      
+      await _withRetry(() async {
+        final media = (await _driveApi!.files.get(
+          driveFileId,
+          downloadOptions: drive.DownloadOptions.fullMedia,
+        )) as drive.Media;
+
+        if (await file.exists()) await file.delete();
+
+        final sink = file.openWrite();
+        try {
+          await for (final chunk in media.stream) {
+            sink.add(chunk);
+          }
+        } catch (e) {
+          await sink.close();
+          if (await file.exists()) await file.delete();
+          rethrow;
+        }
+        await sink.close();
+      });
+
       // Verify hash if expected hash was provided
       if (expectedHash != null) {
         final downloadedHash = await _calculateFileHash(localFilePath);
@@ -1991,11 +2022,11 @@ class GoogleDriveSyncService {
           }
         }
       }
-      
+
       if (kDebugMode) {
         print('Downloaded release artwork to: $localFilePath');
       }
-      
+
       return localFilePath;
     } catch (e) {
       if (kDebugMode) print('Error downloading release artwork: $e');
@@ -3638,26 +3669,35 @@ class GoogleDriveSyncService {
                             localFilePath = previewSongPath;
                             // File exists locally - verify hash if we have expected hash
                             if (uploadedPreviewSongHash != null) {
-                              try {
-                                final localHash = await _cachedFileHash(previewSongPath);
-                                if (localHash == uploadedPreviewSongHash) {
-                                  // Hash matches - no download needed
-                                  if (kDebugMode) {
-                                    print('    Preview song already exists locally with matching hash for: ${remoteProject.displayName}');
+                              // Fast path: if the hash we stored locally already equals the
+                              // expected hash, the file is current — skip the expensive disk read.
+                              if (localProject.uploadedPreviewSongHash == uploadedPreviewSongHash) {
+                                if (kDebugMode) {
+                                  print('    Preview song hash already matches stored hash for: ${remoteProject.displayName}, skipping disk read');
+                                }
+                                needsDownload = false;
+                              } else {
+                                try {
+                                  final localHash = await _cachedFileHash(previewSongPath);
+                                  if (localHash == uploadedPreviewSongHash) {
+                                    // Hash matches - no download needed
+                                    if (kDebugMode) {
+                                      print('    Preview song already exists locally with matching hash for: ${remoteProject.displayName}');
+                                    }
+                                    needsDownload = false;
+                                  } else {
+                                    // Hash mismatch - need to re-download
+                                    if (kDebugMode) {
+                                      print('    Preview song hash mismatch (local: $localHash, expected: $uploadedPreviewSongHash) for: ${remoteProject.displayName}, will re-download');
+                                    }
+                                    needsDownload = true;
                                   }
-                                  needsDownload = false;
-                                } else {
-                                  // Hash mismatch - need to re-download
+                                } catch (e) {
                                   if (kDebugMode) {
-                                    print('    Preview song hash mismatch (local: $localHash, expected: $uploadedPreviewSongHash) for: ${remoteProject.displayName}, will re-download');
+                                    print('    Error checking local file hash: $e, will re-download');
                                   }
                                   needsDownload = true;
                                 }
-                              } catch (e) {
-                                if (kDebugMode) {
-                                  print('    Error checking local file hash: $e, will re-download');
-                                }
-                                needsDownload = true;
                               }
                             } else {
                               // No expected hash - check if local hash matches project hash
@@ -3693,7 +3733,7 @@ class GoogleDriveSyncService {
                           // Hash changed - need to download
                           needsDownload = true;
                         }
-                        
+
                         if (needsDownload) {
                           downloadedPreviewSongs++;
                           
@@ -3863,26 +3903,35 @@ class GoogleDriveSyncService {
                           if (await localFile.exists()) {
                             // File exists locally - verify hash if we have expected hash
                             if (expectedHash != null) {
-                              try {
-                                final localHash = await _cachedFileHash(previewSongPath);
-                                if (localHash == expectedHash) {
-                                  // Hash matches - no download needed
-                                  if (kDebugMode) {
-                                    print('    Preview song already exists locally with matching hash for: ${localProject.displayName}');
+                              // Fast path: if the hash we stored locally already equals the
+                              // expected hash, the file is current — skip the expensive disk read.
+                              if (localProject.uploadedPreviewSongHash == expectedHash) {
+                                if (kDebugMode) {
+                                  print('    Preview song hash already matches stored hash for: ${localProject.displayName}, skipping disk read');
+                                }
+                                needsDownload = false;
+                              } else {
+                                try {
+                                  final localHash = await _cachedFileHash(previewSongPath);
+                                  if (localHash == expectedHash) {
+                                    // Hash matches - no download needed
+                                    if (kDebugMode) {
+                                      print('    Preview song already exists locally with matching hash for: ${localProject.displayName}');
+                                    }
+                                    needsDownload = false;
+                                  } else {
+                                    // Hash mismatch - need to re-download
+                                    if (kDebugMode) {
+                                      print('    Preview song hash mismatch (local: $localHash, expected: $expectedHash) for: ${localProject.displayName}, will re-download');
+                                    }
+                                    needsDownload = true;
                                   }
-                                  needsDownload = false;
-                                } else {
-                                  // Hash mismatch - need to re-download
+                                } catch (e) {
                                   if (kDebugMode) {
-                                    print('    Preview song hash mismatch (local: $localHash, expected: $expectedHash) for: ${localProject.displayName}, will re-download');
+                                    print('    Error checking local file hash: $e, will re-download');
                                   }
                                   needsDownload = true;
                                 }
-                              } catch (e) {
-                                if (kDebugMode) {
-                                  print('    Error checking local file hash: $e, will re-download');
-                                }
-                                needsDownload = true;
                               }
                             } else {
                               // No expected hash - check if local hash matches project hash
