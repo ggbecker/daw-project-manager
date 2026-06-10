@@ -211,7 +211,9 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
     final updated = project.copyWith(
       customDisplayName: newCustomDisplayName,
       bpm: _bpmCtrl.text.trim().isEmpty ? null : double.tryParse(_bpmCtrl.text.trim()),
+      clearBpm: _bpmCtrl.text.trim().isEmpty,
       musicalKey: _keyCtrl.text.trim().isEmpty ? null : _keyCtrl.text.trim(),
+      clearMusicalKey: _keyCtrl.text.trim().isEmpty,
       notes: newNotes,
       clearNotes: newNotes == null,
       status: newStatus,
