@@ -88,7 +88,12 @@ class GoogleDriveSyncService {
   
   // Public getters for user state (following official example)
   GoogleSignInAccount? get currentUser => _currentUser;
-  bool get isSignedIn => _currentUser != null && _isAuthenticated;
+  bool get isSignedIn {
+    if (MobileUtils.isMobile()) {
+      return _currentUser != null && _isAuthenticated;
+    }
+    return _desktopAuthClient != null && _driveApi != null;
+  }
   
   // Public getters for desktop flow
   drive.DriveApi? get driveApi => _driveApi;
