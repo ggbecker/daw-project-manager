@@ -715,6 +715,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
         }
       }
 
+      ref.invalidate(allProjectsStreamProvider);
+
       if (mounted) {
         final scanType = fullMetadata ? AppLocalizations.of(context)!.deepScan : AppLocalizations.of(context)!.rescan;
         final msg = foundCount == 0
@@ -8752,6 +8754,7 @@ class _PendingFolderRow extends ConsumerWidget {
                   await repo.upsertFromFileSystemEntity(entity, fullMetadata: true);
                   scanned++;
                 }
+                ref.invalidate(allProjectsStreamProvider);
                 if (kDebugMode) {
                   print('[PendingRefresh] scanned $scanned entities in ${pf.path}');
                 }
