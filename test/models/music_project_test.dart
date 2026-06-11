@@ -129,6 +129,195 @@ void main() {
     });
   });
 
+  group('MusicProject.projectAgeFormatted', () {
+    test('returns "Just now" when project created seconds ago', () {
+      final p = TestFactories.makeProject(fileCreatedAt: DateTime.now());
+      expect(p.projectAgeFormatted, 'Just now');
+    });
+
+    test('returns singular "1 hour" for a one-hour-old project', () {
+      final p = TestFactories.makeProject(
+        fileCreatedAt: DateTime.now().subtract(const Duration(hours: 1)),
+      );
+      expect(p.projectAgeFormatted, '1 hour');
+    });
+
+    test('returns plural hours for a multi-hour-old project', () {
+      final p = TestFactories.makeProject(
+        fileCreatedAt: DateTime.now().subtract(const Duration(hours: 5)),
+      );
+      expect(p.projectAgeFormatted, '5 hours');
+    });
+
+    test('returns days when project is several days old', () {
+      final p = TestFactories.makeProject(
+        fileCreatedAt: DateTime.now().subtract(const Duration(days: 5)),
+      );
+      expect(p.projectAgeFormatted, '5 days');
+    });
+
+    test('returns months only when day remainder is zero', () {
+      // 30 days → 1 month exactly (30 % 30 == 0)
+      final p = TestFactories.makeProject(
+        fileCreatedAt: DateTime.now().subtract(const Duration(days: 30)),
+      );
+      expect(p.projectAgeFormatted, '1 month');
+    });
+
+    test('returns months and days for a partial month', () {
+      // 45 days → 1 month, 15 days
+      final p = TestFactories.makeProject(
+        fileCreatedAt: DateTime.now().subtract(const Duration(days: 45)),
+      );
+      expect(p.projectAgeFormatted, '1 month, 15 days');
+    });
+
+    test('returns years only when month remainder is zero', () {
+      // 365 days → 1 year, 0 months
+      final p = TestFactories.makeProject(
+        fileCreatedAt: DateTime.now().subtract(const Duration(days: 365)),
+      );
+      expect(p.projectAgeFormatted, '1 year');
+    });
+
+    test('returns years and months for multi-year project', () {
+      // 400 days → 1 year, 1 month (35 days / 30 = 1 month)
+      final p = TestFactories.makeProject(
+        fileCreatedAt: DateTime.now().subtract(const Duration(days: 400)),
+      );
+      expect(p.projectAgeFormatted, '1 year, 1 month');
+    });
+  });
+
+  group('MusicProject.timeToCompletion', () {
+    test('returns null when project is not in a finished phase', () {
+      final p = TestFactories.makeProject(
+        status: 'Mixing',
+        statusChangedAt: DateTime(2025, 1, 1),
+      );
+      expect(p.timeToCompletion(), isNull);
+    });
+
+    test('returns null when statusChangedAt is not set', () {
+      final p = TestFactories.makeProject(
+        status: 'Finished',
+        statusChangedAt: null,
+      );
+      expect(p.timeToCompletion(), isNull);
+    });
+
+    test('uses fileCreatedAt as start date when available', () {
+      final p = TestFactories.makeProject(
+        status: 'Finished',
+        fileCreatedAt: DateTime(2024, 1, 1),
+        createdAt: DateTime(2024, 6, 1), // later — should be ignored
+        statusChangedAt: DateTime(2025, 1, 1),
+      );
+      // 2024 is a leap year: Jan 1 → Jan 1 next year = 366 days
+      expect(p.timeToCompletion()!.inDays, 366);
+    });
+
+    test('falls back to createdAt when fileCreatedAt is null', () {
+      final p = TestFactories.makeProject(
+        status: 'Finished',
+        fileCreatedAt: null,
+        createdAt: DateTime(2024, 6, 1),
+        statusChangedAt: DateTime(2025, 6, 1),
+      );
+      // Jun 1 2024 → Jun 1 2025 = 365 days (leap day was before June)
+      expect(p.timeToCompletion()!.inDays, 365);
+    });
+
+    test('accepts custom finishedPhases set', () {
+      final p = TestFactories.makeProject(
+        status: 'Mastering',
+        statusChangedAt: DateTime(2025, 1, 1),
+        createdAt: DateTime(2024, 1, 1),
+      );
+      expect(p.timeToCompletion({'Mastering'}), isNotNull);
+      expect(p.timeToCompletion({'Finished'}), isNull);
+    });
+  });
+
+  group('MusicProject.timeToCompletionFormatted', () {
+    test('returns null when project is not finished', () {
+      final p = TestFactories.makeProject(status: 'Mixing');
+      expect(p.timeToCompletionFormatted(), isNull);
+    });
+
+    test('returns "Less than an hour" for very quick completion', () {
+      final now = DateTime.now();
+      final p = TestFactories.makeProject(
+        status: 'Finished',
+        createdAt: now.subtract(const Duration(minutes: 30)),
+        statusChangedAt: now,
+      );
+      expect(p.timeToCompletionFormatted(), 'Less than an hour');
+    });
+
+    test('returns days for a week-long project', () {
+      final p = TestFactories.makeProject(
+        status: 'Finished',
+        createdAt: DateTime(2025, 1, 1),
+        statusChangedAt: DateTime(2025, 1, 8),
+      );
+      expect(p.timeToCompletionFormatted(), '7 days');
+    });
+
+    test('returns months and days for a multi-month project', () {
+      // Jan 1 → Feb 15 = 45 days → 1 month, 15 days
+      final p = TestFactories.makeProject(
+        status: 'Finished',
+        createdAt: DateTime(2025, 1, 1),
+        statusChangedAt: DateTime(2025, 2, 15),
+      );
+      expect(p.timeToCompletionFormatted(), '1 month, 15 days');
+    });
+  });
+
+  group('MusicProject.compatibleCamelotCodes', () {
+    test('returns null when musicalKey is null', () {
+      final p = TestFactories.makeProject(musicalKey: null);
+      expect(p.compatibleCamelotCodes, isNull);
+    });
+
+    test('includes the relative key (same number, opposite letter)', () {
+      // A minor = 8A → relative major = C major = 8B
+      final p = TestFactories.makeProject(musicalKey: 'A minor');
+      expect(p.compatibleCamelotCodes, contains('8B'));
+    });
+
+    test('includes adjacent keys on the wheel (+1 and -1)', () {
+      // A minor = 8A → 9A and 7A
+      final codes = TestFactories.makeProject(musicalKey: 'A minor').compatibleCamelotCodes!;
+      expect(codes, contains('9A'));
+      expect(codes, contains('7A'));
+    });
+
+    test('includes energy-shift keys (+7 and -7) with wrap-around', () {
+      // A minor = 8A → +7 = 15 → wraps to 3A; -7 = 1A
+      final codes = TestFactories.makeProject(musicalKey: 'A minor').compatibleCamelotCodes!;
+      expect(codes, contains('3A'));
+      expect(codes, contains('1A'));
+    });
+
+    test('+1 wraps correctly from 12 to 1', () {
+      // E major = 12B → +1 wraps to 1B
+      expect(
+        TestFactories.makeProject(musicalKey: 'E major').compatibleCamelotCodes,
+        contains('1B'),
+      );
+    });
+
+    test('-1 wraps correctly from 1 to 12', () {
+      // B major = 1B → -1 wraps to 12B
+      expect(
+        TestFactories.makeProject(musicalKey: 'B major').compatibleCamelotCodes,
+        contains('12B'),
+      );
+    });
+  });
+
   group('MusicProject.camelotCode', () {
     test('returns correct code for C minor', () {
       final p = TestFactories.makeProject(musicalKey: 'c minor');
@@ -153,6 +342,16 @@ void main() {
     test('returns null when musicalKey is null', () {
       final p = TestFactories.makeProject(musicalKey: null);
       expect(p.camelotCode, isNull);
+    });
+
+    test('resolves enharmonic G#/Ab Major notation', () {
+      final p = TestFactories.makeProject(musicalKey: 'G#/Ab Major');
+      expect(p.camelotCode, '4B');
+    });
+
+    test('resolves enharmonic C#/Db Minor notation', () {
+      final p = TestFactories.makeProject(musicalKey: 'C#/Db Minor');
+      expect(p.camelotCode, '12A');
     });
   });
 
@@ -181,6 +380,40 @@ void main() {
       final original = TestFactories.makeProject();
       final copy = original.copyWith(status: 'Finished');
       expect(copy.lastModifiedAt, original.lastModifiedAt);
+    });
+
+    // Regression: clearing nullable fields via copyWith was broken — passing null
+    // for bpm/musicalKey/customDisplayName had no effect because of the
+    // `field ?? this.field` pattern. Fix added explicit clearField bool flags.
+
+    test('clearBpm sets bpm to null', () {
+      final p = TestFactories.makeProject(bpm: 128.0);
+      expect(p.copyWith(clearBpm: true).bpm, isNull);
+    });
+
+    test('passing null bpm without clearBpm preserves existing value', () {
+      final p = TestFactories.makeProject(bpm: 128.0);
+      expect(p.copyWith(bpm: null).bpm, 128.0);
+    });
+
+    test('clearMusicalKey sets musicalKey to null', () {
+      final p = TestFactories.makeProject(musicalKey: 'C minor');
+      expect(p.copyWith(clearMusicalKey: true).musicalKey, isNull);
+    });
+
+    test('passing null musicalKey without clearMusicalKey preserves existing value', () {
+      final p = TestFactories.makeProject(musicalKey: 'C minor');
+      expect(p.copyWith(musicalKey: null).musicalKey, 'C minor');
+    });
+
+    test('clearCustomDisplayName sets customDisplayName to null', () {
+      final p = TestFactories.makeProject(customDisplayName: 'My Track');
+      expect(p.copyWith(clearCustomDisplayName: true).customDisplayName, isNull);
+    });
+
+    test('passing null customDisplayName without flag preserves existing value', () {
+      final p = TestFactories.makeProject(customDisplayName: 'My Track');
+      expect(p.copyWith(customDisplayName: null).customDisplayName, 'My Track');
     });
   });
 

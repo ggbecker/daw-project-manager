@@ -1,5 +1,7 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:daw_project_manager/models/music_project.dart';
+import 'package:daw_project_manager/models/pending_folder.dart';
 import 'package:daw_project_manager/services/backup_service.dart';
 import '../helpers/hive_test_helper.dart';
 import '../helpers/test_factories.dart';
@@ -168,6 +170,271 @@ void main() {
       await repo.restoreProject(TestFactories.makeProject(id: 'p3'));
 
       expect(repo.getAllProjects().length, 3);
+    });
+  });
+
+  group('ProjectRepository.custom phases', () {
+    test('getCustomPhases returns the 5 default phases when not configured', () async {
+      final repo = await HiveTestHelper.createRepository();
+      expect(repo.getCustomPhases(),
+          ['Idea', 'Arranging', 'Mixing', 'Mastering', 'Finished']);
+    });
+
+    test('setCustomPhases / getCustomPhases round-trip', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.setCustomPhases(['Draft', 'WIP', 'Done']);
+      expect(repo.getCustomPhases(), ['Draft', 'WIP', 'Done']);
+    });
+
+    test('getCustomPhases falls back to defaults on malformed JSON', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.appSettingsBox.put('test-profile_phases', 'not valid json{{');
+      expect(repo.getCustomPhases(),
+          ['Idea', 'Arranging', 'Mixing', 'Mastering', 'Finished']);
+    });
+
+    test('getCustomPhases returns an unmodifiable list', () async {
+      final repo = await HiveTestHelper.createRepository();
+      final phases = repo.getCustomPhases();
+      expect(() => (phases as dynamic).add('Extra'), throwsUnsupportedError);
+    });
+  });
+
+  group('ProjectRepository.phase colors', () {
+    test('getPhaseColors returns empty map when not configured', () async {
+      final repo = await HiveTestHelper.createRepository();
+      expect(repo.getPhaseColors(), isEmpty);
+    });
+
+    test('setPhaseColors / getPhaseColors round-trip', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.setPhaseColors({'Mixing': '#FF5733', 'Finished': '#2ECC71'});
+      final colors = repo.getPhaseColors();
+      expect(colors['Mixing'], '#FF5733');
+      expect(colors['Finished'], '#2ECC71');
+    });
+
+    test('getPhaseColors returns empty map on malformed JSON', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.appSettingsBox.put('test-profile_phase_colors', '{bad}');
+      expect(repo.getPhaseColors(), isEmpty);
+    });
+  });
+
+  group('ProjectRepository.finished phases', () {
+    test('getFinishedPhases defaults to {"Finished"} when not configured', () async {
+      final repo = await HiveTestHelper.createRepository();
+      expect(repo.getFinishedPhases(), {'Finished'});
+    });
+
+    test('setFinishedPhases / getFinishedPhases round-trip', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.setFinishedPhases({'Released', 'Archived'});
+      expect(repo.getFinishedPhases(), {'Released', 'Archived'});
+    });
+
+    test('setFinishedPhase wraps a single phase into a set', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.setFinishedPhase('Mastering');
+      expect(repo.getFinishedPhases(), {'Mastering'});
+    });
+
+    test('migrates legacy single-phase key when new key is absent', () async {
+      final repo = await HiveTestHelper.createRepository();
+      // Simulate a DB written before the multi-phase feature was added
+      await repo.appSettingsBox.put('test-profile_finished_phase', 'Released');
+      expect(repo.getFinishedPhases(), {'Released'});
+    });
+  });
+
+  group('ProjectRepository.custom mixdown folder', () {
+    test('getCustomMixdownFolder returns null when not configured', () async {
+      final repo = await HiveTestHelper.createRepository();
+      expect(repo.getCustomMixdownFolder(), isNull);
+    });
+
+    test('setCustomMixdownFolder saves the trimmed value', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.setCustomMixdownFolder('  Exports  ');
+      expect(repo.getCustomMixdownFolder(), 'Exports');
+    });
+
+    test('setCustomMixdownFolder with null deletes the setting', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.setCustomMixdownFolder('/something');
+      await repo.setCustomMixdownFolder(null);
+      expect(repo.getCustomMixdownFolder(), isNull);
+    });
+
+    test('setCustomMixdownFolder with empty string deletes the setting', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.setCustomMixdownFolder('/something');
+      await repo.setCustomMixdownFolder('');
+      expect(repo.getCustomMixdownFolder(), isNull);
+    });
+  });
+
+  group('ProjectRepository.pending folders', () {
+    test('getPendingFolders returns empty list when not configured', () async {
+      final repo = await HiveTestHelper.createRepository();
+      expect(repo.getPendingFolders(), isEmpty);
+    });
+
+    test('addPendingFolder / getPendingFolders round-trip', () async {
+      final repo = await HiveTestHelper.createRepository();
+      final folder = PendingFolder(
+        id: 'pf-1',
+        path: '/music/project',
+        createdAt: DateTime(2025, 1, 1),
+      );
+      await repo.addPendingFolder(folder);
+      final saved = repo.getPendingFolders();
+      expect(saved.length, 1);
+      expect(saved.first.id, 'pf-1');
+      expect(saved.first.path, '/music/project');
+    });
+
+    test('addPendingFolder deduplicates by path — new entry replaces old', () async {
+      final repo = await HiveTestHelper.createRepository();
+      final old = PendingFolder(id: 'pf-old', path: '/same', createdAt: DateTime(2025, 1, 1));
+      final newer = PendingFolder(id: 'pf-new', path: '/same', createdAt: DateTime(2025, 6, 1));
+      await repo.addPendingFolder(old);
+      await repo.addPendingFolder(newer);
+      final folders = repo.getPendingFolders();
+      expect(folders.length, 1);
+      expect(folders.first.id, 'pf-new');
+    });
+
+    test('removePendingFolder removes by id, keeps others', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.addPendingFolder(PendingFolder(id: 'pf-1', path: '/a', createdAt: DateTime(2025, 1, 1)));
+      await repo.addPendingFolder(PendingFolder(id: 'pf-2', path: '/b', createdAt: DateTime(2025, 1, 1)));
+      await repo.removePendingFolder('pf-1');
+      final folders = repo.getPendingFolders();
+      expect(folders.length, 1);
+      expect(folders.first.id, 'pf-2');
+    });
+
+    test('updatePendingFolder replaces the existing entry', () async {
+      final repo = await HiveTestHelper.createRepository();
+      final original = PendingFolder(id: 'pf-1', path: '/a', createdAt: DateTime(2025, 1, 1));
+      await repo.addPendingFolder(original);
+      final updated = original.copyWith(sessionStartedAt: DateTime(2025, 3, 1));
+      await repo.updatePendingFolder(updated);
+      final folders = repo.getPendingFolders();
+      expect(folders.length, 1);
+      expect(folders.first.sessionStartedAt, DateTime(2025, 3, 1));
+    });
+
+    test('resolveCompletedPendingFolders removes non-existent folders', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.addPendingFolder(PendingFolder(
+        id: 'pf-gone',
+        path: '/definitely/does/not/exist/on/disk',
+        createdAt: DateTime(2025, 1, 1),
+      ));
+      final removed = await repo.resolveCompletedPendingFolders();
+      expect(removed, contains('pf-gone'));
+      expect(repo.getPendingFolders(), isEmpty);
+    });
+
+    test('resolveCompletedPendingFolders removes folders that contain a DAW project file', () async {
+      final dir = await Directory.systemTemp.createTemp('resolve_done_');
+      try {
+        await File('${dir.path}/project.als').create();
+        final repo = await HiveTestHelper.createRepository();
+        await repo.addPendingFolder(PendingFolder(
+          id: 'pf-done',
+          path: dir.path,
+          createdAt: DateTime(2025, 1, 1),
+        ));
+        final removed = await repo.resolveCompletedPendingFolders();
+        expect(removed, contains('pf-done'));
+        expect(repo.getPendingFolders(), isEmpty);
+      } finally {
+        await dir.delete(recursive: true);
+      }
+    });
+
+    test('resolveCompletedPendingFolders keeps folders that exist and have no project file', () async {
+      final dir = await Directory.systemTemp.createTemp('resolve_keep_');
+      try {
+        final repo = await HiveTestHelper.createRepository();
+        await repo.addPendingFolder(PendingFolder(
+          id: 'pf-empty',
+          path: dir.path,
+          createdAt: DateTime(2025, 1, 1),
+        ));
+        final removed = await repo.resolveCompletedPendingFolders();
+        expect(removed, isEmpty);
+        expect(repo.getPendingFolders().length, 1);
+      } finally {
+        await dir.delete(recursive: true);
+      }
+    });
+  });
+
+  group('ProjectRepository.watchAllProjects', () {
+    // Regression: _scanAll in dashboard_page.dart was missing
+    // ref.invalidate(allProjectsStreamProvider) after completing a scan,
+    // so the table would not refresh until the user navigated away and back.
+    // The fix relies on watchAllProjects() emitting after every Box.put(),
+    // which these tests verify at the repository level.
+
+    test('emits initial snapshot immediately on subscribe', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.updateProject(TestFactories.makeProject(id: 'p1'));
+      await repo.updateProject(TestFactories.makeProject(id: 'p2'));
+
+      final first = await repo.watchAllProjects().first;
+      expect(first.map((p) => p.id), containsAll(['p1', 'p2']));
+    });
+
+    test('emits updated list after a project is saved', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.updateProject(TestFactories.makeProject(id: 'existing'));
+
+      // Collect all emissions via listen so no events are missed. The
+      // Future.delayed(Duration.zero) drains the microtask queue after
+      // each step, ensuring the async* generator has subscribed to
+      // box.watch() before we write.
+      final emissions = <List<MusicProject>>[];
+      final sub = repo.watchAllProjects().listen(emissions.add);
+      await Future.delayed(Duration.zero);
+
+      await repo.updateProject(TestFactories.makeProject(id: 'newly-added'));
+      await Future.delayed(Duration.zero);
+      await sub.cancel();
+
+      expect(emissions.length, greaterThanOrEqualTo(2));
+      expect(emissions.last.any((p) => p.id == 'newly-added'), isTrue);
+    });
+
+    test('emits updated lastModifiedAt after rescan upsert', () async {
+      // Simulates the rescan path: upsertFromFileSystemEntity calls
+      // projectsBox.put() unconditionally, which must trigger a Box.watch()
+      // event so the dashboard table reflects the new date.
+      final repo = await HiveTestHelper.createRepository();
+      final original = TestFactories.makeProject(
+        id: 'scanned',
+        lastModifiedAt: DateTime(2024, 1, 1),
+      );
+      await repo.updateProject(original);
+
+      final emissions = <List<MusicProject>>[];
+      final sub = repo.watchAllProjects().listen(emissions.add);
+      await Future.delayed(Duration.zero);
+
+      final rescanned = original.copyWith(
+        lastModifiedAt: DateTime(2025, 6, 10),
+      );
+      await repo.restoreProject(rescanned);
+      await Future.delayed(Duration.zero);
+      await sub.cancel();
+
+      expect(emissions.length, greaterThanOrEqualTo(2));
+      final saved = emissions.last.firstWhere((p) => p.id == 'scanned');
+      expect(saved.lastModifiedAt, DateTime(2025, 6, 10));
     });
   });
 
