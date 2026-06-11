@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as p;
 import 'package:daw_project_manager/models/music_project.dart';
 import 'package:daw_project_manager/models/pending_folder.dart';
+import 'package:daw_project_manager/models/release.dart';
 import 'package:daw_project_manager/services/backup_service.dart';
 import '../helpers/hive_test_helper.dart';
 import '../helpers/test_factories.dart';
@@ -435,6 +437,231 @@ void main() {
       expect(emissions.length, greaterThanOrEqualTo(2));
       final saved = emissions.last.firstWhere((p) => p.id == 'scanned');
       expect(saved.lastModifiedAt, DateTime(2025, 6, 10));
+    });
+  });
+
+  group('ProjectRepository.removeRoot', () {
+    test('removes projects whose filePath is under the root', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.addRoot('/rootA');
+      final rootId = repo.getRoots().first.id;
+
+      await repo.updateProject(
+          TestFactories.makeProject(id: 'p1', filePath: '/rootA/track1.als'));
+      await repo.updateProject(
+          TestFactories.makeProject(id: 'p2', filePath: '/rootA/sub/track2.als'));
+
+      await repo.removeRoot(rootId);
+
+      expect(repo.getById('p1'), isNull);
+      expect(repo.getById('p2'), isNull);
+    });
+
+    test('preserves projects under a different root', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.addRoot('/rootA');
+      final rootId = repo.getRoots().first.id;
+
+      await repo.updateProject(
+          TestFactories.makeProject(id: 'inA', filePath: '/rootA/track.als'));
+      await repo.updateProject(
+          TestFactories.makeProject(id: 'inB', filePath: '/rootB/other.als'));
+
+      await repo.removeRoot(rootId);
+
+      expect(repo.getById('inA'), isNull);
+      expect(repo.getById('inB'), isNotNull);
+    });
+
+    test('preserves projects referenced in a release', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.addRoot('/rootA');
+      final rootId = repo.getRoots().first.id;
+
+      await repo.updateProject(
+          TestFactories.makeProject(id: 'normal', filePath: '/rootA/normal.als'));
+      await repo.updateProject(
+          TestFactories.makeProject(id: 'protected', filePath: '/rootA/protected.als'));
+      await repo.addRelease(
+          Release(id: 'r1', title: 'EP', trackIds: ['protected']));
+
+      await repo.removeRoot(rootId);
+
+      expect(repo.getById('normal'), isNull);
+      expect(repo.getById('protected'), isNotNull);
+    });
+
+    test('removes the root entry from the roots box', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.addRoot('/rootA');
+      final rootId = repo.getRoots().first.id;
+
+      await repo.removeRoot(rootId);
+
+      expect(repo.getRoots(), isEmpty);
+    });
+
+    test('does nothing when root id is not found', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.updateProject(
+          TestFactories.makeProject(id: 'p1', filePath: '/rootA/track.als'));
+
+      await repo.removeRoot('no-such-root-id');
+
+      expect(repo.getById('p1'), isNotNull);
+    });
+  });
+
+  group('ProjectRepository.relocateRoot', () {
+    test('updates the root path', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.addRoot('/rootA');
+      final rootId = repo.getRoots().first.id;
+
+      await repo.relocateRoot(rootId, '/rootB');
+
+      expect(p.normalize(repo.getRoots().first.path), p.normalize('/rootB'));
+    });
+
+    test('rewrites filePath for every project under the old root', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.addRoot('/rootA');
+      final rootId = repo.getRoots().first.id;
+
+      await repo.updateProject(
+          TestFactories.makeProject(id: 'p1', filePath: '/rootA/track1.als'));
+      await repo.updateProject(
+          TestFactories.makeProject(id: 'p2', filePath: '/rootA/sub/track2.als'));
+
+      await repo.relocateRoot(rootId, '/rootB');
+
+      expect(
+        p.normalize(repo.getById('p1')!.filePath),
+        p.normalize('/rootB/track1.als'),
+      );
+      expect(
+        p.normalize(repo.getById('p2')!.filePath),
+        p.normalize('/rootB/sub/track2.als'),
+      );
+    });
+
+    test('returns the count of rewritten projects', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.addRoot('/rootA');
+      final rootId = repo.getRoots().first.id;
+
+      await repo.updateProject(
+          TestFactories.makeProject(id: 'p1', filePath: '/rootA/a.als'));
+      await repo.updateProject(
+          TestFactories.makeProject(id: 'p2', filePath: '/rootA/b.als'));
+
+      final count = await repo.relocateRoot(rootId, '/rootB');
+
+      expect(count, 2);
+    });
+
+    test('does not touch projects under a different root', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.addRoot('/rootA');
+      final rootId = repo.getRoots().first.id;
+
+      await repo.updateProject(
+          TestFactories.makeProject(id: 'inA', filePath: '/rootA/track.als'));
+      await repo.updateProject(
+          TestFactories.makeProject(id: 'inB', filePath: '/rootB/other.als'));
+
+      await repo.relocateRoot(rootId, '/rootC');
+
+      expect(
+        p.normalize(repo.getById('inB')!.filePath),
+        p.normalize('/rootB/other.als'),
+        reason: 'Project outside the relocated root must be unchanged',
+      );
+    });
+
+    test('also rewrites previewSongPath when it starts with the old root', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.addRoot('/rootA');
+      final rootId = repo.getRoots().first.id;
+
+      await repo.updateProject(TestFactories.makeProject(
+        id: 'p1',
+        filePath: '/rootA/track.als',
+        previewSongPath: '/rootA/Exports/mix.mp3',
+      ));
+
+      await repo.relocateRoot(rootId, '/rootB');
+
+      expect(
+        p.normalize(repo.getById('p1')!.previewSongPath!),
+        p.normalize('/rootB/Exports/mix.mp3'),
+      );
+    });
+
+    test('returns 0 when root id is not found', () async {
+      final repo = await HiveTestHelper.createRepository();
+      final count = await repo.relocateRoot('no-such-id', '/rootB');
+      expect(count, 0);
+    });
+  });
+
+  group('ProjectRepository.removeOrphanedProjectsFromRoot', () {
+    test('removes projects not in foundPaths', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.updateProject(
+          TestFactories.makeProject(id: 'kept', filePath: '/root/kept.als'));
+      await repo.updateProject(
+          TestFactories.makeProject(id: 'orphan', filePath: '/root/orphan.als'));
+
+      await repo.removeOrphanedProjectsFromRoot('/root', {'/root/kept.als'});
+
+      expect(repo.getById('kept'), isNotNull);
+      expect(repo.getById('orphan'), isNull);
+    });
+
+    test('preserves all projects when every path is in foundPaths', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.updateProject(
+          TestFactories.makeProject(id: 'p1', filePath: '/root/a.als'));
+      await repo.updateProject(
+          TestFactories.makeProject(id: 'p2', filePath: '/root/b.als'));
+
+      await repo.removeOrphanedProjectsFromRoot(
+          '/root', {'/root/a.als', '/root/b.als'});
+
+      expect(repo.getById('p1'), isNotNull);
+      expect(repo.getById('p2'), isNotNull);
+    });
+
+    test('does not touch projects under a different root', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.updateProject(
+          TestFactories.makeProject(id: 'inRoot', filePath: '/root/track.als'));
+      await repo.updateProject(
+          TestFactories.makeProject(id: 'other', filePath: '/otherRoot/track.als'));
+
+      // foundPaths is empty — every project under /root is "orphaned"
+      await repo.removeOrphanedProjectsFromRoot('/root', {});
+
+      expect(repo.getById('inRoot'), isNull);
+      expect(repo.getById('other'), isNotNull);
+    });
+
+    test('preserves release-protected projects even when absent from foundPaths',
+        () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.updateProject(
+          TestFactories.makeProject(id: 'normal', filePath: '/root/normal.als'));
+      await repo.updateProject(
+          TestFactories.makeProject(id: 'protected', filePath: '/root/protected.als'));
+      await repo.addRelease(
+          Release(id: 'r1', title: 'EP', trackIds: ['protected']));
+
+      // Neither path is in foundPaths — normal should be deleted, protected should survive
+      await repo.removeOrphanedProjectsFromRoot('/root', {});
+
+      expect(repo.getById('normal'), isNull);
+      expect(repo.getById('protected'), isNotNull);
     });
   });
 
