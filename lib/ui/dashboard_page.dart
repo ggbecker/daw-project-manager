@@ -3249,7 +3249,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         ),
       );
       if (!mounted || confirmed != true) return;
-      final picked = await FilePicker.platform.pickFiles(
+      final picked = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: const ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'],
         dialogTitle: l10n.selectPreviewSong,
@@ -3307,7 +3307,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         await repo.updateProject(updated);
         return;
       } else if (action == _FileNotFoundAction.selectNew) {
-        final result = await FilePicker.platform.pickFiles(
+        final result = await FilePicker.pickFiles(
           type: FileType.custom,
           allowedExtensions: const ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'],
           dialogTitle: l10n.selectPreviewSong,
@@ -6683,7 +6683,7 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
         ),
       );
       if (!mounted || confirmed != true) return;
-      final picked = await FilePicker.platform.pickFiles(
+      final picked = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: const ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'],
         dialogTitle: l10n.selectPreviewSong,
@@ -6741,7 +6741,7 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
         await repo.updateProject(updated);
         return;
       } else if (action == _FileNotFoundAction.selectNew) {
-        final result = await FilePicker.platform.pickFiles(
+        final result = await FilePicker.pickFiles(
           type: FileType.custom,
           allowedExtensions: const ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'],
           dialogTitle: l10n.selectPreviewSong,

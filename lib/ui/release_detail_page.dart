@@ -138,7 +138,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
   }
 
   Future<void> _addFiles(BuildContext context, Release release) async {
-    final result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       allowMultiple: true,
       type: FileType.any,
     );
@@ -211,7 +211,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
 
     // Ask user where to save the ZIP
     final safeName = release.title.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_');
-    final savePath = await FilePicker.platform.saveFile(
+    final savePath = await FilePicker.saveFile(
       dialogTitle: AppLocalizations.of(context)!.saveReleaseFilesZip,
       fileName: '${safeName}_files.zip',
       type: FileType.any,
@@ -340,7 +340,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
       return;
     }
 
-    final result = await FilePicker.platform.pickFiles(type: FileType.image);
+    final result = await FilePicker.pickFiles(type: FileType.image);
     if (result != null && result.files.single.path != null) {
       final sourcePath = result.files.single.path!;
       final sourceFile = File(sourcePath);

@@ -46,7 +46,7 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
     required String assetType,
     required Function(String) onFileSelected,
   }) async {
-    final result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       type: assetType == 'image' ? FileType.image : FileType.any,
     );
 
@@ -142,7 +142,7 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
         return;
       }
 
-      final savePath = await FilePicker.platform.saveFile(
+      final savePath = await FilePicker.saveFile(
         dialogTitle: 'Save File',
         fileName: suggestedFileName,
         type: FileType.any,
@@ -211,7 +211,7 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
     }
 
     final safeName = profile.name.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_');
-    final savePath = await FilePicker.platform.saveFile(
+    final savePath = await FilePicker.saveFile(
       dialogTitle: 'Save All Files as ZIP',
       fileName: '${safeName}_profile_assets.zip',
       type: FileType.any,
@@ -588,7 +588,7 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
     if (selectedFiles.isEmpty) return;
 
     final safeName = profile.name.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_');
-    final savePath = await FilePicker.platform.saveFile(
+    final savePath = await FilePicker.saveFile(
       dialogTitle: 'Save Selected Files as ZIP',
       fileName: '${safeName}_selected_files.zip',
       type: FileType.any,

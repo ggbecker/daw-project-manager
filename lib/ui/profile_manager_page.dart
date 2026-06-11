@@ -184,7 +184,7 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
   }
 
   Future<void> _pickProfilePhoto(Profile profile) async {
-    final result = await FilePicker.platform.pickFiles(type: FileType.image);
+    final result = await FilePicker.pickFiles(type: FileType.image);
     if (result != null && result.files.single.path != null) {
       final sourcePath = result.files.single.path!;
       final sourceFile = File(sourcePath);

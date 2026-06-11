@@ -46,7 +46,7 @@ class BackupService {
       final jsonString = const JsonEncoder.withIndent('  ').convert(backupData);
 
       // Save to file
-      final result = await FilePicker.platform.saveFile(
+      final result = await FilePicker.saveFile(
         dialogTitle: exportDialogTitle ?? 'Export Backup',
         fileName: 'daw_project_manager_backup_${DateTime.now().toIso8601String().split('T')[0]}.json',
         type: FileType.custom,
@@ -79,7 +79,7 @@ class BackupService {
   }) async {
     try {
       // Pick backup file
-      final result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['json'],
         dialogTitle: importDialogTitle ?? 'Import Backup',

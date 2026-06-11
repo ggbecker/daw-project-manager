@@ -17,7 +17,7 @@ on:
 
 # Variáveis de Configuração
 env:
-  FLUTTER_BASE_VERSION: 3.41.3
+  FLUTTER_BASE_VERSION: 3.41.9
 
 # 2. Jobs
 jobs:
@@ -38,6 +38,15 @@ jobs:
 
       - name: Get dependencies
         run: flutter pub get
+
+      - name: Inject OAuth Credentials
+        run: |
+          chmod +x scripts/inject_secret.sh
+          ./scripts/inject_secret.sh -d "${{ secrets.DESKTOP_CLIENT_ID }}" -s "${{ secrets.DESKTOP_CLIENT_SECRET }}" -a "${{ secrets.ANDROID_WEB_CLIENT_ID }}"
+        env:
+          DESKTOP_CLIENT_ID: ${{ secrets.DESKTOP_CLIENT_ID }}
+          DESKTOP_CLIENT_SECRET: ${{ secrets.DESKTOP_CLIENT_SECRET }}
+          ANDROID_WEB_CLIENT_ID: ${{ secrets.ANDROID_WEB_CLIENT_ID }}
 
       - name: Generate Hive Adapters
         run: dart run build_runner build --delete-conflicting-outputs

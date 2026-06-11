@@ -407,7 +407,7 @@ class _FoldersPageState extends ConsumerState<_FoldersPage> {
 
   Future<void> _addFolder() async {
     if (_busy || !_isDesktop) return;
-    final picked = await FilePicker.platform.getDirectoryPath(
+    final picked = await FilePicker.getDirectoryPath(
       dialogTitle: widget.l10n.selectProjectsFolder,
     );
     if (picked == null || !mounted) return;
