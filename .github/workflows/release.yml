@@ -17,7 +17,7 @@ on:
 
 # Variáveis de Configuração
 env:
-  FLUTTER_BASE_VERSION: 3.41.3
+  FLUTTER_BASE_VERSION: 3.41.9
 
 # 2. Jobs
 jobs:

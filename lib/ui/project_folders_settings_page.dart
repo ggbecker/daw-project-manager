@@ -85,7 +85,7 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
     if (_busy || !_isDesktop) return;
     final l10n = AppLocalizations.of(context)!;
 
-    final picked = await FilePicker.platform.getDirectoryPath(dialogTitle: l10n.selectProjectsFolder);
+    final picked = await FilePicker.getDirectoryPath(dialogTitle: l10n.selectProjectsFolder);
     if (picked == null) return;
 
     // Reject if this exact folder is already a scan root.
@@ -130,7 +130,7 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
     if (_busy || !_isDesktop) return;
     final l10n = AppLocalizations.of(context)!;
 
-    final picked = await FilePicker.platform.getDirectoryPath(
+    final picked = await FilePicker.getDirectoryPath(
       dialogTitle: l10n.relocateFolderDialogTitle,
     );
     if (picked == null) return;
@@ -205,7 +205,7 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
     if (_busy || !_isDesktop) return;
 
     final l10n = AppLocalizations.of(context)!;
-    final picked = await FilePicker.platform.getDirectoryPath(dialogTitle: l10n.selectExcludedFolder);
+    final picked = await FilePicker.getDirectoryPath(dialogTitle: l10n.selectExcludedFolder);
     if (picked == null) return;
 
     setState(() => _busy = true);

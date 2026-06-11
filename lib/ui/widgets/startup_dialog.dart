@@ -42,7 +42,7 @@ class _StartupDialogState extends ConsumerState<_StartupDialog> {
 
   Future<void> _addFolder() async {
     final l10n = AppLocalizations.of(context)!;
-    final picked = await FilePicker.platform.getDirectoryPath(
+    final picked = await FilePicker.getDirectoryPath(
       dialogTitle: l10n.selectProjectsFolder,
     );
     if (picked == null || !mounted) return;

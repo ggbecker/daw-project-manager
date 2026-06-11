@@ -175,7 +175,7 @@ class _TodoListWidgetState extends ConsumerState<TodoListWidget> {
   Future<void> _importTodosFromFile() async {
     try {
       // Pick a text file
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
+      FilePickerResult? result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['txt'],
         dialogTitle: AppLocalizations.of(context)!.importTodos,

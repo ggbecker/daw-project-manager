@@ -1695,7 +1695,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
             if (action == _FileNotFoundAction.remove) {
               await widget.onSongRemoved();
             } else if (action == _FileNotFoundAction.selectNew) {
-              final result = await FilePicker.platform.pickFiles(
+              final result = await FilePicker.pickFiles(
                 type: FileType.custom,
                 allowedExtensions: const ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'],
                 dialogTitle: l10n.selectPreviewSong,
@@ -2027,7 +2027,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
       final originalName = widget.project.previewSongFileName ?? p.basename(songPath);
       final ext = p.extension(songPath).replaceFirst('.', '');
 
-      final destPath = await FilePicker.platform.saveFile(
+      final destPath = await FilePicker.saveFile(
         dialogTitle: l10n.saveCopy,
         fileName: originalName,
         type: FileType.custom,
@@ -2060,7 +2060,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
     final l10n = AppLocalizations.of(context)!;
 
     try {
-      final result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: const ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'],
         dialogTitle: l10n.selectPreviewSong,
@@ -2596,7 +2596,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                         children: [
                           ElevatedButton.icon(
                             onPressed: () async {
-                              final result = await FilePicker.platform.pickFiles(
+                              final result = await FilePicker.pickFiles(
                                 type: FileType.custom,
                                 allowedExtensions: const [
                                   'mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac',
