@@ -67,7 +67,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
 
   void _scheduleTitleDescSave() {
     _autoSaveTimer?.cancel();
-    _autoSaveTimer = Timer(const Duration(milliseconds: 800), _saveTitleAndDescription);
+    _autoSaveTimer = Timer(const Duration(milliseconds: 300), _saveTitleAndDescription);
   }
 
   Future<void> _saveTitleAndDescription() async {
