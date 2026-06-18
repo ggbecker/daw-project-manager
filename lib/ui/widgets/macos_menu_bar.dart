@@ -141,10 +141,11 @@ class MacOSMenuBar extends ConsumerWidget {
                           label: '${themeType == AppThemeType.neonDark ? '✓ ' : ''}${l10n.neonDarkThemeName}',
                           onSelected: () => ref.read(themeTypeProvider.notifier).setThemeType(AppThemeType.neonDark),
                         ),
-                        PlatformMenuItem(
-                          label: '${themeType == AppThemeType.studioLight ? '✓ ' : ''}${l10n.studioLightThemeName}',
-                          onSelected: () => ref.read(themeTypeProvider.notifier).setThemeType(AppThemeType.studioLight),
-                        ),
+                        // studioLight temporarily hidden from UI
+                        // PlatformMenuItem(
+                        //   label: '${themeType == AppThemeType.studioLight ? '✓ ' : ''}${l10n.studioLightThemeName}',
+                        //   onSelected: () => ref.read(themeTypeProvider.notifier).setThemeType(AppThemeType.studioLight),
+                        // ),
                       ],
                     ),
                   ],

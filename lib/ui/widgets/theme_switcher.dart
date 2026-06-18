@@ -14,18 +14,29 @@ class ThemeSwitcher extends ConsumerWidget {
     final themeName = switch (themeType) {
       AppThemeType.neonDark    => l10n.neonDarkThemeName,
       AppThemeType.classicDark => l10n.classicDarkThemeName,
-      AppThemeType.studioLight => l10n.studioLightThemeName,
+      // studioLight hidden from UI
+      AppThemeType.studioLight => l10n.classicDarkThemeName,
     };
     final tooltip = switch (themeType) {
       AppThemeType.neonDark    => l10n.switchToClassicTheme,
-      AppThemeType.classicDark => l10n.switchToStudioLight,
+      // studioLight hidden — cycle goes neonDark ↔ classicDark only
+      AppThemeType.classicDark => l10n.switchToNeonTheme,
       AppThemeType.studioLight => l10n.switchToNeonTheme,
     };
     final icon = switch (themeType) {
       AppThemeType.neonDark    => Icons.palette,
       AppThemeType.classicDark => Icons.palette_outlined,
-      AppThemeType.studioLight => Icons.wb_sunny_outlined,
+      // studioLight hidden from UI
+      AppThemeType.studioLight => Icons.palette_outlined,
     };
+
+    // Cycles between dark themes only while studioLight is hidden.
+    void cycleVisible() {
+      final next = themeType == AppThemeType.neonDark
+          ? AppThemeType.classicDark
+          : AppThemeType.neonDark;
+      ref.read(themeTypeProvider.notifier).setThemeType(next);
+    }
 
     return Tooltip(
       message: tooltip,
@@ -42,13 +53,13 @@ class ThemeSwitcher extends ConsumerWidget {
                 size: 20,
               ),
             ),
-            onPressed: () => ref.read(themeTypeProvider.notifier).cycle(),
+            onPressed: () => cycleVisible(),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
             tooltip: tooltip,
           ),
           TextButton(
-            onPressed: () => ref.read(themeTypeProvider.notifier).cycle(),
+            onPressed: () => cycleVisible(),
             style: TextButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               minimumSize: Size.zero,
