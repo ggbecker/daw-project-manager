@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'dart:math' show sin, pi;
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -722,6 +724,43 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
     }
   }
 
+  // Pentatonic-scale frequencies (A2–D4) used to give each test project a distinct audible pitch.
+  static const _testFrequencies = [110.0, 130.8, 146.8, 164.8, 196.0, 220.0, 261.6, 293.7];
+
+  /// Generates a minimal valid mono PCM WAV with a sine wave tone and short fade in/out.
+  static Uint8List _generateTestWavBytes({required double frequencyHz, int durationSeconds = 3}) {
+    const sampleRate = 22050;
+    const bitsPerSample = 16;
+    final numSamples = sampleRate * durationSeconds;
+    final dataSize = numSamples * 2;
+    final buffer = ByteData(44 + dataSize);
+    int o = 0;
+
+    void ascii(String s) { for (final c in s.codeUnits) { buffer.setUint8(o++, c); } }
+    void u16(int v) { buffer.setUint16(o, v, Endian.little); o += 2; }
+    void u32(int v) { buffer.setUint32(o, v, Endian.little); o += 4; }
+
+    ascii('RIFF'); u32(36 + dataSize); ascii('WAVE');
+    ascii('fmt '); u32(16); u16(1); u16(1); u32(sampleRate); u32(sampleRate * 2); u16(2); u16(bitsPerSample);
+    ascii('data'); u32(dataSize);
+
+    const fadeLen = 2000;
+    for (int i = 0; i < numSamples; i++) {
+      final fade = (i < fadeLen)
+          ? i / fadeLen
+          : (i > numSamples - fadeLen)
+              ? (numSamples - i) / fadeLen
+              : 1.0;
+      final sample = (sin(2 * pi * frequencyHz * i / sampleRate) * 12000 * fade)
+          .round()
+          .clamp(-32768, 32767);
+      buffer.setInt16(o, sample, Endian.little);
+      o += 2;
+    }
+
+    return buffer.buffer.asUint8List();
+  }
+
   /// Generate testing database with sample projects and releases
   Future<void> _generateTestingDatabase() async {
     // Show confirmation dialog
@@ -773,12 +812,9 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
           'bpm': 128.0,
           'key': 'Am',
           'notes': 'Deep house track with atmospheric pads. Working on the breakdown section.',
-          'todos': [
-            'Add vocal samples',
-            'Mixdown',
-            'Master track',
-          ],
+          'todos': ['Add vocal samples', 'Mixdown', 'Master track'],
           'hidden': false,
+          'hasPreview': true,
         },
         {
           'name': 'Summer Vibes',
@@ -788,11 +824,9 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
           'bpm': 120.0,
           'key': 'C major',
           'notes': 'Upbeat tropical house track. Need to add more percussion elements.',
-          'todos': [
-            'Create melody variations',
-            'Add bassline',
-          ],
+          'todos': ['Create melody variations', 'Add bassline'],
           'hidden': false,
+          'hasPreview': false,
         },
         {
           'name': 'Dark Energy',
@@ -802,10 +836,9 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
           'bpm': 140.0,
           'key': 'Dm',
           'notes': 'Aggressive techno track. Final mix completed.',
-          'todos': [
-            'Upload to SoundCloud',
-          ],
+          'todos': ['Upload to SoundCloud'],
           'hidden': false,
+          'hasPreview': true,
         },
         {
           'name': 'Ambient Space',
@@ -815,11 +848,9 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
           'bpm': 90.0,
           'key': 'F#m',
           'notes': 'Experimental ambient piece with field recordings.',
-          'todos': [
-            'Record more samples',
-            'Add reverb automation',
-          ],
+          'todos': ['Record more samples', 'Add reverb automation'],
           'hidden': false,
+          'hasPreview': true,
         },
         {
           'name': 'Old Project',
@@ -831,6 +862,7 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
           'notes': 'This is a hidden project for testing.',
           'todos': [],
           'hidden': true,
+          'hasPreview': false,
         },
         {
           'name': 'Bass Heavy',
@@ -840,12 +872,9 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
           'bpm': 150.0,
           'key': 'Bb minor',
           'notes': 'Dubstep track with heavy bass drops.',
-          'todos': [
-            'Design bass sounds',
-            'Create build-up',
-            'Mix low end',
-          ],
+          'todos': ['Design bass sounds', 'Create build-up', 'Mix low end'],
           'hidden': false,
+          'hasPreview': true,
         },
         {
           'name': 'Chill Out',
@@ -855,10 +884,9 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
           'bpm': 85.0,
           'key': 'E major',
           'notes': 'Relaxing downtempo track.',
-          'todos': [
-            'Add piano melody',
-          ],
+          'todos': ['Add piano melody'],
           'hidden': false,
+          'hasPreview': false,
         },
         {
           'name': 'Energy Boost',
@@ -868,11 +896,9 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
           'bpm': 132.0,
           'key': 'A major',
           'notes': 'Uplifting progressive house track.',
-          'todos': [
-            'Arrange full track',
-            'Add vocals',
-          ],
+          'todos': ['Arrange full track', 'Add vocals'],
           'hidden': false,
+          'hasPreview': true,
         },
       ];
 
@@ -915,6 +941,25 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
         );
 
         await projectRepo.projectsBox.put(projectId, project);
+
+        // Generate a WAV preview for projects that should have one
+        if (data['hasPreview'] == true) {
+          final previewSongsPath = await getPreviewSongsPath();
+          final safeName = (data['name'] as String).replaceAll(RegExp(r'[^a-zA-Z0-9]+'), '_');
+          final previewFileName = '${safeName}_preview.wav';
+          final previewFile = File(path.join(previewSongsPath, previewFileName));
+          final wavBytes = _generateTestWavBytes(
+            frequencyHz: _testFrequencies[i % _testFrequencies.length],
+          );
+          await previewFile.writeAsBytes(wavBytes);
+          await projectRepo.projectsBox.put(
+            projectId,
+            project.copyWith(
+              previewSongPath: previewFile.path,
+              previewSongFileName: previewFileName,
+            ),
+          );
+        }
       }
 
       // Create a sample release with some projects
@@ -1214,26 +1259,33 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 16),
-                            // Generate Testing Database button (DEBUG ONLY)
-                            if (kDebugMode)
-                              Row(
-                                children: [
-                                  const Icon(Icons.science, size: 24),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      AppLocalizations.of(context)!.generateTestingDatabase,
-                                      style: const TextStyle(fontSize: 16),
-                                    ),
-                                  ),
-                                  ElevatedButton.icon(
-                                    icon: const Icon(Icons.science, size: 18),
-                                    label: Text(AppLocalizations.of(context)!.generateTestingDatabase),
-                                    onPressed: () => _generateTestingDatabase(),
-                                  ),
-                                ],
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                  // Generate Testing Database button — debug builds only, all platforms
+                  if (kDebugMode) ...[
+                    const SizedBox(height: 24),
+                    Card(
+                      color: Theme.of(context).cardColor,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.science, size: 24),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                AppLocalizations.of(context)!.generateTestingDatabase,
+                                style: const TextStyle(fontSize: 16),
                               ),
+                            ),
+                            ElevatedButton.icon(
+                              icon: const Icon(Icons.science, size: 18),
+                              label: Text(AppLocalizations.of(context)!.generateTestingDatabase),
+                              onPressed: _generateTestingDatabase,
+                            ),
                           ],
                         ),
                       ),
