@@ -1769,8 +1769,26 @@ abstract class AppLocalizations {
   /// No description provided for @clickToBrowseArtwork.
   ///
   /// In en, this message translates to:
-  /// **'Click to browse artwork'**
+  /// **'Click to browse or drop an image'**
   String get clickToBrowseArtwork;
+
+  /// Hint shown when dragging an image onto the artwork drop zone
+  ///
+  /// In en, this message translates to:
+  /// **'Drop image here'**
+  String get dropImageHere;
+
+  /// Label for the remove artwork button and menu item
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Artwork'**
+  String get removeArtwork;
+
+  /// Confirmation message when removing artwork
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this artwork? The image file will be deleted.'**
+  String get removeArtworkConfirm;
 
   /// No description provided for @noFilesAddedYet.
   ///

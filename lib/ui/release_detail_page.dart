@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:desktop_drop/desktop_drop.dart';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
@@ -38,6 +39,9 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
   final _descriptionController = TextEditingController();
   String? _artworkImagePath;
   DateTime? _releaseDate;
+  bool _isDraggingArtwork = false;
+  bool _isDraggingFiles = false;
+  Timer? _autoSaveTimer;
 
   @override
   void initState() {
@@ -48,19 +52,41 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
         (r) => r.id == widget.releaseId,
         orElse: () => throw StateError('Release not found'),
       );
-    if (release != null) {
-      _titleController.text = release.title;
-      _descriptionController.text = release.description ?? '';
+      if (release != null) {
+        _titleController.text = release.title;
+        _descriptionController.text = release.description ?? '';
         setState(() {
-      _artworkImagePath = release.artworkImagePath;
+          _artworkImagePath = release.artworkImagePath;
           _releaseDate = release.releaseDate;
         });
-    }
+      }
+      _titleController.addListener(_scheduleTitleDescSave);
+      _descriptionController.addListener(_scheduleTitleDescSave);
     });
+  }
+
+  void _scheduleTitleDescSave() {
+    _autoSaveTimer?.cancel();
+    _autoSaveTimer = Timer(const Duration(milliseconds: 800), _saveTitleAndDescription);
+  }
+
+  Future<void> _saveTitleAndDescription() async {
+    final releases = ref.read(releasesProvider);
+    final release = releases.asData?.value.firstWhere(
+      (r) => r.id == widget.releaseId,
+      orElse: () => throw StateError('Release not found'),
+    );
+    if (release == null) return;
+    final repo = await ref.read(repositoryProvider.future);
+    await repo.updateRelease(release.copyWith(
+      title: _titleController.text,
+      description: _descriptionController.text,
+    ));
   }
 
   @override
   void dispose() {
+    _autoSaveTimer?.cancel();
     _titleController.dispose();
     _descriptionController.dispose();
     super.dispose();
@@ -137,61 +163,61 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
     }
   }
 
-  Future<void> _addFiles(BuildContext context, Release release) async {
-    final result = await FilePicker.pickFiles(
-      allowMultiple: true,
-      type: FileType.any,
-    );
+  Future<void> _saveFilesFromPaths(List<String> sourcePaths, Release release) async {
+    final releasesDirPath = await getReleaseFilesPath(release.id);
+    final releasesDir = Directory(releasesDirPath);
+    if (!await releasesDir.exists()) await releasesDir.create(recursive: true);
 
-    if (result == null || result.files.isEmpty) return;
+    final repo = await ref.read(repositoryProvider.future);
+    final newFiles = <ReleaseFile>[];
 
-    try {
-      final releasesDirPath = await getReleaseFilesPath(release.id);
-      final releasesDir = Directory(releasesDirPath);
-      
-      if (!await releasesDir.exists()) {
-        await releasesDir.create(recursive: true);
-      }
+    for (final sourcePath in sourcePaths) {
+      final sourceFile = File(sourcePath);
+      if (!await sourceFile.exists()) continue;
 
-      final repo = await ref.read(repositoryProvider.future);
-      final newFiles = <ReleaseFile>[];
+      final originalName = path.basename(sourcePath);
+      final fileName = '${const Uuid().v4()}${path.extension(sourcePath)}';
+      final destFile = await sourceFile.copy(path.join(releasesDir.path, fileName));
+      final fileSize = await destFile.length();
 
-      for (final pickedFile in result.files) {
-        if (pickedFile.path == null) continue;
-        
-        final sourceFile = File(pickedFile.path!);
-        if (!await sourceFile.exists()) continue;
+      newFiles.add(ReleaseFile(
+        id: const Uuid().v4(),
+        fileName: originalName,
+        filePath: destFile.path,
+        fileType: _getFileType(originalName),
+        fileSizeBytes: fileSize,
+        addedAt: DateTime.now(),
+      ));
+    }
 
-        final fileExtension = path.extension(pickedFile.path!);
-        final fileName = '${const Uuid().v4()}$fileExtension';
-        final destPath = path.join(releasesDir.path, fileName);
-        
-        final destFile = await sourceFile.copy(destPath);
-        final fileSize = await destFile.length();
-        
-        final releaseFile = ReleaseFile(
-          id: const Uuid().v4(),
-          fileName: pickedFile.name,
-          filePath: destFile.path,
-          fileType: _getFileType(pickedFile.name),
-          fileSizeBytes: fileSize,
-          addedAt: DateTime.now(),
+    if (newFiles.isNotEmpty) {
+      await repo.updateRelease(release.copyWith(files: [...release.files, ...newFiles]));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.addedFilesToRelease(newFiles.length, newFiles.length == 1 ? '' : 's'))),
         );
-        
-        newFiles.add(releaseFile);
       }
+    }
+  }
 
-      if (newFiles.isNotEmpty) {
-        final updatedFiles = [...release.files, ...newFiles];
-        final updatedRelease = release.copyWith(files: updatedFiles);
-        await repo.updateRelease(updatedRelease);
-        
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.addedFilesToRelease(newFiles.length, newFiles.length == 1 ? '' : 's'))),
-          );
-        }
+  Future<void> _addFiles(BuildContext context, Release release) async {
+    final result = await FilePicker.pickFiles(allowMultiple: true, type: FileType.any);
+    if (result == null || result.files.isEmpty) return;
+    try {
+      final paths = result.files.map((f) => f.path).whereType<String>().toList();
+      await _saveFilesFromPaths(paths, release);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedToAddFiles(e.toString()))),
+        );
       }
+    }
+  }
+
+  Future<void> _handleDroppedReleaseFiles(List<String> filePaths, Release release) async {
+    try {
+      await _saveFilesFromPaths(filePaths, release);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -324,13 +350,66 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
     }
   }
 
-  Future<void> _pickImage() async {
+  Release? _currentRelease() {
     final releases = ref.read(releasesProvider);
-    final release = releases.asData?.value.firstWhere(
+    return releases.asData?.value.firstWhere(
       (r) => r.id == widget.releaseId,
       orElse: () => throw StateError('Release not found'),
     );
-    
+  }
+
+  Future<void> _saveArtworkFromPath(String sourcePath) async {
+    final release = _currentRelease();
+    if (release == null) return;
+
+    final sourceFile = File(sourcePath);
+    if (!await sourceFile.exists()) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.selectedFileDoesNotExist)),
+        );
+      }
+      return;
+    }
+
+    try {
+      final releasesDirPath = await getReleaseArtworkPath();
+      final releasesDir = Directory(releasesDirPath);
+      if (!await releasesDir.exists()) await releasesDir.create(recursive: true);
+
+      final fileName = '${const Uuid().v4()}${path.extension(sourcePath)}';
+      final destFile = await sourceFile.copy(path.join(releasesDir.path, fileName));
+
+      // Delete old managed artwork
+      final oldPath = release.artworkImagePath;
+      if (oldPath != null && oldPath.contains('release_artwork')) {
+        try {
+          final old = File(oldPath);
+          if (await old.exists()) await old.delete();
+        } catch (_) {}
+      }
+
+      final newImagePath = destFile.path;
+      final repo = await ref.read(repositoryProvider.future);
+      await repo.updateRelease(release.copyWith(artworkImagePath: newImagePath));
+
+      if (mounted) {
+        setState(() => _artworkImagePath = newImagePath);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.imageSavedSuccessfully)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedToSaveImage(e.toString()))),
+        );
+      }
+    }
+  }
+
+  Future<void> _pickImage() async {
+    final release = _currentRelease();
     if (release == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -339,77 +418,88 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
       }
       return;
     }
-
     final result = await FilePicker.pickFiles(type: FileType.image);
     if (result != null && result.files.single.path != null) {
-      final sourcePath = result.files.single.path!;
-      final sourceFile = File(sourcePath);
-      
-      if (!await sourceFile.exists()) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.selectedFileDoesNotExist)),
-          );
-        }
-        return;
-      }
+      await _saveArtworkFromPath(result.files.single.path!);
+    }
+  }
 
-      try {
-        // Get release artwork directory
-        final releasesDirPath = await getReleaseArtworkPath();
-        final releasesDir = Directory(releasesDirPath);
-        
-        // Create directory if it doesn't exist
-        if (!await releasesDir.exists()) {
-          await releasesDir.create(recursive: true);
-        }
-
-        // Generate unique filename
-        final fileExtension = path.extension(sourcePath);
-        final fileName = '${const Uuid().v4()}$fileExtension';
-        final destPath = path.join(releasesDir.path, fileName);
-        
-        // Copy file to persistent location
-        final destFile = await sourceFile.copy(destPath);
-        
-        // Delete old artwork if it exists and is in our app directory
-        if (release.artworkImagePath != null && release.artworkImagePath!.contains('release_artwork')) {
-          try {
-            final oldFile = File(release.artworkImagePath!);
-            if (await oldFile.exists()) {
-              await oldFile.delete();
-            }
-          } catch (_) {
-            // Ignore errors deleting old file
-          }
-        }
-        
-        final newImagePath = destFile.path;
-        
-        // Automatically save the release with the new image path
-        final repo = await ref.read(repositoryProvider.future);
-        final updatedRelease = release.copyWith(
-          artworkImagePath: newImagePath,
-        );
-        await repo.updateRelease(updatedRelease);
-        
-      setState(() {
-          _artworkImagePath = newImagePath;
-        });
-        
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.imageSavedSuccessfully)),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.failedToSaveImage(e.toString()))),
-          );
+  Future<void> _handleDroppedArtwork(List<String> filePaths) async {
+    const validExts = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.tiff', '.heic', '.heif'};
+    for (final filePath in filePaths) {
+      if (validExts.contains(path.extension(filePath).toLowerCase())) {
+        if (await File(filePath).exists()) {
+          await _saveArtworkFromPath(filePath);
+          return;
         }
       }
     }
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.selectedFileDoesNotExist)),
+      );
+    }
+  }
+
+  Future<void> _removeArtwork(Release release) async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.removeArtwork),
+        content: Text(l10n.removeArtworkConfirm),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: Text(l10n.remove),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    try {
+      final oldPath = release.artworkImagePath ?? _artworkImagePath;
+      if (oldPath != null && oldPath.contains('release_artwork')) {
+        try {
+          final old = File(oldPath);
+          if (await old.exists()) await old.delete();
+        } catch (_) {}
+      }
+      final repo = await ref.read(repositoryProvider.future);
+      await repo.updateRelease(release.copyWith(clearArtworkImagePath: true));
+      if (mounted) {
+        setState(() => _artworkImagePath = null);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.artworkRemoved)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.failedToRemoveArtwork(e.toString()))),
+        );
+      }
+    }
+  }
+
+  Future<void> _showArtworkContextMenu(BuildContext context, Release release, Offset position) async {
+    final l10n = AppLocalizations.of(context)!;
+    final hasArtwork = (release.artworkImagePath ?? _artworkImagePath) != null;
+    final result = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(position.dx, position.dy, position.dx + 1, position.dy + 1),
+      items: [
+        PopupMenuItem(value: 'pick', child: Text(l10n.clickToBrowseArtwork)),
+        if (hasArtwork)
+          PopupMenuItem(value: 'remove', child: Text(l10n.removeArtwork)),
+      ],
+    );
+    if (!mounted) return;
+    if (result == 'pick') _pickImage();
+    if (result == 'remove') _removeArtwork(release);
   }
 
   @override
@@ -614,114 +704,156 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
   // ============================================================================
   
   Widget _buildDesktopArtworkSection(BuildContext context, Release release) {
-    return GestureDetector(
-      onTap: _pickImage,
-      child: Card(
-        child: Builder(
-          builder: (context) {
-            final imagePath = release.artworkImagePath ?? _artworkImagePath;
-            if (imagePath != null && File(imagePath).existsSync()) {
-              return LayoutBuilder(
-                builder: (context, constraints) {
-                  final maxWidth = constraints.maxWidth * 0.5;
-                  return Center(
-                    child: SizedBox(
-                      width: maxWidth,
-                      child: AspectRatio(
-                        aspectRatio: 1.0,
-                        child: Image.file(
-                          File(imagePath),
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.broken_image, size: 50, color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5)),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    AppLocalizations.of(context)!.imageNotFound,
-                                    style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color, fontSize: 12),
+    final l10n = AppLocalizations.of(context)!;
+    final imagePath = release.artworkImagePath ?? _artworkImagePath;
+    final hasArtwork = imagePath != null && File(imagePath).existsSync();
+    final dimColor = Theme.of(context).textTheme.bodySmall?.color;
+    final primaryColor = Theme.of(context).colorScheme.primary;
+
+    return DropTarget(
+      onDragDone: (detail) async {
+        setState(() => _isDraggingArtwork = false);
+        final paths = detail.files.map((f) => f.path).where((p) => p.isNotEmpty).toList();
+        if (paths.isNotEmpty) await _handleDroppedArtwork(paths);
+      },
+      onDragEntered: (_) => setState(() => _isDraggingArtwork = true),
+      onDragExited: (_) => setState(() => _isDraggingArtwork = false),
+      child: GestureDetector(
+        onTap: _pickImage,
+        onSecondaryTapDown: (d) => _showArtworkContextMenu(context, release, d.globalPosition),
+        child: Card(
+          color: _isDraggingArtwork
+              ? primaryColor.withValues(alpha: 0.08)
+              : null,
+          child: Container(
+            decoration: _isDraggingArtwork
+                ? BoxDecoration(
+                    border: Border.all(color: primaryColor, width: 2),
+                    borderRadius: BorderRadius.circular(4),
+                  )
+                : null,
+            child: Stack(
+              children: [
+                // Artwork image or empty-state placeholder
+                Builder(builder: (context) {
+                  if (hasArtwork) {
+                    return LayoutBuilder(
+                      builder: (context, constraints) {
+                        final maxWidth = constraints.maxWidth * 0.5;
+                        return Center(
+                          child: SizedBox(
+                            width: maxWidth,
+                            child: AspectRatio(
+                              aspectRatio: 1.0,
+                              child: Image.file(
+                                File(imagePath),
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, _) => Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.broken_image, size: 50, color: dimColor?.withValues(alpha: 0.5)),
+                                      const SizedBox(height: 8),
+                                      Text(l10n.imageNotFound, style: TextStyle(color: dimColor, fontSize: 12)),
+                                    ],
                                   ),
-                                ],
+                                ),
                               ),
-                            );
-                          },
-                        ),
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  }
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(50.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            _isDraggingArtwork ? Icons.image : Icons.add_a_photo,
+                            size: 50,
+                            color: _isDraggingArtwork ? primaryColor : dimColor,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            _isDraggingArtwork ? l10n.dropImageHere : l10n.clickToBrowseArtwork,
+                            style: TextStyle(
+                              color: _isDraggingArtwork ? primaryColor : dimColor,
+                              fontSize: 14,
+                              fontWeight: _isDraggingArtwork ? FontWeight.bold : FontWeight.normal,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   );
-                },
-              );
-            }
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(50.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.add_a_photo, size: 50, color: Theme.of(context).textTheme.bodySmall?.color),
-                    const SizedBox(height: 12),
-                    Text(
-                      AppLocalizations.of(context)!.clickToBrowseArtwork,
-                      style: TextStyle(
-                        color: Theme.of(context).textTheme.bodySmall?.color,
-                        fontSize: 14,
+                }),
+
+                // Drag overlay (shown over existing artwork when dragging)
+                if (_isDraggingArtwork && hasArtwork)
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: primaryColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.image, size: 64, color: primaryColor),
+                          const SizedBox(height: 12),
+                          Text(
+                            l10n.dropImageHere,
+                            style: TextStyle(color: primaryColor, fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
-              ),
-            );
-          },
+                  ),
+
+                // Remove button (top-right corner, only when artwork exists)
+                if (hasArtwork && !_isDraggingArtwork)
+                  Positioned(
+                    top: 4,
+                    right: 4,
+                    child: Tooltip(
+                      message: l10n.removeArtwork,
+                      child: Material(
+                        color: Colors.black54,
+                        borderRadius: BorderRadius.circular(20),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(20),
+                          onTap: () => _removeArtwork(release),
+                          child: const Padding(
+                            padding: EdgeInsets.all(4),
+                            child: Icon(Icons.close, size: 18, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 
   Widget _buildDesktopDetailsSection(BuildContext context, Release release) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: TextFormField(
-                controller: _titleController,
-                decoration: InputDecoration(labelText: AppLocalizations.of(context)!.releaseTitle),
-              ),
-            ),
-            const SizedBox(width: 8),
-            IconButton(
-              icon: const Icon(Icons.save),
-              tooltip: AppLocalizations.of(context)!.save,
-              onPressed: () async {
-                final releases = ref.read(releasesProvider);
-                final release = releases.asData?.value.firstWhere(
-                  (r) => r.id == widget.releaseId,
-                  orElse: () => throw StateError('Release not found'),
-                );
-                if (release != null) {
-                  final repo = await ref.read(repositoryProvider.future);
-                  final updatedRelease = release.copyWith(
-                    title: _titleController.text,
-                    description: _descriptionController.text,
-                    artworkImagePath: _artworkImagePath,
-                  );
-                  await repo.updateRelease(updatedRelease);
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(AppLocalizations.of(context)!.releaseSaved)),
-                    );
-                  }
-                }
-              },
-            ),
-          ],
+        TextFormField(
+          controller: _titleController,
+          decoration: InputDecoration(labelText: l10n.releaseTitle),
         ),
         const SizedBox(height: 16),
         TextFormField(
           controller: _descriptionController,
-          decoration: InputDecoration(labelText: AppLocalizations.of(context)!.description),
+          decoration: InputDecoration(labelText: l10n.description),
           maxLines: 5,
         ),
         const SizedBox(height: 16),
@@ -927,60 +1059,104 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
   }
 
   Widget _buildDesktopFilesSection(BuildContext context, Release release) {
+    final l10n = AppLocalizations.of(context)!;
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    final dimColor = Theme.of(context).textTheme.bodySmall?.color;
+
     return Flexible(
       flex: 1,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  AppLocalizations.of(context)!.releaseFilesCount(release.files.length),
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                Row(
-                  children: [
-                    ElevatedButton.icon(
-                      icon: const Icon(Icons.file_upload),
-                      label: Text(AppLocalizations.of(context)!.addFiles),
-                      onPressed: () => _addFiles(context, release),
+      child: DropTarget(
+        onDragDone: (detail) async {
+          setState(() => _isDraggingFiles = false);
+          final paths = detail.files.map((f) => f.path).where((p) => p.isNotEmpty).toList();
+          if (paths.isNotEmpty) await _handleDroppedReleaseFiles(paths, release);
+        },
+        onDragEntered: (_) => setState(() => _isDraggingFiles = true),
+        onDragExited: (_) => setState(() => _isDraggingFiles = false),
+        child: Container(
+          decoration: _isDraggingFiles
+              ? BoxDecoration(
+                  border: Border.all(color: primaryColor, width: 2),
+                  borderRadius: BorderRadius.circular(4),
+                  color: primaryColor.withValues(alpha: 0.05),
+                )
+              : null,
+          child: Stack(
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          l10n.releaseFilesCount(release.files.length),
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                        Row(
+                          children: [
+                            ElevatedButton.icon(
+                              icon: const Icon(Icons.file_upload),
+                              label: Text(l10n.addFiles),
+                              onPressed: () => _addFiles(context, release),
+                            ),
+                            const SizedBox(width: 8),
+                            if (release.files.isNotEmpty)
+                              ElevatedButton.icon(
+                                icon: const Icon(Icons.download),
+                                label: Text(l10n.saveReleaseFilesZip),
+                                onPressed: () => _downloadAsZip(context, release),
+                              ),
+                          ],
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    if (release.files.isNotEmpty)
-                      ElevatedButton.icon(
-                        icon: const Icon(Icons.download),
-                        label: Text(AppLocalizations.of(context)!.saveReleaseFilesZip),
-                        onPressed: () => _downloadAsZip(context, release),
-                      ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const Divider(),
-          // Files list
-          Flexible(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 400),
-              child: release.files.isEmpty
-                  ? Center(
-                      child: Text(
-                        AppLocalizations.of(context)!.noFilesAddedYet,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color),
-                      ),
-                    )
-                  : _FilesSection(
-                      files: release.files,
-                      release: release,
+                  ),
+                  const Divider(),
+                  Flexible(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 400),
+                      child: release.files.isEmpty
+                          ? Center(
+                              child: Text(
+                                l10n.noFilesAddedYet,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(color: dimColor),
+                              ),
+                            )
+                          : _FilesSection(files: release.files, release: release),
                     ),
-            ),
+                  ),
+                ],
+              ),
+              // Drag overlay
+              if (_isDraggingFiles)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: primaryColor.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.upload_file, size: 48, color: primaryColor),
+                          const SizedBox(height: 12),
+                          Text(
+                            l10n.dropAudioFileHere,
+                            style: TextStyle(color: primaryColor, fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -1181,52 +1357,21 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
   }
 
   Widget _buildDetailsSection(BuildContext context, Release release) {
+    final l10n = AppLocalizations.of(context)!;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _titleController,
-                    decoration: InputDecoration(labelText: AppLocalizations.of(context)!.releaseTitle),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  icon: const Icon(Icons.save),
-                  tooltip: AppLocalizations.of(context)!.save,
-                  onPressed: () async {
-                    final releases = ref.read(releasesProvider);
-                    final release = releases.asData?.value.firstWhere(
-                      (r) => r.id == widget.releaseId,
-                      orElse: () => throw StateError('Release not found'),
-                    );
-                    if (release != null) {
-                      final repo = await ref.read(repositoryProvider.future);
-                      final updatedRelease = release.copyWith(
-                        title: _titleController.text,
-                        description: _descriptionController.text,
-                        artworkImagePath: _artworkImagePath,
-                      );
-                      await repo.updateRelease(updatedRelease);
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(AppLocalizations.of(context)!.releaseSaved)),
-                        );
-                      }
-                    }
-                  },
-                ),
-              ],
+            TextFormField(
+              controller: _titleController,
+              decoration: InputDecoration(labelText: l10n.releaseTitle),
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _descriptionController,
-              decoration: InputDecoration(labelText: AppLocalizations.of(context)!.description),
+              decoration: InputDecoration(labelText: l10n.description),
               maxLines: 5,
             ),
             const SizedBox(height: 16),
@@ -1719,101 +1864,6 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
     );
   }
 
-  Widget _buildFilesSection(BuildContext context, Release release) {
-    final isMobile = MobileUtils.isMobile();
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Files Section Header
-            isMobile
-                ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        AppLocalizations.of(context)!.releaseFilesCount(release.files.length),
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton.icon(
-                              icon: const Icon(Icons.file_upload),
-                              label: Text(AppLocalizations.of(context)!.addFiles),
-                              onPressed: () => _addFiles(context, release),
-                            ),
-                          ),
-                          if (release.files.isNotEmpty)
-                            SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton.icon(
-                                icon: const Icon(Icons.download),
-                                label: Text(AppLocalizations.of(context)!.saveReleaseFilesZip),
-                                onPressed: () => _downloadAsZip(context, release),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ],
-                  )
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        AppLocalizations.of(context)!.releaseFilesCount(release.files.length),
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      Row(
-                        children: [
-                          ElevatedButton.icon(
-                            icon: const Icon(Icons.file_upload),
-                            label: Text(AppLocalizations.of(context)!.addFiles),
-                            onPressed: () => _addFiles(context, release),
-                          ),
-                          const SizedBox(width: 8),
-                          if (release.files.isNotEmpty)
-                            ElevatedButton.icon(
-                              icon: const Icon(Icons.download),
-                              label: Text(AppLocalizations.of(context)!.saveReleaseFilesZip),
-                              onPressed: () => _downloadAsZip(context, release),
-                            ),
-                        ],
-                      ),
-                    ],
-                  ),
-            const Divider(),
-            // Files List
-            ConstrainedBox(
-              constraints: BoxConstraints(
-                maxHeight: isMobile ? 400 : 600,
-              ),
-              child: release.files.isEmpty
-                  ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(32.0),
-                        child: Text(
-                          AppLocalizations.of(context)!.noFilesAddedYet,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color),
-                        ),
-                      ),
-                    )
-                  : _FilesSection(
-                      files: release.files,
-                      release: release,
-                    ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 class _FilesSection extends ConsumerStatefulWidget {

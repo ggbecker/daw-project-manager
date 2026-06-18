@@ -983,6 +983,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get clickToBrowseArtwork => '点击浏览封面';
 
   @override
+  String get dropImageHere => 'Drop image here';
+
+  @override
+  String get removeArtwork => 'Remove Artwork';
+
+  @override
+  String get removeArtworkConfirm =>
+      'Remove this artwork? The image file will be deleted.';
+
+  @override
   String get noFilesAddedYet => '尚未添加文件。\n点击\"添加文件\"上传发布文件。';
 
   @override

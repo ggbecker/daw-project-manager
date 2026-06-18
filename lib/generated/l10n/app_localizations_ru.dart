@@ -998,6 +998,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get clickToBrowseArtwork => 'Нажмите, чтобы найти обложку';
 
   @override
+  String get dropImageHere => 'Drop image here';
+
+  @override
+  String get removeArtwork => 'Remove Artwork';
+
+  @override
+  String get removeArtworkConfirm =>
+      'Remove this artwork? The image file will be deleted.';
+
+  @override
   String get noFilesAddedYet =>
       'Файлы еще не добавлены.\nНажмите \"Добавить Файлы\", чтобы загрузить файлы релиза.';
 

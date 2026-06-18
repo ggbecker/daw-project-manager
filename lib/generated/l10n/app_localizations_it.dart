@@ -1001,6 +1001,16 @@ class AppLocalizationsIt extends AppLocalizations {
   String get clickToBrowseArtwork => 'Clicca per cercare artwork';
 
   @override
+  String get dropImageHere => 'Drop image here';
+
+  @override
+  String get removeArtwork => 'Remove Artwork';
+
+  @override
+  String get removeArtworkConfirm =>
+      'Remove this artwork? The image file will be deleted.';
+
+  @override
   String get noFilesAddedYet =>
       'Nessun file aggiunto ancora.\nClicca su \"Aggiungi File\" per caricare i file della pubblicazione.';
 

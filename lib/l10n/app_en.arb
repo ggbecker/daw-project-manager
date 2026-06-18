@@ -957,7 +957,19 @@
   "profile": "Profile",
   "noDateSet": "No date set",
   "imageNotFound": "Image not found",
-  "clickToBrowseArtwork": "Click to browse artwork",
+  "clickToBrowseArtwork": "Click to browse or drop an image",
+  "dropImageHere": "Drop image here",
+  "@dropImageHere": {
+    "description": "Hint shown when dragging an image onto the artwork drop zone"
+  },
+  "removeArtwork": "Remove Artwork",
+  "@removeArtwork": {
+    "description": "Label for the remove artwork button and menu item"
+  },
+  "removeArtworkConfirm": "Remove this artwork? The image file will be deleted.",
+  "@removeArtworkConfirm": {
+    "description": "Confirmation message when removing artwork"
+  },
   "noFilesAddedYet": "No files added yet.\nClick \"Add Files\" to upload release files.",
   "noTodosYet": "No todos yet. Add one above.",
   "done": "Done",
