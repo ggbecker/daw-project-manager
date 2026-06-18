@@ -172,6 +172,29 @@ class MusicProject {
       ? customDisplayName!.trim()
       : p.basenameWithoutExtension(fileName);
 
+  static final _uuidPreviewRe = RegExp(
+    r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}_preview\.',
+    caseSensitive: false,
+  );
+
+  static String _sanitizeForFileName(String name) =>
+      name.replaceAll(RegExp(r'[/\\:*?"<>|]'), '_').trim();
+
+  /// Best filename to use when sharing or exporting the preview song.
+  /// Prefers the stored original filename; falls back to the sanitized project
+  /// display name + extension when the stored name is absent or UUID-based.
+  /// Returns null when no preview path is available or it is a Drive reference.
+  String? get previewShareFileName {
+    final effectivePath = previewSongPath;
+    if (effectivePath == null || effectivePath.isEmpty || effectivePath.startsWith('drive://')) return null;
+    final stored = previewSongFileName;
+    if (stored != null && stored.isNotEmpty && !_uuidPreviewRe.hasMatch(stored)) {
+      return stored;
+    }
+    final ext = p.extension(effectivePath);
+    return '${_sanitizeForFileName(displayName)}$ext';
+  }
+
   /// Returns the project age based on file creation date
   /// Falls back to lastModifiedAt if fileCreatedAt is not available
   Duration get projectAge {

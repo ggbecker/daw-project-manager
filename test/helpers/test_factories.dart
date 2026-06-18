@@ -24,6 +24,7 @@ class TestFactories {
     DateTime? deadline,
     bool hidden = false,
     String? previewSongPath,
+    String? previewSongFileName,
     DateTime? statusChangedAt,
   }) {
     return MusicProject(
@@ -47,6 +48,7 @@ class TestFactories {
       deadline: deadline,
       hidden: hidden,
       previewSongPath: previewSongPath,
+      previewSongFileName: previewSongFileName,
       statusChangedAt: statusChangedAt,
     );
   }

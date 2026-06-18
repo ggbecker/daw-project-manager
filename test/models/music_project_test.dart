@@ -463,4 +463,83 @@ void main() {
       expect(restored.todos, isEmpty);
     });
   });
+
+  group('MusicProject.previewShareFileName', () {
+    const localPath = '/previews/abc123_preview.wav';
+
+    test('returns null when previewSongPath is null', () {
+      final p = TestFactories.makeProject(previewSongPath: null);
+      expect(p.previewShareFileName, isNull);
+    });
+
+    test('returns null when previewSongPath is empty', () {
+      final p = TestFactories.makeProject(previewSongPath: '');
+      expect(p.previewShareFileName, isNull);
+    });
+
+    test('returns null when previewSongPath is a Drive reference', () {
+      final p = TestFactories.makeProject(
+        previewSongPath: 'drive://1AbCdEfGhIjKlMnOpQrS',
+      );
+      expect(p.previewShareFileName, isNull);
+    });
+
+    test('returns stored previewSongFileName when it is a real name', () {
+      final p = TestFactories.makeProject(
+        previewSongPath: localPath,
+        previewSongFileName: 'My Demo Mix.wav',
+      );
+      expect(p.previewShareFileName, 'My Demo Mix.wav');
+    });
+
+    test('falls back to project displayName when previewSongFileName is null', () {
+      final p = TestFactories.makeProject(
+        customDisplayName: 'Chill Beats',
+        previewSongPath: localPath,
+        previewSongFileName: null,
+      );
+      expect(p.previewShareFileName, 'Chill Beats.wav');
+    });
+
+    test('falls back to project displayName when previewSongFileName is UUID-based', () {
+      final p = TestFactories.makeProject(
+        customDisplayName: 'Summer Track',
+        previewSongPath: localPath,
+        previewSongFileName:
+            '550e8400-e29b-41d4-a716-446655440000_preview.wav',
+      );
+      expect(p.previewShareFileName, 'Summer Track.wav');
+    });
+
+    test('sanitizes invalid filename characters from displayName', () {
+      final p = TestFactories.makeProject(
+        customDisplayName: 'Track: "Final?" <Mix>',
+        previewSongPath: localPath,
+        previewSongFileName: null,
+      );
+      expect(p.previewShareFileName, 'Track_ _Final__ _Mix_.wav');
+    });
+
+    test('uses fileName stem when customDisplayName is not set', () {
+      final p = TestFactories.makeProject(
+        customDisplayName: null,
+        fileName: 'MyProject.als',
+        previewSongPath: '/previews/xyz_preview.mp3',
+        previewSongFileName: null,
+      );
+      expect(p.previewShareFileName, 'MyProject.mp3');
+    });
+
+    test('preserves stored name that starts with uuid-like text but is not a backup name', () {
+      final p = TestFactories.makeProject(
+        previewSongPath: localPath,
+        previewSongFileName: '550e8400-e29b-41d4-a716-446655440000_finalmaster.wav',
+      );
+      // Does NOT match the strict "_preview." pattern, so it is kept as-is.
+      expect(
+        p.previewShareFileName,
+        '550e8400-e29b-41d4-a716-446655440000_finalmaster.wav',
+      );
+    });
+  });
 }

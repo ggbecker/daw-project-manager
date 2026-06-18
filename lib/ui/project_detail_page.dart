@@ -1839,10 +1839,10 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
         debugPrint('[preview_share] sizeBytes=$fileSizeBytes');
       }
 
-      // Get the original filename or use a default
-      String originalFileName = widget.project.previewSongFileName ?? 
+      // Get the original filename — prefer stored name, fall back to project name
+      String originalFileName = widget.project.previewShareFileName ??
           p.basename(widget.project.previewSongPath!);
-      
+
       // Ensure the filename has an extension
       if (!originalFileName.contains('.')) {
         final ext = p.extension(widget.project.previewSongPath!);
@@ -1856,7 +1856,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
         if (kDebugMode) {
           debugPrint('[preview_share] cacheDir=${cacheDir.path} shareFile=${shareFile.path}');
         }
-        
+
         // Copy file to cache with original name
         await sourceFile.copy(shareFile.path);
         if (kDebugMode) {
@@ -1931,8 +1931,8 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
         return;
       }
 
-      // Get the original filename or use a default
-      String originalFileName = widget.project.previewSongFileName ??
+      // Get the original filename — prefer stored name, fall back to project name
+      String originalFileName = widget.project.previewShareFileName ??
           p.basename(widget.project.previewSongPath!);
       if (!originalFileName.contains('.')) {
         final ext = p.extension(widget.project.previewSongPath!);
@@ -2024,7 +2024,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
         return;
       }
 
-      final originalName = widget.project.previewSongFileName ?? p.basename(songPath);
+      final originalName = widget.project.previewShareFileName ?? p.basename(songPath);
       final ext = p.extension(songPath).replaceFirst('.', '');
 
       final destPath = await FilePicker.saveFile(

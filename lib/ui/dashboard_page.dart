@@ -5752,10 +5752,10 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
         debugPrint('[preview_share] sizeBytes=$fileSizeBytes');
       }
 
-      // Get the original filename or use a default
-      String originalFileName = widget.project.previewSongFileName ?? 
+      // Get the original filename — prefer stored name, fall back to project name
+      String originalFileName = widget.project.previewShareFileName ??
           path.basename(widget.project.previewSongPath!);
-      
+
       // Ensure the filename has an extension
       if (!originalFileName.contains('.')) {
         final ext = path.extension(widget.project.previewSongPath!);
@@ -5769,7 +5769,7 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
         if (kDebugMode) {
           debugPrint('[preview_share] cacheDir=${cacheDir.path} shareFile=${shareFile.path}');
         }
-        
+
         // Copy file to cache with original name
         await sourceFile.copy(shareFile.path);
         if (kDebugMode) {
@@ -5844,8 +5844,8 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
         return;
       }
 
-      // Get the original filename or use a default
-      String originalFileName = widget.project.previewSongFileName ??
+      // Get the original filename — prefer stored name, fall back to project name
+      String originalFileName = widget.project.previewShareFileName ??
           path.basename(widget.project.previewSongPath!);
       if (!originalFileName.contains('.')) {
         final ext = path.extension(widget.project.previewSongPath!);
