@@ -57,8 +57,9 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
   String? _lastSavedNotes;
   String? _selectedPhase;
 
-  bool _hasInitializedPhase = false; // Track if we've initialized the phase
-  bool _extractingMetadata = false; // Track metadata extraction state
+  bool _hasInitializedPhase = false;
+  bool _extractingMetadata = false;
+  Timer? _autoSaveTimer;
 
   /// Records status-change and/or metadata-edit events after saving a project.
   Future<void> _recordSaveEvents(
@@ -164,6 +165,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
 
   @override
   void dispose() {
+    _autoSaveTimer?.cancel();
     _nameCtrl.dispose();
     _bpmCtrl.dispose();
     _keyCtrl.dispose();
@@ -173,6 +175,52 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
     _keyFocusNode.dispose();
     _notesFocusNode.dispose();
     super.dispose();
+  }
+
+  void _scheduleAutoSave() {
+    _autoSaveTimer?.cancel();
+    _autoSaveTimer = Timer(const Duration(milliseconds: 300), _doAutoSave);
+  }
+
+  Future<void> _doAutoSave() async {
+    final allProjects = ref.read(allProjectsStreamProvider).value;
+    if (allProjects == null) return;
+    final MusicProject project;
+    try {
+      project = allProjects.firstWhere((p) => p.id == widget.projectId);
+    } catch (_) {
+      return;
+    }
+    final repo = await ref.read(repositoryProvider.future);
+
+    final nameText = _nameCtrl.text.trim();
+    final newCustomDisplayName =
+        (nameText.isEmpty || nameText == project.fileName) ? null : nameText;
+    final notesText = _notesCtrl.text.trim();
+    final newNotes = notesText.isEmpty ? null : notesText;
+    final newStatus = _selectedPhase ?? project.status;
+    final statusChanged = project.status != newStatus;
+
+    final updated = project.copyWith(
+      customDisplayName: newCustomDisplayName,
+      clearCustomDisplayName: newCustomDisplayName == null,
+      bpm: _bpmCtrl.text.trim().isEmpty ? null : double.tryParse(_bpmCtrl.text.trim()),
+      clearBpm: _bpmCtrl.text.trim().isEmpty,
+      musicalKey: _keyCtrl.text.trim().isEmpty ? null : _keyCtrl.text.trim(),
+      clearMusicalKey: _keyCtrl.text.trim().isEmpty,
+      notes: newNotes,
+      clearNotes: newNotes == null,
+      status: newStatus,
+      statusChangedAt: statusChanged ? DateTime.now() : null,
+    );
+
+    await repo.updateProject(updated);
+    await _recordSaveEvents(repo, project, updated, newStatus, statusChanged);
+
+    _lastSavedName = newCustomDisplayName ?? project.fileName;
+    _lastSavedBpm = _bpmCtrl.text.trim();
+    _lastSavedKey = _keyCtrl.text.trim();
+    _lastSavedNotes = newNotes ?? '';
   }
 
   // NOVO: Função para abrir o diretório pai
@@ -192,43 +240,6 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
             AppLocalizations.of(context)!.couldNotOpenFolder('Unable to open folder'),
           ),
         ),
-      );
-    }
-  }
-
-  Future<void> _doSave(
-    ProjectRepository repo,
-    MusicProject project,
-    MusicProject updatedProject,
-  ) async {
-    final nameText = _nameCtrl.text.trim();
-    final newCustomDisplayName =
-        (nameText.isEmpty || nameText == updatedProject.fileName) ? null : nameText;
-    final notesText = _notesCtrl.text.trim();
-    final newNotes = notesText.isEmpty ? null : notesText;
-    final newStatus = _selectedPhase ?? 'Idea';
-    final statusChanged = project.status != newStatus;
-    final updated = project.copyWith(
-      customDisplayName: newCustomDisplayName,
-      clearCustomDisplayName: newCustomDisplayName == null,
-      bpm: _bpmCtrl.text.trim().isEmpty ? null : double.tryParse(_bpmCtrl.text.trim()),
-      clearBpm: _bpmCtrl.text.trim().isEmpty,
-      musicalKey: _keyCtrl.text.trim().isEmpty ? null : _keyCtrl.text.trim(),
-      clearMusicalKey: _keyCtrl.text.trim().isEmpty,
-      notes: newNotes,
-      clearNotes: newNotes == null,
-      status: newStatus,
-      statusChangedAt: statusChanged ? DateTime.now() : null,
-    );
-    await repo.updateProject(updated);
-    await _recordSaveEvents(repo, project, updated, newStatus, statusChanged);
-    _lastSavedName = newCustomDisplayName ?? updatedProject.fileName;
-    _lastSavedBpm = _bpmCtrl.text.trim();
-    _lastSavedKey = _keyCtrl.text.trim();
-    _lastSavedNotes = newNotes ?? '';
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.saved)),
       );
     }
   }
@@ -491,7 +502,6 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                   project: updatedProject,
                   isMobile: isMobile,
                   sourceFileExists: sourceFileExists,
-                  onSave: () => _doSave(repo, project, updatedProject),
                   onOpenFolder: () => _openProjectFolder(updatedProject.filePath),
                   onRename: () => _renameProjectFile(updatedProject),
                   onOpenInDaw: () async {
@@ -546,6 +556,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                   context,
                                 )!.projectName,
                               ),
+                              onChanged: (_) => _scheduleAutoSave(),
                             ),
                             const SizedBox(height: 12),
                             // Use Column on mobile, Row on desktop
@@ -561,6 +572,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                           )!.bpm,
                                         ),
                                         keyboardType: TextInputType.number,
+                                        onChanged: (_) => _scheduleAutoSave(),
                                       ),
                                       const SizedBox(height: 12),
                                       TextFormField(
@@ -571,9 +583,9 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                             context,
                                           )!.key,
                                         ),
-                                        onChanged: (value) {
-                                          // Force rebuild to update Camelot code display
+                                        onChanged: (_) {
                                           setState(() {});
+                                          _scheduleAutoSave();
                                         },
                                       ),
                                       // Camelot code field (only shown when key is set)
@@ -771,6 +783,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                 setState(() {
                                   _selectedPhase = value;
                                 });
+                                _scheduleAutoSave();
                               },
                             ),
                             const SizedBox(height: 12),
@@ -786,6 +799,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                               ),
                               maxLines: 5,
                               keyboardType: TextInputType.multiline,
+                              onChanged: (_) => _scheduleAutoSave(),
                             ),
 
                             const SizedBox(height: 12),
@@ -1236,7 +1250,6 @@ class _ProjectDetailActionBar extends StatelessWidget {
   final MusicProject project;
   final bool isMobile;
   final bool sourceFileExists;
-  final VoidCallback onSave;
   final VoidCallback onOpenFolder;
   final VoidCallback onRename;
   final VoidCallback onOpenInDaw;
@@ -1246,7 +1259,6 @@ class _ProjectDetailActionBar extends StatelessWidget {
     required this.project,
     required this.isMobile,
     required this.sourceFileExists,
-    required this.onSave,
     required this.onOpenFolder,
     required this.onRename,
     required this.onOpenInDaw,
@@ -1266,11 +1278,6 @@ class _ProjectDetailActionBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          FilledButton.icon(
-            onPressed: onSave,
-            icon: const Icon(Icons.save, size: 16),
-            label: Text(l10n.save),
-          ),
           if (!isMobile) ...[
             const SizedBox(width: 8),
             Tooltip(
