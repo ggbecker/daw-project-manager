@@ -51,6 +51,9 @@ dependencies:
   path_provider: ^2.1.1
   archive: ^4.0.7
   audioplayers: ^6.0.0
+  just_audio: ^0.9.42
+  just_audio_background: ^0.0.1-beta.12
+  audio_service: ^0.18.15
   desktop_drop: ^0.7.0
   google_sign_in: ^7.2.0
   google_sign_in_platform_interface: ^3.1.0

@@ -18,6 +18,7 @@ import 'services/deadline_notification_service.dart';
 import 'services/notification_background_service.dart';
 import 'services/google_drive_sync_service.dart';
 import 'services/update_check_service.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 import 'models/auto_backup_interval.dart';
 import 'utils/app_paths.dart';
 
@@ -216,15 +217,27 @@ void main() async {
     }
   }
   if (!kIsWeb && Platform.isAndroid) {
+    // Fire-and-forget: não bloqueia o runApp(). O player usa audioplayers como
+    // fallback até init() completar; depois usa just_audio com notificação.
+    unawaited(JustAudioBackground.init(
+      androidNotificationChannelId: 'com.bandpassrecords.dpm.audio',
+      androidNotificationChannelName: 'DAW Project Manager',
+      androidNotificationChannelDescription: 'Controles de preview de faixas',
+      androidNotificationOngoing: false,
+      androidStopForegroundOnPause: true,
+    ).timeout(const Duration(seconds: 8)).then((_) {
+      markJabInitialized();
+      if (kDebugMode) print('[JustAudioBackground] initialized OK');
+    }).catchError((Object e) {
+      if (kDebugMode) print('[JustAudioBackground] INIT FAILED/TIMEOUT: $e');
+    }));
+
+    // Notificações de deadline: fire-and-forget para não bloquear o startup.
     try {
       final notificationService = DeadlineNotificationService();
       await notificationService.initialize();
-      
-      // Set callback for notification taps
       notificationService.setOnNotificationTapCallback(_handleNotificationTap);
-      
-      await NotificationBackgroundService.initialize();
-      if (kDebugMode) print('Notification services initialized');
+      unawaited(NotificationBackgroundService.initialize());
     } catch (e) {
       if (kDebugMode) print('Error initializing notification services: $e');
     }
