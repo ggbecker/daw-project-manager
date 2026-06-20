@@ -3315,4 +3315,13 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get playerMixSuggestions => 'ПРЕДЛОЖЕНИЯ МИКСА';
+
+  @override
+  String get nowPlaying => 'Now Playing';
+
+  @override
+  String get noPreviewSongsAvailable => 'No preview songs available';
+
+  @override
+  String get upNext => 'Далее';
 }

@@ -2094,4 +2094,9 @@
   "camelotGuideTransitionsBody": "8A → 8B  (même chiffre, changer d’anneau)\n  Majeur/mineur relatif — pratiquement sans couture.\n\n8A → 7A ou 9A  (±1, même anneau)\n  Ton adjacent — changement doux et subtil.\n\n8A → 1A ou 3A  (±7, même anneau)\n  Boost ou chute d’énergie — changement plus dramatique.",
   "playerMixSuggestions": "SUGGESTIONS DE MIX",
   "@playerMixSuggestions": {}
+,
+  "nowPlaying": "Now Playing",
+  "noPreviewSongsAvailable": "No preview songs available",
+  "upNext": "Suivant",
+  "@upNext": { "description": "Queue panel title - tracks coming up next" }
 }

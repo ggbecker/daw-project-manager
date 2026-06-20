@@ -3199,4 +3199,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get playerMixSuggestions => '混音建议';
+
+  @override
+  String get nowPlaying => 'Now Playing';
+
+  @override
+  String get noPreviewSongsAvailable => 'No preview songs available';
+
+  @override
+  String get upNext => '接下来';
 }

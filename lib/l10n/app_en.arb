@@ -3247,4 +3247,12 @@
   "@camelotGuideTransitionsBody": {},
   "playerMixSuggestions": "MIX SUGGESTIONS",
   "@playerMixSuggestions": {}
+,
+  "nowPlaying": "Now Playing",
+  "@nowPlaying": {
+    "description": "Title for the mobile player page"
+  },
+  "noPreviewSongsAvailable": "No preview songs available",
+  "upNext": "Up Next",
+  "@upNext": { "description": "Queue panel title - tracks coming up next" }
 }

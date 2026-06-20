@@ -3329,4 +3329,13 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get playerMixSuggestions => 'SUGERENCIAS DE MIX';
+
+  @override
+  String get nowPlaying => 'Now Playing';
+
+  @override
+  String get noPreviewSongsAvailable => 'No preview songs available';
+
+  @override
+  String get upNext => 'A continuación';
 }

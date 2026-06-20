@@ -2094,4 +2094,9 @@
   "camelotGuideTransitionsBody": "8A → 8B  (stesso numero, cambio anello)\n  Maggiore/minore relativo — praticamente senza soluzione di continuità.\n\n8A → 7A o 9A  (±1, stesso anello)\n  Tonalità adiacente — cambio morbido e sottile.\n\n8A → 1A o 3A  (±7, stesso anello)\n  Aumento o calo di energia — cambiamento più drammatico.",
   "playerMixSuggestions": "SUGGERIMENTI MIX",
   "@playerMixSuggestions": {}
+,
+  "nowPlaying": "Now Playing",
+  "noPreviewSongsAvailable": "No preview songs available",
+  "upNext": "Prossimo",
+  "@upNext": { "description": "Queue panel title - tracks coming up next" }
 }

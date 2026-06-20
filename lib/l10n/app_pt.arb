@@ -2118,4 +2118,9 @@
   "camelotGuideTransitionsBody": "8A → 8B  (mesmo número, trocar anel)\n  Maior/menor relativo — praticamente sem emenda.\n\n8A → 7A ou 9A  (±1, mesmo anel)\n  Tom adjacente — mudança suave e sutil.\n\n8A → 1A ou 3A  (±7, mesmo anel)\n  Impulso ou queda de energia — mudança mais dramática.",
   "playerMixSuggestions": "SUGESTÕES DE MIX",
   "@playerMixSuggestions": {}
+,
+  "nowPlaying": "Now Playing",
+  "noPreviewSongsAvailable": "No preview songs available",
+  "upNext": "A seguir",
+  "@upNext": { "description": "Queue panel title - tracks coming up next" }
 }

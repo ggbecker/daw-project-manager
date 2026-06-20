@@ -2094,4 +2094,9 @@
   "camelotGuideTransitionsBody": "8A → 8B  (gleiche Zahl, Ring wechseln)\n  Relative Dur/Moll — nahezu nahtlos.\n\n8A → 7A oder 9A  (±1, gleicher Ring)\n  Benachbarter Ton — sanfte, dezente Änderung.\n\n8A → 1A oder 3A  (±7, gleicher Ring)\n  Energie-Boost oder -Drop — dramatischerer Wechsel.",
   "playerMixSuggestions": "MIX-VORSCHLÄGE",
   "@playerMixSuggestions": {}
+,
+  "nowPlaying": "Now Playing",
+  "noPreviewSongsAvailable": "No preview songs available",
+  "upNext": "Als Nächstes",
+  "@upNext": { "description": "Queue panel title - tracks coming up next" }
 }

@@ -2094,4 +2094,9 @@
   "camelotGuideTransitionsBody": "8A → 8B  （相同数字，切换环）\n  关系大调/小调 — 几乎无缝衔接。\n\n8A → 7A 或 9A  （±1，相同环）\n  相邻调性 — 平滑、细腻的变化。\n\n8A → 1A 或 3A  （±7，相同环）\n  能量提升或下降 — 更显著的转变。",
   "playerMixSuggestions": "混音建议",
   "@playerMixSuggestions": {}
+,
+  "nowPlaying": "Now Playing",
+  "noPreviewSongsAvailable": "No preview songs available",
+  "upNext": "接下来",
+  "@upNext": { "description": "Queue panel title - tracks coming up next" }
 }

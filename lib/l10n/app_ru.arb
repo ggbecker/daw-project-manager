@@ -2094,4 +2094,9 @@
   "camelotGuideTransitionsBody": "8A → 8B  (тот же номер, смена кольца)\n  Параллельный мажор/минор — практически незаметно.\n\n8A → 7A или 9A  (±1, то же кольцо)\n  Соседняя тональность — плавное, тонкое изменение.\n\n8A → 1A или 3A  (±7, то же кольцо)\n  Подъём или падение энергии — более резкий переход.",
   "playerMixSuggestions": "ПРЕДЛОЖЕНИЯ МИКСА",
   "@playerMixSuggestions": {}
+,
+  "nowPlaying": "Now Playing",
+  "noPreviewSongsAvailable": "No preview songs available",
+  "upNext": "Далее",
+  "@upNext": { "description": "Queue panel title - tracks coming up next" }
 }

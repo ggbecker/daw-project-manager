@@ -2094,4 +2094,9 @@
   "camelotGuideTransitionsBody": "8A → 8B  (mismo número, cambiar anillo)\n  Mayor/menor relativa — prácticamente sin costuras.\n\n8A → 7A o 9A  (±1, mismo anillo)\n  Tono adyacente — cambio suave y sutil.\n\n8A → 1A o 3A  (±7, mismo anillo)\n  Impulso o caída de energía — cambio más dramático.",
   "playerMixSuggestions": "SUGERENCIAS DE MIX",
   "@playerMixSuggestions": {}
+,
+  "nowPlaying": "Now Playing",
+  "noPreviewSongsAvailable": "No preview songs available",
+  "upNext": "A continuación",
+  "@upNext": { "description": "Queue panel title - tracks coming up next" }
 }

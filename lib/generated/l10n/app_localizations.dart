@@ -5635,6 +5635,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'MIX SUGGESTIONS'**
   String get playerMixSuggestions;
+
+  /// Title for the mobile player page
+  ///
+  /// In en, this message translates to:
+  /// **'Now Playing'**
+  String get nowPlaying;
+
+  /// No description provided for @noPreviewSongsAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No preview songs available'**
+  String get noPreviewSongsAvailable;
+
+  /// Queue panel title - tracks coming up next
+  ///
+  /// In en, this message translates to:
+  /// **'Up Next'**
+  String get upNext;
 }
 
 class _AppLocalizationsDelegate

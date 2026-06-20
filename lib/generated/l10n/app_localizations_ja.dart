@@ -3232,4 +3232,13 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get playerMixSuggestions => 'ミックス候補';
+
+  @override
+  String get nowPlaying => 'Now Playing';
+
+  @override
+  String get noPreviewSongsAvailable => 'No preview songs available';
+
+  @override
+  String get upNext => '次の曲';
 }

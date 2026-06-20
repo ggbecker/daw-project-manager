@@ -3337,4 +3337,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get playerMixSuggestions => 'SUGGESTIONS DE MIX';
+
+  @override
+  String get nowPlaying => 'Now Playing';
+
+  @override
+  String get noPreviewSongsAvailable => 'No preview songs available';
+
+  @override
+  String get upNext => 'Suivant';
 }

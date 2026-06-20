@@ -2094,4 +2094,9 @@
   "camelotGuideTransitionsBody": "8A → 8B  （同じ番号、リングを切り替え）\n  平行長調/短調 — ほぼシームレス。\n\n8A → 7A または 9A  （±1、同じリング）\n  隣接キー — スムーズで細腐な変化。\n\n8A → 1A または 3A  （±7、同じリング）\n  エネルギーブーストまたはドロップ — より劧的な変化。",
   "playerMixSuggestions": "ミックス候補",
   "@playerMixSuggestions": {}
+,
+  "nowPlaying": "Now Playing",
+  "noPreviewSongsAvailable": "No preview songs available",
+  "upNext": "次の曲",
+  "@upNext": { "description": "Queue panel title - tracks coming up next" }
 }
