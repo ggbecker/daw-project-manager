@@ -44,6 +44,7 @@ import 'notification_settings_page.dart';
 import 'widgets/desktop_title_bar.dart';
 import 'widgets/language_switcher.dart';
 import 'widgets/theme_switcher.dart';
+import 'widgets/mobile_mini_player.dart';
 import '../generated/l10n/app_localizations.dart';
 import 'dialogs/create_project_dialog.dart';
 import '../models/pending_folder.dart';
@@ -1176,47 +1177,52 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                       )
                     : null,
                 bottomNavigationBar: MobileUtils.isMobile()
-                    ? NavigationBar(
-                        selectedIndex: _tabController.index,
-                        onDestinationSelected: (i) {
-                          _tabController.animateTo(i);
-                          setState(() {});
-                        },
-                        destinations: [
-                          for (final tab in _currentVisibleTabs)
-                            switch (tab) {
-                              AppTab.projects => NavigationDestination(
-                                  icon: const Icon(Icons.library_music_outlined),
-                                  selectedIcon: const Icon(Icons.library_music),
-                                  label: AppLocalizations.of(context)!.projects,
-                                ),
-                              AppTab.releases => NavigationDestination(
-                                  icon: const Icon(Icons.album_outlined),
-                                  selectedIcon: const Icon(Icons.album),
-                                  label: AppLocalizations.of(context)!.releasesTab,
-                                ),
-                              AppTab.playlists => NavigationDestination(
-                                  icon: const Icon(Icons.playlist_play_outlined),
-                                  selectedIcon: const Icon(Icons.playlist_play),
-                                  label: AppLocalizations.of(context)!.playlists,
-                                ),
-                              AppTab.queue => NavigationDestination(
-                                  icon: const Icon(Icons.checklist_outlined),
-                                  selectedIcon: const Icon(Icons.checklist),
-                                  label: AppLocalizations.of(context)!.queueTab,
-                                ),
-                              AppTab.statistics => NavigationDestination(
-                                  icon: const Icon(Icons.bar_chart_outlined),
-                                  selectedIcon: const Icon(Icons.bar_chart_rounded),
-                                  label: AppLocalizations.of(context)!.statisticsTab,
-                                ),
-                              // player is desktop-only; filtered out of _currentVisibleTabs on mobile
-                              AppTab.player => NavigationDestination(
-                                  icon: const Icon(Icons.headphones_outlined),
-                                  selectedIcon: const Icon(Icons.headphones),
-                                  label: AppLocalizations.of(context)!.playerTitle,
-                                ),
+                    ? Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const MobileMiniPlayer(),
+                          NavigationBar(
+                            selectedIndex: _tabController.index,
+                            onDestinationSelected: (i) {
+                              _tabController.animateTo(i);
+                              setState(() {});
                             },
+                            destinations: [
+                              for (final tab in _currentVisibleTabs)
+                                switch (tab) {
+                                  AppTab.projects => NavigationDestination(
+                                      icon: const Icon(Icons.library_music_outlined),
+                                      selectedIcon: const Icon(Icons.library_music),
+                                      label: AppLocalizations.of(context)!.projects,
+                                    ),
+                                  AppTab.releases => NavigationDestination(
+                                      icon: const Icon(Icons.album_outlined),
+                                      selectedIcon: const Icon(Icons.album),
+                                      label: AppLocalizations.of(context)!.releasesTab,
+                                    ),
+                                  AppTab.playlists => NavigationDestination(
+                                      icon: const Icon(Icons.playlist_play_outlined),
+                                      selectedIcon: const Icon(Icons.playlist_play),
+                                      label: AppLocalizations.of(context)!.playlists,
+                                    ),
+                                  AppTab.queue => NavigationDestination(
+                                      icon: const Icon(Icons.checklist_outlined),
+                                      selectedIcon: const Icon(Icons.checklist),
+                                      label: AppLocalizations.of(context)!.queueTab,
+                                    ),
+                                  AppTab.statistics => NavigationDestination(
+                                      icon: const Icon(Icons.bar_chart_outlined),
+                                      selectedIcon: const Icon(Icons.bar_chart_rounded),
+                                      label: AppLocalizations.of(context)!.statisticsTab,
+                                    ),
+                                  AppTab.player => NavigationDestination(
+                                      icon: const Icon(Icons.headphones_outlined),
+                                      selectedIcon: const Icon(Icons.headphones),
+                                      label: AppLocalizations.of(context)!.playerTitle,
+                                    ),
+                                },
+                            ],
+                          ),
                         ],
                       )
                     : () {
@@ -1951,6 +1957,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                         await _unhideProjects(context, ref, selectedProjectIds);
                                       },
                                       showHidden: hiddenMode == 1 || hiddenMode == 2,
+                                      onRefresh: () => _scanAll(),
                                     )
                                   : _PlutoProjectsTableWithSelection(
                                       key: _tableKey,
@@ -3262,16 +3269,31 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         previewSongFileName: path.basename(newPath),
       ));
       if (!mounted) return;
-      await showDialog(
-        context: context,
-        builder: (dialogContext) => _PreviewSongDialog(
-          project: project.copyWith(
-            previewSongPath: newPath,
-            previewSongFileName: path.basename(newPath),
+      if (MobileUtils.isMobile()) {
+        final pickedProject = project.copyWith(
+          previewSongPath: newPath,
+          previewSongFileName: path.basename(newPath),
+        );
+        final queue = ref.read(mobilePlayerQueueProvider);
+        final idx = queue.indexWhere((p) => p.id == pickedProject.id);
+        await ref.read(mobilePlayerProvider.notifier).playProject(
+          pickedProject,
+          newPath,
+          queue: queue,
+          queueIndex: idx >= 0 ? idx : null,
+        );
+      } else {
+        await showDialog(
+          context: context,
+          builder: (dialogContext) => _PreviewSongDialog(
+            project: project.copyWith(
+              previewSongPath: newPath,
+              previewSongFileName: path.basename(newPath),
+            ),
+            onClose: () {},
           ),
-          onClose: () {},
-        ),
-      );
+        );
+      }
       return;
     }
 
@@ -3382,12 +3404,13 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     );
 
     if (MobileUtils.isMobile()) {
-      await showDialog(
-        context: context,
-        builder: (dialogContext) => _PreviewSongDialog(
-          project: playProject,
-          onClose: () {},
-        ),
+      final queue = ref.read(mobilePlayerQueueProvider);
+      final idx = queue.indexWhere((p) => p.id == playProject.id);
+      await ref.read(mobilePlayerProvider.notifier).playProject(
+        playProject,
+        effectivePath,
+        queue: queue,
+        queueIndex: idx >= 0 ? idx : null,
       );
     } else {
       ref.read(desktopPlayerProvider.notifier).play(playProject, effectivePath);
@@ -6547,6 +6570,7 @@ class _MobileProjectsList extends ConsumerStatefulWidget {
   final Function(List<String>) onHideProjects;
   final Function(List<String>) onUnhideProjects;
   final bool showHidden;
+  final Future<void> Function()? onRefresh;
 
   const _MobileProjectsList({
     required this.projects,
@@ -6555,6 +6579,7 @@ class _MobileProjectsList extends ConsumerStatefulWidget {
     required this.onHideProjects,
     required this.onUnhideProjects,
     required this.showHidden,
+    this.onRefresh,
   });
 
   @override
@@ -6569,16 +6594,6 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
   _MobileSortField _sortField = _MobileSortField.lastModified;
 
   List<MusicProject> _sorted(List<MusicProject> projects) {
-    // DEBUG: log date fields for all projects
-    for (final p in projects) {
-      debugPrint(
-        '[DEBUG DATE] "${p.displayName}" | '
-        'lastModifiedAt=${p.lastModifiedAt.toIso8601String()} | '
-        'fileCreatedAt=${p.fileCreatedAt?.toIso8601String() ?? "null"} | '
-        'createdAt=${p.createdAt.toIso8601String()} | '
-        'same=${p.fileCreatedAt == p.lastModifiedAt}',
-      );
-    }
     final list = List<MusicProject>.from(projects);
     switch (_sortField) {
       case _MobileSortField.lastModified:
@@ -6696,16 +6711,31 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
         previewSongFileName: path.basename(newPath),
       ));
       if (!mounted) return;
-      await showDialog(
-        context: context,
-        builder: (dialogContext) => _PreviewSongDialog(
-          project: project.copyWith(
-            previewSongPath: newPath,
-            previewSongFileName: path.basename(newPath),
+      if (MobileUtils.isMobile()) {
+        final pickedProject = project.copyWith(
+          previewSongPath: newPath,
+          previewSongFileName: path.basename(newPath),
+        );
+        final queue = ref.read(mobilePlayerQueueProvider);
+        final idx = queue.indexWhere((p) => p.id == pickedProject.id);
+        await ref.read(mobilePlayerProvider.notifier).playProject(
+          pickedProject,
+          newPath,
+          queue: queue,
+          queueIndex: idx >= 0 ? idx : null,
+        );
+      } else {
+        await showDialog(
+          context: context,
+          builder: (dialogContext) => _PreviewSongDialog(
+            project: project.copyWith(
+              previewSongPath: newPath,
+              previewSongFileName: path.basename(newPath),
+            ),
+            onClose: () {},
           ),
-          onClose: () {},
-        ),
-      );
+        );
+      }
       return;
     }
 
@@ -6814,12 +6844,13 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
     );
 
     if (MobileUtils.isMobile()) {
-      await showDialog(
-        context: context,
-        builder: (dialogContext) => _PreviewSongDialog(
-          project: playProject,
-          onClose: () {},
-        ),
+      final queue = ref.read(mobilePlayerQueueProvider);
+      final idx = queue.indexWhere((p) => p.id == playProject.id);
+      await ref.read(mobilePlayerProvider.notifier).playProject(
+        playProject,
+        effectivePath,
+        queue: queue,
+        queueIndex: idx >= 0 ? idx : null,
       );
     } else {
       ref.read(desktopPlayerProvider.notifier).play(playProject, effectivePath);
@@ -6965,7 +6996,9 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
           ),
         ),
         Expanded(
-          child: ListView.builder(
+          child: RefreshIndicator(
+            onRefresh: widget.onRefresh ?? () async {},
+            child: ListView.builder(
             itemCount: sortedProjects.length,
             itemBuilder: (context, index) {
               final project = sortedProjects[index];
@@ -7160,6 +7193,7 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                 ),
               );
             },
+          ),
           ),
         ),
         // Selection action bar

@@ -2,6 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:audioplayers/audioplayers.dart';
+import 'package:just_audio/just_audio.dart' as ja;
+import 'package:audio_service/audio_service.dart' show MediaItem;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -1658,6 +1662,342 @@ class WaveformCacheNotifier extends Notifier<Map<String, WaveformPeaks>> {
 final waveformCacheProvider =
     NotifierProvider<WaveformCacheNotifier, Map<String, WaveformPeaks>>(
         WaveformCacheNotifier.new);
+
+// ---------------------------------------------------------------------------
+// Mobile Preview Player (global singleton — persists across navigation)
+// ---------------------------------------------------------------------------
+
+class MobilePlayerState {
+  final MusicProject? currentProject;
+  final bool isPlaying;
+  final Duration position;
+  final Duration duration;
+  final List<MusicProject> queue;
+  final int queueIndex;
+
+  const MobilePlayerState({
+    this.currentProject,
+    this.isPlaying = false,
+    this.position = Duration.zero,
+    this.duration = Duration.zero,
+    this.queue = const [],
+    this.queueIndex = 0,
+  });
+
+  bool get hasTrack => currentProject != null;
+
+  String? get effectivePath =>
+      currentProject?.previewSongPath?.isNotEmpty == true
+          ? currentProject!.previewSongPath
+          : currentProject?.previewSongAutoPath;
+
+  MobilePlayerState copyWith({
+    MusicProject? currentProject,
+    bool? isPlaying,
+    Duration? position,
+    Duration? duration,
+    List<MusicProject>? queue,
+    int? queueIndex,
+  }) =>
+      MobilePlayerState(
+        currentProject: currentProject ?? this.currentProject,
+        isPlaying: isPlaying ?? this.isPlaying,
+        position: position ?? this.position,
+        duration: duration ?? this.duration,
+        queue: queue ?? this.queue,
+        queueIndex: queueIndex ?? this.queueIndex,
+      );
+}
+
+// ── helpers ───────────────────────────────────────────────────────────────────
+
+bool get _isAndroid => !kIsWeb && Platform.isAndroid;
+
+/// Setado como true em main.dart quando JustAudioBackground.init() completa.
+/// Enquanto false, o player Android usa audioplayers como fallback seguro.
+bool _jabInitialized = false;
+
+void markJabInitialized() => _jabInitialized = true;
+
+class MobilePlayerNotifier extends Notifier<MobilePlayerState> {
+  static const _tag = '[MobilePlayer]';
+
+  // Android: just_audio player — background gerenciado pelo just_audio_background.
+  ja.AudioPlayer? _jaPlayer;
+  ja.ConcatenatingAudioSource? _jaSource;
+
+  // Subscriptions Android (vivas durante todo o ciclo de vida do notifier).
+  StreamSubscription<int?>? _indexSub;
+  StreamSubscription<bool>? _jaPlayingSub;
+  StreamSubscription<Duration>? _jaPosSub;
+  StreamSubscription<Duration?>? _jaDurSub;
+  StreamSubscription<ja.PlayerState>? _jaCompleteSub;
+
+  // Desktop fallback: audioplayers (subscriptions re-criadas por play).
+  AudioPlayer? _fallbackPlayer;
+  StreamSubscription<PlayerState>? _fbStateSub;
+  StreamSubscription<Duration>? _fbPosSub;
+  StreamSubscription<Duration>? _fbDurSub;
+  StreamSubscription<void>? _fbCompleteSub;
+
+  @override
+  MobilePlayerState build() {
+    ref.onDispose(_dispose);
+    if (_isAndroid) {
+      _jaPlayer = ja.AudioPlayer();
+      _attachJaListeners();
+    }
+    return const MobilePlayerState();
+  }
+
+  // ── Listeners Android ─────────────────────────────────────────────────────
+
+  void _attachJaListeners() {
+    final p = _jaPlayer!;
+    // ConcatenatingAudioSource avança automaticamente; sincronizamos o estado.
+    _indexSub = p.currentIndexStream.listen((idx) {
+      if (idx == null) return;
+      final q = state.queue;
+      if (idx < q.length && idx != state.queueIndex) {
+        state = state.copyWith(currentProject: q[idx], queueIndex: idx);
+      }
+    });
+    _jaPlayingSub = p.playingStream.listen((playing) {
+      state = state.copyWith(isPlaying: playing);
+    });
+    _jaPosSub = p.positionStream.listen((pos) {
+      state = state.copyWith(position: pos);
+    });
+    _jaDurSub = p.durationStream.listen((dur) {
+      if (dur != null) state = state.copyWith(duration: dur);
+    });
+    // Toda a fila terminou.
+    _jaCompleteSub = p.playerStateStream
+        .where((s) => s.processingState == ja.ProcessingState.completed)
+        .listen((_) {
+      state = state.copyWith(isPlaying: false, position: Duration.zero);
+    });
+  }
+
+  // ── Listeners Desktop ─────────────────────────────────────────────────────
+
+  void _cancelFallbackSubs() {
+    _fbStateSub?.cancel();
+    _fbPosSub?.cancel();
+    _fbDurSub?.cancel();
+    _fbCompleteSub?.cancel();
+  }
+
+  void _attachFallbackListeners() {
+    final p = _fallbackPlayer!;
+    _fbStateSub = p.onPlayerStateChanged.listen((s) {
+      state = state.copyWith(isPlaying: s == PlayerState.playing);
+    });
+    _fbPosSub = p.onPositionChanged.listen((pos) {
+      state = state.copyWith(position: pos);
+    });
+    _fbDurSub = p.onDurationChanged.listen((dur) {
+      state = state.copyWith(duration: dur);
+    });
+    _fbCompleteSub = p.onPlayerComplete.listen((_) {
+      state = state.copyWith(isPlaying: false, position: Duration.zero);
+      _autoAdvanceFallback();
+    });
+  }
+
+  void _autoAdvanceFallback() {
+    final q = state.queue;
+    final nextIdx = state.queueIndex + 1;
+    if (q.isEmpty || nextIdx >= q.length) return;
+    final next = q[nextIdx];
+    final path = next.previewSongPath?.isNotEmpty == true
+        ? next.previewSongPath!
+        : next.previewSongAutoPath;
+    if (path != null) _play(next, path, q, nextIdx);
+  }
+
+  // ── Play ──────────────────────────────────────────────────────────────────
+
+  Future<void> playProject(
+    MusicProject project,
+    String path, {
+    List<MusicProject>? queue,
+    int? queueIndex,
+  }) async {
+    final q = queue ?? [project];
+    final idx = queueIndex ?? 0;
+    await _play(project, path, q, idx);
+  }
+
+  Future<void> _play(
+    MusicProject project,
+    String path,
+    List<MusicProject> queue,
+    int queueIndex,
+  ) async {
+    debugPrint('$_tag playing ${project.displayName} at $path');
+    state = MobilePlayerState(
+      currentProject: project,
+      queue: queue,
+      queueIndex: queueIndex,
+    );
+
+    if (_isAndroid && _jabInitialized) {
+      // ConcatenatingAudioSource para que skip prev/next da notificação funcione.
+      final sources = queue.map((p) {
+        final trackPath = p.previewSongPath?.isNotEmpty == true
+            ? p.previewSongPath!
+            : p.previewSongAutoPath ?? '';
+        return ja.AudioSource.uri(
+          Uri.file(trackPath),
+          tag: MediaItem(id: trackPath, title: p.displayName, artist: ''),
+        );
+      }).toList();
+      _jaSource = ja.ConcatenatingAudioSource(children: sources);
+      await _jaPlayer!.setAudioSource(
+        _jaSource!,
+        initialIndex: queueIndex,
+        initialPosition: Duration.zero,
+      );
+      await _jaPlayer!.play();
+    } else {
+      _cancelFallbackSubs();
+      _fallbackPlayer ??= AudioPlayer();
+      _attachFallbackListeners();
+      await _fallbackPlayer!.stop();
+      await _fallbackPlayer!.play(DeviceFileSource(path));
+    }
+  }
+
+  // ── Controles ─────────────────────────────────────────────────────────────
+
+  bool get _useJa => _isAndroid && _jabInitialized;
+
+  Future<void> togglePlayPause() async {
+    if (_useJa) {
+      if (state.isPlaying) {
+        await _jaPlayer?.pause();
+      } else if (state.hasTrack) {
+        await _jaPlayer?.play();
+      }
+    } else {
+      if (state.isPlaying) {
+        await _fallbackPlayer?.pause();
+      } else if (state.hasTrack) {
+        await _fallbackPlayer?.resume();
+      }
+    }
+  }
+
+  Future<void> pause() async {
+    if (_useJa) {
+      await _jaPlayer?.pause();
+    } else {
+      await _fallbackPlayer?.pause();
+    }
+  }
+
+  Future<void> seek(Duration position) async {
+    if (_useJa) {
+      await _jaPlayer?.seek(position);
+    } else {
+      await _fallbackPlayer?.seek(position);
+    }
+  }
+
+  Future<void> playNext() async {
+    if (_useJa) {
+      if (state.queueIndex < state.queue.length - 1) {
+        await _jaPlayer?.seekToNext();
+      }
+    } else {
+      final q = state.queue;
+      final nextIdx = state.queueIndex + 1;
+      if (q.isEmpty || nextIdx >= q.length) return;
+      final next = q[nextIdx];
+      final path = next.previewSongPath?.isNotEmpty == true
+          ? next.previewSongPath!
+          : next.previewSongAutoPath;
+      if (path != null) await _play(next, path, q, nextIdx);
+    }
+  }
+
+  Future<void> playPrev() async {
+    if (_useJa) {
+      if (state.queueIndex > 0) {
+        await _jaPlayer?.seekToPrevious();
+      }
+    } else {
+      final q = state.queue;
+      final prevIdx = state.queueIndex - 1;
+      if (q.isEmpty || prevIdx < 0) return;
+      final prev = q[prevIdx];
+      final path = prev.previewSongPath?.isNotEmpty == true
+          ? prev.previewSongPath!
+          : prev.previewSongAutoPath;
+      if (path != null) await _play(prev, path, q, prevIdx);
+    }
+  }
+
+  /// Troca a fonte sem mudar projeto/fila — usado pelo botão mono.
+  Future<void> switchSource(String path, Duration seekTo) async {
+    if (_useJa) {
+      final tag = MediaItem(
+        id: path,
+        title: state.currentProject?.displayName ?? '',
+        artist: '',
+      );
+      await _jaPlayer?.setAudioSource(
+        ja.AudioSource.uri(Uri.file(path), tag: tag),
+      );
+      if (seekTo > Duration.zero) await _jaPlayer?.seek(seekTo);
+      await _jaPlayer?.play();
+    } else {
+      _cancelFallbackSubs();
+      _attachFallbackListeners();
+      await _fallbackPlayer?.stop();
+      await _fallbackPlayer?.play(
+        DeviceFileSource(path),
+        position: seekTo > Duration.zero ? seekTo : null,
+      );
+    }
+  }
+
+  Future<void> stop() async {
+    if (_useJa) {
+      await _jaPlayer?.stop();
+    } else {
+      _cancelFallbackSubs();
+      await _fallbackPlayer?.stop();
+    }
+    state = const MobilePlayerState();
+  }
+
+  void _dispose() {
+    _indexSub?.cancel();
+    _jaPlayingSub?.cancel();
+    _jaPosSub?.cancel();
+    _jaDurSub?.cancel();
+    _jaCompleteSub?.cancel();
+    _cancelFallbackSubs();
+    _jaPlayer?.dispose();
+    _fallbackPlayer?.dispose();
+  }
+}
+
+final mobilePlayerProvider =
+    NotifierProvider<MobilePlayerNotifier, MobilePlayerState>(
+        MobilePlayerNotifier.new);
+
+/// Projects with a preview song, in the same order as the current dashboard list.
+final mobilePlayerQueueProvider = Provider<List<MusicProject>>((ref) {
+  final projects = ref.watch(projectsProvider);
+  return projects
+      .where((p) =>
+          (p.previewSongPath?.isNotEmpty ?? false) ||
+          (p.previewSongAutoPath?.isNotEmpty ?? false))
+      .toList();
+});
 
 // ---------------------------------------------------------------------------
 // Session Mode (subscribe-before-launch vs direct launch)

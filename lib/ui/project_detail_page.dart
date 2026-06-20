@@ -1655,10 +1655,24 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
   Future<void> _togglePlayPause() async {
     if (!_hasAudioFile()) return;
 
-    if (!_isPlaying) ref.read(desktopPlayerProvider.notifier).close();
+    // On mobile: pause/resume via global MobilePlayerNotifier so the mini
+    // player and Android notification stay in sync. Validation still happens
+    // below; only the final play/pause calls are delegated.
+    if (MobileUtils.isMobile()) {
+      final mobileNotifier = ref.read(mobilePlayerProvider.notifier);
+      final mobileState = ref.read(mobilePlayerProvider);
+      final isThisTrack = mobileState.currentProject?.id == widget.project.id;
+
+      if (_isPlaying || (isThisTrack && mobileState.isPlaying)) {
+        await mobileNotifier.pause();
+        return;
+      }
+    } else {
+      if (!_isPlaying) ref.read(desktopPlayerProvider.notifier).close();
+    }
 
     try {
-      if (_isPlaying) {
+      if (_isPlaying && !MobileUtils.isMobile()) {
         await _audioPlayer.pause();
       } else {
         if (_effectivePreviewPath!.startsWith('drive://')) {
@@ -1745,9 +1759,8 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
               // Override _effectivePreviewPath immediately so the filename display
               // updates before the stream rebuild arrives (covers both manual and auto).
               setState(() => _replacedPreviewPath = newer.path);
-              // Persist; triggers stream rebuild which will make _replacedPreviewPath redundant.
               widget.onSongChanged(newer.path);
-              await _audioPlayer.play(DeviceFileSource(newer.path));
+              await _playOnCurrentPlatform(newer.path);
               return;
             } else {
               // "Keep Current" — remember the user rejected this specific file so
@@ -1759,19 +1772,20 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
             }
           }
 
-          // Play from current source (stereo or pre-mixed mono).
-          // After natural completion the native player is in "completed" state;
-          // stop() resets it so play() works again. If the user seeked to a
-          // non-zero position after completion, play from that position.
-          if (_playbackEnded) {
-            setState(() => _playbackEnded = false);
-            await _audioPlayer.stop();
-            await _audioPlayer.play(_currentSource(),
-                position: _position > Duration.zero ? _position : null);
-          } else if (_position == Duration.zero || _position >= _duration) {
-            await _audioPlayer.play(_currentSource());
+          if (MobileUtils.isMobile()) {
+            await _playOnCurrentPlatform(_effectivePreviewPath!);
           } else {
-            await _audioPlayer.resume();
+            // Play from current source (stereo or pre-mixed mono).
+            if (_playbackEnded) {
+              setState(() => _playbackEnded = false);
+              await _audioPlayer.stop();
+              await _audioPlayer.play(_currentSource(),
+                  position: _position > Duration.zero ? _position : null);
+            } else if (_position == Duration.zero || _position >= _duration) {
+              await _audioPlayer.play(_currentSource());
+            } else {
+              await _audioPlayer.resume();
+            }
           }
         }
       }
@@ -1785,6 +1799,24 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
           ),
         );
       }
+    }
+  }
+
+  /// Inicia playback no player correto para a plataforma.
+  /// Mobile → MobilePlayerNotifier (mini player + notificação Android).
+  /// Desktop → AudioPlayer local.
+  Future<void> _playOnCurrentPlatform(String path) async {
+    if (MobileUtils.isMobile()) {
+      final queue = ref.read(mobilePlayerQueueProvider);
+      final idx = queue.indexWhere((p) => p.id == widget.project.id);
+      await ref.read(mobilePlayerProvider.notifier).playProject(
+        widget.project,
+        path,
+        queue: queue,
+        queueIndex: idx >= 0 ? idx : null,
+      );
+    } else {
+      await _audioPlayer.play(DeviceFileSource(path));
     }
   }
 
@@ -2210,6 +2242,22 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
     ref.listen(desktopPlayerProvider, (prev, next) {
       if (next != null && _isPlaying) _audioPlayer.pause();
     });
+
+    // Sync local display state from the global player when on mobile.
+    if (MobileUtils.isMobile()) {
+      ref.listen<MobilePlayerState>(mobilePlayerProvider, (prev, next) {
+        final isThisTrack = next.currentProject?.id == widget.project.id;
+        if (isThisTrack) {
+          setState(() {
+            _isPlaying = next.isPlaying;
+            _position = next.position;
+            _duration = next.duration;
+          });
+        } else if (prev?.currentProject?.id == widget.project.id && !isThisTrack) {
+          setState(() => _isPlaying = false);
+        }
+      });
+    }
     return DropTarget(
       onDragDone: (detail) async {
         setState(() {
