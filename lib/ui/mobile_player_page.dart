@@ -1,0 +1,846 @@
+import 'dart:io';
+import 'package:archive/archive_io.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+
+import '../models/music_project.dart';
+import '../providers/providers.dart';
+import '../generated/l10n/app_localizations.dart';
+import '../services/audio_analysis_service.dart';
+import 'project_detail_page.dart';
+
+class MobilePlayerPage extends ConsumerStatefulWidget {
+  const MobilePlayerPage({super.key});
+
+  @override
+  ConsumerState<MobilePlayerPage> createState() => _MobilePlayerPageState();
+}
+
+class _MobilePlayerPageState extends ConsumerState<MobilePlayerPage> {
+  late PageController _pageController;
+  bool _suppressPageChange = false;
+
+  // Mono state (local to the player page, per-project)
+  bool _isMono = false;
+  bool _isGeneratingMono = false;
+  // mono file path cache: projectId → monoFilePath
+  final Map<String, String> _monoCache = {};
+
+  @override
+  void initState() {
+    super.initState();
+    final idx = ref.read(mobilePlayerProvider).queueIndex;
+    _pageController = PageController(initialPage: idx, viewportFraction: 1.0);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _syncPageToState(int idx) {
+    if (!_pageController.hasClients) return;
+    if ((_pageController.page?.round() ?? idx) == idx) return;
+    _suppressPageChange = true;
+    _pageController
+        .animateToPage(idx,
+            duration: const Duration(milliseconds: 280), curve: Curves.easeInOut)
+        .then((_) => _suppressPageChange = false);
+  }
+
+  Future<void> _onPageChanged(int newPage, List<MusicProject> queue) async {
+    if (_suppressPageChange) return;
+    if (newPage < 0 || newPage >= queue.length) return;
+    final project = queue[newPage];
+    final path = project.previewSongPath?.isNotEmpty == true
+        ? project.previewSongPath!
+        : project.previewSongAutoPath;
+    if (path == null) return;
+    // Reset mono when changing track
+    setState(() { _isMono = false; });
+    await ref.read(mobilePlayerProvider.notifier).playProject(
+          project, path, queue: queue, queueIndex: newPage,
+        );
+  }
+
+  bool _supportsMonoMix(String? path) {
+    if (path == null || path.isEmpty) return false;
+    final ext = path.toLowerCase().split('.').last;
+    if (ext == 'wav') return true;
+    if (Platform.isIOS) {
+      return const {'mp3', 'flac', 'aif', 'aiff', 'aac', 'm4a'}.contains(ext);
+    }
+    return const {'mp3', 'flac', 'aif', 'aiff', 'ogg', 'aac', 'm4a'}.contains(ext);
+  }
+
+  void _showQueueSheet(
+      BuildContext context, List<MusicProject> queue, int currentIdx) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.55,
+        minChildSize: 0.35,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (_, scrollCtrl) => _QueueSheet(
+          queue: queue,
+          currentIdx: currentIdx,
+          scrollController: scrollCtrl,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _sharePreviewSong() async {
+    final project = ref.read(mobilePlayerProvider).currentProject;
+    final songPath = ref.read(mobilePlayerProvider).effectivePath;
+    if (project == null || songPath == null) return;
+    if (songPath.startsWith('drive://')) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.previewSongNotAvailableDownloadFirst)),
+        );
+      }
+      return;
+    }
+    try {
+      final sourceFile = File(songPath);
+      if (!await sourceFile.exists()) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
+          );
+        }
+        return;
+      }
+      String originalFileName = project.previewShareFileName ?? p.basename(songPath);
+      if (!originalFileName.contains('.')) {
+        originalFileName = '$originalFileName${p.extension(songPath)}';
+      }
+      final cacheDir = await getTemporaryDirectory();
+      final shareFile = File(p.join(cacheDir.path, originalFileName));
+      await sourceFile.copy(shareFile.path);
+      await SharePlus.instance.share(ShareParams(
+        files: [XFile(shareFile.path, name: originalFileName)],
+        text: 'Preview song: ${project.displayName}',
+      ));
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedToSharePreviewSong(e.toString()))),
+        );
+      }
+    }
+  }
+
+  Future<void> _sharePreviewSongAsZip() async {
+    final project = ref.read(mobilePlayerProvider).currentProject;
+    final songPath = ref.read(mobilePlayerProvider).effectivePath;
+    if (project == null || songPath == null) return;
+    if (songPath.startsWith('drive://')) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.previewSongNotAvailableDownloadFirst)),
+        );
+      }
+      return;
+    }
+    try {
+      final sourceFile = File(songPath);
+      if (!await sourceFile.exists()) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
+          );
+        }
+        return;
+      }
+      String originalFileName = project.previewShareFileName ?? p.basename(songPath);
+      if (!originalFileName.contains('.')) {
+        originalFileName = '$originalFileName${p.extension(songPath)}';
+      }
+      final cacheDir = await getTemporaryDirectory();
+      final shareFile = File(p.join(cacheDir.path, originalFileName));
+      await sourceFile.copy(shareFile.path);
+
+      final zipBase = p.basenameWithoutExtension(originalFileName);
+      var zipPath = p.join(cacheDir.path, '$zipBase.zip');
+      var zipFile = File(zipPath);
+      if (await zipFile.exists()) {
+        zipPath = p.join(cacheDir.path, '${zipBase}_${DateTime.now().millisecondsSinceEpoch}.zip');
+        zipFile = File(zipPath);
+      }
+      final encoder = ZipFileEncoder();
+      encoder.create(zipFile.path);
+      await encoder.addFile(shareFile);
+      encoder.close();
+
+      await SharePlus.instance.share(ShareParams(
+        files: [XFile(zipFile.path, name: p.basename(zipFile.path), mimeType: 'application/zip')],
+        text: 'Preview song (ZIP): ${project.displayName}',
+      ));
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedToSharePreviewSongAsZip(e.toString()))),
+        );
+      }
+    }
+  }
+
+  Future<void> _toggleMono() async {
+    final state = ref.read(mobilePlayerProvider);
+    final project = state.currentProject;
+    if (project == null) return;
+
+    final stereoPath = project.previewSongPath?.isNotEmpty == true
+        ? project.previewSongPath!
+        : project.previewSongAutoPath;
+    if (stereoPath == null) return;
+
+    if (!_supportsMonoMix(stereoPath)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.monoRequiresWav)),
+        );
+      }
+      return;
+    }
+
+    final newMono = !_isMono;
+    final savedPosition = state.position;
+
+    if (newMono) {
+      String? monoPath = _monoCache[project.id];
+      if (monoPath == null) {
+        setState(() => _isGeneratingMono = true);
+        final tmpDir = await getTemporaryDirectory();
+        final outPath = '${tmpDir.path}/mono_${project.id}.wav';
+        final ok = await AudioAnalysisService.writeMonoWavFile(stereoPath, outPath);
+        if (!mounted) return;
+        setState(() => _isGeneratingMono = false);
+        if (!ok) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context)!.monoUnsupportedFormat)),
+          );
+          return;
+        }
+        _monoCache[project.id] = outPath;
+        monoPath = outPath;
+      }
+      setState(() => _isMono = true);
+      await ref.read(mobilePlayerProvider.notifier).switchSource(monoPath, savedPosition);
+    } else {
+      setState(() => _isMono = false);
+      await ref.read(mobilePlayerProvider.notifier).switchSource(stereoPath, savedPosition);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final queue = ref.watch(mobilePlayerQueueProvider);
+    final playerState = ref.watch(mobilePlayerProvider);
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    // Reage apenas quando o queueIndex muda (ex: auto-advance ao fim da faixa).
+    // addPostFrameCallback causava race condition com múltiplos rebuilds.
+    ref.listen<MobilePlayerState>(mobilePlayerProvider, (prev, next) {
+      if (prev?.queueIndex != next.queueIndex) {
+        setState(() { _isMono = false; }); // reset mono ao trocar faixa
+        _syncPageToState(next.queueIndex);
+      }
+    });
+
+    final currentPath = playerState.currentProject?.previewSongPath?.isNotEmpty == true
+        ? playerState.currentProject!.previewSongPath
+        : playerState.currentProject?.previewSongAutoPath;
+
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.keyboard_arrow_down, size: 32),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(l10n.nowPlaying, style: theme.textTheme.titleMedium),
+        centerTitle: true,
+        actions: [
+          if (playerState.currentProject != null)
+            IconButton(
+              icon: const Icon(Icons.info_outline_rounded),
+              tooltip: l10n.projectDetails,
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => ProjectDetailPage(
+                    projectId: playerState.currentProject!.id,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+      body: GestureDetector(
+        onVerticalDragEnd: (d) {
+          final v = d.primaryVelocity ?? 0;
+          if (v > 400) Navigator.of(context).maybePop();
+        },
+        behavior: HitTestBehavior.translucent,
+        child: queue.isEmpty
+          ? Center(child: Text(l10n.noPreviewSongsAvailable))
+          : Column(
+              children: [
+                // ── PageView: swipe left/right to change track ──────────────
+                Expanded(
+                  child: PageView.builder(
+                    controller: _pageController,
+                    itemCount: queue.length,
+                    onPageChanged: (page) => _onPageChanged(page, queue),
+                    itemBuilder: (context, index) =>
+                        _TrackCard(project: queue[index]),
+                  ),
+                ),
+
+                // ── Controls ─────────────────────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+                  child: Column(
+                    children: [
+                      // Track name
+                      Text(
+                        playerState.currentProject?.displayName ?? '',
+                        style: theme.textTheme.titleLarge
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (queue.length > 1)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            '${playerState.queueIndex + 1} / ${queue.length}',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurface.withValues(alpha: 0.5),
+                            ),
+                          ),
+                        ),
+
+                      const SizedBox(height: 16),
+
+                      _ProgressBar(state: playerState),
+
+                      const SizedBox(height: 4),
+
+                      // Prev / Play-Pause / Next
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          IconButton(
+                            iconSize: 36,
+                            icon: const Icon(Icons.skip_previous_rounded),
+                            color: playerState.queueIndex > 0
+                                ? colorScheme.onSurface
+                                : colorScheme.onSurface.withValues(alpha: 0.3),
+                            onPressed: playerState.queueIndex > 0
+                                ? () => ref.read(mobilePlayerProvider.notifier).playPrev()
+                                : null,
+                          ),
+                          const SizedBox(width: 16),
+                          _PlayPauseButton(isPlaying: playerState.isPlaying),
+                          const SizedBox(width: 16),
+                          IconButton(
+                            iconSize: 36,
+                            icon: const Icon(Icons.skip_next_rounded),
+                            color: playerState.queueIndex < queue.length - 1
+                                ? colorScheme.onSurface
+                                : colorScheme.onSurface.withValues(alpha: 0.3),
+                            onPressed: playerState.queueIndex < queue.length - 1
+                                ? () => ref.read(mobilePlayerProvider.notifier).playNext()
+                                : null,
+                          ),
+                          if (queue.length > 1) ...[
+                            const SizedBox(width: 8),
+                            IconButton(
+                              iconSize: 28,
+                              icon: const Icon(Icons.queue_music_rounded),
+                              color: colorScheme.onSurface,
+                              tooltip: l10n.upNext,
+                              onPressed: () => _showQueueSheet(context, queue, playerState.queueIndex),
+                            ),
+                          ],
+                        ],
+                      ),
+
+                      // ── Mono button ─────────────────────────────────────────
+                      if (_supportsMonoMix(currentPath))
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: _isGeneratingMono
+                              ? Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const SizedBox(
+                                      width: 14,
+                                      height: 14,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Mono...',
+                                      style: theme.textTheme.bodySmall,
+                                    ),
+                                  ],
+                                )
+                              : GestureDetector(
+                                  onTap: _toggleMono,
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 180),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 14, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: _isMono
+                                          ? colorScheme.primary
+                                          : colorScheme.surfaceContainerHigh,
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                        color: _isMono
+                                            ? colorScheme.primary
+                                            : colorScheme.outline
+                                                .withValues(alpha: 0.4),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      'MONO',
+                                      style: theme.textTheme.labelSmall?.copyWith(
+                                        color: _isMono
+                                            ? colorScheme.onPrimary
+                                            : colorScheme.onSurface
+                                                .withValues(alpha: 0.7),
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 1.2,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                        ),
+
+                      // ── Share buttons ───────────────────────────────────
+                      if (currentPath != null &&
+                          !currentPath.startsWith('drive://'))
+                        Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              IconButton.outlined(
+                                tooltip: AppLocalizations.of(context)!.share,
+                                icon: const Icon(Icons.share, size: 20),
+                                onPressed: _sharePreviewSong,
+                              ),
+                              const SizedBox(width: 12),
+                              IconButton.outlined(
+                                tooltip: AppLocalizations.of(context)!.shareZip,
+                                icon: const Icon(Icons.archive_outlined, size: 20),
+                                onPressed: _sharePreviewSongAsZip,
+                              ),
+                            ],
+                          ),
+                        ),
+
+                      const SizedBox(height: 32),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+      ),
+    );
+  }
+}
+
+// ── Project info card (shown in the PageView area) ───────────────────────────
+
+class _TrackCard extends StatelessWidget {
+  final MusicProject project;
+  const _TrackCard({required this.project});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      child: Container(
+        decoration: BoxDecoration(
+          color: cs.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 28),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Icon + DAW badge row
+            Row(
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: cs.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(Icons.music_note_rounded, size: 28, color: cs.primary),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (project.dawType != null && project.dawType!.isNotEmpty)
+                        Text(
+                          project.dawType!,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: cs.primary,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                      if (project.status.isNotEmpty)
+                        Container(
+                          margin: const EdgeInsets.only(top: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: cs.secondary.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            project.status,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: cs.secondary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
+            const Divider(height: 1),
+            const SizedBox(height: 20),
+
+            // BPM + Key row
+            if (project.bpm != null || (project.musicalKey != null && project.musicalKey!.isNotEmpty))
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Row(
+                  children: [
+                    if (project.bpm != null) ...[
+                      _InfoChip(
+                        icon: Icons.speed_rounded,
+                        label: '${project.bpm!.toStringAsFixed(project.bpm! % 1 == 0 ? 0 : 1)} BPM',
+                      ),
+                      const SizedBox(width: 10),
+                    ],
+                    if (project.musicalKey != null && project.musicalKey!.isNotEmpty)
+                      _InfoChip(
+                        icon: Icons.piano_rounded,
+                        label: project.musicalKey!,
+                      ),
+                  ],
+                ),
+              ),
+
+            // Notes
+            if (project.notes != null && project.notes!.isNotEmpty)
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Text(
+                    project.notes!,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: cs.onSurface.withValues(alpha: 0.75),
+                      height: 1.55,
+                    ),
+                  ),
+                ),
+              )
+            else
+              Expanded(
+                child: Center(
+                  child: Text(
+                    project.displayName,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      color: cs.onSurface.withValues(alpha: 0.18),
+                      fontWeight: FontWeight.w700,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+
+            // Age
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Icon(Icons.calendar_today_outlined, size: 13, color: cs.onSurface.withValues(alpha: 0.4)),
+                const SizedBox(width: 6),
+                Text(
+                  project.projectAgeFormatted,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: cs.onSurface.withValues(alpha: 0.45),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InfoChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  const _InfoChip({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: cs.onSurface.withValues(alpha: 0.6)),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+String formatDuration(Duration d) {
+  final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+  final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+  return '$m:$s';
+}
+
+// ── Progress bar ─────────────────────────────────────────────────────────────
+
+class _ProgressBar extends ConsumerWidget {
+  final MobilePlayerState state;
+  const _ProgressBar({required this.state});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final total = state.duration.inMilliseconds;
+    final pos = state.position.inMilliseconds;
+    final progress = total > 0 ? (pos / total).clamp(0.0, 1.0) : 0.0;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Column(
+      children: [
+        SliderTheme(
+          data: SliderTheme.of(context).copyWith(
+            trackHeight: 3,
+            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+            overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+          ),
+          child: Slider(
+            value: progress,
+            onChanged: total > 0
+                ? (v) => ref
+                    .read(mobilePlayerProvider.notifier)
+                    .seek(Duration(milliseconds: (v * total).round()))
+                : null,
+            activeColor: colorScheme.primary,
+            inactiveColor: colorScheme.onSurface.withValues(alpha: 0.15),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(formatDuration(state.position),
+                  style: Theme.of(context).textTheme.bodySmall),
+              Text(formatDuration(state.duration),
+                  style: Theme.of(context).textTheme.bodySmall),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Play/Pause button ─────────────────────────────────────────────────────────
+
+class _PlayPauseButton extends ConsumerWidget {
+  final bool isPlaying;
+  const _PlayPauseButton({required this.isPlaying});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return GestureDetector(
+      onTap: () => ref.read(mobilePlayerProvider.notifier).togglePlayPause(),
+      child: Container(
+        width: 64,
+        height: 64,
+        decoration: BoxDecoration(
+          color: colorScheme.primary,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+          color: colorScheme.onPrimary,
+          size: 36,
+        ),
+      ),
+    );
+  }
+}
+
+// ── Queue bottom sheet ────────────────────────────────────────────────────────
+
+class _QueueSheet extends ConsumerWidget {
+  final List<MusicProject> queue;
+  final int currentIdx;
+  final ScrollController scrollController;
+
+  const _QueueSheet({
+    required this.queue,
+    required this.currentIdx,
+    required this.scrollController,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+
+    return Column(
+      children: [
+        // Handle
+        Padding(
+          padding: const EdgeInsets.only(top: 12, bottom: 8),
+          child: Container(
+            width: 36,
+            height: 4,
+            decoration: BoxDecoration(
+              color: cs.onSurface.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+          child: Row(
+            children: [
+              Icon(Icons.queue_music_rounded, size: 18, color: cs.primary),
+              const SizedBox(width: 8),
+              Text(l10n.upNext,
+                  style: theme.textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w700)),
+            ],
+          ),
+        ),
+        const Divider(height: 1),
+        Expanded(
+          child: ListView.builder(
+            controller: scrollController,
+            itemCount: queue.length,
+            itemBuilder: (ctx, idx) {
+              final project = queue[idx];
+              final isCurrent = idx == currentIdx;
+              return ListTile(
+                selected: isCurrent,
+                selectedTileColor: cs.primary.withValues(alpha: 0.08),
+                leading: Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: isCurrent
+                        ? cs.primary.withValues(alpha: 0.15)
+                        : cs.surfaceContainerHigh,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: isCurrent
+                      ? Icon(Icons.equalizer_rounded, size: 18, color: cs.primary)
+                      : Center(
+                          child: Text(
+                            '${idx + 1}',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: cs.onSurface.withValues(alpha: 0.5),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                ),
+                title: Text(
+                  project.displayName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: isCurrent ? FontWeight.w700 : FontWeight.normal,
+                    color: isCurrent ? cs.primary : null,
+                  ),
+                ),
+                subtitle: project.status.isNotEmpty
+                    ? Text(
+                        project.status,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: cs.onSurface.withValues(alpha: 0.5),
+                        ),
+                      )
+                    : null,
+                onTap: () {
+                  final path = project.previewSongPath?.isNotEmpty == true
+                      ? project.previewSongPath!
+                      : project.previewSongAutoPath;
+                  if (path == null) return;
+                  ref.read(mobilePlayerProvider.notifier).playProject(
+                        project,
+                        path,
+                        queue: queue,
+                        queueIndex: idx,
+                      );
+                  Navigator.of(ctx).pop();
+                },
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
