@@ -1012,6 +1012,18 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                   totalWorkSeconds: updatedTotal,
                                 ));
                               },
+                              onEdit: (updated) async {
+                                final updatedSessions = updatedProject.sessions
+                                    .map((s) =>
+                                        s.id == updated.id ? updated : s)
+                                    .toList();
+                                final updatedTotal = updatedSessions.fold<int>(
+                                    0, (a, b) => a + b.durationSeconds);
+                                await repo.updateProject(updatedProject.copyWith(
+                                  sessions: updatedSessions,
+                                  totalWorkSeconds: updatedTotal,
+                                ));
+                              },
                             ),
                             const SizedBox(height: 24),
                             _ProjectStatsButton(projectId: updatedProject.id),
@@ -2871,9 +2883,11 @@ class _RenameProjectDialogState extends State<_RenameProjectDialog> {
 class _SessionHistorySection extends StatefulWidget {
   final List<SessionRecord> sessions;
   final void Function(SessionRecord) onRemove;
+  final void Function(SessionRecord updated) onEdit;
   const _SessionHistorySection({
     required this.sessions,
     required this.onRemove,
+    required this.onEdit,
   });
 
   @override
@@ -2882,6 +2896,14 @@ class _SessionHistorySection extends StatefulWidget {
 
 class _SessionHistorySectionState extends State<_SessionHistorySection> {
   bool _expanded = true;
+
+  void _editSessionDuration(BuildContext context, SessionRecord session) async {
+    final updated = await showDialog<SessionRecord>(
+      context: context,
+      builder: (ctx) => _EditSessionDialog(session: session),
+    );
+    if (updated != null) widget.onEdit(updated);
+  }
 
   void _confirmRemove(BuildContext context, SessionRecord session) {
     final l10n = AppLocalizations.of(context)!;
@@ -3041,24 +3063,35 @@ class _SessionHistorySectionState extends State<_SessionHistorySection> {
                           cell(
                               '${timeFmt.format(s.startedAt)}–${timeFmt.format(s.endedAt)}'),
                           cell(s.phase ?? '—'),
-                          TableRowInkWell(
-                            onTap: () => _confirmRemove(context, s),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 6, horizontal: 8),
-                              child: Row(
-                                children: [
-                                  Text(_fmtDuration(s.durationSeconds),
-                                      style: bodySmall),
-                                  const Spacer(),
-                                  Icon(
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 6, horizontal: 8),
+                            child: Row(
+                              children: [
+                                Text(_fmtDuration(s.durationSeconds),
+                                    style: bodySmall),
+                                const Spacer(),
+                                GestureDetector(
+                                  onTap: () =>
+                                      _editSessionDuration(context, s),
+                                  child: Icon(
+                                    Icons.edit_outlined,
+                                    size: 14,
+                                    color: theme.colorScheme.primary
+                                        .withValues(alpha: 0.7),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                GestureDetector(
+                                  onTap: () => _confirmRemove(context, s),
+                                  child: Icon(
                                     Icons.delete_outline,
                                     size: 14,
                                     color: theme.colorScheme.error
                                         .withValues(alpha: 0.6),
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -3153,6 +3186,131 @@ class _SessionHistorySectionState extends State<_SessionHistorySection> {
               ],
             ],
           ),
+      ],
+    );
+  }
+}
+
+// ─── Edit Session Duration Dialog ────────────────────────────────────────────
+
+class _EditSessionDialog extends StatefulWidget {
+  final SessionRecord session;
+  const _EditSessionDialog({required this.session});
+
+  @override
+  State<_EditSessionDialog> createState() => _EditSessionDialogState();
+}
+
+class _EditSessionDialogState extends State<_EditSessionDialog> {
+  late final TextEditingController _hoursCtrl;
+  late final TextEditingController _minutesCtrl;
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    final h = widget.session.durationSeconds ~/ 3600;
+    final m = (widget.session.durationSeconds % 3600) ~/ 60;
+    _hoursCtrl = TextEditingController(text: h.toString());
+    _minutesCtrl = TextEditingController(text: m.toString());
+  }
+
+  @override
+  void dispose() {
+    _hoursCtrl.dispose();
+    _minutesCtrl.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) return;
+    final h = int.tryParse(_hoursCtrl.text.trim()) ?? 0;
+    final m = int.tryParse(_minutesCtrl.text.trim()) ?? 0;
+    final newSeconds = h * 3600 + m * 60;
+    final updated = SessionRecord(
+      id: widget.session.id,
+      startedAt: widget.session.startedAt,
+      endedAt: widget.session.endedAt,
+      durationSeconds: newSeconds,
+      phase: widget.session.phase,
+    );
+    Navigator.pop(context, updated);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final dateFmt = DateFormat('MMM d, yyyy');
+    final timeFmt = DateFormat('HH:mm');
+
+    return AlertDialog(
+      title: Text(l10n.editSessionTitle),
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '${dateFmt.format(widget.session.startedAt)}  '
+              '${timeFmt.format(widget.session.startedAt)}–'
+              '${timeFmt.format(widget.session.endedAt)}',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).disabledColor,
+                  ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _hoursCtrl,
+                    decoration: InputDecoration(
+                      labelText: l10n.editSessionHours,
+                      isDense: true,
+                    ),
+                    keyboardType: TextInputType.number,
+                    validator: (v) {
+                      final val = int.tryParse(v?.trim() ?? '');
+                      if (val == null || val < 0) return '0+';
+                      return null;
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextFormField(
+                    controller: _minutesCtrl,
+                    decoration: InputDecoration(
+                      labelText: l10n.minutes,
+                      isDense: true,
+                    ),
+                    keyboardType: TextInputType.number,
+                    validator: (v) {
+                      final h = int.tryParse(_hoursCtrl.text.trim()) ?? 0;
+                      final m = int.tryParse(v?.trim() ?? '');
+                      if (m == null || m < 0 || m > 59) return '0–59';
+                      if (h == 0 && m == 0) {
+                        return l10n.editSessionInvalid;
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancel),
+        ),
+        TextButton(
+          onPressed: _submit,
+          child: Text(l10n.save),
+        ),
       ],
     );
   }

@@ -2642,6 +2642,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get removeSessionTitle => '删除会话？';
 
   @override
+  String get editSessionTitle => '编辑会话时长';
+
+  @override
+  String get editSessionHours => '小时';
+
+  @override
+  String get editSessionInvalid => '时长至少需要1分钟';
+
+  @override
   String get sessionTableDate => '日期';
 
   @override

@@ -1,4 +1,4 @@
-{
+﻿{
   "@@locale": "fr",
   "appTitle": "Gestionnaire de Projets DAW",
   "@appTitle": {
@@ -1753,6 +1753,12 @@
   "@noSessionsYet": {},
   "removeSessionTitle": "Supprimer la session ?",
   "@removeSessionTitle": {},
+  "editSessionTitle": "Modifier la duree de la session",
+  "@editSessionTitle": {},
+  "editSessionHours": "Heures",
+  "@editSessionHours": {},
+  "editSessionInvalid": "La duree doit etre d'au moins 1 minute",
+  "@editSessionInvalid": {},
   "sessionTableDate": "Date",
   "@sessionTableDate": {},
   "sessionTableTime": "Heure",

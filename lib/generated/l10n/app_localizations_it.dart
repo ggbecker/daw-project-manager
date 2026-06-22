@@ -2733,6 +2733,15 @@ class AppLocalizationsIt extends AppLocalizations {
   String get removeSessionTitle => 'Rimuovere la sessione?';
 
   @override
+  String get editSessionTitle => 'Modifica durata sessione';
+
+  @override
+  String get editSessionHours => 'Ore';
+
+  @override
+  String get editSessionInvalid => 'La durata deve essere di almeno 1 minuto';
+
+  @override
   String get sessionTableDate => 'Data';
 
   @override

@@ -4634,6 +4634,24 @@ abstract class AppLocalizations {
   /// **'Remove session?'**
   String get removeSessionTitle;
 
+  /// No description provided for @editSessionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit session duration'**
+  String get editSessionTitle;
+
+  /// No description provided for @editSessionHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Hours'**
+  String get editSessionHours;
+
+  /// No description provided for @editSessionInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration must be at least 1 minute'**
+  String get editSessionInvalid;
+
   /// No description provided for @sessionTableDate.
   ///
   /// In en, this message translates to:

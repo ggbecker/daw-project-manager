@@ -2669,6 +2669,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get removeSessionTitle => 'セッションを削除しますか？';
 
   @override
+  String get editSessionTitle => 'セッション時間を編集';
+
+  @override
+  String get editSessionHours => '時間';
+
+  @override
+  String get editSessionInvalid => '時間は1分以上でなければなりません';
+
+  @override
   String get sessionTableDate => '日付';
 
   @override
