@@ -3324,4 +3324,13 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get upNext => 'Далее';
+
+  @override
+  String get playbackModeNormal => 'Normal';
+
+  @override
+  String get playbackModeRepeat => 'Repeat';
+
+  @override
+  String get playbackModeShuffle => 'Shuffle';
 }

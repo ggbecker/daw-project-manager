@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:just_audio/just_audio.dart' as ja;
@@ -1667,6 +1668,8 @@ final waveformCacheProvider =
 // Mobile Preview Player (global singleton — persists across navigation)
 // ---------------------------------------------------------------------------
 
+enum PlaybackMode { normal, repeatOne, repeatAll, shuffle }
+
 class MobilePlayerState {
   final MusicProject? currentProject;
   final bool isPlaying;
@@ -1674,6 +1677,7 @@ class MobilePlayerState {
   final Duration duration;
   final List<MusicProject> queue;
   final int queueIndex;
+  final PlaybackMode playbackMode;
 
   const MobilePlayerState({
     this.currentProject,
@@ -1682,6 +1686,7 @@ class MobilePlayerState {
     this.duration = Duration.zero,
     this.queue = const [],
     this.queueIndex = 0,
+    this.playbackMode = PlaybackMode.normal,
   });
 
   bool get hasTrack => currentProject != null;
@@ -1698,6 +1703,7 @@ class MobilePlayerState {
     Duration? duration,
     List<MusicProject>? queue,
     int? queueIndex,
+    PlaybackMode? playbackMode,
   }) =>
       MobilePlayerState(
         currentProject: currentProject ?? this.currentProject,
@@ -1706,6 +1712,7 @@ class MobilePlayerState {
         duration: duration ?? this.duration,
         queue: queue ?? this.queue,
         queueIndex: queueIndex ?? this.queueIndex,
+        playbackMode: playbackMode ?? this.playbackMode,
       );
 }
 
@@ -1739,6 +1746,11 @@ class MobilePlayerNotifier extends Notifier<MobilePlayerState> {
   StreamSubscription<Duration>? _fbPosSub;
   StreamSubscription<Duration>? _fbDurSub;
   StreamSubscription<void>? _fbCompleteSub;
+
+  // Rastreia qual player foi realmente usado no último _play().
+  // _jabInitialized pode virar true DEPOIS de _play() ter usado audioplayers,
+  // então _useJa não pode depender só de _jabInitialized.
+  bool _usingJaPlayer = false;
 
   @override
   MobilePlayerState build() {
@@ -1807,8 +1819,21 @@ class MobilePlayerNotifier extends Notifier<MobilePlayerState> {
 
   void _autoAdvanceFallback() {
     final q = state.queue;
-    final nextIdx = state.queueIndex + 1;
-    if (q.isEmpty || nextIdx >= q.length) return;
+    if (q.isEmpty) return;
+
+    int nextIdx;
+    switch (state.playbackMode) {
+      case PlaybackMode.shuffle:
+        nextIdx = Random().nextInt(q.length);
+      case PlaybackMode.repeatOne:
+        nextIdx = state.queueIndex; // mesma faixa
+      case PlaybackMode.repeatAll:
+        nextIdx = (state.queueIndex + 1) % q.length;
+      case PlaybackMode.normal:
+        nextIdx = state.queueIndex + 1;
+        if (nextIdx >= q.length) return;
+    }
+
     final next = q[nextIdx];
     final path = next.previewSongPath?.isNotEmpty == true
         ? next.previewSongPath!
@@ -1836,13 +1861,18 @@ class MobilePlayerNotifier extends Notifier<MobilePlayerState> {
     int queueIndex,
   ) async {
     debugPrint('$_tag playing ${project.displayName} at $path');
+    // Preservar o modo de playback — o reset de estado não deve apagar a
+    // escolha do usuário (repeat/shuffle) ao trocar de faixa.
+    final savedMode = state.playbackMode;
     state = MobilePlayerState(
       currentProject: project,
       queue: queue,
       queueIndex: queueIndex,
+      playbackMode: savedMode,
     );
 
     if (_isAndroid && _jabInitialized) {
+      _usingJaPlayer = true;
       // ConcatenatingAudioSource para que skip prev/next da notificação funcione.
       final sources = queue.map((p) {
         final trackPath = p.previewSongPath?.isNotEmpty == true
@@ -1859,8 +1889,10 @@ class MobilePlayerNotifier extends Notifier<MobilePlayerState> {
         initialIndex: queueIndex,
         initialPosition: Duration.zero,
       );
+      await _applyPlaybackMode(savedMode);
       await _jaPlayer!.play();
     } else {
+      _usingJaPlayer = false;
       _cancelFallbackSubs();
       _fallbackPlayer ??= AudioPlayer();
       _attachFallbackListeners();
@@ -1871,7 +1903,7 @@ class MobilePlayerNotifier extends Notifier<MobilePlayerState> {
 
   // ── Controles ─────────────────────────────────────────────────────────────
 
-  bool get _useJa => _isAndroid && _jabInitialized;
+  bool get _useJa => _usingJaPlayer;
 
   Future<void> togglePlayPause() async {
     if (_useJa) {
@@ -1906,13 +1938,15 @@ class MobilePlayerNotifier extends Notifier<MobilePlayerState> {
   }
 
   Future<void> playNext() async {
+    final q = state.queue;
+    final nonNormal = state.playbackMode != PlaybackMode.normal;
     if (_useJa) {
-      if (state.queueIndex < state.queue.length - 1) {
+      if (nonNormal || state.queueIndex < q.length - 1) {
         await _jaPlayer?.seekToNext();
       }
     } else {
-      final q = state.queue;
-      final nextIdx = state.queueIndex + 1;
+      int nextIdx = state.queueIndex + 1;
+      if (nonNormal && nextIdx >= q.length) nextIdx = 0;
       if (q.isEmpty || nextIdx >= q.length) return;
       final next = q[nextIdx];
       final path = next.previewSongPath?.isNotEmpty == true
@@ -1923,13 +1957,15 @@ class MobilePlayerNotifier extends Notifier<MobilePlayerState> {
   }
 
   Future<void> playPrev() async {
+    final q = state.queue;
+    final nonNormal = state.playbackMode != PlaybackMode.normal;
     if (_useJa) {
-      if (state.queueIndex > 0) {
+      if (nonNormal || state.queueIndex > 0) {
         await _jaPlayer?.seekToPrevious();
       }
     } else {
-      final q = state.queue;
-      final prevIdx = state.queueIndex - 1;
+      int prevIdx = state.queueIndex - 1;
+      if (nonNormal && prevIdx < 0) prevIdx = q.length - 1;
       if (q.isEmpty || prevIdx < 0) return;
       final prev = q[prevIdx];
       final path = prev.previewSongPath?.isNotEmpty == true
@@ -1960,6 +1996,38 @@ class MobilePlayerNotifier extends Notifier<MobilePlayerState> {
         DeviceFileSource(path),
         position: seekTo > Duration.zero ? seekTo : null,
       );
+    }
+  }
+
+  Future<void> setPlaybackMode(PlaybackMode mode) async {
+    state = state.copyWith(playbackMode: mode);
+    if (_useJa) await _applyPlaybackMode(mode);
+  }
+
+  Future<void> cyclePlaybackMode() async {
+    final next = switch (state.playbackMode) {
+      PlaybackMode.normal    => PlaybackMode.repeatOne,
+      PlaybackMode.repeatOne => PlaybackMode.repeatAll,
+      PlaybackMode.repeatAll => PlaybackMode.normal,
+      PlaybackMode.shuffle   => PlaybackMode.normal,
+    };
+    await setPlaybackMode(next);
+  }
+
+  Future<void> _applyPlaybackMode(PlaybackMode mode) async {
+    switch (mode) {
+      case PlaybackMode.normal:
+        await _jaPlayer?.setLoopMode(ja.LoopMode.off);
+        await _jaPlayer?.setShuffleModeEnabled(false);
+      case PlaybackMode.repeatOne:
+        await _jaPlayer?.setLoopMode(ja.LoopMode.one);
+        await _jaPlayer?.setShuffleModeEnabled(false);
+      case PlaybackMode.repeatAll:
+        await _jaPlayer?.setLoopMode(ja.LoopMode.all);
+        await _jaPlayer?.setShuffleModeEnabled(false);
+      case PlaybackMode.shuffle:
+        await _jaPlayer?.setLoopMode(ja.LoopMode.off);
+        await _jaPlayer?.setShuffleModeEnabled(true);
     }
   }
 

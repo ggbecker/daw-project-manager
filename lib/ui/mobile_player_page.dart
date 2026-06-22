@@ -342,123 +342,128 @@ class _MobilePlayerPageState extends ConsumerState<MobilePlayerPage> {
 
                       _ProgressBar(state: playerState),
 
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 12),
 
-                      // Prev / Play-Pause / Next
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          IconButton(
-                            iconSize: 36,
-                            icon: const Icon(Icons.skip_previous_rounded),
-                            color: playerState.queueIndex > 0
-                                ? colorScheme.onSurface
-                                : colorScheme.onSurface.withValues(alpha: 0.3),
-                            onPressed: playerState.queueIndex > 0
-                                ? () => ref.read(mobilePlayerProvider.notifier).playPrev()
-                                : null,
-                          ),
-                          const SizedBox(width: 16),
-                          _PlayPauseButton(isPlaying: playerState.isPlaying),
-                          const SizedBox(width: 16),
-                          IconButton(
-                            iconSize: 36,
-                            icon: const Icon(Icons.skip_next_rounded),
-                            color: playerState.queueIndex < queue.length - 1
-                                ? colorScheme.onSurface
-                                : colorScheme.onSurface.withValues(alpha: 0.3),
-                            onPressed: playerState.queueIndex < queue.length - 1
-                                ? () => ref.read(mobilePlayerProvider.notifier).playNext()
-                                : null,
-                          ),
-                          if (queue.length > 1) ...[
-                            const SizedBox(width: 8),
+                      // ── Linha 1: Shuffle / Prev / Play-Pause / Next / Repeat ─
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _ShuffleButton(mode: playerState.playbackMode),
                             IconButton(
-                              iconSize: 28,
-                              icon: const Icon(Icons.queue_music_rounded),
-                              color: colorScheme.onSurface,
-                              tooltip: l10n.upNext,
-                              onPressed: () => _showQueueSheet(context, queue, playerState.queueIndex),
+                              iconSize: 36,
+                              icon: const Icon(Icons.skip_previous_rounded),
+                              color: colorScheme.onSurface.withValues(
+                                alpha: _canSkipPrev(playerState) ? 1.0 : 0.3,
+                              ),
+                              onPressed: _canSkipPrev(playerState)
+                                  ? () => ref.read(mobilePlayerProvider.notifier).playPrev()
+                                  : null,
                             ),
+                            _PlayPauseButton(isPlaying: playerState.isPlaying),
+                            IconButton(
+                              iconSize: 36,
+                              icon: const Icon(Icons.skip_next_rounded),
+                              color: colorScheme.onSurface.withValues(
+                                alpha: _canSkipNext(playerState, queue) ? 1.0 : 0.3,
+                              ),
+                              onPressed: _canSkipNext(playerState, queue)
+                                  ? () => ref.read(mobilePlayerProvider.notifier).playNext()
+                                  : null,
+                            ),
+                            _RepeatButton(mode: playerState.playbackMode),
                           ],
-                        ],
+                        ),
                       ),
 
-                      // ── Mono button ─────────────────────────────────────────
-                      if (_supportsMonoMix(currentPath))
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: _isGeneratingMono
-                              ? Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const SizedBox(
-                                      width: 14,
-                                      height: 14,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Mono...',
-                                      style: theme.textTheme.bodySmall,
-                                    ),
-                                  ],
-                                )
-                              : GestureDetector(
-                                  onTap: _toggleMono,
-                                  child: AnimatedContainer(
-                                    duration: const Duration(milliseconds: 180),
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 14, vertical: 6),
-                                    decoration: BoxDecoration(
-                                      color: _isMono
-                                          ? colorScheme.primary
-                                          : colorScheme.surfaceContainerHigh,
-                                      borderRadius: BorderRadius.circular(20),
-                                      border: Border.all(
-                                        color: _isMono
-                                            ? colorScheme.primary
-                                            : colorScheme.outline
-                                                .withValues(alpha: 0.4),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      'MONO',
-                                      style: theme.textTheme.labelSmall?.copyWith(
-                                        color: _isMono
-                                            ? colorScheme.onPrimary
-                                            : colorScheme.onSurface
-                                                .withValues(alpha: 0.7),
-                                        fontWeight: FontWeight.w700,
-                                        letterSpacing: 1.2,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                        ),
+                      const SizedBox(height: 16),
 
-                      // ── Share buttons ───────────────────────────────────
-                      if (currentPath != null &&
-                          !currentPath.startsWith('drive://'))
-                        Padding(
-                          padding: const EdgeInsets.only(top: 12),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              IconButton.outlined(
-                                tooltip: AppLocalizations.of(context)!.share,
-                                icon: const Icon(Icons.share, size: 20),
+                      // ── Linha 2: Mono | espaço | Share / Download / Playlist ─
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Row(
+                          children: [
+                            // Mono (esquerda)
+                            if (_supportsMonoMix(currentPath))
+                              _isGeneratingMono
+                                  ? Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const SizedBox(
+                                          width: 14, height: 14,
+                                          child: CircularProgressIndicator(strokeWidth: 2),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text('Mono...', style: theme.textTheme.bodySmall),
+                                      ],
+                                    )
+                                  : GestureDetector(
+                                      onTap: _toggleMono,
+                                      child: AnimatedContainer(
+                                        duration: const Duration(milliseconds: 180),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 12, vertical: 5),
+                                        decoration: BoxDecoration(
+                                          color: _isMono
+                                              ? colorScheme.primary
+                                              : Colors.transparent,
+                                          borderRadius: BorderRadius.circular(20),
+                                          border: Border.all(
+                                            color: _isMono
+                                                ? colorScheme.primary
+                                                : colorScheme.onSurface
+                                                    .withValues(alpha: 0.35),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          'MONO',
+                                          style: theme.textTheme.labelSmall?.copyWith(
+                                            color: _isMono
+                                                ? colorScheme.onPrimary
+                                                : colorScheme.onSurface
+                                                    .withValues(alpha: 0.6),
+                                            fontWeight: FontWeight.w700,
+                                            letterSpacing: 1.2,
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                            else
+                              const SizedBox(width: 48),
+
+                            const Spacer(),
+
+                            // Share / Download / Playlist (direita)
+                            if (currentPath != null &&
+                                !currentPath.startsWith('drive://')) ...[
+                              IconButton(
+                                iconSize: 22,
+                                tooltip: l10n.share,
+                                icon: const Icon(Icons.share_rounded),
+                                color: colorScheme.onSurface,
                                 onPressed: _sharePreviewSong,
                               ),
-                              const SizedBox(width: 12),
-                              IconButton.outlined(
-                                tooltip: AppLocalizations.of(context)!.shareZip,
-                                icon: const Icon(Icons.archive_outlined, size: 20),
+                              IconButton(
+                                iconSize: 22,
+                                tooltip: l10n.shareZip,
+                                icon: const Icon(Icons.download_rounded),
+                                color: colorScheme.onSurface,
                                 onPressed: _sharePreviewSongAsZip,
                               ),
                             ],
-                          ),
+                            if (queue.length > 1)
+                              IconButton(
+                                iconSize: 22,
+                                tooltip: l10n.upNext,
+                                icon: const Icon(Icons.queue_music_rounded),
+                                color: colorScheme.onSurface,
+                                onPressed: () => _showQueueSheet(
+                                    context, queue, playerState.queueIndex),
+                              ),
+                          ],
                         ),
+                      ),
 
                       const SizedBox(height: 32),
                     ],
@@ -725,6 +730,71 @@ class _PlayPauseButton extends ConsumerWidget {
           size: 36,
         ),
       ),
+    );
+  }
+}
+
+// ── Playback helpers ──────────────────────────────────────────────────────────
+
+bool _canSkipPrev(MobilePlayerState s) =>
+    s.playbackMode == PlaybackMode.repeatAll ||
+    s.playbackMode == PlaybackMode.shuffle ||
+    s.queueIndex > 0;
+
+bool _canSkipNext(MobilePlayerState s, List<MusicProject> queue) =>
+    s.playbackMode == PlaybackMode.repeatAll ||
+    s.playbackMode == PlaybackMode.shuffle ||
+    s.queueIndex < queue.length - 1;
+
+// ── Cor de marca compartilhada pelos botões de modo ──────────────────────────
+const _kBrandOrange = Color(0xFFFF6100);
+
+// ── Shuffle button ────────────────────────────────────────────────────────────
+
+class _ShuffleButton extends ConsumerWidget {
+  final PlaybackMode mode;
+  const _ShuffleButton({required this.mode});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final active = mode == PlaybackMode.shuffle;
+    return IconButton(
+      iconSize: 28,
+      tooltip: AppLocalizations.of(context)!.playbackModeShuffle,
+      icon: const Icon(Icons.shuffle_rounded),
+      color: active ? _kBrandOrange : colorScheme.onSurface,
+      onPressed: () => ref.read(mobilePlayerProvider.notifier).setPlaybackMode(
+            active ? PlaybackMode.normal : PlaybackMode.shuffle,
+          ),
+    );
+  }
+}
+
+// ── Repeat button ─────────────────────────────────────────────────────────────
+
+class _RepeatButton extends ConsumerWidget {
+  final PlaybackMode mode;
+  const _RepeatButton({required this.mode});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final (icon, active, next) = switch (mode) {
+      PlaybackMode.normal    => (Icons.repeat_rounded,     false, PlaybackMode.repeatOne),
+      PlaybackMode.repeatOne => (Icons.repeat_one_rounded, true,  PlaybackMode.repeatAll),
+      PlaybackMode.repeatAll => (Icons.repeat_rounded,     true,  PlaybackMode.normal),
+      PlaybackMode.shuffle   => (Icons.repeat_rounded,     false, PlaybackMode.repeatOne),
+    };
+
+    return IconButton(
+      iconSize: 28,
+      tooltip: AppLocalizations.of(context)!.playbackModeRepeat,
+      icon: Icon(icon),
+      color: active ? _kBrandOrange : colorScheme.onSurface,
+      onPressed: () =>
+          ref.read(mobilePlayerProvider.notifier).setPlaybackMode(next),
     );
   }
 }

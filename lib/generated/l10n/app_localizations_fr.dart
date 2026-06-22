@@ -3346,4 +3346,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get upNext => 'Suivant';
+
+  @override
+  String get playbackModeNormal => 'Normal';
+
+  @override
+  String get playbackModeRepeat => 'Repeat';
+
+  @override
+  String get playbackModeShuffle => 'Shuffle';
 }

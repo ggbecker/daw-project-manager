@@ -2098,5 +2098,11 @@
   "nowPlaying": "Now Playing",
   "noPreviewSongsAvailable": "No preview songs available",
   "upNext": "Далее",
-  "@upNext": { "description": "Queue panel title - tracks coming up next" }
+  "@upNext": { "description": "Queue panel title - tracks coming up next" },
+  "playbackModeNormal": "Normal",
+  "@playbackModeNormal": { "description": "Playback mode: play queue once in order" },
+  "playbackModeRepeat": "Repeat",
+  "@playbackModeRepeat": { "description": "Playback mode: loop the entire queue" },
+  "playbackModeShuffle": "Shuffle",
+  "@playbackModeShuffle": { "description": "Playback mode: random order" }
 }

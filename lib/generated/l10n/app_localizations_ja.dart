@@ -3241,4 +3241,13 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get upNext => '次の曲';
+
+  @override
+  String get playbackModeNormal => 'Normal';
+
+  @override
+  String get playbackModeRepeat => 'Repeat';
+
+  @override
+  String get playbackModeShuffle => 'Shuffle';
 }

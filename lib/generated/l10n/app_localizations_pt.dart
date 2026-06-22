@@ -3322,4 +3322,13 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get upNext => 'A seguir';
+
+  @override
+  String get playbackModeNormal => 'Normal';
+
+  @override
+  String get playbackModeRepeat => 'Repeat';
+
+  @override
+  String get playbackModeShuffle => 'Shuffle';
 }

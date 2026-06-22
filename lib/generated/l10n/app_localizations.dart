@@ -5653,6 +5653,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Up Next'**
   String get upNext;
+
+  /// Playback mode: play queue once in order
+  ///
+  /// In en, this message translates to:
+  /// **'Normal'**
+  String get playbackModeNormal;
+
+  /// Playback mode: loop the entire queue
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat'**
+  String get playbackModeRepeat;
+
+  /// Playback mode: random order
+  ///
+  /// In en, this message translates to:
+  /// **'Shuffle'**
+  String get playbackModeShuffle;
 }
 
 class _AppLocalizationsDelegate

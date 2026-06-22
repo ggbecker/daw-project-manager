@@ -3208,4 +3208,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get upNext => '接下来';
+
+  @override
+  String get playbackModeNormal => 'Normal';
+
+  @override
+  String get playbackModeRepeat => 'Repeat';
+
+  @override
+  String get playbackModeShuffle => 'Shuffle';
 }

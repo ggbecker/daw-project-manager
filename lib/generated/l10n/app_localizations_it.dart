@@ -3330,4 +3330,13 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get upNext => 'Prossimo';
+
+  @override
+  String get playbackModeNormal => 'Normal';
+
+  @override
+  String get playbackModeRepeat => 'Repeat';
+
+  @override
+  String get playbackModeShuffle => 'Shuffle';
 }

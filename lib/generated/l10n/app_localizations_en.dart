@@ -3319,4 +3319,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get upNext => 'Up Next';
+
+  @override
+  String get playbackModeNormal => 'Normal';
+
+  @override
+  String get playbackModeRepeat => 'Repeat';
+
+  @override
+  String get playbackModeShuffle => 'Shuffle';
 }
