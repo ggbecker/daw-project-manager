@@ -3204,7 +3204,16 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     final customFolder = ref.read(customMixdownFolderProvider).value;
     var effectivePath = project.previewSongPath?.isNotEmpty == true
         ? project.previewSongPath!
-        : (project.previewSongAutoPath ?? MixdownDetectorService.findLatestMixdown(project, customFolder: customFolder)?.path);
+        : project.previewSongAutoPath;
+
+    if (effectivePath == null) {
+      final detected = MixdownDetectorService.findLatestMixdown(project, customFolder: customFolder);
+      if (detected != null) {
+        effectivePath = detected.path;
+        final repo = await ref.read(repositoryProvider.future);
+        await repo.updateProject(project.copyWith(previewSongAutoPath: detected.path));
+      }
+    }
 
     if (effectivePath == null) {
       if (!mounted) return;
@@ -3788,6 +3797,14 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                 ? Directory(project.filePath) as FileSystemEntity
                 : File(project.filePath);
             await repo.upsertFromFileSystemEntity(entity, fullMetadata: true);
+            if (project.previewSongPath?.isNotEmpty != true && project.previewSongAutoPath == null) {
+              final customFolder = ref.read(customMixdownFolderProvider).value;
+              final detected = MixdownDetectorService.findLatestMixdown(project, customFolder: customFolder);
+              if (detected != null) {
+                final fresh = repo.getById(project.id) ?? project;
+                await repo.updateProject(fresh.copyWith(previewSongAutoPath: detected.path));
+              }
+            }
             ref.invalidate(allProjectsStreamProvider);
           } catch (e) {
             if (mounted) {
@@ -6646,7 +6663,16 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
     final customFolder = ref.read(customMixdownFolderProvider).value;
     var effectivePath = project.previewSongPath?.isNotEmpty == true
         ? project.previewSongPath!
-        : (project.previewSongAutoPath ?? MixdownDetectorService.findLatestMixdown(project, customFolder: customFolder)?.path);
+        : project.previewSongAutoPath;
+
+    if (effectivePath == null) {
+      final detected = MixdownDetectorService.findLatestMixdown(project, customFolder: customFolder);
+      if (detected != null) {
+        effectivePath = detected.path;
+        final repo = await ref.read(repositoryProvider.future);
+        await repo.updateProject(project.copyWith(previewSongAutoPath: detected.path));
+      }
+    }
 
     if (effectivePath == null) {
       if (!mounted) return;
