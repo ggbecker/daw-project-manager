@@ -3206,7 +3206,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         ? project.previewSongPath!
         : project.previewSongAutoPath;
 
-    if (effectivePath == null && !project.previewAutoDetectDisabled) {
+    if (effectivePath == null) {
       final detected = MixdownDetectorService.findLatestMixdown(project, customFolder: customFolder);
       if (detected != null) {
         effectivePath = detected.path;
@@ -3276,7 +3276,6 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       await repo.updateProject(project.copyWith(
         previewSongPath: newPath,
         previewSongFileName: path.basename(newPath),
-        previewAutoDetectDisabled: false,
       ));
       if (!mounted) return;
       if (MobileUtils.isMobile()) {
@@ -3350,8 +3349,8 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           final repo = await ref.read(repositoryProvider.future);
           final isAuto = project.previewSongPath?.isNotEmpty != true;
           final updated = isAuto
-              ? project.copyWith(previewSongAutoPath: newPath, previewAutoDetectDisabled: false)
-              : project.copyWith(previewSongPath: newPath, previewSongFileName: path.basename(newPath), previewAutoDetectDisabled: false);
+              ? project.copyWith(previewSongAutoPath: newPath)
+              : project.copyWith(previewSongPath: newPath, previewSongFileName: path.basename(newPath));
           await repo.updateProject(updated);
           effectivePath = newPath;
         } else {
@@ -3392,9 +3391,8 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             ? project.copyWith(
                 previewSongPath: newer.path,
                 previewSongFileName: path.basename(newer.path),
-                previewAutoDetectDisabled: false,
               )
-            : project.copyWith(previewSongAutoPath: newer.path, previewAutoDetectDisabled: false);
+            : project.copyWith(previewSongAutoPath: newer.path);
         await repo.updateProject(updated);
         effectivePath = newer.path;
       } else {
@@ -3799,7 +3797,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                 ? Directory(project.filePath) as FileSystemEntity
                 : File(project.filePath);
             await repo.upsertFromFileSystemEntity(entity, fullMetadata: true);
-            if (project.previewSongPath?.isNotEmpty != true && project.previewSongAutoPath == null && !project.previewAutoDetectDisabled) {
+            if (project.previewSongPath?.isNotEmpty != true && project.previewSongAutoPath == null) {
               final customFolder = ref.read(customMixdownFolderProvider).value;
               final detected = MixdownDetectorService.findLatestMixdown(project, customFolder: customFolder);
               if (detected != null) {
@@ -6667,7 +6665,7 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
         ? project.previewSongPath!
         : project.previewSongAutoPath;
 
-    if (effectivePath == null && !project.previewAutoDetectDisabled) {
+    if (effectivePath == null) {
       final detected = MixdownDetectorService.findLatestMixdown(project, customFolder: customFolder);
       if (detected != null) {
         effectivePath = detected.path;
@@ -6737,7 +6735,6 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
       await repo.updateProject(project.copyWith(
         previewSongPath: newPath,
         previewSongFileName: path.basename(newPath),
-        previewAutoDetectDisabled: false,
       ));
       if (!mounted) return;
       if (MobileUtils.isMobile()) {
@@ -6811,8 +6808,8 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
           final repo = await ref.read(repositoryProvider.future);
           final isAuto = project.previewSongPath?.isNotEmpty != true;
           final updated = isAuto
-              ? project.copyWith(previewSongAutoPath: newPath, previewAutoDetectDisabled: false)
-              : project.copyWith(previewSongPath: newPath, previewSongFileName: path.basename(newPath), previewAutoDetectDisabled: false);
+              ? project.copyWith(previewSongAutoPath: newPath)
+              : project.copyWith(previewSongPath: newPath, previewSongFileName: path.basename(newPath));
           await repo.updateProject(updated);
           effectivePath = newPath;
         } else {
@@ -6853,9 +6850,8 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
             ? project.copyWith(
                 previewSongPath: newer.path,
                 previewSongFileName: path.basename(newer.path),
-                previewAutoDetectDisabled: false,
               )
-            : project.copyWith(previewSongAutoPath: newer.path, previewAutoDetectDisabled: false);
+            : project.copyWith(previewSongAutoPath: newer.path);
         await repo.updateProject(updated);
         effectivePath = newer.path;
       } else {

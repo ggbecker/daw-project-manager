@@ -135,9 +135,6 @@ class MusicProject {
   @HiveField(29)
   final String? ignoredNewerSongPath; // Path offered as "newer" that the user explicitly rejected
 
-  @HiveField(30)
-  final bool previewAutoDetectDisabled; // True when user explicitly removed a preview — suppresses auto-detection
-
   const MusicProject({
     required this.id,
     required this.filePath,
@@ -169,7 +166,6 @@ class MusicProject {
     this.sessions = const [],
     this.metadataScanned = false,
     this.ignoredNewerSongPath,
-    this.previewAutoDetectDisabled = false,
   });
 
   String get displayName => (customDisplayName != null && customDisplayName!.trim().isNotEmpty)
@@ -460,7 +456,6 @@ class MusicProject {
     bool? metadataScanned,
     String? ignoredNewerSongPath,
     bool clearIgnoredNewerSongPath = false,
-    bool? previewAutoDetectDisabled,
   }) {
     return MusicProject(
       id: id ?? this.id,
@@ -493,7 +488,6 @@ class MusicProject {
       sessions: sessions ?? this.sessions,
       metadataScanned: metadataScanned ?? this.metadataScanned,
       ignoredNewerSongPath: clearIgnoredNewerSongPath ? null : (ignoredNewerSongPath ?? this.ignoredNewerSongPath),
-      previewAutoDetectDisabled: previewAutoDetectDisabled ?? this.previewAutoDetectDisabled,
     );
   }
 }
@@ -547,14 +541,13 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
           : const [],
       metadataScanned: fields.containsKey(28) ? (fields[28] as bool? ?? false) : false,
       ignoredNewerSongPath: fields.containsKey(29) ? fields[29] as String? : null,
-      previewAutoDetectDisabled: fields.containsKey(30) ? (fields[30] as bool? ?? false) : false,
     );
   }
 
   @override
   void write(BinaryWriter writer, MusicProject obj) {
     writer
-      ..writeByte(31) // 31 fields (0-30)
+      ..writeByte(30) // 30 fields (0-29)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -614,8 +607,6 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
       ..writeByte(28)
       ..write(obj.metadataScanned)
       ..writeByte(29)
-      ..write(obj.ignoredNewerSongPath)
-      ..writeByte(30)
-      ..write(obj.previewAutoDetectDisabled);
+      ..write(obj.ignoredNewerSongPath);
   }
 }

@@ -26,7 +26,6 @@ class TestFactories {
     String? previewSongPath,
     String? previewSongFileName,
     DateTime? statusChangedAt,
-    bool previewAutoDetectDisabled = false,
   }) {
     return MusicProject(
       id: id,
@@ -51,7 +50,6 @@ class TestFactories {
       previewSongPath: previewSongPath,
       previewSongFileName: previewSongFileName,
       statusChangedAt: statusChangedAt,
-      previewAutoDetectDisabled: previewAutoDetectDisabled,
     );
   }
 

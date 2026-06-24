@@ -874,8 +874,6 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                   // Use clearPreviewSongPath flag to explicitly set it to null
                                   final updated = updatedProject.copyWith(
                                     clearPreviewSongPath: true,
-                                    clearPreviewSongAutoPath: true,
-                                    previewAutoDetectDisabled: true,
                                     updatedAt: DateTime.now(),
                                   );
                                   
@@ -1407,7 +1405,6 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
   }
 
   void _detectMixdown() {
-    if (widget.project.previewAutoDetectDisabled) return;
     if (widget.project.previewSongPath?.isNotEmpty == true) return;
     if (widget.project.previewSongAutoPath != null) {
       _autoDetectedPath = widget.project.previewSongAutoPath;
