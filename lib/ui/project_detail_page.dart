@@ -870,12 +870,12 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                     print('Current previewSongPath: ${updatedProject.previewSongPath}');
                                   }
                                   
-                                  // Create updated project with previewSongPath set to null
-                                  // Use clearPreviewSongPath flag to explicitly set it to null
-                                  final updated = updatedProject.copyWith(
-                                    clearPreviewSongPath: true,
-                                    updatedAt: DateTime.now(),
-                                  );
+                                  // Clear only the path type that's currently active.
+                                  // Removing a manual preview falls back to auto; removing
+                                  // an auto preview clears it without immediately re-detecting.
+                                  final updated = updatedProject.previewSongPath?.isNotEmpty == true
+                                      ? updatedProject.copyWith(clearPreviewSongPath: true, updatedAt: DateTime.now())
+                                      : updatedProject.copyWith(clearPreviewSongAutoPath: true, updatedAt: DateTime.now());
                                   
                                   if (kDebugMode) {
                                     print('Updated project previewSongPath: ${updated.previewSongPath}');
@@ -1452,8 +1452,10 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
   @override
   void didUpdateWidget(_PreviewSongPlayer oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.project.previewSongPath != widget.project.previewSongPath ||
-        oldWidget.project.id != widget.project.id) {
+    final idChanged = oldWidget.project.id != widget.project.id;
+    final pathChanged = oldWidget.project.previewSongPath != widget.project.previewSongPath;
+    final autoPathChanged = oldWidget.project.previewSongAutoPath != widget.project.previewSongAutoPath;
+    if (idChanged || pathChanged || autoPathChanged) {
       // If the stream delivered the path we replaced to, clear the local override.
       if (_replacedPreviewPath != null &&
           (widget.project.previewSongPath == _replacedPreviewPath ||
@@ -1473,7 +1475,14 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
         _peaks = null;
         _autoDetectedPath = null;
       });
-      _detectMixdown();
+      // Don't immediately re-detect when the auto path was just cleared by the
+      // user removing it — that would put it straight back. Re-detection still
+      // happens on project change (idChanged) or on the next explicit trigger
+      // (play button / refresh / rescan).
+      final autoJustRemoved = autoPathChanged && widget.project.previewSongAutoPath == null && !idChanged;
+      if (!autoJustRemoved) {
+        _detectMixdown();
+      }
       _startBackgroundPrep();
     }
   }
