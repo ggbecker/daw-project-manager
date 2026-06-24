@@ -4475,6 +4475,7 @@ class GoogleDriveSyncService {
       'totalWorkSeconds': project.totalWorkSeconds,
       'sessions': project.sessions.map((s) => s.toMap()).toList(),
       'metadataScanned': project.metadataScanned,
+      'previewAutoDetectDisabled': project.previewAutoDetectDisabled,
     };
   }
 
@@ -4521,6 +4522,7 @@ class GoogleDriveSyncService {
               .toList() ??
           const [],
       metadataScanned: data['metadataScanned'] as bool? ?? false,
+      previewAutoDetectDisabled: data['previewAutoDetectDisabled'] as bool? ?? false,
     );
   }
 
