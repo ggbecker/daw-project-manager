@@ -1612,6 +1612,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get support => 'Поддержать';
 
   @override
+  String get shareDiagnosticLog => 'Поделиться журналом диагностики';
+
+  @override
+  String get shareDiagnosticLogEmpty => 'Журнал диагностики пока отсутствует';
+
+  @override
   String get supportTheProject => 'Поддержать проект';
 
   @override

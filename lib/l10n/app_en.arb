@@ -1729,6 +1729,8 @@
   "language": "Language",
   "theme": "Theme",
   "support": "Support",
+  "shareDiagnosticLog": "Share Diagnostic Log",
+  "shareDiagnosticLogEmpty": "No diagnostic log yet",
   "supportTheProject": "Support the project",
   "couldNotOpenBrowser": "Could not open browser. Please visit: {url}",
   "@couldNotOpenBrowser": {

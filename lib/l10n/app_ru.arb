@@ -984,6 +984,8 @@
   "language": "Язык",
   "theme": "Тема",
   "support": "Поддержать",
+  "shareDiagnosticLog": "Поделиться журналом диагностики",
+  "shareDiagnosticLogEmpty": "Журнал диагностики пока отсутствует",
   "supportTheProject": "Поддержать проект",
   "couldNotOpenBrowser": "Не удалось открыть браузер. Пожалуйста, посетите: {url}",
   "@couldNotOpenBrowser": {

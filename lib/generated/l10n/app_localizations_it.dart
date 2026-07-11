@@ -1613,6 +1613,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get support => 'Supporta';
 
   @override
+  String get shareDiagnosticLog => 'Condividi registro diagnostico';
+
+  @override
+  String get shareDiagnosticLogEmpty => 'Nessun registro diagnostico ancora';
+
+  @override
   String get supportTheProject => 'Sostieni il progetto';
 
   @override

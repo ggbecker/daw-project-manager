@@ -984,6 +984,8 @@
   "language": "Idioma",
   "theme": "Tema",
   "support": "Apoiar",
+  "shareDiagnosticLog": "Compartilhar Log de Diagnóstico",
+  "shareDiagnosticLogEmpty": "Ainda não há log de diagnóstico",
   "supportTheProject": "Apoie o projeto",
   "couldNotOpenBrowser": "Não foi possível abrir o navegador. Por favor, visite: {url}",
   "@couldNotOpenBrowser": {

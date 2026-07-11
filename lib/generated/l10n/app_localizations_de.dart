@@ -1618,6 +1618,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get support => 'Unterstützen';
 
   @override
+  String get shareDiagnosticLog => 'Diagnoseprotokoll teilen';
+
+  @override
+  String get shareDiagnosticLogEmpty => 'Noch kein Diagnoseprotokoll vorhanden';
+
+  @override
   String get supportTheProject => 'Unterstütze das Projekt';
 
   @override

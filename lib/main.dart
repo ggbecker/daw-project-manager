@@ -18,6 +18,7 @@ import 'services/deadline_notification_service.dart';
 import 'services/notification_background_service.dart';
 import 'services/google_drive_sync_service.dart';
 import 'services/update_check_service.dart';
+import 'services/crash_logger.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'models/auto_backup_interval.dart';
 import 'utils/app_paths.dart';
@@ -187,9 +188,33 @@ Future<void> _runInitialScan(ProjectRepository repo, ProviderContainer container
 }
 
 
-void main() async {
+void main() {
+  runZonedGuarded(_main, (error, stack) {
+    unawaited(CrashLogger.log('zone', error, stack));
+  });
+}
+
+Future<void> _main() async {
   // 1. Inicialização do Flutter
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Catch uncaught framework errors (build/layout/paint) and errors that
+  // escape the root zone, logging them to disk so a crash that happens
+  // while the app is backgrounded leaves a trace instead of vanishing.
+  CrashLogger.installGlobalHandlers();
+
+  // Replace the default red/gray error box with a small recoverable
+  // placeholder — a single broken widget shouldn't look like the whole
+  // app died, and the failure is now logged regardless.
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    if (kDebugMode) return ErrorWidget(details.exception);
+    return const ColoredBox(
+      color: Color(0x00000000),
+      child: Center(
+        child: Icon(Icons.error_outline, color: Colors.redAccent, size: 20),
+      ),
+    );
+  };
 
   // 1b. Single-instance guard (Windows/Linux only).
   // macOS is handled natively in AppDelegate.swift before Dart starts.
@@ -439,7 +464,8 @@ class DawProjectManagerApp extends ConsumerStatefulWidget {
   ConsumerState<DawProjectManagerApp> createState() => _DawProjectManagerAppState();
 }
 
-class _DawProjectManagerAppState extends ConsumerState<DawProjectManagerApp> with WindowListener {
+class _DawProjectManagerAppState extends ConsumerState<DawProjectManagerApp>
+    with WindowListener, WidgetsBindingObserver {
   static bool get _isDesktop =>
       !kIsWeb && (Platform.isMacOS || Platform.isWindows || Platform.isLinux);
 
@@ -452,6 +478,7 @@ class _DawProjectManagerAppState extends ConsumerState<DawProjectManagerApp> wit
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     if (_isDesktop) {
       windowManager.addListener(this);
       // Quit-warning dialog is macOS-only; intercept close only there.
@@ -468,8 +495,16 @@ class _DawProjectManagerAppState extends ConsumerState<DawProjectManagerApp> wit
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     if (_isDesktop) windowManager.removeListener(this);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Logged so a crash that surfaces right after resuming from background
+    // (a known trouble spot on Android) can be correlated with the transition.
+    unawaited(CrashLogger.logLifecycle(state));
   }
 
   @override

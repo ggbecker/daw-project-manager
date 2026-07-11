@@ -984,6 +984,8 @@
   "language": "语言",
   "theme": "主题",
   "support": "支持",
+  "shareDiagnosticLog": "分享诊断日志",
+  "shareDiagnosticLogEmpty": "暂无诊断日志",
   "supportTheProject": "支持项目",
   "couldNotOpenBrowser": "无法打开浏览器。请访问: {url}",
   "@couldNotOpenBrowser": {

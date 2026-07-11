@@ -1622,6 +1622,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get support => 'Soutenir';
 
   @override
+  String get shareDiagnosticLog => 'Partager le journal de diagnostic';
+
+  @override
+  String get shareDiagnosticLogEmpty =>
+      'Aucun journal de diagnostic pour l\'instant';
+
+  @override
   String get supportTheProject => 'Soutenez le projet';
 
   @override

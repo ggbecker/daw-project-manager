@@ -1607,6 +1607,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get support => 'Apoiar';
 
   @override
+  String get shareDiagnosticLog => 'Compartilhar Log de Diagnóstico';
+
+  @override
+  String get shareDiagnosticLogEmpty => 'Ainda não há log de diagnóstico';
+
+  @override
   String get supportTheProject => 'Apoie o projeto';
 
   @override

@@ -984,6 +984,8 @@
   "language": "言語",
   "theme": "テーマ",
   "support": "サポート",
+  "shareDiagnosticLog": "診断ログを共有",
+  "shareDiagnosticLogEmpty": "診断ログはまだありません",
   "supportTheProject": "プロジェクトをサポート",
   "couldNotOpenBrowser": "ブラウザを開けませんでした。次のURLにアクセスしてください: {url}",
   "@couldNotOpenBrowser": {

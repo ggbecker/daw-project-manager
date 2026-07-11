@@ -2702,6 +2702,18 @@ abstract class AppLocalizations {
   /// **'Support'**
   String get support;
 
+  /// No description provided for @shareDiagnosticLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Diagnostic Log'**
+  String get shareDiagnosticLog;
+
+  /// No description provided for @shareDiagnosticLogEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No diagnostic log yet'**
+  String get shareDiagnosticLogEmpty;
+
   /// No description provided for @supportTheProject.
   ///
   /// In en, this message translates to:

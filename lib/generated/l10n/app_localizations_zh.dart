@@ -1560,6 +1560,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get support => '支持';
 
   @override
+  String get shareDiagnosticLog => '分享诊断日志';
+
+  @override
+  String get shareDiagnosticLogEmpty => '暂无诊断日志';
+
+  @override
   String get supportTheProject => '支持项目';
 
   @override

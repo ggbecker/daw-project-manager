@@ -1580,6 +1580,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get support => 'サポート';
 
   @override
+  String get shareDiagnosticLog => '診断ログを共有';
+
+  @override
+  String get shareDiagnosticLogEmpty => '診断ログはまだありません';
+
+  @override
   String get supportTheProject => 'プロジェクトをサポート';
 
   @override

@@ -1610,6 +1610,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get support => 'Support';
 
   @override
+  String get shareDiagnosticLog => 'Share Diagnostic Log';
+
+  @override
+  String get shareDiagnosticLogEmpty => 'No diagnostic log yet';
+
+  @override
   String get supportTheProject => 'Support the project';
 
   @override
