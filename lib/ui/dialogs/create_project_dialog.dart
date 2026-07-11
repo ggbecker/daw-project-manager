@@ -180,7 +180,7 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
 
     // Create the folder
     try {
-      await Directory(targetPath).create(recursive: true);
+      await PendingFolder.createEmptyFolder(targetPath);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -189,16 +189,6 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
       }
       return;
     }
-
-    // Write a hidden marker file so the app can recognise this folder later
-    try {
-      final markerPath = p.join(targetPath, '.dawpm');
-      final marker = File(markerPath);
-      await marker.writeAsString('{"app":"daw_project_manager"}');
-      if (Platform.isWindows) {
-        await Process.run('attrib', ['+H', markerPath]);
-      }
-    } catch (_) {}
 
     // Register as a pending folder so a row appears in the project list
     final pf = PendingFolder.create(

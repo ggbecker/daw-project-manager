@@ -90,4 +90,13 @@ class PendingFolder {
         createdAt: DateTime.now(),
         intendedDawName: intendedDawName,
       );
+
+  /// Creates an empty project folder on disk with no on-disk marker files.
+  ///
+  /// DAWs such as Cubase refuse to "Back Up Project" into a destination
+  /// folder that isn't completely empty, so this must not leave anything
+  /// behind — pending-folder tracking lives entirely in the Hive registry.
+  static Future<void> createEmptyFolder(String path) async {
+    await Directory(path).create(recursive: true);
+  }
 }
