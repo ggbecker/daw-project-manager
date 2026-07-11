@@ -5743,9 +5743,12 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
   }
 
   Future<void> _sharePreviewSong() async {
-    if (widget.project.previewSongPath == null || widget.project.previewSongPath!.isEmpty) {
+    // Covers a manually-selected preview song AND an auto-detected mixdown —
+    // both are equally shareable, only the source of the path differs.
+    final effectivePath = _effectivePreviewPath;
+    if (effectivePath == null || effectivePath.isEmpty) {
       if (kDebugMode) {
-        debugPrint('[preview_share] No previewSongPath set for project=${widget.project.id}');
+        debugPrint('[preview_share] No effective preview path for project=${widget.project.id}');
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -5756,9 +5759,9 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
     }
 
     // Skip if it's a Drive file reference (not downloaded)
-    if (widget.project.previewSongPath!.startsWith('drive://')) {
+    if (effectivePath.startsWith('drive://')) {
       if (kDebugMode) {
-        debugPrint('[preview_share] Path is Drive reference (not downloaded): ${widget.project.previewSongPath}');
+        debugPrint('[preview_share] Path is Drive reference (not downloaded): $effectivePath');
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -5769,7 +5772,7 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
     }
 
     try {
-      final sourceFile = File(widget.project.previewSongPath!);
+      final sourceFile = File(effectivePath);
       if (kDebugMode) {
         debugPrint('[preview_share] sourceFile=${sourceFile.path}');
       }
@@ -5794,11 +5797,11 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
 
       // Get the original filename — prefer stored name, fall back to project name
       String originalFileName = widget.project.previewShareFileName ??
-          path.basename(widget.project.previewSongPath!);
+          path.basename(effectivePath);
 
       // Ensure the filename has an extension
       if (!originalFileName.contains('.')) {
-        final ext = path.extension(widget.project.previewSongPath!);
+        final ext = path.extension(effectivePath);
         originalFileName = '$originalFileName$ext';
       }
 
@@ -5854,7 +5857,8 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
   Future<void> _sharePreviewSongAsZip() async {
     if (!MobileUtils.isMobile()) return;
 
-    if (widget.project.previewSongPath == null || widget.project.previewSongPath!.isEmpty) {
+    final effectivePath = _effectivePreviewPath;
+    if (effectivePath == null || effectivePath.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
@@ -5864,7 +5868,7 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
     }
 
     // Skip if it's a Drive file reference (not downloaded)
-    if (widget.project.previewSongPath!.startsWith('drive://')) {
+    if (effectivePath.startsWith('drive://')) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppLocalizations.of(context)!.previewSongNotAvailableDownloadFirst)),
@@ -5874,7 +5878,7 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
     }
 
     try {
-      final sourceFile = File(widget.project.previewSongPath!);
+      final sourceFile = File(effectivePath);
       if (!await sourceFile.exists()) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -5886,9 +5890,9 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
 
       // Get the original filename — prefer stored name, fall back to project name
       String originalFileName = widget.project.previewShareFileName ??
-          path.basename(widget.project.previewSongPath!);
+          path.basename(effectivePath);
       if (!originalFileName.contains('.')) {
-        final ext = path.extension(widget.project.previewSongPath!);
+        final ext = path.extension(effectivePath);
         originalFileName = '$originalFileName$ext';
       }
 
@@ -5983,9 +5987,9 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                if (widget.project.previewSongPath != null &&
-                    widget.project.previewSongPath!.isNotEmpty &&
-                    !widget.project.previewSongPath!.startsWith('drive://')) ...[
+                if (_effectivePreviewPath != null &&
+                    _effectivePreviewPath!.isNotEmpty &&
+                    !_effectivePreviewPath!.startsWith('drive://')) ...[
                   IconButton(
                     icon: const Icon(Icons.share),
                     tooltip: AppLocalizations.of(context)!.sharePreviewSong,

@@ -1850,9 +1850,12 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
   }
 
   Future<void> _sharePreviewSong() async {
-    if (widget.project.previewSongPath == null || widget.project.previewSongPath!.isEmpty) {
+    // Covers a manually-selected preview song AND an auto-detected mixdown —
+    // both are equally shareable, only the source of the path differs.
+    final effectivePath = _effectivePreviewPath;
+    if (effectivePath == null || effectivePath.isEmpty) {
       if (kDebugMode) {
-        debugPrint('[preview_share] No previewSongPath set for project=${widget.project.id}');
+        debugPrint('[preview_share] No effective preview path for project=${widget.project.id}');
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1863,9 +1866,9 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
     }
 
     // Skip if it's a Drive file reference (not downloaded)
-    if (widget.project.previewSongPath!.startsWith('drive://')) {
+    if (effectivePath.startsWith('drive://')) {
       if (kDebugMode) {
-        debugPrint('[preview_share] Path is Drive reference (not downloaded): ${widget.project.previewSongPath}');
+        debugPrint('[preview_share] Path is Drive reference (not downloaded): $effectivePath');
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1876,7 +1879,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
     }
 
     try {
-      final sourceFile = File(widget.project.previewSongPath!);
+      final sourceFile = File(effectivePath);
       if (kDebugMode) {
         debugPrint('[preview_share] sourceFile=${sourceFile.path}');
       }
@@ -1901,11 +1904,11 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
 
       // Get the original filename — prefer stored name, fall back to project name
       String originalFileName = widget.project.previewShareFileName ??
-          p.basename(widget.project.previewSongPath!);
+          p.basename(effectivePath);
 
       // Ensure the filename has an extension
       if (!originalFileName.contains('.')) {
-        final ext = p.extension(widget.project.previewSongPath!);
+        final ext = p.extension(effectivePath);
         originalFileName = '$originalFileName$ext';
       }
 
@@ -1961,7 +1964,8 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
   Future<void> _sharePreviewSongAsZip() async {
     if (!MobileUtils.isMobile()) return;
 
-    if (widget.project.previewSongPath == null || widget.project.previewSongPath!.isEmpty) {
+    final effectivePath = _effectivePreviewPath;
+    if (effectivePath == null || effectivePath.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
@@ -1971,7 +1975,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
     }
 
     // Skip if it's a Drive file reference (not downloaded)
-    if (widget.project.previewSongPath!.startsWith('drive://')) {
+    if (effectivePath.startsWith('drive://')) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppLocalizations.of(context)!.previewSongNotAvailableDownloadFirst)),
@@ -1981,7 +1985,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
     }
 
     try {
-      final sourceFile = File(widget.project.previewSongPath!);
+      final sourceFile = File(effectivePath);
       if (!await sourceFile.exists()) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -1993,9 +1997,9 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
 
       // Get the original filename — prefer stored name, fall back to project name
       String originalFileName = widget.project.previewShareFileName ??
-          p.basename(widget.project.previewSongPath!);
+          p.basename(effectivePath);
       if (!originalFileName.contains('.')) {
-        final ext = p.extension(widget.project.previewSongPath!);
+        final ext = p.extension(effectivePath);
         originalFileName = '$originalFileName$ext';
       }
 
@@ -2053,7 +2057,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
   /// Desktop (macOS/Windows): opens a save dialog and copies the preview song to the chosen location.
   Future<void> _exportPreviewSongDesktop() async {
     final l10n = AppLocalizations.of(context)!;
-    final songPath = widget.project.previewSongPath;
+    final songPath = _effectivePreviewPath;
 
     if (songPath == null || songPath.isEmpty) {
       if (mounted) {
@@ -2639,10 +2643,11 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                             ),
                           );
 
-                          // Share (if a local preview song exists)
-                          if (widget.project.previewSongPath != null &&
-                              widget.project.previewSongPath!.isNotEmpty &&
-                              !widget.project.previewSongPath!.startsWith('drive://')) {
+                          // Share (manual or auto-detected preview song, as long
+                          // as it's a local file and not a pending Drive reference)
+                          if (_effectivePreviewPath != null &&
+                              _effectivePreviewPath!.isNotEmpty &&
+                              !_effectivePreviewPath!.startsWith('drive://')) {
                             buttons.add(
                               ElevatedButton.icon(
                                 onPressed: _sharePreviewSong,
@@ -2691,9 +2696,9 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                                   : AppLocalizations.of(context)!.selectPreviewSong,
                             ),
                           ),
-                          if (widget.project.previewSongPath != null &&
-                              widget.project.previewSongPath!.isNotEmpty &&
-                              !widget.project.previewSongPath!.startsWith('drive://')) ...[
+                          if (_effectivePreviewPath != null &&
+                              _effectivePreviewPath!.isNotEmpty &&
+                              !_effectivePreviewPath!.startsWith('drive://')) ...[
                             ElevatedButton.icon(
                               onPressed: _exportPreviewSongDesktop,
                               icon: const Icon(Icons.save_alt),
