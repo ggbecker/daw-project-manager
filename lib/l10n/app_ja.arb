@@ -1388,6 +1388,21 @@
     "description": "macOS menu item to toggle quit warning"
   },
   "menuQuit": "DAW Project Manager を終了",
+  "trayShowWindow": "DAW Project Manager を表示",
+  "trayLastBackup": "最終バックアップ: {when}",
+  "@trayLastBackup": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "trayNeverBackedUp": "バックアップはまだありません",
+  "trayBackupNow": "今すぐバックアップ",
+  "trayPauseSession": "セッションを一時停止",
+  "trayResumeSession": "セッションを再開",
+  "closeToTray": "トレイに閉じる",
+  "closeToTrayDescription": "ウィンドウを閉じてもバックグラウンドで実行を継続し(トレイアイコン)、自動バックアップと通知が引き続き機能するようにします",
   "@menuQuit": {
     "description": "macOS menu item to quit the app"
   },

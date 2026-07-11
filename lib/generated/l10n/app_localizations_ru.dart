@@ -2074,6 +2074,33 @@ class AppLocalizationsRu extends AppLocalizations {
   String get menuQuit => 'Выйти из DAW Project Manager';
 
   @override
+  String get trayShowWindow => 'Показать DAW Project Manager';
+
+  @override
+  String trayLastBackup(String when) {
+    return 'Последнее резервное копирование: $when';
+  }
+
+  @override
+  String get trayNeverBackedUp => 'Резервное копирование ещё не выполнялось';
+
+  @override
+  String get trayBackupNow => 'Создать резервную копию';
+
+  @override
+  String get trayPauseSession => 'Приостановить сеанс';
+
+  @override
+  String get trayResumeSession => 'Возобновить сеанс';
+
+  @override
+  String get closeToTray => 'Закрывать в трей';
+
+  @override
+  String get closeToTrayDescription =>
+      'Продолжать работать в фоне (значок в трее) при закрытии окна, чтобы автоматическое резервное копирование и уведомления продолжали работать';
+
+  @override
   String get menuWindow => 'Окно';
 
   @override

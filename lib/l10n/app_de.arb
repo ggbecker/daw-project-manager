@@ -1388,6 +1388,21 @@
     "description": "macOS menu item to toggle quit warning"
   },
   "menuQuit": "DAW Project Manager beenden",
+  "trayShowWindow": "DAW Project Manager anzeigen",
+  "trayLastBackup": "Letztes Backup: {when}",
+  "@trayLastBackup": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "trayNeverBackedUp": "Noch kein Backup erstellt",
+  "trayBackupNow": "Jetzt sichern",
+  "trayPauseSession": "Sitzung pausieren",
+  "trayResumeSession": "Sitzung fortsetzen",
+  "closeToTray": "In die Ablage schließen",
+  "closeToTrayDescription": "Beim Schließen des Fensters im Hintergrund weiterlaufen (Symbol in der Ablage), damit automatisches Backup und Benachrichtigungen weiter funktionieren",
   "@menuQuit": {
     "description": "macOS menu item to quit the app"
   },

@@ -1388,6 +1388,21 @@
     "description": "macOS menu item to toggle quit warning"
   },
   "menuQuit": "Выйти из DAW Project Manager",
+  "trayShowWindow": "Показать DAW Project Manager",
+  "trayLastBackup": "Последнее резервное копирование: {when}",
+  "@trayLastBackup": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "trayNeverBackedUp": "Резервное копирование ещё не выполнялось",
+  "trayBackupNow": "Создать резервную копию",
+  "trayPauseSession": "Приостановить сеанс",
+  "trayResumeSession": "Возобновить сеанс",
+  "closeToTray": "Закрывать в трей",
+  "closeToTrayDescription": "Продолжать работать в фоне (значок в трее) при закрытии окна, чтобы автоматическое резервное копирование и уведомления продолжали работать",
   "@menuQuit": {
     "description": "macOS menu item to quit the app"
   },

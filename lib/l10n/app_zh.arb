@@ -1388,6 +1388,21 @@
     "description": "macOS menu item to toggle quit warning"
   },
   "menuQuit": "退出 DAW Project Manager",
+  "trayShowWindow": "显示 DAW Project Manager",
+  "trayLastBackup": "上次备份：{when}",
+  "@trayLastBackup": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "trayNeverBackedUp": "尚未备份",
+  "trayBackupNow": "立即备份",
+  "trayPauseSession": "暂停会话",
+  "trayResumeSession": "恢复会话",
+  "closeToTray": "关闭到系统托盘",
+  "closeToTrayDescription": "关闭窗口后继续在后台运行（系统托盘图标），以便自动备份和通知继续工作",
   "@menuQuit": {
     "description": "macOS menu item to quit the app"
   },

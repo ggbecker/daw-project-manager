@@ -2079,6 +2079,33 @@ class AppLocalizationsIt extends AppLocalizations {
   String get menuQuit => 'Esci da DAW Project Manager';
 
   @override
+  String get trayShowWindow => 'Mostra DAW Project Manager';
+
+  @override
+  String trayLastBackup(String when) {
+    return 'Ultimo backup: $when';
+  }
+
+  @override
+  String get trayNeverBackedUp => 'Nessun backup eseguito';
+
+  @override
+  String get trayBackupNow => 'Esegui Backup Ora';
+
+  @override
+  String get trayPauseSession => 'Metti in Pausa la Sessione';
+
+  @override
+  String get trayResumeSession => 'Riprendi Sessione';
+
+  @override
+  String get closeToTray => 'Chiudi nella barra delle applicazioni';
+
+  @override
+  String get closeToTrayDescription =>
+      'Continua a funzionare in background (icona nella barra) quando chiudi la finestra, così il backup automatico e le notifiche continuano a funzionare';
+
+  @override
   String get menuWindow => 'Finestra';
 
   @override

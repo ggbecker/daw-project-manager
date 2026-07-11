@@ -19,6 +19,7 @@ import 'services/notification_background_service.dart';
 import 'services/google_drive_sync_service.dart';
 import 'services/update_check_service.dart';
 import 'services/crash_logger.dart';
+import 'services/tray_service.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'models/auto_backup_interval.dart';
 import 'utils/app_paths.dart';
@@ -349,6 +350,12 @@ Future<void> _main() async {
     }
     _startAutoBackupTimer(container, autoBackupService);
 
+    // 4e-2. System tray icon (Windows/macOS/Linux) — lets the app keep
+    // auto-backup and notifications running while the window is hidden.
+    if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
+      unawaited(TrayService(container, autoBackupService).init());
+    }
+
     // 4f. Bootstrap work timer (starts listening to activeProjectProvider).
     container.read(workTimerProvider);
 
@@ -481,10 +488,9 @@ class _DawProjectManagerAppState extends ConsumerState<DawProjectManagerApp>
     WidgetsBinding.instance.addObserver(this);
     if (_isDesktop) {
       windowManager.addListener(this);
-      // Quit-warning dialog is macOS-only; intercept close only there.
-      if (!kIsWeb && Platform.isMacOS) {
-        windowManager.setPreventClose(true);
-      }
+      // Needed on every desktop platform so onWindowClose can decide
+      // between hiding to the tray and actually quitting.
+      windowManager.setPreventClose(true);
     }
     if (!kIsWeb && Platform.isMacOS) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -509,16 +515,27 @@ class _DawProjectManagerAppState extends ConsumerState<DawProjectManagerApp>
 
   @override
   void onWindowClose() async {
+    final closeToTray = ref.read(closeToTrayProvider);
+
     if (!kIsWeb && Platform.isMacOS) {
-      // Red X on macOS: hide in release, destroy in debug.
+      // Dev convenience: always fully quit on debug builds rather than
+      // lingering in the background between hot restarts.
       if (kDebugMode) {
         await windowManager.destroy();
-      } else {
-        await windowManager.hide();
+        return;
       }
+      if (closeToTray) {
+        await windowManager.hide();
+        return;
+      }
+      // closeToTray disabled: fall through to the shared quit-warning flow.
+    } else if (!kIsWeb && closeToTray) {
+      await windowManager.hide();
       return;
     }
-    // Windows: show quit-warning dialog.
+
+    // Show quit-warning dialog (Windows/Linux always; macOS only when the
+    // user has turned closeToTray off).
     final warn = ref.read(warnBeforeQuitProvider);
     if (!warn) {
       await windowManager.destroy();

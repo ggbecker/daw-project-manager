@@ -2010,6 +2010,32 @@ class AppLocalizationsZh extends AppLocalizations {
   String get menuQuit => '退出 DAW Project Manager';
 
   @override
+  String get trayShowWindow => '显示 DAW Project Manager';
+
+  @override
+  String trayLastBackup(String when) {
+    return '上次备份：$when';
+  }
+
+  @override
+  String get trayNeverBackedUp => '尚未备份';
+
+  @override
+  String get trayBackupNow => '立即备份';
+
+  @override
+  String get trayPauseSession => '暂停会话';
+
+  @override
+  String get trayResumeSession => '恢复会话';
+
+  @override
+  String get closeToTray => '关闭到系统托盘';
+
+  @override
+  String get closeToTrayDescription => '关闭窗口后继续在后台运行（系统托盘图标），以便自动备份和通知继续工作';
+
+  @override
   String get menuWindow => '窗口';
 
   @override

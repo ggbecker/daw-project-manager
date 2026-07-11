@@ -3500,6 +3500,54 @@ abstract class AppLocalizations {
   /// **'Quit DAW Project Manager'**
   String get menuQuit;
 
+  /// No description provided for @trayShowWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Show DAW Project Manager'**
+  String get trayShowWindow;
+
+  /// No description provided for @trayLastBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Last backup: {when}'**
+  String trayLastBackup(String when);
+
+  /// No description provided for @trayNeverBackedUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Never backed up'**
+  String get trayNeverBackedUp;
+
+  /// No description provided for @trayBackupNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Back Up Now'**
+  String get trayBackupNow;
+
+  /// No description provided for @trayPauseSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause Session'**
+  String get trayPauseSession;
+
+  /// No description provided for @trayResumeSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume Session'**
+  String get trayResumeSession;
+
+  /// No description provided for @closeToTray.
+  ///
+  /// In en, this message translates to:
+  /// **'Close to tray'**
+  String get closeToTray;
+
+  /// No description provided for @closeToTrayDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep running in the background (tray icon) when you close the window, so auto-backup and notifications keep working'**
+  String get closeToTrayDescription;
+
   /// macOS menu bar Window menu label
   ///
   /// In en, this message translates to:

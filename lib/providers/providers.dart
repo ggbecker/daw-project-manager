@@ -1082,6 +1082,47 @@ final warnBeforeQuitProvider = NotifierProvider<WarnBeforeQuitNotifier, bool>(()
 });
 
 // ---------------------------------------------------------------------------
+// Close to Tray (desktop-only device-local preference)
+// ---------------------------------------------------------------------------
+
+/// Whether closing the window (the X button) minimizes the app to the
+/// system tray / menu bar instead of quitting it. Defaults to true so
+/// background services (auto-backup, deadline notifications) keep running.
+class CloseToTrayNotifier extends Notifier<bool> {
+  @override
+  bool build() {
+    SchedulerBinding.instance.addPostFrameCallback((_) => _load());
+    return true;
+  }
+
+  Future<void> _load() async {
+    try {
+      await ensureHiveInitialized();
+      final box = await Hive.openBox<String>('settings');
+      final saved = box.get('closeToTray');
+      if (saved != null) state = saved == 'true';
+    } catch (e) {
+      if (kDebugMode) print('Failed to load closeToTray: $e');
+    }
+  }
+
+  Future<void> set(bool value) async {
+    state = value;
+    try {
+      await ensureHiveInitialized();
+      final box = await Hive.openBox<String>('settings');
+      await box.put('closeToTray', value.toString());
+    } catch (e) {
+      if (kDebugMode) print('Failed to save closeToTray: $e');
+    }
+  }
+}
+
+final closeToTrayProvider = NotifierProvider<CloseToTrayNotifier, bool>(() {
+  return CloseToTrayNotifier();
+});
+
+// ---------------------------------------------------------------------------
 // Tab Visibility
 // ---------------------------------------------------------------------------
 

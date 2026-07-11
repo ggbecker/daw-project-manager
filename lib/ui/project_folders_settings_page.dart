@@ -305,6 +305,7 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
     final suggestionsEnabled = ref.watch(suggestionsEnabledProvider);
     final checkUpdates = ref.watch(checkForUpdatesProvider);
     final lastModifiedColors = ref.watch(lastModifiedColorProvider);
+    final closeToTray = ref.watch(closeToTrayProvider);
 
     final listBody = ListView(
       padding: MobileUtils.getResponsivePadding(context),
@@ -390,6 +391,15 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
                   onChanged: (_) => ref.read(lastModifiedColorProvider.notifier).toggle(),
                   title: Text(l10n.lastModifiedColors),
                   subtitle: Text(l10n.lastModifiedColorsDescription,
+                      style: Theme.of(context).textTheme.bodySmall),
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                ),
+                SwitchListTile(
+                  value: closeToTray,
+                  onChanged: (v) => ref.read(closeToTrayProvider.notifier).set(v),
+                  title: Text(l10n.closeToTray),
+                  subtitle: Text(l10n.closeToTrayDescription,
                       style: Theme.of(context).textTheme.bodySmall),
                   contentPadding: EdgeInsets.zero,
                   dense: true,
