@@ -2693,12 +2693,18 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                           ),
                           if (widget.project.previewSongPath != null &&
                               widget.project.previewSongPath!.isNotEmpty &&
-                              !widget.project.previewSongPath!.startsWith('drive://'))
+                              !widget.project.previewSongPath!.startsWith('drive://')) ...[
                             ElevatedButton.icon(
                               onPressed: _exportPreviewSongDesktop,
                               icon: const Icon(Icons.save_alt),
                               label: Text(AppLocalizations.of(context)!.saveCopy),
                             ),
+                            ElevatedButton.icon(
+                              onPressed: _sharePreviewSong,
+                              icon: const Icon(Icons.share),
+                              label: Text(AppLocalizations.of(context)!.share),
+                            ),
+                          ],
                         ],
                       ),
               ],

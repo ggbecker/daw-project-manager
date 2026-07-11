@@ -5983,8 +5983,7 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                if (MobileUtils.isMobile() &&
-                    widget.project.previewSongPath != null &&
+                if (widget.project.previewSongPath != null &&
                     widget.project.previewSongPath!.isNotEmpty &&
                     !widget.project.previewSongPath!.startsWith('drive://')) ...[
                   IconButton(
@@ -5992,11 +5991,12 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
                     tooltip: AppLocalizations.of(context)!.sharePreviewSong,
                     onPressed: _sharePreviewSong,
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.archive),
-                    tooltip: AppLocalizations.of(context)!.shareAsZip,
-                    onPressed: _sharePreviewSongAsZip,
-                  ),
+                  if (MobileUtils.isMobile())
+                    IconButton(
+                      icon: const Icon(Icons.archive),
+                      tooltip: AppLocalizations.of(context)!.shareAsZip,
+                      onPressed: _sharePreviewSongAsZip,
+                    ),
                 ],
                 IconButton(
                   icon: const Icon(Icons.close),
