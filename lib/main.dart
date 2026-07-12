@@ -8,6 +8,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'generated/l10n/app_localizations.dart';
 import 'dart:io' show Platform, Process, ServerSocket, InternetAddress, SocketException, File, Directory, FileSystemException, exit;
 import 'package:window_manager/window_manager.dart';
+import 'package:tray_manager/tray_manager.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 
 // NOVO: Importar providers e serviços para a lógica de auto-scan
@@ -41,6 +42,20 @@ bool _autoBackupRunning = false;
 // Keeps the single-instance socket alive for the app's lifetime.
 // ignore: unused_element
 ServerSocket? _singleInstanceSocket;
+
+/// Fully terminates the app on desktop. Destroys the tray icon first —
+/// tray_manager keeps a native hook/hidden window alive on Windows for as
+/// long as the icon exists, and leaving it around when the Flutter window
+/// closes was making the whole process linger for several seconds until
+/// Windows' own "unresponsive app" timeout force-killed it.
+Future<void> quitApp() async {
+  if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
+    try {
+      await trayManager.destroy();
+    } catch (_) {}
+  }
+  await windowManager.destroy();
+}
 
 Future<void> _showAlreadyRunningMessage() async {
   if (Platform.isWindows) {
@@ -521,7 +536,7 @@ class _DawProjectManagerAppState extends ConsumerState<DawProjectManagerApp>
       // Dev convenience: always fully quit on debug builds rather than
       // lingering in the background between hot restarts.
       if (kDebugMode) {
-        await windowManager.destroy();
+        await quitApp();
         return;
       }
       if (closeToTray) {
@@ -538,12 +553,12 @@ class _DawProjectManagerAppState extends ConsumerState<DawProjectManagerApp>
     // user has turned closeToTray off).
     final warn = ref.read(warnBeforeQuitProvider);
     if (!warn) {
-      await windowManager.destroy();
+      await quitApp();
       return;
     }
     final context = navigatorKey.currentContext;
     if (context == null) {
-      await windowManager.destroy();
+      await quitApp();
       return;
     }
     final confirmed = await showDialog<bool>(
@@ -564,7 +579,7 @@ class _DawProjectManagerAppState extends ConsumerState<DawProjectManagerApp>
         ],
       ),
     );
-    if (confirmed == true) await windowManager.destroy();
+    if (confirmed == true) await quitApp();
   }
 
   @override

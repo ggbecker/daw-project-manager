@@ -9,7 +9,7 @@ import 'package:tray_manager/tray_manager.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../generated/l10n/app_localizations.dart';
-import '../main.dart' show navigatorKey;
+import '../main.dart' show navigatorKey, quitApp;
 import '../providers/providers.dart';
 import 'google_drive_sync_service.dart';
 
@@ -136,7 +136,7 @@ class TrayService with TrayListener {
         }
         break;
       case 'quit':
-        unawaited(windowManager.destroy());
+        unawaited(quitApp());
         break;
     }
   }
