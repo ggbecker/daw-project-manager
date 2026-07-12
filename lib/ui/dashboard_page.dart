@@ -3746,6 +3746,18 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             ],
           ),
         ),
+        if (_effectivePreviewPathFor(project) != null &&
+            !_effectivePreviewPathFor(project)!.startsWith('drive://'))
+          PopupMenuItem<String>(
+            value: 'share',
+            child: Row(
+              children: [
+                const Icon(Icons.share, size: 20),
+                const SizedBox(width: 8),
+                Text(l10n.sharePreviewSong),
+              ],
+            ),
+          ),
       ],
       color: Theme.of(context).cardColor,
     );
@@ -3887,6 +3899,86 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             }
           }
           break;
+        case 'share':
+          await _shareProjectPreview(project);
+          break;
+      }
+    }
+  }
+
+  String? _effectivePreviewPathFor(MusicProject project) =>
+      project.previewSongPath?.isNotEmpty == true
+          ? project.previewSongPath
+          : project.previewSongAutoPath;
+
+  Future<void> _shareProjectPreview(MusicProject project) async {
+    final l10n = AppLocalizations.of(context)!;
+    final effectivePath = _effectivePreviewPathFor(project);
+    if (effectivePath == null || effectivePath.isEmpty) return;
+    if (effectivePath.startsWith('drive://')) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.previewSongNotAvailableDownloadFirst)),
+        );
+      }
+      return;
+    }
+
+    try {
+      final sourceFile = File(effectivePath);
+      if (!await sourceFile.exists()) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.previewSongFileNotFound)),
+          );
+        }
+        return;
+      }
+
+      String originalFileName = project.previewShareFileName ?? path.basename(effectivePath);
+      if (!originalFileName.contains('.')) {
+        originalFileName = '$originalFileName${path.extension(effectivePath)}';
+      }
+
+      // WhatsApp (confirmed via manual testing) rejects WAV/AIFF/FLAC as a
+      // direct audio attachment with no error shown to us — convert to MP3
+      // first so the shared file is actually accepted.
+      var fileToShare = sourceFile;
+      var shareFileName = originalFileName;
+      if (AudioAnalysisService.needsMp3ConversionForSharing(effectivePath)) {
+        final tempDir = await getTemporaryDirectory();
+        final mp3Name = '${path.basenameWithoutExtension(originalFileName)}.mp3';
+        final mp3Path = path.join(tempDir.path, mp3Name);
+        final converted = await AudioAnalysisService.convertToMp3(effectivePath, mp3Path);
+        if (converted) {
+          fileToShare = File(mp3Path);
+          shareFileName = mp3Name;
+        } else if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.mp3ConversionFailed)),
+          );
+        }
+      }
+
+      if (MobileUtils.isMobile()) {
+        final cacheDir = await getTemporaryDirectory();
+        final shareFile = File(path.join(cacheDir.path, shareFileName));
+        await fileToShare.copy(shareFile.path);
+        await Share.shareXFiles(
+          [XFile(shareFile.path, name: shareFileName)],
+          text: 'Preview song: ${project.displayName}',
+        );
+      } else {
+        await Share.shareXFiles(
+          [XFile(fileToShare.path)],
+          text: 'Preview song: ${project.displayName}',
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.failedToSharePreviewSong(e.toString()))),
+        );
       }
     }
   }
