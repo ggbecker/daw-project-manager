@@ -228,61 +228,24 @@ final playlistsSearchProvider = NotifierProvider<PlaylistsSearchNotifier, String
 // 0 = show only visible (default)
 // 1 = show all (visible + hidden)
 // 2 = show only hidden
+//
+// Intentionally session-only (not persisted to Hive). This used to be saved
+// across restarts, but "show only hidden" filters out every normal project —
+// leaving it on from a forgotten earlier session (or, since the underlying
+// key wasn't profile-scoped, a *different* profile) made the whole project
+// list silently disappear on next launch with no obvious cause.
 class ShowHiddenProjectsNotifier extends Notifier<int> {
   @override
-  int build() {
-    // Load saved state asynchronously after build
-    SchedulerBinding.instance.addPostFrameCallback((_) {
-      _loadShowHiddenState();
-    });
-    return 0; // Default to showing only visible projects
+  int build() => 0; // Always starts showing only visible projects.
+
+  void setShowAll(bool show) {
+    state = show ? 1 : 0;
   }
-  
-  Future<void> _loadShowHiddenState() async {
-    try {
-      await ensureHiveInitialized();
-      final settingsBox = await Hive.openBox<String>('settings');
-      final savedState = settingsBox.get('showHiddenProjects');
-      if (savedState != null) {
-        final intState = int.tryParse(savedState);
-        if (intState != null && (intState >= 0 && intState <= 2)) {
-          state = intState;
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Failed to load show hidden state: $e');
-      }
-    }
+
+  void setShowOnlyHidden(bool show) {
+    state = show ? 2 : 0;
   }
-  
-  Future<void> setShowAll(bool show) async {
-    final newState = show ? 1 : 0;
-    state = newState;
-    await _saveState(newState);
-  }
-  
-  Future<void> setShowOnlyHidden(bool show) async {
-    final newState = show ? 2 : 0;
-    state = newState;
-    await _saveState(newState);
-  }
-  
-  Future<void> _saveState(int newState) async {
-    try {
-      await ensureHiveInitialized();
-      final settingsBox = await Hive.openBox<String>('settings');
-      await settingsBox.put('showHiddenProjects', newState.toString());
-      if (kDebugMode) {
-        print('Show hidden projects state saved: $newState');
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Failed to save show hidden state: $e');
-      }
-    }
-  }
-  
+
   bool get isShowingAll => state == 1;
   bool get isShowingOnlyHidden => state == 2;
   bool get isShowingVisible => state == 0;

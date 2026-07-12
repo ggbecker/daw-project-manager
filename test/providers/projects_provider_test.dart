@@ -141,9 +141,7 @@ void main() {
         TestFactories.makeProject(id: 'h', hidden: true),
       ]);
       addTearDown(c.dispose);
-      // state is set synchronously; Hive save is fire-and-forget
-      unawaited(
-          c.read(showHiddenProjectsProvider.notifier).setShowAll(true));
+      c.read(showHiddenProjectsProvider.notifier).setShowAll(true);
 
       expect((await _readProjects(c)).length, 2);
     });
@@ -154,9 +152,7 @@ void main() {
         TestFactories.makeProject(id: 'h', hidden: true),
       ]);
       addTearDown(c.dispose);
-      unawaited(c
-          .read(showHiddenProjectsProvider.notifier)
-          .setShowOnlyHidden(true));
+      c.read(showHiddenProjectsProvider.notifier).setShowOnlyHidden(true);
 
       expect(
           (await _readProjects(c)).map((p) => p.id).toList(), ['h']);
