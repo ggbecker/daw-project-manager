@@ -3,6 +3,7 @@ import 'dart:isolate';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
+import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 /// Results of audio loudness & mastering analysis.
@@ -136,37 +137,80 @@ class AudioAnalysisService {
 
   /// Extensions that some messaging apps (confirmed: WhatsApp, which rejects
   /// them with "file not supported" even via plain OS drag-and-drop) refuse
-  /// as a direct audio attachment, but accept once converted to MP3.
-  static const Set<String> extensionsNeedingMp3ConversionForSharing = {
+  /// as a direct audio attachment, but accept once converted to a
+  /// widely-supported compressed format (MP3 or AAC/M4A).
+  static const Set<String> extensionsNeedingConversionForSharing = {
     'wav', 'aiff', 'aif', 'flac',
   };
 
-  /// Whether [path]'s extension is one that should be converted to MP3
-  /// before sharing to messaging apps. Pure/testable — no I/O.
-  static bool needsMp3ConversionForSharing(String path) {
+  /// Whether [path]'s extension is one that should be converted before
+  /// sharing to messaging apps. Pure/testable — no I/O.
+  static bool needsConversionForSharing(String path) {
     final ext = path.toLowerCase().split('.').last;
-    return extensionsNeedingMp3ConversionForSharing.contains(ext);
+    return extensionsNeedingConversionForSharing.contains(ext);
   }
 
-  /// Converts [inputPath] to an MP3 at [outputPath] via ffmpeg, if available
-  /// on PATH. Returns true on success, false if ffmpeg is missing or the
-  /// conversion failed — callers should fall back to sharing the original
-  /// file rather than blocking the share entirely.
-  static Future<bool> convertToMp3(String inputPath, String outputPath) async {
-    try {
-      File(outputPath).parent.createSync(recursive: true);
-      final result = await Process.run('ffmpeg', [
-        '-y', '-i', inputPath, '-codec:a', 'libmp3lame', '-qscale:a', '2', outputPath,
+  /// Where a Windows build of ffmpeg is bundled alongside the app, if any —
+  /// so end users never need to install anything themselves. Resolved the
+  /// same way tray_manager/windows_taskbar resolve bundled assets: relative
+  /// to the built executable, not the source tree.
+  static String get _bundledFfmpegPath => p.joinAll([
+        p.dirname(Platform.resolvedExecutable),
+        'data', 'flutter_assets', 'resources', 'tools', 'ffmpeg.exe',
       ]);
-      if (result.exitCode != 0) {
-        debugPrint('[Mp3Convert] ffmpeg failed (${result.exitCode}): ${result.stderr}');
-        return false;
-      }
-      return true;
-    } catch (e) {
-      debugPrint('[Mp3Convert] ffmpeg not available: $e');
-      return false;
+
+  /// Resolves which ffmpeg binary to invoke: the bundled Windows build if
+  /// present, otherwise whatever's on PATH (covers macOS/Linux dev machines
+  /// with ffmpeg installed, and Windows dev builds without the bundled exe).
+  static Future<String> _resolveFfmpegCommand() async {
+    if (Platform.isWindows && await File(_bundledFfmpegPath).exists()) {
+      return _bundledFfmpegPath;
     }
+    return 'ffmpeg';
+  }
+
+  /// Converts [inputPath] to a messaging-app-compatible file inside
+  /// [outputDir], choosing the tool/format that needs no extra install on
+  /// the current OS:
+  /// - macOS: AAC/M4A via `afconvert`, which ships with every Mac (Apple's
+  ///   frameworks have never included an MP3 encoder).
+  /// - Windows: MP3 via the ffmpeg binary bundled with the app, falling
+  ///   back to PATH for dev builds without it.
+  /// - Other platforms: MP3 via ffmpeg on PATH (soft dependency).
+  ///
+  /// Returns the converted file, or null if conversion wasn't possible —
+  /// callers should fall back to sharing the original file rather than
+  /// blocking the share entirely.
+  static Future<File?> convertForSharing(String inputPath, String outputDir) async {
+    final base = p.basenameWithoutExtension(inputPath);
+    Directory(outputDir).createSync(recursive: true);
+
+    if (Platform.isMacOS) {
+      final outPath = p.join(outputDir, '$base.m4a');
+      try {
+        final result = await Process.run('afconvert', [
+          '-f', 'm4af', '-d', 'aac', inputPath, outPath,
+        ]);
+        if (result.exitCode == 0) return File(outPath);
+        debugPrint('[ShareConvert] afconvert failed (${result.exitCode}): ${result.stderr}');
+      } catch (e) {
+        debugPrint('[ShareConvert] afconvert exception: $e');
+      }
+      return null;
+    }
+
+    final outPath = p.join(outputDir, '$base.mp3');
+    try {
+      final ffmpeg = await _resolveFfmpegCommand();
+      final result = await Process.run(ffmpeg, [
+        '-y', '-i', inputPath, '-codec:a', 'libmp3lame', '-qscale:a', '2', outPath,
+      ]);
+      if (result.exitCode == 0) return File(outPath);
+      debugPrint('[ShareConvert] ffmpeg failed (${result.exitCode}): ${result.stderr}');
+    } catch (e) {
+      debugPrint('[ShareConvert] ffmpeg not available: $e');
+    }
+    return null;
   }
 
   /// Returns the channel count of a WAV file, or null for non-WAV / parse errors.

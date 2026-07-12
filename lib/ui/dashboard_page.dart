@@ -3941,18 +3941,16 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       }
 
       // WhatsApp (confirmed via manual testing) rejects WAV/AIFF/FLAC as a
-      // direct audio attachment with no error shown to us — convert to MP3
-      // first so the shared file is actually accepted.
+      // direct audio attachment with no error shown to us — convert to a
+      // compatible format first so the shared file is actually accepted.
       var fileToShare = sourceFile;
       var shareFileName = originalFileName;
-      if (AudioAnalysisService.needsMp3ConversionForSharing(effectivePath)) {
+      if (AudioAnalysisService.needsConversionForSharing(effectivePath)) {
         final tempDir = await getTemporaryDirectory();
-        final mp3Name = '${path.basenameWithoutExtension(originalFileName)}.mp3';
-        final mp3Path = path.join(tempDir.path, mp3Name);
-        final converted = await AudioAnalysisService.convertToMp3(effectivePath, mp3Path);
-        if (converted) {
-          fileToShare = File(mp3Path);
-          shareFileName = mp3Name;
+        final converted = await AudioAnalysisService.convertForSharing(effectivePath, tempDir.path);
+        if (converted != null) {
+          fileToShare = converted;
+          shareFileName = path.basename(converted.path);
         } else if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(l10n.mp3ConversionFailed)),
@@ -5899,21 +5897,19 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
 
       // WhatsApp (confirmed via manual testing, including plain OS
       // drag-and-drop of the raw file) rejects WAV/AIFF/FLAC as a direct
-      // audio attachment with no error shown to us — convert to MP3 first
-      // so the shared file is actually accepted.
+      // audio attachment with no error shown to us — convert to a
+      // compatible format first so the shared file is actually accepted.
       var fileToShare = sourceFile;
       var shareFileName = originalFileName;
-      if (AudioAnalysisService.needsMp3ConversionForSharing(effectivePath)) {
+      if (AudioAnalysisService.needsConversionForSharing(effectivePath)) {
         final tempDir = await getTemporaryDirectory();
-        final mp3Name = '${path.basenameWithoutExtension(originalFileName)}.mp3';
-        final mp3Path = path.join(tempDir.path, mp3Name);
         if (kDebugMode) {
-          debugPrint('[preview_share] converting to MP3 for compatibility: $mp3Path');
+          debugPrint('[preview_share] converting for messaging-app compatibility...');
         }
-        final converted = await AudioAnalysisService.convertToMp3(effectivePath, mp3Path);
-        if (converted) {
-          fileToShare = File(mp3Path);
-          shareFileName = mp3Name;
+        final converted = await AudioAnalysisService.convertForSharing(effectivePath, tempDir.path);
+        if (converted != null) {
+          fileToShare = converted;
+          shareFileName = path.basename(converted.path);
         } else if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(AppLocalizations.of(context)!.mp3ConversionFailed)),
