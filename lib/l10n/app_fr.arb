@@ -1106,6 +1106,7 @@
     "description": "Tooltip for the share as ZIP button"
   },
   "share": "Partager",
+  "mp3ConversionFailed": "Impossible de convertir en MP3 pour la compatibilité (ffmpeg introuvable) — partage du fichier original, que certaines applications comme WhatsApp peuvent refuser.",
   "@share": {
     "description": "Label for the share button"
   },

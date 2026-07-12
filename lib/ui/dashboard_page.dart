@@ -5805,23 +5805,47 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
         originalFileName = '$originalFileName$ext';
       }
 
+      // WhatsApp (confirmed via manual testing, including plain OS
+      // drag-and-drop of the raw file) rejects WAV/AIFF/FLAC as a direct
+      // audio attachment with no error shown to us — convert to MP3 first
+      // so the shared file is actually accepted.
+      var fileToShare = sourceFile;
+      var shareFileName = originalFileName;
+      if (AudioAnalysisService.needsMp3ConversionForSharing(effectivePath)) {
+        final tempDir = await getTemporaryDirectory();
+        final mp3Name = '${path.basenameWithoutExtension(originalFileName)}.mp3';
+        final mp3Path = path.join(tempDir.path, mp3Name);
+        if (kDebugMode) {
+          debugPrint('[preview_share] converting to MP3 for compatibility: $mp3Path');
+        }
+        final converted = await AudioAnalysisService.convertToMp3(effectivePath, mp3Path);
+        if (converted) {
+          fileToShare = File(mp3Path);
+          shareFileName = mp3Name;
+        } else if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context)!.mp3ConversionFailed)),
+          );
+        }
+      }
+
       // On mobile, copy to cache directory with original name for sharing
       if (MobileUtils.isMobile()) {
         final cacheDir = await getTemporaryDirectory();
-        final shareFile = File(path.join(cacheDir.path, originalFileName));
+        final shareFile = File(path.join(cacheDir.path, shareFileName));
         if (kDebugMode) {
           debugPrint('[preview_share] cacheDir=${cacheDir.path} shareFile=${shareFile.path}');
         }
 
         // Copy file to cache with original name
-        await sourceFile.copy(shareFile.path);
+        await fileToShare.copy(shareFile.path);
         if (kDebugMode) {
           debugPrint('[preview_share] copied to cache OK, invoking share sheet...');
         }
 
         // Share the file (default behavior)
         final result = await Share.shareXFiles(
-          [XFile(shareFile.path, name: originalFileName)],
+          [XFile(shareFile.path, name: shareFileName)],
           text: 'Preview song: ${widget.project.displayName}',
         );
         if (kDebugMode) {
@@ -5834,7 +5858,7 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
           debugPrint('[preview_share] non-Android direct share, invoking share sheet...');
         }
         final result = await Share.shareXFiles(
-          [XFile(sourceFile.path)],
+          [XFile(fileToShare.path)],
           text: 'Preview song: ${widget.project.displayName}',
         );
         if (kDebugMode) {

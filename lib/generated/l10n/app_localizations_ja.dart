@@ -1857,6 +1857,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get share => '共有';
 
   @override
+  String get mp3ConversionFailed =>
+      '互換性のためのMP3への変換に失敗しました（ffmpegが見つかりません）。元のファイルを共有しますが、WhatsAppなど一部のアプリでは拒否される場合があります。';
+
+  @override
   String get shareZip => 'ZIPを共有';
 
   @override

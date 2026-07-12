@@ -1911,6 +1911,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get share => 'Teilen';
 
   @override
+  String get mp3ConversionFailed =>
+      'Konvertierung zu MP3 für Kompatibilität fehlgeschlagen (ffmpeg nicht gefunden) — die Originaldatei wird geteilt, die manche Apps wie WhatsApp ablehnen könnten.';
+
+  @override
   String get shareZip => 'ZIP teilen';
 
   @override

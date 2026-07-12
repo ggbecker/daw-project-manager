@@ -134,6 +134,41 @@ class AudioAnalysisService {
     return false;
   }
 
+  /// Extensions that some messaging apps (confirmed: WhatsApp, which rejects
+  /// them with "file not supported" even via plain OS drag-and-drop) refuse
+  /// as a direct audio attachment, but accept once converted to MP3.
+  static const Set<String> extensionsNeedingMp3ConversionForSharing = {
+    'wav', 'aiff', 'aif', 'flac',
+  };
+
+  /// Whether [path]'s extension is one that should be converted to MP3
+  /// before sharing to messaging apps. Pure/testable — no I/O.
+  static bool needsMp3ConversionForSharing(String path) {
+    final ext = path.toLowerCase().split('.').last;
+    return extensionsNeedingMp3ConversionForSharing.contains(ext);
+  }
+
+  /// Converts [inputPath] to an MP3 at [outputPath] via ffmpeg, if available
+  /// on PATH. Returns true on success, false if ffmpeg is missing or the
+  /// conversion failed — callers should fall back to sharing the original
+  /// file rather than blocking the share entirely.
+  static Future<bool> convertToMp3(String inputPath, String outputPath) async {
+    try {
+      File(outputPath).parent.createSync(recursive: true);
+      final result = await Process.run('ffmpeg', [
+        '-y', '-i', inputPath, '-codec:a', 'libmp3lame', '-qscale:a', '2', outputPath,
+      ]);
+      if (result.exitCode != 0) {
+        debugPrint('[Mp3Convert] ffmpeg failed (${result.exitCode}): ${result.stderr}');
+        return false;
+      }
+      return true;
+    } catch (e) {
+      debugPrint('[Mp3Convert] ffmpeg not available: $e');
+      return false;
+    }
+  }
+
   /// Returns the channel count of a WAV file, or null for non-WAV / parse errors.
   static Future<int?> getChannelCount(String filePath) async {
     if (!filePath.toLowerCase().endsWith('.wav')) return null;

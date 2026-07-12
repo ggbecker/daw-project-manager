@@ -3218,6 +3218,12 @@ abstract class AppLocalizations {
   /// **'Share'**
   String get share;
 
+  /// No description provided for @mp3ConversionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t convert to MP3 for compatibility (ffmpeg not found) — sharing the original file, which some apps like WhatsApp may reject.'**
+  String get mp3ConversionFailed;
+
   /// Label for the share as ZIP button
   ///
   /// In en, this message translates to:

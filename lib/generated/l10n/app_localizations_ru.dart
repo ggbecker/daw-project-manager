@@ -1899,6 +1899,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get share => 'Поделиться';
 
   @override
+  String get mp3ConversionFailed =>
+      'Не удалось конвертировать в MP3 для совместимости (ffmpeg не найден) — будет отправлен исходный файл, который некоторые приложения, например WhatsApp, могут отклонить.';
+
+  @override
   String get shareZip => 'Поделиться ZIP';
 
   @override
