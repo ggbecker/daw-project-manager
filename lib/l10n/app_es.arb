@@ -1106,6 +1106,8 @@
     "description": "Tooltip for the share as ZIP button"
   },
   "share": "Compartir",
+  "dragToShare": "Arrastrar para Compartir",
+  "dragToShareTooltip": "Arrastra esto a la ventana de otra app (ej: WhatsApp) para compartir el archivo directamente — útil cuando el botón Compartir no abre un menú de compartir.",
   "mp3ConversionFailed": "No se pudo convertir a MP3 por compatibilidad (no se encontró ffmpeg) — se compartirá el archivo original, que algunas apps como WhatsApp pueden rechazar.",
   "@share": {
     "description": "Label for the share button"

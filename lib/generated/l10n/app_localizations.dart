@@ -3218,6 +3218,18 @@ abstract class AppLocalizations {
   /// **'Share'**
   String get share;
 
+  /// No description provided for @dragToShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to Share'**
+  String get dragToShare;
+
+  /// No description provided for @dragToShareTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag this onto another app\'s window (e.g. WhatsApp) to share the file directly — useful when the Share button doesn\'t open a share menu.'**
+  String get dragToShareTooltip;
+
   /// No description provided for @mp3ConversionFailed.
   ///
   /// In en, this message translates to:

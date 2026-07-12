@@ -1857,6 +1857,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get share => '共有';
 
   @override
+  String get dragToShare => 'ドラッグして共有';
+
+  @override
+  String get dragToShareTooltip =>
+      'これを他のアプリ（WhatsAppなど）のウィンドウにドラッグすると、ファイルを直接共有できます。共有ボタンで共有メニューが開かない場合に便利です。';
+
+  @override
   String get mp3ConversionFailed =>
       '互換性のためのMP3への変換に失敗しました（ffmpegが見つかりません）。元のファイルを共有しますが、WhatsAppなど一部のアプリでは拒否される場合があります。';
 

@@ -1897,6 +1897,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get share => 'Compartilhar';
 
   @override
+  String get dragToShare => 'Arraste para Compartilhar';
+
+  @override
+  String get dragToShareTooltip =>
+      'Arraste isso para a janela de outro app (ex: WhatsApp) pra compartilhar o arquivo direto — útil quando o botão Compartilhar não abre um menu de compartilhamento.';
+
+  @override
   String get mp3ConversionFailed =>
       'Não foi possível converter para MP3 por compatibilidade (ffmpeg não encontrado) — compartilhando o arquivo original, que alguns apps como o WhatsApp podem rejeitar.';
 

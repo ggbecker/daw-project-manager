@@ -42,6 +42,7 @@ import 'statistics_page.dart';
 import 'queue_page.dart';
 import 'notification_settings_page.dart';
 import 'widgets/desktop_title_bar.dart';
+import 'widgets/drag_to_share_button.dart';
 import 'widgets/language_switcher.dart';
 import 'widgets/theme_switcher.dart';
 import 'widgets/mobile_mini_player.dart';
@@ -6112,6 +6113,11 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
                       icon: const Icon(Icons.archive),
                       tooltip: AppLocalizations.of(context)!.shareAsZip,
                       onPressed: _sharePreviewSongAsZip,
+                    )
+                  else
+                    Padding(
+                      padding: const EdgeInsets.only(left: 4),
+                      child: DragToShareButton(sourcePath: _effectivePreviewPath!),
                     ),
                 ],
                 IconButton(

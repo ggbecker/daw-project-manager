@@ -1835,6 +1835,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get share => '分享';
 
   @override
+  String get dragToShare => '拖动以分享';
+
+  @override
+  String get dragToShareTooltip =>
+      '把它拖到另一个应用的窗口（例如 WhatsApp）即可直接分享文件——当“分享”按钮无法打开分享菜单时很有用。';
+
+  @override
   String get mp3ConversionFailed =>
       '由于兼容性问题，转换为 MP3 失败（未找到 ffmpeg）——将分享原始文件，但某些应用（如 WhatsApp）可能会拒绝该文件。';
 

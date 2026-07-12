@@ -28,6 +28,7 @@ import '../generated/l10n/app_localizations.dart';
 import '../services/audio_analysis_service.dart';
 import '../services/mixdown_detector_service.dart';
 import 'widgets/desktop_title_bar.dart';
+import 'widgets/drag_to_share_button.dart';
 import 'widgets/todo_list_widget.dart';
 import 'widgets/waveform_widget.dart';
 import 'project_statistics_page.dart';
@@ -2731,6 +2732,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                               icon: const Icon(Icons.share),
                               label: Text(AppLocalizations.of(context)!.share),
                             ),
+                            DragToShareButton(sourcePath: _effectivePreviewPath!),
                           ],
                         ],
                       ),

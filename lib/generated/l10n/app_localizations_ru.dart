@@ -1899,6 +1899,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get share => 'Поделиться';
 
   @override
+  String get dragToShare => 'Перетащить, чтобы поделиться';
+
+  @override
+  String get dragToShareTooltip =>
+      'Перетащите это в окно другого приложения (например, WhatsApp), чтобы поделиться файлом напрямую — полезно, если кнопка \"Поделиться\" не открывает меню отправки.';
+
+  @override
   String get mp3ConversionFailed =>
       'Не удалось конвертировать в MP3 для совместимости (ffmpeg не найден) — будет отправлен исходный файл, который некоторые приложения, например WhatsApp, могут отклонить.';
 
