@@ -4654,7 +4654,10 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                 builder: (context, ref, _) {
                   final playerRequest = ref.watch(desktopPlayerProvider);
                   final isPlaying = ref.watch(desktopIsPlayingProvider);
-                  final isActive = isPlaying && playerRequest?.project.id == project.id;
+                  final isCurrent = playerRequest?.project.id == project.id;
+                  final isActive = isPlaying && isCurrent;
+                  final hasPreview = project.previewSongPath?.isNotEmpty == true ||
+                      project.previewSongAutoPath != null;
                   final iconColor = project.previewSongPath?.isNotEmpty == true
                       ? Colors.green
                       : project.previewSongAutoPath != null
@@ -4665,17 +4668,25 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                     glowColor: iconColor,
                     child: IconButton(
                       icon: Icon(
-                        project.previewSongPath?.isNotEmpty == true || project.previewSongAutoPath != null
-                            ? Icons.play_circle
-                            : Icons.play_circle_outline,
+                        isCurrent
+                            ? (isPlaying ? Icons.pause_circle : Icons.play_circle)
+                            : (hasPreview ? Icons.play_circle : Icons.play_circle_outline),
                       ),
                       iconSize: 24,
                       padding: const EdgeInsets.all(4),
                       constraints: const BoxConstraints(),
-                      tooltip: project.previewSongAutoPath != null && project.previewSongPath?.isNotEmpty != true
-                          ? '${AppLocalizations.of(context)!.playPreview} (P)\n⚡ ${AppLocalizations.of(context)!.autoDetected}: ${path.basename(project.previewSongAutoPath!)}'
-                          : '${AppLocalizations.of(context)!.playPreview} (P)',
-                      onPressed: () => _playPreviewSong(project),
+                      tooltip: isCurrent
+                          ? (isPlaying ? AppLocalizations.of(context)!.pause : AppLocalizations.of(context)!.playPreview)
+                          : project.previewSongAutoPath != null && project.previewSongPath?.isNotEmpty != true
+                              ? '${AppLocalizations.of(context)!.playPreview} (P)\n⚡ ${AppLocalizations.of(context)!.autoDetected}: ${path.basename(project.previewSongAutoPath!)}'
+                              : '${AppLocalizations.of(context)!.playPreview} (P)',
+                      onPressed: () {
+                        if (isCurrent) {
+                          ref.read(desktopPlayerToggleRequestProvider.notifier).bump();
+                        } else {
+                          _playPreviewSong(project);
+                        }
+                      },
                       color: iconColor,
                     ),
                   );
@@ -6400,6 +6411,11 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
   Widget build(BuildContext context) {
     ref.listen(desktopPlayerProvider, (prev, next) {
       if (next == null) _player.stop();
+    });
+    // External toggle request (e.g. clicking the play button on this same
+    // project's row again while it's already loaded here).
+    ref.listen(desktopPlayerToggleRequestProvider, (prev, next) {
+      if (prev != null && prev != next) _togglePlayPause();
     });
     final queueNav = ref.watch(queueNavigationProvider);
     final isQueued = widget.request.isQueuedPlayback;

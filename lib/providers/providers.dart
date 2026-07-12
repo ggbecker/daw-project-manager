@@ -1606,6 +1606,19 @@ class DesktopIsPlayingNotifier extends Notifier<bool> {
 final desktopIsPlayingProvider =
     NotifierProvider<DesktopIsPlayingNotifier, bool>(DesktopIsPlayingNotifier.new);
 
+/// Bumped to ask whoever owns the desktop player's AudioPlayer (currently
+/// _DesktopPlayerBarState) to toggle play/pause on the current track, from
+/// UI that doesn't have direct access to that widget's state — e.g. the
+/// play button on a project row when that row's track is already loaded.
+class DesktopPlayerToggleNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+  void bump() => state++;
+}
+
+final desktopPlayerToggleRequestProvider =
+    NotifierProvider<DesktopPlayerToggleNotifier, int>(DesktopPlayerToggleNotifier.new);
+
 /// Incremented each time the desktop player finishes a track naturally.
 /// Music player listens to this to trigger queue auto-advance.
 class DesktopPlayerCompletedNotifier extends Notifier<int> {
