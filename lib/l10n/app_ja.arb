@@ -1106,6 +1106,11 @@
     "description": "Tooltip for the share as ZIP button"
   },
   "share": "共有",
+  "backupInProgressTitle": "バックアップ中",
+  "backupInProgressMessage": "現在Googleドライブへバックアップをアップロード中です。今終了するとバックアップが不完全になる可能性があります。完了を待ちますか、それでも終了しますか？",
+  "waitForBackup": "待つ",
+  "quitAnyway": "それでも終了",
+  "finishingBackup": "バックアップを完了しています…",
   "dragToShare": "ドラッグして共有",
   "dragToShareTooltip": "これを他のアプリ（WhatsAppなど）のウィンドウにドラッグすると、ファイルを直接共有できます。共有ボタンで共有メニューが開かない場合に便利です。",
   "mp3ConversionFailed": "互換性のためのMP3への変換に失敗しました（ffmpegが見つかりません）。元のファイルを共有しますが、WhatsAppなど一部のアプリでは拒否される場合があります。",

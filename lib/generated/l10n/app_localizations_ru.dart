@@ -1899,6 +1899,22 @@ class AppLocalizationsRu extends AppLocalizations {
   String get share => 'Поделиться';
 
   @override
+  String get backupInProgressTitle => 'Идёт резервное копирование';
+
+  @override
+  String get backupInProgressMessage =>
+      'Сейчас идёт загрузка резервной копии в Google Drive. Если выйти сейчас, она может остаться незавершённой — подождать, пока закончится, или выйти всё равно?';
+
+  @override
+  String get waitForBackup => 'Подождать';
+
+  @override
+  String get quitAnyway => 'Выйти всё равно';
+
+  @override
+  String get finishingBackup => 'Завершение резервного копирования…';
+
+  @override
   String get dragToShare => 'Перетащить, чтобы поделиться';
 
   @override

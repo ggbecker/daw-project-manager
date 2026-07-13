@@ -1897,6 +1897,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get share => 'Share';
 
   @override
+  String get backupInProgressTitle => 'Backup in Progress';
+
+  @override
+  String get backupInProgressMessage =>
+      'A backup is currently uploading to Google Drive. Quitting now may leave it incomplete — wait for it to finish, or quit anyway?';
+
+  @override
+  String get waitForBackup => 'Wait';
+
+  @override
+  String get quitAnyway => 'Quit Anyway';
+
+  @override
+  String get finishingBackup => 'Finishing backup…';
+
+  @override
   String get dragToShare => 'Drag to Share';
 
   @override

@@ -3218,6 +3218,36 @@ abstract class AppLocalizations {
   /// **'Share'**
   String get share;
 
+  /// No description provided for @backupInProgressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup in Progress'**
+  String get backupInProgressTitle;
+
+  /// No description provided for @backupInProgressMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'A backup is currently uploading to Google Drive. Quitting now may leave it incomplete — wait for it to finish, or quit anyway?'**
+  String get backupInProgressMessage;
+
+  /// No description provided for @waitForBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait'**
+  String get waitForBackup;
+
+  /// No description provided for @quitAnyway.
+  ///
+  /// In en, this message translates to:
+  /// **'Quit Anyway'**
+  String get quitAnyway;
+
+  /// No description provided for @finishingBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Finishing backup…'**
+  String get finishingBackup;
+
   /// No description provided for @dragToShare.
   ///
   /// In en, this message translates to:

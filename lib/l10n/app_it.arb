@@ -1106,6 +1106,11 @@
     "description": "Tooltip for the share as ZIP button"
   },
   "share": "Condividi",
+  "backupInProgressTitle": "Backup in Corso",
+  "backupInProgressMessage": "Un backup è in fase di caricamento su Google Drive. Uscire ora potrebbe lasciarlo incompleto — aspettare che finisca, oppure uscire comunque?",
+  "waitForBackup": "Aspetta",
+  "quitAnyway": "Esci Comunque",
+  "finishingBackup": "Completamento backup…",
   "dragToShare": "Trascina per Condividere",
   "dragToShareTooltip": "Trascina questo sulla finestra di un'altra app (es: WhatsApp) per condividere il file direttamente — utile quando il pulsante Condividi non apre un menu di condivisione.",
   "mp3ConversionFailed": "Impossibile convertire in MP3 per compatibilità (ffmpeg non trovato) — verrà condiviso il file originale, che alcune app come WhatsApp potrebbero rifiutare.",

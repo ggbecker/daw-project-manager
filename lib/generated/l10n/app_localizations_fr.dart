@@ -1919,6 +1919,22 @@ class AppLocalizationsFr extends AppLocalizations {
   String get share => 'Partager';
 
   @override
+  String get backupInProgressTitle => 'Sauvegarde en Cours';
+
+  @override
+  String get backupInProgressMessage =>
+      'Une sauvegarde est en cours d\'envoi vers Google Drive. Quitter maintenant risque de la laisser incomplète — attendre qu\'elle se termine, ou quitter quand même ?';
+
+  @override
+  String get waitForBackup => 'Attendre';
+
+  @override
+  String get quitAnyway => 'Quitter Quand Même';
+
+  @override
+  String get finishingBackup => 'Finalisation de la sauvegarde…';
+
+  @override
   String get dragToShare => 'Glisser pour Partager';
 
   @override
