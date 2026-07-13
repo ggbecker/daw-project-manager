@@ -45,9 +45,13 @@ ServerSocket? _singleInstanceSocket;
 
 /// Fully terminates the app on desktop. Destroys the tray icon first —
 /// tray_manager keeps a native hook/hidden window alive on Windows for as
-/// long as the icon exists, and leaving it around when the Flutter window
-/// closes was making the whole process linger for several seconds until
-/// Windows' own "unresponsive app" timeout force-killed it.
+/// long as the icon exists. Then force-exits the process: destroying the
+/// native window alone doesn't end the Dart isolate, and this app keeps
+/// several things running in the background for as long as it lives (the
+/// 5-minute auto-backup Timer.periodic, notification services, Drive sync
+/// listeners) — any one of those can keep the event loop alive after the
+/// window is gone, so without an explicit exit the process lingers until
+/// the OS's own "unresponsive app" timeout kills it.
 Future<void> quitApp() async {
   if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
     try {
@@ -55,6 +59,7 @@ Future<void> quitApp() async {
     } catch (_) {}
   }
   await windowManager.destroy();
+  exit(0);
 }
 
 Future<void> _showAlreadyRunningMessage() async {
