@@ -2702,6 +2702,18 @@ abstract class AppLocalizations {
   /// **'Support'**
   String get support;
 
+  /// No description provided for @shareDiagnosticLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Diagnostic Log'**
+  String get shareDiagnosticLog;
+
+  /// No description provided for @shareDiagnosticLogEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No diagnostic log yet'**
+  String get shareDiagnosticLogEmpty;
+
   /// No description provided for @supportTheProject.
   ///
   /// In en, this message translates to:
@@ -3206,6 +3218,54 @@ abstract class AppLocalizations {
   /// **'Share'**
   String get share;
 
+  /// No description provided for @backupInProgressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup in Progress'**
+  String get backupInProgressTitle;
+
+  /// No description provided for @backupInProgressMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'A backup is currently uploading to Google Drive. Quitting now may leave it incomplete — wait for it to finish, or quit anyway?'**
+  String get backupInProgressMessage;
+
+  /// No description provided for @waitForBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait'**
+  String get waitForBackup;
+
+  /// No description provided for @quitAnyway.
+  ///
+  /// In en, this message translates to:
+  /// **'Quit Anyway'**
+  String get quitAnyway;
+
+  /// No description provided for @finishingBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Finishing backup…'**
+  String get finishingBackup;
+
+  /// No description provided for @dragToShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to Share'**
+  String get dragToShare;
+
+  /// No description provided for @dragToShareTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag this onto another app\'s window (e.g. WhatsApp) to share the file directly — useful when the Share button doesn\'t open a share menu.'**
+  String get dragToShareTooltip;
+
+  /// No description provided for @mp3ConversionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t convert to MP3 for compatibility (ffmpeg not found) — sharing the original file, which some apps like WhatsApp may reject.'**
+  String get mp3ConversionFailed;
+
   /// Label for the share as ZIP button
   ///
   /// In en, this message translates to:
@@ -3487,6 +3547,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Quit DAW Project Manager'**
   String get menuQuit;
+
+  /// No description provided for @trayShowWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Show DAW Project Manager'**
+  String get trayShowWindow;
+
+  /// No description provided for @trayLastBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Last backup: {when}'**
+  String trayLastBackup(String when);
+
+  /// No description provided for @trayNeverBackedUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Never backed up'**
+  String get trayNeverBackedUp;
+
+  /// No description provided for @trayBackupNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Back Up Now'**
+  String get trayBackupNow;
+
+  /// No description provided for @trayPauseSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause Session'**
+  String get trayPauseSession;
+
+  /// No description provided for @trayResumeSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume Session'**
+  String get trayResumeSession;
+
+  /// No description provided for @closeToTray.
+  ///
+  /// In en, this message translates to:
+  /// **'Close to tray'**
+  String get closeToTray;
+
+  /// No description provided for @closeToTrayDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep running in the background (tray icon) when you close the window, so auto-backup and notifications keep working'**
+  String get closeToTrayDescription;
 
   /// macOS menu bar Window menu label
   ///

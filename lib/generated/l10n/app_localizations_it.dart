@@ -1613,6 +1613,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get support => 'Supporta';
 
   @override
+  String get shareDiagnosticLog => 'Condividi registro diagnostico';
+
+  @override
+  String get shareDiagnosticLogEmpty => 'Nessun registro diagnostico ancora';
+
+  @override
   String get supportTheProject => 'Sostieni il progetto';
 
   @override
@@ -1898,6 +1904,33 @@ class AppLocalizationsIt extends AppLocalizations {
   String get share => 'Condividi';
 
   @override
+  String get backupInProgressTitle => 'Backup in Corso';
+
+  @override
+  String get backupInProgressMessage =>
+      'Un backup è in fase di caricamento su Google Drive. Uscire ora potrebbe lasciarlo incompleto — aspettare che finisca, oppure uscire comunque?';
+
+  @override
+  String get waitForBackup => 'Aspetta';
+
+  @override
+  String get quitAnyway => 'Esci Comunque';
+
+  @override
+  String get finishingBackup => 'Completamento backup…';
+
+  @override
+  String get dragToShare => 'Trascina per Condividere';
+
+  @override
+  String get dragToShareTooltip =>
+      'Trascina questo sulla finestra di un\'altra app (es: WhatsApp) per condividere il file direttamente — utile quando il pulsante Condividi non apre un menu di condivisione.';
+
+  @override
+  String get mp3ConversionFailed =>
+      'Impossibile convertire in MP3 per compatibilità (ffmpeg non trovato) — verrà condiviso il file originale, che alcune app come WhatsApp potrebbero rifiutare.';
+
+  @override
   String get shareZip => 'Condividi ZIP';
 
   @override
@@ -2071,6 +2104,33 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get menuQuit => 'Esci da DAW Project Manager';
+
+  @override
+  String get trayShowWindow => 'Mostra DAW Project Manager';
+
+  @override
+  String trayLastBackup(String when) {
+    return 'Ultimo backup: $when';
+  }
+
+  @override
+  String get trayNeverBackedUp => 'Nessun backup eseguito';
+
+  @override
+  String get trayBackupNow => 'Esegui Backup Ora';
+
+  @override
+  String get trayPauseSession => 'Metti in Pausa la Sessione';
+
+  @override
+  String get trayResumeSession => 'Riprendi Sessione';
+
+  @override
+  String get closeToTray => 'Chiudi nella barra delle applicazioni';
+
+  @override
+  String get closeToTrayDescription =>
+      'Continua a funzionare in background (icona nella barra) quando chiudi la finestra, così il backup automatico e le notifiche continuano a funzionare';
 
   @override
   String get menuWindow => 'Finestra';

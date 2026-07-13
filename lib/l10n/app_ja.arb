@@ -984,6 +984,8 @@
   "language": "言語",
   "theme": "テーマ",
   "support": "サポート",
+  "shareDiagnosticLog": "診断ログを共有",
+  "shareDiagnosticLogEmpty": "診断ログはまだありません",
   "supportTheProject": "プロジェクトをサポート",
   "couldNotOpenBrowser": "ブラウザを開けませんでした。次のURLにアクセスしてください: {url}",
   "@couldNotOpenBrowser": {
@@ -1104,6 +1106,14 @@
     "description": "Tooltip for the share as ZIP button"
   },
   "share": "共有",
+  "backupInProgressTitle": "バックアップ中",
+  "backupInProgressMessage": "現在Googleドライブへバックアップをアップロード中です。今終了するとバックアップが不完全になる可能性があります。完了を待ちますか、それでも終了しますか？",
+  "waitForBackup": "待つ",
+  "quitAnyway": "それでも終了",
+  "finishingBackup": "バックアップを完了しています…",
+  "dragToShare": "ドラッグして共有",
+  "dragToShareTooltip": "これを他のアプリ（WhatsAppなど）のウィンドウにドラッグすると、ファイルを直接共有できます。共有ボタンで共有メニューが開かない場合に便利です。",
+  "mp3ConversionFailed": "互換性のためのMP3への変換に失敗しました（ffmpegが見つかりません）。元のファイルを共有しますが、WhatsAppなど一部のアプリでは拒否される場合があります。",
   "@share": {
     "description": "Label for the share button"
   },
@@ -1386,6 +1396,21 @@
     "description": "macOS menu item to toggle quit warning"
   },
   "menuQuit": "DAW Project Manager を終了",
+  "trayShowWindow": "DAW Project Manager を表示",
+  "trayLastBackup": "最終バックアップ: {when}",
+  "@trayLastBackup": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "trayNeverBackedUp": "バックアップはまだありません",
+  "trayBackupNow": "今すぐバックアップ",
+  "trayPauseSession": "セッションを一時停止",
+  "trayResumeSession": "セッションを再開",
+  "closeToTray": "トレイに閉じる",
+  "closeToTrayDescription": "ウィンドウを閉じてもバックグラウンドで実行を継続し(トレイアイコン)、自動バックアップと通知が引き続き機能するようにします",
   "@menuQuit": {
     "description": "macOS menu item to quit the app"
   },

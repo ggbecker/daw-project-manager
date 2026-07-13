@@ -1621,6 +1621,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get support => 'Apoyar';
 
   @override
+  String get shareDiagnosticLog => 'Compartir Registro de Diagnóstico';
+
+  @override
+  String get shareDiagnosticLogEmpty => 'Aún no hay registro de diagnóstico';
+
+  @override
   String get supportTheProject => 'Apoya el proyecto';
 
   @override
@@ -1906,6 +1912,33 @@ class AppLocalizationsEs extends AppLocalizations {
   String get share => 'Compartir';
 
   @override
+  String get backupInProgressTitle => 'Copia de Seguridad en Curso';
+
+  @override
+  String get backupInProgressMessage =>
+      'Se está subiendo una copia de seguridad a Google Drive ahora mismo. Salir puede dejarla incompleta — ¿esperar a que termine, o salir de todos modos?';
+
+  @override
+  String get waitForBackup => 'Esperar';
+
+  @override
+  String get quitAnyway => 'Salir de Todos Modos';
+
+  @override
+  String get finishingBackup => 'Finalizando copia de seguridad…';
+
+  @override
+  String get dragToShare => 'Arrastrar para Compartir';
+
+  @override
+  String get dragToShareTooltip =>
+      'Arrastra esto a la ventana de otra app (ej: WhatsApp) para compartir el archivo directamente — útil cuando el botón Compartir no abre un menú de compartir.';
+
+  @override
+  String get mp3ConversionFailed =>
+      'No se pudo convertir a MP3 por compatibilidad (no se encontró ffmpeg) — se compartirá el archivo original, que algunas apps como WhatsApp pueden rechazar.';
+
+  @override
   String get shareZip => 'Compartir ZIP';
 
   @override
@@ -2079,6 +2112,33 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get menuQuit => 'Salir de DAW Project Manager';
+
+  @override
+  String get trayShowWindow => 'Mostrar DAW Project Manager';
+
+  @override
+  String trayLastBackup(String when) {
+    return 'Última copia de seguridad: $when';
+  }
+
+  @override
+  String get trayNeverBackedUp => 'Aún no hay copias de seguridad';
+
+  @override
+  String get trayBackupNow => 'Hacer Copia de Seguridad Ahora';
+
+  @override
+  String get trayPauseSession => 'Pausar Sesión';
+
+  @override
+  String get trayResumeSession => 'Reanudar Sesión';
+
+  @override
+  String get closeToTray => 'Cerrar a la bandeja';
+
+  @override
+  String get closeToTrayDescription =>
+      'Seguir ejecutándose en segundo plano (icono en la bandeja) al cerrar la ventana, para que la copia de seguridad automática y las notificaciones sigan funcionando';
 
   @override
   String get menuWindow => 'Ventana';

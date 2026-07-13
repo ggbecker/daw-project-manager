@@ -1622,6 +1622,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get support => 'Soutenir';
 
   @override
+  String get shareDiagnosticLog => 'Partager le journal de diagnostic';
+
+  @override
+  String get shareDiagnosticLogEmpty =>
+      'Aucun journal de diagnostic pour l\'instant';
+
+  @override
   String get supportTheProject => 'Soutenez le projet';
 
   @override
@@ -1912,6 +1919,33 @@ class AppLocalizationsFr extends AppLocalizations {
   String get share => 'Partager';
 
   @override
+  String get backupInProgressTitle => 'Sauvegarde en Cours';
+
+  @override
+  String get backupInProgressMessage =>
+      'Une sauvegarde est en cours d\'envoi vers Google Drive. Quitter maintenant risque de la laisser incomplète — attendre qu\'elle se termine, ou quitter quand même ?';
+
+  @override
+  String get waitForBackup => 'Attendre';
+
+  @override
+  String get quitAnyway => 'Quitter Quand Même';
+
+  @override
+  String get finishingBackup => 'Finalisation de la sauvegarde…';
+
+  @override
+  String get dragToShare => 'Glisser pour Partager';
+
+  @override
+  String get dragToShareTooltip =>
+      'Glissez ceci sur la fenêtre d\'une autre application (ex : WhatsApp) pour partager le fichier directement — utile quand le bouton Partager n\'ouvre pas de menu de partage.';
+
+  @override
+  String get mp3ConversionFailed =>
+      'Impossible de convertir en MP3 pour la compatibilité (ffmpeg introuvable) — partage du fichier original, que certaines applications comme WhatsApp peuvent refuser.';
+
+  @override
   String get shareZip => 'Partager ZIP';
 
   @override
@@ -2085,6 +2119,33 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get menuQuit => 'Quitter DAW Project Manager';
+
+  @override
+  String get trayShowWindow => 'Afficher DAW Project Manager';
+
+  @override
+  String trayLastBackup(String when) {
+    return 'Dernière sauvegarde : $when';
+  }
+
+  @override
+  String get trayNeverBackedUp => 'Aucune sauvegarde effectuée';
+
+  @override
+  String get trayBackupNow => 'Sauvegarder maintenant';
+
+  @override
+  String get trayPauseSession => 'Mettre en pause la session';
+
+  @override
+  String get trayResumeSession => 'Reprendre la session';
+
+  @override
+  String get closeToTray => 'Fermer dans la barre système';
+
+  @override
+  String get closeToTrayDescription =>
+      'Continuer à s\'exécuter en arrière-plan (icône dans la barre système) à la fermeture de la fenêtre, afin que la sauvegarde automatique et les notifications continuent de fonctionner';
 
   @override
   String get menuWindow => 'Fenêtre';

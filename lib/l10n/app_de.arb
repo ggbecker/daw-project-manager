@@ -984,6 +984,8 @@
   "language": "Sprache",
   "theme": "Design",
   "support": "Unterstützen",
+  "shareDiagnosticLog": "Diagnoseprotokoll teilen",
+  "shareDiagnosticLogEmpty": "Noch kein Diagnoseprotokoll vorhanden",
   "supportTheProject": "Unterstütze das Projekt",
   "couldNotOpenBrowser": "Browser konnte nicht geöffnet werden. Bitte besuchen Sie: {url}",
   "@couldNotOpenBrowser": {
@@ -1104,6 +1106,14 @@
     "description": "Tooltip for the share as ZIP button"
   },
   "share": "Teilen",
+  "backupInProgressTitle": "Backup läuft",
+  "backupInProgressMessage": "Gerade wird ein Backup zu Google Drive hochgeladen. Wenn du jetzt beendest, könnte es unvollständig bleiben — warten, bis es fertig ist, oder trotzdem beenden?",
+  "waitForBackup": "Warten",
+  "quitAnyway": "Trotzdem beenden",
+  "finishingBackup": "Backup wird abgeschlossen…",
+  "dragToShare": "Zum Teilen ziehen",
+  "dragToShareTooltip": "Ziehe dies auf das Fenster einer anderen App (z. B. WhatsApp), um die Datei direkt zu teilen — nützlich, wenn der Teilen-Button kein Freigabemenü öffnet.",
+  "mp3ConversionFailed": "Konvertierung zu MP3 für Kompatibilität fehlgeschlagen (ffmpeg nicht gefunden) — die Originaldatei wird geteilt, die manche Apps wie WhatsApp ablehnen könnten.",
   "@share": {
     "description": "Label for the share button"
   },
@@ -1386,6 +1396,21 @@
     "description": "macOS menu item to toggle quit warning"
   },
   "menuQuit": "DAW Project Manager beenden",
+  "trayShowWindow": "DAW Project Manager anzeigen",
+  "trayLastBackup": "Letztes Backup: {when}",
+  "@trayLastBackup": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "trayNeverBackedUp": "Noch kein Backup erstellt",
+  "trayBackupNow": "Jetzt sichern",
+  "trayPauseSession": "Sitzung pausieren",
+  "trayResumeSession": "Sitzung fortsetzen",
+  "closeToTray": "In die Ablage schließen",
+  "closeToTrayDescription": "Beim Schließen des Fensters im Hintergrund weiterlaufen (Symbol in der Ablage), damit automatisches Backup und Benachrichtigungen weiter funktionieren",
   "@menuQuit": {
     "description": "macOS menu item to quit the app"
   },

@@ -984,6 +984,8 @@
   "language": "Langue",
   "theme": "Thème",
   "support": "Soutenir",
+  "shareDiagnosticLog": "Partager le journal de diagnostic",
+  "shareDiagnosticLogEmpty": "Aucun journal de diagnostic pour l'instant",
   "supportTheProject": "Soutenez le projet",
   "couldNotOpenBrowser": "Impossible d'ouvrir le navigateur. Veuillez visiter: {url}",
   "@couldNotOpenBrowser": {
@@ -1104,6 +1106,14 @@
     "description": "Tooltip for the share as ZIP button"
   },
   "share": "Partager",
+  "backupInProgressTitle": "Sauvegarde en Cours",
+  "backupInProgressMessage": "Une sauvegarde est en cours d'envoi vers Google Drive. Quitter maintenant risque de la laisser incomplète — attendre qu'elle se termine, ou quitter quand même ?",
+  "waitForBackup": "Attendre",
+  "quitAnyway": "Quitter Quand Même",
+  "finishingBackup": "Finalisation de la sauvegarde…",
+  "dragToShare": "Glisser pour Partager",
+  "dragToShareTooltip": "Glissez ceci sur la fenêtre d'une autre application (ex : WhatsApp) pour partager le fichier directement — utile quand le bouton Partager n'ouvre pas de menu de partage.",
+  "mp3ConversionFailed": "Impossible de convertir en MP3 pour la compatibilité (ffmpeg introuvable) — partage du fichier original, que certaines applications comme WhatsApp peuvent refuser.",
   "@share": {
     "description": "Label for the share button"
   },
@@ -1386,6 +1396,21 @@
     "description": "macOS menu item to toggle quit warning"
   },
   "menuQuit": "Quitter DAW Project Manager",
+  "trayShowWindow": "Afficher DAW Project Manager",
+  "trayLastBackup": "Dernière sauvegarde : {when}",
+  "@trayLastBackup": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "trayNeverBackedUp": "Aucune sauvegarde effectuée",
+  "trayBackupNow": "Sauvegarder maintenant",
+  "trayPauseSession": "Mettre en pause la session",
+  "trayResumeSession": "Reprendre la session",
+  "closeToTray": "Fermer dans la barre système",
+  "closeToTrayDescription": "Continuer à s'exécuter en arrière-plan (icône dans la barre système) à la fermeture de la fenêtre, afin que la sauvegarde automatique et les notifications continuent de fonctionner",
   "@menuQuit": {
     "description": "macOS menu item to quit the app"
   },

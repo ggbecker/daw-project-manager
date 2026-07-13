@@ -132,4 +132,29 @@ void main() {
       expect(_folder(dir.path).isEmptyOrOnlyMarker, isTrue);
     });
   });
+
+  group('PendingFolder.createEmptyFolder', () {
+    test('creates the directory', () async {
+      final base = await Directory.systemTemp.createTemp('pf_create_');
+      addTearDown(() => base.delete(recursive: true));
+      final target = p.join(base.path, 'New Project');
+
+      await PendingFolder.createEmptyFolder(target);
+
+      expect(Directory(target).existsSync(), isTrue);
+    });
+
+    test('leaves no marker file behind, so DAWs see a truly empty folder', () async {
+      // Regression: a DPM-written .dawpm marker made Cubase's "Back Up
+      // Project" refuse the folder as non-empty. The folder must contain
+      // zero entries after creation.
+      final base = await Directory.systemTemp.createTemp('pf_create_nomarker_');
+      addTearDown(() => base.delete(recursive: true));
+      final target = p.join(base.path, 'New Project');
+
+      await PendingFolder.createEmptyFolder(target);
+
+      expect(Directory(target).listSync(), isEmpty);
+    });
+  });
 }

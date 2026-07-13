@@ -1612,6 +1612,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get support => 'Поддержать';
 
   @override
+  String get shareDiagnosticLog => 'Поделиться журналом диагностики';
+
+  @override
+  String get shareDiagnosticLogEmpty => 'Журнал диагностики пока отсутствует';
+
+  @override
   String get supportTheProject => 'Поддержать проект';
 
   @override
@@ -1893,6 +1899,33 @@ class AppLocalizationsRu extends AppLocalizations {
   String get share => 'Поделиться';
 
   @override
+  String get backupInProgressTitle => 'Идёт резервное копирование';
+
+  @override
+  String get backupInProgressMessage =>
+      'Сейчас идёт загрузка резервной копии в Google Drive. Если выйти сейчас, она может остаться незавершённой — подождать, пока закончится, или выйти всё равно?';
+
+  @override
+  String get waitForBackup => 'Подождать';
+
+  @override
+  String get quitAnyway => 'Выйти всё равно';
+
+  @override
+  String get finishingBackup => 'Завершение резервного копирования…';
+
+  @override
+  String get dragToShare => 'Перетащить, чтобы поделиться';
+
+  @override
+  String get dragToShareTooltip =>
+      'Перетащите это в окно другого приложения (например, WhatsApp), чтобы поделиться файлом напрямую — полезно, если кнопка \"Поделиться\" не открывает меню отправки.';
+
+  @override
+  String get mp3ConversionFailed =>
+      'Не удалось конвертировать в MP3 для совместимости (ffmpeg не найден) — будет отправлен исходный файл, который некоторые приложения, например WhatsApp, могут отклонить.';
+
+  @override
   String get shareZip => 'Поделиться ZIP';
 
   @override
@@ -2066,6 +2099,33 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get menuQuit => 'Выйти из DAW Project Manager';
+
+  @override
+  String get trayShowWindow => 'Показать DAW Project Manager';
+
+  @override
+  String trayLastBackup(String when) {
+    return 'Последнее резервное копирование: $when';
+  }
+
+  @override
+  String get trayNeverBackedUp => 'Резервное копирование ещё не выполнялось';
+
+  @override
+  String get trayBackupNow => 'Создать резервную копию';
+
+  @override
+  String get trayPauseSession => 'Приостановить сеанс';
+
+  @override
+  String get trayResumeSession => 'Возобновить сеанс';
+
+  @override
+  String get closeToTray => 'Закрывать в трей';
+
+  @override
+  String get closeToTrayDescription =>
+      'Продолжать работать в фоне (значок в трее) при закрытии окна, чтобы автоматическое резервное копирование и уведомления продолжали работать';
 
   @override
   String get menuWindow => 'Окно';

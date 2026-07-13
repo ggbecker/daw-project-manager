@@ -1729,6 +1729,8 @@
   "language": "Language",
   "theme": "Theme",
   "support": "Support",
+  "shareDiagnosticLog": "Share Diagnostic Log",
+  "shareDiagnosticLogEmpty": "No diagnostic log yet",
   "supportTheProject": "Support the project",
   "couldNotOpenBrowser": "Could not open browser. Please visit: {url}",
   "@couldNotOpenBrowser": {
@@ -2091,6 +2093,14 @@
     "description": "Tooltip for the share as ZIP button"
   },
   "share": "Share",
+  "backupInProgressTitle": "Backup in Progress",
+  "backupInProgressMessage": "A backup is currently uploading to Google Drive. Quitting now may leave it incomplete — wait for it to finish, or quit anyway?",
+  "waitForBackup": "Wait",
+  "quitAnyway": "Quit Anyway",
+  "finishingBackup": "Finishing backup…",
+  "dragToShare": "Drag to Share",
+  "dragToShareTooltip": "Drag this onto another app's window (e.g. WhatsApp) to share the file directly — useful when the Share button doesn't open a share menu.",
+  "mp3ConversionFailed": "Couldn't convert to MP3 for compatibility (ffmpeg not found) — sharing the original file, which some apps like WhatsApp may reject.",
   "@share": {
     "description": "Label for the share button"
   },
@@ -2407,6 +2417,21 @@
     "description": "macOS menu item to toggle quit warning"
   },
   "menuQuit": "Quit DAW Project Manager",
+  "trayShowWindow": "Show DAW Project Manager",
+  "trayLastBackup": "Last backup: {when}",
+  "@trayLastBackup": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "trayNeverBackedUp": "Never backed up",
+  "trayBackupNow": "Back Up Now",
+  "trayPauseSession": "Pause Session",
+  "trayResumeSession": "Resume Session",
+  "closeToTray": "Close to tray",
+  "closeToTrayDescription": "Keep running in the background (tray icon) when you close the window, so auto-backup and notifications keep working",
   "@menuQuit": {
     "description": "macOS menu item to quit the app"
   },

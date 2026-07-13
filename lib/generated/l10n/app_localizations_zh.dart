@@ -1560,6 +1560,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get support => '支持';
 
   @override
+  String get shareDiagnosticLog => '分享诊断日志';
+
+  @override
+  String get shareDiagnosticLogEmpty => '暂无诊断日志';
+
+  @override
   String get supportTheProject => '支持项目';
 
   @override
@@ -1829,6 +1835,33 @@ class AppLocalizationsZh extends AppLocalizations {
   String get share => '分享';
 
   @override
+  String get backupInProgressTitle => '备份进行中';
+
+  @override
+  String get backupInProgressMessage =>
+      '目前正在向 Google Drive 上传备份。现在退出可能导致备份不完整——要等待完成，还是仍然退出？';
+
+  @override
+  String get waitForBackup => '等待';
+
+  @override
+  String get quitAnyway => '仍然退出';
+
+  @override
+  String get finishingBackup => '正在完成备份…';
+
+  @override
+  String get dragToShare => '拖动以分享';
+
+  @override
+  String get dragToShareTooltip =>
+      '把它拖到另一个应用的窗口（例如 WhatsApp）即可直接分享文件——当“分享”按钮无法打开分享菜单时很有用。';
+
+  @override
+  String get mp3ConversionFailed =>
+      '由于兼容性问题，转换为 MP3 失败（未找到 ffmpeg）——将分享原始文件，但某些应用（如 WhatsApp）可能会拒绝该文件。';
+
+  @override
   String get shareZip => '分享ZIP';
 
   @override
@@ -2002,6 +2035,32 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get menuQuit => '退出 DAW Project Manager';
+
+  @override
+  String get trayShowWindow => '显示 DAW Project Manager';
+
+  @override
+  String trayLastBackup(String when) {
+    return '上次备份：$when';
+  }
+
+  @override
+  String get trayNeverBackedUp => '尚未备份';
+
+  @override
+  String get trayBackupNow => '立即备份';
+
+  @override
+  String get trayPauseSession => '暂停会话';
+
+  @override
+  String get trayResumeSession => '恢复会话';
+
+  @override
+  String get closeToTray => '关闭到系统托盘';
+
+  @override
+  String get closeToTrayDescription => '关闭窗口后继续在后台运行（系统托盘图标），以便自动备份和通知继续工作';
 
   @override
   String get menuWindow => '窗口';

@@ -20,6 +20,8 @@ import '../utils/mobile_utils.dart';
 import '../generated/l10n/app_localizations.dart';
 import 'profile_view_page.dart';
 import '../services/backup_service.dart';
+import '../services/crash_logger.dart';
+import 'package:share_plus/share_plus.dart';
 import 'google_drive_sync_page.dart';
 import 'widgets/theme_switcher.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -540,6 +542,19 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
         );
       }
     }
+  }
+
+  Future<void> _shareDiagnosticLog() async {
+    final files = await CrashLogger.existingLogFiles();
+    if (files.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.shareDiagnosticLogEmpty)),
+        );
+      }
+      return;
+    }
+    await Share.shareXFiles(files.map((f) => XFile(f.path)).toList());
   }
 
   Future<void> _showImportDialog() async {
@@ -1256,6 +1271,26 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
                                       if (kDebugMode) print('Error launching support URL: $e');
                                     }
                                   },
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            // Share diagnostic log — helps debug crashes that
+                            // only happen after the app has been backgrounded
+                            Row(
+                              children: [
+                                const Icon(Icons.bug_report_outlined, size: 24),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    AppLocalizations.of(context)!.shareDiagnosticLog,
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                ),
+                                TextButton.icon(
+                                  icon: const Icon(Icons.ios_share, size: 18),
+                                  label: Text(AppLocalizations.of(context)!.shareDiagnosticLog),
+                                  onPressed: _shareDiagnosticLog,
                                 ),
                               ],
                             ),

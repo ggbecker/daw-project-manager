@@ -28,6 +28,7 @@ import '../generated/l10n/app_localizations.dart';
 import '../services/audio_analysis_service.dart';
 import '../services/mixdown_detector_service.dart';
 import 'widgets/desktop_title_bar.dart';
+import 'widgets/drag_to_share_button.dart';
 import 'widgets/todo_list_widget.dart';
 import 'widgets/waveform_widget.dart';
 import 'project_statistics_page.dart';
@@ -870,12 +871,12 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                     print('Current previewSongPath: ${updatedProject.previewSongPath}');
                                   }
                                   
-                                  // Create updated project with previewSongPath set to null
-                                  // Use clearPreviewSongPath flag to explicitly set it to null
-                                  final updated = updatedProject.copyWith(
-                                    clearPreviewSongPath: true,
-                                    updatedAt: DateTime.now(),
-                                  );
+                                  // Clear only the path type that's currently active.
+                                  // Removing a manual preview falls back to auto; removing
+                                  // an auto preview clears it without immediately re-detecting.
+                                  final updated = updatedProject.previewSongPath?.isNotEmpty == true
+                                      ? updatedProject.copyWith(clearPreviewSongPath: true, updatedAt: DateTime.now())
+                                      : updatedProject.copyWith(clearPreviewSongAutoPath: true, updatedAt: DateTime.now());
                                   
                                   if (kDebugMode) {
                                     print('Updated project previewSongPath: ${updated.previewSongPath}');
@@ -1452,8 +1453,10 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
   @override
   void didUpdateWidget(_PreviewSongPlayer oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.project.previewSongPath != widget.project.previewSongPath ||
-        oldWidget.project.id != widget.project.id) {
+    final idChanged = oldWidget.project.id != widget.project.id;
+    final pathChanged = oldWidget.project.previewSongPath != widget.project.previewSongPath;
+    final autoPathChanged = oldWidget.project.previewSongAutoPath != widget.project.previewSongAutoPath;
+    if (idChanged || pathChanged || autoPathChanged) {
       // If the stream delivered the path we replaced to, clear the local override.
       if (_replacedPreviewPath != null &&
           (widget.project.previewSongPath == _replacedPreviewPath ||
@@ -1473,7 +1476,14 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
         _peaks = null;
         _autoDetectedPath = null;
       });
-      _detectMixdown();
+      // Don't immediately re-detect when the auto path was just cleared by the
+      // user removing it — that would put it straight back. Re-detection still
+      // happens on project change (idChanged) or on the next explicit trigger
+      // (play button / refresh / rescan).
+      final autoJustRemoved = autoPathChanged && widget.project.previewSongAutoPath == null && !idChanged;
+      if (!autoJustRemoved) {
+        _detectMixdown();
+      }
       _startBackgroundPrep();
     }
   }
@@ -1841,9 +1851,12 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
   }
 
   Future<void> _sharePreviewSong() async {
-    if (widget.project.previewSongPath == null || widget.project.previewSongPath!.isEmpty) {
+    // Covers a manually-selected preview song AND an auto-detected mixdown —
+    // both are equally shareable, only the source of the path differs.
+    final effectivePath = _effectivePreviewPath;
+    if (effectivePath == null || effectivePath.isEmpty) {
       if (kDebugMode) {
-        debugPrint('[preview_share] No previewSongPath set for project=${widget.project.id}');
+        debugPrint('[preview_share] No effective preview path for project=${widget.project.id}');
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1854,9 +1867,9 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
     }
 
     // Skip if it's a Drive file reference (not downloaded)
-    if (widget.project.previewSongPath!.startsWith('drive://')) {
+    if (effectivePath.startsWith('drive://')) {
       if (kDebugMode) {
-        debugPrint('[preview_share] Path is Drive reference (not downloaded): ${widget.project.previewSongPath}');
+        debugPrint('[preview_share] Path is Drive reference (not downloaded): $effectivePath');
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1867,7 +1880,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
     }
 
     try {
-      final sourceFile = File(widget.project.previewSongPath!);
+      final sourceFile = File(effectivePath);
       if (kDebugMode) {
         debugPrint('[preview_share] sourceFile=${sourceFile.path}');
       }
@@ -1892,31 +1905,53 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
 
       // Get the original filename — prefer stored name, fall back to project name
       String originalFileName = widget.project.previewShareFileName ??
-          p.basename(widget.project.previewSongPath!);
+          p.basename(effectivePath);
 
       // Ensure the filename has an extension
       if (!originalFileName.contains('.')) {
-        final ext = p.extension(widget.project.previewSongPath!);
+        final ext = p.extension(effectivePath);
         originalFileName = '$originalFileName$ext';
+      }
+
+      // WhatsApp (confirmed via manual testing, including plain OS
+      // drag-and-drop of the raw file) rejects WAV/AIFF/FLAC as a direct
+      // audio attachment with no error shown to us — convert to a
+      // compatible format first so the shared file is actually accepted.
+      var fileToShare = sourceFile;
+      var shareFileName = originalFileName;
+      if (AudioAnalysisService.needsConversionForSharing(effectivePath)) {
+        final tempDir = await getTemporaryDirectory();
+        if (kDebugMode) {
+          debugPrint('[preview_share] converting for messaging-app compatibility...');
+        }
+        final converted = await AudioAnalysisService.convertForSharing(effectivePath, tempDir.path);
+        if (converted != null) {
+          fileToShare = converted;
+          shareFileName = p.basename(converted.path);
+        } else if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context)!.mp3ConversionFailed)),
+          );
+        }
       }
 
       // On mobile, copy to cache directory with original name for sharing
       if (MobileUtils.isMobile()) {
         final cacheDir = await getTemporaryDirectory();
-        final shareFile = File(p.join(cacheDir.path, originalFileName));
+        final shareFile = File(p.join(cacheDir.path, shareFileName));
         if (kDebugMode) {
           debugPrint('[preview_share] cacheDir=${cacheDir.path} shareFile=${shareFile.path}');
         }
 
         // Copy file to cache with original name
-        await sourceFile.copy(shareFile.path);
+        await fileToShare.copy(shareFile.path);
         if (kDebugMode) {
           debugPrint('[preview_share] copied to cache OK, invoking share sheet...');
         }
 
         // Share the file (default behavior)
         final result = await Share.shareXFiles(
-          [XFile(shareFile.path, name: originalFileName)],
+          [XFile(shareFile.path, name: shareFileName)],
           text: 'Preview song: ${widget.project.displayName}',
         );
         if (kDebugMode) {
@@ -1929,7 +1964,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
           debugPrint('[preview_share] non-Android direct share, invoking share sheet...');
         }
         final result = await Share.shareXFiles(
-          [XFile(sourceFile.path)],
+          [XFile(fileToShare.path)],
           text: 'Preview song: ${widget.project.displayName}',
         );
         if (kDebugMode) {
@@ -1952,7 +1987,8 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
   Future<void> _sharePreviewSongAsZip() async {
     if (!MobileUtils.isMobile()) return;
 
-    if (widget.project.previewSongPath == null || widget.project.previewSongPath!.isEmpty) {
+    final effectivePath = _effectivePreviewPath;
+    if (effectivePath == null || effectivePath.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
@@ -1962,7 +1998,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
     }
 
     // Skip if it's a Drive file reference (not downloaded)
-    if (widget.project.previewSongPath!.startsWith('drive://')) {
+    if (effectivePath.startsWith('drive://')) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppLocalizations.of(context)!.previewSongNotAvailableDownloadFirst)),
@@ -1972,7 +2008,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
     }
 
     try {
-      final sourceFile = File(widget.project.previewSongPath!);
+      final sourceFile = File(effectivePath);
       if (!await sourceFile.exists()) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -1984,9 +2020,9 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
 
       // Get the original filename — prefer stored name, fall back to project name
       String originalFileName = widget.project.previewShareFileName ??
-          p.basename(widget.project.previewSongPath!);
+          p.basename(effectivePath);
       if (!originalFileName.contains('.')) {
-        final ext = p.extension(widget.project.previewSongPath!);
+        final ext = p.extension(effectivePath);
         originalFileName = '$originalFileName$ext';
       }
 
@@ -2044,7 +2080,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
   /// Desktop (macOS/Windows): opens a save dialog and copies the preview song to the chosen location.
   Future<void> _exportPreviewSongDesktop() async {
     final l10n = AppLocalizations.of(context)!;
-    final songPath = widget.project.previewSongPath;
+    final songPath = _effectivePreviewPath;
 
     if (songPath == null || songPath.isEmpty) {
       if (mounted) {
@@ -2630,10 +2666,11 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                             ),
                           );
 
-                          // Share (if a local preview song exists)
-                          if (widget.project.previewSongPath != null &&
-                              widget.project.previewSongPath!.isNotEmpty &&
-                              !widget.project.previewSongPath!.startsWith('drive://')) {
+                          // Share (manual or auto-detected preview song, as long
+                          // as it's a local file and not a pending Drive reference)
+                          if (_effectivePreviewPath != null &&
+                              _effectivePreviewPath!.isNotEmpty &&
+                              !_effectivePreviewPath!.startsWith('drive://')) {
                             buttons.add(
                               ElevatedButton.icon(
                                 onPressed: _sharePreviewSong,
@@ -2682,14 +2719,21 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                                   : AppLocalizations.of(context)!.selectPreviewSong,
                             ),
                           ),
-                          if (widget.project.previewSongPath != null &&
-                              widget.project.previewSongPath!.isNotEmpty &&
-                              !widget.project.previewSongPath!.startsWith('drive://'))
+                          if (_effectivePreviewPath != null &&
+                              _effectivePreviewPath!.isNotEmpty &&
+                              !_effectivePreviewPath!.startsWith('drive://')) ...[
                             ElevatedButton.icon(
                               onPressed: _exportPreviewSongDesktop,
                               icon: const Icon(Icons.save_alt),
                               label: Text(AppLocalizations.of(context)!.saveCopy),
                             ),
+                            ElevatedButton.icon(
+                              onPressed: _sharePreviewSong,
+                              icon: const Icon(Icons.share),
+                              label: Text(AppLocalizations.of(context)!.share),
+                            ),
+                            DragToShareButton(sourcePath: _effectivePreviewPath!),
+                          ],
                         ],
                       ),
               ],

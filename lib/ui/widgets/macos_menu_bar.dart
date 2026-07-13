@@ -6,11 +6,10 @@ import 'package:flutter/services.dart';
 import '../../generated/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:window_manager/window_manager.dart';
 
 import '../../providers/providers.dart';
 import '../../providers/theme_provider.dart';
-import '../../main.dart' show navigatorKey;
+import '../../main.dart' show navigatorKey, quitApp;
 import '../dashboard_page.dart' show appVersion;
 import 'language_switcher.dart';
 import 'shortcuts_help_dialog.dart';
@@ -53,12 +52,12 @@ class MacOSMenuBar extends ConsumerWidget {
   static Future<void> _handleQuit(WidgetRef ref) async {
     final warn = ref.read(warnBeforeQuitProvider);
     if (!warn) {
-      await windowManager.destroy();
+      await quitApp();
       return;
     }
     final context = navigatorKey.currentContext;
     if (context == null) {
-      await windowManager.destroy();
+      await quitApp();
       return;
     }
     final confirmed = await showDialog<bool>(
@@ -79,7 +78,7 @@ class MacOSMenuBar extends ConsumerWidget {
         ],
       ),
     );
-    if (confirmed == true) await windowManager.destroy();
+    if (confirmed == true) await quitApp();
   }
 
   @override

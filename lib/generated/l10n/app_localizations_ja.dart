@@ -1580,6 +1580,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get support => 'サポート';
 
   @override
+  String get shareDiagnosticLog => '診断ログを共有';
+
+  @override
+  String get shareDiagnosticLogEmpty => '診断ログはまだありません';
+
+  @override
   String get supportTheProject => 'プロジェクトをサポート';
 
   @override
@@ -1851,6 +1857,33 @@ class AppLocalizationsJa extends AppLocalizations {
   String get share => '共有';
 
   @override
+  String get backupInProgressTitle => 'バックアップ中';
+
+  @override
+  String get backupInProgressMessage =>
+      '現在Googleドライブへバックアップをアップロード中です。今終了するとバックアップが不完全になる可能性があります。完了を待ちますか、それでも終了しますか？';
+
+  @override
+  String get waitForBackup => '待つ';
+
+  @override
+  String get quitAnyway => 'それでも終了';
+
+  @override
+  String get finishingBackup => 'バックアップを完了しています…';
+
+  @override
+  String get dragToShare => 'ドラッグして共有';
+
+  @override
+  String get dragToShareTooltip =>
+      'これを他のアプリ（WhatsAppなど）のウィンドウにドラッグすると、ファイルを直接共有できます。共有ボタンで共有メニューが開かない場合に便利です。';
+
+  @override
+  String get mp3ConversionFailed =>
+      '互換性のためのMP3への変換に失敗しました（ffmpegが見つかりません）。元のファイルを共有しますが、WhatsAppなど一部のアプリでは拒否される場合があります。';
+
+  @override
   String get shareZip => 'ZIPを共有';
 
   @override
@@ -2024,6 +2057,33 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get menuQuit => 'DAW Project Manager を終了';
+
+  @override
+  String get trayShowWindow => 'DAW Project Manager を表示';
+
+  @override
+  String trayLastBackup(String when) {
+    return '最終バックアップ: $when';
+  }
+
+  @override
+  String get trayNeverBackedUp => 'バックアップはまだありません';
+
+  @override
+  String get trayBackupNow => '今すぐバックアップ';
+
+  @override
+  String get trayPauseSession => 'セッションを一時停止';
+
+  @override
+  String get trayResumeSession => 'セッションを再開';
+
+  @override
+  String get closeToTray => 'トレイに閉じる';
+
+  @override
+  String get closeToTrayDescription =>
+      'ウィンドウを閉じてもバックグラウンドで実行を継続し(トレイアイコン)、自動バックアップと通知が引き続き機能するようにします';
 
   @override
   String get menuWindow => 'ウィンドウ';

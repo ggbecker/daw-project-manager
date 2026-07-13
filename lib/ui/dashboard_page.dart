@@ -42,6 +42,7 @@ import 'statistics_page.dart';
 import 'queue_page.dart';
 import 'notification_settings_page.dart';
 import 'widgets/desktop_title_bar.dart';
+import 'widgets/drag_to_share_button.dart';
 import 'widgets/language_switcher.dart';
 import 'widgets/theme_switcher.dart';
 import 'widgets/mobile_mini_player.dart';
@@ -3746,6 +3747,18 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             ],
           ),
         ),
+        if (_effectivePreviewPathFor(project) != null &&
+            !_effectivePreviewPathFor(project)!.startsWith('drive://'))
+          PopupMenuItem<String>(
+            value: 'share',
+            child: Row(
+              children: [
+                const Icon(Icons.share, size: 20),
+                const SizedBox(width: 8),
+                Text(l10n.sharePreviewSong),
+              ],
+            ),
+          ),
       ],
       color: Theme.of(context).cardColor,
     );
@@ -3887,6 +3900,84 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             }
           }
           break;
+        case 'share':
+          await _shareProjectPreview(project);
+          break;
+      }
+    }
+  }
+
+  String? _effectivePreviewPathFor(MusicProject project) =>
+      project.previewSongPath?.isNotEmpty == true
+          ? project.previewSongPath
+          : project.previewSongAutoPath;
+
+  Future<void> _shareProjectPreview(MusicProject project) async {
+    final l10n = AppLocalizations.of(context)!;
+    final effectivePath = _effectivePreviewPathFor(project);
+    if (effectivePath == null || effectivePath.isEmpty) return;
+    if (effectivePath.startsWith('drive://')) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.previewSongNotAvailableDownloadFirst)),
+        );
+      }
+      return;
+    }
+
+    try {
+      final sourceFile = File(effectivePath);
+      if (!await sourceFile.exists()) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.previewSongFileNotFound)),
+          );
+        }
+        return;
+      }
+
+      String originalFileName = project.previewShareFileName ?? path.basename(effectivePath);
+      if (!originalFileName.contains('.')) {
+        originalFileName = '$originalFileName${path.extension(effectivePath)}';
+      }
+
+      // WhatsApp (confirmed via manual testing) rejects WAV/AIFF/FLAC as a
+      // direct audio attachment with no error shown to us — convert to a
+      // compatible format first so the shared file is actually accepted.
+      var fileToShare = sourceFile;
+      var shareFileName = originalFileName;
+      if (AudioAnalysisService.needsConversionForSharing(effectivePath)) {
+        final tempDir = await getTemporaryDirectory();
+        final converted = await AudioAnalysisService.convertForSharing(effectivePath, tempDir.path);
+        if (converted != null) {
+          fileToShare = converted;
+          shareFileName = path.basename(converted.path);
+        } else if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.mp3ConversionFailed)),
+          );
+        }
+      }
+
+      if (MobileUtils.isMobile()) {
+        final cacheDir = await getTemporaryDirectory();
+        final shareFile = File(path.join(cacheDir.path, shareFileName));
+        await fileToShare.copy(shareFile.path);
+        await Share.shareXFiles(
+          [XFile(shareFile.path, name: shareFileName)],
+          text: 'Preview song: ${project.displayName}',
+        );
+      } else {
+        await Share.shareXFiles(
+          [XFile(fileToShare.path)],
+          text: 'Preview song: ${project.displayName}',
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.failedToSharePreviewSong(e.toString()))),
+        );
       }
     }
   }
@@ -4563,7 +4654,10 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                 builder: (context, ref, _) {
                   final playerRequest = ref.watch(desktopPlayerProvider);
                   final isPlaying = ref.watch(desktopIsPlayingProvider);
-                  final isActive = isPlaying && playerRequest?.project.id == project.id;
+                  final isCurrent = playerRequest?.project.id == project.id;
+                  final isActive = isPlaying && isCurrent;
+                  final hasPreview = project.previewSongPath?.isNotEmpty == true ||
+                      project.previewSongAutoPath != null;
                   final iconColor = project.previewSongPath?.isNotEmpty == true
                       ? Colors.green
                       : project.previewSongAutoPath != null
@@ -4574,17 +4668,25 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                     glowColor: iconColor,
                     child: IconButton(
                       icon: Icon(
-                        project.previewSongPath?.isNotEmpty == true || project.previewSongAutoPath != null
-                            ? Icons.play_circle
-                            : Icons.play_circle_outline,
+                        isCurrent
+                            ? (isPlaying ? Icons.pause_circle : Icons.play_circle)
+                            : (hasPreview ? Icons.play_circle : Icons.play_circle_outline),
                       ),
                       iconSize: 24,
                       padding: const EdgeInsets.all(4),
                       constraints: const BoxConstraints(),
-                      tooltip: project.previewSongAutoPath != null && project.previewSongPath?.isNotEmpty != true
-                          ? '${AppLocalizations.of(context)!.playPreview} (P)\n⚡ ${AppLocalizations.of(context)!.autoDetected}: ${path.basename(project.previewSongAutoPath!)}'
-                          : '${AppLocalizations.of(context)!.playPreview} (P)',
-                      onPressed: () => _playPreviewSong(project),
+                      tooltip: isCurrent
+                          ? (isPlaying ? AppLocalizations.of(context)!.pause : AppLocalizations.of(context)!.playPreview)
+                          : project.previewSongAutoPath != null && project.previewSongPath?.isNotEmpty != true
+                              ? '${AppLocalizations.of(context)!.playPreview} (P)\n⚡ ${AppLocalizations.of(context)!.autoDetected}: ${path.basename(project.previewSongAutoPath!)}'
+                              : '${AppLocalizations.of(context)!.playPreview} (P)',
+                      onPressed: () {
+                        if (isCurrent) {
+                          ref.read(desktopPlayerToggleRequestProvider.notifier).bump();
+                        } else {
+                          _playPreviewSong(project);
+                        }
+                      },
                       color: iconColor,
                     ),
                   );
@@ -5743,9 +5845,12 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
   }
 
   Future<void> _sharePreviewSong() async {
-    if (widget.project.previewSongPath == null || widget.project.previewSongPath!.isEmpty) {
+    // Covers a manually-selected preview song AND an auto-detected mixdown —
+    // both are equally shareable, only the source of the path differs.
+    final effectivePath = _effectivePreviewPath;
+    if (effectivePath == null || effectivePath.isEmpty) {
       if (kDebugMode) {
-        debugPrint('[preview_share] No previewSongPath set for project=${widget.project.id}');
+        debugPrint('[preview_share] No effective preview path for project=${widget.project.id}');
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -5756,9 +5861,9 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
     }
 
     // Skip if it's a Drive file reference (not downloaded)
-    if (widget.project.previewSongPath!.startsWith('drive://')) {
+    if (effectivePath.startsWith('drive://')) {
       if (kDebugMode) {
-        debugPrint('[preview_share] Path is Drive reference (not downloaded): ${widget.project.previewSongPath}');
+        debugPrint('[preview_share] Path is Drive reference (not downloaded): $effectivePath');
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -5769,7 +5874,7 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
     }
 
     try {
-      final sourceFile = File(widget.project.previewSongPath!);
+      final sourceFile = File(effectivePath);
       if (kDebugMode) {
         debugPrint('[preview_share] sourceFile=${sourceFile.path}');
       }
@@ -5794,31 +5899,53 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
 
       // Get the original filename — prefer stored name, fall back to project name
       String originalFileName = widget.project.previewShareFileName ??
-          path.basename(widget.project.previewSongPath!);
+          path.basename(effectivePath);
 
       // Ensure the filename has an extension
       if (!originalFileName.contains('.')) {
-        final ext = path.extension(widget.project.previewSongPath!);
+        final ext = path.extension(effectivePath);
         originalFileName = '$originalFileName$ext';
+      }
+
+      // WhatsApp (confirmed via manual testing, including plain OS
+      // drag-and-drop of the raw file) rejects WAV/AIFF/FLAC as a direct
+      // audio attachment with no error shown to us — convert to a
+      // compatible format first so the shared file is actually accepted.
+      var fileToShare = sourceFile;
+      var shareFileName = originalFileName;
+      if (AudioAnalysisService.needsConversionForSharing(effectivePath)) {
+        final tempDir = await getTemporaryDirectory();
+        if (kDebugMode) {
+          debugPrint('[preview_share] converting for messaging-app compatibility...');
+        }
+        final converted = await AudioAnalysisService.convertForSharing(effectivePath, tempDir.path);
+        if (converted != null) {
+          fileToShare = converted;
+          shareFileName = path.basename(converted.path);
+        } else if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context)!.mp3ConversionFailed)),
+          );
+        }
       }
 
       // On mobile, copy to cache directory with original name for sharing
       if (MobileUtils.isMobile()) {
         final cacheDir = await getTemporaryDirectory();
-        final shareFile = File(path.join(cacheDir.path, originalFileName));
+        final shareFile = File(path.join(cacheDir.path, shareFileName));
         if (kDebugMode) {
           debugPrint('[preview_share] cacheDir=${cacheDir.path} shareFile=${shareFile.path}');
         }
 
         // Copy file to cache with original name
-        await sourceFile.copy(shareFile.path);
+        await fileToShare.copy(shareFile.path);
         if (kDebugMode) {
           debugPrint('[preview_share] copied to cache OK, invoking share sheet...');
         }
 
         // Share the file (default behavior)
         final result = await Share.shareXFiles(
-          [XFile(shareFile.path, name: originalFileName)],
+          [XFile(shareFile.path, name: shareFileName)],
           text: 'Preview song: ${widget.project.displayName}',
         );
         if (kDebugMode) {
@@ -5831,7 +5958,7 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
           debugPrint('[preview_share] non-Android direct share, invoking share sheet...');
         }
         final result = await Share.shareXFiles(
-          [XFile(sourceFile.path)],
+          [XFile(fileToShare.path)],
           text: 'Preview song: ${widget.project.displayName}',
         );
         if (kDebugMode) {
@@ -5854,7 +5981,8 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
   Future<void> _sharePreviewSongAsZip() async {
     if (!MobileUtils.isMobile()) return;
 
-    if (widget.project.previewSongPath == null || widget.project.previewSongPath!.isEmpty) {
+    final effectivePath = _effectivePreviewPath;
+    if (effectivePath == null || effectivePath.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
@@ -5864,7 +5992,7 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
     }
 
     // Skip if it's a Drive file reference (not downloaded)
-    if (widget.project.previewSongPath!.startsWith('drive://')) {
+    if (effectivePath.startsWith('drive://')) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppLocalizations.of(context)!.previewSongNotAvailableDownloadFirst)),
@@ -5874,7 +6002,7 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
     }
 
     try {
-      final sourceFile = File(widget.project.previewSongPath!);
+      final sourceFile = File(effectivePath);
       if (!await sourceFile.exists()) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -5886,9 +6014,9 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
 
       // Get the original filename — prefer stored name, fall back to project name
       String originalFileName = widget.project.previewShareFileName ??
-          path.basename(widget.project.previewSongPath!);
+          path.basename(effectivePath);
       if (!originalFileName.contains('.')) {
-        final ext = path.extension(widget.project.previewSongPath!);
+        final ext = path.extension(effectivePath);
         originalFileName = '$originalFileName$ext';
       }
 
@@ -5983,20 +6111,25 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                if (MobileUtils.isMobile() &&
-                    widget.project.previewSongPath != null &&
-                    widget.project.previewSongPath!.isNotEmpty &&
-                    !widget.project.previewSongPath!.startsWith('drive://')) ...[
+                if (_effectivePreviewPath != null &&
+                    _effectivePreviewPath!.isNotEmpty &&
+                    !_effectivePreviewPath!.startsWith('drive://')) ...[
                   IconButton(
                     icon: const Icon(Icons.share),
                     tooltip: AppLocalizations.of(context)!.sharePreviewSong,
                     onPressed: _sharePreviewSong,
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.archive),
-                    tooltip: AppLocalizations.of(context)!.shareAsZip,
-                    onPressed: _sharePreviewSongAsZip,
-                  ),
+                  if (MobileUtils.isMobile())
+                    IconButton(
+                      icon: const Icon(Icons.archive),
+                      tooltip: AppLocalizations.of(context)!.shareAsZip,
+                      onPressed: _sharePreviewSongAsZip,
+                    )
+                  else
+                    Padding(
+                      padding: const EdgeInsets.only(left: 4),
+                      child: DragToShareButton(sourcePath: _effectivePreviewPath!),
+                    ),
                 ],
                 IconButton(
                   icon: const Icon(Icons.close),
@@ -6278,6 +6411,11 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
   Widget build(BuildContext context) {
     ref.listen(desktopPlayerProvider, (prev, next) {
       if (next == null) _player.stop();
+    });
+    // External toggle request (e.g. clicking the play button on this same
+    // project's row again while it's already loaded here).
+    ref.listen(desktopPlayerToggleRequestProvider, (prev, next) {
+      if (prev != null && prev != next) _togglePlayPause();
     });
     final queueNav = ref.watch(queueNavigationProvider);
     final isQueued = widget.request.isQueuedPlayback;

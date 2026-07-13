@@ -8,6 +8,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'generated/l10n/app_localizations.dart';
 import 'dart:io' show Platform, Process, ServerSocket, InternetAddress, SocketException, File, Directory, FileSystemException, exit;
 import 'package:window_manager/window_manager.dart';
+import 'package:tray_manager/tray_manager.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 
 // NOVO: Importar providers e serviços para a lógica de auto-scan
@@ -18,6 +19,8 @@ import 'services/deadline_notification_service.dart';
 import 'services/notification_background_service.dart';
 import 'services/google_drive_sync_service.dart';
 import 'services/update_check_service.dart';
+import 'services/crash_logger.dart';
+import 'services/tray_service.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'models/auto_backup_interval.dart';
 import 'utils/app_paths.dart';
@@ -35,10 +38,101 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 // Auto-backup state (top-level so it persists for the app lifetime)
 bool _autoBackupRunning = false;
+Timer? _autoBackupTimer;
+// Resolves when the in-flight auto-backup run finishes — lets quitApp()
+// wait (briefly) for a Drive upload in progress instead of exit(0) cutting
+// it off mid-write.
+Completer<void>? _autoBackupCompleter;
 
 // Keeps the single-instance socket alive for the app's lifetime.
 // ignore: unused_element
 ServerSocket? _singleInstanceSocket;
+
+/// Fully terminates the app on desktop. Destroys the tray icon first —
+/// tray_manager keeps a native hook/hidden window alive on Windows for as
+/// long as the icon exists. Then force-exits the process: destroying the
+/// native window alone doesn't end the Dart isolate, and this app keeps
+/// several things running in the background for as long as it lives (the
+/// 5-minute auto-backup Timer.periodic, notification services, Drive sync
+/// listeners) — any one of those can keep the event loop alive after the
+/// window is gone, so without an explicit exit the process lingers until
+/// the OS's own "unresponsive app" timeout kills it.
+///
+/// exit() cuts off whatever's in flight with no cleanup, so before forcing
+/// it: cancel the auto-backup timer (stop a new run from starting), and if
+/// a Drive upload is already in progress, ask the user whether to wait for
+/// it or quit anyway rather than silently risking a half-written backup or
+/// a corrupted "last upload" timestamp. Any wait is still bounded so a
+/// stuck upload can't reintroduce the original slow-quit problem.
+Future<void> quitApp() async {
+  _autoBackupTimer?.cancel();
+  if (_autoBackupRunning && _autoBackupCompleter != null) {
+    final context = navigatorKey.currentContext;
+    if (context != null) {
+      final l10n = AppLocalizations.of(context)!;
+      final wait = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: Theme.of(ctx).cardColor,
+          title: Text(l10n.backupInProgressTitle),
+          content: Text(l10n.backupInProgressMessage),
+          actions: [
+            TextButton(
+              style: TextButton.styleFrom(foregroundColor: Theme.of(ctx).colorScheme.error),
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l10n.quitAnyway),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(l10n.waitForBackup),
+            ),
+          ],
+        ),
+      );
+      if (wait == true && _autoBackupRunning) {
+        final waitContext = navigatorKey.currentContext;
+        if (waitContext != null) {
+          showDialog(
+            context: waitContext,
+            barrierDismissible: false,
+            builder: (dialogCtx) => AlertDialog(
+              backgroundColor: Theme.of(dialogCtx).cardColor,
+              content: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(width: 16),
+                  Text(AppLocalizations.of(dialogCtx)!.finishingBackup),
+                ],
+              ),
+            ),
+          );
+        }
+        try {
+          await _autoBackupCompleter?.future.timeout(const Duration(seconds: 30));
+        } catch (_) {
+          // Timed out (or the backup itself errored) — proceed with exit
+          // rather than hang indefinitely.
+        }
+        final popContext = navigatorKey.currentContext;
+        if (popContext != null) Navigator.of(popContext, rootNavigator: true).pop();
+      }
+    } else {
+      // No UI available to ask — fall back to a short bounded wait.
+      try {
+        await _autoBackupCompleter!.future.timeout(const Duration(seconds: 5));
+      } catch (_) {}
+    }
+  }
+  if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
+    try {
+      await trayManager.destroy();
+    } catch (_) {}
+  }
+  await windowManager.destroy();
+  exit(0);
+}
 
 Future<void> _showAlreadyRunningMessage() async {
   if (Platform.isWindows) {
@@ -73,9 +167,10 @@ void _startAutoBackupTimer(
   ProviderContainer container,
   GoogleDriveSyncService syncService,
 ) {
-  Timer.periodic(const Duration(minutes: 5), (_) async {
+  _autoBackupTimer = Timer.periodic(const Duration(minutes: 5), (_) async {
     if (_autoBackupRunning) return;
     _autoBackupRunning = true;
+    _autoBackupCompleter = Completer<void>();
     try {
       // Read saved settings from app_settings box
       await ensureHiveInitialized();
@@ -122,6 +217,8 @@ void _startAutoBackupTimer(
       if (kDebugMode) print('Auto-backup failed: $e');
     } finally {
       _autoBackupRunning = false;
+      _autoBackupCompleter?.complete();
+      _autoBackupCompleter = null;
     }
   });
 }
@@ -187,9 +284,33 @@ Future<void> _runInitialScan(ProjectRepository repo, ProviderContainer container
 }
 
 
-void main() async {
+void main() {
+  runZonedGuarded(_main, (error, stack) {
+    unawaited(CrashLogger.log('zone', error, stack));
+  });
+}
+
+Future<void> _main() async {
   // 1. Inicialização do Flutter
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Catch uncaught framework errors (build/layout/paint) and errors that
+  // escape the root zone, logging them to disk so a crash that happens
+  // while the app is backgrounded leaves a trace instead of vanishing.
+  CrashLogger.installGlobalHandlers();
+
+  // Replace the default red/gray error box with a small recoverable
+  // placeholder — a single broken widget shouldn't look like the whole
+  // app died, and the failure is now logged regardless.
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    if (kDebugMode) return ErrorWidget(details.exception);
+    return const ColoredBox(
+      color: Color(0x00000000),
+      child: Center(
+        child: Icon(Icons.error_outline, color: Colors.redAccent, size: 20),
+      ),
+    );
+  };
 
   // 1b. Single-instance guard (Windows/Linux only).
   // macOS is handled natively in AppDelegate.swift before Dart starts.
@@ -324,6 +445,12 @@ void main() async {
     }
     _startAutoBackupTimer(container, autoBackupService);
 
+    // 4e-2. System tray icon (Windows/macOS/Linux) — lets the app keep
+    // auto-backup and notifications running while the window is hidden.
+    if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
+      unawaited(TrayService(container, autoBackupService).init());
+    }
+
     // 4f. Bootstrap work timer (starts listening to activeProjectProvider).
     container.read(workTimerProvider);
 
@@ -439,7 +566,8 @@ class DawProjectManagerApp extends ConsumerStatefulWidget {
   ConsumerState<DawProjectManagerApp> createState() => _DawProjectManagerAppState();
 }
 
-class _DawProjectManagerAppState extends ConsumerState<DawProjectManagerApp> with WindowListener {
+class _DawProjectManagerAppState extends ConsumerState<DawProjectManagerApp>
+    with WindowListener, WidgetsBindingObserver {
   static bool get _isDesktop =>
       !kIsWeb && (Platform.isMacOS || Platform.isWindows || Platform.isLinux);
 
@@ -452,12 +580,12 @@ class _DawProjectManagerAppState extends ConsumerState<DawProjectManagerApp> wit
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     if (_isDesktop) {
       windowManager.addListener(this);
-      // Quit-warning dialog is macOS-only; intercept close only there.
-      if (!kIsWeb && Platform.isMacOS) {
-        windowManager.setPreventClose(true);
-      }
+      // Needed on every desktop platform so onWindowClose can decide
+      // between hiding to the tray and actually quitting.
+      windowManager.setPreventClose(true);
     }
     if (!kIsWeb && Platform.isMacOS) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -468,30 +596,49 @@ class _DawProjectManagerAppState extends ConsumerState<DawProjectManagerApp> wit
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     if (_isDesktop) windowManager.removeListener(this);
     super.dispose();
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Logged so a crash that surfaces right after resuming from background
+    // (a known trouble spot on Android) can be correlated with the transition.
+    unawaited(CrashLogger.logLifecycle(state));
+  }
+
+  @override
   void onWindowClose() async {
+    final closeToTray = ref.read(closeToTrayProvider);
+
     if (!kIsWeb && Platform.isMacOS) {
-      // Red X on macOS: hide in release, destroy in debug.
+      // Dev convenience: always fully quit on debug builds rather than
+      // lingering in the background between hot restarts.
       if (kDebugMode) {
-        await windowManager.destroy();
-      } else {
-        await windowManager.hide();
+        await quitApp();
+        return;
       }
+      if (closeToTray) {
+        await windowManager.hide();
+        return;
+      }
+      // closeToTray disabled: fall through to the shared quit-warning flow.
+    } else if (!kIsWeb && closeToTray) {
+      await windowManager.hide();
       return;
     }
-    // Windows: show quit-warning dialog.
+
+    // Show quit-warning dialog (Windows/Linux always; macOS only when the
+    // user has turned closeToTray off).
     final warn = ref.read(warnBeforeQuitProvider);
     if (!warn) {
-      await windowManager.destroy();
+      await quitApp();
       return;
     }
     final context = navigatorKey.currentContext;
     if (context == null) {
-      await windowManager.destroy();
+      await quitApp();
       return;
     }
     final confirmed = await showDialog<bool>(
@@ -512,7 +659,7 @@ class _DawProjectManagerAppState extends ConsumerState<DawProjectManagerApp> wit
         ],
       ),
     );
-    if (confirmed == true) await windowManager.destroy();
+    if (confirmed == true) await quitApp();
   }
 
   @override

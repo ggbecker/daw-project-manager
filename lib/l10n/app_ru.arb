@@ -984,6 +984,8 @@
   "language": "Язык",
   "theme": "Тема",
   "support": "Поддержать",
+  "shareDiagnosticLog": "Поделиться журналом диагностики",
+  "shareDiagnosticLogEmpty": "Журнал диагностики пока отсутствует",
   "supportTheProject": "Поддержать проект",
   "couldNotOpenBrowser": "Не удалось открыть браузер. Пожалуйста, посетите: {url}",
   "@couldNotOpenBrowser": {
@@ -1104,6 +1106,14 @@
     "description": "Tooltip for the share as ZIP button"
   },
   "share": "Поделиться",
+  "backupInProgressTitle": "Идёт резервное копирование",
+  "backupInProgressMessage": "Сейчас идёт загрузка резервной копии в Google Drive. Если выйти сейчас, она может остаться незавершённой — подождать, пока закончится, или выйти всё равно?",
+  "waitForBackup": "Подождать",
+  "quitAnyway": "Выйти всё равно",
+  "finishingBackup": "Завершение резервного копирования…",
+  "dragToShare": "Перетащить, чтобы поделиться",
+  "dragToShareTooltip": "Перетащите это в окно другого приложения (например, WhatsApp), чтобы поделиться файлом напрямую — полезно, если кнопка \"Поделиться\" не открывает меню отправки.",
+  "mp3ConversionFailed": "Не удалось конвертировать в MP3 для совместимости (ffmpeg не найден) — будет отправлен исходный файл, который некоторые приложения, например WhatsApp, могут отклонить.",
   "@share": {
     "description": "Label for the share button"
   },
@@ -1386,6 +1396,21 @@
     "description": "macOS menu item to toggle quit warning"
   },
   "menuQuit": "Выйти из DAW Project Manager",
+  "trayShowWindow": "Показать DAW Project Manager",
+  "trayLastBackup": "Последнее резервное копирование: {when}",
+  "@trayLastBackup": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "trayNeverBackedUp": "Резервное копирование ещё не выполнялось",
+  "trayBackupNow": "Создать резервную копию",
+  "trayPauseSession": "Приостановить сеанс",
+  "trayResumeSession": "Возобновить сеанс",
+  "closeToTray": "Закрывать в трей",
+  "closeToTrayDescription": "Продолжать работать в фоне (значок в трее) при закрытии окна, чтобы автоматическое резервное копирование и уведомления продолжали работать",
   "@menuQuit": {
     "description": "macOS menu item to quit the app"
   },

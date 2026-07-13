@@ -984,6 +984,8 @@
   "language": "Idioma",
   "theme": "Tema",
   "support": "Apoiar",
+  "shareDiagnosticLog": "Compartilhar Log de Diagnóstico",
+  "shareDiagnosticLogEmpty": "Ainda não há log de diagnóstico",
   "supportTheProject": "Apoie o projeto",
   "couldNotOpenBrowser": "Não foi possível abrir o navegador. Por favor, visite: {url}",
   "@couldNotOpenBrowser": {
@@ -1128,6 +1130,14 @@
     "description": "Tooltip for the share as ZIP button"
   },
   "share": "Compartilhar",
+  "backupInProgressTitle": "Backup em Andamento",
+  "backupInProgressMessage": "Um backup está sendo enviado ao Google Drive agora. Sair pode deixá-lo incompleto — esperar terminar, ou sair mesmo assim?",
+  "waitForBackup": "Esperar",
+  "quitAnyway": "Sair Mesmo Assim",
+  "finishingBackup": "Finalizando backup…",
+  "dragToShare": "Arraste para Compartilhar",
+  "dragToShareTooltip": "Arraste isso para a janela de outro app (ex: WhatsApp) pra compartilhar o arquivo direto — útil quando o botão Compartilhar não abre um menu de compartilhamento.",
+  "mp3ConversionFailed": "Não foi possível converter para MP3 por compatibilidade (ffmpeg não encontrado) — compartilhando o arquivo original, que alguns apps como o WhatsApp podem rejeitar.",
   "@share": {
     "description": "Label for the share button"
   },
@@ -1410,6 +1420,21 @@
     "description": "macOS menu item to toggle quit warning"
   },
   "menuQuit": "Sair do DAW Project Manager",
+  "trayShowWindow": "Mostrar DAW Project Manager",
+  "trayLastBackup": "Último backup: {when}",
+  "@trayLastBackup": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "trayNeverBackedUp": "Nenhum backup feito ainda",
+  "trayBackupNow": "Fazer Backup Agora",
+  "trayPauseSession": "Pausar Sessão",
+  "trayResumeSession": "Retomar Sessão",
+  "closeToTray": "Fechar para a bandeja",
+  "closeToTrayDescription": "Continuar rodando em segundo plano (ícone na bandeja) ao fechar a janela, para o backup automático e as notificações continuarem funcionando",
   "@menuQuit": {
     "description": "macOS menu item to quit the app"
   },

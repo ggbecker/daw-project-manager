@@ -126,11 +126,30 @@ class _MobilePlayerPageState extends ConsumerState<MobilePlayerPage> {
       if (!originalFileName.contains('.')) {
         originalFileName = '$originalFileName${p.extension(songPath)}';
       }
+
+      // WhatsApp (confirmed via manual testing) rejects WAV/AIFF/FLAC as a
+      // direct audio attachment with no error shown to us — convert to a
+      // compatible format first so the shared file is actually accepted.
+      var fileToShare = sourceFile;
+      var shareFileName = originalFileName;
+      if (AudioAnalysisService.needsConversionForSharing(songPath)) {
+        final tempDir = await getTemporaryDirectory();
+        final converted = await AudioAnalysisService.convertForSharing(songPath, tempDir.path);
+        if (converted != null) {
+          fileToShare = converted;
+          shareFileName = p.basename(converted.path);
+        } else if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context)!.mp3ConversionFailed)),
+          );
+        }
+      }
+
       final cacheDir = await getTemporaryDirectory();
-      final shareFile = File(p.join(cacheDir.path, originalFileName));
-      await sourceFile.copy(shareFile.path);
+      final shareFile = File(p.join(cacheDir.path, shareFileName));
+      await fileToShare.copy(shareFile.path);
       await SharePlus.instance.share(ShareParams(
-        files: [XFile(shareFile.path, name: originalFileName)],
+        files: [XFile(shareFile.path, name: shareFileName)],
         text: 'Preview song: ${project.displayName}',
       ));
     } catch (e) {

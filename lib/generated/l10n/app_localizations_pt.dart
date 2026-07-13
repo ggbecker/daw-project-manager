@@ -1607,6 +1607,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get support => 'Apoiar';
 
   @override
+  String get shareDiagnosticLog => 'Compartilhar Log de Diagnóstico';
+
+  @override
+  String get shareDiagnosticLogEmpty => 'Ainda não há log de diagnóstico';
+
+  @override
   String get supportTheProject => 'Apoie o projeto';
 
   @override
@@ -1891,6 +1897,33 @@ class AppLocalizationsPt extends AppLocalizations {
   String get share => 'Compartilhar';
 
   @override
+  String get backupInProgressTitle => 'Backup em Andamento';
+
+  @override
+  String get backupInProgressMessage =>
+      'Um backup está sendo enviado ao Google Drive agora. Sair pode deixá-lo incompleto — esperar terminar, ou sair mesmo assim?';
+
+  @override
+  String get waitForBackup => 'Esperar';
+
+  @override
+  String get quitAnyway => 'Sair Mesmo Assim';
+
+  @override
+  String get finishingBackup => 'Finalizando backup…';
+
+  @override
+  String get dragToShare => 'Arraste para Compartilhar';
+
+  @override
+  String get dragToShareTooltip =>
+      'Arraste isso para a janela de outro app (ex: WhatsApp) pra compartilhar o arquivo direto — útil quando o botão Compartilhar não abre um menu de compartilhamento.';
+
+  @override
+  String get mp3ConversionFailed =>
+      'Não foi possível converter para MP3 por compatibilidade (ffmpeg não encontrado) — compartilhando o arquivo original, que alguns apps como o WhatsApp podem rejeitar.';
+
+  @override
   String get shareZip => 'Compartilhar ZIP';
 
   @override
@@ -2064,6 +2097,33 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get menuQuit => 'Sair do DAW Project Manager';
+
+  @override
+  String get trayShowWindow => 'Mostrar DAW Project Manager';
+
+  @override
+  String trayLastBackup(String when) {
+    return 'Último backup: $when';
+  }
+
+  @override
+  String get trayNeverBackedUp => 'Nenhum backup feito ainda';
+
+  @override
+  String get trayBackupNow => 'Fazer Backup Agora';
+
+  @override
+  String get trayPauseSession => 'Pausar Sessão';
+
+  @override
+  String get trayResumeSession => 'Retomar Sessão';
+
+  @override
+  String get closeToTray => 'Fechar para a bandeja';
+
+  @override
+  String get closeToTrayDescription =>
+      'Continuar rodando em segundo plano (ícone na bandeja) ao fechar a janela, para o backup automático e as notificações continuarem funcionando';
 
   @override
   String get menuWindow => 'Janela';

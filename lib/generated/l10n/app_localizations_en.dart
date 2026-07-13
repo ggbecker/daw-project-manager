@@ -1610,6 +1610,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get support => 'Support';
 
   @override
+  String get shareDiagnosticLog => 'Share Diagnostic Log';
+
+  @override
+  String get shareDiagnosticLogEmpty => 'No diagnostic log yet';
+
+  @override
   String get supportTheProject => 'Support the project';
 
   @override
@@ -1891,6 +1897,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get share => 'Share';
 
   @override
+  String get backupInProgressTitle => 'Backup in Progress';
+
+  @override
+  String get backupInProgressMessage =>
+      'A backup is currently uploading to Google Drive. Quitting now may leave it incomplete — wait for it to finish, or quit anyway?';
+
+  @override
+  String get waitForBackup => 'Wait';
+
+  @override
+  String get quitAnyway => 'Quit Anyway';
+
+  @override
+  String get finishingBackup => 'Finishing backup…';
+
+  @override
+  String get dragToShare => 'Drag to Share';
+
+  @override
+  String get dragToShareTooltip =>
+      'Drag this onto another app\'s window (e.g. WhatsApp) to share the file directly — useful when the Share button doesn\'t open a share menu.';
+
+  @override
+  String get mp3ConversionFailed =>
+      'Couldn\'t convert to MP3 for compatibility (ffmpeg not found) — sharing the original file, which some apps like WhatsApp may reject.';
+
+  @override
   String get shareZip => 'Share ZIP';
 
   @override
@@ -2064,6 +2097,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get menuQuit => 'Quit DAW Project Manager';
+
+  @override
+  String get trayShowWindow => 'Show DAW Project Manager';
+
+  @override
+  String trayLastBackup(String when) {
+    return 'Last backup: $when';
+  }
+
+  @override
+  String get trayNeverBackedUp => 'Never backed up';
+
+  @override
+  String get trayBackupNow => 'Back Up Now';
+
+  @override
+  String get trayPauseSession => 'Pause Session';
+
+  @override
+  String get trayResumeSession => 'Resume Session';
+
+  @override
+  String get closeToTray => 'Close to tray';
+
+  @override
+  String get closeToTrayDescription =>
+      'Keep running in the background (tray icon) when you close the window, so auto-backup and notifications keep working';
 
   @override
   String get menuWindow => 'Window';
