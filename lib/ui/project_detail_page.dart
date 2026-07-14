@@ -1419,6 +1419,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
         setState(() => _autoDetectedPath = file.path);
         final repo = await ref.read(repositoryProvider.future);
         await repo.updateProject(widget.project.copyWith(previewSongAutoPath: file.path));
+        ref.invalidate(allProjectsStreamProvider);
         _startBackgroundPrep();
       }
     });

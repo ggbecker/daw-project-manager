@@ -3214,6 +3214,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         effectivePath = detected.path;
         final repo = await ref.read(repositoryProvider.future);
         await repo.updateProject(project.copyWith(previewSongAutoPath: detected.path));
+        ref.invalidate(allProjectsStreamProvider);
       }
     }
 
@@ -5286,6 +5287,7 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
           setState(() => _autoDetectedPath = file.path);
           final repo = await ref.read(repositoryProvider.future);
           await repo.updateProject(widget.project.copyWith(previewSongAutoPath: file.path));
+          ref.invalidate(allProjectsStreamProvider);
           _startPlayback();
           _startBackgroundPrep();
         }
@@ -6824,6 +6826,7 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
         effectivePath = detected.path;
         final repo = await ref.read(repositoryProvider.future);
         await repo.updateProject(project.copyWith(previewSongAutoPath: detected.path));
+        ref.invalidate(allProjectsStreamProvider);
       }
     }
 
