@@ -2059,6 +2059,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get menuQuit => 'DAW Project Manager を終了';
 
   @override
+  String get quitConfirmTitle => 'DAW Project Manager を終了しますか？';
+
+  @override
+  String get quitConfirmMessage => '本当に終了しますか？';
+
+  @override
+  String get quit => '終了';
+
+  @override
   String get trayShowWindow => 'DAW Project Manager を表示';
 
   @override

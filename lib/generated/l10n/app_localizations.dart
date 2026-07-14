@@ -3548,6 +3548,24 @@ abstract class AppLocalizations {
   /// **'Quit DAW Project Manager'**
   String get menuQuit;
 
+  /// No description provided for @quitConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quit DAW Project Manager?'**
+  String get quitConfirmTitle;
+
+  /// No description provided for @quitConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to quit?'**
+  String get quitConfirmMessage;
+
+  /// No description provided for @quit.
+  ///
+  /// In en, this message translates to:
+  /// **'Quit'**
+  String get quit;
+
   /// No description provided for @trayShowWindow.
   ///
   /// In en, this message translates to:

@@ -2113,6 +2113,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get menuQuit => 'DAW Project Manager beenden';
 
   @override
+  String get quitConfirmTitle => 'DAW Project Manager beenden?';
+
+  @override
+  String get quitConfirmMessage => 'Möchtest du wirklich beenden?';
+
+  @override
+  String get quit => 'Beenden';
+
+  @override
   String get trayShowWindow => 'DAW Project Manager anzeigen';
 
   @override

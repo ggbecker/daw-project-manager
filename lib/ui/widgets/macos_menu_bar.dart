@@ -12,6 +12,7 @@ import '../../providers/theme_provider.dart';
 import '../../main.dart' show navigatorKey, quitApp;
 import '../dashboard_page.dart' show appVersion;
 import 'language_switcher.dart';
+import 'quit_confirm_dialog.dart';
 import 'shortcuts_help_dialog.dart';
 import 'tab_customization_dialog.dart';
 
@@ -60,24 +61,7 @@ class MacOSMenuBar extends ConsumerWidget {
       await quitApp();
       return;
     }
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Theme.of(ctx).cardColor,
-        title: const Text('Quit DAW Project Manager?'),
-        content: const Text('Are you sure you want to quit?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Quit'),
-          ),
-        ],
-      ),
-    );
+    final confirmed = await showQuitConfirmDialog(context);
     if (confirmed == true) await quitApp();
   }
 

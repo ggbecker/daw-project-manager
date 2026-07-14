@@ -1396,6 +1396,9 @@
     "description": "macOS menu item to toggle quit warning"
   },
   "menuQuit": "DAW Project Manager を終了",
+  "quitConfirmTitle": "DAW Project Manager を終了しますか？",
+  "quitConfirmMessage": "本当に終了しますか？",
+  "quit": "終了",
   "trayShowWindow": "DAW Project Manager を表示",
   "trayLastBackup": "最終バックアップ: {when}",
   "@trayLastBackup": {

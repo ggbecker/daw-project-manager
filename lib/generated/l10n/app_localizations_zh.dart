@@ -2037,6 +2037,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get menuQuit => '退出 DAW Project Manager';
 
   @override
+  String get quitConfirmTitle => '退出 DAW Project Manager？';
+
+  @override
+  String get quitConfirmMessage => '确定要退出吗？';
+
+  @override
+  String get quit => '退出';
+
+  @override
   String get trayShowWindow => '显示 DAW Project Manager';
 
   @override

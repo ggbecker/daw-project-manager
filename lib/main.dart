@@ -29,6 +29,7 @@ import 'ui/dashboard_page.dart';
 import 'ui/onboarding_wizard_page.dart';
 import 'ui/project_detail_page.dart';
 import 'ui/widgets/macos_menu_bar.dart';
+import 'ui/widgets/quit_confirm_dialog.dart';
 import 'ui/widgets/update_available_dialog.dart';
 import 'providers/theme_provider.dart';
 import 'utils/route_observer.dart';
@@ -641,24 +642,7 @@ class _DawProjectManagerAppState extends ConsumerState<DawProjectManagerApp>
       await quitApp();
       return;
     }
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Theme.of(ctx).cardColor,
-        title: const Text('Quit DAW Project Manager?'),
-        content: const Text('Are you sure you want to quit?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Quit'),
-          ),
-        ],
-      ),
-    );
+    final confirmed = await showQuitConfirmDialog(context);
     if (confirmed == true) await quitApp();
   }
 

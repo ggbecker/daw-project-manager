@@ -2101,6 +2101,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get menuQuit => 'Выйти из DAW Project Manager';
 
   @override
+  String get quitConfirmTitle => 'Выйти из DAW Project Manager?';
+
+  @override
+  String get quitConfirmMessage => 'Вы уверены, что хотите выйти?';
+
+  @override
+  String get quit => 'Выйти';
+
+  @override
   String get trayShowWindow => 'Показать DAW Project Manager';
 
   @override

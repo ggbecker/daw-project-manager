@@ -1396,6 +1396,9 @@
     "description": "macOS menu item to toggle quit warning"
   },
   "menuQuit": "Quitter DAW Project Manager",
+  "quitConfirmTitle": "Quitter DAW Project Manager ?",
+  "quitConfirmMessage": "Voulez-vous vraiment quitter ?",
+  "quit": "Quitter",
   "trayShowWindow": "Afficher DAW Project Manager",
   "trayLastBackup": "Dernière sauvegarde : {when}",
   "@trayLastBackup": {
