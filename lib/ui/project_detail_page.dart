@@ -1270,7 +1270,7 @@ class _ProjectDetailActionBar extends ConsumerWidget {
             OutlinedButton.icon(
               onPressed: onStats,
               icon: const Icon(Icons.bar_chart, size: 16),
-              label: Text(l10n.statsProjectActivity),
+              label: Text(l10n.statsSingleProjectActivity),
             ),
           ],
         ],
@@ -2760,7 +2760,7 @@ class _ProjectStatsButton extends ConsumerWidget {
       contentPadding: EdgeInsets.zero,
       leading: const Icon(Icons.bar_chart_rounded, size: 20),
       title: Text(
-        l10n.statsProjectActivity,
+        l10n.statsSingleProjectActivity,
         style: Theme.of(context).textTheme.titleSmall,
       ),
       subtitle: Text(

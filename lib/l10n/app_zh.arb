@@ -1475,6 +1475,7 @@
   "statsTopKeys": "热门音乐调式",
   "statsDawTypes": "DAW类型",
   "statsProjectActivity": "项目活动",
+  "statsSingleProjectActivity": "项目活动",
   "statsNoData": "暂无数据",
   "statsNoPhaseData": "项目变更阶段后将显示数据。",
   "statsLastActivityDaysAgo": "最近活动: {days}天前",

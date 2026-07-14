@@ -3818,6 +3818,12 @@ abstract class AppLocalizations {
   /// **'Project Activity'**
   String get statsProjectActivity;
 
+  /// Section/button title for a single project's own activity history (project detail page, per-project stats page) — as opposed to statsProjectActivity, which titles the aggregate activity panel across all projects on the Statistics dashboard. In English both read the same, but other locales need distinct singular vs. plural phrasing.
+  ///
+  /// In en, this message translates to:
+  /// **'Project Activity'**
+  String get statsSingleProjectActivity;
+
   /// No description provided for @statsNoData.
   ///
   /// In en, this message translates to:

@@ -2242,6 +2242,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get statsProjectActivity => 'Активность проектов';
 
   @override
+  String get statsSingleProjectActivity => 'Активность проекта';
+
+  @override
   String get statsNoData => 'Нет данных';
 
   @override

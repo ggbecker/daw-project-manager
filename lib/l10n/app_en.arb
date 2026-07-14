@@ -2511,6 +2511,10 @@
   "statsTopKeys": "Top Musical Keys",
   "statsDawTypes": "DAW Types",
   "statsProjectActivity": "Project Activity",
+  "statsSingleProjectActivity": "Project Activity",
+  "@statsSingleProjectActivity": {
+    "description": "Section/button title for a single project's own activity history (project detail page, per-project stats page) — as opposed to statsProjectActivity, which titles the aggregate activity panel across all projects on the Statistics dashboard. In English both read the same, but other locales need distinct singular vs. plural phrasing."
+  },
   "statsNoData": "No data yet",
   "statsNoPhaseData": "Phase data will appear after projects move between phases.",
   "statsLastActivityDaysAgo": "Last activity: {days} days ago",

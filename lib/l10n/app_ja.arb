@@ -1475,6 +1475,7 @@
   "statsTopKeys": "主な音楽キー",
   "statsDawTypes": "DAWの種類",
   "statsProjectActivity": "プロジェクトのアクティビティ",
+  "statsSingleProjectActivity": "プロジェクトのアクティビティ",
   "statsNoData": "データなし",
   "statsNoPhaseData": "フェーズ移行後にデータが表示されます。",
   "statsLastActivityDaysAgo": "最終活動: {days}日前",

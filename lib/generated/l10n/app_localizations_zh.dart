@@ -2175,6 +2175,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get statsProjectActivity => '项目活动';
 
   @override
+  String get statsSingleProjectActivity => '项目活动';
+
+  @override
   String get statsNoData => '暂无数据';
 
   @override

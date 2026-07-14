@@ -1475,6 +1475,7 @@
   "statsTopKeys": "Tonalités principales",
   "statsDawTypes": "Types de DAW",
   "statsProjectActivity": "Activité des Projets",
+  "statsSingleProjectActivity": "Activité du Projet",
   "statsNoData": "Pas encore de données",
   "statsNoPhaseData": "Les données de phases apparaîtront après des transitions de phase.",
   "statsLastActivityDaysAgo": "Dernière activité: il y a {days} j",

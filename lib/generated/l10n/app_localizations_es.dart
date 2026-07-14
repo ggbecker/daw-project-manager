@@ -2255,6 +2255,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get statsProjectActivity => 'Actividad de Proyectos';
 
   @override
+  String get statsSingleProjectActivity => 'Actividad del Proyecto';
+
+  @override
   String get statsNoData => 'Sin datos aún';
 
   @override

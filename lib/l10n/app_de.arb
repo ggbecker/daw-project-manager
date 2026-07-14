@@ -1475,6 +1475,7 @@
   "statsTopKeys": "Häufige Tonarten",
   "statsDawTypes": "DAW-Typen",
   "statsProjectActivity": "Projektaktivität",
+  "statsSingleProjectActivity": "Projektaktivität",
   "statsNoData": "Noch keine Daten",
   "statsNoPhaseData": "Phasendaten erscheinen, wenn Projekte die Phase wechseln.",
   "statsLastActivityDaysAgo": "Letzte Aktivität: vor {days} Tagen",

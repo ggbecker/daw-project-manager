@@ -1475,6 +1475,7 @@
   "statsTopKeys": "Популярные тональности",
   "statsDawTypes": "Типы DAW",
   "statsProjectActivity": "Активность проектов",
+  "statsSingleProjectActivity": "Активность проекта",
   "statsNoData": "Нет данных",
   "statsNoPhaseData": "Данные появятся после смены фаз.",
   "statsLastActivityDaysAgo": "Последняя активность: {days} дн. назад",
