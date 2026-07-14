@@ -41,6 +41,7 @@ import 'google_drive_sync_page.dart';
 import 'statistics_page.dart';
 import 'queue_page.dart';
 import 'notification_settings_page.dart';
+import 'widgets/conversion_progress_dialog.dart';
 import 'widgets/desktop_title_bar.dart';
 import 'widgets/drag_to_share_button.dart';
 import 'widgets/language_switcher.dart';
@@ -3946,9 +3947,8 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       // compatible format first so the shared file is actually accepted.
       var fileToShare = sourceFile;
       var shareFileName = originalFileName;
-      if (AudioAnalysisService.needsConversionForSharing(effectivePath)) {
-        final tempDir = await getTemporaryDirectory();
-        final converted = await AudioAnalysisService.convertForSharing(effectivePath, tempDir.path);
+      if (AudioAnalysisService.needsConversionForSharing(effectivePath) && mounted) {
+        final converted = await convertForSharingWithProgress(context, effectivePath);
         if (converted != null) {
           fileToShare = converted;
           shareFileName = path.basename(converted.path);
@@ -5913,12 +5913,11 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
       // compatible format first so the shared file is actually accepted.
       var fileToShare = sourceFile;
       var shareFileName = originalFileName;
-      if (AudioAnalysisService.needsConversionForSharing(effectivePath)) {
-        final tempDir = await getTemporaryDirectory();
+      if (AudioAnalysisService.needsConversionForSharing(effectivePath) && mounted) {
         if (kDebugMode) {
           debugPrint('[preview_share] converting for messaging-app compatibility...');
         }
-        final converted = await AudioAnalysisService.convertForSharing(effectivePath, tempDir.path);
+        final converted = await convertForSharingWithProgress(context, effectivePath);
         if (converted != null) {
           fileToShare = converted;
           shareFileName = path.basename(converted.path);

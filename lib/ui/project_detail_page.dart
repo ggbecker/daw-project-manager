@@ -27,6 +27,7 @@ import '../utils/file_launcher.dart';
 import '../generated/l10n/app_localizations.dart';
 import '../services/audio_analysis_service.dart';
 import '../services/mixdown_detector_service.dart';
+import 'widgets/conversion_progress_dialog.dart';
 import 'widgets/desktop_title_bar.dart';
 import 'widgets/drag_to_share_button.dart';
 import 'widgets/todo_list_widget.dart';
@@ -1919,12 +1920,11 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
       // compatible format first so the shared file is actually accepted.
       var fileToShare = sourceFile;
       var shareFileName = originalFileName;
-      if (AudioAnalysisService.needsConversionForSharing(effectivePath)) {
-        final tempDir = await getTemporaryDirectory();
+      if (AudioAnalysisService.needsConversionForSharing(effectivePath) && mounted) {
         if (kDebugMode) {
           debugPrint('[preview_share] converting for messaging-app compatibility...');
         }
-        final converted = await AudioAnalysisService.convertForSharing(effectivePath, tempDir.path);
+        final converted = await convertForSharingWithProgress(context, effectivePath);
         if (converted != null) {
           fileToShare = converted;
           shareFileName = p.basename(converted.path);

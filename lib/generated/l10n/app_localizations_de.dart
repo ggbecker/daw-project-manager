@@ -1911,6 +1911,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get share => 'Teilen';
 
   @override
+  String get convertingAudioForSharing => 'Audio wird zum Teilen vorbereitet…';
+
+  @override
   String get backupInProgressTitle => 'Backup läuft';
 
   @override

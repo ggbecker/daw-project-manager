@@ -2093,6 +2093,7 @@
     "description": "Tooltip for the share as ZIP button"
   },
   "share": "Share",
+  "convertingAudioForSharing": "Preparing audio for sharing…",
   "backupInProgressTitle": "Backup in Progress",
   "backupInProgressMessage": "A backup is currently uploading to Google Drive. Quitting now may leave it incomplete — wait for it to finish, or quit anyway?",
   "waitForBackup": "Wait",

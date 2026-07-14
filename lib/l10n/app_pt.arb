@@ -1130,6 +1130,7 @@
     "description": "Tooltip for the share as ZIP button"
   },
   "share": "Compartilhar",
+  "convertingAudioForSharing": "Preparando o áudio para compartilhar…",
   "backupInProgressTitle": "Backup em Andamento",
   "backupInProgressMessage": "Um backup está sendo enviado ao Google Drive agora. Sair pode deixá-lo incompleto — esperar terminar, ou sair mesmo assim?",
   "waitForBackup": "Esperar",

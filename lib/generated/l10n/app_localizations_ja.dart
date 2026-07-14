@@ -1857,6 +1857,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get share => '共有';
 
   @override
+  String get convertingAudioForSharing => '共有用にオーディオを準備しています…';
+
+  @override
   String get backupInProgressTitle => 'バックアップ中';
 
   @override

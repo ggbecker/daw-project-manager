@@ -1106,6 +1106,7 @@
     "description": "Tooltip for the share as ZIP button"
   },
   "share": "Поделиться",
+  "convertingAudioForSharing": "Подготовка аудио к отправке…",
   "backupInProgressTitle": "Идёт резервное копирование",
   "backupInProgressMessage": "Сейчас идёт загрузка резервной копии в Google Drive. Если выйти сейчас, она может остаться незавершённой — подождать, пока закончится, или выйти всё равно?",
   "waitForBackup": "Подождать",

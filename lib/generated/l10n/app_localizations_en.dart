@@ -1897,6 +1897,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get share => 'Share';
 
   @override
+  String get convertingAudioForSharing => 'Preparing audio for sharing…';
+
+  @override
   String get backupInProgressTitle => 'Backup in Progress';
 
   @override

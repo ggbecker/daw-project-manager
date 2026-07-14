@@ -1897,6 +1897,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get share => 'Compartilhar';
 
   @override
+  String get convertingAudioForSharing =>
+      'Preparando o áudio para compartilhar…';
+
+  @override
   String get backupInProgressTitle => 'Backup em Andamento';
 
   @override

@@ -1106,6 +1106,7 @@
     "description": "Tooltip for the share as ZIP button"
   },
   "share": "共有",
+  "convertingAudioForSharing": "共有用にオーディオを準備しています…",
   "backupInProgressTitle": "バックアップ中",
   "backupInProgressMessage": "現在Googleドライブへバックアップをアップロード中です。今終了するとバックアップが不完全になる可能性があります。完了を待ちますか、それでも終了しますか？",
   "waitForBackup": "待つ",

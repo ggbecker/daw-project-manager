@@ -1899,6 +1899,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get share => 'Поделиться';
 
   @override
+  String get convertingAudioForSharing => 'Подготовка аудио к отправке…';
+
+  @override
   String get backupInProgressTitle => 'Идёт резервное копирование';
 
   @override

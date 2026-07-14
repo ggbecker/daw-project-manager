@@ -1835,6 +1835,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get share => '分享';
 
   @override
+  String get convertingAudioForSharing => '正在准备要分享的音频…';
+
+  @override
   String get backupInProgressTitle => '备份进行中';
 
   @override

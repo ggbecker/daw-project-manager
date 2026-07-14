@@ -3218,6 +3218,12 @@ abstract class AppLocalizations {
   /// **'Share'**
   String get share;
 
+  /// No description provided for @convertingAudioForSharing.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing audio for sharing…'**
+  String get convertingAudioForSharing;
+
   /// No description provided for @backupInProgressTitle.
   ///
   /// In en, this message translates to:

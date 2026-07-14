@@ -1919,6 +1919,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get share => 'Partager';
 
   @override
+  String get convertingAudioForSharing =>
+      'Préparation de l\'audio pour le partage…';
+
+  @override
   String get backupInProgressTitle => 'Sauvegarde en Cours';
 
   @override

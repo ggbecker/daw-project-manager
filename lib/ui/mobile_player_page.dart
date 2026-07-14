@@ -11,6 +11,7 @@ import '../providers/providers.dart';
 import '../generated/l10n/app_localizations.dart';
 import '../services/audio_analysis_service.dart';
 import 'project_detail_page.dart';
+import 'widgets/conversion_progress_dialog.dart';
 
 class MobilePlayerPage extends ConsumerStatefulWidget {
   const MobilePlayerPage({super.key});
@@ -132,9 +133,8 @@ class _MobilePlayerPageState extends ConsumerState<MobilePlayerPage> {
       // compatible format first so the shared file is actually accepted.
       var fileToShare = sourceFile;
       var shareFileName = originalFileName;
-      if (AudioAnalysisService.needsConversionForSharing(songPath)) {
-        final tempDir = await getTemporaryDirectory();
-        final converted = await AudioAnalysisService.convertForSharing(songPath, tempDir.path);
+      if (AudioAnalysisService.needsConversionForSharing(songPath) && mounted) {
+        final converted = await convertForSharingWithProgress(context, songPath);
         if (converted != null) {
           fileToShare = converted;
           shareFileName = p.basename(converted.path);

@@ -1106,6 +1106,7 @@
     "description": "Tooltip for the share as ZIP button"
   },
   "share": "Condividi",
+  "convertingAudioForSharing": "Preparazione dell'audio per la condivisione…",
   "backupInProgressTitle": "Backup in Corso",
   "backupInProgressMessage": "Un backup è in fase di caricamento su Google Drive. Uscire ora potrebbe lasciarlo incompleto — aspettare che finisca, oppure uscire comunque?",
   "waitForBackup": "Aspetta",

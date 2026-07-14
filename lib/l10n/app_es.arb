@@ -1106,6 +1106,7 @@
     "description": "Tooltip for the share as ZIP button"
   },
   "share": "Compartir",
+  "convertingAudioForSharing": "Preparando el audio para compartir…",
   "backupInProgressTitle": "Copia de Seguridad en Curso",
   "backupInProgressMessage": "Se está subiendo una copia de seguridad a Google Drive ahora mismo. Salir puede dejarla incompleta — ¿esperar a que termine, o salir de todos modos?",
   "waitForBackup": "Esperar",
