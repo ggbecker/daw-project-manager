@@ -16,6 +16,7 @@ import '../models/scan_mode.dart';
 import 'onboarding_wizard_page.dart';
 import '../providers/providers.dart';
 import '../repository/project_repository.dart';
+import '../services/mixdown_detector_service.dart';
 import '../services/scanner_service.dart';
 import '../services/update_check_service.dart';
 import '../utils/file_launcher.dart';
@@ -32,28 +33,104 @@ class ProjectFoldersSettingsPage extends ConsumerStatefulWidget {
 class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSettingsPage> {
   bool _busy = false;
   bool _checkingUpdate = false;
-  late final TextEditingController _customMixdownCtrl;
+  late final TextEditingController _newMixdownFolderCtrl;
 
   @override
   void initState() {
     super.initState();
-    _customMixdownCtrl = TextEditingController();
-    // Populate once the provider resolves
-    ref.read(customMixdownFolderProvider.future).then((val) {
-      if (mounted) _customMixdownCtrl.text = val ?? '';
-    });
+    _newMixdownFolderCtrl = TextEditingController();
   }
 
   @override
   void dispose() {
-    _customMixdownCtrl.dispose();
+    _newMixdownFolderCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _saveCustomMixdownFolder(String value) async {
+  Future<void> _addMixdownFolder(String value) async {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return;
+    final current = ref.read(customMixdownFoldersProvider).value ?? const <String>[];
+    if (current.any((f) => f.toLowerCase() == trimmed.toLowerCase())) {
+      _newMixdownFolderCtrl.clear();
+      return;
+    }
     final repo = await ref.read(repositoryProvider.future);
-    await repo.setCustomMixdownFolder(value.isEmpty ? null : value);
-    ref.invalidate(customMixdownFolderProvider);
+    await repo.setCustomMixdownFolders([...current, trimmed]);
+    ref.invalidate(customMixdownFoldersProvider);
+    _newMixdownFolderCtrl.clear();
+  }
+
+  Future<void> _removeMixdownFolder(String folder) async {
+    final current = ref.read(customMixdownFoldersProvider).value ?? const <String>[];
+    final repo = await ref.read(repositoryProvider.future);
+    await repo.setCustomMixdownFolders(current.where((f) => f != folder).toList());
+    ref.invalidate(customMixdownFoldersProvider);
+  }
+
+  void _showMixdownInfoDialog() {
+    final l10n = AppLocalizations.of(context)!;
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.mixdownFoldersInfoDialogTitle),
+        content: SizedBox(
+          width: 420,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(l10n.mixdownFoldersInfoDialogBody),
+                const SizedBox(height: 16),
+                Text(
+                  l10n.mixdownFoldersDawDefaultsHeading,
+                  style: Theme.of(ctx).textTheme.labelLarge,
+                ),
+                const SizedBox(height: 8),
+                for (final entry in MixdownDetectorService.dawFolders.entries)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: RichText(
+                      text: TextSpan(
+                        style: Theme.of(ctx).textTheme.bodySmall,
+                        children: [
+                          TextSpan(
+                            text: '${entry.key}: ',
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          TextSpan(text: entry.value.join(', ')),
+                        ],
+                      ),
+                    ),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: RichText(
+                    text: TextSpan(
+                      style: Theme.of(ctx).textTheme.bodySmall,
+                      children: [
+                        TextSpan(
+                          text: '${l10n.mixdownFoldersOtherDawLabel}: ',
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        TextSpan(text: MixdownDetectorService.fallbackFolders.join(', ')),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.close),
+          ),
+        ],
+      ),
+    );
   }
 
   bool get _isDesktop => !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux);
@@ -300,6 +377,7 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
 
     final projectFolders = ref.watch(scanRootsProvider);
     final excludedFolders = ref.watch(ignoredPathsProvider);
+    final customMixdownFolders = ref.watch(customMixdownFoldersProvider).value ?? const <String>[];
 
     final sessionMode = ref.watch(sessionModeProvider);
     final suggestionsEnabled = ref.watch(suggestionsEnabledProvider);
@@ -697,7 +775,7 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
 
         const SizedBox(height: 12),
 
-        // Custom mixdown folder
+        // Custom mixdown folders
         Card(
           clipBehavior: Clip.antiAlias,
           child: Padding(
@@ -713,36 +791,63 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(AppLocalizations.of(context)!.previewMixdownFolderTitle, style: Theme.of(context).textTheme.titleMedium),
+                          Text(l10n.previewMixdownFolderTitle, style: Theme.of(context).textTheme.titleMedium),
                           const SizedBox(height: 2),
                           Text(
-                            AppLocalizations.of(context)!.previewMixdownFolderSubtitle,
+                            l10n.previewMixdownFolderSubtitle,
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ],
                       ),
                     ),
+                    Tooltip(
+                      message: l10n.mixdownFoldersInfoTooltip,
+                      child: IconButton(
+                        icon: const Icon(Icons.info_outline),
+                        onPressed: _showMixdownInfoDialog,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
+                if (customMixdownFolders.isEmpty)
+                  Text(
+                    l10n.noCustomMixdownFolders,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  )
+                else
+                  ...customMixdownFolders.map((folder) {
+                    return ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      dense: true,
+                      leading: const Icon(Icons.folder_open),
+                      title: Text(folder),
+                      trailing: IconButton(
+                        tooltip: l10n.remove,
+                        onPressed: () => _removeMixdownFolder(folder),
+                        icon: const Icon(Icons.delete_outline),
+                      ),
+                    );
+                  }),
+                const SizedBox(height: 8),
                 Row(
                   children: [
                     Expanded(
                       child: TextField(
-                        controller: _customMixdownCtrl,
+                        controller: _newMixdownFolderCtrl,
                         decoration: InputDecoration(
-                          hintText: AppLocalizations.of(context)!.previewMixdownFolderHint,
-                          prefixIcon: Icon(Icons.folder_open),
-                          border: OutlineInputBorder(),
+                          hintText: l10n.previewMixdownFolderHint,
+                          prefixIcon: const Icon(Icons.folder_open),
+                          border: const OutlineInputBorder(),
                           isDense: true,
                         ),
-                        onSubmitted: _saveCustomMixdownFolder,
+                        onSubmitted: _addMixdownFolder,
                       ),
                     ),
                     const SizedBox(width: 8),
                     FilledButton.tonal(
-                      onPressed: () => _saveCustomMixdownFolder(_customMixdownCtrl.text),
-                      child: Text(AppLocalizations.of(context)!.save),
+                      onPressed: () => _addMixdownFolder(_newMixdownFolderCtrl.text),
+                      child: Text(l10n.addMixdownFolder),
                     ),
                   ],
                 ),

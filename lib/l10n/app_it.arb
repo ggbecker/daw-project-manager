@@ -1598,9 +1598,16 @@
   "nameInvalidCharacters": "Il nome non può contenere / \\ :",
   "alsoRenameContainingFolder": "Rinomina anche la cartella contenitore",
   "renameButton": "Rinomina",
-  "previewMixdownFolderTitle": "Cartella mixdown anteprima",
-  "previewMixdownFolderSubtitle": "Nome della sottocartella in ogni cartella di progetto da controllare prima durante il rilevamento automatico dei brani di anteprima. Lascia vuoto per usare i valori predefiniti del DAW.",
+  "previewMixdownFolderTitle": "Cartelle mixdown anteprima",
+  "previewMixdownFolderSubtitle": "Nomi delle sottocartelle in ogni cartella di progetto da controllare per prime, in ordine, durante il rilevamento automatico dei brani di anteprima. Lascia vuoto per usare i valori predefiniti del DAW.",
   "previewMixdownFolderHint": "es. Mixdown",
+  "mixdownFoldersInfoTooltip": "Come funziona",
+  "mixdownFoldersInfoDialogTitle": "Come funziona il rilevamento dell'anteprima",
+  "mixdownFoldersInfoDialogBody": "Quando un progetto non ha una canzone di anteprima scelta manualmente, l'app cerca il file audio modificato più di recente da usare come anteprima. Controlla prima le tue cartelle personalizzate qui sotto, in ordine, poi ricorre a un elenco di nomi di cartelle predefiniti in base al DAW del progetto.",
+  "mixdownFoldersDawDefaultsHeading": "Cartelle predefinite per DAW",
+  "mixdownFoldersOtherDawLabel": "Altro / DAW non riconosciuta",
+  "addMixdownFolder": "Aggiungi",
+  "noCustomMixdownFolders": "Nessuna cartella personalizzata aggiunta — verranno usati i valori predefiniti del DAW.",
   "dawInfoLabel": "DAW: {daw}",
   "@dawInfoLabel": {
     "placeholders": {

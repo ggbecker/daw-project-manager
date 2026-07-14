@@ -2437,14 +2437,39 @@ class AppLocalizationsRu extends AppLocalizations {
   String get renameButton => 'Переименовать';
 
   @override
-  String get previewMixdownFolderTitle => 'Папка миксов для предпросмотра';
+  String get previewMixdownFolderTitle => 'Папки миксов для предпросмотра';
 
   @override
   String get previewMixdownFolderSubtitle =>
-      'Имя подпапки в каждой папке проекта, которую нужно проверять в первую очередь при автоматическом обнаружении песен для предпросмотра. Оставьте пустым для использования настроек DAW по умолчанию.';
+      'Имена подпапок в каждой папке проекта, проверяемые первыми по порядку при автоматическом обнаружении песен для предпросмотра. Оставьте пустым для использования настроек DAW по умолчанию.';
 
   @override
   String get previewMixdownFolderHint => 'например, Миксы';
+
+  @override
+  String get mixdownFoldersInfoTooltip => 'Как это работает';
+
+  @override
+  String get mixdownFoldersInfoDialogTitle =>
+      'Как работает обнаружение предпросмотра';
+
+  @override
+  String get mixdownFoldersInfoDialogBody =>
+      'Если для проекта не выбрана песня для предпросмотра вручную, приложение ищет самый недавно измененный аудиофайл для использования в качестве предпросмотра. Сначала проверяются ваши пользовательские папки ниже, по порядку, а затем используется список папок по умолчанию на основе DAW проекта.';
+
+  @override
+  String get mixdownFoldersDawDefaultsHeading =>
+      'Папки по умолчанию для каждой DAW';
+
+  @override
+  String get mixdownFoldersOtherDawLabel => 'Другое / нераспознанная DAW';
+
+  @override
+  String get addMixdownFolder => 'Добавить';
+
+  @override
+  String get noCustomMixdownFolders =>
+      'Пользовательские папки не добавлены — будут использованы значения по умолчанию DAW.';
 
   @override
   String dawInfoLabel(String daw) {

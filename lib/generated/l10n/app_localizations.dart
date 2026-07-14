@@ -4145,13 +4145,13 @@ abstract class AppLocalizations {
   /// No description provided for @previewMixdownFolderTitle.
   ///
   /// In en, this message translates to:
-  /// **'Preview Mixdown Folder'**
+  /// **'Preview Mixdown Folders'**
   String get previewMixdownFolderTitle;
 
   /// No description provided for @previewMixdownFolderSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Subfolder name inside each project folder to check first when auto-detecting preview songs. Leave empty to use DAW defaults.'**
+  /// **'Subfolder names inside each project folder to check first, in order, when auto-detecting preview songs. Leave empty to use DAW defaults.'**
   String get previewMixdownFolderSubtitle;
 
   /// No description provided for @previewMixdownFolderHint.
@@ -4159,6 +4159,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'e.g. Mixdowns'**
   String get previewMixdownFolderHint;
+
+  /// No description provided for @mixdownFoldersInfoTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'How this works'**
+  String get mixdownFoldersInfoTooltip;
+
+  /// No description provided for @mixdownFoldersInfoDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How preview detection works'**
+  String get mixdownFoldersInfoDialogTitle;
+
+  /// No description provided for @mixdownFoldersInfoDialogBody.
+  ///
+  /// In en, this message translates to:
+  /// **'When a project has no manually chosen preview song, the app looks for the most recently modified audio file to use as a preview. It checks your custom folders below first, in order, then falls back to a list of default folder names based on the project\'s DAW.'**
+  String get mixdownFoldersInfoDialogBody;
+
+  /// No description provided for @mixdownFoldersDawDefaultsHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Default folders checked per DAW'**
+  String get mixdownFoldersDawDefaultsHeading;
+
+  /// No description provided for @mixdownFoldersOtherDawLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Other / unrecognized DAW'**
+  String get mixdownFoldersOtherDawLabel;
+
+  /// No description provided for @addMixdownFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get addMixdownFolder;
+
+  /// No description provided for @noCustomMixdownFolders.
+  ///
+  /// In en, this message translates to:
+  /// **'No custom folders added — DAW defaults will be used.'**
+  String get noCustomMixdownFolders;
 
   /// No description provided for @dawInfoLabel.
   ///

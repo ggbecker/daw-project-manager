@@ -2455,10 +2455,34 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get previewMixdownFolderSubtitle =>
-      'Unterordnername in jedem Projektordner, der zuerst bei der automatischen Erkennung von Vorschau-Songs geprüft wird. Leer lassen für DAW-Standardwerte.';
+      'Unterordnernamen in jedem Projektordner, die zuerst bei der automatischen Erkennung von Vorschau-Songs geprüft werden, in dieser Reihenfolge. Leer lassen für DAW-Standardwerte.';
 
   @override
   String get previewMixdownFolderHint => 'z.B. Mixdowns';
+
+  @override
+  String get mixdownFoldersInfoTooltip => 'Wie das funktioniert';
+
+  @override
+  String get mixdownFoldersInfoDialogTitle =>
+      'Wie die Vorschau-Erkennung funktioniert';
+
+  @override
+  String get mixdownFoldersInfoDialogBody =>
+      'Wenn für ein Projekt kein manuell ausgewählter Vorschau-Song vorhanden ist, sucht die App nach der zuletzt geänderten Audiodatei, um sie als Vorschau zu verwenden. Zuerst werden Ihre benutzerdefinierten Ordner unten in der angegebenen Reihenfolge geprüft, danach eine Liste von Standardordnernamen basierend auf der DAW des Projekts.';
+
+  @override
+  String get mixdownFoldersDawDefaultsHeading => 'Standardordner pro DAW';
+
+  @override
+  String get mixdownFoldersOtherDawLabel => 'Andere / unbekannte DAW';
+
+  @override
+  String get addMixdownFolder => 'Hinzufügen';
+
+  @override
+  String get noCustomMixdownFolders =>
+      'Keine benutzerdefinierten Ordner hinzugefügt — DAW-Standardwerte werden verwendet.';
 
   @override
   String dawInfoLabel(String daw) {

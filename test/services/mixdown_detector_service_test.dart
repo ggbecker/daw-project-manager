@@ -124,7 +124,7 @@ void main() {
       }
     });
 
-    test('checks customFolder before DAW-specific folder', () async {
+    test('checks customFolders before DAW-specific folder', () async {
       final dir = await Directory.systemTemp.createTemp('daw_custom_');
       try {
         final customDir = Directory('${dir.path}/MyBounces');
@@ -145,10 +145,64 @@ void main() {
         );
         final result = MixdownDetectorService.findLatestMixdown(
           project,
-          customFolder: 'MyBounces',
+          customFolders: ['MyBounces'],
         );
         expect(result, isNotNull);
         expect(result!.path, contains('from_custom'));
+      } finally {
+        await dir.delete(recursive: true);
+      }
+    });
+
+    test('checks multiple customFolders in order, using the first one that exists', () async {
+      final dir = await Directory.systemTemp.createTemp('daw_multi_custom_');
+      try {
+        // 'FirstChoice' doesn't exist on disk; 'SecondChoice' does.
+        final secondDir = Directory('${dir.path}/SecondChoice');
+        await secondDir.create();
+        final file = File('${secondDir.path}/mix.wav');
+        await file.create();
+
+        final project = TestFactories.makeProject(
+          filePath: '${dir.path}/project.als',
+          dawType: 'Ableton Live',
+        );
+        final result = MixdownDetectorService.findLatestMixdown(
+          project,
+          customFolders: ['FirstChoice', 'SecondChoice'],
+        );
+        expect(result, isNotNull);
+        expect(result!.path, contains('mix.wav'));
+      } finally {
+        await dir.delete(recursive: true);
+      }
+    });
+
+    test('earlier customFolders entry wins even if a later one is newer', () async {
+      final dir = await Directory.systemTemp.createTemp('daw_multi_order_');
+      try {
+        final firstDir = Directory('${dir.path}/FirstChoice');
+        final secondDir = Directory('${dir.path}/SecondChoice');
+        await firstDir.create();
+        await secondDir.create();
+
+        final firstFile = File('${firstDir.path}/older.wav');
+        final secondFile = File('${secondDir.path}/newer.wav');
+        await firstFile.create();
+        await secondFile.create();
+        firstFile.setLastModifiedSync(DateTime(2024, 1, 1));
+        secondFile.setLastModifiedSync(DateTime(2025, 1, 1));
+
+        final project = TestFactories.makeProject(
+          filePath: '${dir.path}/project.als',
+          dawType: 'Ableton Live',
+        );
+        final result = MixdownDetectorService.findLatestMixdown(
+          project,
+          customFolders: ['FirstChoice', 'SecondChoice'],
+        );
+        expect(result, isNotNull);
+        expect(result!.path, contains('older.wav'));
       } finally {
         await dir.delete(recursive: true);
       }

@@ -710,10 +710,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       // Auto-detect preview songs for projects that have neither a manual nor
       // a previously auto-detected path. Runs after the full scan so all upserts
       // are committed before we read back the project list.
-      final customFolder = ref.read(customMixdownFolderProvider).value;
+      final customFolders = ref.read(customMixdownFoldersProvider).value;
       for (final project in repo.getAllProjects()) {
         if (project.previewSongPath != null || project.previewSongAutoPath != null) continue;
-        final detected = MixdownDetectorService.findLatestMixdown(project, customFolder: customFolder);
+        final detected = MixdownDetectorService.findLatestMixdown(project, customFolders: customFolders);
         if (detected != null) {
           await repo.updateProject(project.copyWith(previewSongAutoPath: detected.path));
         }
@@ -3204,13 +3204,13 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   }
   
   Future<void> _playPreviewSong(MusicProject project) async {
-    final customFolder = ref.read(customMixdownFolderProvider).value;
+    final customFolders = ref.read(customMixdownFoldersProvider).value;
     var effectivePath = project.previewSongPath?.isNotEmpty == true
         ? project.previewSongPath!
         : project.previewSongAutoPath;
 
     if (effectivePath == null) {
-      final detected = MixdownDetectorService.findLatestMixdown(project, customFolder: customFolder);
+      final detected = MixdownDetectorService.findLatestMixdown(project, customFolders: customFolders);
       if (detected != null) {
         effectivePath = detected.path;
         final repo = await ref.read(repositoryProvider.future);
@@ -3829,8 +3829,8 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                 : File(project.filePath);
             await repo.upsertFromFileSystemEntity(entity, fullMetadata: true);
             if (project.previewSongPath?.isNotEmpty != true && project.previewSongAutoPath == null) {
-              final customFolder = ref.read(customMixdownFolderProvider).value;
-              final detected = MixdownDetectorService.findLatestMixdown(project, customFolder: customFolder);
+              final customFolders = ref.read(customMixdownFoldersProvider).value;
+              final detected = MixdownDetectorService.findLatestMixdown(project, customFolders: customFolders);
               if (detected != null) {
                 final fresh = repo.getById(project.id) ?? project;
                 await repo.updateProject(fresh.copyWith(previewSongAutoPath: detected.path));
@@ -5297,8 +5297,8 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
       _startBackgroundPrep();
     } else {
       Future.microtask(() async {
-        final customFolder = ref.read(customMixdownFolderProvider).value;
-        final file = MixdownDetectorService.findLatestMixdown(widget.project, customFolder: customFolder);
+        final customFolders = ref.read(customMixdownFoldersProvider).value;
+        final file = MixdownDetectorService.findLatestMixdown(widget.project, customFolders: customFolders);
         if (mounted && file != null) {
           setState(() => _autoDetectedPath = file.path);
           final repo = await ref.read(repositoryProvider.future);
@@ -6831,13 +6831,13 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
   }
 
   Future<void> _playPreviewSong(MusicProject project) async {
-    final customFolder = ref.read(customMixdownFolderProvider).value;
+    final customFolders = ref.read(customMixdownFoldersProvider).value;
     var effectivePath = project.previewSongPath?.isNotEmpty == true
         ? project.previewSongPath!
         : project.previewSongAutoPath;
 
     if (effectivePath == null) {
-      final detected = MixdownDetectorService.findLatestMixdown(project, customFolder: customFolder);
+      final detected = MixdownDetectorService.findLatestMixdown(project, customFolders: customFolders);
       if (detected != null) {
         effectivePath = detected.path;
         final repo = await ref.read(repositoryProvider.future);

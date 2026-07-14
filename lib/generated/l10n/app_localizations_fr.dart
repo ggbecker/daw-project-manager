@@ -2461,14 +2461,39 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get previewMixdownFolderTitle =>
-      'Dossier de mixage de prévisualisation';
+      'Dossiers de mixage de prévisualisation';
 
   @override
   String get previewMixdownFolderSubtitle =>
-      'Nom du sous-dossier dans chaque dossier de projet à vérifier en premier lors de la détection automatique des morceaux de prévisualisation. Laisser vide pour utiliser les valeurs par défaut du DAW.';
+      'Noms des sous-dossiers dans chaque dossier de projet à vérifier en premier, dans l\'ordre, lors de la détection automatique des morceaux de prévisualisation. Laisser vide pour utiliser les valeurs par défaut du DAW.';
 
   @override
   String get previewMixdownFolderHint => 'ex. Mixages';
+
+  @override
+  String get mixdownFoldersInfoTooltip => 'Comment ça marche';
+
+  @override
+  String get mixdownFoldersInfoDialogTitle =>
+      'Comment fonctionne la détection de prévisualisation';
+
+  @override
+  String get mixdownFoldersInfoDialogBody =>
+      'Lorsqu\'un projet n\'a pas de morceau de prévisualisation choisi manuellement, l\'application recherche le fichier audio le plus récemment modifié à utiliser comme aperçu. Elle vérifie d\'abord vos dossiers personnalisés ci-dessous, dans l\'ordre, puis se rabat sur une liste de noms de dossiers par défaut selon le DAW du projet.';
+
+  @override
+  String get mixdownFoldersDawDefaultsHeading =>
+      'Dossiers par défaut selon le DAW';
+
+  @override
+  String get mixdownFoldersOtherDawLabel => 'Autre / DAW non reconnu';
+
+  @override
+  String get addMixdownFolder => 'Ajouter';
+
+  @override
+  String get noCustomMixdownFolders =>
+      'Aucun dossier personnalisé ajouté — les valeurs par défaut du DAW seront utilisées.';
 
   @override
   String dawInfoLabel(String daw) {

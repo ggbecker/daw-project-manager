@@ -2438,14 +2438,38 @@ class AppLocalizationsPt extends AppLocalizations {
   String get renameButton => 'Renomear';
 
   @override
-  String get previewMixdownFolderTitle => 'Pasta de mixagem de visualização';
+  String get previewMixdownFolderTitle => 'Pastas de mixagem de visualização';
 
   @override
   String get previewMixdownFolderSubtitle =>
-      'Nome da subpasta dentro de cada pasta de projeto a verificar primeiro ao detectar automaticamente músicas de visualização. Deixe vazio para usar os padrões do DAW.';
+      'Nomes de subpastas dentro de cada pasta de projeto a verificar primeiro, em ordem, ao detectar automaticamente músicas de visualização. Deixe vazio para usar os padrões do DAW.';
 
   @override
   String get previewMixdownFolderHint => 'ex. Mixdowns';
+
+  @override
+  String get mixdownFoldersInfoTooltip => 'Como isso funciona';
+
+  @override
+  String get mixdownFoldersInfoDialogTitle =>
+      'Como funciona a detecção de pré-visualização';
+
+  @override
+  String get mixdownFoldersInfoDialogBody =>
+      'Quando um projeto não tem uma música de pré-visualização escolhida manualmente, o app procura o arquivo de áudio modificado mais recentemente para usar como pré-visualização. Ele verifica primeiro suas pastas personalizadas abaixo, em ordem, e depois recorre a uma lista de nomes de pastas padrão com base no DAW do projeto.';
+
+  @override
+  String get mixdownFoldersDawDefaultsHeading => 'Pastas padrão por DAW';
+
+  @override
+  String get mixdownFoldersOtherDawLabel => 'Outro / DAW não reconhecido';
+
+  @override
+  String get addMixdownFolder => 'Adicionar';
+
+  @override
+  String get noCustomMixdownFolders =>
+      'Nenhuma pasta personalizada adicionada — os padrões do DAW serão usados.';
 
   @override
   String dawInfoLabel(String daw) {

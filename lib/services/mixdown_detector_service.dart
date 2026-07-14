@@ -16,7 +16,8 @@ class MixdownDetectorService {
 
   /// Per-DAW folder names to check, in priority order.
   /// Values match the `dawType` strings produced by metadata_extractor.dart.
-  static const Map<String, List<String>> _dawFolders = {
+  /// Exposed publicly so settings UI can explain the defaults to the user.
+  static const Map<String, List<String>> dawFolders = {
     'Ableton Live':  ['Bounces', 'Mixdown', 'Exports', 'Export'],
     'Logic Pro':     ['Bounces'],          // inside .logicx bundle (handled separately)
     'Cubase':        ['Mixdown'],
@@ -33,7 +34,8 @@ class MixdownDetectorService {
 
   /// Checked for any DAW not in the map above, and appended as final fallbacks
   /// for DAWs that are in the map (covers custom folder setups).
-  static const List<String> _fallbackFolders = [
+  /// Exposed publicly so settings UI can explain the defaults to the user.
+  static const List<String> fallbackFolders = [
     'Mixdown', 'Bounces', 'Renders', 'Exports',
     'bounce',  'Render',  'Export',
   ];
@@ -41,12 +43,13 @@ class MixdownDetectorService {
   /// Returns the most recently modified audio file found in the project's
   /// mixdown folder, or null if nothing is found.
   ///
-  /// [customFolder] is an optional user-defined subfolder name to check first.
-  static File? findLatestMixdown(MusicProject project, {String? customFolder}) {
+  /// [customFolders] are optional user-defined subfolder names, checked
+  /// first and in order, before the DAW-specific and generic defaults.
+  static File? findLatestMixdown(MusicProject project, {List<String>? customFolders}) {
     if (MobileUtils.isMobile()) return null;
     if (project.filePath.isEmpty) return null;
 
-    for (final dir in _candidateDirs(project, customFolder: customFolder)) {
+    for (final dir in _candidateDirs(project, customFolders: customFolders)) {
       if (!dir.existsSync()) continue;
 
       final files = dir
@@ -92,14 +95,17 @@ class MixdownDetectorService {
     return null;
   }
 
-  static List<Directory> _candidateDirs(MusicProject project, {String? customFolder}) {
+  static List<Directory> _candidateDirs(MusicProject project, {List<String>? customFolders}) {
     final projectFile = File(project.filePath);
     final projectDir = projectFile.parent.path;
     final dirs = <String>[];
 
-    // User-defined folder is checked first
-    if (customFolder != null && customFolder.isNotEmpty) {
-      dirs.add(p.join(projectDir, customFolder));
+    // User-defined folders are checked first, in the given order
+    if (customFolders != null) {
+      for (final name in customFolders) {
+        if (name.isEmpty) continue;
+        dirs.add(p.join(projectDir, name));
+      }
     }
 
     // Logic Pro: .logicx is a macOS bundle — Bounces lives inside it
@@ -110,15 +116,15 @@ class MixdownDetectorService {
 
     // DAW-specific folders
     final dawSpecific = project.dawType != null
-        ? (_dawFolders[project.dawType!] ?? _fallbackFolders)
-        : _fallbackFolders;
+        ? (dawFolders[project.dawType!] ?? fallbackFolders)
+        : fallbackFolders;
 
     for (final name in dawSpecific) {
       dirs.add(p.join(projectDir, name));
     }
 
     // Always append generic fallbacks (deduplicated)
-    for (final name in _fallbackFolders) {
+    for (final name in fallbackFolders) {
       final path = p.join(projectDir, name);
       if (!dirs.contains(path)) dirs.add(path);
     }

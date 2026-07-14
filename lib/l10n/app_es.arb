@@ -1598,9 +1598,16 @@
   "nameInvalidCharacters": "El nombre no puede contener / \\ :",
   "alsoRenameContainingFolder": "También renombrar la carpeta contenedora",
   "renameButton": "Renombrar",
-  "previewMixdownFolderTitle": "Carpeta de mezcla de vista previa",
-  "previewMixdownFolderSubtitle": "Nombre de la subcarpeta dentro de cada carpeta de proyecto a verificar primero al detectar canciones de vista previa. Dejar vacío para usar los valores predeterminados del DAW.",
+  "previewMixdownFolderTitle": "Carpetas de mezcla de vista previa",
+  "previewMixdownFolderSubtitle": "Nombres de subcarpetas dentro de cada carpeta de proyecto a verificar primero, en orden, al detectar canciones de vista previa. Dejar vacío para usar los valores predeterminados del DAW.",
   "previewMixdownFolderHint": "p.ej. Mezclas",
+  "mixdownFoldersInfoTooltip": "Cómo funciona esto",
+  "mixdownFoldersInfoDialogTitle": "Cómo funciona la detección de vista previa",
+  "mixdownFoldersInfoDialogBody": "Cuando un proyecto no tiene una canción de vista previa elegida manualmente, la app busca el archivo de audio modificado más recientemente para usarlo como vista previa. Primero verifica tus carpetas personalizadas a continuación, en orden, y luego recurre a una lista de nombres de carpetas predeterminados según el DAW del proyecto.",
+  "mixdownFoldersDawDefaultsHeading": "Carpetas predeterminadas por DAW",
+  "mixdownFoldersOtherDawLabel": "Otro / DAW no reconocido",
+  "addMixdownFolder": "Añadir",
+  "noCustomMixdownFolders": "No se agregaron carpetas personalizadas — se usarán los valores predeterminados del DAW.",
   "dawInfoLabel": "DAW: {daw}",
   "@dawInfoLabel": {
     "placeholders": {

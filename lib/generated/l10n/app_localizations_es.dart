@@ -2452,14 +2452,39 @@ class AppLocalizationsEs extends AppLocalizations {
   String get renameButton => 'Renombrar';
 
   @override
-  String get previewMixdownFolderTitle => 'Carpeta de mezcla de vista previa';
+  String get previewMixdownFolderTitle => 'Carpetas de mezcla de vista previa';
 
   @override
   String get previewMixdownFolderSubtitle =>
-      'Nombre de la subcarpeta dentro de cada carpeta de proyecto a verificar primero al detectar canciones de vista previa. Dejar vacío para usar los valores predeterminados del DAW.';
+      'Nombres de subcarpetas dentro de cada carpeta de proyecto a verificar primero, en orden, al detectar canciones de vista previa. Dejar vacío para usar los valores predeterminados del DAW.';
 
   @override
   String get previewMixdownFolderHint => 'p.ej. Mezclas';
+
+  @override
+  String get mixdownFoldersInfoTooltip => 'Cómo funciona esto';
+
+  @override
+  String get mixdownFoldersInfoDialogTitle =>
+      'Cómo funciona la detección de vista previa';
+
+  @override
+  String get mixdownFoldersInfoDialogBody =>
+      'Cuando un proyecto no tiene una canción de vista previa elegida manualmente, la app busca el archivo de audio modificado más recientemente para usarlo como vista previa. Primero verifica tus carpetas personalizadas a continuación, en orden, y luego recurre a una lista de nombres de carpetas predeterminados según el DAW del proyecto.';
+
+  @override
+  String get mixdownFoldersDawDefaultsHeading =>
+      'Carpetas predeterminadas por DAW';
+
+  @override
+  String get mixdownFoldersOtherDawLabel => 'Otro / DAW no reconocido';
+
+  @override
+  String get addMixdownFolder => 'Añadir';
+
+  @override
+  String get noCustomMixdownFolders =>
+      'No se agregaron carpetas personalizadas — se usarán los valores predeterminados del DAW.';
 
   @override
   String dawInfoLabel(String daw) {

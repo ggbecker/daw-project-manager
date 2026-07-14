@@ -1622,9 +1622,16 @@
   "nameInvalidCharacters": "O nome não pode conter / \\ :",
   "alsoRenameContainingFolder": "Também renomear a pasta que o contém",
   "renameButton": "Renomear",
-  "previewMixdownFolderTitle": "Pasta de mixagem de visualização",
-  "previewMixdownFolderSubtitle": "Nome da subpasta dentro de cada pasta de projeto a verificar primeiro ao detectar automaticamente músicas de visualização. Deixe vazio para usar os padrões do DAW.",
+  "previewMixdownFolderTitle": "Pastas de mixagem de visualização",
+  "previewMixdownFolderSubtitle": "Nomes de subpastas dentro de cada pasta de projeto a verificar primeiro, em ordem, ao detectar automaticamente músicas de visualização. Deixe vazio para usar os padrões do DAW.",
   "previewMixdownFolderHint": "ex. Mixdowns",
+  "mixdownFoldersInfoTooltip": "Como isso funciona",
+  "mixdownFoldersInfoDialogTitle": "Como funciona a detecção de pré-visualização",
+  "mixdownFoldersInfoDialogBody": "Quando um projeto não tem uma música de pré-visualização escolhida manualmente, o app procura o arquivo de áudio modificado mais recentemente para usar como pré-visualização. Ele verifica primeiro suas pastas personalizadas abaixo, em ordem, e depois recorre a uma lista de nomes de pastas padrão com base no DAW do projeto.",
+  "mixdownFoldersDawDefaultsHeading": "Pastas padrão por DAW",
+  "mixdownFoldersOtherDawLabel": "Outro / DAW não reconhecido",
+  "addMixdownFolder": "Adicionar",
+  "noCustomMixdownFolders": "Nenhuma pasta personalizada adicionada — os padrões do DAW serão usados.",
   "dawInfoLabel": "DAW: {daw}",
   "@dawInfoLabel": {
     "placeholders": {

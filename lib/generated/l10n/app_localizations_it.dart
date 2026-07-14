@@ -2445,14 +2445,38 @@ class AppLocalizationsIt extends AppLocalizations {
   String get renameButton => 'Rinomina';
 
   @override
-  String get previewMixdownFolderTitle => 'Cartella mixdown anteprima';
+  String get previewMixdownFolderTitle => 'Cartelle mixdown anteprima';
 
   @override
   String get previewMixdownFolderSubtitle =>
-      'Nome della sottocartella in ogni cartella di progetto da controllare prima durante il rilevamento automatico dei brani di anteprima. Lascia vuoto per usare i valori predefiniti del DAW.';
+      'Nomi delle sottocartelle in ogni cartella di progetto da controllare per prime, in ordine, durante il rilevamento automatico dei brani di anteprima. Lascia vuoto per usare i valori predefiniti del DAW.';
 
   @override
   String get previewMixdownFolderHint => 'es. Mixdown';
+
+  @override
+  String get mixdownFoldersInfoTooltip => 'Come funziona';
+
+  @override
+  String get mixdownFoldersInfoDialogTitle =>
+      'Come funziona il rilevamento dell\'anteprima';
+
+  @override
+  String get mixdownFoldersInfoDialogBody =>
+      'Quando un progetto non ha una canzone di anteprima scelta manualmente, l\'app cerca il file audio modificato più di recente da usare come anteprima. Controlla prima le tue cartelle personalizzate qui sotto, in ordine, poi ricorre a un elenco di nomi di cartelle predefiniti in base al DAW del progetto.';
+
+  @override
+  String get mixdownFoldersDawDefaultsHeading => 'Cartelle predefinite per DAW';
+
+  @override
+  String get mixdownFoldersOtherDawLabel => 'Altro / DAW non riconosciuta';
+
+  @override
+  String get addMixdownFolder => 'Aggiungi';
+
+  @override
+  String get noCustomMixdownFolders =>
+      'Nessuna cartella personalizzata aggiunta — verranno usati i valori predefiniti del DAW.';
 
   @override
   String dawInfoLabel(String daw) {
