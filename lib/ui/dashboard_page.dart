@@ -3968,10 +3968,18 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           text: 'Preview song: ${project.displayName}',
         );
       } else {
-        await Share.shareXFiles(
+        final result = await Share.shareXFiles(
           [XFile(fileToShare.path)],
           text: 'Preview song: ${project.displayName}',
         );
+        // Unpackaged Windows builds have no working share sheet
+        // (DataTransferManager needs MSIX) — without this the click does
+        // nothing visible at all.
+        if (result.status == ShareResultStatus.unavailable && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.shareSheetUnavailable)),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -5962,6 +5970,14 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
         );
         if (kDebugMode) {
           debugPrint('[preview_share] ShareResult: status=${result.status} raw=${result.raw}');
+        }
+        // Unpackaged Windows builds have no working share sheet
+        // (DataTransferManager needs MSIX) — without this the click does
+        // nothing visible at all.
+        if (result.status == ShareResultStatus.unavailable && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context)!.shareSheetUnavailable)),
+          );
         }
       }
     } catch (e, st) {

@@ -1107,6 +1107,7 @@
   },
   "share": "分享",
   "convertingAudioForSharing": "正在准备要分享的音频…",
+  "shareSheetUnavailable": "系统分享菜单在此不可用——请改用歌曲预览中的“拖动以分享”按钮，将文件拖到其他应用中。",
   "backupInProgressTitle": "备份进行中",
   "backupInProgressMessage": "目前正在向 Google Drive 上传备份。现在退出可能导致备份不完整——要等待完成，还是仍然退出？",
   "waitForBackup": "等待",

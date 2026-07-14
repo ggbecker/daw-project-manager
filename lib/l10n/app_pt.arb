@@ -1131,6 +1131,7 @@
   },
   "share": "Compartilhar",
   "convertingAudioForSharing": "Preparando o áudio para compartilhar…",
+  "shareSheetUnavailable": "O menu de compartilhamento do sistema não está disponível aqui — use o botão \"Arraste para Compartilhar\" na prévia da música para arrastar o arquivo até outro app.",
   "backupInProgressTitle": "Backup em Andamento",
   "backupInProgressMessage": "Um backup está sendo enviado ao Google Drive agora. Sair pode deixá-lo incompleto — esperar terminar, ou sair mesmo assim?",
   "waitForBackup": "Esperar",

@@ -1900,6 +1900,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get convertingAudioForSharing => 'Preparing audio for sharing…';
 
   @override
+  String get shareSheetUnavailable =>
+      'The system share menu isn\'t available here — use the \"Drag to Share\" chip on the song preview to drag the file onto another app instead.';
+
+  @override
   String get backupInProgressTitle => 'Backup in Progress';
 
   @override

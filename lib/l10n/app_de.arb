@@ -1107,6 +1107,7 @@
   },
   "share": "Teilen",
   "convertingAudioForSharing": "Audio wird zum Teilen vorbereitet…",
+  "shareSheetUnavailable": "Das System-Freigabemenü ist hier nicht verfügbar — nutze stattdessen den \"Zum Teilen ziehen\"-Chip in der Song-Vorschau, um die Datei auf eine andere App zu ziehen.",
   "backupInProgressTitle": "Backup läuft",
   "backupInProgressMessage": "Gerade wird ein Backup zu Google Drive hochgeladen. Wenn du jetzt beendest, könnte es unvollständig bleiben — warten, bis es fertig ist, oder trotzdem beenden?",
   "waitForBackup": "Warten",

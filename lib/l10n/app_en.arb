@@ -2094,6 +2094,7 @@
   },
   "share": "Share",
   "convertingAudioForSharing": "Preparing audio for sharing…",
+  "shareSheetUnavailable": "The system share menu isn't available here — use the \"Drag to Share\" chip on the song preview to drag the file onto another app instead.",
   "backupInProgressTitle": "Backup in Progress",
   "backupInProgressMessage": "A backup is currently uploading to Google Drive. Quitting now may leave it incomplete — wait for it to finish, or quit anyway?",
   "waitForBackup": "Wait",
