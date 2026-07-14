@@ -2156,7 +2156,12 @@ class GoogleDriveSyncService {
       final allProjects = <MusicProject>[];
       final allReleases = <Release>[];
       final allRoots = <ScanRoot>[];
-      
+
+      // Shared box for global/per-profile preferences (app_settings)
+      final appSettingsBox = await Hive.openBox<String>('app_settings');
+      // Per-profile phase customization: profileId -> {phases, phaseColors, finishedPhases}
+      final phaseSettingsByProfile = <String, Map<String, dynamic>>{};
+
       // Maps to track which profile each item belongs to
       final projectToProfileMap = <String, String>{}; // projectId -> profileId
       final releaseToProfileMap = <String, String>{}; // releaseId -> profileId
@@ -2272,9 +2277,30 @@ class GoogleDriveSyncService {
           final profileProjectsBox = await Hive.openBox<MusicProject>('${profile.id}_projects');
           final profileReleasesBox = await Hive.openBox<Release>('${profile.id}_releases');
           final profileRootsBox = await Hive.openBox<ScanRoot>('${profile.id}_roots');
-          
+
           if (kDebugMode) {
             print('    Opened boxes: ${profileProjectsBox.length} projects, ${profileReleasesBox.length} releases, ${profileRootsBox.length} roots');
+          }
+
+          // Collect phase customization for this profile (custom phase names, colors, finished set)
+          try {
+            final phasesRaw = appSettingsBox.get('${profile.id}_phases');
+            final colorsRaw = appSettingsBox.get('${profile.id}_phase_colors');
+            final finishedRaw = appSettingsBox.get('${profile.id}_finished_phases');
+            final legacyFinishedRaw = appSettingsBox.get('${profile.id}_finished_phase');
+            final phaseSettings = <String, dynamic>{};
+            if (phasesRaw != null) phaseSettings['phases'] = jsonDecode(phasesRaw);
+            if (colorsRaw != null) phaseSettings['phaseColors'] = jsonDecode(colorsRaw);
+            if (finishedRaw != null) {
+              phaseSettings['finishedPhases'] = jsonDecode(finishedRaw);
+            } else if (legacyFinishedRaw != null) {
+              phaseSettings['finishedPhases'] = [legacyFinishedRaw];
+            }
+            if (phaseSettings.isNotEmpty) {
+              phaseSettingsByProfile[profile.id] = phaseSettings;
+            }
+          } catch (e) {
+            if (kDebugMode) print('Error collecting phase settings for profile ${profile.id}: $e');
           }
           
           // Collect projects and track which profile they belong to
@@ -2780,7 +2806,23 @@ class GoogleDriveSyncService {
           print('Error collecting TODO templates: $e');
         }
       }
-      
+
+      // Collect custom mixdown folders (global preference, not per-profile)
+      List<String> customMixdownFolders = [];
+      try {
+        final raw = appSettingsBox.get('customMixdownFolders');
+        if (raw != null) {
+          customMixdownFolders = (jsonDecode(raw) as List).map((e) => e.toString()).toList();
+        }
+        if (kDebugMode) {
+          print('Collected ${customMixdownFolders.length} custom mixdown folders');
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error collecting custom mixdown folders: $e');
+        }
+      }
+
       final data = {
         'timestamp': DateTime.now().toIso8601String(),
         'version': '1.6', // Incremented version to include release artwork
@@ -2789,6 +2831,10 @@ class GoogleDriveSyncService {
         'releases': allReleases.map((r) => _serializeRelease(r)).toList(),
         'roots': allRoots.map((r) => _serializeRoot(r)).toList(),
         'templates': allTemplates.map((t) => _serializeTemplate(t)).toList(),
+        // NEW: Custom mixdown folder names (global preference, not per-profile)
+        'customMixdownFolders': customMixdownFolders,
+        // NEW: Per-profile phase customization (custom phase names, colors, finished set)
+        'phaseSettingsByProfile': phaseSettingsByProfile,
         // NEW: Profile mappings to restore correct associations
         'projectToProfile': projectToProfileMap,
         'releaseToProfile': releaseToProfileMap,
@@ -4319,6 +4365,65 @@ class GoogleDriveSyncService {
         } catch (e) {
           if (kDebugMode) print('Error merging roots for profile ${profile.id}: $e');
         }
+      }
+    }
+
+    // Merge custom mixdown folders (global preference, not per-profile) - union of local and remote
+    if (remoteData['customMixdownFolders'] != null) {
+      try {
+        final remoteCustomMixdownFolders = (remoteData['customMixdownFolders'] as List)
+            .map((f) => f.toString())
+            .toList();
+        if (remoteCustomMixdownFolders.isNotEmpty) {
+          final appSettingsBox = await Hive.openBox<String>('app_settings');
+          final localRaw = appSettingsBox.get('customMixdownFolders');
+          final localFolders = localRaw != null
+              ? (jsonDecode(localRaw) as List).map((e) => e.toString()).toList()
+              : <String>[];
+          final merged = [...localFolders];
+          for (final folder in remoteCustomMixdownFolders) {
+            if (!merged.any((f) => f.toLowerCase() == folder.toLowerCase())) {
+              merged.add(folder);
+            }
+          }
+          await appSettingsBox.put('customMixdownFolders', jsonEncode(merged));
+          if (kDebugMode) {
+            print('  Custom mixdown folders: ${merged.length} after merge');
+          }
+        }
+      } catch (e) {
+        if (kDebugMode) print('Error merging custom mixdown folders: $e');
+      }
+    }
+
+    // Merge per-profile phase customization (custom phase names, colors, finished set)
+    // Only fills in slots that are still unset locally - never overwrites local customization.
+    if (remoteData['phaseSettingsByProfile'] != null) {
+      try {
+        final remotePhaseSettings = Map<String, dynamic>.from(remoteData['phaseSettingsByProfile'] as Map);
+        final appSettingsBox = await Hive.openBox<String>('app_settings');
+        for (final profile in allProfiles) {
+          final remoteForProfile = remotePhaseSettings[profile.id];
+          if (remoteForProfile == null) continue;
+          final remoteMap = Map<String, dynamic>.from(remoteForProfile as Map);
+
+          if (remoteMap['phases'] != null && appSettingsBox.get('${profile.id}_phases') == null) {
+            await appSettingsBox.put('${profile.id}_phases', jsonEncode(remoteMap['phases']));
+          }
+          if (remoteMap['phaseColors'] != null && appSettingsBox.get('${profile.id}_phase_colors') == null) {
+            await appSettingsBox.put('${profile.id}_phase_colors', jsonEncode(remoteMap['phaseColors']));
+          }
+          if (remoteMap['finishedPhases'] != null &&
+              appSettingsBox.get('${profile.id}_finished_phases') == null &&
+              appSettingsBox.get('${profile.id}_finished_phase') == null) {
+            await appSettingsBox.put('${profile.id}_finished_phases', jsonEncode(remoteMap['finishedPhases']));
+          }
+        }
+        if (kDebugMode) {
+          print('  Phase settings: merged for ${remotePhaseSettings.length} profile(s)');
+        }
+      } catch (e) {
+        if (kDebugMode) print('Error merging phase settings: $e');
       }
     }
 
