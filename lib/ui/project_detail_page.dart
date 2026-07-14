@@ -25,6 +25,7 @@ import '../repository/project_repository.dart';
 import '../utils/mobile_utils.dart';
 import '../utils/file_launcher.dart';
 import '../generated/l10n/app_localizations.dart';
+import 'session_actions.dart';
 import '../services/audio_analysis_service.dart';
 import '../services/mixdown_detector_service.dart';
 import 'widgets/conversion_progress_dialog.dart';
@@ -1260,7 +1261,7 @@ class _InfoChip extends StatelessWidget {
 
 // ─── Action Toolbar ───────────────────────────────────────────────────────────
 
-class _ProjectDetailActionBar extends StatelessWidget {
+class _ProjectDetailActionBar extends ConsumerWidget {
   final MusicProject project;
   final bool isMobile;
   final bool sourceFileExists;
@@ -1280,9 +1281,12 @@ class _ProjectDetailActionBar extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final notFoundMsg = l10n.sourceFileNotFoundOnThisMachine;
+    final sessionMode = ref.watch(sessionModeProvider);
+    final isSubscribed =
+        sessionMode && ref.watch(activeProjectProvider)?.id == project.id;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -1294,14 +1298,40 @@ class _ProjectDetailActionBar extends StatelessWidget {
         children: [
           if (!isMobile) ...[
             const SizedBox(width: 8),
-            Tooltip(
-              message: sourceFileExists ? '' : notFoundMsg,
-              child: OutlinedButton.icon(
-                onPressed: sourceFileExists ? onOpenInDaw : null,
-                icon: const Icon(Icons.open_in_new, size: 16),
-                label: Text(l10n.openInDaw),
+            if (sessionMode) ...[
+              OutlinedButton.icon(
+                onPressed: () => isSubscribed
+                    ? confirmEndSession(context, ref)
+                    : confirmStartSession(context, ref, project),
+                icon: Icon(
+                  isSubscribed ? Icons.bookmark : Icons.bookmark_add_outlined,
+                  size: 16,
+                  color: isSubscribed ? Colors.green.shade400 : null,
+                ),
+                label: Text(isSubscribed ? l10n.endSession : l10n.startSession),
               ),
-            ),
+              // Once this project's session is active, still let the user
+              // launch the DAW from here instead of needing the dashboard.
+              if (isSubscribed) ...[
+                const SizedBox(width: 8),
+                Tooltip(
+                  message: sourceFileExists ? '' : notFoundMsg,
+                  child: OutlinedButton.icon(
+                    onPressed: sourceFileExists ? onOpenInDaw : null,
+                    icon: const Icon(Icons.open_in_new, size: 16),
+                    label: Text(l10n.openInDaw),
+                  ),
+                ),
+              ],
+            ] else
+              Tooltip(
+                message: sourceFileExists ? '' : notFoundMsg,
+                child: OutlinedButton.icon(
+                  onPressed: sourceFileExists ? onOpenInDaw : null,
+                  icon: const Icon(Icons.open_in_new, size: 16),
+                  label: Text(l10n.openInDaw),
+                ),
+              ),
           ],
           if (!isMobile) ...[
             const SizedBox(width: 8),

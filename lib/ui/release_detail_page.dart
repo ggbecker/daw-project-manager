@@ -23,6 +23,7 @@ import '../utils/mobile_utils.dart';
 import '../utils/file_launcher.dart';
 import '../generated/l10n/app_localizations.dart';
 import 'project_detail_page.dart';
+import 'session_actions.dart';
 import 'widgets/todo_list_widget.dart';
 import 'widgets/waveform_widget.dart';
 
@@ -959,6 +960,9 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
         : path.dirname(project.filePath);
     final fileExists = File(project.filePath).existsSync() ||
         Directory(project.filePath).existsSync();
+    final sessionMode = ref.watch(sessionModeProvider);
+    final isSubscribed =
+        sessionMode && ref.watch(activeProjectProvider)?.id == project.id;
 
     return Card(
       key: ValueKey(project.id),
@@ -1011,9 +1015,20 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
-                icon: const Icon(Icons.open_in_new),
-                tooltip: AppLocalizations.of(context)!.tooltipLaunchInDaw,
-                onPressed: fileExists ? () => _handleLaunchInDaw(context, project) : null,
+                icon: Icon(sessionMode
+                    ? (isSubscribed ? Icons.bookmark : Icons.bookmark_add_outlined)
+                    : Icons.open_in_new),
+                color: isSubscribed ? Colors.green.shade400 : null,
+                tooltip: sessionMode
+                    ? (isSubscribed
+                        ? AppLocalizations.of(context)!.endSession
+                        : AppLocalizations.of(context)!.startSession)
+                    : AppLocalizations.of(context)!.tooltipLaunchInDaw,
+                onPressed: sessionMode
+                    ? () => isSubscribed
+                        ? confirmEndSession(context, ref)
+                        : confirmStartSession(context, ref, project)
+                    : (fileExists ? () => _handleLaunchInDaw(context, project) : null),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -1575,6 +1590,9 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
                             : path.dirname(project.filePath);
                         final fileExists = File(project.filePath).existsSync() ||
                             Directory(project.filePath).existsSync();
+                        final sessionMode = ref.watch(sessionModeProvider);
+                        final isSubscribed = sessionMode &&
+                            ref.watch(activeProjectProvider)?.id == project.id;
 
                         return Card(
                           key: ValueKey(project.id),
@@ -1631,9 +1649,20 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
                                         // Launch button - only on desktop
                                         if (!isMobile)
                                           IconButton(
-                                            icon: const Icon(Icons.open_in_new),
-                                            tooltip: AppLocalizations.of(context)!.tooltipLaunchInDaw,
-                                            onPressed: fileExists ? () async {
+                                            icon: Icon(sessionMode
+                                                ? (isSubscribed ? Icons.bookmark : Icons.bookmark_add_outlined)
+                                                : Icons.open_in_new),
+                                            color: isSubscribed ? Colors.green.shade400 : null,
+                                            tooltip: sessionMode
+                                                ? (isSubscribed
+                                                    ? AppLocalizations.of(context)!.endSession
+                                                    : AppLocalizations.of(context)!.startSession)
+                                                : AppLocalizations.of(context)!.tooltipLaunchInDaw,
+                                            onPressed: sessionMode
+                                                ? () => isSubscribed
+                                                    ? confirmEndSession(context, ref)
+                                                    : confirmStartSession(context, ref, project)
+                                                : (fileExists ? () async {
                                               final success = await FileLauncher.launchProject(project.filePath);
                                               if (success) {
                                                 if (context.mounted) {
@@ -1648,7 +1677,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
                                                   );
                                                 }
                                               }
-                                            } : null,
+                                            } : null),
                                           ),
                                         // Separator - only if Launch button is shown
                                         if (!isMobile)

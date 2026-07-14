@@ -48,6 +48,7 @@ import 'widgets/language_switcher.dart';
 import 'widgets/theme_switcher.dart';
 import 'widgets/mobile_mini_player.dart';
 import '../generated/l10n/app_localizations.dart';
+import 'session_actions.dart';
 import 'dialogs/create_project_dialog.dart';
 import '../models/pending_folder.dart';
 
@@ -3605,9 +3606,9 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     if (!sessionMode) return;
     final activeProject = ref.read(activeProjectProvider);
     if (activeProject?.id == project.id) {
-      await _confirmEndSession(context, ref);
+      await confirmEndSession(context, ref);
     } else {
-      await _confirmStartSession(context, ref, project);
+      await confirmStartSession(context, ref, project);
     }
     // Explicitly repaint rows so the green/yellow session color applies immediately.
     if (mounted) stateManager?.notifyListeners();
@@ -3663,6 +3664,8 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   Future<void> _showContextMenu(BuildContext context, MusicProject project, Offset position) async {
     final l10n = AppLocalizations.of(context)!;
     final driveService = ref.read(googleDriveSyncServiceProvider);
+    final sessionMode = ref.read(sessionModeProvider);
+    final isSubscribed = sessionMode && ref.read(activeProjectProvider)?.id == project.id;
 
     final result = await showMenu<String>(
       context: context,
@@ -3674,12 +3677,19 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       ),
       items: [
         PopupMenuItem<String>(
-          value: 'launch',
+          value: sessionMode ? (isSubscribed ? 'endSession' : 'startSession') : 'launch',
           child: Row(
             children: [
-              const Icon(Icons.open_in_new, size: 20),
+              Icon(
+                sessionMode
+                    ? (isSubscribed ? Icons.bookmark : Icons.bookmark_add_outlined)
+                    : Icons.open_in_new,
+                size: 20,
+              ),
               const SizedBox(width: 8),
-              Text(l10n.tooltipLaunchInDaw),
+              Text(sessionMode
+                  ? (isSubscribed ? l10n.endSession : l10n.startSession)
+                  : l10n.tooltipLaunchInDaw),
             ],
           ),
         ),
@@ -3769,6 +3779,12 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       switch (result) {
         case 'launch':
           await _launchProject(project);
+          break;
+        case 'startSession':
+          await confirmStartSession(context, ref, project);
+          break;
+        case 'endSession':
+          await confirmEndSession(context, ref);
           break;
         case 'view':
           await _viewProjectDetails(project);
@@ -4738,9 +4754,9 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                     color: isSubscribed ? Colors.green.shade400 : null,
                     onPressed: () {
                       if (isSubscribed) {
-                        _confirmEndSession(context, ref);
+                        confirmEndSession(context, ref);
                       } else {
-                        _confirmStartSession(context, ref, project);
+                        confirmStartSession(context, ref, project);
                       }
                     },
                   );
@@ -6665,9 +6681,9 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
                         color: isSubscribed ? Colors.green.shade400 : null,
                         onPressed: () {
                           if (isSubscribed) {
-                            _confirmEndSession(context, ref);
+                            confirmEndSession(context, ref);
                           } else {
-                            _confirmStartSession(context, ref, project);
+                            confirmStartSession(context, ref, project);
                           }
                         },
                       );
@@ -7537,76 +7553,6 @@ class _FitAllColumnsMenuDelegate
   }
 }
 
-/// Shows a confirmation dialog before ending the active session.
-/// Displays the project name and elapsed session time so the user can review
-/// before committing.
-Future<void> _confirmEndSession(BuildContext context, WidgetRef ref) async {
-  final project = ref.read(activeProjectProvider);
-  if (project == null) return;
-
-  final elapsed = ref.read(workTimerProvider);
-  final l10n = AppLocalizations.of(context)!;
-
-  String fmt(int s) {
-    final h = s ~/ 3600;
-    final m = (s % 3600) ~/ 60;
-    if (h > 0) return '${h}h ${m}m';
-    if (m > 0) return '${m}m';
-    return '< 1m';
-  }
-
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      title: Text(l10n.endSession),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            project.displayName,
-            style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          if (elapsed > 0) ...[
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Icon(Icons.timer_outlined, size: 16,
-                    color: Theme.of(ctx).colorScheme.primary),
-                const SizedBox(width: 6),
-                Text(
-                  '${l10n.sessionDuration}: ${fmt(elapsed)}',
-                  style: Theme.of(ctx).textTheme.bodyMedium,
-                ),
-              ],
-            ),
-          ],
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(ctx, false),
-          child: Text(l10n.cancel),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(ctx, true),
-          style: FilledButton.styleFrom(
-            backgroundColor: Theme.of(ctx).colorScheme.error,
-            foregroundColor: Theme.of(ctx).colorScheme.onError,
-          ),
-          child: Text(l10n.endSession),
-        ),
-      ],
-    ),
-  );
-
-  if (confirmed == true && context.mounted) {
-    ref.read(activeProjectProvider.notifier).clear();
-  }
-}
-
 /// Shows a confirmation dialog before starting a session on a project.
 /// If another session is already active, offers to switch instead.
 Future<void> _launchSuggestionProject(
@@ -7628,146 +7574,6 @@ Future<void> _launchSuggestionProject(
           ? l10n.launchingProject(project.displayName)
           : l10n.failedToLaunchProject(project.displayName)),
     ));
-  }
-}
-
-Future<void> _confirmStartSession(
-    BuildContext context, WidgetRef ref, MusicProject project) async {
-  final l10n = AppLocalizations.of(context)!;
-  final current = ref.read(activeProjectProvider);
-
-  if (current != null) {
-    // ── Switch dialog ──────────────────────────────────────────────────────
-    final elapsed = ref.read(workTimerProvider);
-
-    String fmt(int s) {
-      final h = s ~/ 3600;
-      final m = (s % 3600) ~/ 60;
-      if (h > 0) return '${h}h ${m}m';
-      if (m > 0) return '${m}m';
-      return '< 1m';
-    }
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) {
-        final theme = Theme.of(ctx);
-        return AlertDialog(
-          title: Text(l10n.switchSession),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(l10n.switchSessionBody,
-                  style: theme.textTheme.bodySmall),
-              const SizedBox(height: 14),
-              // Current project row
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.red.withValues(alpha: 0.25)),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.bookmark, size: 14, color: Colors.red.shade400),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        l10n.switchSessionCurrent(current.displayName),
-                        style: const TextStyle(fontSize: 13),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    if (elapsed > 0)
-                      Text(
-                        fmt(elapsed),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: theme.textTheme.bodySmall?.color,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 6),
-                child: Center(child: Icon(Icons.arrow_downward, size: 16)),
-              ),
-              // New project row
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.green.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green.withValues(alpha: 0.25)),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.bookmark_add_outlined,
-                        size: 14, color: Colors.green.shade400),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        l10n.switchSessionNew(project.displayName),
-                        style: const TextStyle(
-                            fontSize: 13, fontWeight: FontWeight.w600),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(l10n.cancel),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: Text(l10n.switchSession),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (confirmed == true && context.mounted) {
-      ref.read(activeProjectProvider.notifier).set(project);
-    }
-    return;
-  }
-
-  // ── Simple start dialog ────────────────────────────────────────────────
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      title: Text(l10n.startSession),
-      content: Text(
-        project.displayName,
-        style: Theme.of(ctx)
-            .textTheme
-            .titleMedium
-            ?.copyWith(fontWeight: FontWeight.w600),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(ctx, false),
-          child: Text(l10n.cancel),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(ctx, true),
-          child: Text(l10n.startSession),
-        ),
-      ],
-    ),
-  );
-
-  if (confirmed == true && context.mounted) {
-    ref.read(activeProjectProvider.notifier).set(project);
   }
 }
 
@@ -8092,7 +7898,7 @@ class _SessionIdleSuggestionsState
             child: InkWell(
               borderRadius: BorderRadius.circular(10),
               onTap: () => sessionMode
-                  ? _confirmStartSession(context, ref, s.project)
+                  ? confirmStartSession(context, ref, s.project)
                   : _launchSuggestionProject(context, s.project),
               child: Padding(
                 padding: const EdgeInsets.all(3),
@@ -8242,7 +8048,7 @@ class _SuggestionsPanelBar extends ConsumerWidget {
                                     .notifier)
                                 .set(false);
                             if (sessionMode) {
-                              _confirmStartSession(context, ref, s.project);
+                              confirmStartSession(context, ref, s.project);
                             } else {
                               _launchSuggestionProject(context, s.project);
                             }
@@ -8564,7 +8370,7 @@ class _ActiveProjectChipState extends ConsumerState<_ActiveProjectChip>
               ),
               const SizedBox(width: 4),
               _StopSessionButton(
-                onPressed: () => _confirmEndSession(context, ref),
+                onPressed: () => confirmEndSession(context, ref),
               ),
             ],
           ),
