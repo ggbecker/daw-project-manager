@@ -25,8 +25,10 @@ import '../repository/project_repository.dart';
 import '../utils/mobile_utils.dart';
 import '../utils/file_launcher.dart';
 import '../generated/l10n/app_localizations.dart';
+import 'session_actions.dart';
 import '../services/audio_analysis_service.dart';
 import '../services/mixdown_detector_service.dart';
+import 'widgets/conversion_progress_dialog.dart';
 import 'widgets/desktop_title_bar.dart';
 import 'widgets/drag_to_share_button.dart';
 import 'widgets/todo_list_widget.dart';
@@ -60,6 +62,8 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
 
   bool _hasInitializedPhase = false;
   bool _extractingMetadata = false;
+  bool _notesExpanded = false;
+  double _notesHeight = 130;
   Timer? _autoSaveTimer;
 
   /// Records status-change and/or metadata-edit events after saving a project.
@@ -617,6 +621,36 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                           ),
                                         ),
                                       ],
+                                      // DAW field (mobile)
+                                      if (updatedProject.dawType != null) ...[
+                                        const SizedBox(height: 12),
+                                        TextFormField(
+                                          key: ValueKey('${updatedProject.dawType}-${updatedProject.dawVersion}'),
+                                          enabled: false,
+                                          initialValue: updatedProject.dawVersion?.isNotEmpty == true
+                                              ? '${updatedProject.dawType} ${updatedProject.dawVersion}'
+                                              : updatedProject.dawType,
+                                          decoration: InputDecoration(
+                                            labelText: AppLocalizations.of(context)!.daw,
+                                            filled: true,
+                                            fillColor: Colors.deepPurple.withOpacity(0.05),
+                                            border: const OutlineInputBorder(),
+                                            disabledBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                color: Colors.deepPurple.withOpacity(0.3),
+                                              ),
+                                            ),
+                                            prefixIcon: const Icon(
+                                              Icons.piano,
+                                              color: Colors.deepPurple,
+                                            ),
+                                          ),
+                                          style: const TextStyle(
+                                            color: Colors.deepPurple,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
                                     ],
                                   )
                                 : Row(
@@ -673,6 +707,38 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                             ),
                                             style: const TextStyle(
                                               color: Colors.blue,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                      // DAW field on desktop (next to key/Camelot fields)
+                                      if (updatedProject.dawType != null) ...[
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: TextFormField(
+                                            key: ValueKey('${updatedProject.dawType}-${updatedProject.dawVersion}'),
+                                            enabled: false,
+                                            initialValue: updatedProject.dawVersion?.isNotEmpty == true
+                                                ? '${updatedProject.dawType} ${updatedProject.dawVersion}'
+                                                : updatedProject.dawType,
+                                            decoration: InputDecoration(
+                                              labelText: AppLocalizations.of(context)!.daw,
+                                              filled: true,
+                                              fillColor: Colors.deepPurple.withOpacity(0.05),
+                                              border: const OutlineInputBorder(),
+                                              disabledBorder: OutlineInputBorder(
+                                                borderSide: BorderSide(
+                                                  color: Colors.deepPurple.withOpacity(0.3),
+                                                ),
+                                              ),
+                                              prefixIcon: const Icon(
+                                                Icons.piano,
+                                                color: Colors.deepPurple,
+                                              ),
+                                            ),
+                                            style: const TextStyle(
+                                              color: Colors.deepPurple,
                                               fontWeight: FontWeight.bold,
                                             ),
                                           ),
@@ -790,17 +856,79 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                             const SizedBox(height: 12),
 
                             // NOVO: CAMPO DE NOTAS
-                            TextFormField(
-                              controller: _notesCtrl,
-                              focusNode: _notesFocusNode,
-                              decoration: InputDecoration(
-                                labelText: AppLocalizations.of(context)!.notes,
-                                alignLabelWithHint: true,
-                                border: OutlineInputBorder(),
-                              ),
-                              maxLines: 5,
-                              keyboardType: TextInputType.multiline,
-                              onChanged: (_) => _scheduleAutoSave(),
+                            Stack(
+                              children: [
+                                SizedBox(
+                                  height: _notesHeight,
+                                  child: TextFormField(
+                                    controller: _notesCtrl,
+                                    focusNode: _notesFocusNode,
+                                    expands: true,
+                                    minLines: null,
+                                    maxLines: null,
+                                    textAlignVertical: TextAlignVertical.top,
+                                    decoration: InputDecoration(
+                                      labelText: AppLocalizations.of(context)!.notes,
+                                      alignLabelWithHint: true,
+                                      border: const OutlineInputBorder(),
+                                      contentPadding: const EdgeInsets.fromLTRB(12, 20, 32, 20),
+                                      suffixIcon: Align(
+                                        alignment: Alignment.topRight,
+                                        widthFactor: 1,
+                                        heightFactor: 1,
+                                        child: IconButton(
+                                          icon: Icon(_notesExpanded
+                                              ? Icons.close_fullscreen
+                                              : Icons.open_in_full),
+                                          iconSize: 18,
+                                          tooltip: _notesExpanded
+                                              ? AppLocalizations.of(context)!.collapseNotes
+                                              : AppLocalizations.of(context)!.expandNotes,
+                                          onPressed: () {
+                                            setState(() {
+                                              _notesExpanded = !_notesExpanded;
+                                              _notesHeight = _notesExpanded ? 400 : 130;
+                                            });
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                    keyboardType: TextInputType.multiline,
+                                    onChanged: (_) => _scheduleAutoSave(),
+                                  ),
+                                ),
+                                Positioned(
+                                  right: 2,
+                                  bottom: 2,
+                                  child: MouseRegion(
+                                    cursor: SystemMouseCursors.resizeUpLeftDownRight,
+                                    child: GestureDetector(
+                                      behavior: HitTestBehavior.opaque,
+                                      onPanUpdate: (details) {
+                                        setState(() {
+                                          _notesHeight = (_notesHeight + details.delta.dy)
+                                              .clamp(100.0, 800.0);
+                                          _notesExpanded = _notesHeight > 130;
+                                        });
+                                      },
+                                      child: SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CustomPaint(
+                                          painter: _ResizeGripPainter(
+                                            color: Theme.of(context)
+                                                    .textTheme
+                                                    .bodySmall
+                                                    ?.color
+                                                    ?.withValues(alpha: 0.5) ??
+                                                Colors.grey,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
 
                             const SizedBox(height: 12),
@@ -1205,6 +1333,13 @@ class _ProjectDetailHeader extends StatelessWidget {
                 ),
               if (project.musicalKey != null)
                 _InfoChip(icon: Icons.music_note, label: project.musicalKey!),
+              if (project.dawType != null)
+                _InfoChip(
+                  icon: Icons.piano,
+                  label: project.dawVersion?.isNotEmpty == true
+                      ? '${project.dawType} ${project.dawVersion}'
+                      : project.dawType!,
+                ),
               if (project.timeToCompletion(finishedPhase) != null)
                 _InfoChip(
                   icon: Icons.emoji_events,
@@ -1257,9 +1392,35 @@ class _InfoChip extends StatelessWidget {
   }
 }
 
+/// Paints the classic three-diagonal-line resize grip in the bottom-right
+/// corner of a manually resizable text box.
+class _ResizeGripPainter extends CustomPainter {
+  final Color color;
+  const _ResizeGripPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1.2
+      ..strokeCap = StrokeCap.round;
+    for (final offset in [4.0, 9.0, 14.0]) {
+      canvas.drawLine(
+        Offset(size.width - offset, size.height - 2),
+        Offset(size.width - 2, size.height - offset),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _ResizeGripPainter oldDelegate) =>
+      oldDelegate.color != color;
+}
+
 // ─── Action Toolbar ───────────────────────────────────────────────────────────
 
-class _ProjectDetailActionBar extends StatelessWidget {
+class _ProjectDetailActionBar extends ConsumerWidget {
   final MusicProject project;
   final bool isMobile;
   final bool sourceFileExists;
@@ -1279,9 +1440,12 @@ class _ProjectDetailActionBar extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final notFoundMsg = l10n.sourceFileNotFoundOnThisMachine;
+    final sessionMode = ref.watch(sessionModeProvider);
+    final isSubscribed =
+        sessionMode && ref.watch(activeProjectProvider)?.id == project.id;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -1293,14 +1457,40 @@ class _ProjectDetailActionBar extends StatelessWidget {
         children: [
           if (!isMobile) ...[
             const SizedBox(width: 8),
-            Tooltip(
-              message: sourceFileExists ? '' : notFoundMsg,
-              child: OutlinedButton.icon(
-                onPressed: sourceFileExists ? onOpenInDaw : null,
-                icon: const Icon(Icons.open_in_new, size: 16),
-                label: Text(l10n.openInDaw),
+            if (sessionMode) ...[
+              OutlinedButton.icon(
+                onPressed: () => isSubscribed
+                    ? confirmEndSession(context, ref)
+                    : confirmStartSession(context, ref, project),
+                icon: Icon(
+                  isSubscribed ? Icons.bookmark : Icons.bookmark_add_outlined,
+                  size: 16,
+                  color: isSubscribed ? Colors.green.shade400 : null,
+                ),
+                label: Text(isSubscribed ? l10n.endSession : l10n.startSession),
               ),
-            ),
+              // Once this project's session is active, still let the user
+              // launch the DAW from here instead of needing the dashboard.
+              if (isSubscribed) ...[
+                const SizedBox(width: 8),
+                Tooltip(
+                  message: sourceFileExists ? '' : notFoundMsg,
+                  child: OutlinedButton.icon(
+                    onPressed: sourceFileExists ? onOpenInDaw : null,
+                    icon: const Icon(Icons.open_in_new, size: 16),
+                    label: Text(l10n.openInDaw),
+                  ),
+                ),
+              ],
+            ] else
+              Tooltip(
+                message: sourceFileExists ? '' : notFoundMsg,
+                child: OutlinedButton.icon(
+                  onPressed: sourceFileExists ? onOpenInDaw : null,
+                  icon: const Icon(Icons.open_in_new, size: 16),
+                  label: Text(l10n.openInDaw),
+                ),
+              ),
           ],
           if (!isMobile) ...[
             const SizedBox(width: 8),
@@ -1418,6 +1608,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
         setState(() => _autoDetectedPath = file.path);
         final repo = await ref.read(repositoryProvider.future);
         await repo.updateProject(widget.project.copyWith(previewSongAutoPath: file.path));
+        ref.invalidate(allProjectsStreamProvider);
         _startBackgroundPrep();
       }
     });
@@ -1919,12 +2110,11 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
       // compatible format first so the shared file is actually accepted.
       var fileToShare = sourceFile;
       var shareFileName = originalFileName;
-      if (AudioAnalysisService.needsConversionForSharing(effectivePath)) {
-        final tempDir = await getTemporaryDirectory();
+      if (AudioAnalysisService.needsConversionForSharing(effectivePath) && mounted) {
         if (kDebugMode) {
           debugPrint('[preview_share] converting for messaging-app compatibility...');
         }
-        final converted = await AudioAnalysisService.convertForSharing(effectivePath, tempDir.path);
+        final converted = await convertForSharingWithProgress(context, effectivePath);
         if (converted != null) {
           fileToShare = converted;
           shareFileName = p.basename(converted.path);
@@ -1969,6 +2159,14 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
         );
         if (kDebugMode) {
           debugPrint('[preview_share] ShareResult: status=${result.status} raw=${result.raw}');
+        }
+        // Unpackaged Windows builds have no working share sheet
+        // (DataTransferManager needs MSIX) — without this the click does
+        // nothing visible at all.
+        if (result.status == ShareResultStatus.unavailable && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context)!.shareSheetUnavailable)),
+          );
         }
       }
     } catch (e, st) {

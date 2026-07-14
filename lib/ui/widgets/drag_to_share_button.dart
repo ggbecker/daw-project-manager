@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -7,6 +8,42 @@ import 'package:super_drag_and_drop/super_drag_and_drop.dart';
 
 import '../../generated/l10n/app_localizations.dart';
 import '../../services/audio_analysis_service.dart';
+
+/// Resolves the path that should actually be dragged for [sourcePath]:
+/// the source itself when it's already messaging-app compatible, otherwise
+/// a converted copy (cached in [cache] keyed by source path, so repeated
+/// drags of the same song don't reconvert).
+///
+/// [onConverting] fires with true only when a real conversion starts (cache
+/// miss) and always with false afterwards — it never fires at all for
+/// passthrough or cache-hit resolutions. Extracted from the widget with
+/// injectable [convert]/[getTempDir] so this logic is unit-testable
+/// (DragItemWidget itself needs the super_native_extensions native plugin).
+Future<String?> resolveDragSharePath(
+  String sourcePath, {
+  required Map<String, String> cache,
+  Future<File?> Function(String inputPath, String outputDir)? convert,
+  Future<Directory> Function()? getTempDir,
+  void Function(bool converting)? onConverting,
+}) async {
+  if (!AudioAnalysisService.needsConversionForSharing(sourcePath)) {
+    return sourcePath;
+  }
+  final cached = cache[sourcePath];
+  if (cached != null && await File(cached).exists()) return cached;
+
+  onConverting?.call(true);
+  try {
+    final tempDir = await (getTempDir ?? getTemporaryDirectory)();
+    final converted = await (convert ?? AudioAnalysisService.convertForSharing)(
+        sourcePath, tempDir.path);
+    if (converted == null) return null;
+    cache[sourcePath] = converted.path;
+    return converted.path;
+  } finally {
+    onConverting?.call(false);
+  }
+}
 
 /// Desktop-only: a chip the user can drag straight onto another app's
 /// window (e.g. WhatsApp Desktop) to share the file.
@@ -28,24 +65,18 @@ class DragToShareButton extends StatefulWidget {
 
 class _DragToShareButtonState extends State<DragToShareButton> {
   // Keyed by source path so repeated drags of the same song don't
-  // re-convert every time.
+  // re-convert every time. Conversion stays lazy (first drag), NOT
+  // pre-warmed on build: pre-warming would run ffmpeg/afconvert for every
+  // rendered chip, burning seconds of CPU and temp disk for songs that are
+  // never dragged.
   static final Map<String, String> _conversionCache = {};
 
-  Future<String?> _resolveDragPath() async {
-    if (!AudioAnalysisService.needsConversionForSharing(widget.sourcePath)) {
-      return widget.sourcePath;
-    }
-    final cached = _conversionCache[widget.sourcePath];
-    if (cached != null && await File(cached).exists()) return cached;
+  // True while a first-drag conversion runs; the OS drag can't start until
+  // it finishes, so the chip shows a spinner to explain the wait.
+  bool _converting = false;
 
-    final tempDir = await getTemporaryDirectory();
-    final converted = await AudioAnalysisService.convertForSharing(
-      widget.sourcePath,
-      tempDir.path,
-    );
-    if (converted == null) return null;
-    _conversionCache[widget.sourcePath] = converted.path;
-    return converted.path;
+  void _setConverting(bool value) {
+    if (mounted) setState(() => _converting = value);
   }
 
   @override
@@ -54,7 +85,11 @@ class _DragToShareButtonState extends State<DragToShareButton> {
     return DragItemWidget(
       allowedOperations: () => [DropOperation.copy],
       dragItemProvider: (request) async {
-        final path = await _resolveDragPath();
+        final path = await resolveDragSharePath(
+          widget.sourcePath,
+          cache: _conversionCache,
+          onConverting: _setConverting,
+        );
         if (path == null) return null;
         final item = DragItem(suggestedName: p.basename(path));
         item.add(Formats.fileUri(Uri.file(path)));
@@ -62,9 +97,15 @@ class _DragToShareButtonState extends State<DragToShareButton> {
       },
       child: DraggableWidget(
         child: Tooltip(
-          message: l10n.dragToShareTooltip,
+          message: _converting ? l10n.convertingAudioForSharing : l10n.dragToShareTooltip,
           child: Chip(
-            avatar: const Icon(Icons.drag_indicator, size: 16),
+            avatar: _converting
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.drag_indicator, size: 16),
             label: Text(l10n.dragToShare),
             visualDensity: VisualDensity.compact,
           ),

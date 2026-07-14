@@ -81,6 +81,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get notes => 'Notes';
 
   @override
+  String get expandNotes => 'Agrandir';
+
+  @override
+  String get collapseNotes => 'Réduire';
+
+  @override
   String get projectPhase => 'Phase du Projet';
 
   @override
@@ -1919,6 +1925,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get share => 'Partager';
 
   @override
+  String get convertingAudioForSharing =>
+      'Préparation de l\'audio pour le partage…';
+
+  @override
+  String get shareSheetUnavailable =>
+      'Le menu de partage du système n\'est pas disponible ici — utilisez la puce « Glisser pour Partager » sur l\'aperçu du morceau pour glisser le fichier vers une autre application.';
+
+  @override
   String get backupInProgressTitle => 'Sauvegarde en Cours';
 
   @override
@@ -1943,7 +1957,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get mp3ConversionFailed =>
-      'Impossible de convertir en MP3 pour la compatibilité (ffmpeg introuvable) — partage du fichier original, que certaines applications comme WhatsApp peuvent refuser.';
+      'La conversion audio n\'est pas disponible sur ce système — partage du fichier original, que certaines applications comme WhatsApp peuvent refuser.';
 
   @override
   String get shareZip => 'Partager ZIP';
@@ -2119,6 +2133,23 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get menuQuit => 'Quitter DAW Project Manager';
+
+  @override
+  String get quitConfirmTitle => 'Quitter DAW Project Manager ?';
+
+  @override
+  String get quitConfirmMessage => 'Voulez-vous vraiment quitter ?';
+
+  @override
+  String get quit => 'Quitter';
+
+  @override
+  String get trayNoticeTitle =>
+      'Toujours en cours d\'exécution en arrière-plan';
+
+  @override
+  String get trayNoticeBody =>
+      'DAW Project Manager a été réduit dans la barre système. Utilisez l\'icône de la barre système pour le rouvrir ou le quitter.';
 
   @override
   String get trayShowWindow => 'Afficher DAW Project Manager';

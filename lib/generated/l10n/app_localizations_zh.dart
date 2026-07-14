@@ -81,6 +81,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notes => '备注';
 
   @override
+  String get expandNotes => '展开';
+
+  @override
+  String get collapseNotes => '收起';
+
+  @override
   String get projectPhase => '项目阶段';
 
   @override
@@ -1835,6 +1841,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get share => '分享';
 
   @override
+  String get convertingAudioForSharing => '正在准备要分享的音频…';
+
+  @override
+  String get shareSheetUnavailable =>
+      '系统分享菜单在此不可用——请改用歌曲预览中的“拖动以分享”按钮，将文件拖到其他应用中。';
+
+  @override
   String get backupInProgressTitle => '备份进行中';
 
   @override
@@ -1859,7 +1872,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get mp3ConversionFailed =>
-      '由于兼容性问题，转换为 MP3 失败（未找到 ffmpeg）——将分享原始文件，但某些应用（如 WhatsApp）可能会拒绝该文件。';
+      '此系统不支持音频转换——将分享原始文件，但某些应用（如 WhatsApp）可能会拒绝该文件。';
 
   @override
   String get shareZip => '分享ZIP';
@@ -2035,6 +2048,21 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get menuQuit => '退出 DAW Project Manager';
+
+  @override
+  String get quitConfirmTitle => '退出 DAW Project Manager？';
+
+  @override
+  String get quitConfirmMessage => '确定要退出吗？';
+
+  @override
+  String get quit => '退出';
+
+  @override
+  String get trayNoticeTitle => '仍在后台运行';
+
+  @override
+  String get trayNoticeBody => 'DAW Project Manager 已最小化到系统托盘。使用托盘图标可重新打开或退出。';
 
   @override
   String get trayShowWindow => '显示 DAW Project Manager';

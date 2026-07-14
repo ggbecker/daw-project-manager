@@ -256,6 +256,18 @@ abstract class AppLocalizations {
   /// **'Notes'**
   String get notes;
 
+  /// No description provided for @expandNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand'**
+  String get expandNotes;
+
+  /// No description provided for @collapseNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse'**
+  String get collapseNotes;
+
   /// No description provided for @projectPhase.
   ///
   /// In en, this message translates to:
@@ -3218,6 +3230,18 @@ abstract class AppLocalizations {
   /// **'Share'**
   String get share;
 
+  /// No description provided for @convertingAudioForSharing.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing audio for sharing…'**
+  String get convertingAudioForSharing;
+
+  /// No description provided for @shareSheetUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The system share menu isn\'t available here — use the \"Drag to Share\" chip on the song preview to drag the file onto another app instead.'**
+  String get shareSheetUnavailable;
+
   /// No description provided for @backupInProgressTitle.
   ///
   /// In en, this message translates to:
@@ -3263,7 +3287,7 @@ abstract class AppLocalizations {
   /// No description provided for @mp3ConversionFailed.
   ///
   /// In en, this message translates to:
-  /// **'Couldn\'t convert to MP3 for compatibility (ffmpeg not found) — sharing the original file, which some apps like WhatsApp may reject.'**
+  /// **'Audio conversion isn\'t available on this system — sharing the original file, which some apps like WhatsApp may reject.'**
   String get mp3ConversionFailed;
 
   /// Label for the share as ZIP button
@@ -3547,6 +3571,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Quit DAW Project Manager'**
   String get menuQuit;
+
+  /// No description provided for @quitConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quit DAW Project Manager?'**
+  String get quitConfirmTitle;
+
+  /// No description provided for @quitConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to quit?'**
+  String get quitConfirmMessage;
+
+  /// No description provided for @quit.
+  ///
+  /// In en, this message translates to:
+  /// **'Quit'**
+  String get quit;
+
+  /// No description provided for @trayNoticeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Still running in the background'**
+  String get trayNoticeTitle;
+
+  /// No description provided for @trayNoticeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'DAW Project Manager was minimized to the system tray. Use the tray icon to reopen or quit it.'**
+  String get trayNoticeBody;
 
   /// No description provided for @trayShowWindow.
   ///

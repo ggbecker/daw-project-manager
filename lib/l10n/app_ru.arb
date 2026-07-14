@@ -27,6 +27,8 @@
   "bpm": "BPM",
   "key": "Тональность (например: C#m, F мажор)",
   "notes": "Заметки",
+  "expandNotes": "Развернуть",
+  "collapseNotes": "Свернуть",
   "projectPhase": "Фаза проекта",
   "failedToLoad": "Ошибка загрузки",
   "fileMissing": "Файл отсутствует.",
@@ -1106,6 +1108,8 @@
     "description": "Tooltip for the share as ZIP button"
   },
   "share": "Поделиться",
+  "convertingAudioForSharing": "Подготовка аудио к отправке…",
+  "shareSheetUnavailable": "Системное меню отправки здесь недоступно — используйте кнопку «Перетащить, чтобы поделиться» в предпрослушивании трека, чтобы перетащить файл в другое приложение.",
   "backupInProgressTitle": "Идёт резервное копирование",
   "backupInProgressMessage": "Сейчас идёт загрузка резервной копии в Google Drive. Если выйти сейчас, она может остаться незавершённой — подождать, пока закончится, или выйти всё равно?",
   "waitForBackup": "Подождать",
@@ -1113,7 +1117,7 @@
   "finishingBackup": "Завершение резервного копирования…",
   "dragToShare": "Перетащить, чтобы поделиться",
   "dragToShareTooltip": "Перетащите это в окно другого приложения (например, WhatsApp), чтобы поделиться файлом напрямую — полезно, если кнопка \"Поделиться\" не открывает меню отправки.",
-  "mp3ConversionFailed": "Не удалось конвертировать в MP3 для совместимости (ffmpeg не найден) — будет отправлен исходный файл, который некоторые приложения, например WhatsApp, могут отклонить.",
+  "mp3ConversionFailed": "Конвертация аудио недоступна в этой системе — будет отправлен исходный файл, который некоторые приложения, например WhatsApp, могут отклонить.",
   "@share": {
     "description": "Label for the share button"
   },
@@ -1396,6 +1400,11 @@
     "description": "macOS menu item to toggle quit warning"
   },
   "menuQuit": "Выйти из DAW Project Manager",
+  "quitConfirmTitle": "Выйти из DAW Project Manager?",
+  "quitConfirmMessage": "Вы уверены, что хотите выйти?",
+  "quit": "Выйти",
+  "trayNoticeTitle": "Продолжает работать в фоне",
+  "trayNoticeBody": "DAW Project Manager свёрнут в системный трей. Используйте значок в трее, чтобы открыть приложение снова или выйти.",
   "trayShowWindow": "Показать DAW Project Manager",
   "trayLastBackup": "Последнее резервное копирование: {when}",
   "@trayLastBackup": {

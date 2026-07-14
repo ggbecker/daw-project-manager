@@ -81,6 +81,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get notes => 'Note';
 
   @override
+  String get expandNotes => 'Espandi';
+
+  @override
+  String get collapseNotes => 'Comprimi';
+
+  @override
   String get projectPhase => 'Fase del Progetto';
 
   @override
@@ -1904,6 +1910,14 @@ class AppLocalizationsIt extends AppLocalizations {
   String get share => 'Condividi';
 
   @override
+  String get convertingAudioForSharing =>
+      'Preparazione dell\'audio per la condivisione…';
+
+  @override
+  String get shareSheetUnavailable =>
+      'Il menu di condivisione di sistema non è disponibile qui — usa il pulsante \"Trascina per Condividere\" nell\'anteprima del brano per trascinare il file su un\'altra app.';
+
+  @override
   String get backupInProgressTitle => 'Backup in Corso';
 
   @override
@@ -1928,7 +1942,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get mp3ConversionFailed =>
-      'Impossibile convertire in MP3 per compatibilità (ffmpeg non trovato) — verrà condiviso il file originale, che alcune app come WhatsApp potrebbero rifiutare.';
+      'La conversione audio non è disponibile su questo sistema — verrà condiviso il file originale, che alcune app come WhatsApp potrebbero rifiutare.';
 
   @override
   String get shareZip => 'Condividi ZIP';
@@ -2104,6 +2118,22 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get menuQuit => 'Esci da DAW Project Manager';
+
+  @override
+  String get quitConfirmTitle => 'Uscire da DAW Project Manager?';
+
+  @override
+  String get quitConfirmMessage => 'Vuoi davvero uscire?';
+
+  @override
+  String get quit => 'Esci';
+
+  @override
+  String get trayNoticeTitle => 'Ancora in esecuzione in background';
+
+  @override
+  String get trayNoticeBody =>
+      'DAW Project Manager è stato ridotto nella barra di sistema. Usa l\'icona nella barra per riaprirlo o uscire.';
 
   @override
   String get trayShowWindow => 'Mostra DAW Project Manager';

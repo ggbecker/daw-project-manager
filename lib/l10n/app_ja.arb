@@ -27,6 +27,8 @@
   "bpm": "BPM",
   "key": "キー（例：C#m、F major）",
   "notes": "メモ",
+  "expandNotes": "展開",
+  "collapseNotes": "折りたたむ",
   "projectPhase": "プロジェクトフェーズ",
   "failedToLoad": "読み込みに失敗しました",
   "fileMissing": "ファイルが見つかりません。",
@@ -1106,6 +1108,8 @@
     "description": "Tooltip for the share as ZIP button"
   },
   "share": "共有",
+  "convertingAudioForSharing": "共有用にオーディオを準備しています…",
+  "shareSheetUnavailable": "システムの共有メニューはここでは利用できません。代わりに、曲のプレビューにある「ドラッグして共有」チップでファイルを他のアプリへドラッグしてください。",
   "backupInProgressTitle": "バックアップ中",
   "backupInProgressMessage": "現在Googleドライブへバックアップをアップロード中です。今終了するとバックアップが不完全になる可能性があります。完了を待ちますか、それでも終了しますか？",
   "waitForBackup": "待つ",
@@ -1113,7 +1117,7 @@
   "finishingBackup": "バックアップを完了しています…",
   "dragToShare": "ドラッグして共有",
   "dragToShareTooltip": "これを他のアプリ（WhatsAppなど）のウィンドウにドラッグすると、ファイルを直接共有できます。共有ボタンで共有メニューが開かない場合に便利です。",
-  "mp3ConversionFailed": "互換性のためのMP3への変換に失敗しました（ffmpegが見つかりません）。元のファイルを共有しますが、WhatsAppなど一部のアプリでは拒否される場合があります。",
+  "mp3ConversionFailed": "このシステムではオーディオ変換を利用できません。元のファイルを共有しますが、WhatsAppなど一部のアプリでは拒否される場合があります。",
   "@share": {
     "description": "Label for the share button"
   },
@@ -1396,6 +1400,11 @@
     "description": "macOS menu item to toggle quit warning"
   },
   "menuQuit": "DAW Project Manager を終了",
+  "quitConfirmTitle": "DAW Project Manager を終了しますか？",
+  "quitConfirmMessage": "本当に終了しますか？",
+  "quit": "終了",
+  "trayNoticeTitle": "バックグラウンドで実行中です",
+  "trayNoticeBody": "DAW Project Manager はシステムトレイに最小化されました。トレイアイコンから再表示または終了できます。",
   "trayShowWindow": "DAW Project Manager を表示",
   "trayLastBackup": "最終バックアップ: {when}",
   "@trayLastBackup": {

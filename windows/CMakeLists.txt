@@ -32,6 +32,14 @@ set(CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS_RELEASE}")
 # Use Unicode for all projects.
 add_definitions(-DUNICODE -D_UNICODE)
 
+# MSVC 14.5x+ (VS 2026) hard-errors (C2338/STL1011) on <experimental/coroutine>,
+# which the audioplayers_windows and flutter_local_notifications_windows plugins
+# still pull in via /await + old C++/WinRT. This is the STL's documented opt-out;
+# it must be set here (directory scope, before generated_plugins.cmake below) so
+# it propagates into every plugin target. Remove once those plugins move to
+# C++20 <coroutine>.
+add_definitions(-D_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS)
+
 # Compilation settings that should be applied to most targets.
 #
 # Be cautious about adding new options here, as plugins use this function by

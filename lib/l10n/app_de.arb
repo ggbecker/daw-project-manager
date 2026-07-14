@@ -27,6 +27,8 @@
   "bpm": "BPM",
   "key": "Tonart (z.B. C#m, F-Dur)",
   "notes": "Notizen",
+  "expandNotes": "Erweitern",
+  "collapseNotes": "Einklappen",
   "projectPhase": "Projektphase",
   "failedToLoad": "Laden fehlgeschlagen",
   "fileMissing": "Datei fehlt.",
@@ -1106,6 +1108,8 @@
     "description": "Tooltip for the share as ZIP button"
   },
   "share": "Teilen",
+  "convertingAudioForSharing": "Audio wird zum Teilen vorbereitet…",
+  "shareSheetUnavailable": "Das System-Freigabemenü ist hier nicht verfügbar — nutze stattdessen den \"Zum Teilen ziehen\"-Chip in der Song-Vorschau, um die Datei auf eine andere App zu ziehen.",
   "backupInProgressTitle": "Backup läuft",
   "backupInProgressMessage": "Gerade wird ein Backup zu Google Drive hochgeladen. Wenn du jetzt beendest, könnte es unvollständig bleiben — warten, bis es fertig ist, oder trotzdem beenden?",
   "waitForBackup": "Warten",
@@ -1113,7 +1117,7 @@
   "finishingBackup": "Backup wird abgeschlossen…",
   "dragToShare": "Zum Teilen ziehen",
   "dragToShareTooltip": "Ziehe dies auf das Fenster einer anderen App (z. B. WhatsApp), um die Datei direkt zu teilen — nützlich, wenn der Teilen-Button kein Freigabemenü öffnet.",
-  "mp3ConversionFailed": "Konvertierung zu MP3 für Kompatibilität fehlgeschlagen (ffmpeg nicht gefunden) — die Originaldatei wird geteilt, die manche Apps wie WhatsApp ablehnen könnten.",
+  "mp3ConversionFailed": "Audio-Konvertierung ist auf diesem System nicht verfügbar — die Originaldatei wird geteilt, die manche Apps wie WhatsApp ablehnen könnten.",
   "@share": {
     "description": "Label for the share button"
   },
@@ -1396,6 +1400,11 @@
     "description": "macOS menu item to toggle quit warning"
   },
   "menuQuit": "DAW Project Manager beenden",
+  "quitConfirmTitle": "DAW Project Manager beenden?",
+  "quitConfirmMessage": "Möchtest du wirklich beenden?",
+  "quit": "Beenden",
+  "trayNoticeTitle": "Läuft weiter im Hintergrund",
+  "trayNoticeBody": "DAW Project Manager wurde in die Taskleiste minimiert. Über das Taskleistensymbol kannst du die App wieder öffnen oder beenden.",
   "trayShowWindow": "DAW Project Manager anzeigen",
   "trayLastBackup": "Letztes Backup: {when}",
   "@trayLastBackup": {

@@ -27,6 +27,8 @@
   "bpm": "BPM",
   "key": "调性（例如：C#m，F大调）",
   "notes": "备注",
+  "expandNotes": "展开",
+  "collapseNotes": "收起",
   "projectPhase": "项目阶段",
   "failedToLoad": "加载失败",
   "fileMissing": "文件缺失。",
@@ -1106,6 +1108,8 @@
     "description": "Tooltip for the share as ZIP button"
   },
   "share": "分享",
+  "convertingAudioForSharing": "正在准备要分享的音频…",
+  "shareSheetUnavailable": "系统分享菜单在此不可用——请改用歌曲预览中的“拖动以分享”按钮，将文件拖到其他应用中。",
   "backupInProgressTitle": "备份进行中",
   "backupInProgressMessage": "目前正在向 Google Drive 上传备份。现在退出可能导致备份不完整——要等待完成，还是仍然退出？",
   "waitForBackup": "等待",
@@ -1113,7 +1117,7 @@
   "finishingBackup": "正在完成备份…",
   "dragToShare": "拖动以分享",
   "dragToShareTooltip": "把它拖到另一个应用的窗口（例如 WhatsApp）即可直接分享文件——当“分享”按钮无法打开分享菜单时很有用。",
-  "mp3ConversionFailed": "由于兼容性问题，转换为 MP3 失败（未找到 ffmpeg）——将分享原始文件，但某些应用（如 WhatsApp）可能会拒绝该文件。",
+  "mp3ConversionFailed": "此系统不支持音频转换——将分享原始文件，但某些应用（如 WhatsApp）可能会拒绝该文件。",
   "@share": {
     "description": "Label for the share button"
   },
@@ -1396,6 +1400,11 @@
     "description": "macOS menu item to toggle quit warning"
   },
   "menuQuit": "退出 DAW Project Manager",
+  "quitConfirmTitle": "退出 DAW Project Manager？",
+  "quitConfirmMessage": "确定要退出吗？",
+  "quit": "退出",
+  "trayNoticeTitle": "仍在后台运行",
+  "trayNoticeBody": "DAW Project Manager 已最小化到系统托盘。使用托盘图标可重新打开或退出。",
   "trayShowWindow": "显示 DAW Project Manager",
   "trayLastBackup": "上次备份：{when}",
   "@trayLastBackup": {

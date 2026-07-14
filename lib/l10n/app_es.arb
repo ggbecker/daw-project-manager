@@ -27,6 +27,8 @@
   "bpm": "BPM",
   "key": "Tonalidad (ej: C#m, F mayor)",
   "notes": "Notas",
+  "expandNotes": "Expandir",
+  "collapseNotes": "Contraer",
   "projectPhase": "Fase del Proyecto",
   "failedToLoad": "Error al cargar",
   "fileMissing": "Archivo faltante.",
@@ -1106,6 +1108,8 @@
     "description": "Tooltip for the share as ZIP button"
   },
   "share": "Compartir",
+  "convertingAudioForSharing": "Preparando el audio para compartir…",
+  "shareSheetUnavailable": "El menú de compartir del sistema no está disponible aquí — usa el botón \"Arrastrar para Compartir\" en la vista previa de la canción para arrastrar el archivo a otra app.",
   "backupInProgressTitle": "Copia de Seguridad en Curso",
   "backupInProgressMessage": "Se está subiendo una copia de seguridad a Google Drive ahora mismo. Salir puede dejarla incompleta — ¿esperar a que termine, o salir de todos modos?",
   "waitForBackup": "Esperar",
@@ -1113,7 +1117,7 @@
   "finishingBackup": "Finalizando copia de seguridad…",
   "dragToShare": "Arrastrar para Compartir",
   "dragToShareTooltip": "Arrastra esto a la ventana de otra app (ej: WhatsApp) para compartir el archivo directamente — útil cuando el botón Compartir no abre un menú de compartir.",
-  "mp3ConversionFailed": "No se pudo convertir a MP3 por compatibilidad (no se encontró ffmpeg) — se compartirá el archivo original, que algunas apps como WhatsApp pueden rechazar.",
+  "mp3ConversionFailed": "La conversión de audio no está disponible en este sistema — se compartirá el archivo original, que algunas apps como WhatsApp pueden rechazar.",
   "@share": {
     "description": "Label for the share button"
   },
@@ -1396,6 +1400,11 @@
     "description": "macOS menu item to toggle quit warning"
   },
   "menuQuit": "Salir de DAW Project Manager",
+  "quitConfirmTitle": "¿Salir de DAW Project Manager?",
+  "quitConfirmMessage": "¿Seguro que quieres salir?",
+  "quit": "Salir",
+  "trayNoticeTitle": "Sigue ejecutándose en segundo plano",
+  "trayNoticeBody": "DAW Project Manager se minimizó a la bandeja del sistema. Usa el icono de la bandeja para reabrirlo o salir.",
   "trayShowWindow": "Mostrar DAW Project Manager",
   "trayLastBackup": "Última copia de seguridad: {when}",
   "@trayLastBackup": {

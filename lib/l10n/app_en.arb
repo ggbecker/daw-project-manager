@@ -27,6 +27,8 @@
   "bpm": "BPM",
   "key": "Key (e.g., C#m, F major)",
   "notes": "Notes",
+  "expandNotes": "Expand",
+  "collapseNotes": "Collapse",
   "projectPhase": "Project Phase",
   "failedToLoad": "Failed to load",
   "fileMissing": "File missing.",
@@ -2093,6 +2095,8 @@
     "description": "Tooltip for the share as ZIP button"
   },
   "share": "Share",
+  "convertingAudioForSharing": "Preparing audio for sharing…",
+  "shareSheetUnavailable": "The system share menu isn't available here — use the \"Drag to Share\" chip on the song preview to drag the file onto another app instead.",
   "backupInProgressTitle": "Backup in Progress",
   "backupInProgressMessage": "A backup is currently uploading to Google Drive. Quitting now may leave it incomplete — wait for it to finish, or quit anyway?",
   "waitForBackup": "Wait",
@@ -2100,7 +2104,7 @@
   "finishingBackup": "Finishing backup…",
   "dragToShare": "Drag to Share",
   "dragToShareTooltip": "Drag this onto another app's window (e.g. WhatsApp) to share the file directly — useful when the Share button doesn't open a share menu.",
-  "mp3ConversionFailed": "Couldn't convert to MP3 for compatibility (ffmpeg not found) — sharing the original file, which some apps like WhatsApp may reject.",
+  "mp3ConversionFailed": "Audio conversion isn't available on this system — sharing the original file, which some apps like WhatsApp may reject.",
   "@share": {
     "description": "Label for the share button"
   },
@@ -2417,6 +2421,11 @@
     "description": "macOS menu item to toggle quit warning"
   },
   "menuQuit": "Quit DAW Project Manager",
+  "quitConfirmTitle": "Quit DAW Project Manager?",
+  "quitConfirmMessage": "Are you sure you want to quit?",
+  "quit": "Quit",
+  "trayNoticeTitle": "Still running in the background",
+  "trayNoticeBody": "DAW Project Manager was minimized to the system tray. Use the tray icon to reopen or quit it.",
   "trayShowWindow": "Show DAW Project Manager",
   "trayLastBackup": "Last backup: {when}",
   "@trayLastBackup": {
