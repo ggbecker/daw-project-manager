@@ -1936,7 +1936,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get mp3ConversionFailed =>
-      'Impossibile convertire in MP3 per compatibilità (ffmpeg non trovato) — verrà condiviso il file originale, che alcune app come WhatsApp potrebbero rifiutare.';
+      'La conversione audio non è disponibile su questo sistema — verrà condiviso il file originale, che alcune app come WhatsApp potrebbero rifiutare.';
 
   @override
   String get shareZip => 'Condividi ZIP';

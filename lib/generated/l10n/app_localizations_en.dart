@@ -1928,7 +1928,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mp3ConversionFailed =>
-      'Couldn\'t convert to MP3 for compatibility (ffmpeg not found) — sharing the original file, which some apps like WhatsApp may reject.';
+      'Audio conversion isn\'t available on this system — sharing the original file, which some apps like WhatsApp may reject.';
 
   @override
   String get shareZip => 'Share ZIP';

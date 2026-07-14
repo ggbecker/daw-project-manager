@@ -1866,7 +1866,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get mp3ConversionFailed =>
-      '由于兼容性问题，转换为 MP3 失败（未找到 ffmpeg）——将分享原始文件，但某些应用（如 WhatsApp）可能会拒绝该文件。';
+      '此系统不支持音频转换——将分享原始文件，但某些应用（如 WhatsApp）可能会拒绝该文件。';
 
   @override
   String get shareZip => '分享ZIP';

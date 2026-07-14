@@ -1139,7 +1139,7 @@
   "finishingBackup": "Finalizando backup…",
   "dragToShare": "Arraste para Compartilhar",
   "dragToShareTooltip": "Arraste isso para a janela de outro app (ex: WhatsApp) pra compartilhar o arquivo direto — útil quando o botão Compartilhar não abre um menu de compartilhamento.",
-  "mp3ConversionFailed": "Não foi possível converter para MP3 por compatibilidade (ffmpeg não encontrado) — compartilhando o arquivo original, que alguns apps como o WhatsApp podem rejeitar.",
+  "mp3ConversionFailed": "A conversão de áudio não está disponível neste sistema — compartilhando o arquivo original, que alguns apps como o WhatsApp podem rejeitar.",
   "@share": {
     "description": "Label for the share button"
   },

@@ -1115,7 +1115,7 @@
   "finishingBackup": "Backup wird abgeschlossen…",
   "dragToShare": "Zum Teilen ziehen",
   "dragToShareTooltip": "Ziehe dies auf das Fenster einer anderen App (z. B. WhatsApp), um die Datei direkt zu teilen — nützlich, wenn der Teilen-Button kein Freigabemenü öffnet.",
-  "mp3ConversionFailed": "Konvertierung zu MP3 für Kompatibilität fehlgeschlagen (ffmpeg nicht gefunden) — die Originaldatei wird geteilt, die manche Apps wie WhatsApp ablehnen könnten.",
+  "mp3ConversionFailed": "Audio-Konvertierung ist auf diesem System nicht verfügbar — die Originaldatei wird geteilt, die manche Apps wie WhatsApp ablehnen könnten.",
   "@share": {
     "description": "Label for the share button"
   },
