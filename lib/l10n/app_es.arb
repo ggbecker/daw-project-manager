@@ -1399,6 +1399,8 @@
   "quitConfirmTitle": "¿Salir de DAW Project Manager?",
   "quitConfirmMessage": "¿Seguro que quieres salir?",
   "quit": "Salir",
+  "trayNoticeTitle": "Sigue ejecutándose en segundo plano",
+  "trayNoticeBody": "DAW Project Manager se minimizó a la bandeja del sistema. Usa el icono de la bandeja para reabrirlo o salir.",
   "trayShowWindow": "Mostrar DAW Project Manager",
   "trayLastBackup": "Última copia de seguridad: {when}",
   "@trayLastBackup": {

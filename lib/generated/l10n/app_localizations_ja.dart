@@ -2068,6 +2068,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get quit => '終了';
 
   @override
+  String get trayNoticeTitle => 'バックグラウンドで実行中です';
+
+  @override
+  String get trayNoticeBody =>
+      'DAW Project Manager はシステムトレイに最小化されました。トレイアイコンから再表示または終了できます。';
+
+  @override
   String get trayShowWindow => 'DAW Project Manager を表示';
 
   @override

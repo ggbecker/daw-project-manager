@@ -21,6 +21,7 @@ class DeadlineNotificationService {
   bool _isDesktopInitialized = false;
 
   static const _workTimerNotifId = 9999;
+  static const _simpleNotifId = 9998;
 
   /// Registers the AUMID and COM activator CLSID in the Windows registry so
   /// that WinRT toast notifications (flutter_local_notifications) display the
@@ -131,6 +132,48 @@ class DeadlineNotificationService {
       );
     } catch (e) {
       if (kDebugMode) print('[DeadlineNotification] Work timer notification failed: $e');
+    }
+  }
+
+  /// Show a plain one-off notification on any platform (title + body, no
+  /// tap payload). Used e.g. for the one-time "still running in the tray"
+  /// notice. Kept separate from the work-timer notification so they don't
+  /// overwrite each other (distinct notification ids/channels).
+  Future<void> showSimpleNotification(String title, String body) async {
+    if (!Platform.isAndroid && !_isDesktopInitialized) {
+      await initializeDesktop();
+    }
+    try {
+      const androidDetails = AndroidNotificationDetails(
+        'general',
+        'General',
+        channelDescription: 'General app notifications',
+        importance: Importance.defaultImportance,
+        priority: Priority.defaultPriority,
+        autoCancel: true,
+      );
+      const darwinDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: false,
+        presentSound: false,
+      );
+      // No custom image — the header icon comes from the AUMID registry entry
+      // registered in _registerWindowsAumid() at startup.
+      const windowsDetails = WindowsNotificationDetails();
+      final notifDetails = NotificationDetails(
+        android: androidDetails,
+        macOS: darwinDetails,
+        iOS: darwinDetails,
+        windows: windowsDetails,
+      );
+      await _notifications.show(
+        id: _simpleNotifId,
+        title: title,
+        body: body,
+        notificationDetails: notifDetails,
+      );
+    } catch (e) {
+      if (kDebugMode) print('[DeadlineNotification] Simple notification failed: $e');
     }
   }
 

@@ -1399,6 +1399,8 @@
   "quitConfirmTitle": "Uscire da DAW Project Manager?",
   "quitConfirmMessage": "Vuoi davvero uscire?",
   "quit": "Esci",
+  "trayNoticeTitle": "Ancora in esecuzione in background",
+  "trayNoticeBody": "DAW Project Manager è stato ridotto nella barra di sistema. Usa l'icona nella barra per riaprirlo o uscire.",
   "trayShowWindow": "Mostra DAW Project Manager",
   "trayLastBackup": "Ultimo backup: {when}",
   "@trayLastBackup": {

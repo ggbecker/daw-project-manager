@@ -1399,6 +1399,8 @@
   "quitConfirmTitle": "Выйти из DAW Project Manager?",
   "quitConfirmMessage": "Вы уверены, что хотите выйти?",
   "quit": "Выйти",
+  "trayNoticeTitle": "Продолжает работать в фоне",
+  "trayNoticeBody": "DAW Project Manager свёрнут в системный трей. Используйте значок в трее, чтобы открыть приложение снова или выйти.",
   "trayShowWindow": "Показать DAW Project Manager",
   "trayLastBackup": "Последнее резервное копирование: {when}",
   "@trayLastBackup": {

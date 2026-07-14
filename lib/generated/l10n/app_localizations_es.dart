@@ -2123,6 +2123,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get quit => 'Salir';
 
   @override
+  String get trayNoticeTitle => 'Sigue ejecutándose en segundo plano';
+
+  @override
+  String get trayNoticeBody =>
+      'DAW Project Manager se minimizó a la bandeja del sistema. Usa el icono de la bandeja para reabrirlo o salir.';
+
+  @override
   String get trayShowWindow => 'Mostrar DAW Project Manager';
 
   @override

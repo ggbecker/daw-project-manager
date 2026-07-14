@@ -1399,6 +1399,8 @@
   "quitConfirmTitle": "DAW Project Manager を終了しますか？",
   "quitConfirmMessage": "本当に終了しますか？",
   "quit": "終了",
+  "trayNoticeTitle": "バックグラウンドで実行中です",
+  "trayNoticeBody": "DAW Project Manager はシステムトレイに最小化されました。トレイアイコンから再表示または終了できます。",
   "trayShowWindow": "DAW Project Manager を表示",
   "trayLastBackup": "最終バックアップ: {when}",
   "@trayLastBackup": {

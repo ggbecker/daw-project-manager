@@ -1399,6 +1399,8 @@
   "quitConfirmTitle": "DAW Project Manager beenden?",
   "quitConfirmMessage": "Möchtest du wirklich beenden?",
   "quit": "Beenden",
+  "trayNoticeTitle": "Läuft weiter im Hintergrund",
+  "trayNoticeBody": "DAW Project Manager wurde in die Taskleiste minimiert. Über das Taskleistensymbol kannst du die App wieder öffnen oder beenden.",
   "trayShowWindow": "DAW Project Manager anzeigen",
   "trayLastBackup": "Letztes Backup: {when}",
   "@trayLastBackup": {

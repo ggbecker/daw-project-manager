@@ -2108,6 +2108,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quit => 'Quit';
 
   @override
+  String get trayNoticeTitle => 'Still running in the background';
+
+  @override
+  String get trayNoticeBody =>
+      'DAW Project Manager was minimized to the system tray. Use the tray icon to reopen or quit it.';
+
+  @override
   String get trayShowWindow => 'Show DAW Project Manager';
 
   @override

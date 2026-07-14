@@ -20,6 +20,7 @@ import 'services/notification_background_service.dart';
 import 'services/google_drive_sync_service.dart';
 import 'services/update_check_service.dart';
 import 'services/crash_logger.dart';
+import 'services/tray_notice.dart';
 import 'services/tray_service.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'models/auto_backup_interval.dart';
@@ -609,6 +610,22 @@ class _DawProjectManagerAppState extends ConsumerState<DawProjectManagerApp>
     unawaited(CrashLogger.logLifecycle(state));
   }
 
+  /// Shows the one-time "still running in the tray" notification on the very
+  /// first close-to-tray, so users don't assume the app quit.
+  Future<void> _maybeShowTrayNotice() async {
+    final context = navigatorKey.currentContext;
+    if (context == null) return;
+    final l10n = AppLocalizations.of(context);
+    if (l10n == null) return;
+    // Capture strings before the async gap — the hidden window keeps the
+    // tree alive, but reading the context after awaits is fragile.
+    final title = l10n.trayNoticeTitle;
+    final body = l10n.trayNoticeBody;
+    if (await TrayNotice.claimFirstHide()) {
+      await DeadlineNotificationService().showSimpleNotification(title, body);
+    }
+  }
+
   @override
   void onWindowClose() async {
     final closeToTray = ref.read(closeToTrayProvider);
@@ -622,11 +639,13 @@ class _DawProjectManagerAppState extends ConsumerState<DawProjectManagerApp>
       }
       if (closeToTray) {
         await windowManager.hide();
+        unawaited(_maybeShowTrayNotice());
         return;
       }
       // closeToTray disabled: fall through to the shared quit-warning flow.
     } else if (!kIsWeb && closeToTray) {
       await windowManager.hide();
+      unawaited(_maybeShowTrayNotice());
       return;
     }
 

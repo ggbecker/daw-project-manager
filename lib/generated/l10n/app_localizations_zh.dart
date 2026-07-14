@@ -2046,6 +2046,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get quit => '退出';
 
   @override
+  String get trayNoticeTitle => '仍在后台运行';
+
+  @override
+  String get trayNoticeBody => 'DAW Project Manager 已最小化到系统托盘。使用托盘图标可重新打开或退出。';
+
+  @override
   String get trayShowWindow => '显示 DAW Project Manager';
 
   @override

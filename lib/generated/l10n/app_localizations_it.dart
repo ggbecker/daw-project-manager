@@ -2115,6 +2115,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get quit => 'Esci';
 
   @override
+  String get trayNoticeTitle => 'Ancora in esecuzione in background';
+
+  @override
+  String get trayNoticeBody =>
+      'DAW Project Manager è stato ridotto nella barra di sistema. Usa l\'icona nella barra per riaprirlo o uscire.';
+
+  @override
   String get trayShowWindow => 'Mostra DAW Project Manager';
 
   @override

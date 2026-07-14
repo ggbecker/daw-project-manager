@@ -2122,6 +2122,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get quit => 'Beenden';
 
   @override
+  String get trayNoticeTitle => 'Läuft weiter im Hintergrund';
+
+  @override
+  String get trayNoticeBody =>
+      'DAW Project Manager wurde in die Taskleiste minimiert. Über das Taskleistensymbol kannst du die App wieder öffnen oder beenden.';
+
+  @override
   String get trayShowWindow => 'DAW Project Manager anzeigen';
 
   @override

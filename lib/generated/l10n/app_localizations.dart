@@ -3566,6 +3566,18 @@ abstract class AppLocalizations {
   /// **'Quit'**
   String get quit;
 
+  /// No description provided for @trayNoticeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Still running in the background'**
+  String get trayNoticeTitle;
+
+  /// No description provided for @trayNoticeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'DAW Project Manager was minimized to the system tray. Use the tray icon to reopen or quit it.'**
+  String get trayNoticeBody;
+
   /// No description provided for @trayShowWindow.
   ///
   /// In en, this message translates to:

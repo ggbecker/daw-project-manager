@@ -2110,6 +2110,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get quit => 'Выйти';
 
   @override
+  String get trayNoticeTitle => 'Продолжает работать в фоне';
+
+  @override
+  String get trayNoticeBody =>
+      'DAW Project Manager свёрнут в системный трей. Используйте значок в трее, чтобы открыть приложение снова или выйти.';
+
+  @override
   String get trayShowWindow => 'Показать DAW Project Manager';
 
   @override
