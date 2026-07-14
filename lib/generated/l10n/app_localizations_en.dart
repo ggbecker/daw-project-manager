@@ -2436,14 +2436,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get renameButton => 'Rename';
 
   @override
-  String get previewMixdownFolderTitle => 'Preview Mixdown Folder';
+  String get previewMixdownFolderTitle => 'Preview Mixdown Folders';
 
   @override
   String get previewMixdownFolderSubtitle =>
-      'Subfolder name inside each project folder to check first when auto-detecting preview songs. Leave empty to use DAW defaults.';
+      'Subfolder names inside each project folder to check first, in order, when auto-detecting preview songs. Leave empty to use DAW defaults.';
 
   @override
   String get previewMixdownFolderHint => 'e.g. Mixdowns';
+
+  @override
+  String get mixdownFoldersInfoTooltip => 'How this works';
+
+  @override
+  String get mixdownFoldersInfoDialogTitle => 'How preview detection works';
+
+  @override
+  String get mixdownFoldersInfoDialogBody =>
+      'When a project has no manually chosen preview song, the app looks for the most recently modified audio file to use as a preview. It checks your custom folders below first, in order, then falls back to a list of default folder names based on the project\'s DAW.';
+
+  @override
+  String get mixdownFoldersDawDefaultsHeading =>
+      'Default folders checked per DAW';
+
+  @override
+  String get mixdownFoldersOtherDawLabel => 'Other / unrecognized DAW';
+
+  @override
+  String get addMixdownFolder => 'Add';
+
+  @override
+  String get noCustomMixdownFolders =>
+      'No custom folders added — DAW defaults will be used.';
 
   @override
   String dawInfoLabel(String daw) {

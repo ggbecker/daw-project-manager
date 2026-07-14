@@ -249,30 +249,44 @@ void main() {
     });
   });
 
-  group('ProjectRepository.custom mixdown folder', () {
-    test('getCustomMixdownFolder returns null when not configured', () async {
+  group('ProjectRepository.custom mixdown folders', () {
+    test('getCustomMixdownFolders returns empty list when not configured', () async {
       final repo = await HiveTestHelper.createRepository();
-      expect(repo.getCustomMixdownFolder(), isNull);
+      expect(repo.getCustomMixdownFolders(), isEmpty);
     });
 
-    test('setCustomMixdownFolder saves the trimmed value', () async {
+    test('setCustomMixdownFolders saves trimmed, non-empty values in order', () async {
       final repo = await HiveTestHelper.createRepository();
-      await repo.setCustomMixdownFolder('  Exports  ');
-      expect(repo.getCustomMixdownFolder(), 'Exports');
+      await repo.setCustomMixdownFolders(['  Exports  ', 'Mixdowns', '']);
+      expect(repo.getCustomMixdownFolders(), ['Exports', 'Mixdowns']);
     });
 
-    test('setCustomMixdownFolder with null deletes the setting', () async {
+    test('setCustomMixdownFolders with empty list deletes the setting', () async {
       final repo = await HiveTestHelper.createRepository();
-      await repo.setCustomMixdownFolder('/something');
-      await repo.setCustomMixdownFolder(null);
-      expect(repo.getCustomMixdownFolder(), isNull);
+      await repo.setCustomMixdownFolders(['Exports']);
+      await repo.setCustomMixdownFolders([]);
+      expect(repo.getCustomMixdownFolders(), isEmpty);
     });
 
-    test('setCustomMixdownFolder with empty string deletes the setting', () async {
+    test('setCustomMixdownFolders with only blank entries deletes the setting', () async {
       final repo = await HiveTestHelper.createRepository();
-      await repo.setCustomMixdownFolder('/something');
-      await repo.setCustomMixdownFolder('');
-      expect(repo.getCustomMixdownFolder(), isNull);
+      await repo.setCustomMixdownFolders(['Exports']);
+      await repo.setCustomMixdownFolders(['  ', '']);
+      expect(repo.getCustomMixdownFolders(), isEmpty);
+    });
+
+    test('migrates the legacy single-folder key when the new key is absent', () async {
+      final repo = await HiveTestHelper.createRepository();
+      // Simulate a DB written before the multi-folder feature was added.
+      await repo.appSettingsBox.put('customMixdownFolder', 'LegacyMixdowns');
+      expect(repo.getCustomMixdownFolders(), ['LegacyMixdowns']);
+    });
+
+    test('new multi-folder key takes precedence over the legacy key', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.appSettingsBox.put('customMixdownFolder', 'LegacyMixdowns');
+      await repo.setCustomMixdownFolders(['NewMixdowns']);
+      expect(repo.getCustomMixdownFolders(), ['NewMixdowns']);
     });
   });
 

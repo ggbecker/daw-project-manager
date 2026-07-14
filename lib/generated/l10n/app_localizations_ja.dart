@@ -2393,10 +2393,32 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get previewMixdownFolderSubtitle =>
-      'プレビュー曲の自動検出時に最初に確認する各プロジェクトフォルダ内のサブフォルダ名。空にするとDAWのデフォルトを使用します。';
+      'プレビュー曲の自動検出時に、順番に最初に確認する各プロジェクトフォルダ内のサブフォルダ名。空にするとDAWのデフォルトを使用します。';
 
   @override
   String get previewMixdownFolderHint => '例：Mixdowns';
+
+  @override
+  String get mixdownFoldersInfoTooltip => '仕組みを見る';
+
+  @override
+  String get mixdownFoldersInfoDialogTitle => 'プレビュー検出の仕組み';
+
+  @override
+  String get mixdownFoldersInfoDialogBody =>
+      'プロジェクトに手動で選択したプレビュー曲がない場合、アプリは最も最近更新されたオーディオファイルをプレビューとして探します。まず以下のカスタムフォルダを順番に確認し、その後プロジェクトのDAWに基づくデフォルトフォルダ名のリストにフォールバックします。';
+
+  @override
+  String get mixdownFoldersDawDefaultsHeading => 'DAWごとのデフォルトフォルダ';
+
+  @override
+  String get mixdownFoldersOtherDawLabel => 'その他 / 不明なDAW';
+
+  @override
+  String get addMixdownFolder => '追加';
+
+  @override
+  String get noCustomMixdownFolders => 'カスタムフォルダが追加されていません — DAWのデフォルトが使用されます。';
 
   @override
   String dawInfoLabel(String daw) {

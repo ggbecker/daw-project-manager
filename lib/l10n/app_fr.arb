@@ -1598,9 +1598,16 @@
   "nameInvalidCharacters": "Le nom ne peut pas contenir / \\ :",
   "alsoRenameContainingFolder": "Renommer aussi le dossier parent",
   "renameButton": "Renommer",
-  "previewMixdownFolderTitle": "Dossier de mixage de prévisualisation",
-  "previewMixdownFolderSubtitle": "Nom du sous-dossier dans chaque dossier de projet à vérifier en premier lors de la détection automatique des morceaux de prévisualisation. Laisser vide pour utiliser les valeurs par défaut du DAW.",
+  "previewMixdownFolderTitle": "Dossiers de mixage de prévisualisation",
+  "previewMixdownFolderSubtitle": "Noms des sous-dossiers dans chaque dossier de projet à vérifier en premier, dans l'ordre, lors de la détection automatique des morceaux de prévisualisation. Laisser vide pour utiliser les valeurs par défaut du DAW.",
   "previewMixdownFolderHint": "ex. Mixages",
+  "mixdownFoldersInfoTooltip": "Comment ça marche",
+  "mixdownFoldersInfoDialogTitle": "Comment fonctionne la détection de prévisualisation",
+  "mixdownFoldersInfoDialogBody": "Lorsqu'un projet n'a pas de morceau de prévisualisation choisi manuellement, l'application recherche le fichier audio le plus récemment modifié à utiliser comme aperçu. Elle vérifie d'abord vos dossiers personnalisés ci-dessous, dans l'ordre, puis se rabat sur une liste de noms de dossiers par défaut selon le DAW du projet.",
+  "mixdownFoldersDawDefaultsHeading": "Dossiers par défaut selon le DAW",
+  "mixdownFoldersOtherDawLabel": "Autre / DAW non reconnu",
+  "addMixdownFolder": "Ajouter",
+  "noCustomMixdownFolders": "Aucun dossier personnalisé ajouté — les valeurs par défaut du DAW seront utilisées.",
   "dawInfoLabel": "DAW : {daw}",
   "@dawInfoLabel": {
     "placeholders": {

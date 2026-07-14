@@ -2369,10 +2369,32 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get previewMixdownFolderSubtitle =>
-      '每个项目文件夹内的子文件夹名称，自动检测预览歌曲时优先检查该文件夹。留空则使用DAW默认值。';
+      '自动检测预览歌曲时，按顺序优先检查每个项目文件夹内的子文件夹名称。留空则使用DAW默认值。';
 
   @override
   String get previewMixdownFolderHint => '例如：Mixdowns';
+
+  @override
+  String get mixdownFoldersInfoTooltip => '工作原理';
+
+  @override
+  String get mixdownFoldersInfoDialogTitle => '预览检测的工作原理';
+
+  @override
+  String get mixdownFoldersInfoDialogBody =>
+      '当项目没有手动选择的预览歌曲时，应用会查找最近修改的音频文件用作预览。它会先按顺序检查下面的自定义文件夹，然后再根据项目的DAW使用默认文件夹名称列表。';
+
+  @override
+  String get mixdownFoldersDawDefaultsHeading => '各DAW的默认文件夹';
+
+  @override
+  String get mixdownFoldersOtherDawLabel => '其他 / 未识别的DAW';
+
+  @override
+  String get addMixdownFolder => '添加';
+
+  @override
+  String get noCustomMixdownFolders => '未添加自定义文件夹 — 将使用DAW默认值。';
 
   @override
   String dawInfoLabel(String daw) {

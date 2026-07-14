@@ -35,6 +35,7 @@ class ProjectRepository {
   final _uuid = const Uuid();
 
   static const _keyCustomMixdownFolder = 'customMixdownFolder';
+  static const _keyCustomMixdownFolders = 'customMixdownFolders';
 
   ProjectRepository({
     required this.profileId,
@@ -47,13 +48,30 @@ class ProjectRepository {
     required this.appSettingsBox,
   });
 
-  String? getCustomMixdownFolder() => appSettingsBox.get(_keyCustomMixdownFolder);
+  // Subfolder names (relative to each project's own folder) checked, in
+  // order, before falling back to DAW-specific and generic defaults.
+  List<String> getCustomMixdownFolders() {
+    final raw = appSettingsBox.get(_keyCustomMixdownFolders);
+    if (raw != null) {
+      try {
+        return List.unmodifiable((jsonDecode(raw) as List).cast<String>());
+      } catch (_) {}
+    }
+    // Migrate the legacy single-folder key.
+    final legacy = appSettingsBox.get(_keyCustomMixdownFolder);
+    if (legacy != null && legacy.isNotEmpty) return [legacy];
+    return const [];
+  }
 
-  Future<void> setCustomMixdownFolder(String? value) async {
-    if (value == null || value.trim().isEmpty) {
-      await appSettingsBox.delete(_keyCustomMixdownFolder);
+  Future<void> setCustomMixdownFolders(List<String> folders) async {
+    final cleaned = folders
+        .map((f) => f.trim())
+        .where((f) => f.isNotEmpty)
+        .toList();
+    if (cleaned.isEmpty) {
+      await appSettingsBox.delete(_keyCustomMixdownFolders);
     } else {
-      await appSettingsBox.put(_keyCustomMixdownFolder, value.trim());
+      await appSettingsBox.put(_keyCustomMixdownFolders, jsonEncode(cleaned));
     }
   }
 

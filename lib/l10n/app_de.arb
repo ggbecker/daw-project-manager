@@ -1599,8 +1599,15 @@
   "alsoRenameContainingFolder": "Auch übergeordneten Ordner umbenennen",
   "renameButton": "Umbenennen",
   "previewMixdownFolderTitle": "Vorschau-Mixdown-Ordner",
-  "previewMixdownFolderSubtitle": "Unterordnername in jedem Projektordner, der zuerst bei der automatischen Erkennung von Vorschau-Songs geprüft wird. Leer lassen für DAW-Standardwerte.",
+  "previewMixdownFolderSubtitle": "Unterordnernamen in jedem Projektordner, die zuerst bei der automatischen Erkennung von Vorschau-Songs geprüft werden, in dieser Reihenfolge. Leer lassen für DAW-Standardwerte.",
   "previewMixdownFolderHint": "z.B. Mixdowns",
+  "mixdownFoldersInfoTooltip": "Wie das funktioniert",
+  "mixdownFoldersInfoDialogTitle": "Wie die Vorschau-Erkennung funktioniert",
+  "mixdownFoldersInfoDialogBody": "Wenn für ein Projekt kein manuell ausgewählter Vorschau-Song vorhanden ist, sucht die App nach der zuletzt geänderten Audiodatei, um sie als Vorschau zu verwenden. Zuerst werden Ihre benutzerdefinierten Ordner unten in der angegebenen Reihenfolge geprüft, danach eine Liste von Standardordnernamen basierend auf der DAW des Projekts.",
+  "mixdownFoldersDawDefaultsHeading": "Standardordner pro DAW",
+  "mixdownFoldersOtherDawLabel": "Andere / unbekannte DAW",
+  "addMixdownFolder": "Hinzufügen",
+  "noCustomMixdownFolders": "Keine benutzerdefinierten Ordner hinzugefügt — DAW-Standardwerte werden verwendet.",
   "dawInfoLabel": "DAW: {daw}",
   "@dawInfoLabel": {
     "placeholders": {

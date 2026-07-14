@@ -2682,9 +2682,16 @@
   "alsoRenameContainingFolder": "Also rename containing folder",
   "renameButton": "Rename",
 
-  "previewMixdownFolderTitle": "Preview Mixdown Folder",
-  "previewMixdownFolderSubtitle": "Subfolder name inside each project folder to check first when auto-detecting preview songs. Leave empty to use DAW defaults.",
+  "previewMixdownFolderTitle": "Preview Mixdown Folders",
+  "previewMixdownFolderSubtitle": "Subfolder names inside each project folder to check first, in order, when auto-detecting preview songs. Leave empty to use DAW defaults.",
   "previewMixdownFolderHint": "e.g. Mixdowns",
+  "mixdownFoldersInfoTooltip": "How this works",
+  "mixdownFoldersInfoDialogTitle": "How preview detection works",
+  "mixdownFoldersInfoDialogBody": "When a project has no manually chosen preview song, the app looks for the most recently modified audio file to use as a preview. It checks your custom folders below first, in order, then falls back to a list of default folder names based on the project's DAW.",
+  "mixdownFoldersDawDefaultsHeading": "Default folders checked per DAW",
+  "mixdownFoldersOtherDawLabel": "Other / unrecognized DAW",
+  "addMixdownFolder": "Add",
+  "noCustomMixdownFolders": "No custom folders added — DAW defaults will be used.",
 
   "dawInfoLabel": "DAW: {daw}",
   "@dawInfoLabel": {

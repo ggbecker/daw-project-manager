@@ -1599,8 +1599,15 @@
   "alsoRenameContainingFolder": "含まれるフォルダも名前変更する",
   "renameButton": "名前変更",
   "previewMixdownFolderTitle": "プレビューミックスダウンフォルダ",
-  "previewMixdownFolderSubtitle": "プレビュー曲の自動検出時に最初に確認する各プロジェクトフォルダ内のサブフォルダ名。空にするとDAWのデフォルトを使用します。",
+  "previewMixdownFolderSubtitle": "プレビュー曲の自動検出時に、順番に最初に確認する各プロジェクトフォルダ内のサブフォルダ名。空にするとDAWのデフォルトを使用します。",
   "previewMixdownFolderHint": "例：Mixdowns",
+  "mixdownFoldersInfoTooltip": "仕組みを見る",
+  "mixdownFoldersInfoDialogTitle": "プレビュー検出の仕組み",
+  "mixdownFoldersInfoDialogBody": "プロジェクトに手動で選択したプレビュー曲がない場合、アプリは最も最近更新されたオーディオファイルをプレビューとして探します。まず以下のカスタムフォルダを順番に確認し、その後プロジェクトのDAWに基づくデフォルトフォルダ名のリストにフォールバックします。",
+  "mixdownFoldersDawDefaultsHeading": "DAWごとのデフォルトフォルダ",
+  "mixdownFoldersOtherDawLabel": "その他 / 不明なDAW",
+  "addMixdownFolder": "追加",
+  "noCustomMixdownFolders": "カスタムフォルダが追加されていません — DAWのデフォルトが使用されます。",
   "dawInfoLabel": "DAW: {daw}",
   "@dawInfoLabel": {
     "placeholders": {
