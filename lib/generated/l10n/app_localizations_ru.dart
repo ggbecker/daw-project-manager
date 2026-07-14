@@ -1912,22 +1912,6 @@ class AppLocalizationsRu extends AppLocalizations {
       'Системное меню отправки здесь недоступно — используйте кнопку «Перетащить, чтобы поделиться» в предпрослушивании трека, чтобы перетащить файл в другое приложение.';
 
   @override
-  String get backupInProgressTitle => 'Идёт резервное копирование';
-
-  @override
-  String get backupInProgressMessage =>
-      'Сейчас идёт загрузка резервной копии в Google Drive. Если выйти сейчас, она может остаться незавершённой — подождать, пока закончится, или выйти всё равно?';
-
-  @override
-  String get waitForBackup => 'Подождать';
-
-  @override
-  String get quitAnyway => 'Выйти всё равно';
-
-  @override
-  String get finishingBackup => 'Завершение резервного копирования…';
-
-  @override
   String get dragToShare => 'Перетащить, чтобы поделиться';
 
   @override

@@ -41,10 +41,6 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 // Auto-backup state (top-level so it persists for the app lifetime)
 bool _autoBackupRunning = false;
 Timer? _autoBackupTimer;
-// Resolves when the in-flight auto-backup run finishes — lets quitApp()
-// wait (briefly) for a Drive upload in progress instead of exit(0) cutting
-// it off mid-write.
-Completer<void>? _autoBackupCompleter;
 
 // Keeps the single-instance socket alive for the app's lifetime.
 // ignore: unused_element
@@ -60,73 +56,16 @@ ServerSocket? _singleInstanceSocket;
 /// window is gone, so without an explicit exit the process lingers until
 /// the OS's own "unresponsive app" timeout kills it.
 ///
-/// exit() cuts off whatever's in flight with no cleanup, so before forcing
-/// it: cancel the auto-backup timer (stop a new run from starting), and if
-/// a Drive upload is already in progress, ask the user whether to wait for
-/// it or quit anyway rather than silently risking a half-written backup or
-/// a corrupted "last upload" timestamp. Any wait is still bounded so a
-/// stuck upload can't reintroduce the original slow-quit problem.
+/// Cancels the auto-backup timer so a new run can't start, but doesn't wait
+/// for one already in flight: the Drive backup file is replaced with a
+/// single atomic upload, so killing it mid-flight just leaves the previous
+/// backup in place rather than corrupting anything — not worth blocking
+/// quit for. (It used to prompt "wait or quit anyway", but that dialog
+/// rendered into the hidden window when quitting from the tray while
+/// closed-to-tray, making it invisible and undismissable — quit looked
+/// hung until the user manually reopened the window.)
 Future<void> quitApp() async {
   _autoBackupTimer?.cancel();
-  if (_autoBackupRunning && _autoBackupCompleter != null) {
-    final context = navigatorKey.currentContext;
-    if (context != null) {
-      final l10n = AppLocalizations.of(context)!;
-      final wait = await showDialog<bool>(
-        context: context,
-        barrierDismissible: false,
-        builder: (ctx) => AlertDialog(
-          backgroundColor: Theme.of(ctx).cardColor,
-          title: Text(l10n.backupInProgressTitle),
-          content: Text(l10n.backupInProgressMessage),
-          actions: [
-            TextButton(
-              style: TextButton.styleFrom(foregroundColor: Theme.of(ctx).colorScheme.error),
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(l10n.quitAnyway),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: Text(l10n.waitForBackup),
-            ),
-          ],
-        ),
-      );
-      if (wait == true && _autoBackupRunning) {
-        final waitContext = navigatorKey.currentContext;
-        if (waitContext != null) {
-          showDialog(
-            context: waitContext,
-            barrierDismissible: false,
-            builder: (dialogCtx) => AlertDialog(
-              backgroundColor: Theme.of(dialogCtx).cardColor,
-              content: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const CircularProgressIndicator(),
-                  const SizedBox(width: 16),
-                  Text(AppLocalizations.of(dialogCtx)!.finishingBackup),
-                ],
-              ),
-            ),
-          );
-        }
-        try {
-          await _autoBackupCompleter?.future.timeout(const Duration(seconds: 30));
-        } catch (_) {
-          // Timed out (or the backup itself errored) — proceed with exit
-          // rather than hang indefinitely.
-        }
-        final popContext = navigatorKey.currentContext;
-        if (popContext != null) Navigator.of(popContext, rootNavigator: true).pop();
-      }
-    } else {
-      // No UI available to ask — fall back to a short bounded wait.
-      try {
-        await _autoBackupCompleter!.future.timeout(const Duration(seconds: 5));
-      } catch (_) {}
-    }
-  }
   if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
     try {
       await trayManager.destroy();
@@ -172,7 +111,6 @@ void _startAutoBackupTimer(
   _autoBackupTimer = Timer.periodic(const Duration(minutes: 5), (_) async {
     if (_autoBackupRunning) return;
     _autoBackupRunning = true;
-    _autoBackupCompleter = Completer<void>();
     try {
       // Read saved settings from app_settings box
       await ensureHiveInitialized();
@@ -219,8 +157,6 @@ void _startAutoBackupTimer(
       if (kDebugMode) print('Auto-backup failed: $e');
     } finally {
       _autoBackupRunning = false;
-      _autoBackupCompleter?.complete();
-      _autoBackupCompleter = null;
     }
   });
 }

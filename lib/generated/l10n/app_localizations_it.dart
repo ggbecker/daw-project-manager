@@ -1918,22 +1918,6 @@ class AppLocalizationsIt extends AppLocalizations {
       'Il menu di condivisione di sistema non è disponibile qui — usa il pulsante \"Trascina per Condividere\" nell\'anteprima del brano per trascinare il file su un\'altra app.';
 
   @override
-  String get backupInProgressTitle => 'Backup in Corso';
-
-  @override
-  String get backupInProgressMessage =>
-      'Un backup è in fase di caricamento su Google Drive. Uscire ora potrebbe lasciarlo incompleto — aspettare che finisca, oppure uscire comunque?';
-
-  @override
-  String get waitForBackup => 'Aspetta';
-
-  @override
-  String get quitAnyway => 'Esci Comunque';
-
-  @override
-  String get finishingBackup => 'Completamento backup…';
-
-  @override
   String get dragToShare => 'Trascina per Condividere';
 
   @override

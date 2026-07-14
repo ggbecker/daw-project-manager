@@ -1870,22 +1870,6 @@ class AppLocalizationsJa extends AppLocalizations {
       'システムの共有メニューはここでは利用できません。代わりに、曲のプレビューにある「ドラッグして共有」チップでファイルを他のアプリへドラッグしてください。';
 
   @override
-  String get backupInProgressTitle => 'バックアップ中';
-
-  @override
-  String get backupInProgressMessage =>
-      '現在Googleドライブへバックアップをアップロード中です。今終了するとバックアップが不完全になる可能性があります。完了を待ちますか、それでも終了しますか？';
-
-  @override
-  String get waitForBackup => '待つ';
-
-  @override
-  String get quitAnyway => 'それでも終了';
-
-  @override
-  String get finishingBackup => 'バックアップを完了しています…';
-
-  @override
   String get dragToShare => 'ドラッグして共有';
 
   @override

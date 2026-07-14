@@ -1925,22 +1925,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'El menú de compartir del sistema no está disponible aquí — usa el botón \"Arrastrar para Compartir\" en la vista previa de la canción para arrastrar el archivo a otra app.';
 
   @override
-  String get backupInProgressTitle => 'Copia de Seguridad en Curso';
-
-  @override
-  String get backupInProgressMessage =>
-      'Se está subiendo una copia de seguridad a Google Drive ahora mismo. Salir puede dejarla incompleta — ¿esperar a que termine, o salir de todos modos?';
-
-  @override
-  String get waitForBackup => 'Esperar';
-
-  @override
-  String get quitAnyway => 'Salir de Todos Modos';
-
-  @override
-  String get finishingBackup => 'Finalizando copia de seguridad…';
-
-  @override
   String get dragToShare => 'Arrastrar para Compartir';
 
   @override

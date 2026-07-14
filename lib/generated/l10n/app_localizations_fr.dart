@@ -1933,22 +1933,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le menu de partage du système n\'est pas disponible ici — utilisez la puce « Glisser pour Partager » sur l\'aperçu du morceau pour glisser le fichier vers une autre application.';
 
   @override
-  String get backupInProgressTitle => 'Sauvegarde en Cours';
-
-  @override
-  String get backupInProgressMessage =>
-      'Une sauvegarde est en cours d\'envoi vers Google Drive. Quitter maintenant risque de la laisser incomplète — attendre qu\'elle se termine, ou quitter quand même ?';
-
-  @override
-  String get waitForBackup => 'Attendre';
-
-  @override
-  String get quitAnyway => 'Quitter Quand Même';
-
-  @override
-  String get finishingBackup => 'Finalisation de la sauvegarde…';
-
-  @override
   String get dragToShare => 'Glisser pour Partager';
 
   @override
