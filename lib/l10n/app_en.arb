@@ -2894,6 +2894,21 @@
   "@sessionTime": {
     "placeholders": { "time": { "type": "String" } }
   },
+  "headerAgeOld": "{age} old",
+  "@headerAgeOld": {
+    "description": "Project age segment of the detail header meta line, e.g. '3 months old'",
+    "placeholders": { "age": { "type": "String" } }
+  },
+  "headerEdited": "edited {when}",
+  "@headerEdited": {
+    "description": "Last-edited segment of the detail header meta line; {when} is a relative date like '2 days ago'",
+    "placeholders": { "when": { "type": "String" } }
+  },
+  "headerWorked": "{time} worked",
+  "@headerWorked": {
+    "description": "Total work time segment of the detail header meta line, e.g. '5h 32m worked'",
+    "placeholders": { "time": { "type": "String" } }
+  },
   "sessionHistory": "Session History",
   "@sessionHistory": {},
   "noSessionsYet": "No sessions recorded yet",

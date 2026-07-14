@@ -1812,6 +1812,18 @@
   "@sessionTime": {
     "placeholders": { "time": { "type": "String" } }
   },
+  "headerAgeOld": "{age} de vida",
+  "@headerAgeOld": {
+    "placeholders": { "age": { "type": "String" } }
+  },
+  "headerEdited": "editado {when}",
+  "@headerEdited": {
+    "placeholders": { "when": { "type": "String" } }
+  },
+  "headerWorked": "{time} trabalhado",
+  "@headerWorked": {
+    "placeholders": { "time": { "type": "String" } }
+  },
   "sessionHistory": "Histórico de sessões",
   "@sessionHistory": {},
   "noSessionsYet": "Nenhuma sessão registrada ainda",

@@ -2832,6 +2832,21 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String headerAgeOld(String age) {
+    return '$age de vida';
+  }
+
+  @override
+  String headerEdited(String when) {
+    return 'editado $when';
+  }
+
+  @override
+  String headerWorked(String time) {
+    return '$time trabalhado';
+  }
+
+  @override
   String get sessionHistory => 'Histórico de sessões';
 
   @override

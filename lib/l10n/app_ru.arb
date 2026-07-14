@@ -1788,6 +1788,18 @@
   "@sessionTime": {
     "placeholders": { "time": { "type": "String" } }
   },
+  "headerAgeOld": "возраст: {age}",
+  "@headerAgeOld": {
+    "placeholders": { "age": { "type": "String" } }
+  },
+  "headerEdited": "изменено {when}",
+  "@headerEdited": {
+    "placeholders": { "when": { "type": "String" } }
+  },
+  "headerWorked": "отработано {time}",
+  "@headerWorked": {
+    "placeholders": { "time": { "type": "String" } }
+  },
   "sessionHistory": "История сессий",
   "@sessionHistory": {},
   "noSessionsYet": "Сессии ещё не записаны",

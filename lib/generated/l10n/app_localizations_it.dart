@@ -2838,6 +2838,21 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String headerAgeOld(String age) {
+    return '$age di vita';
+  }
+
+  @override
+  String headerEdited(String when) {
+    return 'modificato $when';
+  }
+
+  @override
+  String headerWorked(String time) {
+    return '$time di lavoro';
+  }
+
+  @override
   String get sessionHistory => 'Cronologia sessioni';
 
   @override

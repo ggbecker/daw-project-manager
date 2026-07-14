@@ -1788,6 +1788,18 @@
   "@sessionTime": {
     "placeholders": { "time": { "type": "String" } }
   },
+  "headerAgeOld": "已创建 {age}",
+  "@headerAgeOld": {
+    "placeholders": { "age": { "type": "String" } }
+  },
+  "headerEdited": "{when}编辑",
+  "@headerEdited": {
+    "placeholders": { "when": { "type": "String" } }
+  },
+  "headerWorked": "已投入 {time}",
+  "@headerWorked": {
+    "placeholders": { "time": { "type": "String" } }
+  },
   "sessionHistory": "会话历史",
   "@sessionHistory": {},
   "noSessionsYet": "尚未记录任何会话",

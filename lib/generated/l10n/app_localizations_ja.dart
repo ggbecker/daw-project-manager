@@ -2771,6 +2771,21 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String headerAgeOld(String age) {
+    return '作成から$age';
+  }
+
+  @override
+  String headerEdited(String when) {
+    return '$whenに編集';
+  }
+
+  @override
+  String headerWorked(String time) {
+    return '作業時間 $time';
+  }
+
+  @override
   String get sessionHistory => 'セッション履歴';
 
   @override

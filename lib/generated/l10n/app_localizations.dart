@@ -4820,6 +4820,24 @@ abstract class AppLocalizations {
   /// **'Session: {time}'**
   String sessionTime(String time);
 
+  /// Project age segment of the detail header meta line, e.g. '3 months old'
+  ///
+  /// In en, this message translates to:
+  /// **'{age} old'**
+  String headerAgeOld(String age);
+
+  /// Last-edited segment of the detail header meta line; {when} is a relative date like '2 days ago'
+  ///
+  /// In en, this message translates to:
+  /// **'edited {when}'**
+  String headerEdited(String when);
+
+  /// Total work time segment of the detail header meta line, e.g. '5h 32m worked'
+  ///
+  /// In en, this message translates to:
+  /// **'{time} worked'**
+  String headerWorked(String time);
+
   /// No description provided for @sessionHistory.
   ///
   /// In en, this message translates to:

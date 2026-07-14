@@ -1788,6 +1788,18 @@
   "@sessionTime": {
     "placeholders": { "time": { "type": "String" } }
   },
+  "headerAgeOld": "{age} alt",
+  "@headerAgeOld": {
+    "placeholders": { "age": { "type": "String" } }
+  },
+  "headerEdited": "bearbeitet {when}",
+  "@headerEdited": {
+    "placeholders": { "when": { "type": "String" } }
+  },
+  "headerWorked": "{time} gearbeitet",
+  "@headerWorked": {
+    "placeholders": { "time": { "type": "String" } }
+  },
   "sessionHistory": "Sitzungsverlauf",
   "@sessionHistory": {},
   "noSessionsYet": "Noch keine Sitzungen aufgezeichnet",

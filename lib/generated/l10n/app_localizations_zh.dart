@@ -2742,6 +2742,21 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String headerAgeOld(String age) {
+    return '已创建 $age';
+  }
+
+  @override
+  String headerEdited(String when) {
+    return '$when编辑';
+  }
+
+  @override
+  String headerWorked(String time) {
+    return '已投入 $time';
+  }
+
+  @override
   String get sessionHistory => '会话历史';
 
   @override

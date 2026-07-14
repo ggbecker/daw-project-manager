@@ -1788,6 +1788,18 @@
   "@sessionTime": {
     "placeholders": { "time": { "type": "String" } }
   },
+  "headerAgeOld": "作成から{age}",
+  "@headerAgeOld": {
+    "placeholders": { "age": { "type": "String" } }
+  },
+  "headerEdited": "{when}に編集",
+  "@headerEdited": {
+    "placeholders": { "when": { "type": "String" } }
+  },
+  "headerWorked": "作業時間 {time}",
+  "@headerWorked": {
+    "placeholders": { "time": { "type": "String" } }
+  },
   "sessionHistory": "セッション履歴",
   "@sessionHistory": {},
   "noSessionsYet": "セッションはまだ記録されていません",

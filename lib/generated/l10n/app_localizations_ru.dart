@@ -2832,6 +2832,21 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String headerAgeOld(String age) {
+    return 'возраст: $age';
+  }
+
+  @override
+  String headerEdited(String when) {
+    return 'изменено $when';
+  }
+
+  @override
+  String headerWorked(String time) {
+    return 'отработано $time';
+  }
+
+  @override
   String get sessionHistory => 'История сессий';
 
   @override
