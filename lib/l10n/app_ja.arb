@@ -27,6 +27,8 @@
   "bpm": "BPM",
   "key": "キー（例：C#m、F major）",
   "notes": "メモ",
+  "expandNotes": "展開",
+  "collapseNotes": "折りたたむ",
   "projectPhase": "プロジェクトフェーズ",
   "failedToLoad": "読み込みに失敗しました",
   "fileMissing": "ファイルが見つかりません。",

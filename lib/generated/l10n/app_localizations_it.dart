@@ -81,6 +81,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get notes => 'Note';
 
   @override
+  String get expandNotes => 'Espandi';
+
+  @override
+  String get collapseNotes => 'Comprimi';
+
+  @override
   String get projectPhase => 'Fase del Progetto';
 
   @override

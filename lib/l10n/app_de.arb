@@ -27,6 +27,8 @@
   "bpm": "BPM",
   "key": "Tonart (z.B. C#m, F-Dur)",
   "notes": "Notizen",
+  "expandNotes": "Erweitern",
+  "collapseNotes": "Einklappen",
   "projectPhase": "Projektphase",
   "failedToLoad": "Laden fehlgeschlagen",
   "fileMissing": "Datei fehlt.",

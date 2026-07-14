@@ -27,6 +27,8 @@
   "bpm": "BPM",
   "key": "Тональность (например: C#m, F мажор)",
   "notes": "Заметки",
+  "expandNotes": "Развернуть",
+  "collapseNotes": "Свернуть",
   "projectPhase": "Фаза проекта",
   "failedToLoad": "Ошибка загрузки",
   "fileMissing": "Файл отсутствует.",

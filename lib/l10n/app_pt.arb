@@ -27,6 +27,8 @@
   "bpm": "BPM",
   "key": "Tom (ex: C#m, F maior)",
   "notes": "Notas",
+  "expandNotes": "Expandir",
+  "collapseNotes": "Recolher",
   "projectPhase": "Fase do Projeto",
   "failedToLoad": "Falha ao carregar",
   "fileMissing": "Arquivo ausente.",

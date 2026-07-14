@@ -27,6 +27,8 @@
   "bpm": "BPM",
   "key": "Tonalité (ex: C#m, F majeur)",
   "notes": "Notes",
+  "expandNotes": "Agrandir",
+  "collapseNotes": "Réduire",
   "projectPhase": "Phase du Projet",
   "failedToLoad": "Échec du chargement",
   "fileMissing": "Fichier manquant.",

@@ -27,6 +27,8 @@
   "bpm": "BPM",
   "key": "Key (e.g., C#m, F major)",
   "notes": "Notes",
+  "expandNotes": "Expand",
+  "collapseNotes": "Collapse",
   "projectPhase": "Project Phase",
   "failedToLoad": "Failed to load",
   "fileMissing": "File missing.",

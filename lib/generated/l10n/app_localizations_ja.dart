@@ -81,6 +81,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get notes => 'メモ';
 
   @override
+  String get expandNotes => '展開';
+
+  @override
+  String get collapseNotes => '折りたたむ';
+
+  @override
   String get projectPhase => 'プロジェクトフェーズ';
 
   @override

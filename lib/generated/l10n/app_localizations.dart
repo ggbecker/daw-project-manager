@@ -256,6 +256,18 @@ abstract class AppLocalizations {
   /// **'Notes'**
   String get notes;
 
+  /// No description provided for @expandNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand'**
+  String get expandNotes;
+
+  /// No description provided for @collapseNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse'**
+  String get collapseNotes;
+
   /// No description provided for @projectPhase.
   ///
   /// In en, this message translates to:

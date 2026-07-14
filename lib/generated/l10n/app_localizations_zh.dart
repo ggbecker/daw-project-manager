@@ -81,6 +81,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notes => '备注';
 
   @override
+  String get expandNotes => '展开';
+
+  @override
+  String get collapseNotes => '收起';
+
+  @override
   String get projectPhase => '项目阶段';
 
   @override

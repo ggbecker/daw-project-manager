@@ -81,6 +81,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get notes => 'Заметки';
 
   @override
+  String get expandNotes => 'Развернуть';
+
+  @override
+  String get collapseNotes => 'Свернуть';
+
+  @override
   String get projectPhase => 'Фаза проекта';
 
   @override

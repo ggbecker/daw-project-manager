@@ -81,6 +81,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get notes => 'Notas';
 
   @override
+  String get expandNotes => 'Expandir';
+
+  @override
+  String get collapseNotes => 'Recolher';
+
+  @override
   String get projectPhase => 'Fase do Projeto';
 
   @override

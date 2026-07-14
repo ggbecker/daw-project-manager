@@ -27,6 +27,8 @@
   "bpm": "BPM",
   "key": "调性（例如：C#m，F大调）",
   "notes": "备注",
+  "expandNotes": "展开",
+  "collapseNotes": "收起",
   "projectPhase": "项目阶段",
   "failedToLoad": "加载失败",
   "fileMissing": "文件缺失。",
