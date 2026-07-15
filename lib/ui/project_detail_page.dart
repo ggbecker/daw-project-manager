@@ -32,6 +32,7 @@ import 'widgets/conversion_progress_dialog.dart';
 import 'widgets/desktop_title_bar.dart';
 import 'widgets/drag_to_share_button.dart';
 import 'widgets/project_detail_header.dart';
+import 'widgets/resizable_text_field.dart';
 import 'widgets/todo_list_widget.dart';
 import 'widgets/waveform_widget.dart';
 import 'project_statistics_page.dart';
@@ -63,8 +64,6 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
 
   bool _hasInitializedPhase = false;
   bool _extractingMetadata = false;
-  bool _notesExpanded = false;
-  double _notesHeight = 130;
   Timer? _autoSaveTimer;
 
   /// Records status-change and/or metadata-edit events after saving a project.
@@ -803,79 +802,13 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                             const SizedBox(height: 12),
 
                             // NOVO: CAMPO DE NOTAS
-                            Stack(
-                              children: [
-                                SizedBox(
-                                  height: _notesHeight,
-                                  child: TextFormField(
-                                    controller: _notesCtrl,
-                                    focusNode: _notesFocusNode,
-                                    expands: true,
-                                    minLines: null,
-                                    maxLines: null,
-                                    textAlignVertical: TextAlignVertical.top,
-                                    decoration: InputDecoration(
-                                      labelText: AppLocalizations.of(context)!.notes,
-                                      alignLabelWithHint: true,
-                                      border: const OutlineInputBorder(),
-                                      contentPadding: const EdgeInsets.fromLTRB(12, 20, 32, 20),
-                                      suffixIcon: Align(
-                                        alignment: Alignment.topRight,
-                                        widthFactor: 1,
-                                        heightFactor: 1,
-                                        child: IconButton(
-                                          icon: Icon(_notesExpanded
-                                              ? Icons.close_fullscreen
-                                              : Icons.open_in_full),
-                                          iconSize: 18,
-                                          tooltip: _notesExpanded
-                                              ? AppLocalizations.of(context)!.collapseNotes
-                                              : AppLocalizations.of(context)!.expandNotes,
-                                          onPressed: () {
-                                            setState(() {
-                                              _notesExpanded = !_notesExpanded;
-                                              _notesHeight = _notesExpanded ? 400 : 130;
-                                            });
-                                          },
-                                        ),
-                                      ),
-                                    ),
-                                    keyboardType: TextInputType.multiline,
-                                    onChanged: (_) => _scheduleAutoSave(),
-                                  ),
-                                ),
-                                Positioned(
-                                  right: 2,
-                                  bottom: 2,
-                                  child: MouseRegion(
-                                    cursor: SystemMouseCursors.resizeUpLeftDownRight,
-                                    child: GestureDetector(
-                                      behavior: HitTestBehavior.opaque,
-                                      onPanUpdate: (details) {
-                                        setState(() {
-                                          _notesHeight = (_notesHeight + details.delta.dy)
-                                              .clamp(100.0, 800.0);
-                                          _notesExpanded = _notesHeight > 130;
-                                        });
-                                      },
-                                      child: SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CustomPaint(
-                                          painter: _ResizeGripPainter(
-                                            color: Theme.of(context)
-                                                    .textTheme
-                                                    .bodySmall
-                                                    ?.color
-                                                    ?.withValues(alpha: 0.5) ??
-                                                Colors.grey,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                            ResizableTextField(
+                              controller: _notesCtrl,
+                              focusNode: _notesFocusNode,
+                              labelText: AppLocalizations.of(context)!.notes,
+                              expandTooltip: AppLocalizations.of(context)!.expandNotes,
+                              collapseTooltip: AppLocalizations.of(context)!.collapseNotes,
+                              onChanged: (_) => _scheduleAutoSave(),
                             ),
 
                             const SizedBox(height: 12),
@@ -1143,32 +1076,6 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
     },
     );
   }
-}
-
-/// Paints the classic three-diagonal-line resize grip in the bottom-right
-/// corner of a manually resizable text box.
-class _ResizeGripPainter extends CustomPainter {
-  final Color color;
-  const _ResizeGripPainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 1.2
-      ..strokeCap = StrokeCap.round;
-    for (final offset in [4.0, 9.0, 14.0]) {
-      canvas.drawLine(
-        Offset(size.width - offset, size.height - 2),
-        Offset(size.width - 2, size.height - offset),
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _ResizeGripPainter oldDelegate) =>
-      oldDelegate.color != color;
 }
 
 // ─── Action Toolbar ───────────────────────────────────────────────────────────

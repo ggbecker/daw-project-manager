@@ -24,6 +24,7 @@ import '../utils/file_launcher.dart';
 import '../generated/l10n/app_localizations.dart';
 import 'project_detail_page.dart';
 import 'session_actions.dart';
+import 'widgets/resizable_text_field.dart';
 import 'widgets/todo_list_widget.dart';
 import 'widgets/waveform_widget.dart';
 
@@ -852,10 +853,11 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
           decoration: InputDecoration(labelText: l10n.releaseTitle),
         ),
         const SizedBox(height: 16),
-        TextFormField(
+        ResizableTextField(
           controller: _descriptionController,
-          decoration: InputDecoration(labelText: l10n.description),
-          maxLines: 5,
+          labelText: l10n.description,
+          expandTooltip: l10n.expand,
+          collapseTooltip: l10n.collapse,
         ),
         const SizedBox(height: 16),
         ListTile(
@@ -1384,10 +1386,11 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
               decoration: InputDecoration(labelText: l10n.releaseTitle),
             ),
             const SizedBox(height: 16),
-            TextFormField(
+            ResizableTextField(
               controller: _descriptionController,
-              decoration: InputDecoration(labelText: l10n.description),
-              maxLines: 5,
+              labelText: l10n.description,
+              expandTooltip: l10n.expand,
+              collapseTooltip: l10n.collapse,
             ),
             const SizedBox(height: 16),
             ListTile(
