@@ -1779,6 +1779,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get add => 'Hinzufügen';
 
   @override
+  String get addTaskAtTimestamp => 'Aufgabe zur aktuellen Zeit hinzufügen';
+
+  @override
+  String get taskDescriptionHint => 'Aufgabenbeschreibung';
+
+  @override
+  String get taskAdded => 'Aufgabe hinzugefügt';
+
+  @override
   String get fromProject => 'Vom Projekt';
 
   @override

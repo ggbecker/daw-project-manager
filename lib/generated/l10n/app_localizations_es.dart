@@ -1782,6 +1782,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get add => 'Añadir';
 
   @override
+  String get addTaskAtTimestamp => 'Añadir tarea en el momento actual';
+
+  @override
+  String get taskDescriptionHint => 'Descripción de la tarea';
+
+  @override
+  String get taskAdded => 'Tarea añadida';
+
+  @override
   String get fromProject => 'Del Proyecto';
 
   @override

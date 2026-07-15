@@ -1731,6 +1731,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get add => '追加';
 
   @override
+  String get addTaskAtTimestamp => '現在の再生位置にタスクを追加';
+
+  @override
+  String get taskDescriptionHint => 'タスクの説明';
+
+  @override
+  String get taskAdded => 'タスクを追加しました';
+
+  @override
   String get fromProject => 'プロジェクトから';
 
   @override

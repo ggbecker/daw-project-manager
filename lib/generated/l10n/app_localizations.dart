@@ -2978,6 +2978,24 @@ abstract class AppLocalizations {
   /// **'Add'**
   String get add;
 
+  /// Tooltip/title for adding a to-do from the player, tagged with the current playback time
+  ///
+  /// In en, this message translates to:
+  /// **'Add task at current time'**
+  String get addTaskAtTimestamp;
+
+  /// Hint text for the to-do description field in the player's add-task sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Task description'**
+  String get taskDescriptionHint;
+
+  /// Snackbar shown after adding a to-do from the player
+  ///
+  /// In en, this message translates to:
+  /// **'Task added'**
+  String get taskAdded;
+
   /// Label indicating item is from a project
   ///
   /// In en, this message translates to:

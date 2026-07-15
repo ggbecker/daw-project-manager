@@ -1774,6 +1774,15 @@ class AppLocalizationsIt extends AppLocalizations {
   String get add => 'Aggiungi';
 
   @override
+  String get addTaskAtTimestamp => 'Aggiungi attività al momento attuale';
+
+  @override
+  String get taskDescriptionHint => 'Descrizione dell\'attività';
+
+  @override
+  String get taskAdded => 'Attività aggiunta';
+
+  @override
   String get fromProject => 'Dal Progetto';
 
   @override

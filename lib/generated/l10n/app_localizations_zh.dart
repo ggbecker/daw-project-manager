@@ -1710,6 +1710,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get add => '添加';
 
   @override
+  String get addTaskAtTimestamp => '在当前时间添加任务';
+
+  @override
+  String get taskDescriptionHint => '任务描述';
+
+  @override
+  String get taskAdded => '已添加任务';
+
+  @override
   String get fromProject => '来自项目';
 
   @override

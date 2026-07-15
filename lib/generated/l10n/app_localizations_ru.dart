@@ -1770,6 +1770,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get add => 'Добавить';
 
   @override
+  String get addTaskAtTimestamp => 'Добавить задачу на текущей позиции';
+
+  @override
+  String get taskDescriptionHint => 'Описание задачи';
+
+  @override
+  String get taskAdded => 'Задача добавлена';
+
+  @override
   String get fromProject => 'Из Проекта';
 
   @override
