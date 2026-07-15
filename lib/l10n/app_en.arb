@@ -2610,6 +2610,33 @@
   "sortByPhase": "Phase",
   "sortByCreatedAt": "Date added",
   "sortByBpm": "BPM",
+  "sortNewestFirst": "Newest first",
+  "sortOldestFirst": "Oldest first",
+  "sortTitleAZ": "Title A–Z",
+  "sortTitleZA": "Title Z–A",
+  "musicPlayerTab": "Music Player",
+  "previewAudioChangedRefreshing": "Preview audio changed on disk — refreshing waveform…",
+  "audioFileChangedRefreshing": "Audio file changed on disk — refreshing waveform…",
+  "autoFitAllColumns": "Auto fit all columns",
+  "uploadAutoDetectedPreviewSongs": "Upload auto-detected preview songs",
+  "uploadAutoDetectedPreviewSongsSubtitle": "Include songs found automatically by the scanner, not just ones you set manually.",
+  "monoGenerating": "Mono...",
+  "errorHandlingDroppedFiles": "Error handling dropped files: {error}",
+  "@errorHandlingDroppedFiles": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "resetOnboardingConfirm": "This will restart the setup wizard. Continue?",
+  "couldNotLaunchDaw": "Could not launch {daw}: {error}",
+  "@couldNotLaunchDaw": {
+    "placeholders": {
+      "daw": { "type": "String" },
+      "error": { "type": "String" }
+    }
+  },
+  "couldNotOpenLink": "Could not open link.",
+  "githubButtonLabel": "GitHub",
   "monoLabel": "Mono",
   "monoToggleTooltip": "Toggle mono playback",
   "monoRequiresWav": "Mono mixing requires a WAV file",

@@ -2283,9 +2283,9 @@ class _AudioFileItemState extends ConsumerState<_AudioFileItem> {
       onStale: () {
         if (!mounted) return;
         setState(() => _peaks = null);
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(const SnackBar(
-          content: Text('Audio file changed on disk — refreshing waveform…'),
-          duration: Duration(seconds: 3),
+        ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
+          content: Text(AppLocalizations.of(context)!.audioFileChangedRefreshing),
+          duration: const Duration(seconds: 3),
         ));
       },
     ).then((peaks) {

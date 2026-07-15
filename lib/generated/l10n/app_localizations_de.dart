@@ -2329,6 +2329,63 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sortByBpm => 'BPM';
 
   @override
+  String get sortNewestFirst => 'Neueste zuerst';
+
+  @override
+  String get sortOldestFirst => 'Älteste zuerst';
+
+  @override
+  String get sortTitleAZ => 'Titel A–Z';
+
+  @override
+  String get sortTitleZA => 'Titel Z–A';
+
+  @override
+  String get musicPlayerTab => 'Musikplayer';
+
+  @override
+  String get previewAudioChangedRefreshing =>
+      'Vorschau-Audio auf der Festplatte geändert — Wellenform wird aktualisiert…';
+
+  @override
+  String get audioFileChangedRefreshing =>
+      'Audiodatei auf der Festplatte geändert — Wellenform wird aktualisiert…';
+
+  @override
+  String get autoFitAllColumns => 'Alle Spalten automatisch anpassen';
+
+  @override
+  String get uploadAutoDetectedPreviewSongs =>
+      'Automatisch erkannte Vorschau-Songs hochladen';
+
+  @override
+  String get uploadAutoDetectedPreviewSongsSubtitle =>
+      'Auch Songs einbeziehen, die automatisch vom Scanner gefunden wurden, nicht nur manuell festgelegte.';
+
+  @override
+  String get monoGenerating => 'Mono …';
+
+  @override
+  String errorHandlingDroppedFiles(String error) {
+    return 'Fehler beim Verarbeiten der abgelegten Dateien: $error';
+  }
+
+  @override
+  String get resetOnboardingConfirm =>
+      'Dadurch wird der Einrichtungsassistent neu gestartet. Fortfahren?';
+
+  @override
+  String couldNotLaunchDaw(String daw, String error) {
+    return '$daw konnte nicht gestartet werden: $error';
+  }
+
+  @override
+  String get couldNotOpenLink => 'Link konnte nicht geöffnet werden.';
+
+  @override
+  String get githubButtonLabel => 'GitHub';
+
+  @override
   String get monoLabel => 'Mono';
 
   @override

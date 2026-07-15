@@ -3938,6 +3938,102 @@ abstract class AppLocalizations {
   /// **'BPM'**
   String get sortByBpm;
 
+  /// No description provided for @sortNewestFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Newest first'**
+  String get sortNewestFirst;
+
+  /// No description provided for @sortOldestFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Oldest first'**
+  String get sortOldestFirst;
+
+  /// No description provided for @sortTitleAZ.
+  ///
+  /// In en, this message translates to:
+  /// **'Title A–Z'**
+  String get sortTitleAZ;
+
+  /// No description provided for @sortTitleZA.
+  ///
+  /// In en, this message translates to:
+  /// **'Title Z–A'**
+  String get sortTitleZA;
+
+  /// No description provided for @musicPlayerTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Music Player'**
+  String get musicPlayerTab;
+
+  /// No description provided for @previewAudioChangedRefreshing.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview audio changed on disk — refreshing waveform…'**
+  String get previewAudioChangedRefreshing;
+
+  /// No description provided for @audioFileChangedRefreshing.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio file changed on disk — refreshing waveform…'**
+  String get audioFileChangedRefreshing;
+
+  /// No description provided for @autoFitAllColumns.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto fit all columns'**
+  String get autoFitAllColumns;
+
+  /// No description provided for @uploadAutoDetectedPreviewSongs.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload auto-detected preview songs'**
+  String get uploadAutoDetectedPreviewSongs;
+
+  /// No description provided for @uploadAutoDetectedPreviewSongsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Include songs found automatically by the scanner, not just ones you set manually.'**
+  String get uploadAutoDetectedPreviewSongsSubtitle;
+
+  /// No description provided for @monoGenerating.
+  ///
+  /// In en, this message translates to:
+  /// **'Mono...'**
+  String get monoGenerating;
+
+  /// No description provided for @errorHandlingDroppedFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Error handling dropped files: {error}'**
+  String errorHandlingDroppedFiles(String error);
+
+  /// No description provided for @resetOnboardingConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'This will restart the setup wizard. Continue?'**
+  String get resetOnboardingConfirm;
+
+  /// No description provided for @couldNotLaunchDaw.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not launch {daw}: {error}'**
+  String couldNotLaunchDaw(String daw, String error);
+
+  /// No description provided for @couldNotOpenLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open link.'**
+  String get couldNotOpenLink;
+
+  /// No description provided for @githubButtonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'GitHub'**
+  String get githubButtonLabel;
+
   /// No description provided for @monoLabel.
   ///
   /// In en, this message translates to:

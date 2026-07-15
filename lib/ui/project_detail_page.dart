@@ -1356,9 +1356,9 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
       onStale: () {
         if (!mounted) return;
         setState(() => _peaks = null);
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(const SnackBar(
-          content: Text('Preview audio changed on disk — refreshing waveform…'),
-          duration: Duration(seconds: 3),
+        ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
+          content: Text(AppLocalizations.of(context)!.previewAudioChangedRefreshing),
+          duration: const Duration(seconds: 3),
         ));
       },
     ).then((peaks) {
@@ -2199,7 +2199,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Error handling dropped files: ${e.toString()}'),
+                content: Text(AppLocalizations.of(context)!.errorHandlingDroppedFiles(e.toString())),
               ),
             );
           }

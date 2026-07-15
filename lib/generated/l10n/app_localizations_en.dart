@@ -2315,6 +2315,63 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sortByBpm => 'BPM';
 
   @override
+  String get sortNewestFirst => 'Newest first';
+
+  @override
+  String get sortOldestFirst => 'Oldest first';
+
+  @override
+  String get sortTitleAZ => 'Title A–Z';
+
+  @override
+  String get sortTitleZA => 'Title Z–A';
+
+  @override
+  String get musicPlayerTab => 'Music Player';
+
+  @override
+  String get previewAudioChangedRefreshing =>
+      'Preview audio changed on disk — refreshing waveform…';
+
+  @override
+  String get audioFileChangedRefreshing =>
+      'Audio file changed on disk — refreshing waveform…';
+
+  @override
+  String get autoFitAllColumns => 'Auto fit all columns';
+
+  @override
+  String get uploadAutoDetectedPreviewSongs =>
+      'Upload auto-detected preview songs';
+
+  @override
+  String get uploadAutoDetectedPreviewSongsSubtitle =>
+      'Include songs found automatically by the scanner, not just ones you set manually.';
+
+  @override
+  String get monoGenerating => 'Mono...';
+
+  @override
+  String errorHandlingDroppedFiles(String error) {
+    return 'Error handling dropped files: $error';
+  }
+
+  @override
+  String get resetOnboardingConfirm =>
+      'This will restart the setup wizard. Continue?';
+
+  @override
+  String couldNotLaunchDaw(String daw, String error) {
+    return 'Could not launch $daw: $error';
+  }
+
+  @override
+  String get couldNotOpenLink => 'Could not open link.';
+
+  @override
+  String get githubButtonLabel => 'GitHub';
+
+  @override
   String get monoLabel => 'Mono';
 
   @override

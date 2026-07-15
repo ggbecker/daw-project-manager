@@ -414,7 +414,7 @@ class _MobilePlayerPageState extends ConsumerState<MobilePlayerPage> {
                                           child: CircularProgressIndicator(strokeWidth: 2),
                                         ),
                                         const SizedBox(width: 6),
-                                        Text('Mono...', style: theme.textTheme.bodySmall),
+                                        Text(AppLocalizations.of(context)!.monoGenerating, style: theme.textTheme.bodySmall),
                                       ],
                                     )
                                   : GestureDetector(

@@ -1181,11 +1181,10 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
                     const Divider(height: 24),
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: const Text('Upload auto-detected preview songs',
-                          style: TextStyle(fontSize: 14)),
+                      title: Text(AppLocalizations.of(context)!.uploadAutoDetectedPreviewSongs,
+                          style: const TextStyle(fontSize: 14)),
                       subtitle: Text(
-                        'Include songs found automatically by the scanner, '
-                        'not just ones you set manually.',
+                        AppLocalizations.of(context)!.uploadAutoDetectedPreviewSongsSubtitle,
                         style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                       ),
                       value: ref.watch(uploadAutoPreviewSongsProvider),

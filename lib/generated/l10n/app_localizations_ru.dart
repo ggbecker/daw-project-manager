@@ -2316,6 +2316,63 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sortByBpm => 'BPM';
 
   @override
+  String get sortNewestFirst => 'Сначала новые';
+
+  @override
+  String get sortOldestFirst => 'Сначала старые';
+
+  @override
+  String get sortTitleAZ => 'Название А–Я';
+
+  @override
+  String get sortTitleZA => 'Название Я–А';
+
+  @override
+  String get musicPlayerTab => 'Музыкальный плеер';
+
+  @override
+  String get previewAudioChangedRefreshing =>
+      'Аудио предпросмотра изменилось на диске — обновление формы волны…';
+
+  @override
+  String get audioFileChangedRefreshing =>
+      'Аудиофайл изменился на диске — обновление формы волны…';
+
+  @override
+  String get autoFitAllColumns => 'Автоподбор ширины всех столбцов';
+
+  @override
+  String get uploadAutoDetectedPreviewSongs =>
+      'Загружать автоматически найденные превью-треки';
+
+  @override
+  String get uploadAutoDetectedPreviewSongsSubtitle =>
+      'Включать треки, автоматически найденные сканером, а не только заданные вручную.';
+
+  @override
+  String get monoGenerating => 'Моно…';
+
+  @override
+  String errorHandlingDroppedFiles(String error) {
+    return 'Ошибка обработки перетащенных файлов: $error';
+  }
+
+  @override
+  String get resetOnboardingConfirm =>
+      'Это перезапустит мастер настройки. Продолжить?';
+
+  @override
+  String couldNotLaunchDaw(String daw, String error) {
+    return 'Не удалось запустить $daw: $error';
+  }
+
+  @override
+  String get couldNotOpenLink => 'Не удалось открыть ссылку.';
+
+  @override
+  String get githubButtonLabel => 'GitHub';
+
+  @override
   String get monoLabel => 'Моно';
 
   @override

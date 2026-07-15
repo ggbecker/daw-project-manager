@@ -638,6 +638,7 @@ class _ThemePreviewMockup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     const textColor = Colors.white;
     const dimText = Color(0xFFAAAAAA);
 
@@ -677,9 +678,9 @@ class _ThemePreviewMockup extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 2),
             child: Row(
               children: [
-                _previewText('Name', dimText, flex: 3),
-                _previewText('Status', dimText, flex: 2),
-                _previewText('BPM', dimText, flex: 1),
+                _previewText(l10n.name, dimText, flex: 3),
+                _previewText(l10n.status, dimText, flex: 2),
+                _previewText(l10n.bpm, dimText, flex: 1),
               ],
             ),
           ),

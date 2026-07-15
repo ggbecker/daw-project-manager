@@ -48,6 +48,7 @@ import 'widgets/language_switcher.dart';
 import 'widgets/theme_switcher.dart';
 import 'widgets/mobile_mini_player.dart';
 import '../generated/l10n/app_localizations.dart';
+import '../main.dart' show navigatorKey;
 import 'session_actions.dart';
 import 'dialogs/create_project_dialog.dart';
 import '../models/pending_folder.dart';
@@ -2124,7 +2125,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                             AppTab.playlists  => NavigationRailDestination(icon: const Icon(Icons.playlist_play), label: Text(AppLocalizations.of(context)!.playlists)),
                             AppTab.queue      => NavigationRailDestination(icon: const Icon(Icons.checklist), label: Text(AppLocalizations.of(context)!.queueTab)),
                             AppTab.statistics => NavigationRailDestination(icon: const Icon(Icons.bar_chart_rounded), label: Text(AppLocalizations.of(context)!.statisticsTab)),
-                            AppTab.player     => NavigationRailDestination(icon: const Icon(Icons.headphones), label: const Text('Music Player')),
+                            AppTab.player     => NavigationRailDestination(icon: const Icon(Icons.headphones), label: Text(AppLocalizations.of(context)!.musicPlayerTab)),
                           },
                       ],
                       trailing: Expanded(
@@ -5395,7 +5396,7 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
   Future<void> _toggleMono() async {
     if (!_supportsMonoMix()) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Mono mixing is not supported for this format')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.monoRequiresWav)),
       );
       return;
     }
@@ -5414,7 +5415,7 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
         } else {
           setState(() => _isGeneratingMono = false);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Could not create mono mix — unsupported format')),
+            SnackBar(content: Text(AppLocalizations.of(context)!.monoUnsupportedFormat)),
           );
           return;
         }
@@ -5447,7 +5448,7 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Mono switch failed: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.monoSwitchFailed(e.toString()))),
         );
       }
     }
@@ -5700,7 +5701,7 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
                   const SizedBox(width: 6),
                   GestureDetector(
                     onTap: _isGeneratingMono ? null : _toggleMono,
-                    child: Text('Mono', style: TextStyle(color: _isMono ? Colors.red : null)),
+                    child: Text(AppLocalizations.of(context)!.monoLabel, style: TextStyle(color: _isMono ? Colors.red : null)),
                   ),
                 ],
               ),
@@ -5840,7 +5841,7 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
                   const SizedBox(width: 6),
                   GestureDetector(
                     onTap: _isGeneratingMono ? null : _toggleMono,
-                    child: Text('Mono', style: TextStyle(color: _isMono ? Colors.red : null)),
+                    child: Text(AppLocalizations.of(context)!.monoLabel, style: TextStyle(color: _isMono ? Colors.red : null)),
                   ),
                 ],
               ),
@@ -6349,9 +6350,9 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
       onStale: () {
         if (!mounted) return;
         setState(() => _peaks = null);
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(const SnackBar(
-          content: Text('Preview audio changed on disk — refreshing waveform…'),
-          duration: Duration(seconds: 3),
+        ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
+          content: Text(AppLocalizations.of(context)!.previewAudioChangedRefreshing),
+          duration: const Duration(seconds: 3),
         ));
       },
     ).then((peaks) {
@@ -6664,7 +6665,7 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
                           const SizedBox(width: 6),
                           GestureDetector(
                             onTap: _isGeneratingMono ? null : _toggleMono,
-                            child: Text('Mono', style: TextStyle(fontSize: 11, color: _isMono ? Colors.red : null)),
+                            child: Text(AppLocalizations.of(context)!.monoLabel, style: TextStyle(fontSize: 11, color: _isMono ? Colors.red : null)),
                           ),
                         ],
                       ),
@@ -7520,16 +7521,18 @@ class _FitAllColumnsMenuDelegate
       stateManager: stateManager,
       column: column,
     );
+    final context = navigatorKey.currentContext;
+    final label = context != null ? AppLocalizations.of(context)!.autoFitAllColumns : 'Auto fit all columns';
     return [
       ...defaults,
       const PopupMenuDivider(),
-      const PopupMenuItem<String>(
+      PopupMenuItem<String>(
         value: _menuFitAll,
         child: Row(
           children: [
-            Icon(Icons.fit_screen, size: 16),
-            SizedBox(width: 8),
-            Text('Auto fit all columns'),
+            const Icon(Icons.fit_screen, size: 16),
+            const SizedBox(width: 8),
+            Text(label),
           ],
         ),
       ),

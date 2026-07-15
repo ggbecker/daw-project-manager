@@ -217,7 +217,7 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Could not launch ${_selectedDaw!.name}: $e'),
+              content: Text(AppLocalizations.of(context)!.couldNotLaunchDaw(_selectedDaw!.name, e.toString())),
               duration: const Duration(seconds: 6),
             ),
           );

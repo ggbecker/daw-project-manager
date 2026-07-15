@@ -2339,6 +2339,63 @@ class AppLocalizationsFr extends AppLocalizations {
   String get sortByBpm => 'BPM';
 
   @override
+  String get sortNewestFirst => 'Plus récent d\'abord';
+
+  @override
+  String get sortOldestFirst => 'Plus ancien d\'abord';
+
+  @override
+  String get sortTitleAZ => 'Titre A–Z';
+
+  @override
+  String get sortTitleZA => 'Titre Z–A';
+
+  @override
+  String get musicPlayerTab => 'Lecteur de musique';
+
+  @override
+  String get previewAudioChangedRefreshing =>
+      'L\'audio d\'aperçu a changé sur le disque — actualisation de la forme d\'onde…';
+
+  @override
+  String get audioFileChangedRefreshing =>
+      'Le fichier audio a changé sur le disque — actualisation de la forme d\'onde…';
+
+  @override
+  String get autoFitAllColumns => 'Ajuster automatiquement toutes les colonnes';
+
+  @override
+  String get uploadAutoDetectedPreviewSongs =>
+      'Envoyer les morceaux d\'aperçu détectés automatiquement';
+
+  @override
+  String get uploadAutoDetectedPreviewSongsSubtitle =>
+      'Inclure les morceaux trouvés automatiquement par le scanner, pas seulement ceux définis manuellement.';
+
+  @override
+  String get monoGenerating => 'Mono…';
+
+  @override
+  String errorHandlingDroppedFiles(String error) {
+    return 'Erreur lors du traitement des fichiers déposés : $error';
+  }
+
+  @override
+  String get resetOnboardingConfirm =>
+      'Cela relancera l\'assistant de configuration. Continuer ?';
+
+  @override
+  String couldNotLaunchDaw(String daw, String error) {
+    return 'Impossible de lancer $daw : $error';
+  }
+
+  @override
+  String get couldNotOpenLink => 'Impossible d\'ouvrir le lien.';
+
+  @override
+  String get githubButtonLabel => 'GitHub';
+
+  @override
   String get monoLabel => 'Mono';
 
   @override
