@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
 
+import '../../utils/mobile_utils.dart';
+
 /// A multi-line [TextFormField] with two ways to grow: an expand/collapse
 /// toggle that jumps between [initialHeight] and [expandedHeight], and a
 /// drag handle in the bottom-right corner for manual resizing. Used for
 /// long free-text fields (project notes, release descriptions) where a
 /// fixed `maxLines` is either too cramped or wastes space most of the time.
+///
+/// The drag handle relies on a pointer that can hover/precisely grab a 20x20
+/// corner, which does not work with touch on mobile, so it is hidden there by
+/// default ([enableDragResize] defaults to `!MobileUtils.isMobile()`). The
+/// tap-based expand/collapse toggle remains available everywhere.
 class ResizableTextField extends StatefulWidget {
   final TextEditingController controller;
   final FocusNode? focusNode;
@@ -17,7 +24,11 @@ class ResizableTextField extends StatefulWidget {
   final double maxHeight;
   final ValueChanged<String>? onChanged;
 
-  const ResizableTextField({
+  /// Whether to show the bottom-right corner drag handle. Defaults to hidden
+  /// on mobile, where a precise corner grab isn't practical with touch.
+  final bool enableDragResize;
+
+  ResizableTextField({
     super.key,
     required this.controller,
     this.focusNode,
@@ -29,7 +40,8 @@ class ResizableTextField extends StatefulWidget {
     this.minHeight = 100,
     this.maxHeight = 800,
     this.onChanged,
-  });
+    bool? enableDragResize,
+  }) : enableDragResize = enableDragResize ?? !MobileUtils.isMobile();
 
   @override
   State<ResizableTextField> createState() => _ResizableTextFieldState();
@@ -79,38 +91,39 @@ class _ResizableTextFieldState extends State<ResizableTextField> {
             onChanged: widget.onChanged,
           ),
         ),
-        Positioned(
-          right: 2,
-          bottom: 2,
-          child: MouseRegion(
-            cursor: SystemMouseCursors.resizeUpLeftDownRight,
-            child: GestureDetector(
-              key: const Key('resizableTextFieldGrip'),
-              behavior: HitTestBehavior.opaque,
-              onPanUpdate: (details) {
-                setState(() {
-                  _height = (_height + details.delta.dy)
-                      .clamp(widget.minHeight, widget.maxHeight);
-                  _expanded = _height > widget.initialHeight;
-                });
-              },
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CustomPaint(
-                  painter: _ResizeGripPainter(
-                    color: Theme.of(context)
-                            .textTheme
-                            .bodySmall
-                            ?.color
-                            ?.withValues(alpha: 0.5) ??
-                        Colors.grey,
+        if (widget.enableDragResize)
+          Positioned(
+            right: 2,
+            bottom: 2,
+            child: MouseRegion(
+              cursor: SystemMouseCursors.resizeUpLeftDownRight,
+              child: GestureDetector(
+                key: const Key('resizableTextFieldGrip'),
+                behavior: HitTestBehavior.opaque,
+                onPanUpdate: (details) {
+                  setState(() {
+                    _height = (_height + details.delta.dy)
+                        .clamp(widget.minHeight, widget.maxHeight);
+                    _expanded = _height > widget.initialHeight;
+                  });
+                },
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CustomPaint(
+                    painter: _ResizeGripPainter(
+                      color: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.color
+                              ?.withValues(alpha: 0.5) ??
+                          Colors.grey,
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
       ],
     );
   }

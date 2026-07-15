@@ -11,6 +11,7 @@ Future<void> _pump(
   double minHeight = 100,
   double maxHeight = 800,
   ValueChanged<String>? onChanged,
+  bool? enableDragResize,
 }) {
   return tester.pumpWidget(
     MaterialApp(
@@ -25,6 +26,7 @@ Future<void> _pump(
           minHeight: minHeight,
           maxHeight: maxHeight,
           onChanged: onChanged,
+          enableDragResize: enableDragResize,
         ),
       ),
     ),
@@ -116,6 +118,24 @@ void main() {
 
       expect(_heightOf(tester), greaterThan(130));
       expect(find.byIcon(Icons.close_fullscreen), findsOneWidget);
+    });
+
+    testWidgets('shows the resize grip when enableDragResize is true',
+        (tester) async {
+      final controller = TextEditingController();
+      await _pump(tester, controller: controller, enableDragResize: true);
+
+      expect(find.byKey(const Key('resizableTextFieldGrip')), findsOneWidget);
+    });
+
+    testWidgets('hides the resize grip when enableDragResize is false (mobile)',
+        (tester) async {
+      final controller = TextEditingController();
+      await _pump(tester, controller: controller, enableDragResize: false);
+
+      expect(find.byKey(const Key('resizableTextFieldGrip')), findsNothing);
+      // The tap-based expand toggle is still available on mobile.
+      expect(find.byIcon(Icons.open_in_full), findsOneWidget);
     });
 
     testWidgets('typing calls onChanged with the new text', (tester) async {

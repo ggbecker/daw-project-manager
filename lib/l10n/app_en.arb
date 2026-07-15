@@ -1919,6 +1919,18 @@
   "@add": {
     "description": "Button to add selected items"
   },
+  "addTaskAtTimestamp": "Add task at current time",
+  "@addTaskAtTimestamp": {
+    "description": "Tooltip/title for adding a to-do from the player, tagged with the current playback time"
+  },
+  "taskDescriptionHint": "Task description",
+  "@taskDescriptionHint": {
+    "description": "Hint text for the to-do description field in the player's add-task sheet"
+  },
+  "taskAdded": "Task added",
+  "@taskAdded": {
+    "description": "Snackbar shown after adding a to-do from the player"
+  },
   "fromProject": "From Project",
   "@fromProject": {
     "description": "Label indicating item is from a project"

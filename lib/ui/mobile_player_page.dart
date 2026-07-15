@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../models/music_project.dart';
+import '../models/todo_item.dart';
 import '../providers/providers.dart';
 import '../generated/l10n/app_localizations.dart';
 import '../services/audio_analysis_service.dart';
@@ -56,16 +57,137 @@ class _MobilePlayerPageState extends ConsumerState<MobilePlayerPage> {
   Future<void> _onPageChanged(int newPage, List<MusicProject> queue) async {
     if (_suppressPageChange) return;
     if (newPage < 0 || newPage >= queue.length) return;
-    final project = queue[newPage];
-    final path = project.previewSongPath?.isNotEmpty == true
-        ? project.previewSongPath!
-        : project.previewSongAutoPath;
-    if (path == null) return;
     // Reset mono when changing track
     setState(() { _isMono = false; });
-    await ref.read(mobilePlayerProvider.notifier).playProject(
-          project, path, queue: queue, queueIndex: newPage,
+    final notifier = ref.read(mobilePlayerProvider.notifier);
+    final stateQueue = ref.read(mobilePlayerProvider).queue;
+    if (stateQueue.isEmpty) {
+      // Player not initialised via playProject yet — start it from this queue.
+      final project = queue[newPage];
+      final path = project.previewSongPath?.isNotEmpty == true
+          ? project.previewSongPath!
+          : project.previewSongAutoPath;
+      if (path == null) return;
+      await notifier.playProject(project, path,
+          queue: queue, queueIndex: newPage);
+    } else {
+      // `queue` is already the ordered play sequence — just jump to the page so
+      // the swipe follows shuffle order instead of the sequential neighbour.
+      await notifier.playAtIndex(newPage);
+    }
+  }
+
+  /// Opens a bottom sheet to add a todo to the currently-playing project,
+  /// capturing the current playback position so the entry is tagged with the
+  /// exact `[m:ss]` where it was created.
+  Future<void> _openAddTodoSheet() async {
+    final playerState = ref.read(mobilePlayerProvider);
+    final project = playerState.currentProject;
+    if (project == null) return;
+    final position = playerState.position;
+    final l10n = AppLocalizations.of(context)!;
+    final controller = TextEditingController();
+
+    final text = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (ctx) {
+        final theme = Theme.of(ctx);
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 4,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.addTaskAtTimestamp,
+                  style: theme.textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(Icons.access_time_rounded,
+                      size: 16, color: theme.colorScheme.primary),
+                  const SizedBox(width: 6),
+                  Text(formatDuration(position),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w600)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(project.displayName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.6))),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: controller,
+                autofocus: true,
+                textInputAction: TextInputAction.done,
+                minLines: 1,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  hintText: l10n.taskDescriptionHint,
+                  border: const OutlineInputBorder(),
+                ),
+                onSubmitted: (v) => Navigator.of(ctx).pop(v),
+              ),
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerRight,
+                child: FilledButton.icon(
+                  icon: const Icon(Icons.add),
+                  label: Text(l10n.add),
+                  onPressed: () => Navigator.of(ctx).pop(controller.text),
+                ),
+              ),
+            ],
+          ),
         );
+      },
+    );
+    controller.dispose();
+
+    if (text == null || text.trim().isEmpty) return;
+    await _addTodoAtTimestamp(project, position, text.trim());
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(l10n.taskAdded)));
+  }
+
+  Future<void> _addTodoAtTimestamp(
+      MusicProject project, Duration position, String text) async {
+    final repo = await ref.read(repositoryProvider.future);
+    // Use the freshest copy of the project so we don't clobber edits made
+    // elsewhere while the track was playing.
+    var latest = project;
+    final list = ref.read(allProjectsStreamProvider).asData?.value;
+    if (list != null) {
+      for (final pr in list) {
+        if (pr.id == project.id) {
+          latest = pr;
+          break;
+        }
+      }
+    }
+    final newTodo = TodoItem(
+      id: '${DateTime.now().millisecondsSinceEpoch}',
+      text: buildTimestampedTodoText(position, text),
+      createdAt: DateTime.now(),
+    );
+    await repo.updateProject(
+        latest.copyWith(todos: [...latest.todos, newTodo]));
+    ref.invalidate(allProjectsStreamProvider);
   }
 
   bool _supportsMonoMix(String? path) {
@@ -266,8 +388,13 @@ class _MobilePlayerPageState extends ConsumerState<MobilePlayerPage> {
 
   @override
   Widget build(BuildContext context) {
-    final queue = ref.watch(mobilePlayerQueueProvider);
     final playerState = ref.watch(mobilePlayerProvider);
+    final providerQueue = ref.watch(mobilePlayerQueueProvider);
+    // Bind the swipeable queue to the player's ordered queue so swiping follows
+    // the play order (respecting shuffle); fall back to the dashboard list only
+    // until playback has started.
+    final queue =
+        playerState.queue.isNotEmpty ? playerState.queue : providerQueue;
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -297,6 +424,12 @@ class _MobilePlayerPageState extends ConsumerState<MobilePlayerPage> {
         title: Text(l10n.nowPlaying, style: theme.textTheme.titleMedium),
         centerTitle: true,
         actions: [
+          if (playerState.currentProject != null)
+            IconButton(
+              icon: const Icon(Icons.playlist_add_rounded),
+              tooltip: l10n.addTaskAtTimestamp,
+              onPressed: _openAddTodoSheet,
+            ),
           if (playerState.currentProject != null)
             IconButton(
               icon: const Icon(Icons.info_outline_rounded),
@@ -674,6 +807,13 @@ String formatDuration(Duration d) {
   final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
   final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
   return '$m:$s';
+}
+
+/// Builds the stored text for a todo added from the player, prefixing the
+/// playback position as `[m:ss] ` so the entry records exactly where in the
+/// track it was created.
+String buildTimestampedTodoText(Duration position, String text) {
+  return '[${formatDuration(position)}] ${text.trim()}';
 }
 
 // ── Progress bar ─────────────────────────────────────────────────────────────

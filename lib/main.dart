@@ -284,6 +284,10 @@ Future<void> _main() async {
       androidNotificationChannelDescription: 'Controles de preview de faixas',
       androidNotificationOngoing: false,
       androidStopForegroundOnPause: true,
+      // Brand the media notification: app accent color and the existing
+      // monochrome status-bar icon (already used for deadline notifications).
+      notificationColor: const Color(0xFFFF6100),
+      androidNotificationIcon: 'drawable/ic_notification',
     ).timeout(const Duration(seconds: 8)).then((_) {
       markJabInitialized();
       if (kDebugMode) print('[JustAudioBackground] initialized OK');
