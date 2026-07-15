@@ -10,10 +10,12 @@ import 'package:audio_service/audio_service.dart' show MediaItem;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import '../utils/app_paths.dart';
 import '../utils/mobile_utils.dart';
 import '../utils/phase_colors.dart';
@@ -1794,6 +1796,10 @@ class MobilePlayerNotifier extends Notifier<MobilePlayerState> {
   // a natural permite restaurar a ordem ao desligar o shuffle.
   List<MusicProject> _naturalQueue = [];
 
+  // Cached copy of the app icon used as MediaItem art (shows the logo in the
+  // Android media notification). Prepared once, best-effort.
+  Uri? _artUri;
+
   // Subscriptions Android (vivas durante todo o ciclo de vida do notifier).
   StreamSubscription<int?>? _indexSub;
   StreamSubscription<bool>? _jaPlayingSub;
@@ -1820,8 +1826,27 @@ class MobilePlayerNotifier extends Notifier<MobilePlayerState> {
     if (_isAndroid) {
       _jaPlayer = ja.AudioPlayer();
       _attachJaListeners();
+      unawaited(_prepareArtUri());
     }
     return const MobilePlayerState();
+  }
+
+  /// Copies the bundled app icon into a cache file once, so it can be used as
+  /// [MediaItem.artUri] (shows the app logo in the Android media notification).
+  Future<void> _prepareArtUri() async {
+    try {
+      final dir = await getTemporaryDirectory();
+      final file = File(p.join(dir.path, 'dpm_notification_art.png'));
+      if (!await file.exists()) {
+        final bytes = await rootBundle.load('app_icon.png');
+        await file.writeAsBytes(
+          bytes.buffer.asUint8List(bytes.offsetInBytes, bytes.lengthInBytes),
+        );
+      }
+      _artUri = Uri.file(file.path);
+    } catch (e) {
+      debugPrint('$_tag failed to prepare notification art: $e');
+    }
   }
 
   // ── Listeners Android ─────────────────────────────────────────────────────
@@ -1928,7 +1953,12 @@ class MobilePlayerNotifier extends Notifier<MobilePlayerState> {
     final trackPath = resolvedPreviewPath(project);
     return ja.AudioSource.uri(
       Uri.file(trackPath),
-      tag: MediaItem(id: trackPath, title: project.displayName, artist: ''),
+      tag: MediaItem(
+        id: trackPath,
+        title: project.displayName,
+        artist: '',
+        artUri: _artUri,
+      ),
     );
   }
 
@@ -2063,6 +2093,7 @@ class MobilePlayerNotifier extends Notifier<MobilePlayerState> {
         id: path,
         title: state.currentProject?.displayName ?? '',
         artist: '',
+        artUri: _artUri,
       );
       await _jaPlayer?.setAudioSource(
         ja.AudioSource.uri(Uri.file(path), tag: tag),
