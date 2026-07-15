@@ -57,16 +57,24 @@ class _MobilePlayerPageState extends ConsumerState<MobilePlayerPage> {
   Future<void> _onPageChanged(int newPage, List<MusicProject> queue) async {
     if (_suppressPageChange) return;
     if (newPage < 0 || newPage >= queue.length) return;
-    final project = queue[newPage];
-    final path = project.previewSongPath?.isNotEmpty == true
-        ? project.previewSongPath!
-        : project.previewSongAutoPath;
-    if (path == null) return;
     // Reset mono when changing track
     setState(() { _isMono = false; });
-    await ref.read(mobilePlayerProvider.notifier).playProject(
-          project, path, queue: queue, queueIndex: newPage,
-        );
+    final notifier = ref.read(mobilePlayerProvider.notifier);
+    final stateQueue = ref.read(mobilePlayerProvider).queue;
+    if (stateQueue.isEmpty) {
+      // Player not initialised via playProject yet — start it from this queue.
+      final project = queue[newPage];
+      final path = project.previewSongPath?.isNotEmpty == true
+          ? project.previewSongPath!
+          : project.previewSongAutoPath;
+      if (path == null) return;
+      await notifier.playProject(project, path,
+          queue: queue, queueIndex: newPage);
+    } else {
+      // `queue` is already the ordered play sequence — just jump to the page so
+      // the swipe follows shuffle order instead of the sequential neighbour.
+      await notifier.playAtIndex(newPage);
+    }
   }
 
   /// Opens a bottom sheet to add a todo to the currently-playing project,
@@ -380,8 +388,13 @@ class _MobilePlayerPageState extends ConsumerState<MobilePlayerPage> {
 
   @override
   Widget build(BuildContext context) {
-    final queue = ref.watch(mobilePlayerQueueProvider);
     final playerState = ref.watch(mobilePlayerProvider);
+    final providerQueue = ref.watch(mobilePlayerQueueProvider);
+    // Bind the swipeable queue to the player's ordered queue so swiping follows
+    // the play order (respecting shuffle); fall back to the dashboard list only
+    // until playback has started.
+    final queue =
+        playerState.queue.isNotEmpty ? playerState.queue : providerQueue;
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;

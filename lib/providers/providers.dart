@@ -1743,12 +1743,56 @@ bool _jabInitialized = false;
 
 void markJabInitialized() => _jabInitialized = true;
 
+/// The order in which tracks are visited for [mode]. For shuffle, [current]
+/// (if present) is kept first so playback continues from the current track and
+/// the rest are randomly permuted; otherwise the natural order is returned
+/// unchanged. The result is what drives the player queue, the notification skip
+/// buttons, and the swipeable PageView so all three agree.
+List<MusicProject> orderedQueueFor(
+  List<MusicProject> natural,
+  MusicProject? current,
+  PlaybackMode mode, {
+  Random? random,
+}) {
+  if (mode != PlaybackMode.shuffle || natural.length <= 1) {
+    return List<MusicProject>.of(natural);
+  }
+  final rng = random ?? Random();
+  final rest = natural.where((p) => p.id != current?.id).toList()..shuffle(rng);
+  final head = natural.where((p) => p.id == current?.id).toList();
+  return [...head, ...rest];
+}
+
+/// Next index within an already-ordered queue of [length], or null when at the
+/// end in a non-wrapping ([normal]) mode. Because the queue is pre-ordered,
+/// "next" is simply the following slot (wrapping for every non-normal mode).
+int? nextIndexIn(int length, int current, PlaybackMode mode) {
+  if (length <= 0) return null;
+  final next = current + 1;
+  if (next >= length) return mode == PlaybackMode.normal ? null : 0;
+  return next;
+}
+
+/// Previous index within an already-ordered queue of [length], or null when at
+/// the start in a non-wrapping ([normal]) mode.
+int? prevIndexIn(int length, int current, PlaybackMode mode) {
+  if (length <= 0) return null;
+  final prev = current - 1;
+  if (prev < 0) return mode == PlaybackMode.normal ? null : length - 1;
+  return prev;
+}
+
 class MobilePlayerNotifier extends Notifier<MobilePlayerState> {
   static const _tag = '[MobilePlayer]';
 
   // Android: just_audio player — background gerenciado pelo just_audio_background.
   ja.AudioPlayer? _jaPlayer;
   ja.ConcatenatingAudioSource? _jaSource;
+
+  // Fila na ordem natural (dashboard). `state.queue` guarda a ordem efetiva de
+  // reprodução (idêntica a esta em modo normal, embaralhada em shuffle). Manter
+  // a natural permite restaurar a ordem ao desligar o shuffle.
+  List<MusicProject> _naturalQueue = [];
 
   // Subscriptions Android (vivas durante todo o ciclo de vida do notifier).
   StreamSubscription<int?>? _indexSub;
@@ -1848,24 +1892,16 @@ class MobilePlayerNotifier extends Notifier<MobilePlayerState> {
     final q = state.queue;
     if (q.isEmpty) return;
 
-    int nextIdx;
-    switch (state.playbackMode) {
-      case PlaybackMode.shuffle:
-        nextIdx = Random().nextInt(q.length);
-      case PlaybackMode.repeatOne:
-        nextIdx = state.queueIndex; // mesma faixa
-      case PlaybackMode.repeatAll:
-        nextIdx = (state.queueIndex + 1) % q.length;
-      case PlaybackMode.normal:
-        nextIdx = state.queueIndex + 1;
-        if (nextIdx >= q.length) return;
-    }
+    // The queue is already in play order (shuffled or not), so advancing is the
+    // next slot; repeat-one stays on the same track.
+    final nextIdx = state.playbackMode == PlaybackMode.repeatOne
+        ? state.queueIndex
+        : nextIndexIn(q.length, state.queueIndex, state.playbackMode);
+    if (nextIdx == null) return;
 
     final next = q[nextIdx];
-    final path = next.previewSongPath?.isNotEmpty == true
-        ? next.previewSongPath!
-        : next.previewSongAutoPath;
-    if (path != null) _play(next, path, q, nextIdx);
+    final path = resolvedPreviewPath(next);
+    if (path.isNotEmpty) _play(next, path, q, nextIdx);
   }
 
   // ── Play ──────────────────────────────────────────────────────────────────
@@ -1876,9 +1912,24 @@ class MobilePlayerNotifier extends Notifier<MobilePlayerState> {
     List<MusicProject>? queue,
     int? queueIndex,
   }) async {
-    final q = queue ?? [project];
-    final idx = queueIndex ?? 0;
-    await _play(project, path, q, idx);
+    final natural = queue ?? [project];
+    _naturalQueue = natural;
+    // Order the queue for the current mode (shuffled or not) up front, so the
+    // queue we hand the player and the PageView is already the play order.
+    final ordered = orderedQueueFor(natural, project, state.playbackMode);
+    var idx = ordered.indexWhere((p) => p.id == project.id);
+    if (idx < 0) {
+      idx = ordered.isEmpty ? 0 : (queueIndex ?? 0).clamp(0, ordered.length - 1);
+    }
+    await _play(project, path, ordered, idx);
+  }
+
+  ja.AudioSource _toAudioSource(MusicProject project) {
+    final trackPath = resolvedPreviewPath(project);
+    return ja.AudioSource.uri(
+      Uri.file(trackPath),
+      tag: MediaItem(id: trackPath, title: project.displayName, artist: ''),
+    );
   }
 
   Future<void> _play(
@@ -1901,15 +1952,9 @@ class MobilePlayerNotifier extends Notifier<MobilePlayerState> {
     if (_isAndroid && _jabInitialized) {
       _usingJaPlayer = true;
       // ConcatenatingAudioSource para que skip prev/next da notificação funcione.
-      final sources = queue.map((p) {
-        final trackPath = p.previewSongPath?.isNotEmpty == true
-            ? p.previewSongPath!
-            : p.previewSongAutoPath ?? '';
-        return ja.AudioSource.uri(
-          Uri.file(trackPath),
-          tag: MediaItem(id: trackPath, title: p.displayName, artist: ''),
-        );
-      }).toList();
+      // A fila já vem na ordem de reprodução (ver playProject/_reorderForMode),
+      // então o avanço automático e os botões da notificação seguem o shuffle.
+      final sources = queue.map(_toAudioSource).toList();
       _jaSource = ja.ConcatenatingAudioSource(children: sources);
       try {
         await _jaPlayer!.setAudioSource(
@@ -1977,40 +2022,37 @@ class MobilePlayerNotifier extends Notifier<MobilePlayerState> {
   }
 
   Future<void> playNext() async {
-    final q = state.queue;
-    final nonNormal = state.playbackMode != PlaybackMode.normal;
-    if (_useJa) {
-      if (nonNormal || state.queueIndex < q.length - 1) {
-        await _jaPlayer?.seekToNext();
-      }
-    } else {
-      int nextIdx = state.queueIndex + 1;
-      if (nonNormal && nextIdx >= q.length) nextIdx = 0;
-      if (q.isEmpty || nextIdx >= q.length) return;
-      final next = q[nextIdx];
-      final path = next.previewSongPath?.isNotEmpty == true
-          ? next.previewSongPath!
-          : next.previewSongAutoPath;
-      if (path != null) await _play(next, path, q, nextIdx);
-    }
+    final target =
+        nextIndexIn(state.queue.length, state.queueIndex, state.playbackMode);
+    if (target != null) await playAtIndex(target);
   }
 
   Future<void> playPrev() async {
+    final target =
+        prevIndexIn(state.queue.length, state.queueIndex, state.playbackMode);
+    if (target != null) await playAtIndex(target);
+  }
+
+  /// Jumps to [index] within the current (already-ordered) `state.queue`. Used
+  /// by next/prev, the mini-player swipe, and the full-screen PageView swipe so
+  /// they all move through the same order — and therefore respect shuffle.
+  Future<void> playAtIndex(int index) async {
     final q = state.queue;
-    final nonNormal = state.playbackMode != PlaybackMode.normal;
+    if (index < 0 || index >= q.length) return;
     if (_useJa) {
-      if (nonNormal || state.queueIndex > 0) {
-        await _jaPlayer?.seekToPrevious();
+      try {
+        // The concat is already in play order, so seeking by index follows the
+        // shuffle order without rebuilding the source.
+        await _jaPlayer?.seek(Duration.zero, index: index);
+        await _jaPlayer?.play();
+      } catch (e) {
+        debugPrint('$_tag failed to seek to index $index: $e');
+        state = state.copyWith(isPlaying: false);
       }
     } else {
-      int prevIdx = state.queueIndex - 1;
-      if (nonNormal && prevIdx < 0) prevIdx = q.length - 1;
-      if (q.isEmpty || prevIdx < 0) return;
-      final prev = q[prevIdx];
-      final path = prev.previewSongPath?.isNotEmpty == true
-          ? prev.previewSongPath!
-          : prev.previewSongAutoPath;
-      if (path != null) await _play(prev, path, q, prevIdx);
+      final next = q[index];
+      final path = resolvedPreviewPath(next);
+      if (path.isNotEmpty) await _play(next, path, q, index);
     }
   }
 
@@ -2039,8 +2081,46 @@ class MobilePlayerNotifier extends Notifier<MobilePlayerState> {
   }
 
   Future<void> setPlaybackMode(PlaybackMode mode) async {
-    state = state.copyWith(playbackMode: mode);
-    if (_useJa) await _applyPlaybackMode(mode);
+    final wasShuffle = state.playbackMode == PlaybackMode.shuffle;
+    final nowShuffle = mode == PlaybackMode.shuffle;
+    if (wasShuffle != nowShuffle &&
+        _naturalQueue.length > 1 &&
+        state.currentProject != null) {
+      // Turning shuffle on/off changes the play order — rebuild the ordered
+      // queue (keeping the current track playing) so swipes and skips follow
+      // the new order right away.
+      await _reorderForMode(mode);
+    } else {
+      state = state.copyWith(playbackMode: mode);
+      if (_useJa) await _applyPlaybackMode(mode);
+    }
+  }
+
+  Future<void> _reorderForMode(PlaybackMode mode) async {
+    final current = state.currentProject!;
+    final resumePos = state.position;
+    final wasPlaying = state.isPlaying;
+    final ordered = orderedQueueFor(_naturalQueue, current, mode);
+    var idx = ordered.indexWhere((p) => p.id == current.id);
+    if (idx < 0) idx = 0;
+    state = state.copyWith(queue: ordered, queueIndex: idx, playbackMode: mode);
+    if (_useJa) {
+      try {
+        _jaSource = ja.ConcatenatingAudioSource(
+          children: ordered.map(_toAudioSource).toList(),
+        );
+        await _jaPlayer!.setAudioSource(
+          _jaSource!,
+          initialIndex: idx,
+          initialPosition: resumePos,
+        );
+        await _applyPlaybackMode(mode);
+        if (wasPlaying) await _jaPlayer!.play();
+      } catch (e) {
+        debugPrint('$_tag failed to reorder queue: $e');
+        state = state.copyWith(isPlaying: false);
+      }
+    }
   }
 
   Future<void> cyclePlaybackMode() async {
@@ -2054,19 +2134,19 @@ class MobilePlayerNotifier extends Notifier<MobilePlayerState> {
   }
 
   Future<void> _applyPlaybackMode(PlaybackMode mode) async {
+    // Ordering is handled by _naturalQueue/orderedQueueFor, so just_audio's own
+    // shuffle stays OFF; here we only map the loop behaviour.
+    await _jaPlayer?.setShuffleModeEnabled(false);
     switch (mode) {
       case PlaybackMode.normal:
         await _jaPlayer?.setLoopMode(ja.LoopMode.off);
-        await _jaPlayer?.setShuffleModeEnabled(false);
       case PlaybackMode.repeatOne:
         await _jaPlayer?.setLoopMode(ja.LoopMode.one);
-        await _jaPlayer?.setShuffleModeEnabled(false);
       case PlaybackMode.repeatAll:
         await _jaPlayer?.setLoopMode(ja.LoopMode.all);
-        await _jaPlayer?.setShuffleModeEnabled(false);
       case PlaybackMode.shuffle:
-        await _jaPlayer?.setLoopMode(ja.LoopMode.off);
-        await _jaPlayer?.setShuffleModeEnabled(true);
+        // Children are pre-shuffled; loop the shuffled set so it keeps cycling.
+        await _jaPlayer?.setLoopMode(ja.LoopMode.all);
     }
   }
 
