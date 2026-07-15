@@ -517,7 +517,7 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
                       context: context,
                       builder: (ctx) => AlertDialog(
                         title: Text(l10n.resetOnboarding),
-                        content: const Text('This will restart the setup wizard. Continue?'),
+                        content: Text(l10n.resetOnboardingConfirm),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.of(ctx).pop(false),

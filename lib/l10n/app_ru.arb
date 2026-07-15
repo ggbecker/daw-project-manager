@@ -1512,6 +1512,33 @@
   "sortByPhase": "Фаза",
   "sortByCreatedAt": "Дата добавления",
   "sortByBpm": "BPM",
+  "sortNewestFirst": "Сначала новые",
+  "sortOldestFirst": "Сначала старые",
+  "sortTitleAZ": "Название А–Я",
+  "sortTitleZA": "Название Я–А",
+  "musicPlayerTab": "Музыкальный плеер",
+  "previewAudioChangedRefreshing": "Аудио предпросмотра изменилось на диске — обновление формы волны…",
+  "audioFileChangedRefreshing": "Аудиофайл изменился на диске — обновление формы волны…",
+  "autoFitAllColumns": "Автоподбор ширины всех столбцов",
+  "uploadAutoDetectedPreviewSongs": "Загружать автоматически найденные превью-треки",
+  "uploadAutoDetectedPreviewSongsSubtitle": "Включать треки, автоматически найденные сканером, а не только заданные вручную.",
+  "monoGenerating": "Моно…",
+  "errorHandlingDroppedFiles": "Ошибка обработки перетащенных файлов: {error}",
+  "@errorHandlingDroppedFiles": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "resetOnboardingConfirm": "Это перезапустит мастер настройки. Продолжить?",
+  "couldNotLaunchDaw": "Не удалось запустить {daw}: {error}",
+  "@couldNotLaunchDaw": {
+    "placeholders": {
+      "daw": { "type": "String" },
+      "error": { "type": "String" }
+    }
+  },
+  "couldNotOpenLink": "Не удалось открыть ссылку.",
+  "githubButtonLabel": "GitHub",
   "monoLabel": "Моно",
   "monoToggleTooltip": "Переключить моно воспроизведение",
   "monoRequiresWav": "Для монофонического микса требуется WAV-файл",

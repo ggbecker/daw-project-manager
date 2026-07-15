@@ -27,16 +27,17 @@ class UpdateAvailableDialog extends StatelessWidget {
     );
   }
 
-  Future<void> _launch(Uri uri, ScaffoldMessengerState messenger) async {
+  Future<void> _launch(Uri uri, ScaffoldMessengerState messenger, String couldNotOpenLinkMessage) async {
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('Could not open link.')),
+        SnackBar(content: Text(couldNotOpenLinkMessage)),
       );
     }
   }
 
   Future<void> _openStoreLink(BuildContext context) async {
     final messenger = ScaffoldMessenger.of(context);
+    final couldNotOpenLinkMessage = AppLocalizations.of(context)!.couldNotOpenLink;
     Uri uri;
     if (Platform.isWindows && _kWindowsStoreId.isNotEmpty) {
       uri = Uri.parse('https://www.microsoft.com/store/apps/$_kWindowsStoreId');
@@ -46,27 +47,29 @@ class UpdateAvailableDialog extends StatelessWidget {
     } else {
       return;
     }
-    await _launch(uri, messenger);
+    await _launch(uri, messenger, couldNotOpenLinkMessage);
   }
 
   Future<void> _openGitHubRelease(BuildContext context) async {
     if (_kGithubOwner.isEmpty || _kGithubRepo.isEmpty) return;
     final messenger = ScaffoldMessenger.of(context);
+    final couldNotOpenLinkMessage = AppLocalizations.of(context)!.couldNotOpenLink;
     final uri = Uri.parse(
         'https://github.com/$_kGithubOwner/$_kGithubRepo/releases/tag/v$version');
-    await _launch(uri, messenger);
+    await _launch(uri, messenger, couldNotOpenLinkMessage);
   }
 
   Future<void> _openMsStoreApp(BuildContext context) async {
     if (_kWindowsStoreId.isEmpty) return;
     final messenger = ScaffoldMessenger.of(context);
+    final couldNotOpenLinkMessage = AppLocalizations.of(context)!.couldNotOpenLink;
     final storeUri =
         Uri.parse('ms-windows-store://pdp/?productid=$_kWindowsStoreId');
     final webUri = Uri.parse(
         'https://www.microsoft.com/store/apps/$_kWindowsStoreId');
     // Try the ms-windows-store:// protocol first; fall back to web URL.
     if (!await launchUrl(storeUri)) {
-      await _launch(webUri, messenger);
+      await _launch(webUri, messenger, couldNotOpenLinkMessage);
     }
   }
 
@@ -203,7 +206,7 @@ class UpdateAvailableDialog extends StatelessWidget {
         if (_kGithubOwner.isNotEmpty && _kGithubRepo.isNotEmpty)
           TextButton.icon(
             icon: const Icon(Icons.open_in_new, size: 14),
-            label: const Text('GitHub'),
+            label: Text(AppLocalizations.of(context)!.githubButtonLabel),
             onPressed: () => _openGitHubRelease(context),
           ),
         TextButton(

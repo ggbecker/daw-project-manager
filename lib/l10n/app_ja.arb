@@ -1512,6 +1512,33 @@
   "sortByPhase": "フェーズ",
   "sortByCreatedAt": "追加日",
   "sortByBpm": "BPM",
+  "sortNewestFirst": "新しい順",
+  "sortOldestFirst": "古い順",
+  "sortTitleAZ": "タイトル A–Z",
+  "sortTitleZA": "タイトル Z–A",
+  "musicPlayerTab": "音楽プレーヤー",
+  "previewAudioChangedRefreshing": "プレビュー音声がディスク上で変更されました — 波形を更新中…",
+  "audioFileChangedRefreshing": "音声ファイルがディスク上で変更されました — 波形を更新中…",
+  "autoFitAllColumns": "すべての列を自動調整",
+  "uploadAutoDetectedPreviewSongs": "自動検出されたプレビュー曲をアップロード",
+  "uploadAutoDetectedPreviewSongsSubtitle": "手動で設定した曲だけでなく、スキャナーが自動的に見つけた曲も含めます。",
+  "monoGenerating": "モノラル…",
+  "errorHandlingDroppedFiles": "ドロップされたファイルの処理エラー: {error}",
+  "@errorHandlingDroppedFiles": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "resetOnboardingConfirm": "セットアップウィザードが再起動されます。続行しますか？",
+  "couldNotLaunchDaw": "{daw} を起動できませんでした: {error}",
+  "@couldNotLaunchDaw": {
+    "placeholders": {
+      "daw": { "type": "String" },
+      "error": { "type": "String" }
+    }
+  },
+  "couldNotOpenLink": "リンクを開けませんでした。",
+  "githubButtonLabel": "GitHub",
   "monoLabel": "モノ",
   "monoToggleTooltip": "モノラル再生を切り替え",
   "monoRequiresWav": "モノラルミックスにはWAVファイルが必要です",

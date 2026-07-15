@@ -2272,6 +2272,59 @@ class AppLocalizationsJa extends AppLocalizations {
   String get sortByBpm => 'BPM';
 
   @override
+  String get sortNewestFirst => '新しい順';
+
+  @override
+  String get sortOldestFirst => '古い順';
+
+  @override
+  String get sortTitleAZ => 'タイトル A–Z';
+
+  @override
+  String get sortTitleZA => 'タイトル Z–A';
+
+  @override
+  String get musicPlayerTab => '音楽プレーヤー';
+
+  @override
+  String get previewAudioChangedRefreshing => 'プレビュー音声がディスク上で変更されました — 波形を更新中…';
+
+  @override
+  String get audioFileChangedRefreshing => '音声ファイルがディスク上で変更されました — 波形を更新中…';
+
+  @override
+  String get autoFitAllColumns => 'すべての列を自動調整';
+
+  @override
+  String get uploadAutoDetectedPreviewSongs => '自動検出されたプレビュー曲をアップロード';
+
+  @override
+  String get uploadAutoDetectedPreviewSongsSubtitle =>
+      '手動で設定した曲だけでなく、スキャナーが自動的に見つけた曲も含めます。';
+
+  @override
+  String get monoGenerating => 'モノラル…';
+
+  @override
+  String errorHandlingDroppedFiles(String error) {
+    return 'ドロップされたファイルの処理エラー: $error';
+  }
+
+  @override
+  String get resetOnboardingConfirm => 'セットアップウィザードが再起動されます。続行しますか？';
+
+  @override
+  String couldNotLaunchDaw(String daw, String error) {
+    return '$daw を起動できませんでした: $error';
+  }
+
+  @override
+  String get couldNotOpenLink => 'リンクを開けませんでした。';
+
+  @override
+  String get githubButtonLabel => 'GitHub';
+
+  @override
   String get monoLabel => 'モノ';
 
   @override

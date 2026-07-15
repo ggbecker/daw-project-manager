@@ -242,11 +242,11 @@ class _ReleasesTabPageState extends ConsumerState<ReleasesTabPage> {
                       underline: const SizedBox.shrink(),
                       style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color),
                       icon: Icon(Icons.sort, size: 16, color: Theme.of(context).textTheme.bodyMedium?.color),
-                      items: const [
-                        DropdownMenuItem(value: ReleasesSort.dateDesc, child: Text('Newest first')),
-                        DropdownMenuItem(value: ReleasesSort.dateAsc, child: Text('Oldest first')),
-                        DropdownMenuItem(value: ReleasesSort.titleAsc, child: Text('Title A–Z')),
-                        DropdownMenuItem(value: ReleasesSort.titleDesc, child: Text('Title Z–A')),
+                      items: [
+                        DropdownMenuItem(value: ReleasesSort.dateDesc, child: Text(l10n.sortNewestFirst)),
+                        DropdownMenuItem(value: ReleasesSort.dateAsc, child: Text(l10n.sortOldestFirst)),
+                        DropdownMenuItem(value: ReleasesSort.titleAsc, child: Text(l10n.sortTitleAZ)),
+                        DropdownMenuItem(value: ReleasesSort.titleDesc, child: Text(l10n.sortTitleZA)),
                       ],
                       onChanged: (v) {
                         if (v != null) ref.read(releasesSortProvider.notifier).setSort(v);

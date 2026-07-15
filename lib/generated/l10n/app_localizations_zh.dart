@@ -2248,6 +2248,59 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sortByBpm => 'BPM';
 
   @override
+  String get sortNewestFirst => '最新优先';
+
+  @override
+  String get sortOldestFirst => '最早优先';
+
+  @override
+  String get sortTitleAZ => '标题 A–Z';
+
+  @override
+  String get sortTitleZA => '标题 Z–A';
+
+  @override
+  String get musicPlayerTab => '音乐播放器';
+
+  @override
+  String get previewAudioChangedRefreshing => '预览音频在磁盘上已更改 — 正在刷新波形…';
+
+  @override
+  String get audioFileChangedRefreshing => '音频文件在磁盘上已更改 — 正在刷新波形…';
+
+  @override
+  String get autoFitAllColumns => '自动调整所有列';
+
+  @override
+  String get uploadAutoDetectedPreviewSongs => '上传自动检测到的预览歌曲';
+
+  @override
+  String get uploadAutoDetectedPreviewSongsSubtitle =>
+      '包括扫描器自动找到的歌曲，而不仅仅是手动设置的歌曲。';
+
+  @override
+  String get monoGenerating => '单声道…';
+
+  @override
+  String errorHandlingDroppedFiles(String error) {
+    return '处理拖放文件时出错：$error';
+  }
+
+  @override
+  String get resetOnboardingConfirm => '这将重新启动设置向导。是否继续？';
+
+  @override
+  String couldNotLaunchDaw(String daw, String error) {
+    return '无法启动 $daw：$error';
+  }
+
+  @override
+  String get couldNotOpenLink => '无法打开链接。';
+
+  @override
+  String get githubButtonLabel => 'GitHub';
+
+  @override
   String get monoLabel => '单声道';
 
   @override

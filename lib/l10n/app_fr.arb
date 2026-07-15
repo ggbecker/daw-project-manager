@@ -1512,6 +1512,33 @@
   "sortByPhase": "Phase",
   "sortByCreatedAt": "Date d'ajout",
   "sortByBpm": "BPM",
+  "sortNewestFirst": "Plus récent d'abord",
+  "sortOldestFirst": "Plus ancien d'abord",
+  "sortTitleAZ": "Titre A–Z",
+  "sortTitleZA": "Titre Z–A",
+  "musicPlayerTab": "Lecteur de musique",
+  "previewAudioChangedRefreshing": "L'audio d'aperçu a changé sur le disque — actualisation de la forme d'onde…",
+  "audioFileChangedRefreshing": "Le fichier audio a changé sur le disque — actualisation de la forme d'onde…",
+  "autoFitAllColumns": "Ajuster automatiquement toutes les colonnes",
+  "uploadAutoDetectedPreviewSongs": "Envoyer les morceaux d'aperçu détectés automatiquement",
+  "uploadAutoDetectedPreviewSongsSubtitle": "Inclure les morceaux trouvés automatiquement par le scanner, pas seulement ceux définis manuellement.",
+  "monoGenerating": "Mono…",
+  "errorHandlingDroppedFiles": "Erreur lors du traitement des fichiers déposés : {error}",
+  "@errorHandlingDroppedFiles": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "resetOnboardingConfirm": "Cela relancera l'assistant de configuration. Continuer ?",
+  "couldNotLaunchDaw": "Impossible de lancer {daw} : {error}",
+  "@couldNotLaunchDaw": {
+    "placeholders": {
+      "daw": { "type": "String" },
+      "error": { "type": "String" }
+    }
+  },
+  "couldNotOpenLink": "Impossible d'ouvrir le lien.",
+  "githubButtonLabel": "GitHub",
   "monoLabel": "Mono",
   "monoToggleTooltip": "Basculer en lecture mono",
   "monoRequiresWav": "Le mixage mono nécessite un fichier WAV",

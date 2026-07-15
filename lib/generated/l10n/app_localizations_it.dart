@@ -2323,6 +2323,63 @@ class AppLocalizationsIt extends AppLocalizations {
   String get sortByBpm => 'BPM';
 
   @override
+  String get sortNewestFirst => 'Più recenti prima';
+
+  @override
+  String get sortOldestFirst => 'Più vecchi prima';
+
+  @override
+  String get sortTitleAZ => 'Titolo A–Z';
+
+  @override
+  String get sortTitleZA => 'Titolo Z–A';
+
+  @override
+  String get musicPlayerTab => 'Lettore musicale';
+
+  @override
+  String get previewAudioChangedRefreshing =>
+      'L\'audio di anteprima è cambiato su disco — aggiornamento della forma d\'onda…';
+
+  @override
+  String get audioFileChangedRefreshing =>
+      'Il file audio è cambiato su disco — aggiornamento della forma d\'onda…';
+
+  @override
+  String get autoFitAllColumns => 'Adatta automaticamente tutte le colonne';
+
+  @override
+  String get uploadAutoDetectedPreviewSongs =>
+      'Carica brani di anteprima rilevati automaticamente';
+
+  @override
+  String get uploadAutoDetectedPreviewSongsSubtitle =>
+      'Includi i brani trovati automaticamente dallo scanner, non solo quelli impostati manualmente.';
+
+  @override
+  String get monoGenerating => 'Mono…';
+
+  @override
+  String errorHandlingDroppedFiles(String error) {
+    return 'Errore durante la gestione dei file trascinati: $error';
+  }
+
+  @override
+  String get resetOnboardingConfirm =>
+      'Questo riavvierà la procedura guidata di configurazione. Continuare?';
+
+  @override
+  String couldNotLaunchDaw(String daw, String error) {
+    return 'Impossibile avviare $daw: $error';
+  }
+
+  @override
+  String get couldNotOpenLink => 'Impossibile aprire il link.';
+
+  @override
+  String get githubButtonLabel => 'GitHub';
+
+  @override
   String get monoLabel => 'Mono';
 
   @override
