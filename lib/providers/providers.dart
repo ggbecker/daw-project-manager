@@ -1756,6 +1756,7 @@ class MobilePlayerNotifier extends Notifier<MobilePlayerState> {
   StreamSubscription<Duration>? _jaPosSub;
   StreamSubscription<Duration?>? _jaDurSub;
   StreamSubscription<ja.PlayerState>? _jaCompleteSub;
+  StreamSubscription<ja.PlaybackEvent>? _jaEventSub;
 
   // Desktop fallback: audioplayers (subscriptions re-criadas por play).
   AudioPlayer? _fallbackPlayer;
@@ -1806,6 +1807,15 @@ class MobilePlayerNotifier extends Notifier<MobilePlayerState> {
         .listen((_) {
       state = state.copyWith(isPlaying: false, position: Duration.zero);
     });
+    // Erros do pipeline (fonte inválida, decode) chegam aqui; sem tratá-los, o
+    // BehaviorSubject fecha, playingStream para de emitir e isPlaying trava.
+    _jaEventSub = p.playbackEventStream.listen(
+      (_) {},
+      onError: (Object e, StackTrace st) {
+        debugPrint('$_tag playback error: $e');
+        state = state.copyWith(isPlaying: false);
+      },
+    );
   }
 
   // ── Listeners Desktop ─────────────────────────────────────────────────────
@@ -1901,13 +1911,19 @@ class MobilePlayerNotifier extends Notifier<MobilePlayerState> {
         );
       }).toList();
       _jaSource = ja.ConcatenatingAudioSource(children: sources);
-      await _jaPlayer!.setAudioSource(
-        _jaSource!,
-        initialIndex: queueIndex,
-        initialPosition: Duration.zero,
-      );
-      await _applyPlaybackMode(savedMode);
-      await _jaPlayer!.play();
+      try {
+        await _jaPlayer!.setAudioSource(
+          _jaSource!,
+          initialIndex: queueIndex,
+          initialPosition: Duration.zero,
+        );
+        await _applyPlaybackMode(savedMode);
+        await _jaPlayer!.play();
+      } catch (e) {
+        // Don't leave the button stuck on "pause" if the source failed to load.
+        debugPrint('$_tag failed to start playback: $e');
+        state = state.copyWith(isPlaying: false);
+      }
     } else {
       _usingJaPlayer = false;
       _cancelFallbackSubs();
@@ -1923,16 +1939,22 @@ class MobilePlayerNotifier extends Notifier<MobilePlayerState> {
   bool get _useJa => _usingJaPlayer;
 
   Future<void> togglePlayPause() async {
+    if (!state.hasTrack) return;
     if (_useJa) {
-      if (state.isPlaying) {
+      // Decide off the *live* player state, not the cached `state.isPlaying`.
+      // If a stream hiccup left `isPlaying` stale, the cached path could call
+      // pause() on an already-stopped player (button appears dead), so read the
+      // player directly.
+      final playing = _jaPlayer?.playing ?? state.isPlaying;
+      if (playing) {
         await _jaPlayer?.pause();
-      } else if (state.hasTrack) {
+      } else {
         await _jaPlayer?.play();
       }
     } else {
       if (state.isPlaying) {
         await _fallbackPlayer?.pause();
-      } else if (state.hasTrack) {
+      } else {
         await _fallbackPlayer?.resume();
       }
     }
@@ -2064,6 +2086,7 @@ class MobilePlayerNotifier extends Notifier<MobilePlayerState> {
     _jaPosSub?.cancel();
     _jaDurSub?.cancel();
     _jaCompleteSub?.cancel();
+    _jaEventSub?.cancel();
     _cancelFallbackSubs();
     _jaPlayer?.dispose();
     _fallbackPlayer?.dispose();
@@ -2074,14 +2097,25 @@ final mobilePlayerProvider =
     NotifierProvider<MobilePlayerNotifier, MobilePlayerState>(
         MobilePlayerNotifier.new);
 
-/// Projects with a preview song, in the same order as the current dashboard list.
+/// The local file path the mobile player would use for [p], or '' if none.
+String resolvedPreviewPath(MusicProject p) =>
+    p.previewSongPath?.isNotEmpty == true
+        ? p.previewSongPath!
+        : (p.previewSongAutoPath ?? '');
+
+/// Whether [p] has a preview that the mobile player can actually load. Excludes
+/// empty paths and `drive://` placeholders (not yet downloaded) — feeding those
+/// into the just_audio queue wedges playback, leaving play/pause stuck.
+bool isPlayablePreview(MusicProject p) {
+  final path = resolvedPreviewPath(p);
+  return path.isNotEmpty && !path.startsWith('drive://');
+}
+
+/// Projects with a playable preview song, in the same order as the current
+/// dashboard list.
 final mobilePlayerQueueProvider = Provider<List<MusicProject>>((ref) {
   final projects = ref.watch(projectsProvider);
-  return projects
-      .where((p) =>
-          (p.previewSongPath?.isNotEmpty ?? false) ||
-          (p.previewSongAutoPath?.isNotEmpty ?? false))
-      .toList();
+  return projects.where(isPlayablePreview).toList();
 });
 
 // ---------------------------------------------------------------------------
