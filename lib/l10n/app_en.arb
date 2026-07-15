@@ -2097,11 +2097,6 @@
   "share": "Share",
   "convertingAudioForSharing": "Preparing audio for sharing…",
   "shareSheetUnavailable": "The system share menu isn't available here — use the \"Drag to Share\" chip on the song preview to drag the file onto another app instead.",
-  "backupInProgressTitle": "Backup in Progress",
-  "backupInProgressMessage": "A backup is currently uploading to Google Drive. Quitting now may leave it incomplete — wait for it to finish, or quit anyway?",
-  "waitForBackup": "Wait",
-  "quitAnyway": "Quit Anyway",
-  "finishingBackup": "Finishing backup…",
   "dragToShare": "Drag to Share",
   "dragToShareTooltip": "Drag this onto another app's window (e.g. WhatsApp) to share the file directly — useful when the Share button doesn't open a share menu.",
   "mp3ConversionFailed": "Audio conversion isn't available on this system — sharing the original file, which some apps like WhatsApp may reject.",
@@ -2511,6 +2506,10 @@
   "statsTopKeys": "Top Musical Keys",
   "statsDawTypes": "DAW Types",
   "statsProjectActivity": "Project Activity",
+  "statsSingleProjectActivity": "Project Activity",
+  "@statsSingleProjectActivity": {
+    "description": "Section/button title for a single project's own activity history (project detail page, per-project stats page) — as opposed to statsProjectActivity, which titles the aggregate activity panel across all projects on the Statistics dashboard. In English both read the same, but other locales need distinct singular vs. plural phrasing."
+  },
   "statsNoData": "No data yet",
   "statsNoPhaseData": "Phase data will appear after projects move between phases.",
   "statsLastActivityDaysAgo": "Last activity: {days} days ago",
@@ -2892,6 +2891,21 @@
   },
   "sessionTime": "Session: {time}",
   "@sessionTime": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "headerAgeOld": "{age} old",
+  "@headerAgeOld": {
+    "description": "Project age segment of the detail header meta line, e.g. '3 months old'",
+    "placeholders": { "age": { "type": "String" } }
+  },
+  "headerEdited": "edited {when}",
+  "@headerEdited": {
+    "description": "Last-edited segment of the detail header meta line; {when} is a relative date like '2 days ago'",
+    "placeholders": { "when": { "type": "String" } }
+  },
+  "headerWorked": "{time} worked",
+  "@headerWorked": {
+    "description": "Total work time segment of the detail header meta line, e.g. '5h 32m worked'",
     "placeholders": { "time": { "type": "String" } }
   },
   "sessionHistory": "Session History",

@@ -733,6 +733,15 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     }
   }
 
+  /// Pull-to-refresh on the mobile Projects tab. Mobile has no scan roots —
+  /// projects there are metadata-only entries synced via Google Drive, not
+  /// local files discovered by [_scanAll] — so running the desktop folder
+  /// scan here always found 0 files and surfaced a confusing "no projects
+  /// found in the selected folders" snackbar. Just re-read local storage.
+  Future<void> _refreshMobileProjects() async {
+    ref.invalidate(allProjectsStreamProvider);
+  }
+
   Future<void> _fullScanAll({bool onlyUnscanned = true}) async {
     if (_scanning || _deepScanning) return;
     setState(() => _deepScanning = true);
@@ -1960,7 +1969,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                         await _unhideProjects(context, ref, selectedProjectIds);
                                       },
                                       showHidden: hiddenMode == 1 || hiddenMode == 2,
-                                      onRefresh: () => _scanAll(),
+                                      onRefresh: () => _refreshMobileProjects(),
                                     )
                                   : _PlutoProjectsTableWithSelection(
                                       key: _tableKey,

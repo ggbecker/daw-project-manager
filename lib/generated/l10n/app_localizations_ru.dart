@@ -1912,22 +1912,6 @@ class AppLocalizationsRu extends AppLocalizations {
       'Системное меню отправки здесь недоступно — используйте кнопку «Перетащить, чтобы поделиться» в предпрослушивании трека, чтобы перетащить файл в другое приложение.';
 
   @override
-  String get backupInProgressTitle => 'Идёт резервное копирование';
-
-  @override
-  String get backupInProgressMessage =>
-      'Сейчас идёт загрузка резервной копии в Google Drive. Если выйти сейчас, она может остаться незавершённой — подождать, пока закончится, или выйти всё равно?';
-
-  @override
-  String get waitForBackup => 'Подождать';
-
-  @override
-  String get quitAnyway => 'Выйти всё равно';
-
-  @override
-  String get finishingBackup => 'Завершение резервного копирования…';
-
-  @override
   String get dragToShare => 'Перетащить, чтобы поделиться';
 
   @override
@@ -2240,6 +2224,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get statsProjectActivity => 'Активность проектов';
+
+  @override
+  String get statsSingleProjectActivity => 'Активность проекта';
 
   @override
   String get statsNoData => 'Нет данных';
@@ -2829,6 +2816,21 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String sessionTime(String time) {
     return 'Сессия: $time';
+  }
+
+  @override
+  String headerAgeOld(String age) {
+    return 'возраст: $age';
+  }
+
+  @override
+  String headerEdited(String when) {
+    return 'изменено $when';
+  }
+
+  @override
+  String headerWorked(String time) {
+    return 'отработано $time';
   }
 
   @override

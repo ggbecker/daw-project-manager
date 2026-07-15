@@ -1848,22 +1848,6 @@ class AppLocalizationsZh extends AppLocalizations {
       '系统分享菜单在此不可用——请改用歌曲预览中的“拖动以分享”按钮，将文件拖到其他应用中。';
 
   @override
-  String get backupInProgressTitle => '备份进行中';
-
-  @override
-  String get backupInProgressMessage =>
-      '目前正在向 Google Drive 上传备份。现在退出可能导致备份不完整——要等待完成，还是仍然退出？';
-
-  @override
-  String get waitForBackup => '等待';
-
-  @override
-  String get quitAnyway => '仍然退出';
-
-  @override
-  String get finishingBackup => '正在完成备份…';
-
-  @override
   String get dragToShare => '拖动以分享';
 
   @override
@@ -2173,6 +2157,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get statsProjectActivity => '项目活动';
+
+  @override
+  String get statsSingleProjectActivity => '项目活动';
 
   @override
   String get statsNoData => '暂无数据';
@@ -2739,6 +2726,21 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String sessionTime(String time) {
     return '会话: $time';
+  }
+
+  @override
+  String headerAgeOld(String age) {
+    return '已创建 $age';
+  }
+
+  @override
+  String headerEdited(String when) {
+    return '$when编辑';
+  }
+
+  @override
+  String headerWorked(String time) {
+    return '已投入 $time';
   }
 
   @override

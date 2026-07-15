@@ -1110,11 +1110,6 @@
   "share": "Teilen",
   "convertingAudioForSharing": "Audio wird zum Teilen vorbereitet…",
   "shareSheetUnavailable": "Das System-Freigabemenü ist hier nicht verfügbar — nutze stattdessen den \"Zum Teilen ziehen\"-Chip in der Song-Vorschau, um die Datei auf eine andere App zu ziehen.",
-  "backupInProgressTitle": "Backup läuft",
-  "backupInProgressMessage": "Gerade wird ein Backup zu Google Drive hochgeladen. Wenn du jetzt beendest, könnte es unvollständig bleiben — warten, bis es fertig ist, oder trotzdem beenden?",
-  "waitForBackup": "Warten",
-  "quitAnyway": "Trotzdem beenden",
-  "finishingBackup": "Backup wird abgeschlossen…",
   "dragToShare": "Zum Teilen ziehen",
   "dragToShareTooltip": "Ziehe dies auf das Fenster einer anderen App (z. B. WhatsApp), um die Datei direkt zu teilen — nützlich, wenn der Teilen-Button kein Freigabemenü öffnet.",
   "mp3ConversionFailed": "Audio-Konvertierung ist auf diesem System nicht verfügbar — die Originaldatei wird geteilt, die manche Apps wie WhatsApp ablehnen könnten.",
@@ -1475,6 +1470,7 @@
   "statsTopKeys": "Häufige Tonarten",
   "statsDawTypes": "DAW-Typen",
   "statsProjectActivity": "Projektaktivität",
+  "statsSingleProjectActivity": "Projektaktivität",
   "statsNoData": "Noch keine Daten",
   "statsNoPhaseData": "Phasendaten erscheinen, wenn Projekte die Phase wechseln.",
   "statsLastActivityDaysAgo": "Letzte Aktivität: vor {days} Tagen",
@@ -1786,6 +1782,18 @@
   },
   "sessionTime": "Sitzung: {time}",
   "@sessionTime": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "headerAgeOld": "{age} alt",
+  "@headerAgeOld": {
+    "placeholders": { "age": { "type": "String" } }
+  },
+  "headerEdited": "bearbeitet {when}",
+  "@headerEdited": {
+    "placeholders": { "when": { "type": "String" } }
+  },
+  "headerWorked": "{time} gearbeitet",
+  "@headerWorked": {
     "placeholders": { "time": { "type": "String" } }
   },
   "sessionHistory": "Sitzungsverlauf",

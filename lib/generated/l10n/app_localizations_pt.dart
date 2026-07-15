@@ -1911,22 +1911,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'O menu de compartilhamento do sistema não está disponível aqui — use o botão \"Arraste para Compartilhar\" na prévia da música para arrastar o arquivo até outro app.';
 
   @override
-  String get backupInProgressTitle => 'Backup em Andamento';
-
-  @override
-  String get backupInProgressMessage =>
-      'Um backup está sendo enviado ao Google Drive agora. Sair pode deixá-lo incompleto — esperar terminar, ou sair mesmo assim?';
-
-  @override
-  String get waitForBackup => 'Esperar';
-
-  @override
-  String get quitAnyway => 'Sair Mesmo Assim';
-
-  @override
-  String get finishingBackup => 'Finalizando backup…';
-
-  @override
   String get dragToShare => 'Arraste para Compartilhar';
 
   @override
@@ -2239,6 +2223,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get statsProjectActivity => 'Atividade dos Projetos';
+
+  @override
+  String get statsSingleProjectActivity => 'Atividade do Projeto';
 
   @override
   String get statsNoData => 'Sem dados ainda';
@@ -2829,6 +2816,21 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String sessionTime(String time) {
     return 'Sessão: $time';
+  }
+
+  @override
+  String headerAgeOld(String age) {
+    return '$age de vida';
+  }
+
+  @override
+  String headerEdited(String when) {
+    return 'editado $when';
+  }
+
+  @override
+  String headerWorked(String time) {
+    return '$time trabalhado';
   }
 
   @override

@@ -1870,22 +1870,6 @@ class AppLocalizationsJa extends AppLocalizations {
       'システムの共有メニューはここでは利用できません。代わりに、曲のプレビューにある「ドラッグして共有」チップでファイルを他のアプリへドラッグしてください。';
 
   @override
-  String get backupInProgressTitle => 'バックアップ中';
-
-  @override
-  String get backupInProgressMessage =>
-      '現在Googleドライブへバックアップをアップロード中です。今終了するとバックアップが不完全になる可能性があります。完了を待ちますか、それでも終了しますか？';
-
-  @override
-  String get waitForBackup => '待つ';
-
-  @override
-  String get quitAnyway => 'それでも終了';
-
-  @override
-  String get finishingBackup => 'バックアップを完了しています…';
-
-  @override
   String get dragToShare => 'ドラッグして共有';
 
   @override
@@ -2197,6 +2181,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get statsProjectActivity => 'プロジェクトのアクティビティ';
+
+  @override
+  String get statsSingleProjectActivity => 'プロジェクトのアクティビティ';
 
   @override
   String get statsNoData => 'データなし';
@@ -2768,6 +2755,21 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String sessionTime(String time) {
     return 'セッション: $time';
+  }
+
+  @override
+  String headerAgeOld(String age) {
+    return '作成から$age';
+  }
+
+  @override
+  String headerEdited(String when) {
+    return '$whenに編集';
+  }
+
+  @override
+  String headerWorked(String time) {
+    return '作業時間 $time';
   }
 
   @override

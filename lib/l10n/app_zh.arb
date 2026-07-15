@@ -1110,11 +1110,6 @@
   "share": "分享",
   "convertingAudioForSharing": "正在准备要分享的音频…",
   "shareSheetUnavailable": "系统分享菜单在此不可用——请改用歌曲预览中的“拖动以分享”按钮，将文件拖到其他应用中。",
-  "backupInProgressTitle": "备份进行中",
-  "backupInProgressMessage": "目前正在向 Google Drive 上传备份。现在退出可能导致备份不完整——要等待完成，还是仍然退出？",
-  "waitForBackup": "等待",
-  "quitAnyway": "仍然退出",
-  "finishingBackup": "正在完成备份…",
   "dragToShare": "拖动以分享",
   "dragToShareTooltip": "把它拖到另一个应用的窗口（例如 WhatsApp）即可直接分享文件——当“分享”按钮无法打开分享菜单时很有用。",
   "mp3ConversionFailed": "此系统不支持音频转换——将分享原始文件，但某些应用（如 WhatsApp）可能会拒绝该文件。",
@@ -1475,6 +1470,7 @@
   "statsTopKeys": "热门音乐调式",
   "statsDawTypes": "DAW类型",
   "statsProjectActivity": "项目活动",
+  "statsSingleProjectActivity": "项目活动",
   "statsNoData": "暂无数据",
   "statsNoPhaseData": "项目变更阶段后将显示数据。",
   "statsLastActivityDaysAgo": "最近活动: {days}天前",
@@ -1786,6 +1782,18 @@
   },
   "sessionTime": "会话: {time}",
   "@sessionTime": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "headerAgeOld": "已创建 {age}",
+  "@headerAgeOld": {
+    "placeholders": { "age": { "type": "String" } }
+  },
+  "headerEdited": "{when}编辑",
+  "@headerEdited": {
+    "placeholders": { "when": { "type": "String" } }
+  },
+  "headerWorked": "已投入 {time}",
+  "@headerWorked": {
     "placeholders": { "time": { "type": "String" } }
   },
   "sessionHistory": "会话历史",

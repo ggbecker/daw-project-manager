@@ -26,6 +26,7 @@ class TestFactories {
     String? previewSongPath,
     String? previewSongFileName,
     DateTime? statusChangedAt,
+    int totalWorkSeconds = 0,
   }) {
     return MusicProject(
       id: id,
@@ -50,6 +51,7 @@ class TestFactories {
       previewSongPath: previewSongPath,
       previewSongFileName: previewSongFileName,
       statusChangedAt: statusChangedAt,
+      totalWorkSeconds: totalWorkSeconds,
     );
   }
 

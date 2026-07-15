@@ -96,7 +96,7 @@ class _ProjectStatsBody extends StatelessWidget {
 
           // ── Event scatter chart ─────────────────────────────────────────
           if (events.isNotEmpty) ...[
-            _SectionTitle(l10n.statsProjectActivity),
+            _SectionTitle(l10n.statsSingleProjectActivity),
             const SizedBox(height: 8),
             Card(
               child: Padding(
@@ -121,7 +121,7 @@ class _ProjectStatsBody extends StatelessWidget {
           const SizedBox(height: 24),
 
           // ── Full timeline ───────────────────────────────────────────────
-          _SectionTitle(l10n.statsProjectActivity),
+          _SectionTitle(l10n.statsSingleProjectActivity),
           const SizedBox(height: 8),
           if (chronological.isEmpty)
             _Placeholder(l10n.statsNoEvents)
@@ -183,7 +183,7 @@ class _QuickStatsRow extends StatelessWidget {
       ),
       _StatCard(
         icon: Icons.history,
-        label: l10n.statsProjectActivity,
+        label: l10n.statsSingleProjectActivity,
         value: daysSinceActivity == null
             ? '—'
             : daysSinceActivity == 0

@@ -31,6 +31,8 @@ import '../services/mixdown_detector_service.dart';
 import 'widgets/conversion_progress_dialog.dart';
 import 'widgets/desktop_title_bar.dart';
 import 'widgets/drag_to_share_button.dart';
+import 'widgets/project_detail_header.dart';
+import 'widgets/resizable_text_field.dart';
 import 'widgets/todo_list_widget.dart';
 import 'widgets/waveform_widget.dart';
 import 'project_statistics_page.dart';
@@ -62,8 +64,6 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
 
   bool _hasInitializedPhase = false;
   bool _extractingMetadata = false;
-  bool _notesExpanded = false;
-  double _notesHeight = 130;
   Timer? _autoSaveTimer;
 
   /// Records status-change and/or metadata-edit events after saving a project.
@@ -103,57 +103,6 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
     }
   }
 
-
-  String _formatDuration(Duration duration) {
-    final l10n = AppLocalizations.of(context)!;
-    final years = duration.inDays ~/ 365;
-    final months = (duration.inDays % 365) ~/ 30;
-    final days = duration.inDays % 30;
-    
-    if (years > 0) {
-      if (months > 0) {
-        return l10n.ageYearsMonths(years, years > 1 ? 's' : '', months, months > 1 ? 's' : '');
-      }
-      return l10n.ageYears(years, years > 1 ? 's' : '');
-    } else if (months > 0) {
-      if (days > 0) {
-        return l10n.ageMonthsDays(months, months > 1 ? 's' : '', days, days > 1 ? 's' : '');
-      }
-      return l10n.ageMonths(months, months > 1 ? 's' : '');
-    } else if (days > 0) {
-      return l10n.ageDays(days, days > 1 ? 's' : '');
-    } else if (duration.inHours > 0) {
-      return l10n.ageHours(duration.inHours, duration.inHours > 1 ? 's' : '');
-    } else {
-      return l10n.ageJustNow;
-    }
-  }
-
-  String? _formatCompletionDuration(Duration? duration) {
-    if (duration == null) return null;
-    final l10n = AppLocalizations.of(context)!;
-    final years = duration.inDays ~/ 365;
-    final months = (duration.inDays % 365) ~/ 30;
-    final days = duration.inDays % 30;
-    
-    if (years > 0) {
-      if (months > 0) {
-        return l10n.ageYearsMonths(years, years > 1 ? 's' : '', months, months > 1 ? 's' : '');
-      }
-      return l10n.ageYears(years, years > 1 ? 's' : '');
-    } else if (months > 0) {
-      if (days > 0) {
-        return l10n.ageMonthsDays(months, months > 1 ? 's' : '', days, days > 1 ? 's' : '');
-      }
-      return l10n.ageMonths(months, months > 1 ? 's' : '');
-    } else if (days > 0) {
-      return l10n.ageDays(days, days > 1 ? 's' : '');
-    } else if (duration.inHours > 0) {
-      return l10n.ageHours(duration.inHours, duration.inHours > 1 ? 's' : '');
-    } else {
-      return l10n.ageLessThanHour;
-    }
-  }
 
   @override
   void initState() {
@@ -493,12 +442,9 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _ProjectDetailHeader(
+                ProjectDetailHeader(
                   project: updatedProject,
-                  isMobile: isMobile,
                   dateFormat: dateFormat,
-                  formatDuration: _formatDuration,
-                  formatCompletionDuration: _formatCompletionDuration,
                   isSessionActive: ref.watch(activeProjectProvider)?.id == widget.projectId,
                   liveSessionSeconds: ref.watch(workTimerProvider),
                   finishedPhase: ref.watch(finishedPhaseProvider),
@@ -856,79 +802,13 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                             const SizedBox(height: 12),
 
                             // NOVO: CAMPO DE NOTAS
-                            Stack(
-                              children: [
-                                SizedBox(
-                                  height: _notesHeight,
-                                  child: TextFormField(
-                                    controller: _notesCtrl,
-                                    focusNode: _notesFocusNode,
-                                    expands: true,
-                                    minLines: null,
-                                    maxLines: null,
-                                    textAlignVertical: TextAlignVertical.top,
-                                    decoration: InputDecoration(
-                                      labelText: AppLocalizations.of(context)!.notes,
-                                      alignLabelWithHint: true,
-                                      border: const OutlineInputBorder(),
-                                      contentPadding: const EdgeInsets.fromLTRB(12, 20, 32, 20),
-                                      suffixIcon: Align(
-                                        alignment: Alignment.topRight,
-                                        widthFactor: 1,
-                                        heightFactor: 1,
-                                        child: IconButton(
-                                          icon: Icon(_notesExpanded
-                                              ? Icons.close_fullscreen
-                                              : Icons.open_in_full),
-                                          iconSize: 18,
-                                          tooltip: _notesExpanded
-                                              ? AppLocalizations.of(context)!.collapseNotes
-                                              : AppLocalizations.of(context)!.expandNotes,
-                                          onPressed: () {
-                                            setState(() {
-                                              _notesExpanded = !_notesExpanded;
-                                              _notesHeight = _notesExpanded ? 400 : 130;
-                                            });
-                                          },
-                                        ),
-                                      ),
-                                    ),
-                                    keyboardType: TextInputType.multiline,
-                                    onChanged: (_) => _scheduleAutoSave(),
-                                  ),
-                                ),
-                                Positioned(
-                                  right: 2,
-                                  bottom: 2,
-                                  child: MouseRegion(
-                                    cursor: SystemMouseCursors.resizeUpLeftDownRight,
-                                    child: GestureDetector(
-                                      behavior: HitTestBehavior.opaque,
-                                      onPanUpdate: (details) {
-                                        setState(() {
-                                          _notesHeight = (_notesHeight + details.delta.dy)
-                                              .clamp(100.0, 800.0);
-                                          _notesExpanded = _notesHeight > 130;
-                                        });
-                                      },
-                                      child: SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CustomPaint(
-                                          painter: _ResizeGripPainter(
-                                            color: Theme.of(context)
-                                                    .textTheme
-                                                    .bodySmall
-                                                    ?.color
-                                                    ?.withValues(alpha: 0.5) ??
-                                                Colors.grey,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                            ResizableTextField(
+                              controller: _notesCtrl,
+                              focusNode: _notesFocusNode,
+                              labelText: AppLocalizations.of(context)!.notes,
+                              expandTooltip: AppLocalizations.of(context)!.expandNotes,
+                              collapseTooltip: AppLocalizations.of(context)!.collapseNotes,
+                              onChanged: (_) => _scheduleAutoSave(),
                             ),
 
                             const SizedBox(height: 12),
@@ -1198,226 +1078,6 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
   }
 }
 
-// ─── Project Detail Header ────────────────────────────────────────────────────
-
-class _ProjectDetailHeader extends StatelessWidget {
-  final MusicProject project;
-  final bool isMobile;
-  final DateFormat dateFormat;
-  final String Function(Duration) formatDuration;
-  final String? Function(Duration?) formatCompletionDuration;
-  final bool isSessionActive;
-  final int liveSessionSeconds;
-
-  final Set<String> finishedPhase;
-
-  const _ProjectDetailHeader({
-    required this.project,
-    required this.isMobile,
-    required this.dateFormat,
-    required this.formatDuration,
-    required this.formatCompletionDuration,
-    required this.isSessionActive,
-    required this.liveSessionSeconds,
-    required this.finishedPhase,
-  });
-
-  String _formatTotalWork(int seconds) {
-    final h = seconds ~/ 3600;
-    final m = (seconds % 3600) ~/ 60;
-    if (h > 0) return '${h}h ${m}m';
-    if (m > 0) return '${m}m';
-    return '${seconds}s';
-  }
-
-  String _formatLiveSession(int seconds) {
-    final h = seconds ~/ 3600;
-    final m = ((seconds % 3600) ~/ 60).toString().padLeft(2, '0');
-    final s = (seconds % 60).toString().padLeft(2, '0');
-    return h > 0 ? '$h:$m:$s' : '$m:$s';
-  }
-
-  String _relativeDate(BuildContext context, DateTime date) {
-    final l10n = AppLocalizations.of(context)!;
-    final diff = DateTime.now().difference(date);
-    if (diff.inDays == 0) return l10n.dateToday;
-    if (diff.inDays == 1) return l10n.dateYesterday;
-    if (diff.inDays < 7) return l10n.dateDaysAgo(diff.inDays);
-    if (diff.inDays < 30) return l10n.dateWeeksAgo(diff.inDays ~/ 7);
-    if (diff.inDays < 365) return l10n.dateMonthsAgo(diff.inDays ~/ 30);
-    return l10n.dateYearsAgo(diff.inDays ~/ 365, '');
-  }
-
-  Color _phaseColor(String status) {
-    if (finishedPhase.contains(status)) return Colors.green;
-    switch (status) {
-      case 'Mastering': return Colors.purple;
-      case 'Mixing': return Colors.blue;
-      case 'Arranging': return Colors.orange;
-      default: return Colors.grey;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-    final phaseColor = _phaseColor(project.status);
-    final surfaceColor = theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4);
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
-      decoration: BoxDecoration(
-        color: surfaceColor,
-        border: Border(bottom: BorderSide(color: theme.dividerColor)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Text(
-                  project.displayName,
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: phaseColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: phaseColor.withValues(alpha: 0.4)),
-                ),
-                child: Text(
-                  project.status,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: phaseColor,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          if (!isMobile) ...[
-            const SizedBox(height: 4),
-            Text(
-              project.filePath,
-              style: TextStyle(fontSize: 11, color: theme.textTheme.bodySmall?.color),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 6,
-            children: [
-              _InfoChip(
-                icon: Icons.access_time,
-                label: formatDuration(project.projectAge),
-              ),
-              _InfoChip(
-                icon: Icons.edit_calendar_outlined,
-                label: l10n.lastModified(dateFormat.format(project.lastModifiedAt)),
-              ),
-              if (project.bpm != null)
-                _InfoChip(
-                  icon: Icons.speed,
-                  label: '${project.bpm!.toStringAsFixed(project.bpm! % 1 == 0 ? 0 : 1)} BPM',
-                ),
-              if (project.musicalKey != null)
-                _InfoChip(icon: Icons.music_note, label: project.musicalKey!),
-              if (project.dawType != null)
-                _InfoChip(
-                  icon: Icons.piano,
-                  label: project.dawVersion?.isNotEmpty == true
-                      ? '${project.dawType} ${project.dawVersion}'
-                      : project.dawType!,
-                ),
-              if (project.timeToCompletion(finishedPhase) != null)
-                _InfoChip(
-                  icon: Icons.emoji_events,
-                  label: l10n.completedIn(formatCompletionDuration(project.timeToCompletion(finishedPhase))!),
-                  color: Colors.amber,
-                ),
-              if (project.fileCreatedAt != null)
-                _InfoChip(
-                  icon: Icons.calendar_today_outlined,
-                  label: l10n.createdDate(_relativeDate(context, project.fileCreatedAt!)),
-                ),
-              if (project.totalWorkSeconds > 0)
-                _InfoChip(
-                  icon: Icons.work_history,
-                  label: l10n.totalWorkTime(_formatTotalWork(project.totalWorkSeconds)),
-                ),
-              if (isSessionActive)
-                _InfoChip(
-                  icon: Icons.timelapse,
-                  label: l10n.sessionTime(_formatLiveSession(liveSessionSeconds)),
-                  color: Colors.green.shade400,
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InfoChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color? color;
-
-  const _InfoChip({required this.icon, required this.label, this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final c = color ?? theme.textTheme.bodySmall?.color ?? Colors.grey;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 13, color: c),
-        const SizedBox(width: 4),
-        Text(label, style: TextStyle(fontSize: 12, color: c)),
-      ],
-    );
-  }
-}
-
-/// Paints the classic three-diagonal-line resize grip in the bottom-right
-/// corner of a manually resizable text box.
-class _ResizeGripPainter extends CustomPainter {
-  final Color color;
-  const _ResizeGripPainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 1.2
-      ..strokeCap = StrokeCap.round;
-    for (final offset in [4.0, 9.0, 14.0]) {
-      canvas.drawLine(
-        Offset(size.width - offset, size.height - 2),
-        Offset(size.width - 2, size.height - offset),
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _ResizeGripPainter oldDelegate) =>
-      oldDelegate.color != color;
-}
-
 // ─── Action Toolbar ───────────────────────────────────────────────────────────
 
 class _ProjectDetailActionBar extends ConsumerWidget {
@@ -1517,7 +1177,7 @@ class _ProjectDetailActionBar extends ConsumerWidget {
             OutlinedButton.icon(
               onPressed: onStats,
               icon: const Icon(Icons.bar_chart, size: 16),
-              label: Text(l10n.statsProjectActivity),
+              label: Text(l10n.statsSingleProjectActivity),
             ),
           ],
         ],
@@ -3007,7 +2667,7 @@ class _ProjectStatsButton extends ConsumerWidget {
       contentPadding: EdgeInsets.zero,
       leading: const Icon(Icons.bar_chart_rounded, size: 20),
       title: Text(
-        l10n.statsProjectActivity,
+        l10n.statsSingleProjectActivity,
         style: Theme.of(context).textTheme.titleSmall,
       ),
       subtitle: Text(

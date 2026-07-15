@@ -1110,11 +1110,6 @@
   "share": "共有",
   "convertingAudioForSharing": "共有用にオーディオを準備しています…",
   "shareSheetUnavailable": "システムの共有メニューはここでは利用できません。代わりに、曲のプレビューにある「ドラッグして共有」チップでファイルを他のアプリへドラッグしてください。",
-  "backupInProgressTitle": "バックアップ中",
-  "backupInProgressMessage": "現在Googleドライブへバックアップをアップロード中です。今終了するとバックアップが不完全になる可能性があります。完了を待ちますか、それでも終了しますか？",
-  "waitForBackup": "待つ",
-  "quitAnyway": "それでも終了",
-  "finishingBackup": "バックアップを完了しています…",
   "dragToShare": "ドラッグして共有",
   "dragToShareTooltip": "これを他のアプリ（WhatsAppなど）のウィンドウにドラッグすると、ファイルを直接共有できます。共有ボタンで共有メニューが開かない場合に便利です。",
   "mp3ConversionFailed": "このシステムではオーディオ変換を利用できません。元のファイルを共有しますが、WhatsAppなど一部のアプリでは拒否される場合があります。",
@@ -1475,6 +1470,7 @@
   "statsTopKeys": "主な音楽キー",
   "statsDawTypes": "DAWの種類",
   "statsProjectActivity": "プロジェクトのアクティビティ",
+  "statsSingleProjectActivity": "プロジェクトのアクティビティ",
   "statsNoData": "データなし",
   "statsNoPhaseData": "フェーズ移行後にデータが表示されます。",
   "statsLastActivityDaysAgo": "最終活動: {days}日前",
@@ -1786,6 +1782,18 @@
   },
   "sessionTime": "セッション: {time}",
   "@sessionTime": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "headerAgeOld": "作成から{age}",
+  "@headerAgeOld": {
+    "placeholders": { "age": { "type": "String" } }
+  },
+  "headerEdited": "{when}に編集",
+  "@headerEdited": {
+    "placeholders": { "when": { "type": "String" } }
+  },
+  "headerWorked": "作業時間 {time}",
+  "@headerWorked": {
     "placeholders": { "time": { "type": "String" } }
   },
   "sessionHistory": "セッション履歴",

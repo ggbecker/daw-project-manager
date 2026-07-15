@@ -1924,22 +1924,6 @@ class AppLocalizationsDe extends AppLocalizations {
       'Das System-Freigabemenü ist hier nicht verfügbar — nutze stattdessen den \"Zum Teilen ziehen\"-Chip in der Song-Vorschau, um die Datei auf eine andere App zu ziehen.';
 
   @override
-  String get backupInProgressTitle => 'Backup läuft';
-
-  @override
-  String get backupInProgressMessage =>
-      'Gerade wird ein Backup zu Google Drive hochgeladen. Wenn du jetzt beendest, könnte es unvollständig bleiben — warten, bis es fertig ist, oder trotzdem beenden?';
-
-  @override
-  String get waitForBackup => 'Warten';
-
-  @override
-  String get quitAnyway => 'Trotzdem beenden';
-
-  @override
-  String get finishingBackup => 'Backup wird abgeschlossen…';
-
-  @override
   String get dragToShare => 'Zum Teilen ziehen';
 
   @override
@@ -2252,6 +2236,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get statsProjectActivity => 'Projektaktivität';
+
+  @override
+  String get statsSingleProjectActivity => 'Projektaktivität';
 
   @override
   String get statsNoData => 'Noch keine Daten';
@@ -2841,6 +2828,21 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String sessionTime(String time) {
     return 'Sitzung: $time';
+  }
+
+  @override
+  String headerAgeOld(String age) {
+    return '$age alt';
+  }
+
+  @override
+  String headerEdited(String when) {
+    return 'bearbeitet $when';
+  }
+
+  @override
+  String headerWorked(String time) {
+    return '$time gearbeitet';
   }
 
   @override
