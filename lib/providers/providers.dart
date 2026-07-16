@@ -1055,28 +1055,30 @@ final todoTemplatesNotifierProvider = NotifierProvider<TodoTemplatesNotifier, vo
 
 // Warn Before Quit Setting
 class WarnBeforeQuitNotifier extends Notifier<bool> {
+  // main() awaits `Hive.openBox<String>('settings')` before runApp() ("so
+  // providers can read it synchronously on first build" — see main.dart),
+  // so the box is guaranteed already open by the time any provider builds.
+  // Reading it synchronously here (rather than deferring to a post-frame
+  // callback, as this used to) avoids a startup race where a window-close
+  // event firing before that callback ran would see the hardcoded `true`
+  // default instead of the user's actual saved preference.
   @override
   bool build() {
-    SchedulerBinding.instance.addPostFrameCallback((_) => _load());
-    return true;
-  }
-
-  Future<void> _load() async {
     try {
-      await ensureHiveInitialized();
-      final box = await Hive.openBox<String>('settings');
-      final saved = box.get('warnBeforeQuit');
-      if (saved != null) state = saved == 'true';
+      final saved = Hive.box<String>('settings').get('warnBeforeQuit');
+      if (saved != null) return saved == 'true';
     } catch (e) {
       if (kDebugMode) print('Failed to load warnBeforeQuit: $e');
     }
+    return true;
   }
 
   Future<void> toggle() async {
     state = !state;
     try {
-      await ensureHiveInitialized();
-      final box = await Hive.openBox<String>('settings');
+      final box = Hive.isBoxOpen('settings')
+          ? Hive.box<String>('settings')
+          : await Hive.openBox<String>('settings');
       await box.put('warnBeforeQuit', state.toString());
     } catch (e) {
       if (kDebugMode) print('Failed to save warnBeforeQuit: $e');
@@ -1096,28 +1098,29 @@ final warnBeforeQuitProvider = NotifierProvider<WarnBeforeQuitNotifier, bool>(()
 /// system tray / menu bar instead of quitting it. Defaults to true so
 /// background services (auto-backup, deadline notifications) keep running.
 class CloseToTrayNotifier extends Notifier<bool> {
+  // Same synchronous-read rationale as WarnBeforeQuitNotifier above — the
+  // settings box is guaranteed already open by the time this builds, so
+  // there's no need (and no correctness benefit) to defer the real read to
+  // a post-frame callback. Deferring it was the actual bug: a window-close
+  // event firing before that callback ran would see the hardcoded `true`
+  // default and minimize to tray even when the user had turned this off.
   @override
   bool build() {
-    SchedulerBinding.instance.addPostFrameCallback((_) => _load());
-    return true;
-  }
-
-  Future<void> _load() async {
     try {
-      await ensureHiveInitialized();
-      final box = await Hive.openBox<String>('settings');
-      final saved = box.get('closeToTray');
-      if (saved != null) state = saved == 'true';
+      final saved = Hive.box<String>('settings').get('closeToTray');
+      if (saved != null) return saved == 'true';
     } catch (e) {
       if (kDebugMode) print('Failed to load closeToTray: $e');
     }
+    return true;
   }
 
   Future<void> set(bool value) async {
     state = value;
     try {
-      await ensureHiveInitialized();
-      final box = await Hive.openBox<String>('settings');
+      final box = Hive.isBoxOpen('settings')
+          ? Hive.box<String>('settings')
+          : await Hive.openBox<String>('settings');
       await box.put('closeToTray', value.toString());
     } catch (e) {
       if (kDebugMode) print('Failed to save closeToTray: $e');
