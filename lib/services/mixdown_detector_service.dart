@@ -30,6 +30,7 @@ class MixdownDetectorService {
     'Maschine':      ['Exports', 'Export', 'Mixdown'],
     'Waveform':      ['Exports', 'Mixdown'],
     'Sonar':         ['Mixdown', 'Audio'],
+    'LUNA':          ['Exported Files'],
   };
 
   /// Checked for any DAW not in the map above, and appended as final fallbacks
@@ -112,6 +113,14 @@ class MixdownDetectorService {
     if (project.dawType == 'Logic Pro' &&
         project.filePath.toLowerCase().endsWith('.logicx')) {
       dirs.add(p.join(project.filePath, 'Bounces'));
+    }
+
+    // LUNA: .luna is a package — Exported Files (mixdowns) lives inside it.
+    // (The "Rendered" folder holds frozen VSTi/track renders, not mixdowns,
+    // so it's deliberately not treated as a preview source.)
+    if (project.dawType == 'LUNA' &&
+        project.filePath.toLowerCase().endsWith('.luna')) {
+      dirs.add(p.join(project.filePath, 'Exported Files'));
     }
 
     // DAW-specific folders

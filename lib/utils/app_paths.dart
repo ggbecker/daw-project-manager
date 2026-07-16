@@ -87,3 +87,16 @@ Future<String> getPreviewSongsPath() async {
   }
 }
 
+/// Gets the path where placeholder project files for the demo/screenshot
+/// profile are created, so real DAW project files exist on disk (avoiding
+/// the "source file not found" warning) without touching the user's own
+/// project folders.
+Future<String> getDemoProjectsPath() async {
+  final basePath = await getLocalAppDataPath();
+  final demoProjectsDir = Directory(path.join(basePath, 'demo_projects'));
+  if (!await demoProjectsDir.exists()) {
+    await demoProjectsDir.create(recursive: true);
+  }
+  return demoProjectsDir.path;
+}
+

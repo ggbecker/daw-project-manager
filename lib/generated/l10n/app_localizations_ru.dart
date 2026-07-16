@@ -364,6 +364,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get allPhases => 'Все Фазы';
 
   @override
+  String get filterByDaw => 'Фильтр по DAW';
+
+  @override
+  String get allDaws => 'Все DAW';
+
+  @override
   String get daw => 'DAW';
 
   @override
@@ -1641,15 +1647,33 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get generateTestingDatabaseMessage =>
-      'Это заполнит базу данных примерами проектов и релизов для тестирования. Продолжить?';
+      'Это создаст (или обновит) отдельный профиль \"Demo — Screenshots\", заполненный большим количеством разнообразных примеров проектов, релизов и плейлистов для всех поддерживаемых DAW, и переключит вас на него. Остальные ваши профили останутся без изменений. Продолжить?';
 
   @override
   String get testingDatabaseGenerated =>
-      'Тестовая база данных успешно создана!';
+      'Демо-профиль готов — вы переключены на него!';
 
   @override
   String failedToGenerateTestingDatabase(String error) {
     return 'Ошибка при создании тестовой базы данных: $error';
+  }
+
+  @override
+  String get removeTestingDatabase => 'Удалить тестовую базу данных';
+
+  @override
+  String get removeTestingDatabaseMessage =>
+      'Это навсегда удалит профиль \"Demo — Screenshots\" и все его образцы проектов, релизов, плейлистов и файлов предварительного прослушивания. Продолжить?';
+
+  @override
+  String get testingDatabaseRemoved => 'Демо-данные удалены.';
+
+  @override
+  String get noTestingDatabaseFound => 'Демо-данные для удаления не найдены.';
+
+  @override
+  String failedToRemoveTestingDatabase(String error) {
+    return 'Не удалось удалить тестовую базу данных: $error';
   }
 
   @override

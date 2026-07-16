@@ -1,0 +1,45 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:daw_project_manager/utils/daw_logo.dart';
+
+void main() {
+  group('getDawLogoPath', () {
+    test('null or empty dawType returns null', () {
+      expect(getDawLogoPath(null), isNull);
+      expect(getDawLogoPath(''), isNull);
+    });
+
+    test('unrecognized dawType returns null', () {
+      expect(getDawLogoPath('Some Unknown DAW'), isNull);
+    });
+
+    test('resolves every canonical DAW name produced by MetadataExtractor', () {
+      const expected = {
+        'Ableton Live': 'ableton-live.png',
+        'Bitwig Studio': 'bitwig-studio.png',
+        'Cubase': 'cubase.png',
+        'FL Studio': 'fl-studio.png',
+        'Logic Pro': 'logic-pro.png',
+        'Maschine': 'maschine.png',
+        'Nuendo': 'nuendo.png',
+        'Pro Tools': 'pro-tools.png',
+        'Reaper': 'reaper.png',
+        'Studio One': 'studio-one.png',
+        'Waveform': 'tracktion-waveform.png',
+        'LUNA': 'luna.png',
+      };
+
+      for (final entry in expected.entries) {
+        expect(
+          getDawLogoPath(entry.key),
+          'resources/daw/logos/${entry.value}',
+          reason: 'DAW type "${entry.key}" should resolve to ${entry.value}',
+        );
+      }
+    });
+
+    test('matching is case-insensitive', () {
+      expect(getDawLogoPath('ableton live'), 'resources/daw/logos/ableton-live.png');
+      expect(getDawLogoPath('LUNA'.toLowerCase()), 'resources/daw/logos/luna.png');
+    });
+  });
+}

@@ -25,6 +25,7 @@ import 'music_player_page.dart';
 import 'widgets/startup_dialog.dart';
 import 'widgets/tab_customization_dialog.dart';
 import '../services/dock_menu_service.dart';
+import '../utils/daw_logo.dart';
 import '../utils/mobile_utils.dart';
 import '../utils/phase_colors.dart';
 import '../providers/theme_provider.dart';
@@ -938,6 +939,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     final finishedNotifier = ref.read(showFinishedProjectsProvider.notifier);
     final phaseFilter = ref.watch(phaseFilterProvider);
     final customPhases = ref.watch(customPhasesProvider);
+    final dawFilter = ref.watch(dawFilterProvider);
+    final availableDaws = ref.watch(availableDawsProvider);
     final deadlineFilter = ref.watch(deadlineFilterProvider);
     final initialScanning = ref.watch(initialScanStateProvider);
     final isProfileSwitching = ref.watch(profileSwitchingProvider);
@@ -1436,29 +1439,68 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                       }
                                     },
                                   ),
-                                DropdownButton<String>(
-                                  value: phaseFilter,
-                                  hint: Text(
-                                    AppLocalizations.of(context)!.filterByPhase,
-                                    style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
-                                  ),
-                                  underline: const SizedBox.shrink(),
-                                  style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color),
-                                  icon: Icon(Icons.filter_list, size: 16, color: Theme.of(context).textTheme.bodyMedium?.color),
-                                  items: [
-                                    DropdownMenuItem<String>(
-                                      value: null,
-                                      child: Text(AppLocalizations.of(context)!.allPhases),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.filter_list, size: 16, color: Theme.of(context).textTheme.bodyMedium?.color),
+                                    const SizedBox(width: 4),
+                                    DropdownButton<String>(
+                                      value: phaseFilter,
+                                      hint: Text(
+                                        AppLocalizations.of(context)!.filterByPhase,
+                                        style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
+                                      ),
+                                      underline: const SizedBox.shrink(),
+                                      style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color),
+                                      icon: const SizedBox.shrink(),
+                                      items: [
+                                        DropdownMenuItem<String>(
+                                          value: null,
+                                          child: Text(AppLocalizations.of(context)!.allPhases),
+                                        ),
+                                        ...customPhases.map((phase) => DropdownMenuItem<String>(
+                                          value: phase,
+                                          child: Text(phase),
+                                        )),
+                                      ],
+                                      onChanged: (String? value) {
+                                        ref.read(phaseFilterProvider.notifier).setPhase(value);
+                                      },
                                     ),
-                                    ...customPhases.map((phase) => DropdownMenuItem<String>(
-                                      value: phase,
-                                      child: Text(phase),
-                                    )),
                                   ],
-                          onChanged: (String? value) {
-                            ref.read(phaseFilterProvider.notifier).setPhase(value);
-                          },
-                        ),
+                                ),
+                        // DAW Filter dropdown — only offers DAWs actually present in this profile
+                        if (availableDaws.isNotEmpty)
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.piano, size: 16, color: Theme.of(context).textTheme.bodyMedium?.color),
+                              const SizedBox(width: 4),
+                              DropdownButton<String>(
+                                value: dawFilter,
+                                hint: Text(
+                                  AppLocalizations.of(context)!.filterByDaw,
+                                  style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
+                                ),
+                                underline: const SizedBox.shrink(),
+                                style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color),
+                                icon: const SizedBox.shrink(),
+                                items: [
+                                  DropdownMenuItem<String>(
+                                    value: null,
+                                    child: Text(AppLocalizations.of(context)!.allDaws),
+                                  ),
+                                  ...availableDaws.map((daw) => DropdownMenuItem<String>(
+                                    value: daw,
+                                    child: Text(daw),
+                                  )),
+                                ],
+                                onChanged: (String? value) {
+                                  ref.read(dawFilterProvider.notifier).setDaw(value);
+                                },
+                              ),
+                            ],
+                          ),
                         // Deadline Filter dropdown (Desktop only)
                         if (!MobileUtils.isMobile())
                           DropdownButton<DeadlineFilter>(
@@ -2534,6 +2576,8 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
     final finishedNotifier = ref.read(showFinishedProjectsProvider.notifier);
     final phaseFilter = ref.watch(phaseFilterProvider);
     final customPhases = ref.watch(customPhasesProvider);
+    final dawFilter = ref.watch(dawFilterProvider);
+    final availableDaws = ref.watch(availableDawsProvider);
     final scanRoots = ref.watch(scanRootsProvider);
     final l10n = AppLocalizations.of(context)!;
 
@@ -2710,6 +2754,8 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
                   ),
                 ),
                 const SizedBox(width: 8),
+                Icon(Icons.filter_list, size: 16, color: Theme.of(context).textTheme.bodyMedium?.color),
+                const SizedBox(width: 4),
                 DropdownButton<String>(
                   value: phaseFilter,
                   hint: Text(
@@ -2718,7 +2764,7 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
                   ),
                   underline: const SizedBox.shrink(),
                   style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color),
-                  icon: Icon(Icons.filter_list, size: 16, color: Theme.of(context).textTheme.bodyMedium?.color),
+                  icon: const SizedBox.shrink(),
                   items: [
                     DropdownMenuItem<String>(value: null, child: Text(l10n.allPhases)),
                     ...customPhases.map((phase) => DropdownMenuItem<String>(
@@ -2730,6 +2776,31 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
                     ref.read(phaseFilterProvider.notifier).setPhase(value);
                   },
                 ),
+                if (availableDaws.isNotEmpty) ...[
+                  const SizedBox(width: 8),
+                  Icon(Icons.piano, size: 16, color: Theme.of(context).textTheme.bodyMedium?.color),
+                  const SizedBox(width: 4),
+                  DropdownButton<String>(
+                    value: dawFilter,
+                    hint: Text(
+                      l10n.filterByDaw,
+                      style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
+                    ),
+                    underline: const SizedBox.shrink(),
+                    style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color),
+                    icon: const SizedBox.shrink(),
+                    items: [
+                      DropdownMenuItem<String>(value: null, child: Text(l10n.allDaws)),
+                      ...availableDaws.map((daw) => DropdownMenuItem<String>(
+                        value: daw,
+                        child: Text(daw),
+                      )),
+                    ],
+                    onChanged: (String? value) {
+                      ref.read(dawFilterProvider.notifier).setDaw(value);
+                    },
+                  ),
+                ],
                 const Spacer(),
                 ValueListenableBuilder<({bool hasGroups, bool anyExpanded})>(
                   valueListenable: _groupExpandState,
@@ -3507,51 +3578,6 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         ref.read(phaseColorsProvider),
         ref.read(customPhasesProvider),
       );
-
-  String? _getDawLogoPath(String? dawType) {
-    if (dawType == null || dawType.isEmpty) return null;
-    
-    // Map DAW types to logo file names (case-insensitive matching)
-    final dawLower = dawType.toLowerCase();
-    final logoMap = {
-      'ableton': 'ableton-live.png',
-      'ableton live': 'ableton-live.png',
-      'fl studio': 'fl-studio.png',
-      'flstudio': 'fl-studio.png',
-      'logic pro': 'logic-pro.png',
-      'logic': 'logic-pro.png',
-      'cubase': 'cubase.png',
-      'studio one': 'studio-one.png',
-      'studioone': 'studio-one.png',
-      'reaper': 'reaper.png',
-      'pro tools': 'pro-tools.png',
-      'protools': 'pro-tools.png',
-      'bitwig': 'bitwig-studio.png',
-      'bitwig studio': 'bitwig-studio.png',
-      'nuendo': 'nuendo.png',
-      'maschine': 'maschine.png',
-      'tracktion waveform': 'tracktion-waveform.png',
-      'tracktion': 'tracktion-waveform.png',
-      'waveform': 'tracktion-waveform.png',
-      'cakewalk': 'cakewalk.png',
-      'cakewalk sonar': 'cakewalk.png',
-      'sonar': 'cakewalk.png',
-    };
-    
-    // Try exact match first
-    if (logoMap.containsKey(dawLower)) {
-      return 'resources/daw/logos/${logoMap[dawLower]}';
-    }
-    
-    // Try partial match
-    for (final entry in logoMap.entries) {
-      if (dawLower.contains(entry.key) || entry.key.contains(dawLower)) {
-        return 'resources/daw/logos/${entry.value}';
-      }
-    }
-    
-    return null;
-  }
 
   Future<void> _launchProject(MusicProject project) async {
     if (ref.read(sessionModeProvider)) return;
@@ -4434,7 +4460,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           final project = rendererContext.row.cells['data']?.value as MusicProject?;
           if (project == null) return const SizedBox.shrink();
           final dawType = rendererContext.cell.value as String? ?? '';
-          final logoPath = _getDawLogoPath(dawType);
+          final logoPath = getDawLogoPath(dawType);
           
           final content = Row(
             mainAxisSize: MainAxisSize.min,

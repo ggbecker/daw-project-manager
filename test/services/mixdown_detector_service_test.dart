@@ -124,6 +124,45 @@ void main() {
       }
     });
 
+    test('LUNA: finds mixdown in Exported Files folder inside the .luna package', () async {
+      final dir = await Directory.systemTemp.createTemp('luna_pkg_');
+      try {
+        final projectPath = '${dir.path}/MySession.luna';
+        final exportedDir = Directory('$projectPath/Exported Files');
+        await exportedDir.create(recursive: true);
+        final file = File('${exportedDir.path}/MySession - MAIN.wav');
+        await file.create();
+
+        final project = TestFactories.makeProject(
+          filePath: projectPath,
+          dawType: 'LUNA',
+        );
+        final result = MixdownDetectorService.findLatestMixdown(project);
+        expect(result, isNotNull);
+        expect(result!.path, contains('MAIN.wav'));
+      } finally {
+        await dir.delete(recursive: true);
+      }
+    });
+
+    test('LUNA: ignores the Rendered folder (frozen VSTi tracks, not mixdowns)', () async {
+      final dir = await Directory.systemTemp.createTemp('luna_pkg_rendered_');
+      try {
+        final projectPath = '${dir.path}/MySession.luna';
+        final renderedDir = Directory('$projectPath/Rendered');
+        await renderedDir.create(recursive: true);
+        await File('${renderedDir.path}/frozen_vocal.wav').create();
+
+        final project = TestFactories.makeProject(
+          filePath: projectPath,
+          dawType: 'LUNA',
+        );
+        expect(MixdownDetectorService.findLatestMixdown(project), isNull);
+      } finally {
+        await dir.delete(recursive: true);
+      }
+    });
+
     test('checks customFolders before DAW-specific folder', () async {
       final dir = await Directory.systemTemp.createTemp('daw_custom_');
       try {

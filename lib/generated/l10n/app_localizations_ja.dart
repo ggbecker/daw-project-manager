@@ -358,6 +358,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get allPhases => 'すべてのフェーズ';
 
   @override
+  String get filterByDaw => 'DAWでフィルター';
+
+  @override
+  String get allDaws => 'すべてのDAW';
+
+  @override
   String get daw => 'DAW';
 
   @override
@@ -1609,14 +1615,32 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get generateTestingDatabaseMessage =>
-      'これにより、テスト用のサンプルプロジェクトとリリースでデータベースが入力されます。続行しますか？';
+      'これにより、対応するすべてのDAWにわたる多様なサンプルプロジェクト、リリース、プレイリストが含まれた専用の「Demo — Screenshots」プロファイルが作成（または更新）され、そのプロファイルに切り替わります。他のプロファイルは変更されません。続行しますか？';
 
   @override
-  String get testingDatabaseGenerated => 'テストデータベースが正常に生成されました！';
+  String get testingDatabaseGenerated => 'デモプロファイルの準備ができました — 切り替えました！';
 
   @override
   String failedToGenerateTestingDatabase(String error) {
     return 'テストデータベースの生成に失敗しました: $error';
+  }
+
+  @override
+  String get removeTestingDatabase => 'テストデータベースを削除';
+
+  @override
+  String get removeTestingDatabaseMessage =>
+      '「Demo — Screenshots」プロファイルと、そのすべてのサンプルプロジェクト、リリース、プレイリスト、プレビュー音声ファイルが完全に削除されます。続行しますか？';
+
+  @override
+  String get testingDatabaseRemoved => 'デモデータを削除しました。';
+
+  @override
+  String get noTestingDatabaseFound => '削除するデモデータが見つかりませんでした。';
+
+  @override
+  String failedToRemoveTestingDatabase(String error) {
+    return 'テストデータベースの削除に失敗しました: $error';
   }
 
   @override

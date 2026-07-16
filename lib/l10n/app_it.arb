@@ -201,6 +201,8 @@
   "filters": "Filtri",
   "filterByPhase": "Filtra per Fase",
   "allPhases": "Tutte le Fasi",
+  "filterByDaw": "Filtra per DAW",
+  "allDaws": "Tutte le DAW",
   "daw": "DAW",
   "lastModifiedColumn": "Ultima Modifica",
   "actions": "Azioni",
@@ -1006,10 +1008,22 @@
     }
   },
   "generateTestingDatabase": "Genera Database di Test",
-  "generateTestingDatabaseMessage": "Questo popolerà il database con progetti e pubblicazioni di esempio per i test. Continuare?",
-  "testingDatabaseGenerated": "Database di test generato con successo!",
+  "generateTestingDatabaseMessage": "Questo creerà (o aggiornerà) un profilo dedicato \"Demo — Screenshots\" pieno di una vasta varietà di progetti, pubblicazioni e playlist di esempio per tutte le DAW supportate, e passerà a esso. I tuoi altri profili rimarranno invariati. Continuare?",
+  "testingDatabaseGenerated": "Profilo demo pronto — passato ad esso!",
   "failedToGenerateTestingDatabase": "Errore nella generazione del database di test: {error}",
   "@failedToGenerateTestingDatabase": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "removeTestingDatabase": "Rimuovi database di test",
+  "removeTestingDatabaseMessage": "Questo eliminerà definitivamente il profilo \"Demo — Screenshots\" e tutti i suoi progetti, pubblicazioni, playlist e file audio di anteprima di esempio. Continuare?",
+  "testingDatabaseRemoved": "Dati demo rimossi.",
+  "noTestingDatabaseFound": "Nessun dato demo trovato da rimuovere.",
+  "failedToRemoveTestingDatabase": "Errore nella rimozione del database di test: {error}",
+  "@failedToRemoveTestingDatabase": {
     "placeholders": {
       "error": {
         "type": "String"

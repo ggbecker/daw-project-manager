@@ -201,6 +201,8 @@
   "filters": "Фильтры",
   "filterByPhase": "Фильтровать по Фазе",
   "allPhases": "Все Фазы",
+  "filterByDaw": "Фильтр по DAW",
+  "allDaws": "Все DAW",
   "daw": "DAW",
   "lastModifiedColumn": "Последнее Изменение",
   "actions": "Действия",
@@ -1006,10 +1008,22 @@
     }
   },
   "generateTestingDatabase": "Создать тестовую базу данных",
-  "generateTestingDatabaseMessage": "Это заполнит базу данных примерами проектов и релизов для тестирования. Продолжить?",
-  "testingDatabaseGenerated": "Тестовая база данных успешно создана!",
+  "generateTestingDatabaseMessage": "Это создаст (или обновит) отдельный профиль \"Demo — Screenshots\", заполненный большим количеством разнообразных примеров проектов, релизов и плейлистов для всех поддерживаемых DAW, и переключит вас на него. Остальные ваши профили останутся без изменений. Продолжить?",
+  "testingDatabaseGenerated": "Демо-профиль готов — вы переключены на него!",
   "failedToGenerateTestingDatabase": "Ошибка при создании тестовой базы данных: {error}",
   "@failedToGenerateTestingDatabase": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "removeTestingDatabase": "Удалить тестовую базу данных",
+  "removeTestingDatabaseMessage": "Это навсегда удалит профиль \"Demo — Screenshots\" и все его образцы проектов, релизов, плейлистов и файлов предварительного прослушивания. Продолжить?",
+  "testingDatabaseRemoved": "Демо-данные удалены.",
+  "noTestingDatabaseFound": "Демо-данные для удаления не найдены.",
+  "failedToRemoveTestingDatabase": "Не удалось удалить тестовую базу данных: {error}",
+  "@failedToRemoveTestingDatabase": {
     "placeholders": {
       "error": {
         "type": "String"

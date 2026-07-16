@@ -363,6 +363,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get allPhases => 'Todas as Fases';
 
   @override
+  String get filterByDaw => 'Filtrar por DAW';
+
+  @override
+  String get allDaws => 'Todas as DAWs';
+
+  @override
   String get daw => 'DAW';
 
   @override
@@ -1636,15 +1642,34 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get generateTestingDatabaseMessage =>
-      'Isso irá popular a base de dados com projetos e releases de exemplo para testes. Continuar?';
+      'Isso irá criar (ou atualizar) um perfil dedicado \"Demo — Screenshots\" preenchido com uma grande variedade de projetos, lançamentos e playlists de exemplo em todas as DAWs suportadas, e mudar para ele. Seus outros perfis permanecem inalterados. Continuar?';
 
   @override
   String get testingDatabaseGenerated =>
-      'Base de dados de teste gerada com sucesso!';
+      'Perfil de demonstração pronto — alternado para ele!';
 
   @override
   String failedToGenerateTestingDatabase(String error) {
     return 'Falha ao gerar base de dados de teste: $error';
+  }
+
+  @override
+  String get removeTestingDatabase => 'Remover base de dados de teste';
+
+  @override
+  String get removeTestingDatabaseMessage =>
+      'Isso excluirá permanentemente o perfil \"Demo — Screenshots\" e todos os seus projetos, lançamentos, playlists e arquivos de áudio de pré-visualização de exemplo. Continuar?';
+
+  @override
+  String get testingDatabaseRemoved => 'Dados de demonstração removidos.';
+
+  @override
+  String get noTestingDatabaseFound =>
+      'Nenhum dado de demonstração encontrado para remover.';
+
+  @override
+  String failedToRemoveTestingDatabase(String error) {
+    return 'Falha ao remover base de dados de teste: $error';
   }
 
   @override

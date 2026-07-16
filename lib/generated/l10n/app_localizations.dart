@@ -748,6 +748,18 @@ abstract class AppLocalizations {
   /// **'All Phases'**
   String get allPhases;
 
+  /// No description provided for @filterByDaw.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by DAW'**
+  String get filterByDaw;
+
+  /// No description provided for @allDaws.
+  ///
+  /// In en, this message translates to:
+  /// **'All DAWs'**
+  String get allDaws;
+
   /// No description provided for @daw.
   ///
   /// In en, this message translates to:
@@ -2753,13 +2765,13 @@ abstract class AppLocalizations {
   /// No description provided for @generateTestingDatabaseMessage.
   ///
   /// In en, this message translates to:
-  /// **'This will populate the database with sample projects and releases for testing. Continue?'**
+  /// **'This will create (or refresh) a dedicated \"Demo — Screenshots\" profile filled with a large variety of sample projects, releases, and playlists across every supported DAW, and switch you to it. Your other profiles are left untouched. Continue?'**
   String get generateTestingDatabaseMessage;
 
   /// No description provided for @testingDatabaseGenerated.
   ///
   /// In en, this message translates to:
-  /// **'Testing database generated successfully!'**
+  /// **'Demo profile ready — switched to it!'**
   String get testingDatabaseGenerated;
 
   /// No description provided for @failedToGenerateTestingDatabase.
@@ -2767,6 +2779,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to generate testing database: {error}'**
   String failedToGenerateTestingDatabase(String error);
+
+  /// No description provided for @removeTestingDatabase.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Testing Database'**
+  String get removeTestingDatabase;
+
+  /// No description provided for @removeTestingDatabaseMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This will permanently delete the \"Demo — Screenshots\" profile and all of its sample projects, releases, playlists, and preview audio files. Continue?'**
+  String get removeTestingDatabaseMessage;
+
+  /// No description provided for @testingDatabaseRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Demo data removed.'**
+  String get testingDatabaseRemoved;
+
+  /// No description provided for @noTestingDatabaseFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No demo data found to remove.'**
+  String get noTestingDatabaseFound;
+
+  /// No description provided for @failedToRemoveTestingDatabase.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to remove testing database: {error}'**
+  String failedToRemoveTestingDatabase(String error);
 
   /// Playlists tab title
   ///

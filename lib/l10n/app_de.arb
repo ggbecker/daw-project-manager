@@ -201,6 +201,8 @@
   "filters": "Filter",
   "filterByPhase": "Nach Phase filtern",
   "allPhases": "Alle Phasen",
+  "filterByDaw": "Nach DAW filtern",
+  "allDaws": "Alle DAWs",
   "daw": "DAW",
   "lastModifiedColumn": "Zuletzt Geändert",
   "actions": "Aktionen",
@@ -1006,10 +1008,22 @@
     }
   },
   "generateTestingDatabase": "Testdatenbank generieren",
-  "generateTestingDatabaseMessage": "Dies wird die Datenbank mit Beispielprojekten und Veröffentlichungen für Tests füllen. Fortfahren?",
-  "testingDatabaseGenerated": "Testdatenbank erfolgreich generiert!",
+  "generateTestingDatabaseMessage": "Dies erstellt (oder aktualisiert) ein eigenes Profil \"Demo — Screenshots\" mit einer großen Vielfalt an Beispielprojekten, Veröffentlichungen und Playlists für alle unterstützten DAWs und wechselt zu diesem Profil. Ihre anderen Profile bleiben unverändert. Fortfahren?",
+  "testingDatabaseGenerated": "Demo-Profil bereit — dorthin gewechselt!",
   "failedToGenerateTestingDatabase": "Fehler beim Generieren der Testdatenbank: {error}",
   "@failedToGenerateTestingDatabase": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "removeTestingDatabase": "Testdatenbank entfernen",
+  "removeTestingDatabaseMessage": "Dies löscht das Profil \"Demo — Screenshots\" sowie alle zugehörigen Beispielprojekte, Veröffentlichungen, Playlists und Vorschau-Audiodateien dauerhaft. Fortfahren?",
+  "testingDatabaseRemoved": "Demo-Daten entfernt.",
+  "noTestingDatabaseFound": "Keine Demo-Daten zum Entfernen gefunden.",
+  "failedToRemoveTestingDatabase": "Fehler beim Entfernen der Testdatenbank: {error}",
+  "@failedToRemoveTestingDatabase": {
     "placeholders": {
       "error": {
         "type": "String"
