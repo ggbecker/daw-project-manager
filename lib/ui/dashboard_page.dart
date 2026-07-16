@@ -1439,53 +1439,67 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                       }
                                     },
                                   ),
-                                DropdownButton<String>(
-                                  value: phaseFilter,
-                                  hint: Text(
-                                    AppLocalizations.of(context)!.filterByPhase,
-                                    style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
-                                  ),
-                                  underline: const SizedBox.shrink(),
-                                  style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color),
-                                  icon: Icon(Icons.filter_list, size: 16, color: Theme.of(context).textTheme.bodyMedium?.color),
-                                  items: [
-                                    DropdownMenuItem<String>(
-                                      value: null,
-                                      child: Text(AppLocalizations.of(context)!.allPhases),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.filter_list, size: 16, color: Theme.of(context).textTheme.bodyMedium?.color),
+                                    const SizedBox(width: 4),
+                                    DropdownButton<String>(
+                                      value: phaseFilter,
+                                      hint: Text(
+                                        AppLocalizations.of(context)!.filterByPhase,
+                                        style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
+                                      ),
+                                      underline: const SizedBox.shrink(),
+                                      style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color),
+                                      icon: const SizedBox.shrink(),
+                                      items: [
+                                        DropdownMenuItem<String>(
+                                          value: null,
+                                          child: Text(AppLocalizations.of(context)!.allPhases),
+                                        ),
+                                        ...customPhases.map((phase) => DropdownMenuItem<String>(
+                                          value: phase,
+                                          child: Text(phase),
+                                        )),
+                                      ],
+                                      onChanged: (String? value) {
+                                        ref.read(phaseFilterProvider.notifier).setPhase(value);
+                                      },
                                     ),
-                                    ...customPhases.map((phase) => DropdownMenuItem<String>(
-                                      value: phase,
-                                      child: Text(phase),
-                                    )),
                                   ],
-                          onChanged: (String? value) {
-                            ref.read(phaseFilterProvider.notifier).setPhase(value);
-                          },
-                        ),
+                                ),
                         // DAW Filter dropdown — only offers DAWs actually present in this profile
                         if (availableDaws.isNotEmpty)
-                          DropdownButton<String>(
-                            value: dawFilter,
-                            hint: Text(
-                              AppLocalizations.of(context)!.filterByDaw,
-                              style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
-                            ),
-                            underline: const SizedBox.shrink(),
-                            style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color),
-                            icon: Icon(Icons.piano, size: 16, color: Theme.of(context).textTheme.bodyMedium?.color),
-                            items: [
-                              DropdownMenuItem<String>(
-                                value: null,
-                                child: Text(AppLocalizations.of(context)!.allDaws),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.piano, size: 16, color: Theme.of(context).textTheme.bodyMedium?.color),
+                              const SizedBox(width: 4),
+                              DropdownButton<String>(
+                                value: dawFilter,
+                                hint: Text(
+                                  AppLocalizations.of(context)!.filterByDaw,
+                                  style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
+                                ),
+                                underline: const SizedBox.shrink(),
+                                style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color),
+                                icon: const SizedBox.shrink(),
+                                items: [
+                                  DropdownMenuItem<String>(
+                                    value: null,
+                                    child: Text(AppLocalizations.of(context)!.allDaws),
+                                  ),
+                                  ...availableDaws.map((daw) => DropdownMenuItem<String>(
+                                    value: daw,
+                                    child: Text(daw),
+                                  )),
+                                ],
+                                onChanged: (String? value) {
+                                  ref.read(dawFilterProvider.notifier).setDaw(value);
+                                },
                               ),
-                              ...availableDaws.map((daw) => DropdownMenuItem<String>(
-                                value: daw,
-                                child: Text(daw),
-                              )),
                             ],
-                            onChanged: (String? value) {
-                              ref.read(dawFilterProvider.notifier).setDaw(value);
-                            },
                           ),
                         // Deadline Filter dropdown (Desktop only)
                         if (!MobileUtils.isMobile())
@@ -2740,6 +2754,8 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
                   ),
                 ),
                 const SizedBox(width: 8),
+                Icon(Icons.filter_list, size: 16, color: Theme.of(context).textTheme.bodyMedium?.color),
+                const SizedBox(width: 4),
                 DropdownButton<String>(
                   value: phaseFilter,
                   hint: Text(
@@ -2748,7 +2764,7 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
                   ),
                   underline: const SizedBox.shrink(),
                   style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color),
-                  icon: Icon(Icons.filter_list, size: 16, color: Theme.of(context).textTheme.bodyMedium?.color),
+                  icon: const SizedBox.shrink(),
                   items: [
                     DropdownMenuItem<String>(value: null, child: Text(l10n.allPhases)),
                     ...customPhases.map((phase) => DropdownMenuItem<String>(
@@ -2762,6 +2778,8 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
                 ),
                 if (availableDaws.isNotEmpty) ...[
                   const SizedBox(width: 8),
+                  Icon(Icons.piano, size: 16, color: Theme.of(context).textTheme.bodyMedium?.color),
+                  const SizedBox(width: 4),
                   DropdownButton<String>(
                     value: dawFilter,
                     hint: Text(
@@ -2770,7 +2788,7 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
                     ),
                     underline: const SizedBox.shrink(),
                     style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color),
-                    icon: Icon(Icons.piano, size: 16, color: Theme.of(context).textTheme.bodyMedium?.color),
+                    icon: const SizedBox.shrink(),
                     items: [
                       DropdownMenuItem<String>(value: null, child: Text(l10n.allDaws)),
                       ...availableDaws.map((daw) => DropdownMenuItem<String>(
