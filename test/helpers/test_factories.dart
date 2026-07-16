@@ -27,6 +27,9 @@ class TestFactories {
     String? previewSongFileName,
     DateTime? statusChangedAt,
     int totalWorkSeconds = 0,
+    String? previewSongAutoPath,
+    String? parentProjectId,
+    String? ignoredNewerSongPath,
   }) {
     return MusicProject(
       id: id,
@@ -52,6 +55,9 @@ class TestFactories {
       previewSongFileName: previewSongFileName,
       statusChangedAt: statusChangedAt,
       totalWorkSeconds: totalWorkSeconds,
+      previewSongAutoPath: previewSongAutoPath,
+      parentProjectId: parentProjectId,
+      ignoredNewerSongPath: ignoredNewerSongPath,
     );
   }
 

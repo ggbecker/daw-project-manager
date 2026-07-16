@@ -3184,6 +3184,7 @@ class GoogleDriveSyncService {
     required ProjectRepository projectRepo,
     required ProfileRepository profileRepo,
     String? profileId, // Optional - kept for compatibility but not used
+    bool uploadAutoDetectedSongs = false,
   }) async {
     try {
       if (kDebugMode) print('Starting complete application sync...');
@@ -3213,6 +3214,7 @@ class GoogleDriveSyncService {
         await uploadDatabase(
           projectRepo: projectRepo,
           profileRepo: profileRepo,
+          uploadAutoDetectedSongs: uploadAutoDetectedSongs,
         );
         return SyncResult(
           projectsAdded: 0,
@@ -3267,6 +3269,7 @@ class GoogleDriveSyncService {
       await uploadDatabase(
         projectRepo: projectRepo,
         profileRepo: profileRepo,
+        uploadAutoDetectedSongs: uploadAutoDetectedSongs,
       );
 
       if (kDebugMode) {
@@ -3357,6 +3360,7 @@ class GoogleDriveSyncService {
         remote.customDisplayName != local.customDisplayName ||
         remote.hidden != local.hidden ||
         remote.deadline != local.deadline ||
+        remote.ignoredNewerSongPath != local.ignoredNewerSongPath ||
         remote.lastModifiedAt != local.lastModifiedAt ||
         remote.fileCreatedAt != local.fileCreatedAt;
   }
@@ -3678,8 +3682,14 @@ class GoogleDriveSyncService {
                 // (updatedAt can change when file is modified on disk, not just metadata)
                 
                 final metadataChanged = _hasMetadataChanged(remoteProject, localProject);
-                
-                if (metadataChanged) {
+                // Only let remote's metadata win if it is actually the newer side.
+                // Without this check, a project edited locally after the last upload
+                // (but before this merge runs) would have those fresh local edits
+                // silently discarded in favor of a stale remote copy — the opposite
+                // of the "prefer newer data" conflict resolution this is meant to do.
+                final remoteIsNewer = remoteProject.updatedAt.isAfter(localProject.updatedAt);
+
+                if (metadataChanged && remoteIsNewer) {
                   // Metadata changed - merge intelligently
                   // Keep file system fields from local (filePath, fileName, fileSizeBytes, lastModifiedAt, etc.)
                   // But update metadata fields from remote (todos, notes, bpm, key, status, etc.)
@@ -3866,15 +3876,20 @@ class GoogleDriveSyncService {
                     deadline: remoteProject.deadline,
                     clearDeadline: remoteProject.deadline == null,
                     statusChangedAt: remoteProject.statusChangedAt,
+                    ignoredNewerSongPath: remoteProject.ignoredNewerSongPath,
+                    clearIgnoredNewerSongPath: remoteProject.ignoredNewerSongPath == null,
                     previewSongPath: previewSongPath,
                     previewSongFileName: previewSongFileName ?? remoteProject.previewSongFileName,
                     uploadedPreviewSongHash: uploadedPreviewSongHash ?? remoteProject.uploadedPreviewSongHash,
                     // Use remote updatedAt so the UI shows the actual modification time, not download time
                     updatedAt: remoteProject.updatedAt,
-                    // Use remote lastModifiedAt — this is the desktop DAW modification time from the backup,
-                    // which is the authoritative source for when the project was last worked on.
-                    lastModifiedAt: remoteProject.lastModifiedAt,
-                    fileCreatedAt: remoteProject.fileCreatedAt,
+                    // lastModifiedAt/fileCreatedAt come from stat-ing the DAW file on disk.
+                    // On mobile there is no such file to stat, so remote (desktop) is always
+                    // the authoritative source and must be propagated. On desktop, the local
+                    // scan is the ground truth — pulling in remote's copy here would overwrite
+                    // fresh filesystem data with whatever a possibly-stale backup last saw.
+                    lastModifiedAt: MobileUtils.isMobile() ? remoteProject.lastModifiedAt : localProject.lastModifiedAt,
+                    fileCreatedAt: MobileUtils.isMobile() ? remoteProject.fileCreatedAt : localProject.fileCreatedAt,
                     // Keep other file system fields from local (file-based)
                     // filePath, fileName, fileSizeBytes, fileExtension stay from local
                   );
@@ -4580,6 +4595,9 @@ class GoogleDriveSyncService {
       'totalWorkSeconds': project.totalWorkSeconds,
       'sessions': project.sessions.map((s) => s.toMap()).toList(),
       'metadataScanned': project.metadataScanned,
+      'previewSongAutoPath': project.previewSongAutoPath,
+      'parentProjectId': project.parentProjectId,
+      'ignoredNewerSongPath': project.ignoredNewerSongPath,
     };
   }
 
@@ -4626,8 +4644,22 @@ class GoogleDriveSyncService {
               .toList() ??
           const [],
       metadataScanned: data['metadataScanned'] as bool? ?? false,
+      previewSongAutoPath: data['previewSongAutoPath'] as String?,
+      parentProjectId: data['parentProjectId'] as String?,
+      ignoredNewerSongPath: data['ignoredNewerSongPath'] as String?,
     );
   }
+
+  /// Test-only accessors for the private serialize/deserialize pair above —
+  /// mirrors the pattern in BackupService so round-trip tests don't need to
+  /// go through a full Drive upload/download cycle.
+  @visibleForTesting
+  Map<String, dynamic> serializeProjectForTest(MusicProject project) =>
+      _serializeProject(project);
+
+  @visibleForTesting
+  MusicProject deserializeProjectForTest(Map<String, dynamic> data) =>
+      _deserializeProject(data);
 
   Map<String, dynamic> _serializeRelease(Release release) {
     return {

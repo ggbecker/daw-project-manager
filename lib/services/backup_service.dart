@@ -298,6 +298,9 @@ class BackupService {
       'totalWorkSeconds': project.totalWorkSeconds,
       'sessions': project.sessions.map((s) => s.toMap()).toList(),
       'metadataScanned': project.metadataScanned,
+      'previewSongAutoPath': project.previewSongAutoPath,
+      'parentProjectId': project.parentProjectId,
+      'ignoredNewerSongPath': project.ignoredNewerSongPath,
     };
   }
 
@@ -333,6 +336,9 @@ class BackupService {
               .toList() ??
           const [],
       metadataScanned: json['metadataScanned'] as bool? ?? false,
+      previewSongAutoPath: json['previewSongAutoPath'] as String?,
+      parentProjectId: json['parentProjectId'] as String?,
+      ignoredNewerSongPath: json['ignoredNewerSongPath'] as String?,
     );
   }
 

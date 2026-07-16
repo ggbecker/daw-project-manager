@@ -189,6 +189,36 @@ void main() {
       expect(restored.todos, isEmpty);
     });
 
+    test('preserves previewSongAutoPath, parentProjectId, and ignoredNewerSongPath', () {
+      final original = TestFactories.makeProject(
+        previewSongAutoPath: '/Users/artist/Live Sets/Bounces/mixdown.wav',
+        parentProjectId: 'parent-project-id',
+        ignoredNewerSongPath: '/Users/artist/Live Sets/Bounces/rejected.wav',
+      );
+
+      final restored =
+          BackupService.projectFromJson(BackupService.projectToJson(original));
+
+      expect(restored.previewSongAutoPath, '/Users/artist/Live Sets/Bounces/mixdown.wav');
+      expect(restored.parentProjectId, 'parent-project-id');
+      expect(restored.ignoredNewerSongPath, '/Users/artist/Live Sets/Bounces/rejected.wav');
+    });
+
+    test('preserves null previewSongAutoPath, parentProjectId, and ignoredNewerSongPath', () {
+      final original = TestFactories.makeProject(
+        previewSongAutoPath: null,
+        parentProjectId: null,
+        ignoredNewerSongPath: null,
+      );
+
+      final restored =
+          BackupService.projectFromJson(BackupService.projectToJson(original));
+
+      expect(restored.previewSongAutoPath, isNull);
+      expect(restored.parentProjectId, isNull);
+      expect(restored.ignoredNewerSongPath, isNull);
+    });
+
     test('lastModifiedAt is unchanged after round-trip (not bumped to now)',
         () {
       final past = DateTime(2020, 6, 15, 8, 0, 0);

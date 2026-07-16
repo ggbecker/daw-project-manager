@@ -12,6 +12,7 @@ import 'package:daw_project_manager/repository/profile_repository.dart';
 import 'package:daw_project_manager/repository/project_repository.dart';
 import 'package:daw_project_manager/services/google_drive_sync_service.dart';
 import '../helpers/hive_test_helper.dart';
+import '../helpers/test_factories.dart';
 
 // Minimal stub — extends BaseClient so get/post/etc. are provided; only
 // instantiation matters and no methods are ever called in these tests.
@@ -166,5 +167,201 @@ void main() {
         ['Local Idea', 'Local Done'],
       );
     });
+  });
+
+  group('GoogleDriveSyncService project serialization round-trip', () {
+    test('preserves previewSongAutoPath, parentProjectId, and ignoredNewerSongPath', () {
+      final service = GoogleDriveSyncService();
+      final original = TestFactories.makeProject(
+        previewSongAutoPath: '/Users/artist/Live Sets/Bounces/mixdown.wav',
+        parentProjectId: 'parent-project-id',
+        ignoredNewerSongPath: '/Users/artist/Live Sets/Bounces/rejected.wav',
+      );
+
+      final restored = service.deserializeProjectForTest(
+        service.serializeProjectForTest(original),
+      );
+
+      expect(restored.previewSongAutoPath, '/Users/artist/Live Sets/Bounces/mixdown.wav');
+      expect(restored.parentProjectId, 'parent-project-id');
+      expect(restored.ignoredNewerSongPath, '/Users/artist/Live Sets/Bounces/rejected.wav');
+    });
+  });
+
+  group('GoogleDriveSyncService.mergeData - project conflict resolution', () {
+    // Regression: mergeData used to always overwrite local project metadata
+    // (notes, todos, bpm, status, etc.) with whatever was in the remote
+    // backup whenever the two differed, regardless of which side was
+    // actually edited more recently. That meant the auto-backup timer (which
+    // downloads+merges via syncDatabase before re-uploading) could silently
+    // discard a local edit made after the last backup in favor of a stale
+    // remote copy. The fix compares updatedAt and only lets remote win when
+    // it is genuinely the newer side.
+    late Directory tempDir;
+    late ProjectRepository projectRepo;
+    late ProfileRepository profileRepo;
+    late Profile profile;
+
+    setUp(() async {
+      tempDir = await HiveTestHelper.setUp();
+      if (!Hive.isAdapterRegistered(5)) Hive.registerAdapter(ProfileAdapter());
+      final profilesBox = await Hive.openBox<Profile>('profiles');
+      final settingsBox = await Hive.openBox<String>('settings');
+      profileRepo = ProfileRepository(profilesBox: profilesBox, settingsBox: settingsBox);
+      profile = await profileRepo.createProfile('Test Profile');
+      projectRepo = await HiveTestHelper.createRepository(profileId: profile.id);
+      await Hive.openBox<String>('app_settings');
+    });
+
+    tearDown(() async {
+      await HiveTestHelper.tearDown(tempDir);
+    });
+
+    Map<String, dynamic> remoteProjectMap({
+      required String id,
+      required DateTime updatedAt,
+      String? notes,
+      String? previewSongAutoPath,
+      String? parentProjectId,
+      String? ignoredNewerSongPath,
+    }) {
+      return {
+        'id': id,
+        'filePath': '/remote/$id.als',
+        'fileName': '$id.als',
+        'fileSizeBytes': 1000,
+        'lastModifiedAt': DateTime(2025, 1, 1).toIso8601String(),
+        'status': 'Mixing',
+        'fileExtension': '.als',
+        'createdAt': DateTime(2024, 1, 1).toIso8601String(),
+        'updatedAt': updatedAt.toIso8601String(),
+        'notes': notes,
+        'previewSongAutoPath': previewSongAutoPath,
+        'parentProjectId': parentProjectId,
+        'ignoredNewerSongPath': ignoredNewerSongPath,
+      };
+    }
+
+    test('keeps local edits when local was modified after the remote copy', () async {
+      final local = TestFactories.makeProject(
+        id: 'p1',
+        notes: 'Local edit made after last backup',
+        updatedAt: DateTime(2025, 6, 1, 12, 0),
+      );
+      await projectRepo.projectsBox.put(local.id, local);
+
+      final service = GoogleDriveSyncService();
+      await service.mergeData(
+        remoteData: {
+          'projects': [
+            remoteProjectMap(
+              id: 'p1',
+              // Older than local's updatedAt — this is a stale remote copy.
+              updatedAt: DateTime(2025, 6, 1, 10, 0),
+              notes: 'Stale remote note',
+            ),
+          ],
+        },
+        projectRepo: projectRepo,
+        profileRepo: profileRepo,
+        downloadPreviewSongs: false,
+      );
+
+      final merged = projectRepo.projectsBox.get('p1');
+      expect(merged!.notes, 'Local edit made after last backup');
+    });
+
+    test('takes remote edits when remote was modified after the local copy', () async {
+      final local = TestFactories.makeProject(
+        id: 'p2',
+        notes: 'Old local note',
+        updatedAt: DateTime(2025, 6, 1, 8, 0),
+      );
+      await projectRepo.projectsBox.put(local.id, local);
+
+      final service = GoogleDriveSyncService();
+      await service.mergeData(
+        remoteData: {
+          'projects': [
+            remoteProjectMap(
+              id: 'p2',
+              // Newer than local's updatedAt — remote genuinely has the latest edit.
+              updatedAt: DateTime(2025, 6, 1, 12, 0),
+              notes: 'Fresh remote note',
+            ),
+          ],
+        },
+        projectRepo: projectRepo,
+        profileRepo: profileRepo,
+        downloadPreviewSongs: false,
+      );
+
+      final merged = projectRepo.projectsBox.get('p2');
+      expect(merged!.notes, 'Fresh remote note');
+    });
+
+    test('restores previewSongAutoPath, parentProjectId, and ignoredNewerSongPath for a brand-new project from remote', () async {
+      final service = GoogleDriveSyncService();
+      await service.mergeData(
+        remoteData: {
+          'projects': [
+            remoteProjectMap(
+              id: 'p3',
+              updatedAt: DateTime(2025, 6, 1),
+              previewSongAutoPath: '/remote/Bounces/mixdown.wav',
+              parentProjectId: 'parent-id',
+              ignoredNewerSongPath: '/remote/Bounces/rejected.wav',
+            ),
+          ],
+        },
+        projectRepo: projectRepo,
+        profileRepo: profileRepo,
+        downloadPreviewSongs: false,
+      );
+
+      final restored = projectRepo.projectsBox.get('p3');
+      expect(restored, isNotNull);
+      expect(restored!.previewSongAutoPath, '/remote/Bounces/mixdown.wav');
+      expect(restored.parentProjectId, 'parent-id');
+      expect(restored.ignoredNewerSongPath, '/remote/Bounces/rejected.wav');
+    });
+
+    test(
+      'keeps local lastModifiedAt/fileCreatedAt on desktop even when remote is newer '
+      '(flutter test runs as a desktop process, so MobileUtils.isMobile() is false here; '
+      'the mobile branch — where these must come from remote — cannot be exercised by a '
+      'unit test without mocking Platform.isAndroid/isIOS, so it is not automated)',
+      () async {
+        final localFileCreatedAt = DateTime(2024, 3, 1);
+        final localLastModifiedAt = DateTime(2025, 5, 1);
+        final local = TestFactories.makeProject(
+          id: 'p4',
+          fileCreatedAt: localFileCreatedAt,
+          lastModifiedAt: localLastModifiedAt,
+          updatedAt: DateTime(2025, 6, 1, 8, 0),
+        );
+        await projectRepo.projectsBox.put(local.id, local);
+
+        final service = GoogleDriveSyncService();
+        await service.mergeData(
+          remoteData: {
+            'projects': [
+              remoteProjectMap(
+                id: 'p4',
+                updatedAt: DateTime(2025, 6, 1, 12, 0),
+                notes: 'Remote note that makes metadata differ',
+              ),
+            ],
+          },
+          projectRepo: projectRepo,
+          profileRepo: profileRepo,
+          downloadPreviewSongs: false,
+        );
+
+        final merged = projectRepo.projectsBox.get('p4');
+        expect(merged!.fileCreatedAt, localFileCreatedAt);
+        expect(merged.lastModifiedAt, localLastModifiedAt);
+      },
+    );
   });
 }

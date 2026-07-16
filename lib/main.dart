@@ -142,12 +142,14 @@ void _startAutoBackupTimer(
         return; // Not due yet
       }
 
-      // Run backup silently
+      // Run backup silently. Use syncDatabase (not a raw uploadDatabase) so a
+      // newer backup already on Drive — e.g. uploaded from another device —
+      // gets downloaded and merged first instead of being blindly overwritten.
       final profileRepo =
           await container.read(profileRepositoryProvider.future);
       final projectRepo = await container.read(repositoryProvider.future);
       final uploadAutoDetected = settingsBox.get('uploadAutoPreviewSongs') == 'true';
-      await syncService.uploadDatabase(
+      await syncService.syncDatabase(
         projectRepo: projectRepo,
         profileRepo: profileRepo,
         uploadAutoDetectedSongs: uploadAutoDetected,
