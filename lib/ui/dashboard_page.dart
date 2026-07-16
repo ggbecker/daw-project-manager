@@ -25,6 +25,7 @@ import 'music_player_page.dart';
 import 'widgets/startup_dialog.dart';
 import 'widgets/tab_customization_dialog.dart';
 import '../services/dock_menu_service.dart';
+import '../utils/daw_logo.dart';
 import '../utils/mobile_utils.dart';
 import '../utils/phase_colors.dart';
 import '../providers/theme_provider.dart';
@@ -3508,52 +3509,6 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         ref.read(customPhasesProvider),
       );
 
-  String? _getDawLogoPath(String? dawType) {
-    if (dawType == null || dawType.isEmpty) return null;
-    
-    // Map DAW types to logo file names (case-insensitive matching)
-    final dawLower = dawType.toLowerCase();
-    final logoMap = {
-      'ableton': 'ableton-live.png',
-      'ableton live': 'ableton-live.png',
-      'fl studio': 'fl-studio.png',
-      'flstudio': 'fl-studio.png',
-      'logic pro': 'logic-pro.png',
-      'logic': 'logic-pro.png',
-      'cubase': 'cubase.png',
-      'studio one': 'studio-one.png',
-      'studioone': 'studio-one.png',
-      'reaper': 'reaper.png',
-      'pro tools': 'pro-tools.png',
-      'protools': 'pro-tools.png',
-      'bitwig': 'bitwig-studio.png',
-      'bitwig studio': 'bitwig-studio.png',
-      'nuendo': 'nuendo.png',
-      'maschine': 'maschine.png',
-      'tracktion waveform': 'tracktion-waveform.png',
-      'tracktion': 'tracktion-waveform.png',
-      'waveform': 'tracktion-waveform.png',
-      'cakewalk': 'cakewalk.png',
-      'cakewalk sonar': 'cakewalk.png',
-      'sonar': 'cakewalk.png',
-      'luna': 'luna.png',
-    };
-    
-    // Try exact match first
-    if (logoMap.containsKey(dawLower)) {
-      return 'resources/daw/logos/${logoMap[dawLower]}';
-    }
-    
-    // Try partial match
-    for (final entry in logoMap.entries) {
-      if (dawLower.contains(entry.key) || entry.key.contains(dawLower)) {
-        return 'resources/daw/logos/${entry.value}';
-      }
-    }
-    
-    return null;
-  }
-
   Future<void> _launchProject(MusicProject project) async {
     if (ref.read(sessionModeProvider)) return;
     final exists = File(project.filePath).existsSync() || Directory(project.filePath).existsSync();
@@ -4435,7 +4390,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           final project = rendererContext.row.cells['data']?.value as MusicProject?;
           if (project == null) return const SizedBox.shrink();
           final dawType = rendererContext.cell.value as String? ?? '';
-          final logoPath = _getDawLogoPath(dawType);
+          final logoPath = getDawLogoPath(dawType);
           
           final content = Row(
             mainAxisSize: MainAxisSize.min,

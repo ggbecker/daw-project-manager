@@ -22,6 +22,7 @@ import '../models/music_project.dart';
 import '../models/project_event.dart';
 import '../providers/providers.dart';
 import '../repository/project_repository.dart';
+import '../utils/daw_logo.dart';
 import '../utils/mobile_utils.dart';
 import '../utils/file_launcher.dart';
 import '../generated/l10n/app_localizations.dart';
@@ -275,6 +276,27 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
         );
       }
     }
+  }
+
+  /// The DAW's logo when one is known for [dawType], falling back to a
+  /// generic piano icon tinted with [color] (the theme's primary color).
+  /// Sized to match the original icon's footprint (same 16x16 the dashboard
+  /// table uses for its DAW badges) so the logo doesn't blow out the field.
+  Widget _buildDawPrefixIcon(String? dawType, Color color) {
+    final logoPath = getDawLogoPath(dawType);
+    if (logoPath == null) {
+      return Icon(Icons.piano, color: color);
+    }
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: Image.asset(
+        logoPath,
+        width: 16,
+        height: 16,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) => Icon(Icons.piano, color: color),
+      ),
+    );
   }
 
   @override
@@ -570,32 +592,32 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                       // DAW field (mobile)
                                       if (updatedProject.dawType != null) ...[
                                         const SizedBox(height: 12),
-                                        TextFormField(
-                                          key: ValueKey('${updatedProject.dawType}-${updatedProject.dawVersion}'),
-                                          enabled: false,
-                                          initialValue: updatedProject.dawVersion?.isNotEmpty == true
-                                              ? '${updatedProject.dawType} ${updatedProject.dawVersion}'
-                                              : updatedProject.dawType,
-                                          decoration: InputDecoration(
-                                            labelText: AppLocalizations.of(context)!.daw,
-                                            filled: true,
-                                            fillColor: Colors.deepPurple.withOpacity(0.05),
-                                            border: const OutlineInputBorder(),
-                                            disabledBorder: OutlineInputBorder(
-                                              borderSide: BorderSide(
-                                                color: Colors.deepPurple.withOpacity(0.3),
+                                        Builder(builder: (context) {
+                                          final dawColor = Theme.of(context).colorScheme.primary;
+                                          return TextFormField(
+                                            key: ValueKey('${updatedProject.dawType}-${updatedProject.dawVersion}'),
+                                            enabled: false,
+                                            initialValue: updatedProject.dawVersion?.isNotEmpty == true
+                                                ? '${updatedProject.dawType} ${updatedProject.dawVersion}'
+                                                : updatedProject.dawType,
+                                            decoration: InputDecoration(
+                                              labelText: AppLocalizations.of(context)!.daw,
+                                              filled: true,
+                                              fillColor: dawColor.withOpacity(0.05),
+                                              border: const OutlineInputBorder(),
+                                              disabledBorder: OutlineInputBorder(
+                                                borderSide: BorderSide(
+                                                  color: dawColor.withOpacity(0.3),
+                                                ),
                                               ),
+                                              prefixIcon: _buildDawPrefixIcon(updatedProject.dawType, dawColor),
                                             ),
-                                            prefixIcon: const Icon(
-                                              Icons.piano,
-                                              color: Colors.deepPurple,
+                                            style: TextStyle(
+                                              color: dawColor,
+                                              fontWeight: FontWeight.bold,
                                             ),
-                                          ),
-                                          style: const TextStyle(
-                                            color: Colors.deepPurple,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
+                                          );
+                                        }),
                                       ],
                                     ],
                                   )
@@ -662,32 +684,32 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                       if (updatedProject.dawType != null) ...[
                                         const SizedBox(width: 8),
                                         Expanded(
-                                          child: TextFormField(
-                                            key: ValueKey('${updatedProject.dawType}-${updatedProject.dawVersion}'),
-                                            enabled: false,
-                                            initialValue: updatedProject.dawVersion?.isNotEmpty == true
-                                                ? '${updatedProject.dawType} ${updatedProject.dawVersion}'
-                                                : updatedProject.dawType,
-                                            decoration: InputDecoration(
-                                              labelText: AppLocalizations.of(context)!.daw,
-                                              filled: true,
-                                              fillColor: Colors.deepPurple.withOpacity(0.05),
-                                              border: const OutlineInputBorder(),
-                                              disabledBorder: OutlineInputBorder(
-                                                borderSide: BorderSide(
-                                                  color: Colors.deepPurple.withOpacity(0.3),
+                                          child: Builder(builder: (context) {
+                                            final dawColor = Theme.of(context).colorScheme.primary;
+                                            return TextFormField(
+                                              key: ValueKey('${updatedProject.dawType}-${updatedProject.dawVersion}'),
+                                              enabled: false,
+                                              initialValue: updatedProject.dawVersion?.isNotEmpty == true
+                                                  ? '${updatedProject.dawType} ${updatedProject.dawVersion}'
+                                                  : updatedProject.dawType,
+                                              decoration: InputDecoration(
+                                                labelText: AppLocalizations.of(context)!.daw,
+                                                filled: true,
+                                                fillColor: dawColor.withOpacity(0.05),
+                                                border: const OutlineInputBorder(),
+                                                disabledBorder: OutlineInputBorder(
+                                                  borderSide: BorderSide(
+                                                    color: dawColor.withOpacity(0.3),
+                                                  ),
                                                 ),
+                                                prefixIcon: _buildDawPrefixIcon(updatedProject.dawType, dawColor),
                                               ),
-                                              prefixIcon: const Icon(
-                                                Icons.piano,
-                                                color: Colors.deepPurple,
+                                              style: TextStyle(
+                                                color: dawColor,
+                                                fontWeight: FontWeight.bold,
                                               ),
-                                            ),
-                                            style: const TextStyle(
-                                              color: Colors.deepPurple,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
+                                            );
+                                          }),
                                         ),
                                       ],
                                       const SizedBox(width: 8),
