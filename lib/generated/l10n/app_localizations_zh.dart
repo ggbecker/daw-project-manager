@@ -354,6 +354,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get allPhases => '所有阶段';
 
   @override
+  String get filterByDaw => '按DAW筛选';
+
+  @override
+  String get allDaws => '所有DAW';
+
+  @override
   String get daw => 'DAW';
 
   @override

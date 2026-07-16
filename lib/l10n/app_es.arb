@@ -201,6 +201,8 @@
   "filters": "Filtros",
   "filterByPhase": "Filtrar por Fase",
   "allPhases": "Todas las Fases",
+  "filterByDaw": "Filtrar por DAW",
+  "allDaws": "Todos los DAW",
   "daw": "DAW",
   "lastModifiedColumn": "Última Modificación",
   "actions": "Acciones",

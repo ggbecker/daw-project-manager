@@ -345,7 +345,13 @@ final projectsProvider = Provider<List<MusicProject>>((ref) {
     if (phaseFilter != null) {
       projects = projects.where((p) => p.status == phaseFilter).toList();
     }
-    
+
+    // --- Filter by DAW ---
+    final dawFilter = ref.watch(dawFilterProvider);
+    if (dawFilter != null) {
+      projects = projects.where((p) => p.dawType == dawFilter).toList();
+    }
+
     // --- Filter by deadline ---
     final deadlineFilter = ref.watch(deadlineFilterProvider);
     if (deadlineFilter != DeadlineFilter.all) {
@@ -624,6 +630,42 @@ class PhaseFilterNotifier extends Notifier<String?> {
     state = null;
   }
 }
+
+// DAW Filter Provider - filters projects by dawType
+final dawFilterProvider = NotifierProvider<DawFilterNotifier, String?>(() {
+  return DawFilterNotifier();
+});
+
+class DawFilterNotifier extends Notifier<String?> {
+  @override
+  String? build() {
+    return null; // null means show all DAWs
+  }
+
+  void setDaw(String? daw) {
+    state = daw; // null to show all, or a specific DAW like 'Ableton Live', 'FL Studio', etc.
+  }
+
+  void clear() {
+    state = null;
+  }
+}
+
+// Available DAWs provider — distinct, sorted dawType values across every
+// project in the current profile (independent of any active filters), so
+// the DAW filter dropdown only ever offers DAWs the user actually has.
+final availableDawsProvider = Provider<List<String>>((ref) {
+  final allProjectsAsync = ref.watch(allProjectsStreamProvider);
+  final projects = allProjectsAsync.value ?? const <MusicProject>[];
+  final daws = projects
+      .map((p) => p.dawType)
+      .whereType<String>()
+      .where((d) => d.isNotEmpty)
+      .toSet()
+      .toList();
+  daws.sort();
+  return daws;
+});
 
 // Custom phases provider — reads per-profile phases from repository
 final customPhasesProvider = Provider<List<String>>((ref) {

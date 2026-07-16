@@ -748,6 +748,18 @@ abstract class AppLocalizations {
   /// **'All Phases'**
   String get allPhases;
 
+  /// No description provided for @filterByDaw.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by DAW'**
+  String get filterByDaw;
+
+  /// No description provided for @allDaws.
+  ///
+  /// In en, this message translates to:
+  /// **'All DAWs'**
+  String get allDaws;
+
   /// No description provided for @daw.
   ///
   /// In en, this message translates to:

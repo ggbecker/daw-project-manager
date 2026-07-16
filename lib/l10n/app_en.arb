@@ -227,6 +227,8 @@
   "filterByPhase": "Filter by Phase",
   "filters": "Filters",
   "allPhases": "All Phases",
+  "filterByDaw": "Filter by DAW",
+  "allDaws": "All DAWs",
   "daw": "DAW",
   "lastModifiedColumn": "Last Modified",
   "actions": "Actions",

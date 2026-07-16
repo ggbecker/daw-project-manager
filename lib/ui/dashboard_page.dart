@@ -939,6 +939,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     final finishedNotifier = ref.read(showFinishedProjectsProvider.notifier);
     final phaseFilter = ref.watch(phaseFilterProvider);
     final customPhases = ref.watch(customPhasesProvider);
+    final dawFilter = ref.watch(dawFilterProvider);
+    final availableDaws = ref.watch(availableDawsProvider);
     final deadlineFilter = ref.watch(deadlineFilterProvider);
     final initialScanning = ref.watch(initialScanStateProvider);
     final isProfileSwitching = ref.watch(profileSwitchingProvider);
@@ -1460,6 +1462,31 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                             ref.read(phaseFilterProvider.notifier).setPhase(value);
                           },
                         ),
+                        // DAW Filter dropdown — only offers DAWs actually present in this profile
+                        if (availableDaws.isNotEmpty)
+                          DropdownButton<String>(
+                            value: dawFilter,
+                            hint: Text(
+                              AppLocalizations.of(context)!.filterByDaw,
+                              style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
+                            ),
+                            underline: const SizedBox.shrink(),
+                            style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color),
+                            icon: Icon(Icons.piano, size: 16, color: Theme.of(context).textTheme.bodyMedium?.color),
+                            items: [
+                              DropdownMenuItem<String>(
+                                value: null,
+                                child: Text(AppLocalizations.of(context)!.allDaws),
+                              ),
+                              ...availableDaws.map((daw) => DropdownMenuItem<String>(
+                                value: daw,
+                                child: Text(daw),
+                              )),
+                            ],
+                            onChanged: (String? value) {
+                              ref.read(dawFilterProvider.notifier).setDaw(value);
+                            },
+                          ),
                         // Deadline Filter dropdown (Desktop only)
                         if (!MobileUtils.isMobile())
                           DropdownButton<DeadlineFilter>(
@@ -2535,6 +2562,8 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
     final finishedNotifier = ref.read(showFinishedProjectsProvider.notifier);
     final phaseFilter = ref.watch(phaseFilterProvider);
     final customPhases = ref.watch(customPhasesProvider);
+    final dawFilter = ref.watch(dawFilterProvider);
+    final availableDaws = ref.watch(availableDawsProvider);
     final scanRoots = ref.watch(scanRootsProvider);
     final l10n = AppLocalizations.of(context)!;
 
@@ -2731,6 +2760,29 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
                     ref.read(phaseFilterProvider.notifier).setPhase(value);
                   },
                 ),
+                if (availableDaws.isNotEmpty) ...[
+                  const SizedBox(width: 8),
+                  DropdownButton<String>(
+                    value: dawFilter,
+                    hint: Text(
+                      l10n.filterByDaw,
+                      style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
+                    ),
+                    underline: const SizedBox.shrink(),
+                    style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color),
+                    icon: Icon(Icons.piano, size: 16, color: Theme.of(context).textTheme.bodyMedium?.color),
+                    items: [
+                      DropdownMenuItem<String>(value: null, child: Text(l10n.allDaws)),
+                      ...availableDaws.map((daw) => DropdownMenuItem<String>(
+                        value: daw,
+                        child: Text(daw),
+                      )),
+                    ],
+                    onChanged: (String? value) {
+                      ref.read(dawFilterProvider.notifier).setDaw(value);
+                    },
+                  ),
+                ],
                 const Spacer(),
                 ValueListenableBuilder<({bool hasGroups, bool anyExpanded})>(
                   valueListenable: _groupExpandState,

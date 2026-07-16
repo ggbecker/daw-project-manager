@@ -365,6 +365,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get allPhases => 'Todas las Fases';
 
   @override
+  String get filterByDaw => 'Filtrar por DAW';
+
+  @override
+  String get allDaws => 'Todos los DAW';
+
+  @override
   String get daw => 'DAW';
 
   @override

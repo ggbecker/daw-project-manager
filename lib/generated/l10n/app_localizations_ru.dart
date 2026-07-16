@@ -364,6 +364,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get allPhases => 'Все Фазы';
 
   @override
+  String get filterByDaw => 'Фильтр по DAW';
+
+  @override
+  String get allDaws => 'Все DAW';
+
+  @override
   String get daw => 'DAW';
 
   @override

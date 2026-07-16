@@ -201,6 +201,8 @@
   "filters": "筛选器",
   "filterByPhase": "按阶段筛选",
   "allPhases": "所有阶段",
+  "filterByDaw": "按DAW筛选",
+  "allDaws": "所有DAW",
   "daw": "DAW",
   "lastModifiedColumn": "最后修改",
   "actions": "操作",

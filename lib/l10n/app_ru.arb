@@ -201,6 +201,8 @@
   "filters": "Фильтры",
   "filterByPhase": "Фильтровать по Фазе",
   "allPhases": "Все Фазы",
+  "filterByDaw": "Фильтр по DAW",
+  "allDaws": "Все DAW",
   "daw": "DAW",
   "lastModifiedColumn": "Последнее Изменение",
   "actions": "Действия",

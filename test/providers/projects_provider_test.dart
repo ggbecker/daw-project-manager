@@ -68,6 +68,22 @@ Future<List<MusicProject>> _readProjects(ProviderContainer c) async {
   return c.read(projectsProvider);
 }
 
+/// Same active-subscription requirement as [_readProjects], but for
+/// [availableDawsProvider] instead of the filtered [projectsProvider].
+Future<List<String>> _readAvailableDaws(ProviderContainer c) async {
+  final completer = Completer<void>();
+  final sub = c.listen<AsyncValue<List<MusicProject>>>(
+    allProjectsStreamProvider,
+    (_, next) {
+      if (next.hasValue && !completer.isCompleted) completer.complete();
+    },
+    fireImmediately: true,
+  );
+  await completer.future;
+  sub.close();
+  return c.read(availableDawsProvider);
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -274,6 +290,95 @@ void main() {
 
       expect(
           (await _readProjects(c)).map((p) => p.id).toList(), ['mixing']);
+    });
+  });
+
+  group('projectsProvider — DAW filter', () {
+    test('null DAW filter shows all non-hidden projects', () async {
+      final c = _makeContainer([
+        TestFactories.makeProject(id: 'a', dawType: 'Ableton Live'),
+        TestFactories.makeProject(id: 'b', dawType: 'FL Studio'),
+      ]);
+      addTearDown(c.dispose);
+
+      expect((await _readProjects(c)).length, 2);
+    });
+
+    test('setting DAW filter = FL Studio returns only FL Studio projects', () async {
+      final c = _makeContainer([
+        TestFactories.makeProject(id: 'a', dawType: 'Ableton Live'),
+        TestFactories.makeProject(id: 'b', dawType: 'FL Studio'),
+        TestFactories.makeProject(id: 'c', dawType: 'FL Studio'),
+      ]);
+      addTearDown(c.dispose);
+      c.read(dawFilterProvider.notifier).setDaw('FL Studio');
+
+      final ids = (await _readProjects(c)).map((p) => p.id).toSet();
+      expect(ids, {'b', 'c'});
+    });
+
+    test('DAW filter with no matching projects returns empty list', () async {
+      final c = _makeContainer([
+        TestFactories.makeProject(id: '1', dawType: 'Ableton Live'),
+      ]);
+      addTearDown(c.dispose);
+      c.read(dawFilterProvider.notifier).setDaw('Logic Pro');
+
+      expect(await _readProjects(c), isEmpty);
+    });
+
+    test('clear() resets the filter back to showing all', () async {
+      final c = _makeContainer([
+        TestFactories.makeProject(id: 'a', dawType: 'Ableton Live'),
+        TestFactories.makeProject(id: 'b', dawType: 'FL Studio'),
+      ]);
+      addTearDown(c.dispose);
+      c.read(dawFilterProvider.notifier).setDaw('FL Studio');
+      expect((await _readProjects(c)).length, 1);
+
+      c.read(dawFilterProvider.notifier).clear();
+      expect((await _readProjects(c)).length, 2);
+    });
+  });
+
+  group('availableDawsProvider', () {
+    test('returns distinct, alphabetically sorted DAW types', () async {
+      final c = _makeContainer([
+        TestFactories.makeProject(id: 'a', dawType: 'FL Studio'),
+        TestFactories.makeProject(id: 'b', dawType: 'Ableton Live'),
+        TestFactories.makeProject(id: 'c', dawType: 'FL Studio'),
+      ]);
+      addTearDown(c.dispose);
+
+      expect(await _readAvailableDaws(c), ['Ableton Live', 'FL Studio']);
+    });
+
+    test('includes DAWs from hidden projects — reflects the whole profile, not the filtered view', () async {
+      final c = _makeContainer([
+        TestFactories.makeProject(id: 'visible', dawType: 'Ableton Live', hidden: false),
+        TestFactories.makeProject(id: 'hidden', dawType: 'Logic Pro', hidden: true),
+      ]);
+      addTearDown(c.dispose);
+
+      expect(await _readAvailableDaws(c), ['Ableton Live', 'Logic Pro']);
+    });
+
+    test('ignores null and empty dawType values', () async {
+      final c = _makeContainer([
+        TestFactories.makeProject(id: 'a', dawType: 'Ableton Live'),
+        TestFactories.makeProject(id: 'b', dawType: null),
+        TestFactories.makeProject(id: 'c', dawType: ''),
+      ]);
+      addTearDown(c.dispose);
+
+      expect(await _readAvailableDaws(c), ['Ableton Live']);
+    });
+
+    test('empty project list returns an empty DAW list', () async {
+      final c = _makeContainer([]);
+      addTearDown(c.dispose);
+
+      expect(await _readAvailableDaws(c), isEmpty);
     });
   });
 }

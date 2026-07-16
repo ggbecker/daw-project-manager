@@ -358,6 +358,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get allPhases => 'すべてのフェーズ';
 
   @override
+  String get filterByDaw => 'DAWでフィルター';
+
+  @override
+  String get allDaws => 'すべてのDAW';
+
+  @override
   String get daw => 'DAW';
 
   @override

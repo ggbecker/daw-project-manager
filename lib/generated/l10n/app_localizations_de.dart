@@ -365,6 +365,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get allPhases => 'Alle Phasen';
 
   @override
+  String get filterByDaw => 'Nach DAW filtern';
+
+  @override
+  String get allDaws => 'Alle DAWs';
+
+  @override
   String get daw => 'DAW';
 
   @override

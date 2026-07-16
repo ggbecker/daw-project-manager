@@ -201,6 +201,8 @@
   "filters": "フィルター",
   "filterByPhase": "フェーズでフィルター",
   "allPhases": "すべてのフェーズ",
+  "filterByDaw": "DAWでフィルター",
+  "allDaws": "すべてのDAW",
   "daw": "DAW",
   "lastModifiedColumn": "最終更新",
   "actions": "アクション",
