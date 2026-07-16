@@ -83,6 +83,10 @@ void main() {
       expect(await dawTypeFor('.bun'), 'Sonnar');
     });
 
+    test('.luna → LUNA', () async {
+      expect(await dawTypeFor('.luna'), 'LUNA');
+    });
+
     test('unknown extension → null', () async {
       expect(await dawTypeFor('.unknown'), isNull);
     });

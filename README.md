@@ -22,6 +22,7 @@ Supports **macOS**, **Windows**, **Android**, and **iOS**. Primary development t
 | Reaper | `.rpp` |
 | Studio One | `.song` |
 | Tracktion Waveform | `.tracktionedit`, `.tracktion` |
+| Universal Audio LUNA | `.luna` |
 
 ---
 

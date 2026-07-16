@@ -3536,6 +3536,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       'cakewalk': 'cakewalk.png',
       'cakewalk sonar': 'cakewalk.png',
       'sonar': 'cakewalk.png',
+      'luna': 'luna.png',
     };
     
     // Try exact match first

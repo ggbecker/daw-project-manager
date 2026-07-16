@@ -134,6 +134,8 @@ class MetadataExtractor {
       case '.wrk':
       case '.bun':
         return 'Sonnar';
+      case '.luna':
+        return 'LUNA';
       default:
         return null;
     }
