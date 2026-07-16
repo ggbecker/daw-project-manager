@@ -26,7 +26,7 @@ import 'widgets/language_switcher.dart';
 // The demo-data generator/remover is normally a debug-only tool, but it's
 // temporarily enabled in release builds too so it can be used to seed a
 // screenshot-ready profile from a release build.
-const bool _showTestingDatabaseTools = true;
+const bool _showTestingDatabaseTools = kDebugMode;
 
 class ProfileManagerPage extends ConsumerStatefulWidget {
   const ProfileManagerPage({super.key});
