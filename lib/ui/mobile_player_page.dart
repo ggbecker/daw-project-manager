@@ -426,12 +426,6 @@ class _MobilePlayerPageState extends ConsumerState<MobilePlayerPage> {
         actions: [
           if (playerState.currentProject != null)
             IconButton(
-              icon: const Icon(Icons.playlist_add_rounded),
-              tooltip: l10n.addTaskAtTimestamp,
-              onPressed: _openAddTodoSheet,
-            ),
-          if (playerState.currentProject != null)
-            IconButton(
               icon: const Icon(Icons.info_outline_rounded),
               tooltip: l10n.projectDetails,
               onPressed: () => Navigator.of(context).push(
@@ -585,6 +579,16 @@ class _MobilePlayerPageState extends ConsumerState<MobilePlayerPage> {
                               const SizedBox(width: 48),
 
                             const Spacer(),
+
+                            // Add task at timestamp (left of Share)
+                            if (playerState.currentProject != null)
+                              IconButton(
+                                iconSize: 22,
+                                tooltip: l10n.addTaskAtTimestamp,
+                                icon: const Icon(Icons.playlist_add_rounded),
+                                color: colorScheme.onSurface,
+                                onPressed: _openAddTodoSheet,
+                              ),
 
                             // Share / Download / Playlist (direita)
                             if (currentPath != null &&
