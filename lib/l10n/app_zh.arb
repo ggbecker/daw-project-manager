@@ -1006,10 +1006,22 @@
     }
   },
   "generateTestingDatabase": "生成测试数据库",
-  "generateTestingDatabaseMessage": "这将用示例项目和发布填充数据库以进行测试。继续吗？",
-  "testingDatabaseGenerated": "测试数据库生成成功！",
+  "generateTestingDatabaseMessage": "这将创建（或刷新）一个专用的“Demo — Screenshots”配置文件，其中包含涵盖所有受支持 DAW 的大量示例项目、发行版和播放列表，并切换到该配置文件。您的其他配置文件不会受到影响。继续吗？",
+  "testingDatabaseGenerated": "演示配置文件已就绪 — 已切换！",
   "failedToGenerateTestingDatabase": "生成测试数据库失败: {error}",
   "@failedToGenerateTestingDatabase": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "removeTestingDatabase": "删除测试数据库",
+  "removeTestingDatabaseMessage": "这将永久删除“Demo — Screenshots”配置文件及其所有示例项目、发行版、播放列表和预览音频文件。继续吗？",
+  "testingDatabaseRemoved": "演示数据已删除。",
+  "noTestingDatabaseFound": "未找到可删除的演示数据。",
+  "failedToRemoveTestingDatabase": "删除测试数据库失败: {error}",
+  "@failedToRemoveTestingDatabase": {
     "placeholders": {
       "error": {
         "type": "String"

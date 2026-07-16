@@ -1642,15 +1642,33 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get generateTestingDatabaseMessage =>
-      'Questo popolerà il database con progetti e pubblicazioni di esempio per i test. Continuare?';
+      'Questo creerà (o aggiornerà) un profilo dedicato \"Demo — Screenshots\" pieno di una vasta varietà di progetti, pubblicazioni e playlist di esempio per tutte le DAW supportate, e passerà a esso. I tuoi altri profili rimarranno invariati. Continuare?';
 
   @override
   String get testingDatabaseGenerated =>
-      'Database di test generato con successo!';
+      'Profilo demo pronto — passato ad esso!';
 
   @override
   String failedToGenerateTestingDatabase(String error) {
     return 'Errore nella generazione del database di test: $error';
+  }
+
+  @override
+  String get removeTestingDatabase => 'Rimuovi database di test';
+
+  @override
+  String get removeTestingDatabaseMessage =>
+      'Questo eliminerà definitivamente il profilo \"Demo — Screenshots\" e tutti i suoi progetti, pubblicazioni, playlist e file audio di anteprima di esempio. Continuare?';
+
+  @override
+  String get testingDatabaseRemoved => 'Dati demo rimossi.';
+
+  @override
+  String get noTestingDatabaseFound => 'Nessun dato demo trovato da rimuovere.';
+
+  @override
+  String failedToRemoveTestingDatabase(String error) {
+    return 'Errore nella rimozione del database di test: $error';
   }
 
   @override

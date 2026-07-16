@@ -1647,14 +1647,34 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get generateTestingDatabaseMessage =>
-      'Dies wird die Datenbank mit Beispielprojekten und Veröffentlichungen für Tests füllen. Fortfahren?';
+      'Dies erstellt (oder aktualisiert) ein eigenes Profil \"Demo — Screenshots\" mit einer großen Vielfalt an Beispielprojekten, Veröffentlichungen und Playlists für alle unterstützten DAWs und wechselt zu diesem Profil. Ihre anderen Profile bleiben unverändert. Fortfahren?';
 
   @override
-  String get testingDatabaseGenerated => 'Testdatenbank erfolgreich generiert!';
+  String get testingDatabaseGenerated =>
+      'Demo-Profil bereit — dorthin gewechselt!';
 
   @override
   String failedToGenerateTestingDatabase(String error) {
     return 'Fehler beim Generieren der Testdatenbank: $error';
+  }
+
+  @override
+  String get removeTestingDatabase => 'Testdatenbank entfernen';
+
+  @override
+  String get removeTestingDatabaseMessage =>
+      'Dies löscht das Profil \"Demo — Screenshots\" sowie alle zugehörigen Beispielprojekte, Veröffentlichungen, Playlists und Vorschau-Audiodateien dauerhaft. Fortfahren?';
+
+  @override
+  String get testingDatabaseRemoved => 'Demo-Daten entfernt.';
+
+  @override
+  String get noTestingDatabaseFound =>
+      'Keine Demo-Daten zum Entfernen gefunden.';
+
+  @override
+  String failedToRemoveTestingDatabase(String error) {
+    return 'Fehler beim Entfernen der Testdatenbank: $error';
   }
 
   @override

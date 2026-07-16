@@ -3,12 +3,14 @@ import 'package:hive_ce/hive.dart';
 import 'package:daw_project_manager/models/ignored_path.dart';
 import 'package:daw_project_manager/models/music_project.dart';
 import 'package:daw_project_manager/models/playlist.dart';
+import 'package:daw_project_manager/models/profile.dart';
 import 'package:daw_project_manager/models/project_event.dart';
 import 'package:daw_project_manager/models/release.dart';
 import 'package:daw_project_manager/models/release_file.dart';
 import 'package:daw_project_manager/models/scan_root.dart';
 import 'package:daw_project_manager/models/todo_item.dart';
 import 'package:daw_project_manager/models/todo_template.dart';
+import 'package:daw_project_manager/repository/profile_repository.dart';
 import 'package:daw_project_manager/repository/project_repository.dart';
 
 /// Manages Hive lifecycle for unit tests.
@@ -47,11 +49,20 @@ class HiveTestHelper {
     if (!Hive.isAdapterRegistered(2)) Hive.registerAdapter(ScanRootAdapter());
     if (!Hive.isAdapterRegistered(3)) Hive.registerAdapter(ReleaseAdapter());
     if (!Hive.isAdapterRegistered(4)) Hive.registerAdapter(ReleaseFileAdapter());
+    if (!Hive.isAdapterRegistered(5)) Hive.registerAdapter(ProfileAdapter());
     if (!Hive.isAdapterRegistered(6)) Hive.registerAdapter(TodoItemAdapter());
     if (!Hive.isAdapterRegistered(7)) Hive.registerAdapter(IgnoredPathAdapter());
     if (!Hive.isAdapterRegistered(8)) Hive.registerAdapter(PlaylistAdapter());
     if (!Hive.isAdapterRegistered(9)) Hive.registerAdapter(TodoTemplateAdapter());
     if (!Hive.isAdapterRegistered(11)) Hive.registerAdapter(ProjectEventAdapter());
+  }
+
+  /// Creates a [ProfileRepository] backed by the same temp Hive instance,
+  /// for tests that need multi-profile behavior (e.g. demo data generation).
+  static Future<ProfileRepository> createProfileRepository() async {
+    final profilesBox = await Hive.openBox<Profile>(ProfileRepository.profilesBoxName);
+    final settingsBox = await Hive.openBox<String>('settings');
+    return ProfileRepository(profilesBox: profilesBox, settingsBox: settingsBox);
   }
 
   static Future<ProjectRepository> createRepository({

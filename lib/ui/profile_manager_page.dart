@@ -1,19 +1,14 @@
 import 'dart:io';
-import 'dart:math' show sin, pi;
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as path;
-import 'package:uuid/uuid.dart';
 import 'widgets/desktop_title_bar.dart';
 import '../models/profile.dart';
-import '../models/music_project.dart';
-import '../models/release.dart';
-import '../models/todo_item.dart';
 import '../providers/providers.dart';
 import '../repository/project_repository.dart';
+import '../services/demo_data_service.dart';
 import '../services/scanner_service.dart';
 import '../utils/app_paths.dart';
 import '../utils/mobile_utils.dart';
@@ -26,6 +21,12 @@ import 'google_drive_sync_page.dart';
 import 'widgets/theme_switcher.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'widgets/language_switcher.dart';
+
+// TODO: Set this back to `kDebugMode` once promotional screenshots are done.
+// The demo-data generator/remover is normally a debug-only tool, but it's
+// temporarily enabled in release builds too so it can be used to seed a
+// screenshot-ready profile from a release build.
+const bool _showTestingDatabaseTools = true;
 
 class ProfileManagerPage extends ConsumerStatefulWidget {
   const ProfileManagerPage({super.key});
@@ -739,44 +740,10 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
     }
   }
 
-  // Pentatonic-scale frequencies (A2–D4) used to give each test project a distinct audible pitch.
-  static const _testFrequencies = [110.0, 130.8, 146.8, 164.8, 196.0, 220.0, 261.6, 293.7];
-
-  /// Generates a minimal valid mono PCM WAV with a sine wave tone and short fade in/out.
-  static Uint8List _generateTestWavBytes({required double frequencyHz, int durationSeconds = 3}) {
-    const sampleRate = 22050;
-    const bitsPerSample = 16;
-    final numSamples = sampleRate * durationSeconds;
-    final dataSize = numSamples * 2;
-    final buffer = ByteData(44 + dataSize);
-    int o = 0;
-
-    void ascii(String s) { for (final c in s.codeUnits) { buffer.setUint8(o++, c); } }
-    void u16(int v) { buffer.setUint16(o, v, Endian.little); o += 2; }
-    void u32(int v) { buffer.setUint32(o, v, Endian.little); o += 4; }
-
-    ascii('RIFF'); u32(36 + dataSize); ascii('WAVE');
-    ascii('fmt '); u32(16); u16(1); u16(1); u32(sampleRate); u32(sampleRate * 2); u16(2); u16(bitsPerSample);
-    ascii('data'); u32(dataSize);
-
-    const fadeLen = 2000;
-    for (int i = 0; i < numSamples; i++) {
-      final fade = (i < fadeLen)
-          ? i / fadeLen
-          : (i > numSamples - fadeLen)
-              ? (numSamples - i) / fadeLen
-              : 1.0;
-      final sample = (sin(2 * pi * frequencyHz * i / sampleRate) * 12000 * fade)
-          .round()
-          .clamp(-32768, 32767);
-      buffer.setInt16(o, sample, Endian.little);
-      o += 2;
-    }
-
-    return buffer.buffer.asUint8List();
-  }
-
-  /// Generate testing database with sample projects and releases
+  /// Creates (or refreshes) a dedicated demo profile with a large, varied
+  /// catalog of fake projects/releases/playlists for promotional
+  /// screenshots, and switches to it — the user's real data is never
+  /// touched, since it lives in a separate profile-scoped Hive box set.
   Future<void> _generateTestingDatabase() async {
     // Show confirmation dialog
     final confirmed = await showDialog<bool>(
@@ -801,224 +768,19 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
 
     try {
       final profileRepo = await ref.read(profileRepositoryProvider.future);
-      final currentProfileId = profileRepo.getCurrentProfileId();
-      
-      if (currentProfileId == null) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.noProfileSelected)),
-          );
-        }
-        return;
-      }
 
-      final projectRepo = await ref.read(repositoryProvider.future);
-      final uuid = const Uuid();
-      final now = DateTime.now();
+      final demoProfile = await DemoDataService().generate(profileRepo);
+      await profileRepo.setCurrentProfileId(demoProfile.id);
 
-      // Sample project data
-      // Valid status values: 'Idea', 'Arranging', 'Mixing', 'Mastering', 'Finished'
-      final sampleProjects = [
-        {
-          'name': 'Midnight Dreams',
-          'daw': 'Ableton Live',
-          'extension': '.als',
-          'status': 'Arranging',
-          'bpm': 128.0,
-          'key': 'Am',
-          'notes': 'Deep house track with atmospheric pads. Working on the breakdown section.',
-          'todos': ['Add vocal samples', 'Mixdown', 'Master track'],
-          'hidden': false,
-          'hasPreview': true,
-        },
-        {
-          'name': 'Summer Vibes',
-          'daw': 'FL Studio',
-          'extension': '.flp',
-          'status': 'Idea',
-          'bpm': 120.0,
-          'key': 'C major',
-          'notes': 'Upbeat tropical house track. Need to add more percussion elements.',
-          'todos': ['Create melody variations', 'Add bassline'],
-          'hidden': false,
-          'hasPreview': false,
-        },
-        {
-          'name': 'Dark Energy',
-          'daw': 'Logic Pro',
-          'extension': '.logicx',
-          'status': 'Finished',
-          'bpm': 140.0,
-          'key': 'Dm',
-          'notes': 'Aggressive techno track. Final mix completed.',
-          'todos': ['Upload to SoundCloud'],
-          'hidden': false,
-          'hasPreview': true,
-        },
-        {
-          'name': 'Ambient Space',
-          'daw': 'Ableton Live',
-          'extension': '.als',
-          'status': 'Mixing',
-          'bpm': 90.0,
-          'key': 'F#m',
-          'notes': 'Experimental ambient piece with field recordings.',
-          'todos': ['Record more samples', 'Add reverb automation'],
-          'hidden': false,
-          'hasPreview': true,
-        },
-        {
-          'name': 'Old Project',
-          'daw': 'Cubase',
-          'extension': '.cpr',
-          'status': 'Idea',
-          'bpm': 110.0,
-          'key': 'G major',
-          'notes': 'This is a hidden project for testing.',
-          'todos': [],
-          'hidden': true,
-          'hasPreview': false,
-        },
-        {
-          'name': 'Bass Heavy',
-          'daw': 'FL Studio',
-          'extension': '.flp',
-          'status': 'Arranging',
-          'bpm': 150.0,
-          'key': 'Bb minor',
-          'notes': 'Dubstep track with heavy bass drops.',
-          'todos': ['Design bass sounds', 'Create build-up', 'Mix low end'],
-          'hidden': false,
-          'hasPreview': true,
-        },
-        {
-          'name': 'Chill Out',
-          'daw': 'Ableton Live',
-          'extension': '.als',
-          'status': 'Idea',
-          'bpm': 85.0,
-          'key': 'E major',
-          'notes': 'Relaxing downtempo track.',
-          'todos': ['Add piano melody'],
-          'hidden': false,
-          'hasPreview': false,
-        },
-        {
-          'name': 'Energy Boost',
-          'daw': 'Logic Pro',
-          'extension': '.logicx',
-          'status': 'Mastering',
-          'bpm': 132.0,
-          'key': 'A major',
-          'notes': 'Uplifting progressive house track.',
-          'todos': ['Arrange full track', 'Add vocals'],
-          'hidden': false,
-          'hasPreview': true,
-        },
-      ];
-
-      // Create sample projects
-      final createdProjectIds = <String>[];
-      for (int i = 0; i < sampleProjects.length; i++) {
-        final data = sampleProjects[i];
-        final projectId = uuid.v4();
-        createdProjectIds.add(projectId);
-        
-        final createdAt = now.subtract(Duration(days: 30 - (i * 3)));
-        final updatedAt = now.subtract(Duration(days: i));
-        
-        final todos = (data['todos'] as List).map((text) => TodoItem(
-          id: uuid.v4(),
-          text: text.toString(),
-          completed: false,
-          createdAt: updatedAt,
-        )).toList();
-
-        final project = MusicProject(
-          id: projectId,
-          filePath: '/test/projects/${data['name']}${data['extension']}',
-          fileName: '${data['name']}${data['extension']}',
-          fileSizeBytes: 5000000 + (i * 1000000), // Varying file sizes
-          lastModifiedAt: updatedAt,
-          fileExtension: data['extension'] as String,
-          createdAt: createdAt,
-          updatedAt: updatedAt,
-          customDisplayName: data['name'] as String,
-          status: data['status'] as String,
-          bpm: data['bpm'] as double,
-          musicalKey: data['key'] as String,
-          notes: data['notes'] as String,
-          dawType: data['daw'] as String,
-          dawVersion: '11',
-          todos: todos,
-          hidden: data['hidden'] as bool,
-          fileCreatedAt: createdAt,
-        );
-
-        await projectRepo.projectsBox.put(projectId, project);
-
-        // Generate a WAV preview for projects that should have one
-        if (data['hasPreview'] == true) {
-          final previewSongsPath = await getPreviewSongsPath();
-          final safeName = (data['name'] as String).replaceAll(RegExp(r'[^a-zA-Z0-9]+'), '_');
-          final previewFileName = '${safeName}_preview.wav';
-          final previewFile = File(path.join(previewSongsPath, previewFileName));
-          final wavBytes = _generateTestWavBytes(
-            frequencyHz: _testFrequencies[i % _testFrequencies.length],
-          );
-          await previewFile.writeAsBytes(wavBytes);
-          await projectRepo.projectsBox.put(
-            projectId,
-            project.copyWith(
-              previewSongPath: previewFile.path,
-              previewSongFileName: previewFileName,
-            ),
-          );
-        }
-      }
-
-      // Create a sample release with some projects
-      if (createdProjectIds.length >= 3) {
-        final releaseId = uuid.v4();
-        final release = Release(
-          id: releaseId,
-          title: 'Test EP - Summer Collection',
-          releaseDate: now.add(const Duration(days: 30)),
-          description: 'A collection of summer-themed tracks for testing purposes.',
-          trackIds: [
-            createdProjectIds[0], // Midnight Dreams
-            createdProjectIds[1], // Summer Vibes
-            createdProjectIds[5], // Bass Heavy
-          ],
-          todos: [
-            TodoItem(
-              id: uuid.v4(),
-              text: 'Design cover art',
-              completed: false,
-              createdAt: now,
-            ),
-            TodoItem(
-              id: uuid.v4(),
-              text: 'Master all tracks',
-              completed: false,
-              createdAt: now,
-            ),
-            TodoItem(
-              id: uuid.v4(),
-              text: 'Upload to streaming platforms',
-              completed: false,
-              createdAt: now,
-            ),
-          ],
-        );
-
-        await projectRepo.releasesBox.put(releaseId, release);
-      }
-
-      // Invalidate providers to refresh UI
+      // Invalidate providers so the app picks up the demo profile immediately.
+      ref.invalidate(repositoryProvider);
       ref.invalidate(allProjectsStreamProvider);
       ref.invalidate(releasesProvider);
       ref.invalidate(scanRootsProvider);
+      ref.invalidate(currentProfileProvider);
+
+      await Future.delayed(const Duration(milliseconds: 100));
+      await ref.read(repositoryProvider.future);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1038,6 +800,68 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
         );
       }
       if (kDebugMode) print('Error generating testing database: $e');
+    }
+  }
+
+  /// Permanently deletes the "Demo — Screenshots" profile (if it exists),
+  /// including its generated preview audio files. If it was the active
+  /// profile, the app switches back to another one automatically.
+  Future<void> _removeTestingDatabase() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(AppLocalizations.of(context)!.removeTestingDatabase),
+        content: Text(AppLocalizations.of(context)!.removeTestingDatabaseMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade300),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(AppLocalizations.of(context)!.removeTestingDatabase),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      final profileRepo = await ref.read(profileRepositoryProvider.future);
+      final removed = await DemoDataService().remove(profileRepo);
+
+      // Invalidate providers in case the active profile changed as a result.
+      ref.invalidate(repositoryProvider);
+      ref.invalidate(allProjectsStreamProvider);
+      ref.invalidate(releasesProvider);
+      ref.invalidate(scanRootsProvider);
+      ref.invalidate(currentProfileProvider);
+
+      await Future.delayed(const Duration(milliseconds: 100));
+      await ref.read(repositoryProvider.future);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(removed
+                ? AppLocalizations.of(context)!.testingDatabaseRemoved
+                : AppLocalizations.of(context)!.noTestingDatabaseFound),
+            backgroundColor: removed ? Colors.green : null,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.failedToRemoveTestingDatabase(e.toString())),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      if (kDebugMode) print('Error removing testing database: $e');
     }
   }
 
@@ -1299,27 +1123,57 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
                       ),
                     ),
                   ],
-                  // Generate Testing Database button — debug builds only, all platforms
-                  if (kDebugMode) ...[
+                  // Generate/Remove Testing Database buttons — see _showTestingDatabaseTools above
+                  if (_showTestingDatabaseTools) ...[
                     const SizedBox(height: 24),
                     Card(
                       color: Theme.of(context).cardColor,
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
-                        child: Row(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            const Icon(Icons.science, size: 24),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                AppLocalizations.of(context)!.generateTestingDatabase,
-                                style: const TextStyle(fontSize: 16),
-                              ),
+                            Row(
+                              children: [
+                                const Icon(Icons.science, size: 24),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    AppLocalizations.of(context)!.generateTestingDatabase,
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                ),
+                                ElevatedButton.icon(
+                                  icon: const Icon(Icons.science, size: 18),
+                                  label: Text(AppLocalizations.of(context)!.generateTestingDatabase),
+                                  onPressed: _generateTestingDatabase,
+                                ),
+                              ],
                             ),
-                            ElevatedButton.icon(
-                              icon: const Icon(Icons.science, size: 18),
-                              label: Text(AppLocalizations.of(context)!.generateTestingDatabase),
-                              onPressed: _generateTestingDatabase,
+                            const Divider(height: 24),
+                            Row(
+                              children: [
+                                Icon(Icons.delete_sweep, size: 24, color: Colors.red.shade300),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    AppLocalizations.of(context)!.removeTestingDatabase,
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                ),
+                                OutlinedButton.icon(
+                                  icon: Icon(Icons.delete_sweep, size: 18, color: Colors.red.shade300),
+                                  label: Text(
+                                    AppLocalizations.of(context)!.removeTestingDatabase,
+                                    style: TextStyle(color: Colors.red.shade300),
+                                  ),
+                                  onPressed: _removeTestingDatabase,
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: Colors.red.shade300,
+                                    side: BorderSide(color: Colors.red.shade300),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),

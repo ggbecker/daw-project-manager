@@ -1588,14 +1588,33 @@ class AppLocalizationsZh extends AppLocalizations {
   String get generateTestingDatabase => '生成测试数据库';
 
   @override
-  String get generateTestingDatabaseMessage => '这将用示例项目和发布填充数据库以进行测试。继续吗？';
+  String get generateTestingDatabaseMessage =>
+      '这将创建（或刷新）一个专用的“Demo — Screenshots”配置文件，其中包含涵盖所有受支持 DAW 的大量示例项目、发行版和播放列表，并切换到该配置文件。您的其他配置文件不会受到影响。继续吗？';
 
   @override
-  String get testingDatabaseGenerated => '测试数据库生成成功！';
+  String get testingDatabaseGenerated => '演示配置文件已就绪 — 已切换！';
 
   @override
   String failedToGenerateTestingDatabase(String error) {
     return '生成测试数据库失败: $error';
+  }
+
+  @override
+  String get removeTestingDatabase => '删除测试数据库';
+
+  @override
+  String get removeTestingDatabaseMessage =>
+      '这将永久删除“Demo — Screenshots”配置文件及其所有示例项目、发行版、播放列表和预览音频文件。继续吗？';
+
+  @override
+  String get testingDatabaseRemoved => '演示数据已删除。';
+
+  @override
+  String get noTestingDatabaseFound => '未找到可删除的演示数据。';
+
+  @override
+  String failedToRemoveTestingDatabase(String error) {
+    return '删除测试数据库失败: $error';
   }
 
   @override

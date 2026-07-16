@@ -1006,10 +1006,22 @@
     }
   },
   "generateTestingDatabase": "Gerar Base de Dados de Teste",
-  "generateTestingDatabaseMessage": "Isso irá popular a base de dados com projetos e releases de exemplo para testes. Continuar?",
-  "testingDatabaseGenerated": "Base de dados de teste gerada com sucesso!",
+  "generateTestingDatabaseMessage": "Isso irá criar (ou atualizar) um perfil dedicado \"Demo — Screenshots\" preenchido com uma grande variedade de projetos, lançamentos e playlists de exemplo em todas as DAWs suportadas, e mudar para ele. Seus outros perfis permanecem inalterados. Continuar?",
+  "testingDatabaseGenerated": "Perfil de demonstração pronto — alternado para ele!",
   "failedToGenerateTestingDatabase": "Falha ao gerar base de dados de teste: {error}",
   "@failedToGenerateTestingDatabase": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "removeTestingDatabase": "Remover base de dados de teste",
+  "removeTestingDatabaseMessage": "Isso excluirá permanentemente o perfil \"Demo — Screenshots\" e todos os seus projetos, lançamentos, playlists e arquivos de áudio de pré-visualização de exemplo. Continuar?",
+  "testingDatabaseRemoved": "Dados de demonstração removidos.",
+  "noTestingDatabaseFound": "Nenhum dado de demonstração encontrado para remover.",
+  "failedToRemoveTestingDatabase": "Falha ao remover base de dados de teste: {error}",
+  "@failedToRemoveTestingDatabase": {
     "placeholders": {
       "error": {
         "type": "String"

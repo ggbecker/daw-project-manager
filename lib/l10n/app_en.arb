@@ -1755,17 +1755,29 @@
 }
   },
   "generateTestingDatabase": "Generate Testing Database",
-  "generateTestingDatabaseMessage": "This will populate the database with sample projects and releases for testing. Continue?",
-  "testingDatabaseGenerated": "Testing database generated successfully!",
+  "generateTestingDatabaseMessage": "This will create (or refresh) a dedicated \"Demo — Screenshots\" profile filled with a large variety of sample projects, releases, and playlists across every supported DAW, and switch you to it. Your other profiles are left untouched. Continue?",
+  "testingDatabaseGenerated": "Demo profile ready — switched to it!",
   "failedToGenerateTestingDatabase": "Failed to generate testing database: {error}",
   "@failedToGenerateTestingDatabase": {
     "placeholders": {
       "error": {
         "type": "String"
-      
+
 }
-    
+
 }
+  },
+  "removeTestingDatabase": "Remove Testing Database",
+  "removeTestingDatabaseMessage": "This will permanently delete the \"Demo — Screenshots\" profile and all of its sample projects, releases, playlists, and preview audio files. Continue?",
+  "testingDatabaseRemoved": "Demo data removed.",
+  "noTestingDatabaseFound": "No demo data found to remove.",
+  "failedToRemoveTestingDatabase": "Failed to remove testing database: {error}",
+  "@failedToRemoveTestingDatabase": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   },
   "playlists": "Playlists",
   "@playlists": {
