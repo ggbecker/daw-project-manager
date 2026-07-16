@@ -95,6 +95,11 @@ class DemoDataService {
 
   static const _playlistNames = ['Favorites', 'Late Night Session', 'Ready to Master'];
 
+  // Extensions that are actually directories ("package bundles") on disk
+  // rather than a single file — mirrors the special-casing in
+  // ScannerService/MixdownDetectorService for Logic Pro and LUNA.
+  static const _folderBasedExtensions = {'.logicx', '.luna'};
+
   // Pentatonic-scale frequencies (A2-D4) used to give each preview a distinct audible pitch.
   static const _previewFrequencies = [110.0, 130.8, 146.8, 164.8, 196.0, 220.0, 261.6, 293.7];
 
@@ -105,11 +110,18 @@ class DemoDataService {
   /// catalog spanning every supported DAW and phase, and returns the profile.
   ///
   /// [previewSongsPathProvider] defaults to the real [getPreviewSongsPath]
-  /// (which touches `path_provider`/the OS app-data dir); tests inject a
-  /// provider that resolves inside their own temp directory instead.
+  /// and [demoFilesPathProvider] to the real [getDemoProjectsPath] (both
+  /// touch `path_provider`/the OS app-data dir); tests inject providers that
+  /// resolve inside their own temp directory instead.
+  ///
+  /// Every generated project gets a real placeholder on disk at its
+  /// `filePath` (an empty file, or an empty directory for package-bundle
+  /// DAWs like Logic Pro/LUNA) so the app doesn't show a "source file not
+  /// found" warning for demo projects.
   Future<Profile> generate(
     ProfileRepository profileRepo, {
     Future<String> Function() previewSongsPathProvider = getPreviewSongsPath,
+    Future<String> Function() demoFilesPathProvider = getDemoProjectsPath,
   }) async {
     final existing = profileRepo
         .getAllProfiles()
@@ -127,6 +139,7 @@ class DemoDataService {
 
     final now = DateTime.now();
     final previewSongsPath = await previewSongsPathProvider();
+    final demoFilesPath = await demoFilesPathProvider();
 
     const projectCount = 30;
     final projects = <MusicProject>[];
@@ -167,10 +180,18 @@ class DemoDataService {
       final hasPreview = i % 2 == 0;
       final projectId = _uuid.v4();
 
+      final fileName = '$name${daw.extension}';
+      final filePath = path.join(demoFilesPath, fileName);
+      if (_folderBasedExtensions.contains(daw.extension)) {
+        await Directory(filePath).create(recursive: true);
+      } else {
+        await File(filePath).create(recursive: true);
+      }
+
       var project = MusicProject(
         id: projectId,
-        filePath: '/Demo Projects/$name${daw.extension}',
-        fileName: '$name${daw.extension}',
+        filePath: filePath,
+        fileName: fileName,
         fileSizeBytes: 3000000 + i * 250000,
         lastModifiedAt: updatedAt,
         fileExtension: daw.extension,
@@ -300,14 +321,21 @@ class DemoDataService {
     return demoProfile;
   }
 
-  /// Deletes all generated preview audio files and empties the demo
-  /// profile's boxes, then removes the profile itself (unless it's the
-  /// user's only remaining profile, in which case it's just left empty —
-  /// the app always requires at least one profile to exist).
+  /// Deletes all generated preview audio files and placeholder project
+  /// files/folders, empties the demo profile's boxes, then removes the
+  /// profile itself (unless it's the user's only remaining profile, in
+  /// which case it's just left empty — the app always requires at least
+  /// one profile to exist).
+  ///
+  /// [demoFilesPathProvider] defaults to the real [getDemoProjectsPath];
+  /// tests inject a provider that resolves inside their own temp directory.
   ///
   /// Returns `true` if a demo profile was found and removed, `false` if
   /// there was nothing to remove.
-  Future<bool> remove(ProfileRepository profileRepo) async {
+  Future<bool> remove(
+    ProfileRepository profileRepo, {
+    Future<String> Function() demoFilesPathProvider = getDemoProjectsPath,
+  }) async {
     final existing = profileRepo
         .getAllProfiles()
         .where((p) => p.name == demoProfileName);
@@ -327,6 +355,18 @@ class DemoDataService {
             // Non-critical — leftover preview files are harmless.
           }
         }
+      }
+    }
+
+    // The demo-files directory is used exclusively by this service (unlike
+    // preview_songs, which real projects also write into), so it's safe to
+    // delete wholesale rather than walking each project's placeholder.
+    final demoFilesDir = Directory(await demoFilesPathProvider());
+    if (await demoFilesDir.exists()) {
+      try {
+        await demoFilesDir.delete(recursive: true);
+      } catch (_) {
+        // Non-critical — leftover placeholder files are harmless.
       }
     }
 

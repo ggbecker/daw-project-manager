@@ -24,6 +24,12 @@ void main() {
     return dir.path;
   }
 
+  Future<String> fakeDemoFilesPath() async {
+    final dir = Directory(p.join(tempDir.path, 'demo_projects'));
+    if (!await dir.exists()) await dir.create(recursive: true);
+    return dir.path;
+  }
+
   setUp(() async {
     tempDir = await HiveTestHelper.setUp();
     profileRepo = await HiveTestHelper.createProfileRepository();
@@ -38,6 +44,7 @@ void main() {
       final profile = await DemoDataService().generate(
         profileRepo,
         previewSongsPathProvider: fakePreviewSongsPath,
+        demoFilesPathProvider: fakeDemoFilesPath,
       );
 
       expect(profile.name, DemoDataService.demoProfileName);
@@ -48,6 +55,7 @@ void main() {
       final first = await DemoDataService().generate(
         profileRepo,
         previewSongsPathProvider: fakePreviewSongsPath,
+        demoFilesPathProvider: fakeDemoFilesPath,
       );
       final firstProjects = await Hive.openBox<MusicProject>('${first.id}_projects');
       final firstCount = firstProjects.length;
@@ -56,6 +64,7 @@ void main() {
       final second = await DemoDataService().generate(
         profileRepo,
         previewSongsPathProvider: fakePreviewSongsPath,
+        demoFilesPathProvider: fakeDemoFilesPath,
       );
 
       expect(second.id, first.id);
@@ -69,6 +78,7 @@ void main() {
       final profile = await DemoDataService().generate(
         profileRepo,
         previewSongsPathProvider: fakePreviewSongsPath,
+        demoFilesPathProvider: fakeDemoFilesPath,
       );
       final projects = await Hive.openBox<MusicProject>('${profile.id}_projects');
 
@@ -86,10 +96,52 @@ void main() {
       expect(statuses, {'Idea', 'Arranging', 'Mixing', 'Mastering', 'Finished'});
     });
 
+    test('every project has a real placeholder on disk at its filePath', () async {
+      final profile = await DemoDataService().generate(
+        profileRepo,
+        previewSongsPathProvider: fakePreviewSongsPath,
+        demoFilesPathProvider: fakeDemoFilesPath,
+      );
+      final projects = await Hive.openBox<MusicProject>('${profile.id}_projects');
+
+      for (final project in projects.values) {
+        final existsAsFile = File(project.filePath).existsSync();
+        final existsAsDirectory = Directory(project.filePath).existsSync();
+        expect(existsAsFile || existsAsDirectory, isTrue,
+            reason: '${project.filePath} should exist on disk');
+      }
+    });
+
+    test('package-bundle DAWs (Logic Pro, LUNA) get a real directory, not a file', () async {
+      final profile = await DemoDataService().generate(
+        profileRepo,
+        previewSongsPathProvider: fakePreviewSongsPath,
+        demoFilesPathProvider: fakeDemoFilesPath,
+      );
+      final projects = await Hive.openBox<MusicProject>('${profile.id}_projects');
+
+      final bundleProjects = projects.values
+          .where((p) => p.fileExtension == '.logicx' || p.fileExtension == '.luna');
+      expect(bundleProjects, isNotEmpty);
+      for (final project in bundleProjects) {
+        expect(Directory(project.filePath).existsSync(), isTrue,
+            reason: '${project.filePath} (${project.fileExtension}) should be a directory');
+        expect(File(project.filePath).existsSync(), isFalse);
+      }
+
+      final fileProjects = projects.values.where((p) => p.fileExtension == '.als');
+      expect(fileProjects, isNotEmpty);
+      for (final project in fileProjects) {
+        expect(File(project.filePath).existsSync(), isTrue,
+            reason: '${project.filePath} (${project.fileExtension}) should be a file');
+      }
+    });
+
     test('every release trackId resolves to a generated project', () async {
       final profile = await DemoDataService().generate(
         profileRepo,
         previewSongsPathProvider: fakePreviewSongsPath,
+        demoFilesPathProvider: fakeDemoFilesPath,
       );
       final projects = await Hive.openBox<MusicProject>('${profile.id}_projects');
       final releases = await Hive.openBox<Release>('${profile.id}_releases');
@@ -108,6 +160,7 @@ void main() {
       final profile = await DemoDataService().generate(
         profileRepo,
         previewSongsPathProvider: fakePreviewSongsPath,
+        demoFilesPathProvider: fakeDemoFilesPath,
       );
       final events = await Hive.openBox<ProjectEvent>('${profile.id}_events');
       expect(events.values, isNotEmpty);
@@ -135,6 +188,7 @@ void main() {
       await DemoDataService().generate(
         profileRepo,
         previewSongsPathProvider: fakePreviewSongsPath,
+        demoFilesPathProvider: fakeDemoFilesPath,
       );
 
       expect(realRepo.projectsBox.length, 1);
@@ -155,6 +209,7 @@ void main() {
       await DemoDataService().generate(
         profileRepo,
         previewSongsPathProvider: fakePreviewSongsPath,
+        demoFilesPathProvider: fakeDemoFilesPath,
       );
 
       expect(templatesBox.length, 1);
@@ -164,7 +219,7 @@ void main() {
 
   group('DemoDataService.remove', () {
     test('returns false when no demo profile exists', () async {
-      final removed = await DemoDataService().remove(profileRepo);
+      final removed = await DemoDataService().remove(profileRepo, demoFilesPathProvider: fakeDemoFilesPath);
       expect(removed, isFalse);
     });
 
@@ -173,9 +228,10 @@ void main() {
       final demoProfile = await DemoDataService().generate(
         profileRepo,
         previewSongsPathProvider: fakePreviewSongsPath,
+        demoFilesPathProvider: fakeDemoFilesPath,
       );
 
-      final removed = await DemoDataService().remove(profileRepo);
+      final removed = await DemoDataService().remove(profileRepo, demoFilesPathProvider: fakeDemoFilesPath);
 
       expect(removed, isTrue);
       expect(profileRepo.getAllProfiles().any((p) => p.id == demoProfile.id), isFalse);
@@ -186,9 +242,10 @@ void main() {
       final demoProfile = await DemoDataService().generate(
         profileRepo,
         previewSongsPathProvider: fakePreviewSongsPath,
+        demoFilesPathProvider: fakeDemoFilesPath,
       );
 
-      final removed = await DemoDataService().remove(profileRepo);
+      final removed = await DemoDataService().remove(profileRepo, demoFilesPathProvider: fakeDemoFilesPath);
 
       expect(removed, isTrue);
       expect(profileRepo.getAllProfiles().length, 1);
@@ -201,12 +258,13 @@ void main() {
       await DemoDataService().generate(
         profileRepo,
         previewSongsPathProvider: fakePreviewSongsPath,
+        demoFilesPathProvider: fakeDemoFilesPath,
       );
       final previewDir = Directory(p.join(tempDir.path, 'previews'));
       final filesBefore = previewDir.listSync().whereType<File>().toList();
       expect(filesBefore, isNotEmpty);
 
-      await DemoDataService().remove(profileRepo);
+      await DemoDataService().remove(profileRepo, demoFilesPathProvider: fakeDemoFilesPath);
 
       final filesAfter = previewDir.listSync().whereType<File>().toList();
       expect(filesAfter, isEmpty);
@@ -221,11 +279,28 @@ void main() {
       await DemoDataService().generate(
         profileRepo,
         previewSongsPathProvider: fakePreviewSongsPath,
+        demoFilesPathProvider: fakeDemoFilesPath,
       );
-      await DemoDataService().remove(profileRepo);
+      await DemoDataService().remove(profileRepo, demoFilesPathProvider: fakeDemoFilesPath);
 
       expect(realRepo.projectsBox.length, 1);
       expect(realRepo.getById('real-project-1'), isNotNull);
+    });
+
+    test('deletes the placeholder project files/folders directory from disk', () async {
+      await profileRepo.createProfile('Real Profile');
+      await DemoDataService().generate(
+        profileRepo,
+        previewSongsPathProvider: fakePreviewSongsPath,
+        demoFilesPathProvider: fakeDemoFilesPath,
+      );
+      final demoFilesDir = Directory(p.join(tempDir.path, 'demo_projects'));
+      expect(demoFilesDir.existsSync(), isTrue);
+      expect(demoFilesDir.listSync(), isNotEmpty);
+
+      await DemoDataService().remove(profileRepo, demoFilesPathProvider: fakeDemoFilesPath);
+
+      expect(demoFilesDir.existsSync(), isFalse);
     });
   });
 }
