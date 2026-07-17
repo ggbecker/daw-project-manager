@@ -65,6 +65,53 @@ void main() {
       }
     });
 
+    test(
+      'returns null when currentPath is a Drive-download cache file, even if a '
+      'newer file sits next to it (belonging to a different project)',
+      () async {
+        // Regression: GoogleDriveSyncService.downloadPreviewSongFile writes every
+        // project's downloaded preview into one shared "preview_songs" directory,
+        // named "<projectId>_preview.<ext>". Before this guard, playing project A
+        // right after project B's preview was (re)downloaded in the same sync pass
+        // would scan that shared folder, see project B's fresher file, and offer to
+        // replace project A's preview with it — a completely unrelated project's file.
+        final dir = await Directory.systemTemp.createTemp('mixdown_drive_cache_');
+        try {
+          final projectA = File(
+            '${dir.path}/3fa85f64-5717-4562-b3fc-2c963f66afa6_preview.mp3',
+          );
+          final projectB = File(
+            '${dir.path}/7c9e6679-7425-40de-944b-e07fc1f90ae7_preview.mp3',
+          );
+          await projectA.create();
+          await projectB.create();
+          projectA.setLastModifiedSync(DateTime(2024, 1, 1));
+          projectB.setLastModifiedSync(DateTime(2025, 1, 1)); // freshly re-downloaded
+
+          final result = MixdownDetectorService.findNewerFileInSameFolder(projectA.path);
+          expect(result, isNull);
+        } finally {
+          await dir.delete(recursive: true);
+        }
+      },
+    );
+
+    test('is case-insensitive when recognizing a Drive-download cache filename', () async {
+      final dir = await Directory.systemTemp.createTemp('mixdown_drive_cache_ci_');
+      try {
+        final current = File('${dir.path}/3FA85F64-5717-4562-B3FC-2C963F66AFA6_preview.wav');
+        final other = File('${dir.path}/other.wav');
+        await current.create();
+        await other.create();
+        current.setLastModifiedSync(DateTime(2024, 1, 1));
+        other.setLastModifiedSync(DateTime(2025, 1, 1));
+
+        expect(MixdownDetectorService.findNewerFileInSameFolder(current.path), isNull);
+      } finally {
+        await dir.delete(recursive: true);
+      }
+    });
+
     test('returns null when the newest file matches ignoredPath', () async {
       final dir = await Directory.systemTemp.createTemp('mixdown_ignored_');
       try {
