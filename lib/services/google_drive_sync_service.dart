@@ -2083,6 +2083,18 @@ class GoogleDriveSyncService {
     return _mergeHashCache[filePath] ??= await _calculateFileHash(filePath);
   }
 
+  /// Returns the basename of [filePath] to use as a preview song's display name,
+  /// unless it looks like one of our own Drive-download filenames
+  /// (`<uuid>_preview.<ext>`) — in which case there is no real original name to
+  /// recover from it and null is returned instead. Used as the fallback when
+  /// restoring a backup that predates the `previewSongFileNames` manifest map,
+  /// so a UUID never gets stored as a project's "original" preview filename.
+  String? _realPreviewFileNameOrNull(String? filePath) {
+    if (filePath == null) return null;
+    final basename = path.basename(filePath);
+    return _uuidPreviewRe.hasMatch(basename) ? null : basename;
+  }
+
   /// Returns true if [localProject.previewSongAutoPath] already points at a file on
   /// disk whose hash matches [expectedHash] (falling back to the project's last
   /// recorded [MusicProject.uploadedPreviewSongHash] when [expectedHash] is
@@ -3632,10 +3644,11 @@ class GoogleDriveSyncService {
                     // Fallback for old backups that predate the previewSongFileNames map:
                     // use the basename of the remote project's path (the real filename on
                     // the uploading machine) rather than showing a UUID filename.
-                    originalFileName ??= (remoteProject.previewSongPath != null &&
-                            !_isDriveFileReference(remoteProject.previewSongPath!))
-                        ? path.basename(remoteProject.previewSongPath!)
-                        : null;
+                    if (originalFileName == null &&
+                        remoteProject.previewSongPath != null &&
+                        !_isDriveFileReference(remoteProject.previewSongPath!)) {
+                      originalFileName = _realPreviewFileNameOrNull(remoteProject.previewSongPath);
+                    }
                     if (previewSongHashes != null && previewSongHashes.containsKey(remoteProject.id)) {
                       expectedHash = previewSongHashes[remoteProject.id] as String;
                     }
@@ -3733,7 +3746,7 @@ class GoogleDriveSyncService {
                       if (previewSongFileName == null &&
                           remoteProject.previewSongPath != null &&
                           !_isDriveFileReference(remoteProject.previewSongPath!)) {
-                        previewSongFileName = path.basename(remoteProject.previewSongPath!);
+                        previewSongFileName = _realPreviewFileNameOrNull(remoteProject.previewSongPath);
                       }
                       if (previewSongHashes != null && previewSongHashes.containsKey(remoteProject.id)) {
                         uploadedPreviewSongHash = previewSongHashes[remoteProject.id] as String;
@@ -3982,7 +3995,7 @@ class GoogleDriveSyncService {
                       if (originalFileName == null &&
                           remoteProject.previewSongPath != null &&
                           !_isDriveFileReference(remoteProject.previewSongPath!)) {
-                        originalFileName = path.basename(remoteProject.previewSongPath!);
+                        originalFileName = _realPreviewFileNameOrNull(remoteProject.previewSongPath);
                       }
                       if (previewSongHashes != null && previewSongHashes.containsKey(remoteProject.id)) {
                         expectedHash = previewSongHashes[remoteProject.id] as String;
@@ -4708,6 +4721,11 @@ class GoogleDriveSyncService {
   Future<bool> autoPreviewAlreadyMatchesForTest(MusicProject localProject, String? expectedHash) =>
       _autoPreviewAlreadyMatches(localProject, expectedHash);
 
+  /// Test-only accessor for [_realPreviewFileNameOrNull].
+  @visibleForTesting
+  String? realPreviewFileNameOrNullForTest(String? filePath) =>
+      _realPreviewFileNameOrNull(filePath);
+
   Map<String, dynamic> _serializeRelease(Release release) {
     return {
       'id': release.id,
@@ -4872,10 +4890,11 @@ class GoogleDriveSyncService {
     if (previewSongFiles != null && previewSongFiles.containsKey(projectId)) {
       final driveFileId = previewSongFiles[projectId] as String;
       String? originalFileName = previewSongFileNames?[projectId] as String?;
-      originalFileName ??= (remoteProject.previewSongPath != null &&
-              !_isDriveFileReference(remoteProject.previewSongPath!))
-          ? path.basename(remoteProject.previewSongPath!)
-          : null;
+      if (originalFileName == null &&
+          remoteProject.previewSongPath != null &&
+          !_isDriveFileReference(remoteProject.previewSongPath!)) {
+        originalFileName = _realPreviewFileNameOrNull(remoteProject.previewSongPath);
+      }
       final expectedHash = previewSongHashes?[projectId] as String?;
       final fileExtension =
           originalFileName != null ? path.extension(originalFileName) : null;

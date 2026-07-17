@@ -461,4 +461,53 @@ void main() {
       );
     });
   });
+
+  group('GoogleDriveSyncService._realPreviewFileNameOrNull', () {
+    // Regression: when restoring a backup that predates the previewSongFileNames
+    // manifest map, mergeData() fell back to path.basename(remoteProject.previewSongPath)
+    // for the display name with no check on what that basename actually was. If the
+    // remote project's own previewSongPath was itself a previously-downloaded Drive
+    // copy (named "<uuid>_preview.<ext>" by downloadPreviewSongFile), that UUID name
+    // would be written into previewSongFileName and propagate through the whole sync
+    // mesh on every future re-upload (uploadDatabase prefers project.previewSongFileName
+    // over recomputing it). The dashboard's _displayFileName() already refuses to
+    // *show* a UUID name, but that only masked the bad data rather than preventing it
+    // from being stored. _realPreviewFileNameOrNull() closes the gap at the source, so
+    // all four merge/restore call sites that derive a name from a remote path can never
+    // write a UUID-shaped name into previewSongFileName in the first place.
+    late GoogleDriveSyncService service;
+
+    setUp(() {
+      service = GoogleDriveSyncService();
+    });
+
+    test('returns the basename for a real, non-UUID filename', () {
+      expect(
+        service.realPreviewFileNameOrNullForTest('/Users/artist/Live Sets/Bounces/mixdown_final.wav'),
+        'mixdown_final.wav',
+      );
+    });
+
+    test('returns null for a Drive-download-shaped UUID filename', () {
+      expect(
+        service.realPreviewFileNameOrNullForTest(
+          '/Users/artist/AppSupport/preview_songs/3fa85f64-5717-4562-b3fc-2c963f66afa6_preview.mp3',
+        ),
+        isNull,
+      );
+    });
+
+    test('is case-insensitive when matching the UUID pattern', () {
+      expect(
+        service.realPreviewFileNameOrNullForTest(
+          '/tmp/3FA85F64-5717-4562-B3FC-2C963F66AFA6_preview.wav',
+        ),
+        isNull,
+      );
+    });
+
+    test('returns null when the path itself is null', () {
+      expect(service.realPreviewFileNameOrNullForTest(null), isNull);
+    });
+  });
 }
