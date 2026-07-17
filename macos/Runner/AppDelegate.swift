@@ -36,7 +36,11 @@ class AppDelegate: FlutterAppDelegate {
 
   @objc private func handleShowWindowRequest() {
     DispatchQueue.main.async {
-      NSApp.activate(options: .activateIgnoringOtherApps)
+      if #available(macOS 14.0, *) {
+        NSApp.activate()
+      } else {
+        NSApp.activate(ignoringOtherApps: true)
+      }
       NSApplication.shared.windows.first?.makeKeyAndOrderFront(nil)
     }
   }

@@ -14,6 +14,17 @@ class MixdownDetectorService {
     '.wav', '.mp3', '.flac', '.aif', '.aiff', '.aac', '.m4a', '.ogg',
   };
 
+  // Matches this app's own Drive-download filenames — "<uuid>_preview.<ext>" —
+  // written by GoogleDriveSyncService.downloadPreviewSongFile into a single
+  // "preview_songs" cache directory shared by every project. That directory is
+  // not a per-project export folder, so a "same folder" scan must never run
+  // against it: it would surface other projects' downloaded previews as false
+  // "newer export found" hits.
+  static final RegExp _driveDownloadFileRe = RegExp(
+    r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}_preview\.',
+    caseSensitive: false,
+  );
+
   /// Per-DAW folder names to check, in priority order.
   /// Values match the `dawType` strings produced by metadata_extractor.dart.
   /// Exposed publicly so settings UI can explain the defaults to the user.
@@ -72,13 +83,16 @@ class MixdownDetectorService {
 
   /// Returns the newest audio file in the same directory as [currentPath] if it
   /// is strictly newer than [currentPath] itself and is a different file.
-  /// Returns null if [currentPath] is already the newest, doesn't exist, or on mobile.
+  /// Returns null if [currentPath] is already the newest, doesn't exist, is on
+  /// mobile, or lives in the shared Drive-download preview cache (that folder
+  /// holds every project's downloaded preview, not just this project's exports).
   ///
   /// [ignoredPath] is a path the user has previously rejected ("Keep Current").
   /// If the newest file matches it, the prompt is suppressed until a genuinely
   /// different (even newer) file appears.
   static File? findNewerFileInSameFolder(String currentPath, {String? ignoredPath}) {
     if (MobileUtils.isMobile()) return null;
+    if (_driveDownloadFileRe.hasMatch(p.basename(currentPath))) return null;
     final current = File(currentPath);
     if (!current.existsSync()) return null;
     final currentModified = current.lastModifiedSync();
