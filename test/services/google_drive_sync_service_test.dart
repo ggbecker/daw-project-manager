@@ -2,11 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:crypto/crypto.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:googleapis_auth/auth_io.dart' as auth_io;
 import 'package:hive_ce/hive.dart';
 import 'package:http/http.dart' as http;
+import 'package:path/path.dart' as path;
 import 'package:daw_project_manager/models/profile.dart';
 import 'package:daw_project_manager/repository/profile_repository.dart';
 import 'package:daw_project_manager/repository/project_repository.dart';
@@ -363,5 +365,100 @@ void main() {
         expect(merged.lastModifiedAt, localLastModifiedAt);
       },
     );
+  });
+
+  group('GoogleDriveSyncService._autoPreviewAlreadyMatches', () {
+    // Regression: the auto-backup timer switched from uploadDatabase() to
+    // syncDatabase() (which downloads+merges before re-uploading) so a newer
+    // Drive backup from another device wouldn't be silently clobbered. That
+    // meant every routine desktop auto-backup now runs mergeData()'s preview
+    // song reconciliation too. For a project whose preview was only ever
+    // auto-detected (previewSongAutoPath set, previewSongPath null) and had
+    // been auto-uploaded to Drive, mergeData saw previewSongPath == null and
+    // concluded "we don't have this file yet", re-downloading a byte-identical
+    // copy under a UUID-based filename and writing it into previewSongPath —
+    // which outranks previewSongAutoPath everywhere in the UI, so the desktop
+    // preview silently switched to the new UUID-named duplicate and the
+    // "auto-detected" badge disappeared. _autoPreviewAlreadyMatches() is the
+    // guard added to catch this: mergeData now consults it before deciding a
+    // preview needs to be (re)downloaded.
+    //
+    // Exercising this from mergeData() end-to-end would require a real
+    // driveApi/credentials round trip (downloadPreviewSongFile talks to
+    // Drive), so the closest automatable test is the helper itself, which
+    // contains the actual decision logic that was missing before the fix.
+    late Directory tempDir;
+
+    setUp(() async {
+      tempDir = await Directory.systemTemp.createTemp('auto_preview_test');
+    });
+
+    tearDown(() async {
+      if (await tempDir.exists()) await tempDir.delete(recursive: true);
+    });
+
+    test('returns true when the auto-detected file on disk matches the expected hash', () async {
+      final autoPath = path.join(tempDir.path, 'mixdown.wav');
+      await File(autoPath).writeAsBytes([1, 2, 3, 4]);
+      final expectedHash = md5.convert([1, 2, 3, 4]).toString();
+
+      final project = TestFactories.makeProject(previewSongAutoPath: autoPath);
+
+      final service = GoogleDriveSyncService();
+      expect(
+        await service.autoPreviewAlreadyMatchesForTest(project, expectedHash),
+        isTrue,
+      );
+    });
+
+    test('falls back to the project\'s stored uploadedPreviewSongHash when expectedHash is null', () async {
+      final autoPath = path.join(tempDir.path, 'mixdown.wav');
+      await File(autoPath).writeAsBytes([5, 6, 7, 8]);
+      final storedHash = md5.convert([5, 6, 7, 8]).toString();
+
+      final project = TestFactories.makeProject(previewSongAutoPath: autoPath)
+          .copyWith(uploadedPreviewSongHash: storedHash);
+
+      final service = GoogleDriveSyncService();
+      expect(
+        await service.autoPreviewAlreadyMatchesForTest(project, null),
+        isTrue,
+      );
+    });
+
+    test('returns false when the auto-detected file\'s hash differs from Drive\'s', () async {
+      final autoPath = path.join(tempDir.path, 'mixdown.wav');
+      await File(autoPath).writeAsBytes([1, 2, 3, 4]);
+      final differentHash = md5.convert([9, 9, 9, 9]).toString();
+
+      final project = TestFactories.makeProject(previewSongAutoPath: autoPath);
+
+      final service = GoogleDriveSyncService();
+      expect(
+        await service.autoPreviewAlreadyMatchesForTest(project, differentHash),
+        isFalse,
+      );
+    });
+
+    test('returns false when previewSongAutoPath is not set', () async {
+      final project = TestFactories.makeProject();
+
+      final service = GoogleDriveSyncService();
+      expect(
+        await service.autoPreviewAlreadyMatchesForTest(project, 'anyhash'),
+        isFalse,
+      );
+    });
+
+    test('returns false when the auto-detected file no longer exists on disk', () async {
+      final missingPath = path.join(tempDir.path, 'does-not-exist.wav');
+      final project = TestFactories.makeProject(previewSongAutoPath: missingPath);
+
+      final service = GoogleDriveSyncService();
+      expect(
+        await service.autoPreviewAlreadyMatchesForTest(project, 'anyhash'),
+        isFalse,
+      );
+    });
   });
 }

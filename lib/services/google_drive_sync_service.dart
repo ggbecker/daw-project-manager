@@ -2083,6 +2083,29 @@ class GoogleDriveSyncService {
     return _mergeHashCache[filePath] ??= await _calculateFileHash(filePath);
   }
 
+  /// Returns true if [localProject.previewSongAutoPath] already points at a file on
+  /// disk whose hash matches [expectedHash] (falling back to the project's last
+  /// recorded [MusicProject.uploadedPreviewSongHash] when [expectedHash] is
+  /// unavailable). Used during merge to avoid re-downloading a preview from Drive
+  /// into `previewSongPath` when the auto-detected file already on this device is
+  /// the same one that's already backed up — downloading it anyway would duplicate
+  /// the file under a UUID-named copy and silently promote an auto-detected preview
+  /// into a manually-pinned one, overriding the "auto-detected" status in the UI.
+  Future<bool> _autoPreviewAlreadyMatches(MusicProject localProject, String? expectedHash) async {
+    final autoPath = localProject.previewSongAutoPath;
+    if (autoPath == null || autoPath.isEmpty) return false;
+    final hashToMatch = expectedHash ?? localProject.uploadedPreviewSongHash;
+    if (hashToMatch == null) return false;
+    try {
+      final autoFile = File(autoPath);
+      if (!await autoFile.exists()) return false;
+      final autoHash = await _cachedFileHash(autoPath);
+      return autoHash == hashToMatch;
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Retry [fn] up to [maxAttempts] times on transient Drive/network errors using
   /// exponential backoff (2 s, 4 s, 8 s …) with ±25 % jitter.
   /// Throws immediately on cancellation or non-retryable errors.
@@ -3787,8 +3810,16 @@ class GoogleDriveSyncService {
                             // Path exists but file doesn't - need to download
                             needsDownload = true;
                           }
-                        } else if (previewSongPath == null || _isDriveFileReference(previewSongPath)) {
-                          // No local path or Drive reference - need to download
+                        } else if (previewSongPath == null) {
+                          // No manually-set local path. Before downloading, check whether
+                          // the auto-detected preview already on this device is the exact
+                          // file that's on Drive (e.g. this device is the one that uploaded
+                          // it) - if so, skip the download so we don't duplicate it under a
+                          // UUID filename and silently promote previewSongAutoPath into
+                          // previewSongPath.
+                          needsDownload = !await _autoPreviewAlreadyMatches(localProject, uploadedPreviewSongHash);
+                        } else if (_isDriveFileReference(previewSongPath)) {
+                          // Drive reference - need to download
                           needsDownload = true;
                         } else if (uploadedPreviewSongHash != null && localProject.uploadedPreviewSongHash != uploadedPreviewSongHash) {
                           // Hash changed - need to download
@@ -4026,8 +4057,16 @@ class GoogleDriveSyncService {
                             // Path exists but file doesn't - need to download
                             needsDownload = true;
                           }
-                        } else if (previewSongPath == null || _isDriveFileReference(previewSongPath)) {
-                          // No local path or Drive reference - need to download
+                        } else if (previewSongPath == null) {
+                          // No manually-set local path. Before downloading, check whether
+                          // the auto-detected preview already on this device is the exact
+                          // file that's on Drive (e.g. this device is the one that uploaded
+                          // it) - if so, skip the download so we don't duplicate it under a
+                          // UUID filename and silently promote previewSongAutoPath into
+                          // previewSongPath.
+                          needsDownload = !await _autoPreviewAlreadyMatches(localProject, expectedHash);
+                        } else if (_isDriveFileReference(previewSongPath)) {
+                          // Drive reference - need to download
                           needsDownload = true;
                         } else if (expectedHash != null && uploadedPreviewSongHash != expectedHash) {
                           // Hash changed - need to download
@@ -4660,6 +4699,14 @@ class GoogleDriveSyncService {
   @visibleForTesting
   MusicProject deserializeProjectForTest(Map<String, dynamic> data) =>
       _deserializeProject(data);
+
+  /// Test-only accessor for [_autoPreviewAlreadyMatches] — the merge-time check
+  /// that stops a locally auto-detected preview from being re-downloaded (and
+  /// promoted into [MusicProject.previewSongPath]) when it's already the same
+  /// file that's on Drive.
+  @visibleForTesting
+  Future<bool> autoPreviewAlreadyMatchesForTest(MusicProject localProject, String? expectedHash) =>
+      _autoPreviewAlreadyMatches(localProject, expectedHash);
 
   Map<String, dynamic> _serializeRelease(Release release) {
     return {
