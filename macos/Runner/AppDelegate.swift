@@ -6,6 +6,11 @@ class AppDelegate: FlutterAppDelegate {
 
   private var recentProjects: [[String: String]] = []
 
+  // Cross-process signal telling an already-running instance to surface its
+  // window — needed because a second launch attempt (Dock/Finder icon) is a
+  // separate process and can't just call windowManager.show() directly.
+  private static let showWindowNotificationName = Notification.Name("com.bandpassrecords.dpm.showWindow")
+
   override func applicationWillFinishLaunching(_ notification: Notification) {
     // Enforce single instance in release builds only.
     // Debug builds skip this so `flutter run` can relaunch the app freely.
@@ -13,14 +18,26 @@ class AppDelegate: FlutterAppDelegate {
     let others = NSRunningApplication.runningApplications(withBundleIdentifier: bundleId)
       .filter { $0 != NSRunningApplication.current }
     if !others.isEmpty {
+      // Ask the running instance to show itself (it may be hidden in the
+      // tray) instead of just telling the user to go close it manually.
+      DistributedNotificationCenter.default().postNotificationName(
+        AppDelegate.showWindowNotificationName, object: bundleId, userInfo: nil, deliverImmediately: true)
       others.first?.activate(options: .activateIgnoringOtherApps)
-      let alert = NSAlert()
-      alert.messageText = "DAW Project Manager is already running"
-      alert.informativeText = "Please close the existing instance before opening a new one."
-      alert.alertStyle = .informational
-      alert.addButton(withTitle: "OK")
-      alert.runModal()
       exit(0)
+    }
+
+    DistributedNotificationCenter.default().addObserver(
+      self,
+      selector: #selector(handleShowWindowRequest),
+      name: AppDelegate.showWindowNotificationName,
+      object: nil
+    )
+  }
+
+  @objc private func handleShowWindowRequest() {
+    DispatchQueue.main.async {
+      NSApp.activate(options: .activateIgnoringOtherApps)
+      NSApplication.shared.windows.first?.makeKeyAndOrderFront(nil)
     }
   }
 

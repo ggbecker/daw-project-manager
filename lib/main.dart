@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'generated/l10n/app_localizations.dart';
-import 'dart:io' show Platform, Process, ServerSocket, InternetAddress, SocketException, File, Directory, FileSystemException, exit;
+import 'dart:io' show Platform, Process, ServerSocket, Socket, InternetAddress, SocketException, File, Directory, FileSystemException, exit;
 import 'package:window_manager/window_manager.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
@@ -73,6 +73,17 @@ Future<void> quitApp() async {
   }
   await windowManager.destroy();
   exit(0);
+}
+
+/// Restores and focuses the window in response to a second launch attempt
+/// (e.g. clicking a taskbar/desktop shortcut while hidden in the tray).
+/// Mirrors [TrayService._showWindow] — kept separate since it must run
+/// before the tray service (or even the provider container) exists.
+Future<void> _bringWindowToFront() async {
+  try {
+    await windowManager.show();
+    await windowManager.focus();
+  } catch (_) {}
 }
 
 Future<void> _showAlreadyRunningMessage() async {
@@ -257,9 +268,25 @@ Future<void> _main() async {
   if (!kIsWeb && Platform.isWindows) {
     try {
       _singleInstanceSocket = await ServerSocket.bind(InternetAddress.loopbackIPv4, 57321);
+      // Any connection on this port is a second launch attempt asking us to
+      // surface the (possibly tray-hidden) window instead of starting fresh.
+      _singleInstanceSocket!.listen((client) {
+        client.destroy();
+        unawaited(_bringWindowToFront());
+      });
     } on SocketException {
-      // Port is already bound — another instance is running.
-      await _showAlreadyRunningMessage();
+      // Port is already bound — another instance is running. Ask it to show
+      // itself rather than just telling the user to go close it manually.
+      try {
+        final socket = await Socket.connect(
+          InternetAddress.loopbackIPv4,
+          57321,
+          timeout: const Duration(seconds: 2),
+        );
+        await socket.close();
+      } catch (_) {
+        await _showAlreadyRunningMessage();
+      }
       exit(0);
     }
   }
