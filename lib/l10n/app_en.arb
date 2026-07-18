@@ -3081,6 +3081,8 @@
   "@stop": {},
   "pause": "Pause",
   "@pause": {},
+  "playPauseTooltip": "Play / Pause",
+  "@playPauseTooltip": {},
   "resume": "Resume",
   "@resume": {},
   "workTimerSection": "Work Session Reminders",

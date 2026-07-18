@@ -3004,6 +3004,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pause => '暂停';
 
   @override
+  String get playPauseTooltip => 'Play / Pause';
+
+  @override
   String get resume => '继续';
 
   @override

@@ -1958,6 +1958,8 @@
   "@stop": {},
   "pause": "暂停",
   "@pause": {},
+  "playPauseTooltip": "Play / Pause",
+  "@playPauseTooltip": {},
   "resume": "继续",
   "@resume": {},
   "workTimerSection": "工作会话提醒",

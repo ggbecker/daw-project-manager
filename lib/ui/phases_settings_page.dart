@@ -286,7 +286,7 @@ class _PhasesSettingsPageState extends ConsumerState<PhasesSettingsPage> {
                                     IconButton(
                                       icon: const Icon(Icons.delete_outline),
                                       color: Theme.of(context).colorScheme.error,
-                                      tooltip: 'Delete',
+                                      tooltip: l10n.delete,
                                       onPressed: phases.length > 1
                                           ? () => _deletePhase(phase, phases)
                                           : null,

@@ -5282,6 +5282,12 @@ abstract class AppLocalizations {
   /// **'Pause'**
   String get pause;
 
+  /// No description provided for @playPauseTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Play / Pause'**
+  String get playPauseTooltip;
+
   /// No description provided for @resume.
   ///
   /// In en, this message translates to:

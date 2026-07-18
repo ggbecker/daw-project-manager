@@ -1958,6 +1958,8 @@
   "@stop": {},
   "pause": "一時停止",
   "@pause": {},
+  "playPauseTooltip": "Play / Pause",
+  "@playPauseTooltip": {},
   "resume": "再開",
   "@resume": {},
   "workTimerSection": "作業セッションリマインダー",

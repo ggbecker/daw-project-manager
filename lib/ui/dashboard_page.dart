@@ -6594,7 +6594,7 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
                     icon: Icon(_isPlaying ? Icons.pause_circle : Icons.play_circle),
                     iconSize: 34, color: cs.primary, padding: iconPad,
                     constraints: const BoxConstraints(minWidth: 38, minHeight: 38),
-                    tooltip: 'Play / Pause  (Space)',
+                    tooltip: '${l10n.playPauseTooltip}  (Space)',
                     onPressed: _togglePlayPause,
                   ),
                   Tooltip(

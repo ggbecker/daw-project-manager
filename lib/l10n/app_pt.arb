@@ -1982,6 +1982,8 @@
   "@stop": {},
   "pause": "Pausar",
   "@pause": {},
+  "playPauseTooltip": "Play / Pause",
+  "@playPauseTooltip": {},
   "resume": "Retomar",
   "@resume": {},
   "workTimerSection": "Lembretes de sessão de trabalho",

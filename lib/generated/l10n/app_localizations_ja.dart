@@ -3033,6 +3033,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get pause => '一時停止';
 
   @override
+  String get playPauseTooltip => 'Play / Pause';
+
+  @override
   String get resume => '再開';
 
   @override

@@ -1958,6 +1958,8 @@
   "@stop": {},
   "pause": "Пауза",
   "@pause": {},
+  "playPauseTooltip": "Play / Pause",
+  "@playPauseTooltip": {},
   "resume": "Продолжить",
   "@resume": {},
   "workTimerSection": "Напоминания о рабочей сессии",

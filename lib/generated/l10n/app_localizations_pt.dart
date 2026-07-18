@@ -3105,6 +3105,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get pause => 'Pausar';
 
   @override
+  String get playPauseTooltip => 'Play / Pause';
+
+  @override
   String get resume => 'Retomar';
 
   @override

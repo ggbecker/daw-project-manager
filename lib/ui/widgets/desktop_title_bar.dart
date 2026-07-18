@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart'
     if (dart.library.html) 'package:window_manager/window_manager_stub.dart';
 
+import '../../generated/l10n/app_localizations.dart';
 import '../../utils/mobile_utils.dart';
 
 /// A cross-platform desktop title bar widget.
@@ -101,7 +102,7 @@ class _DesktopTitleBarState extends State<DesktopTitleBar> {
                 color: Theme.of(context).textTheme.bodyMedium?.color,
               ),
               onPressed: () => Navigator.pop(context),
-              tooltip: 'Back',
+              tooltip: AppLocalizations.of(context)!.back,
             ),
             Text(
               widget.title,

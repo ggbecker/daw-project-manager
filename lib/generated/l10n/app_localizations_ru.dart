@@ -3105,6 +3105,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get pause => 'Пауза';
 
   @override
+  String get playPauseTooltip => 'Play / Pause';
+
+  @override
   String get resume => 'Продолжить';
 
   @override
