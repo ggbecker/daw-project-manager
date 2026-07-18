@@ -11,10 +11,10 @@
 ; --- Informações do Aplicativo ---
 AppName=DAW Project Manager
 AppVersion={#APP_VERSION}
-AppPublisher=DAW Project Manager Co.
-AppPublisherURL=https://www.github.com/bandpassrecords/daw-project-manager
-AppSupportURL=https://www.github.com/bandpassrecords/daw-project-manager
-AppUpdatesURL=https://www.github.com/bandpassrecords/daw-project-manager
+AppPublisher=BandPass Records
+AppPublisherURL=https://dpm.bandpassrecords.com
+AppSupportURL=https://github.com/bandpassrecords/daw-project-manager/issues
+AppUpdatesURL=https://github.com/bandpassrecords/daw-project-manager/releases
 DefaultDirName={autopf}\DAW Project Manager
 DefaultGroupName=DAW Project Manager
 ; Nome do arquivo de saída
