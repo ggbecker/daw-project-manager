@@ -367,16 +367,7 @@ class _ThemePage extends ConsumerWidget {
             selected: current == AppThemeType.neonDark,
             onTap: () => ref.read(themeTypeProvider.notifier).setThemeType(AppThemeType.neonDark),
           ),
-          _ThemeCard(
-            themeType: AppThemeType.studioLight,
-            label: l10n.studioLightThemeName,
-            bg: const Color(0xFFF8F4EE),
-            card: const Color(0xFFFFFFFF),
-            primary: const Color(0xFF6D28D9),
-            accent: const Color(0xFFD97706),
-            selected: current == AppThemeType.studioLight,
-            onTap: () => ref.read(themeTypeProvider.notifier).setThemeType(AppThemeType.studioLight),
-          ),
+          // studioLight hidden from UI — see theme_switcher.dart.
         ],
       ),
     );
