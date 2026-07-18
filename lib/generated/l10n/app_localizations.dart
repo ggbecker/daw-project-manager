@@ -232,6 +232,18 @@ abstract class AppLocalizations {
   /// **'Scanning…'**
   String get scanning;
 
+  /// No description provided for @newProjectBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'NEW'**
+  String get newProjectBadge;
+
+  /// No description provided for @newlyDetectedProjectTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatically detected — not yet reviewed'**
+  String get newlyDetectedProjectTooltip;
+
   /// No description provided for @projectName.
   ///
   /// In en, this message translates to:

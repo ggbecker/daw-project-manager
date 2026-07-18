@@ -116,6 +116,9 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
     _bpmFocusNode = FocusNode();
     _keyFocusNode = FocusNode();
     _notesFocusNode = FocusNode();
+    // Single choke point for clearing the "newly discovered" badge, regardless
+    // of which of the several call sites navigated here.
+    ref.read(recentlyDiscoveredProjectsProvider.notifier).dismiss(widget.projectId);
   }
 
   @override

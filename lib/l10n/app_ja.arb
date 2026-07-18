@@ -23,6 +23,8 @@
   "rescan": "再スキャン",
   "refreshProject": "更新",
   "scanning": "スキャン中…",
+  "newProjectBadge": "NEW",
+  "newlyDetectedProjectTooltip": "Automatically detected — not yet reviewed",
   "projectName": "プロジェクト名",
   "bpm": "BPM",
   "key": "キー（例：C#m、F major）",

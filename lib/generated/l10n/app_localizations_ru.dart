@@ -69,6 +69,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get scanning => 'Сканирование…';
 
   @override
+  String get newProjectBadge => 'NEW';
+
+  @override
+  String get newlyDetectedProjectTooltip =>
+      'Automatically detected — not yet reviewed';
+
+  @override
   String get projectName => 'Название проекта';
 
   @override

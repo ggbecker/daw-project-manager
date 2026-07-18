@@ -23,6 +23,8 @@
   "rescan": "重新扫描",
   "refreshProject": "刷新",
   "scanning": "扫描中…",
+  "newProjectBadge": "NEW",
+  "newlyDetectedProjectTooltip": "Automatically detected — not yet reviewed",
   "projectName": "项目名称",
   "bpm": "BPM",
   "key": "调性（例如：C#m，F大调）",

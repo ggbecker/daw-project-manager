@@ -23,6 +23,8 @@
   "rescan": "Rescanner",
   "refreshProject": "Actualiser",
   "scanning": "Scan en cours…",
+  "newProjectBadge": "NEW",
+  "newlyDetectedProjectTooltip": "Automatically detected — not yet reviewed",
   "projectName": "Nom du Projet",
   "bpm": "BPM",
   "key": "Tonalité (ex: C#m, F majeur)",

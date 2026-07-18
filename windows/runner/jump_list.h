@@ -4,9 +4,13 @@
 #include <string>
 #include <vector>
 
-// Updates the Windows taskbar Jump List (right-click menu) with the supplied
-// projects. Each item opens the project file with its default application.
-// projects = vector of {displayName, filePath}
+// Rebuilds the Windows taskbar Jump List (right-click menu): a static
+// "Tasks" section (New Project, Scan for Projects) plus a "Recent Projects"
+// category. Every entry relaunches this same exe with a command-line
+// argument (--new-project / --scan-projects / --open-project=<id>) that
+// main.dart interprets — either at cold start or by forwarding it to an
+// already-running instance over the single-instance loopback socket.
+// projects = vector of {displayName, id}
 bool UpdateJumpList(
     const std::vector<std::pair<std::wstring, std::wstring>>& projects);
 

@@ -69,6 +69,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get scanning => 'スキャン中…';
 
   @override
+  String get newProjectBadge => 'NEW';
+
+  @override
+  String get newlyDetectedProjectTooltip =>
+      'Automatically detected — not yet reviewed';
+
+  @override
   String get projectName => 'プロジェクト名';
 
   @override
