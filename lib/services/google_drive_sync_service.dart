@@ -2361,7 +2361,7 @@ class GoogleDriveSyncService {
             
             // Check preview song status (only on desktop - mobile doesn't add preview songs)
             // On mobile, we only download preview songs, never upload them
-            if (!MobileUtils.isMobile() && !Platform.isIOS) {
+            if (!MobileUtils.isMobile()) {
               if (project.previewSongPath != null && project.previewSongPath!.isNotEmpty) {
                 // Skip if it's a Drive reference (already uploaded)
                 if (!project.previewSongPath!.startsWith('drive://')) {
@@ -2504,7 +2504,7 @@ class GoogleDriveSyncService {
             
             // Check release artwork status (only on desktop - mobile doesn't upload artwork)
             // On mobile, we only download artwork, never upload them
-            if (!MobileUtils.isMobile() && !Platform.isIOS) {
+            if (!MobileUtils.isMobile()) {
               if (release.artworkImagePath != null && release.artworkImagePath!.isNotEmpty) {
                 try {
                   // Calculate current file hash
@@ -2581,7 +2581,7 @@ class GoogleDriveSyncService {
           
           // Check profile photo status (only on desktop - mobile doesn't upload profile photos)
           // On mobile, we only download profile photos, never upload them
-          if (!MobileUtils.isMobile() && !Platform.isIOS) {
+          if (!MobileUtils.isMobile()) {
             if (profile.photoPath != null && profile.photoPath!.isNotEmpty) {
               try {
                 // Calculate current file hash
