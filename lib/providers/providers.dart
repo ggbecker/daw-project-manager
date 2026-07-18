@@ -2542,7 +2542,7 @@ class WorkTimerNotifier extends Notifier<int> {
     final elapsed = DateTime.now().difference(_startTime!);
     state = elapsed.inSeconds;
 
-    if (Platform.isAndroid || Platform.isIOS) return;
+    if (MobileUtils.isMobile()) return;
 
     final enabled = ref.read(workTimerNotifEnabledProvider);
     if (!enabled) return;

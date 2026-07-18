@@ -29,6 +29,7 @@ import 'services/folder_watcher_service.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'models/auto_backup_interval.dart';
 import 'utils/app_paths.dart';
+import 'utils/mobile_utils.dart';
 
 import 'ui/dashboard_page.dart';
 import 'ui/dialogs/create_project_dialog.dart';
@@ -217,7 +218,7 @@ void _startAutoBackupTimer(
 
       // On desktop, try to silently restore session if not already signed in
       if (!syncService.isSignedIn) {
-        if (!kIsWeb && !Platform.isAndroid && !Platform.isIOS) {
+        if (!kIsWeb && !MobileUtils.isMobile()) {
           try {
             final restored = await syncService.restoreSession();
             if (!restored) return;
@@ -602,7 +603,7 @@ Future<void> _main(List<String> args) async {
 
     // 4c-2. Background folder watcher (desktop only — mobile has no scan
     // roots today) — auto-detects new project files without a full rescan.
-    if (!kIsWeb && !Platform.isAndroid && !Platform.isIOS) {
+    if (!kIsWeb && !MobileUtils.isMobile()) {
       _startFolderWatcher(container);
     }
 
@@ -627,7 +628,7 @@ Future<void> _main(List<String> args) async {
 
     // 4e. Start auto-backup timer (desktop: try to restore session silently)
     final autoBackupService = GoogleDriveSyncService();
-    if (!kIsWeb && !Platform.isAndroid && !Platform.isIOS) {
+    if (!kIsWeb && !MobileUtils.isMobile()) {
       try {
         await autoBackupService.initializeCredentialsStorage();
         await autoBackupService.restoreSession();

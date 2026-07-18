@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
+import 'mobile_utils.dart';
 
 /// Static flag to track if Hive has been initialized
 bool _hiveInitialized = false;
@@ -67,7 +68,7 @@ Future<String> getReleaseArtworkPath() async {
 /// On mobile, this uses the application documents directory for persistence
 /// On desktop, this uses the app data directory
 Future<String> getPreviewSongsPath() async {
-  if (Platform.isAndroid || Platform.isIOS) {
+  if (MobileUtils.isMobile()) {
     // On mobile, use application documents directory for persistent storage
     // This ensures preview songs are not deleted by the system
     final appDocDir = await getApplicationDocumentsDirectory();
