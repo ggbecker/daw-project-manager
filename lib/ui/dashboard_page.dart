@@ -1991,6 +1991,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
               child: Builder(builder: (context) {
                 final tabView = TabBarView(
                   controller: _tabController,
+                  // On mobile, tabs are switched via the bottom NavigationBar;
+                  // swiping between them is easy to trigger by accident while
+                  // scrolling a list, so disable the swipe gesture there.
+                  physics: MobileUtils.isMobile() ? const NeverScrollableScrollPhysics() : null,
                   children: [
                     for (final tab in _currentVisibleTabs)
                       switch (tab) {
@@ -4375,6 +4379,9 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               project.notes != null &&
               fuzzyMatchAll(project.notes!, currentQuery);
 
+          final isNewlyDiscovered =
+              ref.watch(recentlyDiscoveredProjectsProvider).contains(project.id);
+
           // Tree connector for child rows inside a folder group
           final depth = rendererContext.row.depth;
           final parent = rendererContext.row.parent;
@@ -4397,6 +4404,10 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                   ),
                 ),
               Expanded(child: Text(rendererContext.cell.value.toString())),
+              if (isNewlyDiscovered) ...[
+                const SizedBox(width: 6),
+                const _NewProjectBadge(),
+              ],
               if (isNotesMatch)
                 Tooltip(
                   message: AppLocalizations.of(context)!.matchedInDescription,
@@ -6583,7 +6594,7 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
                     icon: Icon(_isPlaying ? Icons.pause_circle : Icons.play_circle),
                     iconSize: 34, color: cs.primary, padding: iconPad,
                     constraints: const BoxConstraints(minWidth: 38, minHeight: 38),
-                    tooltip: 'Play / Pause  (Space)',
+                    tooltip: '${l10n.playPauseTooltip}  (Space)',
                     onPressed: _togglePlayPause,
                   ),
                   Tooltip(
@@ -7258,6 +7269,10 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                         project.displayName,
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       )),
+                      if (ref.watch(recentlyDiscoveredProjectsProvider).contains(project.id)) ...[
+                        const SizedBox(width: 6),
+                        const _NewProjectBadge(),
+                      ],
                       if (isNotesMatch)
                         Tooltip(
                           message: AppLocalizations.of(context)!.matchedInDescription,
@@ -8588,6 +8603,39 @@ class _ExpandArrowCellState extends State<_ExpandArrowCell> {
           _expanded ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_right,
           size: 18,
           color: Theme.of(context).colorScheme.primary,
+        ),
+      ),
+    );
+  }
+}
+
+// Small pill shown next to a project's name when the background folder
+// watcher just found it (see FolderWatcherService / recentlyDiscoveredProjectsProvider).
+// Styled to match the existing deadline badge (Container + tinted border)
+// rather than introducing a new visual language.
+class _NewProjectBadge extends StatelessWidget {
+  const _NewProjectBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Tooltip(
+      message: l10n.newlyDetectedProjectTooltip,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: Colors.green.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(color: Colors.green.withValues(alpha: 0.4), width: 1),
+        ),
+        child: Text(
+          l10n.newProjectBadge,
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: Colors.green.shade700,
+            letterSpacing: 0.5,
+          ),
         ),
       ),
     );

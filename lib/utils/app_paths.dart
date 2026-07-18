@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
+import 'mobile_utils.dart';
 
 /// Static flag to track if Hive has been initialized
 bool _hiveInitialized = false;
@@ -14,7 +15,23 @@ Future<void> ensureHiveInitialized() async {
     if (kDebugMode) print('Hive already initialized, skipping...');
     return;
   }
-  
+
+  // Under `flutter test`, never fall back to the real on-disk app-data
+  // directory. This flag only tracks "has *this* function called
+  // Hive.init()", not whether Hive itself is already initialized — so the
+  // first test (in a process that may run many test files) to reach this
+  // function via some provider's fire-and-forget _load() would otherwise
+  // silently call Hive.init(realAppDataPath), redirecting every later
+  // Hive.openBox() in that process to the developer's actual app data,
+  // even if an earlier test file had already called Hive.init(tempDir)
+  // itself. A test that needs Hive must call Hive.init(tempDir) itself
+  // (see HiveTestHelper.setUp); anything else silently no-ops here instead
+  // of touching real user data.
+  if (Platform.environment['FLUTTER_TEST'] == 'true') {
+    _hiveInitialized = true;
+    return;
+  }
+
   try {
     final appDataPath = await getLocalAppDataPath();
     Hive.init(appDataPath);
@@ -67,7 +84,7 @@ Future<String> getReleaseArtworkPath() async {
 /// On mobile, this uses the application documents directory for persistence
 /// On desktop, this uses the app data directory
 Future<String> getPreviewSongsPath() async {
-  if (Platform.isAndroid || Platform.isIOS) {
+  if (MobileUtils.isMobile()) {
     // On mobile, use application documents directory for persistent storage
     // This ensures preview songs are not deleted by the system
     final appDocDir = await getApplicationDocumentsDirectory();

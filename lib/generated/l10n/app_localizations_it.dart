@@ -69,6 +69,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get scanning => 'Scansione in corso…';
 
   @override
+  String get newProjectBadge => 'NEW';
+
+  @override
+  String get newlyDetectedProjectTooltip =>
+      'Automatically detected — not yet reviewed';
+
+  @override
   String get projectName => 'Nome del Progetto';
 
   @override
@@ -3101,6 +3108,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get pause => 'Pausa';
+
+  @override
+  String get playPauseTooltip => 'Play / Pause';
 
   @override
   String get resume => 'Riprendi';

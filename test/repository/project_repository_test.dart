@@ -785,4 +785,42 @@ void main() {
       expect(saved.status, 'Mixing');
     });
   });
+
+  // These exercise the "diff against known paths, upsert only new ones"
+  // contract the background folder watcher (FolderWatcherService, wired up
+  // in main.dart) relies on: it calls upsertFromFileSystemEntity only for
+  // paths not already in getAllProjects(), so a single new file must produce
+  // exactly one project, and re-running it for an already-known path must
+  // update in place rather than duplicate.
+  group('ProjectRepository.upsertFromFileSystemEntity (watcher-style diff)', () {
+    test('creates exactly one project for a newly seen file', () async {
+      final repo = await HiveTestHelper.createRepository();
+      final fileDir = await Directory.systemTemp.createTemp('upsert_diff_test_');
+      addTearDown(() => fileDir.delete(recursive: true));
+      final file = File(p.join(fileDir.path, 'song.als'))..writeAsStringSync('data');
+
+      expect(repo.getByPath(file.path), isNull);
+
+      await repo.upsertFromFileSystemEntity(file, fullMetadata: false);
+
+      expect(repo.getAllProjects().length, 1);
+      expect(repo.getByPath(file.path), isNotNull);
+    });
+
+    test('re-upserting an already-known path updates in place instead of duplicating', () async {
+      final repo = await HiveTestHelper.createRepository();
+      final fileDir = await Directory.systemTemp.createTemp('upsert_diff_test_');
+      addTearDown(() => fileDir.delete(recursive: true));
+      final file = File(p.join(fileDir.path, 'song.als'))..writeAsStringSync('data');
+
+      await repo.upsertFromFileSystemEntity(file, fullMetadata: false);
+      final firstId = repo.getByPath(file.path)!.id;
+
+      file.writeAsStringSync('more data than before');
+      await repo.upsertFromFileSystemEntity(file, fullMetadata: false);
+
+      expect(repo.getAllProjects().length, 1);
+      expect(repo.getByPath(file.path)!.id, firstId);
+    });
+  });
 }

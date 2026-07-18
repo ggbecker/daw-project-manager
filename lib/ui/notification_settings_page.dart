@@ -6,6 +6,7 @@ import '../generated/l10n/app_localizations.dart';
 import '../models/notification_preferences.dart';
 import '../services/deadline_notification_service.dart';
 import '../providers/providers.dart';
+import '../utils/mobile_utils.dart';
 import 'widgets/desktop_title_bar.dart';
 
 /// Page for configuring deadline notification preferences
@@ -91,7 +92,7 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
     }
   }
 
-  bool get _isMobile => Platform.isAndroid || Platform.isIOS;
+  bool get _isMobile => MobileUtils.isMobile();
 
   @override
   Widget build(BuildContext context) {

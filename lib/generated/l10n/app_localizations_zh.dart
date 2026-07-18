@@ -69,6 +69,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get scanning => '扫描中…';
 
   @override
+  String get newProjectBadge => 'NEW';
+
+  @override
+  String get newlyDetectedProjectTooltip =>
+      'Automatically detected — not yet reviewed';
+
+  @override
   String get projectName => '项目名称';
 
   @override
@@ -2995,6 +3002,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pause => '暂停';
+
+  @override
+  String get playPauseTooltip => 'Play / Pause';
 
   @override
   String get resume => '继续';

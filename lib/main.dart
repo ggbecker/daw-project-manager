@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert' show jsonDecode, jsonEncode, utf8;
 import 'dart:math' show sqrt;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show LogicalKeyboardKey, MethodChannel;
@@ -20,13 +21,18 @@ import 'services/notification_background_service.dart';
 import 'services/google_drive_sync_service.dart';
 import 'services/update_check_service.dart';
 import 'services/crash_logger.dart';
+import 'services/dock_menu_service.dart';
+import 'services/quick_action.dart';
 import 'services/tray_notice.dart';
 import 'services/tray_service.dart';
+import 'services/folder_watcher_service.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'models/auto_backup_interval.dart';
 import 'utils/app_paths.dart';
+import 'utils/mobile_utils.dart';
 
 import 'ui/dashboard_page.dart';
+import 'ui/dialogs/create_project_dialog.dart';
 import 'ui/onboarding_wizard_page.dart';
 import 'ui/project_detail_page.dart';
 import 'ui/widgets/macos_menu_bar.dart';
@@ -45,6 +51,11 @@ Timer? _autoBackupTimer;
 // Keeps the single-instance socket alive for the app's lifetime.
 // ignore: unused_element
 ServerSocket? _singleInstanceSocket;
+
+// Set once the provider container exists. Quick actions arriving before
+// this is ready (a launch racing app startup) are simply dropped — bringing
+// the window to front still happens regardless.
+ProviderContainer? _appContainer;
 
 /// Fully terminates the app on desktop. Destroys the tray icon first —
 /// tray_manager keeps a native hook/hidden window alive on Windows for as
@@ -66,6 +77,10 @@ ServerSocket? _singleInstanceSocket;
 /// hung until the user manually reopened the window.)
 Future<void> quitApp() async {
   _autoBackupTimer?.cancel();
+  _folderWatcherRepoSub?.close();
+  await _folderWatcherRootsSub?.cancel();
+  await _folderWatcherChangesSub?.cancel();
+  await _folderWatcherService?.dispose();
   if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
     try {
       await trayManager.destroy();
@@ -84,6 +99,75 @@ Future<void> _bringWindowToFront() async {
     await windowManager.show();
     await windowManager.focus();
   } catch (_) {}
+}
+
+/// Runs [action] once the navigator has a context, either immediately (if
+/// one is already available) or after the next frame — needed since quick
+/// actions can arrive before the first frame renders (cold start via a jump
+/// list / Dock menu click) as well as long after (an already-running app).
+void _runWithNavigatorContext(void Function(BuildContext context) action) {
+  final ctx = navigatorKey.currentContext;
+  if (ctx != null) {
+    action(ctx);
+    return;
+  }
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    final ctx = navigatorKey.currentContext;
+    if (ctx != null) action(ctx);
+  });
+}
+
+void _openProjectById(String id) {
+  _runWithNavigatorContext((ctx) {
+    Navigator.of(ctx).push(
+      MaterialPageRoute(builder: (_) => ProjectDetailPage(projectId: id)),
+    );
+  });
+}
+
+void _showCreateProjectDialog() {
+  _runWithNavigatorContext((ctx) {
+    showDialog<String>(
+      context: ctx,
+      barrierDismissible: false,
+      builder: (_) => const CreateProjectDialog(),
+    );
+  });
+}
+
+Future<void> _triggerProjectScan() async {
+  final container = _appContainer;
+  if (container == null) return;
+  try {
+    final repo = await container.read(repositoryProvider.future);
+    final foundCount = await _runInitialScan(repo, container);
+    _runWithNavigatorContext((ctx) {
+      final l10n = AppLocalizations.of(ctx);
+      if (l10n == null) return;
+      final msg = foundCount == 0
+          ? l10n.noProjectsFoundInRoots
+          : l10n.scanComplete(l10n.rescan, foundCount, foundCount == 1 ? '' : 's');
+      ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(msg)));
+    });
+  } catch (_) {}
+}
+
+/// Dispatches a quick action requested via the taskbar jump list (Windows)
+/// or the Dock menu (macOS forwards these straight from native code instead —
+/// see [DockMenuService.setOpenProjectHandler]). [args] is either the
+/// process's own command-line arguments (cold start) or the argument list
+/// forwarded by a second launch attempt over the single-instance socket.
+Future<void> _dispatchQuickAction(List<String> args) async {
+  switch (parseQuickAction(args)) {
+    case NewProjectQuickAction():
+      _showCreateProjectDialog();
+    case ScanProjectsQuickAction():
+      await _triggerProjectScan();
+    case OpenProjectQuickAction(:final projectId):
+      _openProjectById(projectId);
+    case null:
+      break;
+  }
 }
 
 Future<void> _showAlreadyRunningMessage() async {
@@ -134,7 +218,7 @@ void _startAutoBackupTimer(
 
       // On desktop, try to silently restore session if not already signed in
       if (!syncService.isSignedIn) {
-        if (!kIsWeb && !Platform.isAndroid && !Platform.isIOS) {
+        if (!kIsWeb && !MobileUtils.isMobile()) {
           try {
             final restored = await syncService.restoreSession();
             if (!restored) return;
@@ -174,6 +258,100 @@ void _startAutoBackupTimer(
   });
 }
 
+// Background folder watcher (desktop only) — auto-detects new project files
+// dropped into scan roots so they appear without a manual/periodic rescan.
+// Lives here (not in DashboardPage) so it survives regardless of which
+// tab/screen is open and can rebind cleanly across profile switches, the
+// same way the auto-backup timer and tray service do.
+FolderWatcherService? _folderWatcherService;
+ProviderSubscription<AsyncValue<ProjectRepository>>? _folderWatcherRepoSub;
+StreamSubscription<BoxEvent>? _folderWatcherRootsSub;
+StreamSubscription<String>? _folderWatcherChangesSub;
+ProjectRepository? _folderWatcherActiveRepo;
+
+void _startFolderWatcher(ProviderContainer container) {
+  final watcher = FolderWatcherService();
+  _folderWatcherService = watcher;
+
+  _folderWatcherChangesSub = watcher.changes.listen((rootPath) {
+    final repo = _folderWatcherActiveRepo;
+    if (repo != null) _onFolderWatcherActivity(rootPath, repo, container);
+  });
+
+  void bindRepo(ProjectRepository repo) {
+    if (identical(repo, _folderWatcherActiveRepo)) return;
+    _folderWatcherActiveRepo = repo;
+    _folderWatcherRootsSub?.cancel();
+    watcher.syncRoots(repo.getRoots());
+    _folderWatcherRootsSub = repo.watchRoots().listen((_) {
+      watcher.syncRoots(repo.getRoots());
+    });
+  }
+
+  // Rebinds automatically on profile switch, since repositoryProvider
+  // resolves to a fresh ProjectRepository (own Hive boxes) per profile.
+  _folderWatcherRepoSub = container.listen<AsyncValue<ProjectRepository>>(
+    repositoryProvider,
+    (previous, next) {
+      final repo = next.value;
+      if (repo != null) bindRepo(repo);
+    },
+    fireImmediately: true,
+  );
+}
+
+/// Runs a targeted, diff-based scan of just [rootPath] — much lighter than
+/// the full-root walk in `_runInitialScan`/`_scanAll`, since it skips any
+/// path already known to the repository (no wasted metadata re-extraction)
+/// and never prunes/removes existing projects (that stays manual-rescan-only
+/// so a filesystem-watch hiccup can never delete user data).
+Future<void> _onFolderWatcherActivity(
+  String rootPath,
+  ProjectRepository repo,
+  ProviderContainer container,
+) async {
+  try {
+    final scanner = ScannerService();
+    final ignoredPaths =
+        repo.getIgnoredPaths().map((p) => p.path).toList(growable: false);
+    final knownPaths = repo.getAllProjects().map((p) => p.filePath).toSet();
+    final newIds = <String>[];
+
+    await for (final entity
+        in scanner.scanDirectory(rootPath, ignoredPaths: ignoredPaths)) {
+      if (knownPaths.contains(entity.path)) continue;
+      await repo.upsertFromFileSystemEntity(entity, fullMetadata: false);
+      final saved = repo.getByPath(entity.path);
+      if (saved != null) newIds.add(saved.id);
+    }
+
+    if (newIds.isNotEmpty) {
+      container.read(recentlyDiscoveredProjectsProvider.notifier).addAll(newIds);
+      container.invalidate(allProjectsStreamProvider);
+    }
+
+    // Resolve pending folders that are now satisfied, but only when there's
+    // no in-flight work-timer session on them. Session-tracked entries are
+    // deliberately left alone so the interactive "end and record / continue
+    // session" dialog in DashboardPage._scanAll — the only place that ever
+    // reconciles a session — still gets a chance to run on the next manual
+    // rescan, instead of the watcher silently discarding that timer data.
+    final resolvable = repo
+        .getPendingFolders()
+        .where((pf) => pf.sessionStartedAt == null)
+        .where((pf) => !pf.folderExists || pf.hasProjectFile())
+        .toList(growable: false);
+    if (resolvable.isNotEmpty) {
+      for (final pf in resolvable) {
+        await repo.removePendingFolder(pf.id);
+      }
+      container.read(pendingFoldersDirtyProvider.notifier).bump();
+    }
+  } catch (e) {
+    if (kDebugMode) print('[FolderWatcher] scan failed for $rootPath: $e');
+  }
+}
+
 class _BackIntent extends Intent {
   const _BackIntent();
 }
@@ -201,11 +379,16 @@ Future<void> _handleNotificationTap(String projectId) async {
 }
 
 // NOVO: Função para executar o scan
-Future<void> _runInitialScan(ProjectRepository repo, ProviderContainer container) async {
+// Returns the number of on-disk projects found/synced — used by the "Scan
+// for Projects" quick action to show a result, since this otherwise silent
+// path (unlike the dashboard's manual rescan button) gives no feedback.
+Future<int> _runInitialScan(ProjectRepository repo, ProviderContainer container) async {
+  container.read(initialScanStateProvider.notifier).setScanning(true);
+  var foundCount = 0;
   try {
     // 1. Limpa arquivos que não existem mais
     await repo.clearMissingFiles();
-    
+
     // 2. Cria o scanner e processa as raízes de scan
     final scanner = ScannerService();
     final ignoredPaths = repo.getIgnoredPaths().map((p) => p.path).toList(growable: false);
@@ -213,14 +396,15 @@ Future<void> _runInitialScan(ProjectRepository repo, ProviderContainer container
     for (final root in repo.getRoots()) {
       await for (final entity in scanner.scanDirectory(root.path, ignoredPaths: ignoredPaths)) {
         await repo.upsertFromFileSystemEntity(entity);
+        foundCount++;
       }
       // Update lastScanAt timestamp for this root
       await repo.updateRootLastScanAt(root.id, scanTime);
     }
-    
+
     // 3. Mark initial scan as complete
     container.read(initialScanStateProvider.notifier).complete();
-    
+
     if (kDebugMode) {
       print("Initial scan completed successfully.");
     }
@@ -232,16 +416,17 @@ Future<void> _runInitialScan(ProjectRepository repo, ProviderContainer container
       print(st);
     }
   }
+  return foundCount;
 }
 
 
-void main() {
-  runZonedGuarded(_main, (error, stack) {
+void main(List<String> args) {
+  runZonedGuarded(() => _main(args), (error, stack) {
     unawaited(CrashLogger.log('zone', error, stack));
   });
 }
 
-Future<void> _main() async {
+Future<void> _main(List<String> args) async {
   // 1. Inicialização do Flutter
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -270,19 +455,37 @@ Future<void> _main() async {
       _singleInstanceSocket = await ServerSocket.bind(InternetAddress.loopbackIPv4, 57321);
       // Any connection on this port is a second launch attempt asking us to
       // surface the (possibly tray-hidden) window instead of starting fresh.
+      // It may also carry the second instance's command-line args (a jump
+      // list quick action) as a JSON-encoded string list payload.
       _singleInstanceSocket!.listen((client) {
-        client.destroy();
-        unawaited(_bringWindowToFront());
+        final chunks = <int>[];
+        client.listen(
+          chunks.addAll,
+          onDone: () {
+            client.destroy();
+            unawaited(_bringWindowToFront());
+            if (chunks.isNotEmpty) {
+              try {
+                final forwarded = (jsonDecode(utf8.decode(chunks)) as List)
+                    .cast<String>();
+                unawaited(_dispatchQuickAction(forwarded));
+              } catch (_) {}
+            }
+          },
+        );
       });
     } on SocketException {
       // Port is already bound — another instance is running. Ask it to show
-      // itself rather than just telling the user to go close it manually.
+      // itself (and forward along any quick-action arguments) rather than
+      // just telling the user to go close it manually.
       try {
         final socket = await Socket.connect(
           InternetAddress.loopbackIPv4,
           57321,
           timeout: const Duration(seconds: 2),
         );
+        socket.add(utf8.encode(jsonEncode(args)));
+        await socket.flush();
         await socket.close();
       } catch (_) {
         await _showAlreadyRunningMessage();
@@ -294,6 +497,8 @@ Future<void> _main() async {
   // 1c. Generate taskbar overlay icons (Windows only)
   if (!kIsWeb && Platform.isWindows) {
     await _initTaskbarOverlayIcons();
+    await _initThumbnailToolbarIcons();
+    _registerThumbnailToolbarHandler();
   }
 
   // 2. Initialize notification services
@@ -376,6 +581,15 @@ Future<void> _main() async {
 
   // NOVO: 4. Configuração do Riverpod e Auto-Scan
   final container = ProviderContainer();
+  _appContainer = container;
+
+  // Dock menu (macOS) invokes straight back into this running process —
+  // no relaunch/IPC involved, unlike the Windows jump list.
+  DockMenuService.setOpenProjectHandler((id) async {
+    await _bringWindowToFront();
+    _openProjectById(id);
+  });
+
   try {
     // 4a. Pré-carrega o ProfileRepository primeiro
     await container.read(profileRepositoryProvider.future);
@@ -386,7 +600,13 @@ Future<void> _main() async {
     // 4c. Executa o Scan Inicial em segundo plano (não aguardamos o Future)
     // O await repo... em cima garante que o Hive está pronto antes do scan.
     _runInitialScan(repo, container);
-    
+
+    // 4c-2. Background folder watcher (desktop only — mobile has no scan
+    // roots today) — auto-detects new project files without a full rescan.
+    if (!kIsWeb && !MobileUtils.isMobile()) {
+      _startFolderWatcher(container);
+    }
+
     // 4d. Schedule deadline notifications (Android only)
     if (!kIsWeb && Platform.isAndroid) {
       try {
@@ -408,7 +628,7 @@ Future<void> _main() async {
 
     // 4e. Start auto-backup timer (desktop: try to restore session silently)
     final autoBackupService = GoogleDriveSyncService();
-    if (!kIsWeb && !Platform.isAndroid && !Platform.isIOS) {
+    if (!kIsWeb && !MobileUtils.isMobile()) {
       try {
         await autoBackupService.initializeCredentialsStorage();
         await autoBackupService.restoreSession();
@@ -444,6 +664,10 @@ Future<void> _main() async {
       child: const DawProjectManagerApp(),
     ),
   );
+
+  // Cold start via a jump list quick action (New Project / Scan for
+  // Projects / a recent project) — dispatch once the first frame is up.
+  unawaited(_dispatchQuickAction(args));
 }
 
 // Windows taskbar overlay icon support — calls the native windows_taskbar plugin
@@ -510,6 +734,111 @@ Future<void> _initTaskbarOverlayIcons() async {
     _taskbarIconPaths['playing'] = playingPath;
     _taskbarIconPaths['paused']  = pausedPath;
   } catch (_) {}
+}
+
+/// Fills a 16×16 icon from a per-pixel predicate, light gray on transparent —
+/// good enough contrast for the taskbar thumbnail toolbar in both themes.
+Uint8List _makeGlyphIco(bool Function(double x, double y) inside) {
+  const int sz = 16;
+  final pix = Uint8List(sz * sz * 4);
+  for (int row = 0; row < sz; row++) {
+    for (int col = 0; col < sz; col++) {
+      if (!inside(col + 0.5, row + 0.5)) continue;
+      final i = ((sz - 1 - row) * sz + col) * 4; // bottom-up DIB order
+      pix[i] = 0xE8; pix[i + 1] = 0xE8; pix[i + 2] = 0xE8; pix[i + 3] = 255;
+    }
+  }
+  return _buildIco(pix);
+}
+
+/// A single triangle pointing right (mirror the x coordinate for left).
+bool _triangle(double x, double y, {required double apexX, required double baseX}) {
+  const yTop = 4.0, yBot = 12.0, yMid = 8.0;
+  final lo = apexX < baseX ? baseX : apexX;
+  final hi = apexX < baseX ? apexX : baseX;
+  if (x < (lo < hi ? lo : hi) || x > (lo < hi ? hi : lo)) return false;
+  final t = (x - baseX).abs() / (apexX - baseX).abs();
+  final halfHeight = (yBot - yTop) / 2 * (1 - t);
+  return (y - yMid).abs() <= halfHeight;
+}
+
+Uint8List _makePlayIco() =>
+    _makeGlyphIco((x, y) => _triangle(x, y, apexX: 11.5, baseX: 5.0));
+
+Uint8List _makePauseIco() => _makeGlyphIco((x, y) {
+      if (y < 4 || y > 12) return false;
+      return (x >= 4.5 && x <= 7) || (x >= 9 && x <= 11.5);
+    });
+
+/// Writes the play/pause thumbnail toolbar icon to the system temp dir at
+/// startup.
+Future<void> _initThumbnailToolbarIcons() async {
+  try {
+    final tmp = Directory.systemTemp.path;
+    final entries = {
+      'play': _makePlayIco(),
+      'pause': _makePauseIco(),
+    };
+    for (final entry in entries.entries) {
+      final path = '$tmp\\daw_pm_thumb_${entry.key}.ico';
+      await File(path).writeAsBytes(entry.value);
+      _taskbarIconPaths[entry.key] = path;
+    }
+  } catch (_) {}
+}
+
+bool _thumbnailToolbarHandlerRegistered = false;
+
+/// Registers the click handler for the thumbnail toolbar's play/pause
+/// button — done once, since the button index → action mapping never
+/// changes. [container] is read lazily at click time so this can be called
+/// as soon as the channel exists, before the provider tree is ready.
+///
+/// Desktop preview playback is a separate stack from the mobile player
+/// (`desktopPlayerProvider` / `desktopIsPlayingProvider`, driven by
+/// `_DesktopPlayerBar` in dashboard_page.dart) — `mobilePlayerProvider` is
+/// mobile-only despite the generic-sounding name and never changes here.
+void _registerThumbnailToolbarHandler() {
+  if (_thumbnailToolbarHandlerRegistered) return;
+  _thumbnailToolbarHandlerRegistered = true;
+  _taskbarChannel.setMethodCallHandler((call) async {
+    if (call.method != 'WM_COMMAND') return;
+    final container = _appContainer;
+    if (container == null) return;
+    if (call.arguments as int == 0) {
+      container.read(desktopPlayerToggleRequestProvider.notifier).bump();
+    }
+  });
+}
+
+/// Updates the Windows taskbar thumbnail toolbar (a single hover-preview
+/// play/pause button) to reflect the current preview player state. Hidden
+/// entirely when nothing is loaded.
+void _updateThumbnailToolbar(WidgetRef ref) {
+  if (kIsWeb || !Platform.isWindows) return;
+  final request = ref.read(desktopPlayerProvider);
+  if (request == null) {
+    _taskbarChannel
+        .invokeMethod('ResetThumbnailToolbar', <String, Object?>{})
+        .catchError((Object e) {
+      if (kDebugMode) print('[ThumbnailToolbar] ResetThumbnailToolbar failed: $e');
+    });
+    return;
+  }
+  final isPlaying = ref.read(desktopIsPlayingProvider);
+  final playPausePath = _taskbarIconPaths[isPlaying ? 'pause' : 'play'];
+  if (playPausePath == null) return;
+  _taskbarChannel.invokeMethod('SetThumbnailToolbar', <String, Object?>{
+    'buttons': [
+      {
+        'icon': playPausePath,
+        'tooltip': isPlaying ? 'Pause' : 'Play',
+        'mode': 0,
+      },
+    ],
+  }).catchError((Object e) {
+    if (kDebugMode) print('[ThumbnailToolbar] SetThumbnailToolbar failed: $e');
+  });
 }
 
 /// Updates the Windows taskbar overlay icon to reflect session state.
@@ -667,6 +996,10 @@ class _DawProjectManagerAppState extends ConsumerState<DawProjectManagerApp>
           }
         } catch (_) {}
       });
+      // Thumbnail toolbar: a single hover-preview play/pause button —
+      // reflects the desktop preview player, not the work-session timer.
+      ref.listen(desktopPlayerProvider, (_, _) => _updateThumbnailToolbar(ref));
+      ref.listen(desktopIsPlayingProvider, (_, _) => _updateThumbnailToolbar(ref));
     }
 
     return MaterialApp(

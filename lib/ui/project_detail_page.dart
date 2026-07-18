@@ -116,6 +116,9 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
     _bpmFocusNode = FocusNode();
     _keyFocusNode = FocusNode();
     _notesFocusNode = FocusNode();
+    // Single choke point for clearing the "newly discovered" badge, regardless
+    // of which of the several call sites navigated here.
+    ref.read(recentlyDiscoveredProjectsProvider.notifier).dismiss(widget.projectId);
   }
 
   @override
@@ -2022,7 +2025,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
   /// Picks a local audio file on Android/iOS and stores it in the app's preview_songs folder.
   /// This does NOT upload anything to Drive.
   Future<void> _pickPreviewSongMobile() async {
-    if (!Platform.isAndroid && !Platform.isIOS) return;
+    if (!MobileUtils.isMobile()) return;
 
     final l10n = AppLocalizations.of(context)!;
 
@@ -2527,7 +2530,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                 const SizedBox(height: 8),
                 // On mobile, show Share button instead of Change Preview Song
                 // On desktop, show Change Preview Song button
-                Platform.isAndroid || Platform.isIOS
+                MobileUtils.isMobile()
                     ? Builder(
                         builder: (context) {
                           final buttons = <Widget>[];

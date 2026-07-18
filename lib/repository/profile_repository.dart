@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:uuid/uuid.dart';
@@ -7,6 +6,7 @@ import '../models/music_project.dart';
 import '../models/scan_root.dart';
 import '../models/release.dart';
 import '../utils/app_paths.dart';
+import '../utils/mobile_utils.dart';
 
 class ProfileRepository {
   static const profilesBoxName = 'profiles';
@@ -60,7 +60,7 @@ class ProfileRepository {
       await setCurrentProfileId(defaultProfile.id);
       
       if (kDebugMode) {
-        if (Platform.isAndroid || Platform.isIOS) {
+        if (MobileUtils.isMobile()) {
           print('Mobile platform: Created empty "Default" profile for app initialization.');
           print('  This profile will be automatically removed when backup is downloaded from Google Drive.');
         } else {
@@ -70,7 +70,7 @@ class ProfileRepository {
       
       // On desktop, migrate existing data from old boxes to default profile boxes
       // On mobile, skip migration (profile boxes will be empty)
-      if (!Platform.isAndroid && !Platform.isIOS) {
+      if (!MobileUtils.isMobile()) {
         await _migrateExistingData(defaultProfile.id);
       }
     } else {

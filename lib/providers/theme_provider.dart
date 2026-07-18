@@ -58,9 +58,15 @@ class ThemeTypeNotifier extends Notifier<AppThemeType> {
   }
 
   Future<void> cycle() async {
-    final values = AppThemeType.values;
-    final next = values[(values.indexOf(state) + 1) % values.length];
-    await setThemeType(next);
+    await setThemeType(nextVisibleTheme(state));
+  }
+
+  /// studioLight is hidden from the UI — mirror ThemeSwitcher.cycleVisible()
+  /// and rotate only between the two visible dark themes, regardless of the
+  /// theme cycle() is currently on.
+  @visibleForTesting
+  static AppThemeType nextVisibleTheme(AppThemeType current) {
+    return current == AppThemeType.neonDark ? AppThemeType.classicDark : AppThemeType.neonDark;
   }
 }
 

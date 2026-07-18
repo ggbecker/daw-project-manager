@@ -5,6 +5,7 @@ import FlutterMacOS
 class AppDelegate: FlutterAppDelegate {
 
   private var recentProjects: [[String: String]] = []
+  private var dockMenuChannel: FlutterMethodChannel?
 
   // Cross-process signal telling an already-running instance to surface its
   // window — needed because a second launch attempt (Dock/Finder icon) is a
@@ -64,6 +65,7 @@ class AppDelegate: FlutterAppDelegate {
         result(FlutterMethodNotImplemented)
       }
     }
+    dockMenuChannel = channel
   }
 
   // Builds the right-click Dock menu showing the five most-recently-modified projects.
@@ -71,22 +73,31 @@ class AppDelegate: FlutterAppDelegate {
     guard !recentProjects.isEmpty else { return nil }
     let menu = NSMenu()
     for project in recentProjects {
-      guard let name = project["name"], let path = project["path"] else { continue }
+      guard let name = project["name"], let id = project["id"] else { continue }
       let item = NSMenuItem(
         title: name,
         action: #selector(openRecentProject(_:)),
         keyEquivalent: ""
       )
-      item.representedObject = path
+      item.representedObject = id
       item.target = self
       menu.addItem(item)
     }
     return menu
   }
 
+  // Dock menu runs in-process, so this calls straight back into Dart to
+  // navigate to the project's detail page instead of opening the raw file
+  // with its default (DAW) application.
   @objc private func openRecentProject(_ sender: NSMenuItem) {
-    guard let path = sender.representedObject as? String else { return }
-    NSWorkspace.shared.open(URL(fileURLWithPath: path))
+    guard let id = sender.representedObject as? String else { return }
+    if #available(macOS 14.0, *) {
+      NSApp.activate()
+    } else {
+      NSApp.activate(ignoringOtherApps: true)
+    }
+    NSApplication.shared.windows.first?.makeKeyAndOrderFront(nil)
+    dockMenuChannel?.invokeMethod("openProject", arguments: ["id": id])
   }
 
   override func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {

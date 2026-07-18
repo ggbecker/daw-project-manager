@@ -50,25 +50,25 @@ bool FlutterWindow::OnCreate() {
                   std::get_if<flutter::EncodableMap>(&item);
               if (!map) continue;
               auto nameIt = map->find(flutter::EncodableValue("name"));
-              auto pathIt = map->find(flutter::EncodableValue("path"));
-              if (nameIt == map->end() || pathIt == map->end()) continue;
+              auto idIt = map->find(flutter::EncodableValue("id"));
+              if (nameIt == map->end() || idIt == map->end()) continue;
               const auto* name =
                   std::get_if<std::string>(&nameIt->second);
-              const auto* path =
-                  std::get_if<std::string>(&pathIt->second);
-              if (!name || !path) continue;
+              const auto* id =
+                  std::get_if<std::string>(&idIt->second);
+              if (!name || !id) continue;
               // Convert UTF-8 → wstring for Windows APIs
               int nLen = MultiByteToWideChar(CP_UTF8, 0, name->c_str(), -1,
                                              nullptr, 0);
-              int pLen = MultiByteToWideChar(CP_UTF8, 0, path->c_str(), -1,
+              int pLen = MultiByteToWideChar(CP_UTF8, 0, id->c_str(), -1,
                                              nullptr, 0);
               std::wstring wname(nLen, L'\0');
-              std::wstring wpath(pLen, L'\0');
+              std::wstring wid(pLen, L'\0');
               MultiByteToWideChar(CP_UTF8, 0, name->c_str(), -1,
                                   wname.data(), nLen);
-              MultiByteToWideChar(CP_UTF8, 0, path->c_str(), -1,
-                                  wpath.data(), pLen);
-              projects.emplace_back(wname, wpath);
+              MultiByteToWideChar(CP_UTF8, 0, id->c_str(), -1,
+                                  wid.data(), pLen);
+              projects.emplace_back(wname, wid);
             }
             UpdateJumpList(projects);
           }

@@ -542,4 +542,41 @@ void main() {
       );
     });
   });
+
+  group('TestFactories.makeProject field coverage', () {
+    // Regression: thumbnailPath, uploadedPreviewSongHash, sessions and
+    // metadataScanned were added to MusicProject but never exposed as
+    // makeProject() params, so tests couldn't construct a project with
+    // them set without bypassing the factory — against the CLAUDE.md
+    // checklist for adding a MusicProject field.
+    test('exposes thumbnailPath, uploadedPreviewSongHash, sessions and metadataScanned', () {
+      final session = SessionRecord(
+        id: 's1',
+        startedAt: DateTime(2025, 1, 1, 10, 0),
+        endedAt: DateTime(2025, 1, 1, 11, 0),
+        durationSeconds: 3600,
+      );
+
+      final p = TestFactories.makeProject(
+        thumbnailPath: '/thumbs/p1.png',
+        uploadedPreviewSongHash: 'abc123',
+        sessions: [session],
+        metadataScanned: true,
+      );
+
+      expect(p.thumbnailPath, '/thumbs/p1.png');
+      expect(p.uploadedPreviewSongHash, 'abc123');
+      expect(p.sessions, [session]);
+      expect(p.metadataScanned, isTrue);
+    });
+
+    test('defaults thumbnailPath/uploadedPreviewSongHash to null, sessions to empty, metadataScanned to false', () {
+      final p = TestFactories.makeProject();
+
+      expect(p.thumbnailPath, isNull);
+      expect(p.uploadedPreviewSongHash, isNull);
+      expect(p.sessions, isEmpty);
+      expect(p.metadataScanned, isFalse);
+    });
+  });
 }

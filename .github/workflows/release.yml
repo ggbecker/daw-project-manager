@@ -262,6 +262,14 @@ jobs:
           # Manual + no team still errors without an explicit identity.
           sed -i '' 's/"CODE_SIGN_IDENTITY\[sdk=macosx\*\]" = "Apple Development"/"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-"/g' "$PBXPROJ"
 
+      # 2.95. Stamp the current year into the Windows version resource's LegalCopyright,
+      # so the shipped .exe always shows the year it was actually built/released.
+      - name: Update copyright year (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: bash
+        run: |
+          sed -i "s/Copyright (C) [0-9]\{4\}/Copyright (C) $(date +%Y)/" windows/runner/Runner.rc
+
       # 3. Build
       - name: Build ${{ matrix.os_name }} Executable
         shell: bash

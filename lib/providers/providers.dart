@@ -611,6 +611,31 @@ class SelectedProjectsNotifier extends Notifier<Set<String>> {
   }
 }
 
+// Recently Discovered Projects Provider — IDs of projects the background
+// folder watcher (see FolderWatcherService, wired up in main.dart) has found
+// since this app session started. Intentionally session-only (not persisted
+// to Hive) — "new" only means something within the current run of the app,
+// and this naturally resets on restart just like ShowHiddenProjectsProvider.
+final recentlyDiscoveredProjectsProvider =
+    NotifierProvider<RecentlyDiscoveredProjectsNotifier, Set<String>>(() {
+  return RecentlyDiscoveredProjectsNotifier();
+});
+
+class RecentlyDiscoveredProjectsNotifier extends Notifier<Set<String>> {
+  @override
+  Set<String> build() => <String>{};
+
+  void addAll(Iterable<String> projectIds) {
+    state = {...state, ...projectIds};
+  }
+
+  void dismiss(String projectId) {
+    if (!state.contains(projectId)) return;
+    final updated = Set<String>.from(state)..remove(projectId);
+    state = updated;
+  }
+}
+
 // Phase Filter Provider - filters projects by phase/status
 final phaseFilterProvider = NotifierProvider<PhaseFilterNotifier, String?>(() {
   return PhaseFilterNotifier();
@@ -2517,7 +2542,7 @@ class WorkTimerNotifier extends Notifier<int> {
     final elapsed = DateTime.now().difference(_startTime!);
     state = elapsed.inSeconds;
 
-    if (Platform.isAndroid || Platform.isIOS) return;
+    if (MobileUtils.isMobile()) return;
 
     final enabled = ref.read(workTimerNotifEnabledProvider);
     if (!enabled) return;
