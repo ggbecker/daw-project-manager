@@ -1991,6 +1991,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
               child: Builder(builder: (context) {
                 final tabView = TabBarView(
                   controller: _tabController,
+                  // On mobile, tabs are switched via the bottom NavigationBar;
+                  // swiping between them is easy to trigger by accident while
+                  // scrolling a list, so disable the swipe gesture there.
+                  physics: MobileUtils.isMobile() ? const NeverScrollableScrollPhysics() : null,
                   children: [
                     for (final tab in _currentVisibleTabs)
                       switch (tab) {
