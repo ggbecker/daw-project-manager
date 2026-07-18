@@ -97,7 +97,7 @@ class AppDelegate: FlutterAppDelegate {
       NSApp.activate(ignoringOtherApps: true)
     }
     NSApplication.shared.windows.first?.makeKeyAndOrderFront(nil)
-    dockMenuChannel?.invokeMethod("openProject", ["id": id])
+    dockMenuChannel?.invokeMethod("openProject", arguments: ["id": id])
   }
 
   override func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
