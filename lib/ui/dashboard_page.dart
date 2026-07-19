@@ -3366,6 +3366,29 @@ ScanIconState deepScanIconState({
   return ScanIconState.idle;
 }
 
+/// Parses a persisted `settings` box value back into a [TrinaColumnSort].
+/// Returns null for anything other than the two values this ever writes
+/// ('ascending'/'descending') — including a missing key or a corrupt/stale
+/// value — so a garbled preference is treated as "no persisted sort" rather
+/// than silently defaulting to ascending.
+@visibleForTesting
+TrinaColumnSort? sortDirectionFromPrefsValue(String? value) {
+  return switch (value) {
+    'ascending' => TrinaColumnSort.ascending,
+    'descending' => TrinaColumnSort.descending,
+    _ => null,
+  };
+}
+
+/// The inverse of [sortDirectionFromPrefsValue] — null for
+/// [TrinaColumnSort.none] or a null direction, since "no sort" is persisted
+/// by deleting the key rather than writing a sentinel value.
+@visibleForTesting
+String? sortDirectionToPrefsValue(TrinaColumnSort? direction) {
+  if (direction == null || direction.isNone) return null;
+  return direction.isDescending ? 'descending' : 'ascending';
+}
+
 /// Collects the [MusicProject.id] of every project-backed row in [topLevelRows],
 /// including rows nested inside collapsed or expanded smart-folder groups.
 ///
@@ -3496,17 +3519,63 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   // all group-expand and sort state, since a fresh grid has nothing to read
   // that state back from. This snapshot survives that remount and is
   // reapplied in onLoaded once the new stateManager is live.
+  //
+  // The sort half is also persisted to the `settings` Hive box (group-expand
+  // deliberately isn't — that's noisier and easy to re-expand by hand) so it
+  // survives a full app restart too, not just an in-session remount. Seeded
+  // synchronously in initState from whatever's on disk, so the very first
+  // frame is already sorted correctly instead of flashing unsorted rows
+  // first (same reasoning as _mapProjectsToRows pre-sorting on remount).
+  static const _sortFieldPrefsKey = 'projectsSortField';
+  static const _sortDirectionPrefsKey = 'projectsSortDirection';
+
   Set<String> _lastKnownExpandedGroupNames = {};
   String? _lastKnownSortField;
   TrinaColumnSort? _lastKnownSortDirection;
+
+  @override
+  void initState() {
+    super.initState();
+    try {
+      final box = Hive.box<String>('settings');
+      final field = box.get(_sortFieldPrefsKey);
+      final direction = sortDirectionFromPrefsValue(box.get(_sortDirectionPrefsKey));
+      if (field != null && direction != null) {
+        _lastKnownSortField = field;
+        _lastKnownSortDirection = direction;
+      }
+    } catch (_) {
+      // 'settings' box isn't open yet — main() should always open it before
+      // runApp(), but fall back to unsorted rather than crash if it isn't.
+    }
+  }
+
+  void _persistSortPreference(String? field, TrinaColumnSort? direction) async {
+    try {
+      final box = await Hive.openBox<String>('settings');
+      final directionValue = sortDirectionToPrefsValue(direction);
+      if (field == null || directionValue == null) {
+        await box.delete(_sortFieldPrefsKey);
+        await box.delete(_sortDirectionPrefsKey);
+      } else {
+        await box.put(_sortFieldPrefsKey, field);
+        await box.put(_sortDirectionPrefsKey, directionValue);
+      }
+    } catch (_) {}
+  }
 
   void _captureTableStateSnapshot() {
     final sm = stateManager;
     if (sm == null) return;
     _lastKnownExpandedGroupNames = expandedGroupNames(sm.rows);
     final sortedColumn = sm.getSortedColumn;
-    _lastKnownSortField = sortedColumn?.field;
-    _lastKnownSortDirection = sortedColumn?.sort;
+    final newField = sortedColumn?.field;
+    final newDirection = sortedColumn?.sort;
+    if (newField != _lastKnownSortField || newDirection != _lastKnownSortDirection) {
+      _lastKnownSortField = newField;
+      _lastKnownSortDirection = newDirection;
+      _persistSortPreference(newField, newDirection);
+    }
   }
 
   // Applies _lastKnownSortField/_lastKnownSortDirection to whichever live

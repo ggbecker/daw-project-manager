@@ -131,6 +131,43 @@ void main() {
     });
   });
 
+  group('sortDirectionFromPrefsValue / sortDirectionToPrefsValue', () {
+    // Regression coverage for persisting the Projects grid's column sort
+    // across app restarts (see _PlutoProjectsTableState.initState /
+    // _persistSortPreference): these two are the only translation between
+    // TrinaColumnSort and what actually gets written to the `settings` Hive
+    // box, so a bug here would either lose the persisted sort silently or
+    // crash trying to reparse it.
+
+    test('parses the two values ever written', () {
+      expect(sortDirectionFromPrefsValue('ascending'), TrinaColumnSort.ascending);
+      expect(sortDirectionFromPrefsValue('descending'), TrinaColumnSort.descending);
+    });
+
+    test('treats a missing or corrupt stored value as no persisted sort', () {
+      expect(sortDirectionFromPrefsValue(null), isNull);
+      expect(sortDirectionFromPrefsValue(''), isNull);
+      expect(sortDirectionFromPrefsValue('sideways'), isNull);
+    });
+
+    test('serializes ascending/descending back to the same strings it parses', () {
+      expect(sortDirectionToPrefsValue(TrinaColumnSort.ascending), 'ascending');
+      expect(sortDirectionToPrefsValue(TrinaColumnSort.descending), 'descending');
+    });
+
+    test('serializes a cleared/absent sort to null rather than a sentinel value', () {
+      expect(sortDirectionToPrefsValue(TrinaColumnSort.none), isNull);
+      expect(sortDirectionToPrefsValue(null), isNull);
+    });
+
+    test('round-trips through both directions', () {
+      for (final direction in [TrinaColumnSort.ascending, TrinaColumnSort.descending]) {
+        final value = sortDirectionToPrefsValue(direction);
+        expect(sortDirectionFromPrefsValue(value), direction);
+      }
+    });
+  });
+
   group('groupChildProjectIds', () {
     test('collects ids of every project inside a group row', () {
       final group = _groupHeaderRow('Mixes', [_flatRow('a'), _flatRow('b')]);
