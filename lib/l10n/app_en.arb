@@ -24,7 +24,6 @@
   "refreshProject": "Refresh",
   "scanning": "Scanning…",
   "newProjectBadge": "NEW",
-  "newlyDetectedProjectTooltip": "Automatically detected — not yet reviewed",
   "projectName": "Project Name",
   "bpm": "BPM",
   "key": "Key (e.g., C#m, F major)",

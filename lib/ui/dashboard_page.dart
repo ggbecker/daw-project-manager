@@ -131,6 +131,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
   bool _scanning = false;
   bool _deepScanning = false;
   bool _extractingMetadata = false;
+  // Briefly true right after a scan finishes successfully, so the
+  // corresponding button's icon can flash a checkmark — see rescanIconState/
+  // deepScanIconState and _flashScanSuccess.
+  bool _rescanJustSucceeded = false;
+  bool _deepScanJustSucceeded = false;
+  Timer? _scanSuccessFlashTimer;
   bool _isSearchingMobile = false;
   bool _isSearchingDesktop = false;
   double _railWidth = 130.0;
@@ -340,7 +346,31 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     _searchFocusNode.dispose();
     _debugKeyboardFocusNode.dispose();
     _searchController.dispose();
+    _scanSuccessFlashTimer?.cancel();
     super.dispose();
+  }
+
+  /// Briefly flags [deep]'s scan button as just-succeeded so its icon can
+  /// flash a checkmark (see rescanIconState/deepScanIconState) before
+  /// reverting to normal — the only feedback a scan gets now that neither a
+  /// plain scan nor (eventually) a deep scan blocks the UI with an overlay.
+  void _flashScanSuccess({required bool deep}) {
+    if (!mounted) return;
+    _scanSuccessFlashTimer?.cancel();
+    setState(() {
+      if (deep) {
+        _deepScanJustSucceeded = true;
+      } else {
+        _rescanJustSucceeded = true;
+      }
+    });
+    _scanSuccessFlashTimer = Timer(const Duration(milliseconds: 1200), () {
+      if (!mounted) return;
+      setState(() {
+        _rescanJustSucceeded = false;
+        _deepScanJustSucceeded = false;
+      });
+    });
   }
   
   // Track last processed key to avoid duplicate processing
@@ -562,6 +592,13 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       final scanner = ScannerService();
       int foundCount = 0;
       await repo.clearMissingFiles();
+      // Snapshot before the scan so we can tell genuinely new projects
+      // (surfaced with the "New" badge) apart from ones just re-confirmed
+      // as still present — this scan no longer blocks the UI, so the grid
+      // can visibly change under the user while it runs. Skipped on an empty
+      // repo: that's an initial population, not a "new" discovery.
+      final knownPaths = repo.getAllProjects().map((p) => p.filePath).toSet();
+      final newlyDiscoveredIds = <String>[];
       final ignoredPaths = repo.getIgnoredPaths().map((p) => p.path).toList(growable: false);
       final scanTime = DateTime.now();
       for (final root in repo.getRoots()) {
@@ -572,8 +609,17 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
           foundPaths.add(entity.path);
           foundCount++;
         }
+        if (knownPaths.isNotEmpty) {
+          for (final path in newlyFoundPaths(foundPaths, knownPaths)) {
+            final saved = repo.getByPath(path);
+            if (saved != null) newlyDiscoveredIds.add(saved.id);
+          }
+        }
         await repo.removeOrphanedProjectsFromRoot(root.path, foundPaths);
         await repo.updateRootLastScanAt(root.id, scanTime);
+      }
+      if (newlyDiscoveredIds.isNotEmpty) {
+        ref.read(recentlyDiscoveredProjectsProvider.notifier).addAll(newlyDiscoveredIds);
       }
 
       // Snapshot pending folders with active session tracking before resolving,
@@ -731,6 +777,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
             : AppLocalizations.of(context)!.scanComplete(scanType, foundCount, foundCount == 1 ? '' : 's');
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
       }
+      _flashScanSuccess(deep: fullMetadata);
     } finally {
       if (mounted) setState(() => _scanning = false);
     }
@@ -922,6 +969,13 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       if (mounted) setState(() => _updateVisibleTabs(next));
     });
 
+    // The background initial scan at app launch also drives the Rescan
+    // button's icon (see isScanning below), so flash the same success
+    // checkmark when it finishes as a manual rescan gets.
+    ref.listen<bool>(initialScanStateProvider, (previous, next) {
+      if (previous == true && next == false) _flashScanSuccess(deep: false);
+    });
+
     // Get current search text based on active tab
     final currentSearch = switch (_currentTab) {
       AppTab.projects   => ref.watch(projectsSearchProvider),
@@ -947,6 +1001,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     final isProfileSwitching = ref.watch(profileSwitchingProvider);
     final isScanning = _scanning || initialScanning;
     final isAnyOperation = isScanning || isProfileSwitching || _extractingMetadata;
+    final blockingOperation = shouldBlockForOperation(
+      scanning: _scanning,
+      deepScanning: _deepScanning,
+      profileSwitching: isProfileSwitching,
+      extractingMetadata: _extractingMetadata,
+    );
     final isLeftRail = !MobileUtils.isMobile() && ref.watch(tabPositionProvider) == TabPosition.left;
     final railCollapsed = ref.watch(railCollapsedProvider);
     
@@ -1694,13 +1754,19 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                               : () async {
                                     await _scanAll();
                                   },
-                          icon: (isScanning && !_deepScanning)
-                              ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                  )
-                              : const Icon(Icons.refresh),
+                          icon: switch (rescanIconState(
+                            isScanning: isScanning,
+                            deepScanning: _deepScanning,
+                            justSucceeded: _rescanJustSucceeded,
+                          )) {
+                            ScanIconState.spinning => const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            ScanIconState.justSucceeded => const Icon(Icons.check, color: Colors.green),
+                            ScanIconState.idle => const Icon(Icons.refresh),
+                          },
                           label: Text((isScanning && !_deepScanning) ? AppLocalizations.of(context)!.scanning : AppLocalizations.of(context)!.rescan),
                         ),
                         if (!isLeftRail) ...[
@@ -1751,13 +1817,18 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                         await _fullScanAll(onlyUnscanned: onlyUnscanned);
                                       }
                                     },
-                            icon: _deepScanning
-                                ? const SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
-                                    )
-                                : const Icon(Icons.search),
+                            icon: switch (deepScanIconState(
+                              deepScanning: _deepScanning,
+                              justSucceeded: _deepScanJustSucceeded,
+                            )) {
+                              ScanIconState.spinning => const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                              ScanIconState.justSucceeded => const Icon(Icons.check, color: Colors.green),
+                              ScanIconState.idle => const Icon(Icons.search),
+                            },
                             label: Text(_deepScanning ? AppLocalizations.of(context)!.scanning : AppLocalizations.of(context)!.deepScan),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Theme.of(context).colorScheme.primary,
@@ -2217,12 +2288,18 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                 const SizedBox(height: 8),
                                 // Rescan
                                 IconButton(
-                                  icon: (isScanning && !_deepScanning)
-                                      ? const SizedBox(
-                                          width: 18, height: 18,
-                                          child: CircularProgressIndicator(strokeWidth: 2),
-                                        )
-                                      : const Icon(Icons.refresh),
+                                  icon: switch (rescanIconState(
+                                    isScanning: isScanning,
+                                    deepScanning: _deepScanning,
+                                    justSucceeded: _rescanJustSucceeded,
+                                  )) {
+                                    ScanIconState.spinning => const SizedBox(
+                                        width: 18, height: 18,
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      ),
+                                    ScanIconState.justSucceeded => const Icon(Icons.check, color: Colors.green),
+                                    ScanIconState.idle => const Icon(Icons.refresh),
+                                  },
                                   onPressed: isAnyOperation ? null : () => _scanAll(),
                                 ),
                                 if (!railCollapsed)
@@ -2235,9 +2312,15 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                 const SizedBox(height: 8),
                                 // Deep scan
                                 IconButton(
-                                  icon: _deepScanning
-                                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                                      : const Icon(Icons.search),
+                                  icon: switch (deepScanIconState(
+                                    deepScanning: _deepScanning,
+                                    justSucceeded: _deepScanJustSucceeded,
+                                  )) {
+                                    ScanIconState.spinning =>
+                                      const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
+                                    ScanIconState.justSucceeded => const Icon(Icons.check, color: Colors.green),
+                                    ScanIconState.idle => const Icon(Icons.search),
+                                  },
                                   onPressed: isAnyOperation
                                       ? null
                                       : () async {
@@ -2344,7 +2427,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                 }),
               ),
               // Loading overlay
-              if (isAnyOperation)
+              if (blockingOperation)
                 Container(
                   color: Colors.black54,
                   child: Center(
@@ -3067,6 +3150,68 @@ class _PlutoProjectsTable extends ConsumerStatefulWidget {
   ConsumerState<_PlutoProjectsTable> createState() => _PlutoProjectsTableState();
 }
 
+/// Whether the full-screen loading overlay (which prevents all interaction)
+/// should be shown for the given in-flight operations.
+///
+/// A plain scan — whether the background one at app launch or a
+/// user-triggered "Rescan" — never blocks: both are diff-based against what's
+/// already on screen, so browsing through them is safe. Newly-found projects
+/// surface via the "New" badge (`recentlyDiscoveredProjectsProvider`) instead
+/// of a blocking spinner; any pruning of missing projects or session-
+/// reconciliation dialogs a rescan triggers can happen against a still-
+/// interactive grid.
+///
+/// Deep scan still blocks for now: it rewrites metadata in place on existing
+/// projects, and — unlike a plain scan adding rows the user can simply
+/// ignore until they're ready — an in-place rewrite could show a project
+/// half-updated if opened mid-scan. `scanning` is accepted (deep scan always
+/// implies it) so the call site doesn't need to special-case which flag to
+/// pass, and to leave room to fold deep scan into this same non-blocking
+/// treatment later. Switching profiles or extracting metadata both mutate
+/// state the user could otherwise interact with mid-flight, so those still
+/// block too.
+@visibleForTesting
+bool shouldBlockForOperation({
+  required bool scanning,
+  required bool deepScanning,
+  required bool profileSwitching,
+  required bool extractingMetadata,
+}) {
+  return deepScanning || profileSwitching || extractingMetadata;
+}
+
+/// What a scan-triggering button's icon should show: a spinner while its
+/// scan runs, a checkmark for a brief window right after it finishes
+/// successfully (so the user gets positive confirmation the non-blocking
+/// scan actually completed, since there's no overlay forcing their
+/// attention anymore), or the button's normal idle icon otherwise.
+enum ScanIconState { idle, spinning, justSucceeded }
+
+/// Icon state for the "Rescan" button. Deep scan also sets `isScanning`
+/// (see `_scanAll`/`_fullScanAll`) but owns its own spinner via the
+/// dedicated Deep Scan button, so it's explicitly excluded here.
+@visibleForTesting
+ScanIconState rescanIconState({
+  required bool isScanning,
+  required bool deepScanning,
+  required bool justSucceeded,
+}) {
+  if (isScanning && !deepScanning) return ScanIconState.spinning;
+  if (justSucceeded) return ScanIconState.justSucceeded;
+  return ScanIconState.idle;
+}
+
+/// Icon state for the "Deep Scan" button.
+@visibleForTesting
+ScanIconState deepScanIconState({
+  required bool deepScanning,
+  required bool justSucceeded,
+}) {
+  if (deepScanning) return ScanIconState.spinning;
+  if (justSucceeded) return ScanIconState.justSucceeded;
+  return ScanIconState.idle;
+}
+
 /// Collects the [MusicProject.id] of every project-backed row in [topLevelRows],
 /// including rows nested inside collapsed or expanded smart-folder groups.
 ///
@@ -3092,6 +3237,21 @@ Set<String> collectProjectRowIds(List<TrinaRow> topLevelRows) {
     }
   }
   return ids;
+}
+
+/// The [MusicProject.id] of every project inside [groupRow] (a single
+/// smart-folder group row), or empty if [groupRow] isn't a group. Used to
+/// derive a group's own "New" badge from whichever of its members were just
+/// discovered — a project that used to sit alone (flat) and gets grouped
+/// with a newly-found sibling should visibly read as "something changed
+/// here" even though the folder row itself isn't new.
+@visibleForTesting
+Set<String> groupChildProjectIds(TrinaRow groupRow) {
+  if (!groupRow.type.isGroup) return {};
+  return groupRow.type.group.children.originalList
+      .map((r) => (r.cells['data']?.value as MusicProject?)?.id)
+      .whereType<String>()
+      .toSet();
 }
 
 /// Sorts [rows] by each row's cell value at [field] — string comparison,
@@ -4598,7 +4758,11 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               Expanded(child: Text(rendererContext.cell.value.toString())),
               if (isNewlyDiscovered) ...[
                 const SizedBox(width: 6),
-                const _NewProjectBadge(),
+                _NewProjectBadge(
+                  onDismiss: () => ref
+                      .read(recentlyDiscoveredProjectsProvider.notifier)
+                      .dismiss(project.id),
+                ),
               ],
               if (isNotesMatch)
                 Tooltip(
@@ -7476,7 +7640,11 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                       )),
                       if (ref.watch(recentlyDiscoveredProjectsProvider).contains(project.id)) ...[
                         const SizedBox(width: 6),
-                        const _NewProjectBadge(),
+                        _NewProjectBadge(
+                          onDismiss: () => ref
+                              .read(recentlyDiscoveredProjectsProvider.notifier)
+                              .dismiss(project.id),
+                        ),
                       ],
                       if (isNotesMatch)
                         Tooltip(
@@ -8814,18 +8982,21 @@ class _ExpandArrowCellState extends State<_ExpandArrowCell> {
   }
 }
 
-// Small pill shown next to a project's name when the background folder
-// watcher just found it (see FolderWatcherService / recentlyDiscoveredProjectsProvider).
-// Styled to match the existing deadline badge (Container + tinted border)
-// rather than introducing a new visual language.
+// Small pill shown next to a project's (or smart-folder group's) name when
+// the background folder watcher / scan just found it (see
+// FolderWatcherService / recentlyDiscoveredProjectsProvider). Styled to
+// match the existing deadline badge (Container + tinted border) rather than
+// introducing a new visual language. No tooltip by design — hovering it is
+// itself the dismissal, so a tooltip would appear only to vanish immediately
+// (mirrors "peeking" at a snackbar right as it's swiped away).
 class _NewProjectBadge extends StatelessWidget {
-  const _NewProjectBadge();
+  final VoidCallback onDismiss;
+  const _NewProjectBadge({required this.onDismiss});
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return Tooltip(
-      message: l10n.newlyDetectedProjectTooltip,
+    return MouseRegion(
+      onEnter: (_) => onDismiss(),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
         decoration: BoxDecoration(
@@ -8834,7 +9005,7 @@ class _NewProjectBadge extends StatelessWidget {
           border: Border.all(color: Colors.green.withValues(alpha: 0.4), width: 1),
         ),
         child: Text(
-          l10n.newProjectBadge,
+          AppLocalizations.of(context)!.newProjectBadge,
           style: TextStyle(
             fontSize: 10,
             fontWeight: FontWeight.bold,
@@ -8847,7 +9018,7 @@ class _NewProjectBadge extends StatelessWidget {
   }
 }
 
-class _FolderNameCell extends StatefulWidget {
+class _FolderNameCell extends ConsumerStatefulWidget {
   final TrinaRow row;
   final TrinaGridStateManager stateManager;
   final String folderName;
@@ -8858,10 +9029,10 @@ class _FolderNameCell extends StatefulWidget {
   });
 
   @override
-  State<_FolderNameCell> createState() => _FolderNameCellState();
+  ConsumerState<_FolderNameCell> createState() => _FolderNameCellState();
 }
 
-class _FolderNameCellState extends State<_FolderNameCell> {
+class _FolderNameCellState extends ConsumerState<_FolderNameCell> {
   late bool _expanded;
 
   @override
@@ -8885,6 +9056,10 @@ class _FolderNameCellState extends State<_FolderNameCell> {
 
   @override
   Widget build(BuildContext context) {
+    final childIds = groupChildProjectIds(widget.row);
+    final recentlyDiscovered = ref.watch(recentlyDiscoveredProjectsProvider);
+    final hasNewChild = childIds.any(recentlyDiscovered.contains);
+
     return GestureDetector(
       onTap: () =>
           widget.stateManager.toggleExpandedRowGroup(rowGroup: widget.row),
@@ -8903,6 +9078,14 @@ class _FolderNameCellState extends State<_FolderNameCell> {
               overflow: TextOverflow.ellipsis,
             ),
           ),
+          if (hasNewChild) ...[
+            const SizedBox(width: 6),
+            _NewProjectBadge(
+              onDismiss: () => ref
+                  .read(recentlyDiscoveredProjectsProvider.notifier)
+                  .dismissAll(childIds),
+            ),
+          ],
         ],
       ),
     );

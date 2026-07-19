@@ -45,6 +45,39 @@ void main() {
       expect(c.read(recentlyDiscoveredProjectsProvider), {'a'});
     });
 
+    test('dismissAll removes every given id in a single update', () {
+      final c = ProviderContainer();
+      addTearDown(c.dispose);
+      final notifier = c.read(recentlyDiscoveredProjectsProvider.notifier);
+
+      notifier.addAll(['a', 'b', 'c']);
+      notifier.dismissAll(['a', 'c']);
+
+      expect(c.read(recentlyDiscoveredProjectsProvider), {'b'});
+    });
+
+    test('dismissAll with an empty list is a no-op', () {
+      final c = ProviderContainer();
+      addTearDown(c.dispose);
+      final notifier = c.read(recentlyDiscoveredProjectsProvider.notifier);
+
+      notifier.addAll(['a']);
+      notifier.dismissAll([]);
+
+      expect(c.read(recentlyDiscoveredProjectsProvider), {'a'});
+    });
+
+    test('dismissAll silently ignores ids that were never added', () {
+      final c = ProviderContainer();
+      addTearDown(c.dispose);
+      final notifier = c.read(recentlyDiscoveredProjectsProvider.notifier);
+
+      notifier.addAll(['a']);
+      notifier.dismissAll(['a', 'does-not-exist']);
+
+      expect(c.read(recentlyDiscoveredProjectsProvider), isEmpty);
+    });
+
     test(
         'a fresh container ("app restart") always starts empty, regardless '
         'of what a previous container found — this is intentionally '

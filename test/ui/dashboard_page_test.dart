@@ -30,6 +30,121 @@ TrinaRow _groupHeaderRow(String name, List<TrinaRow> children, {bool expanded = 
 }
 
 void main() {
+  group('shouldBlockForOperation', () {
+    // Regression test: the full-screen loading overlay used to key off a
+    // flag that also went true during the background initial scan at app
+    // launch and a plain user-triggered rescan, locking the user out of the
+    // app for the duration of either. Both are diff-based scans safe to
+    // browse through (newly-found projects surface via the "New" badge
+    // instead), so neither should block — only deep scan (which rewrites
+    // existing projects' metadata in place) and operations that mutate state
+    // out from under the user (switching profiles, extracting metadata)
+    // still do.
+    bool call({
+      bool scanning = false,
+      bool deepScanning = false,
+      bool profileSwitching = false,
+      bool extractingMetadata = false,
+    }) =>
+        shouldBlockForOperation(
+          scanning: scanning,
+          deepScanning: deepScanning,
+          profileSwitching: profileSwitching,
+          extractingMetadata: extractingMetadata,
+        );
+
+    test('does not block when nothing is happening', () {
+      expect(call(), isFalse);
+    });
+
+    test('does not block for a plain user-initiated rescan', () {
+      expect(call(scanning: true), isFalse);
+    });
+
+    test('blocks for a deep scan', () {
+      // Deep scan always implies `scanning` too (see _scanAll), so exercise
+      // that realistic combination rather than deepScanning in isolation.
+      expect(call(scanning: true, deepScanning: true), isTrue);
+    });
+
+    test('blocks while switching profiles', () {
+      expect(call(profileSwitching: true), isTrue);
+    });
+
+    test('blocks while extracting metadata', () {
+      expect(call(extractingMetadata: true), isTrue);
+    });
+  });
+
+  group('rescanIconState', () {
+    test('shows a spinner while a plain scan runs', () {
+      expect(
+        rescanIconState(isScanning: true, deepScanning: false, justSucceeded: false),
+        ScanIconState.spinning,
+      );
+    });
+
+    test('defers to the dedicated Deep Scan button while deep-scanning', () {
+      // isScanning is true here too (deep scan implies it via _scanAll),
+      // but the Rescan button must not also spin — it has its own icon.
+      expect(
+        rescanIconState(isScanning: true, deepScanning: true, justSucceeded: false),
+        ScanIconState.idle,
+      );
+    });
+
+    test('shows the checkmark once scanning has stopped', () {
+      expect(
+        rescanIconState(isScanning: false, deepScanning: false, justSucceeded: true),
+        ScanIconState.justSucceeded,
+      );
+    });
+
+    test('spinner takes priority over a stale justSucceeded flag', () {
+      expect(
+        rescanIconState(isScanning: true, deepScanning: false, justSucceeded: true),
+        ScanIconState.spinning,
+      );
+    });
+
+    test('idle otherwise', () {
+      expect(
+        rescanIconState(isScanning: false, deepScanning: false, justSucceeded: false),
+        ScanIconState.idle,
+      );
+    });
+  });
+
+  group('deepScanIconState', () {
+    test('shows a spinner while deep-scanning', () {
+      expect(deepScanIconState(deepScanning: true, justSucceeded: false), ScanIconState.spinning);
+    });
+
+    test('shows the checkmark once deep-scanning has stopped', () {
+      expect(deepScanIconState(deepScanning: false, justSucceeded: true), ScanIconState.justSucceeded);
+    });
+
+    test('idle otherwise', () {
+      expect(deepScanIconState(deepScanning: false, justSucceeded: false), ScanIconState.idle);
+    });
+  });
+
+  group('groupChildProjectIds', () {
+    test('collects ids of every project inside a group row', () {
+      final group = _groupHeaderRow('Mixes', [_flatRow('a'), _flatRow('b')]);
+
+      expect(groupChildProjectIds(group), {'a', 'b'});
+    });
+
+    test('is empty for a non-group (flat) row', () {
+      expect(groupChildProjectIds(_flatRow('a')), isEmpty);
+    });
+
+    test('is empty for an empty group', () {
+      expect(groupChildProjectIds(_groupHeaderRow('Empty', [])), isEmpty);
+    });
+  });
+
   group('collectProjectRowIds', () {
     test('collects IDs from flat (ungrouped) rows', () {
       final rows = [_flatRow('p1'), _flatRow('p2')];

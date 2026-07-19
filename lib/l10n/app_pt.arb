@@ -24,7 +24,6 @@
   "refreshProject": "Atualizar",
   "scanning": "Escaneando…",
   "newProjectBadge": "NEW",
-  "newlyDetectedProjectTooltip": "Automatically detected — not yet reviewed",
   "projectName": "Nome do Projeto",
   "bpm": "BPM",
   "key": "Tom (ex: C#m, F maior)",

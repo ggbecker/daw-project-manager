@@ -24,7 +24,6 @@
   "refreshProject": "Обновить",
   "scanning": "Сканирование…",
   "newProjectBadge": "NEW",
-  "newlyDetectedProjectTooltip": "Automatically detected — not yet reviewed",
   "projectName": "Название проекта",
   "bpm": "BPM",
   "key": "Тональность (например: C#m, F мажор)",

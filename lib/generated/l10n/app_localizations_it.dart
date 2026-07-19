@@ -72,10 +72,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get newProjectBadge => 'NEW';
 
   @override
-  String get newlyDetectedProjectTooltip =>
-      'Automatically detected — not yet reviewed';
-
-  @override
   String get projectName => 'Nome del Progetto';
 
   @override

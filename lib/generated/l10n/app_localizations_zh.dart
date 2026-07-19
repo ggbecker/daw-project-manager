@@ -72,10 +72,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get newProjectBadge => 'NEW';
 
   @override
-  String get newlyDetectedProjectTooltip =>
-      'Automatically detected — not yet reviewed';
-
-  @override
   String get projectName => '项目名称';
 
   @override

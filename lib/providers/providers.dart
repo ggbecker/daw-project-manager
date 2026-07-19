@@ -634,6 +634,17 @@ class RecentlyDiscoveredProjectsNotifier extends Notifier<Set<String>> {
     final updated = Set<String>.from(state)..remove(projectId);
     state = updated;
   }
+
+  /// Dismisses every id in [projectIds] as a single state update — used for
+  /// a smart-folder group's badge, which represents several newly-found
+  /// projects at once and should clear all of them together on hover rather
+  /// than one state update per member.
+  void dismissAll(Iterable<String> projectIds) {
+    if (projectIds.isEmpty) return;
+    final updated = Set<String>.from(state)..removeAll(projectIds);
+    if (updated.length == state.length) return;
+    state = updated;
+  }
 }
 
 // Phase Filter Provider - filters projects by phase/status
