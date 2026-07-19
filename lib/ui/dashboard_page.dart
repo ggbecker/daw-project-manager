@@ -3161,21 +3161,33 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   void _restoreTableStateSnapshot() {
     final sm = stateManager;
     if (sm == null) return;
+    // notify:false throughout — toggleExpandedRowGroup() defaults to
+    // notify:true, which used to fire _onStateManagerChanged() synchronously
+    // mid-restore (the listener is already attached by the time this runs)
+    // and re-run _captureTableStateSnapshot() on the *partially* restored
+    // grid — before the sort below had been reapplied — clobbering
+    // _lastKnownSortField/_lastKnownSortDirection back to null right before
+    // they're read a few lines down. That silently no-opped sort restoration
+    // on every single remount, not just subsequent ones.
     for (final row in groupRowsToExpand(sm.rows, _lastKnownExpandedGroupNames)) {
-      sm.toggleExpandedRowGroup(rowGroup: row);
+      sm.toggleExpandedRowGroup(rowGroup: row, notify: false);
     }
     final sortField = _lastKnownSortField;
     final sortMode = _lastKnownSortDirection;
-    if (sortField == null || sortMode == null) return;
-    for (final column in sm.columns) {
-      if (column.field != sortField) continue;
-      if (sortMode.isAscending) {
-        sm.sortAscending(column, notify: false);
-      } else if (sortMode.isDescending) {
-        sm.sortDescending(column, notify: false);
+    if (sortField != null && sortMode != null) {
+      for (final column in sm.columns) {
+        if (column.field != sortField) continue;
+        if (sortMode.isAscending) {
+          sm.sortAscending(column, notify: false);
+        } else if (sortMode.isDescending) {
+          sm.sortDescending(column, notify: false);
+        }
+        break;
       }
-      break;
     }
+    // Single batched notification now that expand + sort are both settled,
+    // instead of one repaint per toggled group.
+    sm.notifyListeners();
   }
 
   // Returns true when the project set is identical (same IDs) — only cell
