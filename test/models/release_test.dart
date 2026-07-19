@@ -38,4 +38,35 @@ void main() {
       expect(releaseProtectedProjectIds([_release('r1', [])]), isEmpty);
     });
   });
+
+  group('trackIdsAfterRemoving', () {
+    // Regression coverage for the "Delete Missing" dialog's opt-in checkbox:
+    // choosing to also delete release-tracked missing projects must scrub
+    // those ids out of trackIds, or the release keeps pointing at a project
+    // that no longer exists.
+
+    test('removes every deleted id from trackIds', () {
+      final release = _release('r1', ['a', 'b', 'c']);
+
+      expect(trackIdsAfterRemoving(release, {'a', 'c'}), ['b']);
+    });
+
+    test('preserves order of the ids that remain', () {
+      final release = _release('r1', ['c', 'a', 'b']);
+
+      expect(trackIdsAfterRemoving(release, {'a'}), ['c', 'b']);
+    });
+
+    test('is a no-op when none of the deleted ids are tracked', () {
+      final release = _release('r1', ['a', 'b']);
+
+      expect(trackIdsAfterRemoving(release, {'z'}), ['a', 'b']);
+    });
+
+    test('results in an empty list when every track is deleted', () {
+      final release = _release('r1', ['a', 'b']);
+
+      expect(trackIdsAfterRemoving(release, {'a', 'b'}), isEmpty);
+    });
+  });
 }

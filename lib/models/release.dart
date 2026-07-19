@@ -81,3 +81,13 @@ Set<String> releaseProtectedProjectIds(Iterable<Release> releases) {
   }
   return ids;
 }
+
+/// [release]'s trackIds with every id in [deletedProjectIds] removed.
+///
+/// Used when a user explicitly opts to delete release-tracked missing
+/// projects anyway (see the dashboard's "Delete Missing" bulk action) —
+/// without this, the release would keep pointing at a project id that no
+/// longer exists.
+List<String> trackIdsAfterRemoving(Release release, Set<String> deletedProjectIds) {
+  return release.trackIds.where((id) => !deletedProjectIds.contains(id)).toList();
+}

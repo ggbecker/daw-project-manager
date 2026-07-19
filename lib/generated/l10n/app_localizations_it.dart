@@ -489,17 +489,11 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String deleteMissingProjectsConfirmWithSkipped(
+  String deleteMissingProjectsAlsoDeleteReleaseTracked(
     int count,
     String plural,
-    int skippedCount,
   ) {
-    return '$count project$plural whose file could not be found on this machine will be permanently deleted, along with all notes, deadlines, and session history. This can\'t be undone.\n\n$skippedCount more skipped: still referenced by a release. Remove from the release first to delete permanently.';
-  }
-
-  @override
-  String missingProjectsProtectedByRelease(int count, String plural) {
-    return '$count missing project$plural skipped: still referenced by a release. Remove from the release first to delete permanently.';
+    return 'Also delete $count project$plural that are part of a release (removes them from that release too)';
   }
 
   @override

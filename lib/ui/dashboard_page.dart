@@ -910,11 +910,13 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
   /// ProjectRepository.deleteProjectsPermanently's doc comment); this is now
   /// the only way to actually remove a project's entry.
   ///
-  /// Missing projects still referenced by a release are excluded, matching
-  /// every other deletion path in the app (removeRoot,
+  /// Missing projects still referenced by a release are excluded by default,
+  /// matching every other deletion path in the app (removeRoot,
   /// _deleteProjectsUnderPathPrefix, clearAllData) — losing one would
-  /// silently drop a track from that release. The user has to remove it from
-  /// the release first if they really want it gone.
+  /// silently drop a track from that release. The confirmation dialog offers
+  /// an explicit opt-in checkbox to delete them anyway; choosing to also
+  /// scrubs the deleted ids out of every release's trackIds so none are left
+  /// dangling.
   Future<void> _deleteMissingProjects(BuildContext context, WidgetRef ref, List<String> selectedProjectIds) async {
     final allProjectsAsync = ref.read(allProjectsStreamProvider);
     final allProjects = allProjectsAsync.value ?? [];
@@ -923,48 +925,75 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
 
     final releases = ref.read(releasesProvider).value ?? [];
     final protectedIds = releaseProtectedProjectIds(releases);
-    final idsToDelete = missingIds.where((id) => !protectedIds.contains(id)).toList();
-    final skippedCount = missingIds.length - idsToDelete.length;
+    final releaseTrackedIds = missingIds.where(protectedIds.contains).toList();
+    final freeIds = missingIds.where((id) => !protectedIds.contains(id)).toList();
 
     final l10n = AppLocalizations.of(context)!;
+    var alsoDeleteReleaseTracked = false;
 
-    if (idsToDelete.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.missingProjectsProtectedByRelease(skippedCount, skippedCount == 1 ? '' : 's'))),
-      );
-      return;
-    }
-
-    final plural = idsToDelete.length == 1 ? '' : 's';
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.deleteMissingProjectsTitle),
-        content: Text(
-          skippedCount > 0
-              ? l10n.deleteMissingProjectsConfirmWithSkipped(idsToDelete.length, plural, skippedCount)
-              : l10n.deleteMissingProjectsConfirm(idsToDelete.length, plural),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.red.shade700),
-            child: Text(l10n.deleteMissingProjectsConfirmButton),
-          ),
-        ],
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          final idsToDelete = alsoDeleteReleaseTracked ? missingIds : freeIds;
+          final plural = idsToDelete.length == 1 ? '' : 's';
+          return AlertDialog(
+            title: Text(l10n.deleteMissingProjectsTitle),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(l10n.deleteMissingProjectsConfirm(idsToDelete.length, plural)),
+                if (releaseTrackedIds.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  CheckboxListTile(
+                    value: alsoDeleteReleaseTracked,
+                    onChanged: (v) => setDialogState(() => alsoDeleteReleaseTracked = v ?? false),
+                    title: Text(l10n.deleteMissingProjectsAlsoDeleteReleaseTracked(
+                      releaseTrackedIds.length,
+                      releaseTrackedIds.length == 1 ? '' : 's',
+                    )),
+                    controlAffinity: ListTileControlAffinity.leading,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ],
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(l10n.cancel),
+              ),
+              FilledButton(
+                onPressed: idsToDelete.isEmpty ? null : () => Navigator.pop(ctx, true),
+                style: FilledButton.styleFrom(backgroundColor: Colors.red.shade700),
+                child: Text(l10n.deleteMissingProjectsConfirmButton),
+              ),
+            ],
+          );
+        },
       ),
     );
     if (confirmed != true || !mounted) return;
 
+    final idsToDelete = alsoDeleteReleaseTracked ? missingIds : freeIds;
+    if (idsToDelete.isEmpty) return;
+
     try {
       final repo = await ref.read(repositoryProvider.future);
       await repo.deleteProjectsPermanently(idsToDelete);
+
+      if (alsoDeleteReleaseTracked) {
+        final deleted = idsToDelete.toSet();
+        for (final release in releases) {
+          if (!release.trackIds.any(deleted.contains)) continue;
+          await repo.updateRelease(release.copyWith(trackIds: trackIdsAfterRemoving(release, deleted)));
+        }
+      }
+
       ref.invalidate(allProjectsStreamProvider);
       if (mounted) {
+        final plural = idsToDelete.length == 1 ? '' : 's';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.missingProjectsDeleted(idsToDelete.length, plural))),
         );
