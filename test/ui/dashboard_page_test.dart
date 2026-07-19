@@ -312,4 +312,144 @@ void main() {
       expect(lastKnownSortDirection, TrinaColumnSort.ascending);
     });
   });
+
+  group('_rebuildRows-style expand restore must be idempotent', () {
+    // Regression test for a bug introduced by making _mapProjectsToRows()
+    // pre-expand groups from the persisted snapshot (to fix the sort/expand
+    // flash on remount): _rebuildRows()'s own restore loop used to assume
+    // freshly-built group rows *always* start collapsed and unconditionally
+    // called toggleExpandedRowGroup() whenever a group "was" expanded before
+    // the rebuild. Once fresh rows could already arrive pre-expanded, that
+    // unconditional toggle flipped them straight back to collapsed —
+    // theme/locale switches (which trigger a _rebuildRows() by design) then
+    // visibly collapsed every smart folder again. The fix compares the
+    // desired state against the row's *actual* current state before
+    // deciding whether to toggle at all.
+    List<TrinaColumn> columns() => [
+          TrinaColumn(title: 'Name', field: 'name', type: TrinaColumnType.text()),
+        ];
+
+    TrinaRow flat(String name) => TrinaRow(cells: {'name': TrinaCell(value: name)});
+
+    TrinaRow group(String name, List<TrinaRow> children, {bool expanded = false}) {
+      return TrinaRow(
+        cells: {'name': TrinaCell(value: name)},
+        type: TrinaRowType.group(
+          children: FilteredList(initialList: children),
+          expanded: expanded,
+        ),
+      );
+    }
+
+    // Mirrors _rebuildRows()'s buggy restore loop: toggles unconditionally.
+    void restoreExpandBuggy(TrinaGridStateManager sm, Map<String, bool> wasCollapsed) {
+      for (final row in sm.rows) {
+        if (row.type.isGroup) {
+          final name = row.cells['name']!.value as String;
+          if (wasCollapsed[name] == false) {
+            sm.toggleExpandedRowGroup(rowGroup: row, notify: false);
+          }
+        }
+      }
+    }
+
+    // Mirrors the fixed _rebuildRows(): only toggles when state disagrees.
+    void restoreExpandFixed(TrinaGridStateManager sm, Map<String, bool> wasCollapsed) {
+      for (final row in sm.rows) {
+        if (row.type.isGroup) {
+          final name = row.cells['name']!.value as String;
+          final shouldBeExpanded = wasCollapsed[name] == false;
+          if (shouldBeExpanded != row.type.group.expanded) {
+            sm.toggleExpandedRowGroup(rowGroup: row, notify: false);
+          }
+        }
+      }
+    }
+
+    Future<TrinaGridStateManager> pumpGrid(
+      WidgetTester tester,
+      Key key,
+      List<TrinaRow> rows,
+    ) async {
+      late TrinaGridStateManager sm;
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 400,
+            height: 400,
+            child: TrinaGrid(
+              key: key,
+              columns: columns(),
+              rows: rows,
+              onLoaded: (e) {
+                e.stateManager.setRowGroup(TrinaRowGroupTreeDelegate(
+                  resolveColumnDepth: (c) => null,
+                  showText: (c) => true,
+                  showFirstExpandableIcon: false,
+                  showCount: false,
+                ));
+                sm = e.stateManager;
+              },
+            ),
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+      return sm;
+    }
+
+    testWidgets(
+        'unconditional toggle collapses a group whose fresh row already arrived expanded',
+        (tester) async {
+      final wasCollapsed = {'Mixes': false}; // group WAS expanded before rebuild
+
+      // Fresh rows built the way _mapProjectsToRows() now builds them: the
+      // group already pre-expanded from the persisted snapshot.
+      final alreadyExpandedRows = [
+        flat('Zeta'),
+        group('Mixes', [flat('Charlie'), flat('Alpha')], expanded: true),
+      ];
+      final sm = await pumpGrid(tester, const ValueKey('buggy'), alreadyExpandedRows);
+
+      restoreExpandBuggy(sm, wasCollapsed);
+
+      expect(
+        sm.rows.firstWhere((r) => r.type.isGroup).type.group.expanded,
+        isFalse,
+        reason: 'demonstrates the regression: an already-expanded row gets toggled shut',
+      );
+    });
+
+    testWidgets(
+        'idempotent toggle leaves an already-expanded fresh row expanded',
+        (tester) async {
+      final wasCollapsed = {'Mixes': false};
+
+      final alreadyExpandedRows = [
+        flat('Zeta'),
+        group('Mixes', [flat('Charlie'), flat('Alpha')], expanded: true),
+      ];
+      final sm = await pumpGrid(tester, const ValueKey('fixed1'), alreadyExpandedRows);
+
+      restoreExpandFixed(sm, wasCollapsed);
+
+      expect(sm.rows.firstWhere((r) => r.type.isGroup).type.group.expanded, isTrue);
+    });
+
+    testWidgets(
+        'idempotent toggle still expands a fresh row that arrived collapsed',
+        (tester) async {
+      final wasCollapsed = {'Mixes': false};
+
+      final freshlyCollapsedRows = [
+        flat('Zeta'),
+        group('Mixes', [flat('Charlie'), flat('Alpha')], expanded: false),
+      ];
+      final sm = await pumpGrid(tester, const ValueKey('fixed2'), freshlyCollapsedRows);
+
+      restoreExpandFixed(sm, wasCollapsed);
+
+      expect(sm.rows.firstWhere((r) => r.type.isGroup).type.group.expanded, isTrue);
+    });
+  });
 }

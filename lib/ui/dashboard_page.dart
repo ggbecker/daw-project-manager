@@ -3362,8 +3362,16 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     for (final row in sm.rows) {
       if (row.type.isGroup) {
         final name = row.cells['name']?.value as String? ?? '';
-        // New group rows default to collapsed; expand the ones that were open.
-        if (wasCollapsed[name] == false) sm.toggleExpandedRowGroup(rowGroup: row);
+        // _mapProjectsToRows() already applies _lastKnownExpandedGroupNames
+        // when building fresh group rows (see applySortSnapshot's doc
+        // comment for why), so a group may already start expanded here —
+        // toggleExpandedRowGroup() *toggles*, so calling it unconditionally
+        // on an already-expanded row would collapse it right back. Only
+        // toggle when the row's current state doesn't already match.
+        final shouldBeExpanded = wasCollapsed[name] == false;
+        if (shouldBeExpanded != row.type.group.expanded) {
+          sm.toggleExpandedRowGroup(rowGroup: row);
+        }
       }
     }
     if (sortedColumn != null) {
