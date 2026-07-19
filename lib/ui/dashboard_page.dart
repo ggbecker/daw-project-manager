@@ -5,7 +5,8 @@ import 'package:trina_grid/trina_grid.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb, listEquals;
+import 'package:flutter/foundation.dart'
+    show kDebugMode, kIsWeb, listEquals, visibleForTesting;
 import 'package:flutter/services.dart'; 
 import 'package:path/path.dart' as path; // 🚨 NOVO IMPORT
 import 'package:url_launcher/url_launcher.dart';
@@ -3066,6 +3067,105 @@ class _PlutoProjectsTable extends ConsumerStatefulWidget {
   ConsumerState<_PlutoProjectsTable> createState() => _PlutoProjectsTableState();
 }
 
+/// Collects the [MusicProject.id] of every project-backed row in [topLevelRows],
+/// including rows nested inside collapsed or expanded smart-folder groups.
+///
+/// Smart-folder groups (`TrinaRowType.group`) keep their member rows in
+/// `row.type.group.children`, not in the top-level row list, so a naive scan
+/// of only top-level rows sees group *headers* (whose `data` cell is null)
+/// instead of the projects inside them. That previously made the grouped-view
+/// row/project ID comparison in `_tableRowsMatchProjects` fail on every
+/// refresh, forcing a full row rebuild (and losing group expansion + sort
+/// state) even when nothing structurally changed.
+@visibleForTesting
+Set<String> collectProjectRowIds(List<TrinaRow> topLevelRows) {
+  final ids = <String>{};
+  for (final row in topLevelRows) {
+    if (row.type.isGroup) {
+      for (final child in row.type.group.children.originalList) {
+        final id = (child.cells['data']?.value as MusicProject?)?.id;
+        if (id != null) ids.add(id);
+      }
+    } else {
+      final id = (row.cells['data']?.value as MusicProject?)?.id;
+      if (id != null) ids.add(id);
+    }
+  }
+  return ids;
+}
+
+/// Sorts [rows] by each row's cell value at [field] — string comparison,
+/// matching `TrinaColumnType.text().compare()`, the type every column in
+/// this table uses — and recursively sorts each group row's children the
+/// same way. Mirrors what `TrinaGridStateManager.sortAscending/Descending`
+/// do internally (including their row-group delegation), but runs on plain
+/// [TrinaRow] lists before they're ever attached to a grid.
+///
+/// Used to build a freshly-mounted TrinaGrid's *initial* rows already in the
+/// desired order: TrinaGrid only calls `onLoaded` (and hence any state-
+/// manager-level sort restore) via `addPostFrameCallback`, i.e. after its
+/// first frame has already painted. Waiting for that to reapply a sort
+/// causes a one-frame flash of the natural/unsorted order every time the
+/// grid remounts (switching theme or language both do, since TrinaGrid's key
+/// includes both) — pre-sorting the initial rows means that first frame is
+/// already correct.
+@visibleForTesting
+void applySortSnapshot(List<TrinaRow> rows, String field, TrinaColumnSort direction) {
+  if (direction.isNone) return;
+  int compare(TrinaRow a, TrinaRow b) {
+    final av = a.cells[field]?.value;
+    final bv = b.cells[field]?.value;
+    if (av == null || bv == null) {
+      return av == bv ? 0 : (av == null ? -1 : 1);
+    }
+    return av.toString().compareTo(bv.toString());
+  }
+
+  final effectiveCompare =
+      direction.isDescending ? (TrinaRow a, TrinaRow b) => compare(b, a) : compare;
+  rows.sort(effectiveCompare);
+  for (final row in rows) {
+    if (row.type.isGroup) {
+      row.type.group.children.sort(effectiveCompare);
+    }
+  }
+}
+
+/// The set of currently-expanded smart-folder group names among [rows].
+///
+/// Used to snapshot expand state before it can be lost — TrinaGrid's key
+/// includes both locale and theme, so switching either one remounts the
+/// entire grid with a brand new [TrinaGridStateManager] whose groups start
+/// out collapsed by default, with nothing left to read the old expand state
+/// back from.
+@visibleForTesting
+Set<String> expandedGroupNames(List<TrinaRow> rows) {
+  return {
+    for (final row in rows)
+      if (row.type.isGroup && row.type.group.expanded)
+        row.cells['name']?.value as String? ?? '',
+  };
+}
+
+/// Which of [rows] are collapsed groups whose name appears in
+/// [namesToExpand] — i.e. the rows that still need `toggleExpandedRowGroup`
+/// called on them to restore a previously-captured [expandedGroupNames]
+/// snapshot after the row list was rebuilt (or the whole grid remounted)
+/// collapsed by default. Groups are matched by name only, so a folder that
+/// no longer exists after the rebuild is silently dropped, and a rebuilt
+/// group that happens to share a name with a still-expanded one is expanded
+/// to match.
+@visibleForTesting
+List<TrinaRow> groupRowsToExpand(List<TrinaRow> rows, Set<String> namesToExpand) {
+  return [
+    for (final row in rows)
+      if (row.type.isGroup &&
+          !row.type.group.expanded &&
+          namesToExpand.contains(row.cells['name']?.value as String? ?? ''))
+        row,
+  ];
+}
+
 class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   TrinaGridStateManager? stateManager;
   bool _isRebuildingRows = false;
@@ -3073,6 +3173,72 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   // call that busts TrinaGrid's renderer cache (which only invalidates on cell/
   // row/selection changes, not on theme changes).
   bool _needsThemeRefresh = false;
+
+  // Continuously-updated snapshot of group-expand and column-sort state, kept
+  // in sync (via _onStateManagerChanged) every time the live grid actually
+  // changes. TrinaGrid's key includes both locale and theme
+  // (`trina_grid_${locale}_${theme}`), so switching either one discards the
+  // old TrinaGridStateManager entirely and mounts a brand new one — losing
+  // all group-expand and sort state, since a fresh grid has nothing to read
+  // that state back from. This snapshot survives that remount and is
+  // reapplied in onLoaded once the new stateManager is live.
+  Set<String> _lastKnownExpandedGroupNames = {};
+  String? _lastKnownSortField;
+  TrinaColumnSort? _lastKnownSortDirection;
+
+  void _captureTableStateSnapshot() {
+    final sm = stateManager;
+    if (sm == null) return;
+    _lastKnownExpandedGroupNames = expandedGroupNames(sm.rows);
+    final sortedColumn = sm.getSortedColumn;
+    _lastKnownSortField = sortedColumn?.field;
+    _lastKnownSortDirection = sortedColumn?.sort;
+  }
+
+  // Applies _lastKnownSortField/_lastKnownSortDirection to whichever live
+  // column matches by field. Deliberately reads the *persistent* snapshot
+  // rather than sm.getSortedColumn: on a freshly-mounted grid (theme/locale
+  // remount) the fresh TrinaColumn objects always start with sort:none —
+  // _mapProjectsToRows() pre-sorts the row *data* for the first frame, but
+  // nothing sets the column's own sort flag until this runs. Reading the
+  // live column instead of the snapshot here would silently skip restoring
+  // it whenever this is the first thing to touch sort after a remount,
+  // leaving the header's sort-direction icon stuck on neutral even though
+  // the rows are genuinely sorted.
+  void _applyKnownSort(TrinaGridStateManager sm) {
+    final sortField = _lastKnownSortField;
+    final sortMode = _lastKnownSortDirection;
+    if (sortField == null || sortMode == null) return;
+    for (final column in sm.columns) {
+      if (column.field != sortField) continue;
+      if (sortMode.isAscending) {
+        sm.sortAscending(column, notify: false);
+      } else if (sortMode.isDescending) {
+        sm.sortDescending(column, notify: false);
+      }
+      break;
+    }
+  }
+
+  void _restoreTableStateSnapshot() {
+    final sm = stateManager;
+    if (sm == null) return;
+    // notify:false throughout — toggleExpandedRowGroup() defaults to
+    // notify:true, which used to fire _onStateManagerChanged() synchronously
+    // mid-restore (the listener is already attached by the time this runs)
+    // and re-run _captureTableStateSnapshot() on the *partially* restored
+    // grid — before the sort below had been reapplied — clobbering
+    // _lastKnownSortField/_lastKnownSortDirection back to null right before
+    // they're read a few lines down. That silently no-opped sort restoration
+    // on every single remount, not just subsequent ones.
+    for (final row in groupRowsToExpand(sm.rows, _lastKnownExpandedGroupNames)) {
+      sm.toggleExpandedRowGroup(rowGroup: row, notify: false);
+    }
+    _applyKnownSort(sm);
+    // Single batched notification now that expand + sort are both settled,
+    // instead of one repaint per toggled group.
+    sm.notifyListeners();
+  }
 
   // Returns true when the project set is identical (same IDs) — only cell
   // values may have changed (BPM, key, lastModified, etc.). In that case we
@@ -3094,11 +3260,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   bool _tableRowsMatchProjects(List<MusicProject> projects) {
     final sm = stateManager;
     if (sm == null) return false;
-    final rowIds = sm.refRows.originalList
-        .where((r) => r.isMain)
-        .map((r) => (r.cells['data']?.value as MusicProject?)?.id)
-        .whereType<String>()
-        .toSet();
+    final rowIds = collectProjectRowIds(sm.refRows.originalList);
     final projectIds = projects.map((p) => p.id).toSet();
     return rowIds.length == projectIds.length && rowIds.containsAll(projectIds);
   }
@@ -3182,7 +3344,10 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   void _onStateManagerChanged() {
     if (!mounted) return;
     setState(() {});
-    if (!_isRebuildingRows) _updateGroupExpandNotifier();
+    if (!_isRebuildingRows) {
+      _captureTableStateSnapshot();
+      _updateGroupExpandNotifier();
+    }
   }
 
   void _rebuildRows() {
@@ -3202,10 +3367,25 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     for (final row in sm.rows) {
       if (row.type.isGroup) {
         final name = row.cells['name']?.value as String? ?? '';
-        // New group rows default to collapsed; expand the ones that were open.
-        if (wasCollapsed[name] == false) sm.toggleExpandedRowGroup(rowGroup: row);
+        // _mapProjectsToRows() already applies _lastKnownExpandedGroupNames
+        // when building fresh group rows (see applySortSnapshot's doc
+        // comment for why), so a group may already start expanded here —
+        // toggleExpandedRowGroup() *toggles*, so calling it unconditionally
+        // on an already-expanded row would collapse it right back. Only
+        // toggle when the row's current state doesn't already match.
+        final shouldBeExpanded = wasCollapsed[name] == false;
+        if (shouldBeExpanded != row.type.group.expanded) {
+          sm.toggleExpandedRowGroup(rowGroup: row, notify: false);
+        }
       }
     }
+    // newRows' *data* is already in the right order — _mapProjectsToRows()
+    // pre-sorts it — but insertRows() doesn't touch the live TrinaColumn's
+    // sort flag, so the header's sort-direction icon would otherwise stay
+    // neutral. This sets that bookkeeping. Uses the persistent snapshot
+    // rather than sm.getSortedColumn — see _applyKnownSort's doc comment for
+    // why that matters on a remount.
+    _applyKnownSort(sm);
     sm.notifyListeners();
     _isRebuildingRows = false;
     // _rebuildRows is called from didUpdateWidget (i.e. during the build phase).
@@ -4153,14 +4333,26 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           },
           type: TrinaRowType.group(
             children: FilteredList(initialList: group.map(_projectToRow).toList()),
+            expanded: _lastKnownExpandedGroupNames.contains(path.basename(dir)),
           ),
         ),
       ));
     }
 
-    // Sort all display items newest-first.
+    // Sort all display items newest-first (the natural/default order).
     items.sort((a, b) => b.$1.compareTo(a.$1));
-    return items.map((e) => e.$2).toList();
+    final rows = items.map((e) => e.$2).toList();
+
+    // Reapply whatever column sort was active before this row list was
+    // (re)built — see applySortSnapshot's doc comment for why this can't
+    // just wait for the state-manager-level restore in onLoaded.
+    final sortField = _lastKnownSortField;
+    final sortDirection = _lastKnownSortDirection;
+    if (sortField != null && sortDirection != null) {
+      applySortSnapshot(rows, sortField, sortDirection);
+    }
+
+    return rows;
   }
 
   @override
@@ -4997,15 +5189,28 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               ),
             );
             stateManager!.addListener(_onStateManagerChanged);
-            _updateGroupExpandNotifier();
-            // If the grid was recreated due to a theme change, bust the
-            // renderer cache now that the new stateManager is live.
             if (_needsThemeRefresh) {
+              // The deferred _rebuildRows() below busts the renderer cache
+              // AND restores expand/sort state itself, so don't also call
+              // _restoreTableStateSnapshot() here — _mapProjectsToRows()
+              // already pre-applied the same snapshot when building
+              // initialRows above, so both calls would just be settling an
+              // already-correct grid a second time. Two separate repaints
+              // (one now, one a frame later) of visually-identical content is
+              // exactly what reads as the smart folder flickering on a quick
+              // theme switch, since each one replaces the group row's object
+              // identity. One settle instead of two.
               _needsThemeRefresh = false;
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (mounted) _rebuildRows();
               });
+            } else {
+              // Locale switches (or any other remount) have no renderer-cache
+              // issue to fix, so a synchronous restore is enough — no need to
+              // wait a frame like the theme-refresh path above.
+              _restoreTableStateSnapshot();
             }
+            _updateGroupExpandNotifier();
           },
       onRowSecondaryTap: (TrinaGridOnRowSecondaryTapEvent event) {
         final project = event.row.cells['data']?.value as MusicProject?;
