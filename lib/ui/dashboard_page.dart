@@ -909,19 +909,42 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
   /// auto-delete anything on their own (see
   /// ProjectRepository.deleteProjectsPermanently's doc comment); this is now
   /// the only way to actually remove a project's entry.
+  ///
+  /// Missing projects still referenced by a release are excluded, matching
+  /// every other deletion path in the app (removeRoot,
+  /// _deleteProjectsUnderPathPrefix, clearAllData) — losing one would
+  /// silently drop a track from that release. The user has to remove it from
+  /// the release first if they really want it gone.
   Future<void> _deleteMissingProjects(BuildContext context, WidgetRef ref, List<String> selectedProjectIds) async {
     final allProjectsAsync = ref.read(allProjectsStreamProvider);
     final allProjects = allProjectsAsync.value ?? [];
-    final idsToDelete = missingProjectIds(allProjects, selectedProjectIds);
-    if (idsToDelete.isEmpty) return;
+    final missingIds = missingProjectIds(allProjects, selectedProjectIds);
+    if (missingIds.isEmpty) return;
+
+    final releases = ref.read(releasesProvider).value ?? [];
+    final protectedIds = releaseProtectedProjectIds(releases);
+    final idsToDelete = missingIds.where((id) => !protectedIds.contains(id)).toList();
+    final skippedCount = missingIds.length - idsToDelete.length;
 
     final l10n = AppLocalizations.of(context)!;
+
+    if (idsToDelete.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.missingProjectsProtectedByRelease(skippedCount, skippedCount == 1 ? '' : 's'))),
+      );
+      return;
+    }
+
     final plural = idsToDelete.length == 1 ? '' : 's';
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.deleteMissingProjectsTitle),
-        content: Text(l10n.deleteMissingProjectsConfirm(idsToDelete.length, plural)),
+        content: Text(
+          skippedCount > 0
+              ? l10n.deleteMissingProjectsConfirmWithSkipped(idsToDelete.length, plural, skippedCount)
+              : l10n.deleteMissingProjectsConfirm(idsToDelete.length, plural),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -3168,6 +3191,9 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
                     Builder(builder: (context) {
                       final missingIds = missingProjectIds(widget.projects, _selectedProjectIds);
                       if (missingIds.isEmpty) return const SizedBox.shrink();
+                      // Shown whenever anything selected is missing, even if it later
+                      // turns out to be entirely release-protected — _deleteMissingProjects
+                      // explains that rather than hiding the button with no feedback.
                       return Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [

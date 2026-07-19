@@ -958,6 +958,22 @@ abstract class AppLocalizations {
   /// **'{count} missing project{plural} deleted.'**
   String missingProjectsDeleted(int count, String plural);
 
+  /// No description provided for @deleteMissingProjectsConfirmWithSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} project{plural} whose file could not be found on this machine will be permanently deleted, along with all notes, deadlines, and session history. This can\'t be undone.\n\n{skippedCount} more skipped: still referenced by a release. Remove from the release first to delete permanently.'**
+  String deleteMissingProjectsConfirmWithSkipped(
+    int count,
+    String plural,
+    int skippedCount,
+  );
+
+  /// No description provided for @missingProjectsProtectedByRelease.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} missing project{plural} skipped: still referenced by a release. Remove from the release first to delete permanently.'**
+  String missingProjectsProtectedByRelease(int count, String plural);
+
   /// Confirmation message when hiding a project
   ///
   /// In en, this message translates to:

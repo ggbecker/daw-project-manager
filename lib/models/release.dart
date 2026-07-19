@@ -66,3 +66,18 @@ class Release {
     );
   }
 }
+
+/// Every [MusicProject] id referenced by any release in [releases].
+///
+/// These projects are treated as protected throughout the app — removeRoot,
+/// ignoring a path (`_deleteProjectsUnderPathPrefix`), and clearing all data
+/// all skip them, and the dashboard's own project filter keeps showing them
+/// even once their scan root is gone — because losing one would silently
+/// drop a track from someone's release.
+Set<String> releaseProtectedProjectIds(Iterable<Release> releases) {
+  final ids = <String>{};
+  for (final release in releases) {
+    ids.addAll(release.trackIds);
+  }
+  return ids;
+}

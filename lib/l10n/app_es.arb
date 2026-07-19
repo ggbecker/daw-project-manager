@@ -318,6 +318,31 @@
       }
     }
   },
+  "deleteMissingProjectsConfirmWithSkipped": "{count} project{plural} whose file could not be found on this machine will be permanently deleted, along with all notes, deadlines, and session history. This can't be undone.\n\n{skippedCount} more skipped: still referenced by a release. Remove from the release first to delete permanently.",
+  "@deleteMissingProjectsConfirmWithSkipped": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      },
+      "skippedCount": {
+        "type": "int"
+      }
+    }
+  },
+  "missingProjectsProtectedByRelease": "{count} missing project{plural} skipped: still referenced by a release. Remove from the release first to delete permanently.",
+  "@missingProjectsProtectedByRelease": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      }
+    }
+  },
   "hideProjectMessage": "¿Está seguro de que desea ocultar \"{projectName}\"?",
   "@hideProjectMessage": {
     "description": "Mensaje de confirmación al ocultar un proyecto",
