@@ -3094,6 +3094,43 @@ Set<String> collectProjectRowIds(List<TrinaRow> topLevelRows) {
   return ids;
 }
 
+/// Sorts [rows] by each row's cell value at [field] — string comparison,
+/// matching `TrinaColumnType.text().compare()`, the type every column in
+/// this table uses — and recursively sorts each group row's children the
+/// same way. Mirrors what `TrinaGridStateManager.sortAscending/Descending`
+/// do internally (including their row-group delegation), but runs on plain
+/// [TrinaRow] lists before they're ever attached to a grid.
+///
+/// Used to build a freshly-mounted TrinaGrid's *initial* rows already in the
+/// desired order: TrinaGrid only calls `onLoaded` (and hence any state-
+/// manager-level sort restore) via `addPostFrameCallback`, i.e. after its
+/// first frame has already painted. Waiting for that to reapply a sort
+/// causes a one-frame flash of the natural/unsorted order every time the
+/// grid remounts (switching theme or language both do, since TrinaGrid's key
+/// includes both) — pre-sorting the initial rows means that first frame is
+/// already correct.
+@visibleForTesting
+void applySortSnapshot(List<TrinaRow> rows, String field, TrinaColumnSort direction) {
+  if (direction.isNone) return;
+  int compare(TrinaRow a, TrinaRow b) {
+    final av = a.cells[field]?.value;
+    final bv = b.cells[field]?.value;
+    if (av == null || bv == null) {
+      return av == bv ? 0 : (av == null ? -1 : 1);
+    }
+    return av.toString().compareTo(bv.toString());
+  }
+
+  final effectiveCompare =
+      direction.isDescending ? (TrinaRow a, TrinaRow b) => compare(b, a) : compare;
+  rows.sort(effectiveCompare);
+  for (final row in rows) {
+    if (row.type.isGroup) {
+      row.type.group.children.sort(effectiveCompare);
+    }
+  }
+}
+
 /// The set of currently-expanded smart-folder group names among [rows].
 ///
 /// Used to snapshot expand state before it can be lost — TrinaGrid's key
@@ -4283,14 +4320,26 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           },
           type: TrinaRowType.group(
             children: FilteredList(initialList: group.map(_projectToRow).toList()),
+            expanded: _lastKnownExpandedGroupNames.contains(path.basename(dir)),
           ),
         ),
       ));
     }
 
-    // Sort all display items newest-first.
+    // Sort all display items newest-first (the natural/default order).
     items.sort((a, b) => b.$1.compareTo(a.$1));
-    return items.map((e) => e.$2).toList();
+    final rows = items.map((e) => e.$2).toList();
+
+    // Reapply whatever column sort was active before this row list was
+    // (re)built — see applySortSnapshot's doc comment for why this can't
+    // just wait for the state-manager-level restore in onLoaded.
+    final sortField = _lastKnownSortField;
+    final sortDirection = _lastKnownSortDirection;
+    if (sortField != null && sortDirection != null) {
+      applySortSnapshot(rows, sortField, sortDirection);
+    }
+
+    return rows;
   }
 
   @override

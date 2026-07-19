@@ -10,6 +10,10 @@ TrinaRow _flatRow(String id) {
   return TrinaRow(cells: {'data': TrinaCell(value: TestFactories.makeProject(id: id))});
 }
 
+TrinaRow _namedFlatRow(String name) {
+  return TrinaRow(cells: {'name': TrinaCell(value: name)});
+}
+
 TrinaRow _groupHeaderRow(String name, List<TrinaRow> children, {bool expanded = false}) {
   return TrinaRow(
     cells: {
@@ -117,6 +121,58 @@ void main() {
       final rows = [_groupHeaderRow('Stems', [_flatRow('b')], expanded: false)];
 
       expect(groupRowsToExpand(rows, {'Mixes (deleted)'}), isEmpty);
+    });
+  });
+
+  group('applySortSnapshot', () {
+    // Regression coverage for: rapidly switching theme showed a one-frame
+    // flash of the default (unsorted) row order before the applied sort
+    // snapped back in. TrinaGrid only calls onLoaded (and hence any state-
+    // manager-level sort restore) after its first frame has painted, so the
+    // fix is to hand the freshly-built grid rows that are *already* sorted,
+    // via applySortSnapshot(), rather than sorting them after the fact.
+
+    test('sorts ascending by string comparison of the target field', () {
+      final rows = [_namedFlatRow('Charlie'), _namedFlatRow('Alpha'), _namedFlatRow('Bravo')];
+
+      applySortSnapshot(rows, 'name', TrinaColumnSort.ascending);
+
+      expect(rows.map((r) => r.cells['name']!.value), ['Alpha', 'Bravo', 'Charlie']);
+    });
+
+    test('sorts descending by string comparison of the target field', () {
+      final rows = [_namedFlatRow('Charlie'), _namedFlatRow('Alpha'), _namedFlatRow('Bravo')];
+
+      applySortSnapshot(rows, 'name', TrinaColumnSort.descending);
+
+      expect(rows.map((r) => r.cells['name']!.value), ['Charlie', 'Bravo', 'Alpha']);
+    });
+
+    test('is a no-op when direction is none', () {
+      final rows = [_namedFlatRow('Charlie'), _namedFlatRow('Alpha'), _namedFlatRow('Bravo')];
+
+      applySortSnapshot(rows, 'name', TrinaColumnSort.none);
+
+      expect(rows.map((r) => r.cells['name']!.value), ['Charlie', 'Alpha', 'Bravo']);
+    });
+
+    test('also sorts each group row\'s children, independent of top-level order', () {
+      final group = _groupHeaderRow(
+        'Mixes',
+        [_namedFlatRow('Charlie'), _namedFlatRow('Alpha')],
+        expanded: true,
+      );
+      final rows = [_namedFlatRow('Zeta'), group];
+
+      applySortSnapshot(rows, 'name', TrinaColumnSort.ascending);
+
+      // Top level compares group headers/flat rows by their own 'name' cell:
+      // "Mixes" sorts before "Zeta".
+      expect(rows.map((r) => r.cells['name']!.value), ['Mixes', 'Zeta']);
+      expect(
+        group.type.group.children.originalList.map((r) => r.cells['name']!.value),
+        ['Alpha', 'Charlie'],
+      );
     });
   });
 
