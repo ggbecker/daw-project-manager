@@ -5184,9 +5184,15 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               ),
             );
             stateManager!.addListener(_onStateManagerChanged);
-            // Restore group-expand/sort state carried over from the previous
-            // grid instance — locale and theme switches both remount the grid
-            // (see the key above) with fresh, default-collapsed/unsorted rows.
+            // Belt-and-braces restore of group-expand/sort state carried over
+            // from the previous grid instance — locale and theme switches
+            // both remount the grid (see the key above). _mapProjectsToRows()
+            // already pre-applies this same snapshot when building initialRows
+            // above (so the very first frame is already correct, see
+            // applySortSnapshot's doc comment), so this is normally a no-op;
+            // it only does real work if rows/columns ever diverge from that
+            // snapshot for some other reason, and it's what sets the actual
+            // column.sort/group.expanded bookkeeping either way.
             _restoreTableStateSnapshot();
             _updateGroupExpandNotifier();
             // If the grid was recreated due to a theme change, bust the
