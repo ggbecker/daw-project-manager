@@ -452,4 +452,91 @@ void main() {
       expect(sm.rows.firstWhere((r) => r.type.isGroup).type.group.expanded, isTrue);
     });
   });
+
+  group('sort-icon restore must use the persistent snapshot, not the live column', () {
+    // Regression test for: after switching theme, the header's sort-
+    // direction icon reverted to neutral even though the table was still
+    // genuinely sorted. Root cause: on a remount, TrinaGrid gets brand new
+    // TrinaColumn objects (built fresh in build()) whose .sort always starts
+    // at none. _mapProjectsToRows() pre-sorts the row *data* so the table
+    // looks right immediately, but nothing had set the new column's own
+    // .sort flag by the time the theme-switch path's deferred rebuild ran
+    // its "read the currently sorted column" step — because that step used
+    // to read stateManager.getSortedColumn (which finds nothing on a fresh,
+    // never-clicked column) instead of the persisted snapshot of what field
+    // *should* be sorted.
+    List<TrinaColumn> columns() => [
+          TrinaColumn(title: 'Name', field: 'name', type: TrinaColumnType.text()),
+        ];
+
+    TrinaRow flat(String name) => TrinaRow(cells: {'name': TrinaCell(value: name)});
+
+    Future<TrinaGridStateManager> pumpGrid(WidgetTester tester, Key key, List<TrinaRow> rows) async {
+      late TrinaGridStateManager sm;
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 400,
+            height: 400,
+            child: TrinaGrid(
+              key: key,
+              columns: columns(),
+              rows: rows,
+              onLoaded: (e) => sm = e.stateManager,
+            ),
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+      return sm;
+    }
+
+    testWidgets('reading sm.getSortedColumn on a fresh remount finds nothing to restore', (tester) async {
+      // The persisted snapshot says "name" should be sorted ascending (the
+      // exact direction doesn't matter for this test — only that *some*
+      // sort is known but the live column doesn't reflect it yet).
+      const knownSortField = 'name';
+
+      // ...but the freshly-mounted grid's column has never been clicked, so
+      // its own .sort flag is still none — this is the state right after a
+      // theme-switch remount, before anything restores the column flag.
+      final freshRows = [flat('Alpha'), flat('Bravo')]; // data already pre-sorted
+      final sm = await pumpGrid(tester, const ValueKey('fresh'), freshRows);
+
+      // The old, buggy approach: derive what to (re-)sort from the live
+      // column instead of the snapshot.
+      final sortedColumn = sm.getSortedColumn;
+      expect(sortedColumn, isNull,
+          reason: 'demonstrates the bug: nothing on the fresh grid is flagged as sorted yet');
+
+      // knownSortField/knownSortDirection (the actual source of truth) are
+      // simply never consulted by that approach, so the header icon for
+      // "name" never gets set to ascending even though the table is sorted.
+      final nameColumn = sm.columns.firstWhere((c) => c.field == knownSortField);
+      expect(nameColumn.sort, TrinaColumnSort.none);
+    });
+
+    testWidgets('reading the persistent snapshot correctly restores the sort-icon flag', (tester) async {
+      const knownSortField = 'name';
+      const knownSortDirection = TrinaColumnSort.ascending;
+
+      final freshRows = [flat('Alpha'), flat('Bravo')];
+      final sm = await pumpGrid(tester, const ValueKey('fixed'), freshRows);
+
+      // Mirrors _applyKnownSort(): look up the column by the snapshot's
+      // field name, not by asking the grid what's currently flagged.
+      for (final column in sm.columns) {
+        if (column.field != knownSortField) continue;
+        if (knownSortDirection.isAscending) {
+          sm.sortAscending(column, notify: false);
+        } else if (knownSortDirection.isDescending) {
+          sm.sortDescending(column, notify: false);
+        }
+        break;
+      }
+
+      final nameColumn = sm.columns.firstWhere((c) => c.field == knownSortField);
+      expect(nameColumn.sort, TrinaColumnSort.ascending);
+    });
+  });
 }

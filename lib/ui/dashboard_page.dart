@@ -3195,6 +3195,31 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     _lastKnownSortDirection = sortedColumn?.sort;
   }
 
+  // Applies _lastKnownSortField/_lastKnownSortDirection to whichever live
+  // column matches by field. Deliberately reads the *persistent* snapshot
+  // rather than sm.getSortedColumn: on a freshly-mounted grid (theme/locale
+  // remount) the fresh TrinaColumn objects always start with sort:none —
+  // _mapProjectsToRows() pre-sorts the row *data* for the first frame, but
+  // nothing sets the column's own sort flag until this runs. Reading the
+  // live column instead of the snapshot here would silently skip restoring
+  // it whenever this is the first thing to touch sort after a remount,
+  // leaving the header's sort-direction icon stuck on neutral even though
+  // the rows are genuinely sorted.
+  void _applyKnownSort(TrinaGridStateManager sm) {
+    final sortField = _lastKnownSortField;
+    final sortMode = _lastKnownSortDirection;
+    if (sortField == null || sortMode == null) return;
+    for (final column in sm.columns) {
+      if (column.field != sortField) continue;
+      if (sortMode.isAscending) {
+        sm.sortAscending(column, notify: false);
+      } else if (sortMode.isDescending) {
+        sm.sortDescending(column, notify: false);
+      }
+      break;
+    }
+  }
+
   void _restoreTableStateSnapshot() {
     final sm = stateManager;
     if (sm == null) return;
@@ -3209,19 +3234,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     for (final row in groupRowsToExpand(sm.rows, _lastKnownExpandedGroupNames)) {
       sm.toggleExpandedRowGroup(rowGroup: row, notify: false);
     }
-    final sortField = _lastKnownSortField;
-    final sortMode = _lastKnownSortDirection;
-    if (sortField != null && sortMode != null) {
-      for (final column in sm.columns) {
-        if (column.field != sortField) continue;
-        if (sortMode.isAscending) {
-          sm.sortAscending(column, notify: false);
-        } else if (sortMode.isDescending) {
-          sm.sortDescending(column, notify: false);
-        }
-        break;
-      }
-    }
+    _applyKnownSort(sm);
     // Single batched notification now that expand + sort are both settled,
     // instead of one repaint per toggled group.
     sm.notifyListeners();
@@ -3348,14 +3361,6 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             !row.type.group.expanded;
       }
     }
-    // insertRows() below does not re-apply whatever column sort the user had
-    // clicked into place — it just appends the freshly built rows in their
-    // natural (unsorted) order, even though the column header keeps showing
-    // the sort arrow. Capture the active sort so it can be re-applied after
-    // the row list is rebuilt.
-    final sortedColumn = sm.getSortedColumn;
-    final sortMode = sortedColumn?.sort;
-
     final newRows = _mapProjectsToRows(widget.projects);
     sm.removeRows(sm.rows, notify: false);
     sm.insertRows(0, newRows);
@@ -3370,17 +3375,17 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         // toggle when the row's current state doesn't already match.
         final shouldBeExpanded = wasCollapsed[name] == false;
         if (shouldBeExpanded != row.type.group.expanded) {
-          sm.toggleExpandedRowGroup(rowGroup: row);
+          sm.toggleExpandedRowGroup(rowGroup: row, notify: false);
         }
       }
     }
-    if (sortedColumn != null) {
-      if (sortMode!.isAscending) {
-        sm.sortAscending(sortedColumn, notify: false);
-      } else if (sortMode.isDescending) {
-        sm.sortDescending(sortedColumn, notify: false);
-      }
-    }
+    // newRows' *data* is already in the right order — _mapProjectsToRows()
+    // pre-sorts it — but insertRows() doesn't touch the live TrinaColumn's
+    // sort flag, so the header's sort-direction icon would otherwise stay
+    // neutral. This sets that bookkeeping. Uses the persistent snapshot
+    // rather than sm.getSortedColumn — see _applyKnownSort's doc comment for
+    // why that matters on a remount.
+    _applyKnownSort(sm);
     sm.notifyListeners();
     _isRebuildingRows = false;
     // _rebuildRows is called from didUpdateWidget (i.e. during the build phase).
