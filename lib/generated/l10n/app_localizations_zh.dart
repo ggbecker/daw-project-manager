@@ -3110,6 +3110,13 @@ class AppLocalizationsZh extends AppLocalizations {
       '控制每个文件夹中的项目在表格中的显示方式——作为简单的平铺列表或按子文件夹分组。';
 
   @override
+  String get excludeSmartFoldersFromSort => 'Keep smart folders out of sorting';
+
+  @override
+  String get excludeSmartFoldersFromSortDescription =>
+      'When you sort the Projects table by a column, smart-folder groups stay in place instead of moving with the sort — only the projects inside them (and any ungrouped projects) get reordered. Experimental: off by default.';
+
+  @override
   String get scanModeFlat => '平铺';
 
   @override

@@ -371,6 +371,77 @@ void main() {
         ['Alpha', 'Charlie'],
       );
     });
+
+    test('excludeGroupsFromSort keeps a group row out of the top-level reorder', () {
+      // Regression coverage for excludeSmartFoldersFromSortProvider: a
+      // smart-folder group used to move around the table just like any
+      // other row whenever the user sorted by a column — annoying for
+      // workflows where folders represent a fixed structure (e.g. project
+      // phases) rather than something meant to be sorted alongside files.
+      final group = _groupHeaderRow(
+        'Zeta Folder', // sorts last alphabetically, but must stay put
+        [_namedFlatRow('Charlie'), _namedFlatRow('Alpha')],
+      );
+      final rows = [_namedFlatRow('Bravo'), group, _namedFlatRow('Delta')];
+
+      applySortSnapshot(rows, 'name', TrinaColumnSort.ascending, excludeGroupsFromSort: true);
+
+      // The group stayed at index 1 (its original slot); the flat rows
+      // around it sorted into the remaining slots.
+      expect(rows.map((r) => r.cells['name']!.value), ['Bravo', 'Zeta Folder', 'Delta']);
+      // Children still sort normally — only the top level is exempt.
+      expect(
+        group.type.group.children.originalList.map((r) => r.cells['name']!.value),
+        ['Alpha', 'Charlie'],
+      );
+    });
+  });
+
+  group('sortFlatRowsKeepingGroupsInPlace', () {
+    int byName(TrinaRow a, TrinaRow b) =>
+        (a.cells['name']!.value as String).compareTo(b.cells['name']!.value as String);
+
+    test('leaves every group at its current index', () {
+      final groupA = _groupHeaderRow('Group A', [_namedFlatRow('x')]);
+      final groupB = _groupHeaderRow('Group B', [_namedFlatRow('y')]);
+      final current = [_namedFlatRow('Zeta'), groupA, _namedFlatRow('Alpha'), groupB];
+
+      final result = sortFlatRowsKeepingGroupsInPlace(current, byName);
+
+      expect(result[1], same(groupA));
+      expect(result[3], same(groupB));
+    });
+
+    test('sorts the flat rows into the remaining slots, in order', () {
+      final group = _groupHeaderRow('Folder', [_namedFlatRow('x')]);
+      final current = [_namedFlatRow('Zeta'), group, _namedFlatRow('Alpha'), _namedFlatRow('Mid')];
+
+      final result = sortFlatRowsKeepingGroupsInPlace(current, byName);
+
+      expect(
+        result.map((r) => r.cells['name']!.value),
+        ['Alpha', 'Folder', 'Mid', 'Zeta'],
+      );
+    });
+
+    test('is unchanged when there are no groups', () {
+      final current = [_namedFlatRow('Zeta'), _namedFlatRow('Alpha'), _namedFlatRow('Mid')];
+
+      final result = sortFlatRowsKeepingGroupsInPlace(current, byName);
+
+      expect(result.map((r) => r.cells['name']!.value), ['Alpha', 'Mid', 'Zeta']);
+    });
+
+    test('is unchanged when every row is a group', () {
+      final groupA = _groupHeaderRow('B', [_namedFlatRow('x')]);
+      final groupB = _groupHeaderRow('A', [_namedFlatRow('y')]);
+      final current = [groupA, groupB];
+
+      final result = sortFlatRowsKeepingGroupsInPlace(current, byName);
+
+      // Groups are never reordered by this function, even though 'A' < 'B'.
+      expect(result, [groupA, groupB]);
+    });
   });
 
   group('table-state restore orchestration (theme/locale remount)', () {

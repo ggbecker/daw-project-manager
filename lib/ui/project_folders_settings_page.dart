@@ -706,6 +706,18 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
                       },
                     ),
                   ],
+                  const Divider(height: 24),
+                  SwitchListTile(
+                    value: ref.watch(excludeSmartFoldersFromSortProvider),
+                    onChanged: (v) => ref.read(excludeSmartFoldersFromSortProvider.notifier).set(v),
+                    title: Text(l10n.excludeSmartFoldersFromSort),
+                    subtitle: Text(
+                      l10n.excludeSmartFoldersFromSortDescription,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                  ),
                 ],
               ),
             ),

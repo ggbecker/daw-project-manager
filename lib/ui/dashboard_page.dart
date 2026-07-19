@@ -3447,7 +3447,12 @@ Set<String> groupChildProjectIds(TrinaRow groupRow) {
 /// includes both) — pre-sorting the initial rows means that first frame is
 /// already correct.
 @visibleForTesting
-void applySortSnapshot(List<TrinaRow> rows, String field, TrinaColumnSort direction) {
+void applySortSnapshot(
+  List<TrinaRow> rows,
+  String field,
+  TrinaColumnSort direction, {
+  bool excludeGroupsFromSort = false,
+}) {
   if (direction.isNone) return;
   int compare(TrinaRow a, TrinaRow b) {
     final av = a.cells[field]?.value;
@@ -3460,10 +3465,75 @@ void applySortSnapshot(List<TrinaRow> rows, String field, TrinaColumnSort direct
 
   final effectiveCompare =
       direction.isDescending ? (TrinaRow a, TrinaRow b) => compare(b, a) : compare;
-  rows.sort(effectiveCompare);
+  if (excludeGroupsFromSort) {
+    rows.setAll(0, sortFlatRowsKeepingGroupsInPlace(rows, effectiveCompare));
+  } else {
+    rows.sort(effectiveCompare);
+  }
   for (final row in rows) {
     if (row.type.isGroup) {
       row.type.group.children.sort(effectiveCompare);
+    }
+  }
+}
+
+/// The row order that results from sorting only the non-group ("flat") rows
+/// in [currentOrder] by [compare] — every group (smart-folder) row keeps its
+/// current top-level index, with sorted flat rows filling the remaining
+/// slots in order. Used so a column sort doesn't move smart-folder groups
+/// around (see `excludeSmartFoldersFromSortProvider`) while the individual
+/// project rows still sort normally.
+@visibleForTesting
+List<TrinaRow> sortFlatRowsKeepingGroupsInPlace(
+  List<TrinaRow> currentOrder,
+  int Function(TrinaRow, TrinaRow) compare,
+) {
+  final sortedFlat = currentOrder.where((r) => !r.type.isGroup).toList()..sort(compare);
+  var flatIndex = 0;
+  return [
+    for (final row in currentOrder)
+      if (row.type.isGroup) row else sortedFlat[flatIndex++],
+  ];
+}
+
+/// Row-group delegate identical to [TrinaRowGroupTreeDelegate] except its
+/// [sort] leaves group (smart-folder) rows in their current top-level order
+/// — only the non-group rows and each group's own children get reordered by
+/// the active column sort. Used for the live grid when
+/// `excludeSmartFoldersFromSortProvider` is on; [applySortSnapshot] mirrors
+/// the same behavior (via [sortFlatRowsKeepingGroupsInPlace]) for the
+/// initial/rebuilt row list, since that's built and pre-sorted before the
+/// grid — and this delegate — ever exist.
+class _GroupOrderStableRowGroupDelegate extends TrinaRowGroupTreeDelegate {
+  _GroupOrderStableRowGroupDelegate({
+    required super.resolveColumnDepth,
+    required super.showText,
+    super.showFirstExpandableIcon,
+    super.showCount,
+  });
+
+  @override
+  void sort({
+    required TrinaColumn column,
+    required FilteredList<TrinaRow> rows,
+    required int Function(TrinaRow, TrinaRow) compare,
+  }) {
+    if (rows.originalList.isEmpty) return;
+
+    // rows.sort() only accepts a Comparator, not an explicit target order —
+    // so express the desired order as one: every row gets a unique target
+    // index, which sidesteps needing List.sort to be stable (it isn't
+    // guaranteed to be) since no two rows ever compare equal.
+    final desiredOrder = sortFlatRowsKeepingGroupsInPlace(rows.originalList, compare);
+    final targetIndex = {for (var i = 0; i < desiredOrder.length; i++) desiredOrder[i]: i};
+    rows.sort((a, b) => targetIndex[a]!.compareTo(targetIndex[b]!));
+
+    final children = TrinaRowGroupHelper.iterateWithFilter(
+      rows.originalList,
+      filter: (r) => r.type.isGroup,
+    );
+    for (final child in children) {
+      child.type.group.children.sort(compare);
     }
   }
 }
@@ -4732,7 +4802,12 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     final sortField = _lastKnownSortField;
     final sortDirection = _lastKnownSortDirection;
     if (sortField != null && sortDirection != null) {
-      applySortSnapshot(rows, sortField, sortDirection);
+      applySortSnapshot(
+        rows,
+        sortField,
+        sortDirection,
+        excludeGroupsFromSort: ref.read(excludeSmartFoldersFromSortProvider),
+      );
     }
 
     return rows;
@@ -5484,6 +5559,11 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       ),
     ]; // <-- Semicolon final do array de colunas
 
+    // Watched (not read) so toggling it rebuilds this widget and — via the
+    // grid's key below — remounts the grid, reusing the same restore path
+    // that already survives a theme/locale remount to reapply expand/sort
+    // state, now also correctly under the new group-sort behavior.
+    final excludeFoldersFromSort = ref.watch(excludeSmartFoldersFromSortProvider);
     final initialRows = _mapProjectsToRows(widget.projects);
 
     if (widget.projects.isEmpty) {
@@ -5541,7 +5621,9 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             : Color.alphaBlend(Colors.black.withValues(alpha: 0.04), activeTheme.cardColor);
 
     final grid = TrinaGrid(
-          key: ValueKey('trina_grid_${l10n.localeName}_${ref.watch(themeTypeProvider).name}'),
+          key: ValueKey(
+            'trina_grid_${l10n.localeName}_${ref.watch(themeTypeProvider).name}_$excludeFoldersFromSort',
+          ),
           columnMenuDelegate: _FitAllColumnsMenuDelegate(),
           columns: columns,
           rows: initialRows,
@@ -5566,14 +5648,21 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           onLoaded: (TrinaGridOnLoadedEvent event) {
             stateManager = event.stateManager;
             stateManager!.setRowGroup(
-              TrinaRowGroupTreeDelegate(
-                // Returning null for all columns disables TrinaGrid's auto
-                // expand icon; we render our own in the checkbox column.
-                resolveColumnDepth: (column) => null,
-                showText: (cell) => true,
-                showFirstExpandableIcon: false,
-                showCount: false,
-              ),
+              excludeFoldersFromSort
+                  ? _GroupOrderStableRowGroupDelegate(
+                      // Returning null for all columns disables TrinaGrid's auto
+                      // expand icon; we render our own in the checkbox column.
+                      resolveColumnDepth: (column) => null,
+                      showText: (cell) => true,
+                      showFirstExpandableIcon: false,
+                      showCount: false,
+                    )
+                  : TrinaRowGroupTreeDelegate(
+                      resolveColumnDepth: (column) => null,
+                      showText: (cell) => true,
+                      showFirstExpandableIcon: false,
+                      showCount: false,
+                    ),
             );
             stateManager!.addListener(_onStateManagerChanged);
             if (_needsThemeRefresh) {

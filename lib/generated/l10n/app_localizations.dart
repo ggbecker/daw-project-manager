@@ -5465,6 +5465,18 @@ abstract class AppLocalizations {
   /// **'Controls how projects in each folder are displayed in the table — as a plain flat list or grouped by subfolder.'**
   String get scanModeSectionDescription;
 
+  /// No description provided for @excludeSmartFoldersFromSort.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep smart folders out of sorting'**
+  String get excludeSmartFoldersFromSort;
+
+  /// No description provided for @excludeSmartFoldersFromSortDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'When you sort the Projects table by a column, smart-folder groups stay in place instead of moving with the sort — only the projects inside them (and any ungrouped projects) get reordered. Experimental: off by default.'**
+  String get excludeSmartFoldersFromSortDescription;
+
   /// No description provided for @scanModeFlat.
   ///
   /// In en, this message translates to:

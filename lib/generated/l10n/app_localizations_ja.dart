@@ -3139,6 +3139,13 @@ class AppLocalizationsJa extends AppLocalizations {
       '各フォルダー内のプロジェクトをテーブルに表示する方法を制御します — 単純なフラットリストまたはサブフォルダーでグループ化。';
 
   @override
+  String get excludeSmartFoldersFromSort => 'Keep smart folders out of sorting';
+
+  @override
+  String get excludeSmartFoldersFromSortDescription =>
+      'When you sort the Projects table by a column, smart-folder groups stay in place instead of moving with the sort — only the projects inside them (and any ungrouped projects) get reordered. Experimental: off by default.';
+
+  @override
   String get scanModeFlat => 'フラット';
 
   @override

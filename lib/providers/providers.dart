@@ -2372,6 +2372,47 @@ final suggestionsEnabledProvider =
         SuggestionsEnabledNotifier.new);
 
 // ---------------------------------------------------------------------------
+// Smart Folder Sort Exclusion
+// ---------------------------------------------------------------------------
+
+/// Whether smart-folder group rows should be excluded from the Projects
+/// grid's active column sort — folders keep their existing top-level order
+/// and only individual project rows (plus each folder's own contents) get
+/// reordered. Off by default: this changes a long-standing interleaved-sort
+/// behavior, so it ships opt-in until confirmed to work well across
+/// different smart-folder workflows.
+class ExcludeSmartFoldersFromSortNotifier extends Notifier<bool> {
+  static const _key = 'excludeSmartFoldersFromSort';
+
+  // Read synchronously (the `settings` box is already open by the time any
+  // provider builds — see main.dart) rather than via a post-frame _load(),
+  // since this value feeds the Projects grid's remount key: an async load
+  // that flips the value a frame after cold start would make the grid
+  // remount again almost immediately, visibly flickering.
+  @override
+  bool build() {
+    try {
+      final saved = Hive.box<String>('settings').get(_key);
+      if (saved != null) return saved == 'true';
+    } catch (_) {
+      // Box not open yet on the very first frame — falls back to the
+      // opt-in default (false) rather than crash.
+    }
+    return false;
+  }
+
+  Future<void> set(bool value) async {
+    state = value;
+    final box = await Hive.openBox<String>('settings');
+    await box.put(_key, value.toString());
+  }
+}
+
+final excludeSmartFoldersFromSortProvider =
+    NotifierProvider<ExcludeSmartFoldersFromSortNotifier, bool>(
+        ExcludeSmartFoldersFromSortNotifier.new);
+
+// ---------------------------------------------------------------------------
 // Work Timer Notification Settings
 // ---------------------------------------------------------------------------
 
