@@ -5,7 +5,8 @@ import 'package:trina_grid/trina_grid.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb, listEquals;
+import 'package:flutter/foundation.dart'
+    show kDebugMode, kIsWeb, listEquals, visibleForTesting;
 import 'package:flutter/services.dart'; 
 import 'package:path/path.dart' as path; // 🚨 NOVO IMPORT
 import 'package:url_launcher/url_launcher.dart';
@@ -3066,6 +3067,68 @@ class _PlutoProjectsTable extends ConsumerStatefulWidget {
   ConsumerState<_PlutoProjectsTable> createState() => _PlutoProjectsTableState();
 }
 
+/// Collects the [MusicProject.id] of every project-backed row in [topLevelRows],
+/// including rows nested inside collapsed or expanded smart-folder groups.
+///
+/// Smart-folder groups (`TrinaRowType.group`) keep their member rows in
+/// `row.type.group.children`, not in the top-level row list, so a naive scan
+/// of only top-level rows sees group *headers* (whose `data` cell is null)
+/// instead of the projects inside them. That previously made the grouped-view
+/// row/project ID comparison in `_tableRowsMatchProjects` fail on every
+/// refresh, forcing a full row rebuild (and losing group expansion + sort
+/// state) even when nothing structurally changed.
+@visibleForTesting
+Set<String> collectProjectRowIds(List<TrinaRow> topLevelRows) {
+  final ids = <String>{};
+  for (final row in topLevelRows) {
+    if (row.type.isGroup) {
+      for (final child in row.type.group.children.originalList) {
+        final id = (child.cells['data']?.value as MusicProject?)?.id;
+        if (id != null) ids.add(id);
+      }
+    } else {
+      final id = (row.cells['data']?.value as MusicProject?)?.id;
+      if (id != null) ids.add(id);
+    }
+  }
+  return ids;
+}
+
+/// The set of currently-expanded smart-folder group names among [rows].
+///
+/// Used to snapshot expand state before it can be lost — TrinaGrid's key
+/// includes both locale and theme, so switching either one remounts the
+/// entire grid with a brand new [TrinaGridStateManager] whose groups start
+/// out collapsed by default, with nothing left to read the old expand state
+/// back from.
+@visibleForTesting
+Set<String> expandedGroupNames(List<TrinaRow> rows) {
+  return {
+    for (final row in rows)
+      if (row.type.isGroup && row.type.group.expanded)
+        row.cells['name']?.value as String? ?? '',
+  };
+}
+
+/// Which of [rows] are collapsed groups whose name appears in
+/// [namesToExpand] — i.e. the rows that still need `toggleExpandedRowGroup`
+/// called on them to restore a previously-captured [expandedGroupNames]
+/// snapshot after the row list was rebuilt (or the whole grid remounted)
+/// collapsed by default. Groups are matched by name only, so a folder that
+/// no longer exists after the rebuild is silently dropped, and a rebuilt
+/// group that happens to share a name with a still-expanded one is expanded
+/// to match.
+@visibleForTesting
+List<TrinaRow> groupRowsToExpand(List<TrinaRow> rows, Set<String> namesToExpand) {
+  return [
+    for (final row in rows)
+      if (row.type.isGroup &&
+          !row.type.group.expanded &&
+          namesToExpand.contains(row.cells['name']?.value as String? ?? ''))
+        row,
+  ];
+}
+
 class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   TrinaGridStateManager? stateManager;
   bool _isRebuildingRows = false;
@@ -3073,6 +3136,47 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   // call that busts TrinaGrid's renderer cache (which only invalidates on cell/
   // row/selection changes, not on theme changes).
   bool _needsThemeRefresh = false;
+
+  // Continuously-updated snapshot of group-expand and column-sort state, kept
+  // in sync (via _onStateManagerChanged) every time the live grid actually
+  // changes. TrinaGrid's key includes both locale and theme
+  // (`trina_grid_${locale}_${theme}`), so switching either one discards the
+  // old TrinaGridStateManager entirely and mounts a brand new one — losing
+  // all group-expand and sort state, since a fresh grid has nothing to read
+  // that state back from. This snapshot survives that remount and is
+  // reapplied in onLoaded once the new stateManager is live.
+  Set<String> _lastKnownExpandedGroupNames = {};
+  String? _lastKnownSortField;
+  TrinaColumnSort? _lastKnownSortDirection;
+
+  void _captureTableStateSnapshot() {
+    final sm = stateManager;
+    if (sm == null) return;
+    _lastKnownExpandedGroupNames = expandedGroupNames(sm.rows);
+    final sortedColumn = sm.getSortedColumn;
+    _lastKnownSortField = sortedColumn?.field;
+    _lastKnownSortDirection = sortedColumn?.sort;
+  }
+
+  void _restoreTableStateSnapshot() {
+    final sm = stateManager;
+    if (sm == null) return;
+    for (final row in groupRowsToExpand(sm.rows, _lastKnownExpandedGroupNames)) {
+      sm.toggleExpandedRowGroup(rowGroup: row);
+    }
+    final sortField = _lastKnownSortField;
+    final sortMode = _lastKnownSortDirection;
+    if (sortField == null || sortMode == null) return;
+    for (final column in sm.columns) {
+      if (column.field != sortField) continue;
+      if (sortMode.isAscending) {
+        sm.sortAscending(column, notify: false);
+      } else if (sortMode.isDescending) {
+        sm.sortDescending(column, notify: false);
+      }
+      break;
+    }
+  }
 
   // Returns true when the project set is identical (same IDs) — only cell
   // values may have changed (BPM, key, lastModified, etc.). In that case we
@@ -3094,11 +3198,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   bool _tableRowsMatchProjects(List<MusicProject> projects) {
     final sm = stateManager;
     if (sm == null) return false;
-    final rowIds = sm.refRows.originalList
-        .where((r) => r.isMain)
-        .map((r) => (r.cells['data']?.value as MusicProject?)?.id)
-        .whereType<String>()
-        .toSet();
+    final rowIds = collectProjectRowIds(sm.refRows.originalList);
     final projectIds = projects.map((p) => p.id).toSet();
     return rowIds.length == projectIds.length && rowIds.containsAll(projectIds);
   }
@@ -3182,7 +3282,10 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   void _onStateManagerChanged() {
     if (!mounted) return;
     setState(() {});
-    if (!_isRebuildingRows) _updateGroupExpandNotifier();
+    if (!_isRebuildingRows) {
+      _captureTableStateSnapshot();
+      _updateGroupExpandNotifier();
+    }
   }
 
   void _rebuildRows() {
@@ -3196,6 +3299,14 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             !row.type.group.expanded;
       }
     }
+    // insertRows() below does not re-apply whatever column sort the user had
+    // clicked into place — it just appends the freshly built rows in their
+    // natural (unsorted) order, even though the column header keeps showing
+    // the sort arrow. Capture the active sort so it can be re-applied after
+    // the row list is rebuilt.
+    final sortedColumn = sm.getSortedColumn;
+    final sortMode = sortedColumn?.sort;
+
     final newRows = _mapProjectsToRows(widget.projects);
     sm.removeRows(sm.rows, notify: false);
     sm.insertRows(0, newRows);
@@ -3204,6 +3315,13 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         final name = row.cells['name']?.value as String? ?? '';
         // New group rows default to collapsed; expand the ones that were open.
         if (wasCollapsed[name] == false) sm.toggleExpandedRowGroup(rowGroup: row);
+      }
+    }
+    if (sortedColumn != null) {
+      if (sortMode!.isAscending) {
+        sm.sortAscending(sortedColumn, notify: false);
+      } else if (sortMode.isDescending) {
+        sm.sortDescending(sortedColumn, notify: false);
       }
     }
     sm.notifyListeners();
@@ -4997,6 +5115,10 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               ),
             );
             stateManager!.addListener(_onStateManagerChanged);
+            // Restore group-expand/sort state carried over from the previous
+            // grid instance — locale and theme switches both remount the grid
+            // (see the key above) with fresh, default-collapsed/unsorted rows.
+            _restoreTableStateSnapshot();
             _updateGroupExpandNotifier();
             // If the grid was recreated due to a theme change, bust the
             // renderer cache now that the new stateManager is live.
