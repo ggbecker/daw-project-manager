@@ -5184,25 +5184,28 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               ),
             );
             stateManager!.addListener(_onStateManagerChanged);
-            // Belt-and-braces restore of group-expand/sort state carried over
-            // from the previous grid instance — locale and theme switches
-            // both remount the grid (see the key above). _mapProjectsToRows()
-            // already pre-applies this same snapshot when building initialRows
-            // above (so the very first frame is already correct, see
-            // applySortSnapshot's doc comment), so this is normally a no-op;
-            // it only does real work if rows/columns ever diverge from that
-            // snapshot for some other reason, and it's what sets the actual
-            // column.sort/group.expanded bookkeeping either way.
-            _restoreTableStateSnapshot();
-            _updateGroupExpandNotifier();
-            // If the grid was recreated due to a theme change, bust the
-            // renderer cache now that the new stateManager is live.
             if (_needsThemeRefresh) {
+              // The deferred _rebuildRows() below busts the renderer cache
+              // AND restores expand/sort state itself, so don't also call
+              // _restoreTableStateSnapshot() here — _mapProjectsToRows()
+              // already pre-applied the same snapshot when building
+              // initialRows above, so both calls would just be settling an
+              // already-correct grid a second time. Two separate repaints
+              // (one now, one a frame later) of visually-identical content is
+              // exactly what reads as the smart folder flickering on a quick
+              // theme switch, since each one replaces the group row's object
+              // identity. One settle instead of two.
               _needsThemeRefresh = false;
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (mounted) _rebuildRows();
               });
+            } else {
+              // Locale switches (or any other remount) have no renderer-cache
+              // issue to fix, so a synchronous restore is enough — no need to
+              // wait a frame like the theme-refresh path above.
+              _restoreTableStateSnapshot();
             }
+            _updateGroupExpandNotifier();
           },
       onRowSecondaryTap: (TrinaGridOnRowSecondaryTapEvent event) {
         final project = event.row.cells['data']?.value as MusicProject?;
