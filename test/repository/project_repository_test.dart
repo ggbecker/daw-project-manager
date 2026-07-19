@@ -619,63 +619,55 @@ void main() {
     });
   });
 
-  group('ProjectRepository.removeOrphanedProjectsFromRoot', () {
-    test('removes projects not in foundPaths', () async {
+  group('ProjectRepository.deleteProjectsPermanently', () {
+    // Scans used to auto-prune a project the moment its file went missing
+    // (removeOrphanedProjectsFromRoot / clearMissingFiles) — including, in
+    // clearMissingFiles's case, projects still referenced by a Release, with
+    // no confirmation and no way back. That's gone: a missing file now just
+    // leaves the project flagged missing (a live filesystem check done in
+    // the UI) until the user explicitly deletes it via this method, e.g.
+    // from the "Delete Missing" bulk action.
+
+    test('removes the given projects', () async {
       final repo = await HiveTestHelper.createRepository();
-      await repo.updateProject(
-          TestFactories.makeProject(id: 'kept', filePath: '/root/kept.als'));
-      await repo.updateProject(
-          TestFactories.makeProject(id: 'orphan', filePath: '/root/orphan.als'));
+      await repo.updateProject(TestFactories.makeProject(id: 'a'));
+      await repo.updateProject(TestFactories.makeProject(id: 'b'));
 
-      await repo.removeOrphanedProjectsFromRoot('/root', {'/root/kept.als'});
+      await repo.deleteProjectsPermanently(['a']);
 
-      expect(repo.getById('kept'), isNotNull);
-      expect(repo.getById('orphan'), isNull);
+      expect(repo.getById('a'), isNull);
+      expect(repo.getById('b'), isNotNull);
     });
 
-    test('preserves all projects when every path is in foundPaths', () async {
+    test('deletes every id given, including ones referenced by a release', () async {
+      // Unlike the old auto-prune, an explicit user-triggered delete is not
+      // expected to protect release-tracked projects — the user asked for
+      // exactly this deletion, deliberately, via the selection UI.
       final repo = await HiveTestHelper.createRepository();
-      await repo.updateProject(
-          TestFactories.makeProject(id: 'p1', filePath: '/root/a.als'));
-      await repo.updateProject(
-          TestFactories.makeProject(id: 'p2', filePath: '/root/b.als'));
+      await repo.updateProject(TestFactories.makeProject(id: 'tracked'));
+      await repo.addRelease(Release(id: 'r1', title: 'EP', trackIds: ['tracked']));
 
-      await repo.removeOrphanedProjectsFromRoot(
-          '/root', {'/root/a.als', '/root/b.als'});
+      await repo.deleteProjectsPermanently(['tracked']);
 
-      expect(repo.getById('p1'), isNotNull);
-      expect(repo.getById('p2'), isNotNull);
+      expect(repo.getById('tracked'), isNull);
     });
 
-    test('does not touch projects under a different root', () async {
+    test('is a no-op for an empty id list', () async {
       final repo = await HiveTestHelper.createRepository();
-      await repo.updateProject(
-          TestFactories.makeProject(id: 'inRoot', filePath: '/root/track.als'));
-      await repo.updateProject(
-          TestFactories.makeProject(id: 'other', filePath: '/otherRoot/track.als'));
+      await repo.updateProject(TestFactories.makeProject(id: 'a'));
 
-      // foundPaths is empty — every project under /root is "orphaned"
-      await repo.removeOrphanedProjectsFromRoot('/root', {});
+      await repo.deleteProjectsPermanently([]);
 
-      expect(repo.getById('inRoot'), isNull);
-      expect(repo.getById('other'), isNotNull);
+      expect(repo.getById('a'), isNotNull);
     });
 
-    test('preserves release-protected projects even when absent from foundPaths',
-        () async {
+    test('silently ignores ids that do not exist', () async {
       final repo = await HiveTestHelper.createRepository();
-      await repo.updateProject(
-          TestFactories.makeProject(id: 'normal', filePath: '/root/normal.als'));
-      await repo.updateProject(
-          TestFactories.makeProject(id: 'protected', filePath: '/root/protected.als'));
-      await repo.addRelease(
-          Release(id: 'r1', title: 'EP', trackIds: ['protected']));
+      await repo.updateProject(TestFactories.makeProject(id: 'a'));
 
-      // Neither path is in foundPaths — normal should be deleted, protected should survive
-      await repo.removeOrphanedProjectsFromRoot('/root', {});
+      await repo.deleteProjectsPermanently(['a', 'does-not-exist']);
 
-      expect(repo.getById('normal'), isNull);
-      expect(repo.getById('protected'), isNotNull);
+      expect(repo.getById('a'), isNull);
     });
   });
 

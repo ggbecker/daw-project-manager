@@ -293,6 +293,31 @@
       }
     }
   },
+  "deleteMissingProjects": "Delete Missing",
+  "deleteMissingProjectsTitle": "Delete missing projects?",
+  "deleteMissingProjectsConfirm": "{count} project{plural} whose file could not be found on this machine will be permanently deleted, along with all notes, deadlines, and session history. This can't be undone.",
+  "@deleteMissingProjectsConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteMissingProjectsConfirmButton": "Delete Permanently",
+  "missingProjectsDeleted": "{count} missing project{plural} deleted.",
+  "@missingProjectsDeleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      }
+    }
+  },
   "hideProjectMessage": "Êtes-vous sûr de vouloir masquer \"{projectName}\" ?",
   "@hideProjectMessage": {
     "description": "Message de confirmation lors du masquage d'un projet",

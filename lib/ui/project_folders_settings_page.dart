@@ -140,14 +140,11 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
     final excluded = repo.getIgnoredPaths().map((p) => p.path).toList(growable: false);
     final scanTime = DateTime.now();
     int found = 0;
-    final foundPaths = <String>{};
 
     await for (final entity in scanner.scanDirectory(folderPath, ignoredPaths: excluded)) {
       await repo.upsertFromFileSystemEntity(entity, fullMetadata: false);
-      foundPaths.add(entity.path);
       found++;
     }
-    await repo.removeOrphanedProjectsFromRoot(folderPath, foundPaths);
     await repo.updateRootLastScanAt(folderId, scanTime);
 
     if (!mounted) return;

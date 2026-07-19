@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:trina_grid/trina_grid.dart';
@@ -142,6 +144,49 @@ void main() {
 
     test('is empty for an empty group', () {
       expect(groupChildProjectIds(_groupHeaderRow('Empty', [])), isEmpty);
+    });
+  });
+
+  group('missingProjectIds', () {
+    // Regression coverage for the "Delete Missing" bulk action: scans no
+    // longer auto-delete a project the moment its file disappears (see
+    // ProjectRepository.deleteProjectsPermanently's doc comment) — deleting
+    // is now this explicit, selection-driven action instead, and it must
+    // only ever touch the selected projects whose file is actually gone.
+
+    test('returns only selected projects whose file does not exist', () async {
+      final dir = await Directory.systemTemp.createTemp('missing_project_ids_');
+      try {
+        final existingFile = File('${dir.path}/exists.als');
+        await existingFile.create();
+        final present = TestFactories.makeProject(id: 'present', filePath: existingFile.path);
+        final missing = TestFactories.makeProject(id: 'missing', filePath: '${dir.path}/gone.als');
+
+        final result = missingProjectIds([present, missing], ['present', 'missing']);
+
+        expect(result, ['missing']);
+      } finally {
+        await dir.delete(recursive: true);
+      }
+    });
+
+    test('ignores a missing project that was not selected', () {
+      final missing = TestFactories.makeProject(id: 'missing', filePath: '/nonexistent/gone.als');
+
+      expect(missingProjectIds([missing], []), isEmpty);
+    });
+
+    test('is empty when every selected project still has its file', () async {
+      final dir = await Directory.systemTemp.createTemp('missing_project_ids_');
+      try {
+        final file = File('${dir.path}/exists.als');
+        await file.create();
+        final present = TestFactories.makeProject(id: 'present', filePath: file.path);
+
+        expect(missingProjectIds([present], ['present']), isEmpty);
+      } finally {
+        await dir.delete(recursive: true);
+      }
     });
   });
 

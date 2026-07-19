@@ -471,6 +471,25 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get deleteMissingProjects => 'Delete Missing';
+
+  @override
+  String get deleteMissingProjectsTitle => 'Delete missing projects?';
+
+  @override
+  String deleteMissingProjectsConfirm(int count, String plural) {
+    return '$count project$plural whose file could not be found on this machine will be permanently deleted, along with all notes, deadlines, and session history. This can\'t be undone.';
+  }
+
+  @override
+  String get deleteMissingProjectsConfirmButton => 'Delete Permanently';
+
+  @override
+  String missingProjectsDeleted(int count, String plural) {
+    return '$count missing project$plural deleted.';
+  }
+
+  @override
   String hideProjectMessage(String projectName) {
     return 'Sind Sie sicher, dass Sie \"$projectName\" ausblenden möchten?';
   }

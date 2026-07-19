@@ -386,10 +386,9 @@ Future<int> _runInitialScan(ProjectRepository repo, ProviderContainer container)
   container.read(initialScanStateProvider.notifier).setScanning(true);
   var foundCount = 0;
   try {
-    // 1. Limpa arquivos que não existem mais
-    await repo.clearMissingFiles();
-
-    // 2. Cria o scanner e processa as raízes de scan
+    // Cria o scanner e processa as raízes de scan. Projects whose file goes
+    // missing are left alone here — see deleteProjectsPermanently's doc
+    // comment for why scans no longer auto-delete anything.
     final scanner = ScannerService();
     final ignoredPaths = repo.getIgnoredPaths().map((p) => p.path).toList(growable: false);
     final scanTime = DateTime.now();

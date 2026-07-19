@@ -928,6 +928,36 @@ abstract class AppLocalizations {
   /// **'Failed to unhide projects: {error}'**
   String failedToUnhideProjects(String error);
 
+  /// No description provided for @deleteMissingProjects.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Missing'**
+  String get deleteMissingProjects;
+
+  /// No description provided for @deleteMissingProjectsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete missing projects?'**
+  String get deleteMissingProjectsTitle;
+
+  /// No description provided for @deleteMissingProjectsConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} project{plural} whose file could not be found on this machine will be permanently deleted, along with all notes, deadlines, and session history. This can\'t be undone.'**
+  String deleteMissingProjectsConfirm(int count, String plural);
+
+  /// No description provided for @deleteMissingProjectsConfirmButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Permanently'**
+  String get deleteMissingProjectsConfirmButton;
+
+  /// No description provided for @missingProjectsDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} missing project{plural} deleted.'**
+  String missingProjectsDeleted(int count, String plural);
+
   /// Confirmation message when hiding a project
   ///
   /// In en, this message translates to:

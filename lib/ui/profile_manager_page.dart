@@ -163,10 +163,7 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
     final scanner = ScannerService();
     int foundCount = 0;
     final ignoredPaths = repo.getIgnoredPaths().map((p) => p.path).toList(growable: false);
-    
-    // Clear missing files for the current profile
-    await repo.clearMissingFiles();
-    
+
     // Scan all root folders for the current profile (same logic as dashboard)
     // Use lightweight scan (fast, no full metadata extraction)
     final scanTime = DateTime.now();

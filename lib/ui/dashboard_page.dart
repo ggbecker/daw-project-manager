@@ -29,6 +29,7 @@ import '../services/dock_menu_service.dart';
 import '../utils/daw_logo.dart';
 import '../utils/mobile_utils.dart';
 import '../utils/phase_colors.dart';
+import '../utils/project_file_status.dart';
 import '../providers/theme_provider.dart';
 import '../utils/file_launcher.dart';
 import '../utils/search_utils.dart';
@@ -591,7 +592,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     try {
       final scanner = ScannerService();
       int foundCount = 0;
-      await repo.clearMissingFiles();
       // Snapshot before the scan so we can tell genuinely new projects
       // (surfaced with the "New" badge) apart from ones just re-confirmed
       // as still present — this scan no longer blocks the UI, so the grid
@@ -615,7 +615,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
             if (saved != null) newlyDiscoveredIds.add(saved.id);
           }
         }
-        await repo.removeOrphanedProjectsFromRoot(root.path, foundPaths);
         await repo.updateRootLastScanAt(root.id, scanTime);
       }
       if (newlyDiscoveredIds.isNotEmpty) {
@@ -899,6 +898,58 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppLocalizations.of(context)!.failedToUnhideProjects(e.toString()))),
+        );
+      }
+    }
+  }
+
+  /// Permanently deletes whichever of [selectedProjectIds] are currently
+  /// missing (file gone from disk) — projects still present on disk are left
+  /// untouched even if selected alongside missing ones. Scans no longer
+  /// auto-delete anything on their own (see
+  /// ProjectRepository.deleteProjectsPermanently's doc comment); this is now
+  /// the only way to actually remove a project's entry.
+  Future<void> _deleteMissingProjects(BuildContext context, WidgetRef ref, List<String> selectedProjectIds) async {
+    final allProjectsAsync = ref.read(allProjectsStreamProvider);
+    final allProjects = allProjectsAsync.value ?? [];
+    final idsToDelete = missingProjectIds(allProjects, selectedProjectIds);
+    if (idsToDelete.isEmpty) return;
+
+    final l10n = AppLocalizations.of(context)!;
+    final plural = idsToDelete.length == 1 ? '' : 's';
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.deleteMissingProjectsTitle),
+        content: Text(l10n.deleteMissingProjectsConfirm(idsToDelete.length, plural)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red.shade700),
+            child: Text(l10n.deleteMissingProjectsConfirmButton),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    try {
+      final repo = await ref.read(repositoryProvider.future);
+      await repo.deleteProjectsPermanently(idsToDelete);
+      ref.invalidate(allProjectsStreamProvider);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.missingProjectsDeleted(idsToDelete.length, plural))),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${l10n.error}: $e')),
         );
       }
     }
@@ -2087,6 +2138,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                       onUnhideProjects: (selectedProjectIds) async {
                                         await _unhideProjects(context, ref, selectedProjectIds);
                                       },
+                                      // No onDeleteMissingProjects here: mobile projects are
+                                      // metadata-only entries synced via Drive, not local files
+                                      // (see FolderWatcher/_scanAll comments) — every one of them
+                                      // would spuriously read as "missing" by a File.existsSync()
+                                      // check against a desktop path, so the concept (and the
+                                      // "cloud_off" indicator it's paired with) is desktop-only.
                                       showHidden: hiddenMode == 1 || hiddenMode == 2,
                                       onRefresh: () => _refreshMobileProjects(),
                                     )
@@ -2102,6 +2159,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                       },
                                       onUnhideProjects: (selectedProjectIds) async {
                                         await _unhideProjects(context, ref, selectedProjectIds);
+                                      },
+                                      onDeleteMissingProjects: (selectedProjectIds) async {
+                                        await _deleteMissingProjects(context, ref, selectedProjectIds);
                                       },
                                       showHidden: hiddenMode == 1 || hiddenMode == 2,
                                       onExtractingMetadataChanged: (extracting) {
@@ -2466,6 +2526,7 @@ class _PlutoProjectsTableWithSelection extends ConsumerStatefulWidget {
   final Function(List<MusicProject>) onCreateRelease;
   final Function(List<String>) onHideProjects;
   final Function(List<String>) onUnhideProjects;
+  final Function(List<String>) onDeleteMissingProjects;
   final bool showHidden;
   final Function(bool) onExtractingMetadataChanged;
   final bool isAnyOperation;
@@ -2479,6 +2540,7 @@ class _PlutoProjectsTableWithSelection extends ConsumerStatefulWidget {
     required this.onCreateRelease,
     required this.onHideProjects,
     required this.onUnhideProjects,
+    required this.onDeleteMissingProjects,
     required this.showHidden,
     required this.onExtractingMetadataChanged,
     required this.isAnyOperation,
@@ -3103,6 +3165,27 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
                         _clearSelection();
                       },
                     ),
+                    Builder(builder: (context) {
+                      final missingIds = missingProjectIds(widget.projects, _selectedProjectIds);
+                      if (missingIds.isEmpty) return const SizedBox.shrink();
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const SizedBox(width: 8),
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.delete_forever),
+                            label: Text(AppLocalizations.of(context)!.deleteMissingProjects),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red.shade700,
+                            ),
+                            onPressed: () {
+                              widget.onDeleteMissingProjects(_selectedProjectIds.toList());
+                              _clearSelection();
+                            },
+                          ),
+                        ],
+                      );
+                    }),
                   ],
                 )
               else
@@ -3178,6 +3261,22 @@ bool shouldBlockForOperation({
   required bool extractingMetadata,
 }) {
   return deepScanning || profileSwitching || extractingMetadata;
+}
+
+/// The subset of [selectedIds] among [projects] whose file no longer exists
+/// on disk — the exact set the "Delete Missing" bulk action targets.
+/// Projects still present on disk are left alone even if selected alongside
+/// missing ones, so a mixed selection only ever deletes the missing half.
+@visibleForTesting
+List<String> missingProjectIds(
+  List<MusicProject> projects,
+  Iterable<String> selectedIds,
+) {
+  final selected = selectedIds.toSet();
+  return projects
+      .where((p) => selected.contains(p.id) && !projectFileExists(p))
+      .map((p) => p.id)
+      .toList();
 }
 
 /// What a scan-triggering button's icon should show: a spinner while its
