@@ -478,6 +478,35 @@ void main() {
     });
   });
 
+  group('smartFolderShouldRenderAsGroup', () {
+    // Regression coverage for a follow-up report on issue #67: a lone
+    // Cubase project newly dropped into a "1-Active Projects" folder merged
+    // correctly with an existing same-named Studio One folder while showing
+    // all DAWs (member count > 1 after merging), but filtering the DAW
+    // type down to Cubase only hid the Studio One siblings, dropping the
+    // visible member count back to 1 and demoting the group to a flat,
+    // seemingly "orphaned" row — even though the folder is a real,
+    // intentionally-merged one. With mergeByName on, a group must never
+    // demote just because a filter narrowed its currently-visible members
+    // down to one.
+
+    test('demotes a lone project to flat when merge-by-name is off', () {
+      expect(smartFolderShouldRenderAsGroup(1, mergeByName: false), isFalse);
+    });
+
+    test('keeps rendering as a group once there are 2+ members, merge-by-name off', () {
+      expect(smartFolderShouldRenderAsGroup(2, mergeByName: false), isTrue);
+    });
+
+    test('never demotes to flat when merge-by-name is on, even with a single visible member', () {
+      expect(smartFolderShouldRenderAsGroup(1, mergeByName: true), isTrue);
+    });
+
+    test('still renders as a group with 2+ members when merge-by-name is on', () {
+      expect(smartFolderShouldRenderAsGroup(2, mergeByName: true), isTrue);
+    });
+  });
+
   group('sortFlatRowsKeepingGroupsInPlace', () {
     int byName(TrinaRow a, TrinaRow b) =>
         (a.cells['name']!.value as String).compareTo(b.cells['name']!.value as String);

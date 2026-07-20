@@ -3453,6 +3453,29 @@ String smartFolderGroupKey(
   return mergeSameName ? path.basename(topLevel) : topLevel;
 }
 
+/// Whether a smart-folder group with [memberCount] currently-visible
+/// projects should render as an actual group row, rather than demoting its
+/// lone member to a plain flat row.
+///
+/// Normally a folder with only one *currently visible* project isn't worth
+/// wrapping in a group row, so it demotes to flat. But when [mergeByName] is
+/// on (see `mergeSmartFoldersByNameProvider`), a member count of 1 is often
+/// just the active DAW-type filter hiding that folder's merge partner(s)
+/// from another scan root — reported after the merge feature shipped: a
+/// brand-new Cubase project dropped into a "1-Active Projects" folder
+/// correctly merged with an existing same-named Studio One folder while
+/// showing all DAWs, but filtering the view down to Cubase only made it
+/// "disappear" back into an orphaned flat row, since only that one Cubase
+/// project remained in the bucket once its Studio One siblings were
+/// filtered out. Keeping every group intact while merging is enabled avoids
+/// that flicker between grouped and orphaned depending on which DAW filter
+/// happens to be active.
+@visibleForTesting
+bool smartFolderShouldRenderAsGroup(int memberCount, {required bool mergeByName}) {
+  if (mergeByName) return true;
+  return memberCount > 1;
+}
+
 /// Sorts [rows] by each row's cell value at [field] — string comparison,
 /// matching `TrinaColumnType.text().compare()`, the type every column in
 /// this table uses — and recursively sorts each group row's children the
@@ -4771,12 +4794,17 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       }
     }
 
-    // Groups with exactly 1 project are demoted to flat.
+    // Groups with only 1 currently-visible project are demoted to flat
+    // (unless merge-by-name is on — see smartFolderShouldRenderAsGroup).
     for (final entry in folderGroups.entries) {
-      if (entry.value.length == 1) flatProjects.add(entry.value.first);
+      if (!smartFolderShouldRenderAsGroup(entry.value.length, mergeByName: mergeFoldersByName)) {
+        flatProjects.add(entry.value.first);
+      }
     }
     final realGroups = Map.fromEntries(
-      folderGroups.entries.where((e) => e.value.length > 1),
+      folderGroups.entries.where(
+        (e) => smartFolderShouldRenderAsGroup(e.value.length, mergeByName: mergeFoldersByName),
+      ),
     );
 
     // Build display items as (latestModified, row) so we can sort interleaved.
