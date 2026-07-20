@@ -3389,6 +3389,18 @@ String? sortDirectionToPrefsValue(TrinaColumnSort? direction) {
   return direction.isDescending ? 'descending' : 'ascending';
 }
 
+/// Compares two 'lastModified' cell values chronologically. Used as the
+/// Projects table's Last Modified column `compare` callback: that column's
+/// cell values are raw [DateTime]s (not the formatted display string), so
+/// ascending/descending sort orders by actual date rather than by the
+/// alphabetical order of a formatted date string — e.g. "Jul" sorting after
+/// "Jun" alphabetically would otherwise put a July date after a June one
+/// even in years where July came first chronologically.
+@visibleForTesting
+int compareLastModifiedCellValues(dynamic a, dynamic b) {
+  return (a as DateTime).compareTo(b as DateTime);
+}
+
 /// Collects the [MusicProject.id] of every project-backed row in [topLevelRows],
 /// including rows nested inside collapsed or expanded smart-folder groups.
 ///
@@ -3808,7 +3820,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       row.cells['dawType']?.value = dawDisplay(updated);
       row.cells['bpm']?.value = updated.bpm?.toString() ?? '';
       row.cells['key']?.value = updated.musicalKey ?? '';
-      row.cells['lastModified']?.value = widget.dateFormat.format(updated.lastModifiedAt);
+      row.cells['lastModified']?.value = updated.lastModifiedAt;
       row.cells['deadline']?.value = updated.deadlineStatus ?? '';
       // Update the launch cell's own value so TrinaGrid re-renders the action
       // column (play button) when preview song data changes.
@@ -3829,7 +3841,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           }
         }
         if (latestModified != null) {
-          row.cells['lastModified']?.value = widget.dateFormat.format(latestModified);
+          row.cells['lastModified']?.value = latestModified;
         }
       } else {
         updateProjectRow(row);
@@ -4761,7 +4773,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         'dawType': TrinaCell(value: dawDisplay),
         'bpm': TrinaCell(value: p.bpm?.toString() ?? ''),
         'key': TrinaCell(value: p.musicalKey ?? ''),
-        'lastModified': TrinaCell(value: widget.dateFormat.format(p.lastModifiedAt)),
+        'lastModified': TrinaCell(value: p.lastModifiedAt),
         'deadline': TrinaCell(value: p.deadlineStatus ?? ''),
         'launch': TrinaCell(value: ''),
         'data': TrinaCell(value: p),
@@ -4862,7 +4874,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             'dawType': TrinaCell(value: ''),
             'bpm': TrinaCell(value: ''),
             'key': TrinaCell(value: ''),
-            'lastModified': TrinaCell(value: widget.dateFormat.format(latestModified)),
+            'lastModified': TrinaCell(value: latestModified),
             'deadline': TrinaCell(value: ''),
             'launch': TrinaCell(value: ''),
             'data': TrinaCell(value: null),
@@ -4957,7 +4969,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           final project = widget.projects[i];
           final row = stateManager!.rows[i];
           if (row.cells['lastModified'] != null) {
-            row.cells['lastModified']!.value = widget.dateFormat.format(project.lastModifiedAt);
+            row.cells['lastModified']!.value = project.lastModifiedAt;
           }
         }
         stateManager!.notifyListeners();
@@ -5321,7 +5333,11 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       TrinaColumn(
         title: AppLocalizations.of(context)!.lastModifiedColumn,
         field: 'lastModified',
-        type: TrinaColumnType.text(),
+        // Cell values are raw DateTimes (not the formatted display string)
+        // so ascending/descending sort compares chronologically instead of
+        // alphabetically — a locale format like "Jul 21, 2026" would
+        // otherwise sort by month name text, not by actual date.
+        type: TrinaColumnType.custom(compare: compareLastModifiedCellValues),
         enableEditingMode: false,
         width: 200,
         minWidth: 160,
@@ -5359,7 +5375,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               }
 
               return Text(
-                rendererContext.cell.value.toString(),
+                widget.dateFormat.format(project.lastModifiedAt),
                 style: TextStyle(color: textColor),
               );
             },

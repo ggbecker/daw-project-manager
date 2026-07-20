@@ -228,6 +228,36 @@ void main() {
     });
   });
 
+  group('compareLastModifiedCellValues', () {
+    // Regression test: the Last Modified column used to store the already-
+    // formatted display string (e.g. "Jul 21, 2026") as the cell's raw
+    // value, so ascending/descending sort compared that text alphabetically
+    // instead of chronologically — a January date could sort after a July
+    // one because "Jan" < "Jul" has nothing to do with which came first.
+    // The column now stores a raw DateTime and sorts via this comparator.
+
+    test('orders chronologically even when alphabetical month order disagrees', () {
+      final july = DateTime(2026, 7, 1);
+      final january = DateTime(2027, 1, 1); // later date, "smaller" month name
+
+      expect(compareLastModifiedCellValues(july, january), lessThan(0));
+      expect(compareLastModifiedCellValues(january, july), greaterThan(0));
+    });
+
+    test('treats equal DateTimes as equal', () {
+      final date = DateTime(2026, 7, 21, 20, 0);
+
+      expect(compareLastModifiedCellValues(date, DateTime(2026, 7, 21, 20, 0)), 0);
+    });
+
+    test('orders within the same day by time of day', () {
+      final morning = DateTime(2026, 7, 21, 9, 0);
+      final evening = DateTime(2026, 7, 21, 20, 0);
+
+      expect(compareLastModifiedCellValues(morning, evening), lessThan(0));
+    });
+  });
+
   group('collectProjectRowIds', () {
     test('collects IDs from flat (ungrouped) rows', () {
       final rows = [_flatRow('p1'), _flatRow('p2')];
@@ -352,6 +382,26 @@ void main() {
       applySortSnapshot(rows, 'name', TrinaColumnSort.none);
 
       expect(rows.map((r) => r.cells['name']!.value), ['Charlie', 'Alpha', 'Bravo']);
+    });
+
+    test('sorts DateTime cell values (e.g. lastModified) chronologically via toString()', () {
+      // Regression coverage: this pre-sort snapshot (used to avoid a flash
+      // of unsorted rows on a theme/locale remount) falls back to comparing
+      // cells' toString() when no special-case applies. The Last Modified
+      // column now stores a raw DateTime rather than a locale-formatted
+      // display string precisely so this still lands in chronological
+      // order — DateTime.toString() is zero-padded (e.g. "2026-07-01
+      // 00:00:00.000"), unlike a formatted string such as "Jul 1, 2026",
+      // which would sort "Jul" before "Jun" alphabetically regardless of
+      // which year came first.
+      TrinaRow dateRow(DateTime value) => TrinaRow(cells: {'lastModified': TrinaCell(value: value)});
+      final july = dateRow(DateTime(2026, 7, 1));
+      final january = dateRow(DateTime(2027, 1, 1));
+      final rows = [july, january];
+
+      applySortSnapshot(rows, 'lastModified', TrinaColumnSort.ascending);
+
+      expect(rows, [july, january]);
     });
 
     test('also sorts each group row\'s children, independent of top-level order', () {
