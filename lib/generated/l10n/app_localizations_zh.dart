@@ -3145,6 +3145,13 @@ class AppLocalizationsZh extends AppLocalizations {
       '按列对项目表排序时，智能文件夹分组会保持原位，不随排序移动——只有分组内的项目（以及未分组的项目）会重新排序。实验性功能，默认关闭。';
 
   @override
+  String get mergeSmartFoldersByName => '合并同名的智能文件夹';
+
+  @override
+  String get mergeSmartFoldersByNameDescription =>
+      '当两个扫描根目录（例如不同的 DAW）拥有同名的顶级文件夹时，将它们在项目表中视为一个合并的分组，而不是两个独立的分组。';
+
+  @override
   String get scanModeFlat => '平铺';
 
   @override

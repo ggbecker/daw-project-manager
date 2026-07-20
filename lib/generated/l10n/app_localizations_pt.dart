@@ -3251,6 +3251,14 @@ class AppLocalizationsPt extends AppLocalizations {
       'Ao ordenar a tabela de projetos por uma coluna, os grupos de pastas inteligentes permanecem no lugar em vez de se mover com a ordenação — apenas os projetos dentro deles (e os projetos não agrupados) são reordenados. Experimental: desativado por padrão.';
 
   @override
+  String get mergeSmartFoldersByName =>
+      'Mesclar pastas inteligentes com o mesmo nome';
+
+  @override
+  String get mergeSmartFoldersByNameDescription =>
+      'Quando duas pastas raiz de digitalização (por exemplo, DAWs diferentes) têm uma pasta de nível superior com o mesmo nome, elas são tratadas como um único grupo mesclado na tabela de projetos, em vez de dois grupos separados.';
+
+  @override
   String get scanModeFlat => 'Simples';
 
   @override
