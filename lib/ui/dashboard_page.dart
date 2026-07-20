@@ -3431,6 +3431,28 @@ Set<String> groupChildProjectIds(TrinaRow groupRow) {
       .toSet();
 }
 
+/// The key used to bucket a project into its smart-folder group during
+/// `_mapProjectsToRows()`. [rootPath] is the scan root the project lives
+/// under; [relativeParts] is its path relative to that root, already split
+/// into segments (so `relativeParts[0]` is the top-level subfolder).
+///
+/// Normally each root's own top-level subfolder is its own group, keyed by
+/// its full path — so a "0-Ideas" folder under a Cubase root and a
+/// "0-Ideas" folder under a Studio One root stay separate even though they
+/// share a name. When [mergeSameName] is on (see
+/// `mergeSmartFoldersByNameProvider`), the key is just the folder's
+/// basename, so same-named top-level folders from different scan roots
+/// collapse into a single merged group.
+@visibleForTesting
+String smartFolderGroupKey(
+  String rootPath,
+  List<String> relativeParts, {
+  required bool mergeSameName,
+}) {
+  final topLevel = path.join(rootPath, relativeParts[0]);
+  return mergeSameName ? path.basename(topLevel) : topLevel;
+}
+
 /// Sorts [rows] by each row's cell value at [field] — string comparison,
 /// matching `TrinaColumnType.text().compare()`, the type every column in
 /// this table uses — and recursively sorts each group row's children the
@@ -4722,6 +4744,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       return null;
     }
 
+    final mergeFoldersByName = ref.read(mergeSmartFoldersByNameProvider);
     final flatProjects = <MusicProject>[];
     final folderGroups = <String, List<MusicProject>>{};
 
@@ -4740,8 +4763,8 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           // Project sits directly in the root — no subfolder to group by.
           flatProjects.add(proj);
         } else {
-          final topLevel = path.join(rootPath, parts[0]);
-          folderGroups.putIfAbsent(topLevel, () => []).add(proj);
+          final key = smartFolderGroupKey(rootPath, parts, mergeSameName: mergeFoldersByName);
+          folderGroups.putIfAbsent(key, () => []).add(proj);
         }
       } else {
         flatProjects.add(proj);
@@ -5564,6 +5587,10 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     // that already survives a theme/locale remount to reapply expand/sort
     // state, now also correctly under the new group-sort behavior.
     final excludeFoldersFromSort = ref.watch(excludeSmartFoldersFromSortProvider);
+    // Same remount rationale: toggling this changes which projects land in
+    // which group (see smartFolderGroupKey), so the grid needs a fresh key
+    // to rebuild its row-group tree rather than diffing stale groups.
+    final mergeFoldersByName = ref.watch(mergeSmartFoldersByNameProvider);
     final initialRows = _mapProjectsToRows(widget.projects);
 
     if (widget.projects.isEmpty) {
@@ -5622,7 +5649,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
 
     final grid = TrinaGrid(
           key: ValueKey(
-            'trina_grid_${l10n.localeName}_${ref.watch(themeTypeProvider).name}_$excludeFoldersFromSort',
+            'trina_grid_${l10n.localeName}_${ref.watch(themeTypeProvider).name}_${excludeFoldersFromSort}_$mergeFoldersByName',
           ),
           columnMenuDelegate: _FitAllColumnsMenuDelegate(),
           columns: columns,

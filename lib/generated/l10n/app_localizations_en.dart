@@ -3245,6 +3245,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'When you sort the Projects table by a column, smart-folder groups stay in place instead of moving with the sort — only the projects inside them (and any ungrouped projects) get reordered. Experimental: off by default.';
 
   @override
+  String get mergeSmartFoldersByName =>
+      'Merge smart folders with the same name';
+
+  @override
+  String get mergeSmartFoldersByNameDescription =>
+      'When two scan roots (e.g. different DAWs) have a top-level folder with the same name, treat them as a single merged group in the Projects table instead of two separate ones.';
+
+  @override
   String get scanModeFlat => 'Flat';
 
   @override

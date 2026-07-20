@@ -3263,6 +3263,14 @@ class AppLocalizationsDe extends AppLocalizations {
       'Wenn du die Projekttabelle nach einer Spalte sortierst, bleiben Smart-Ordner-Gruppen an ihrem Platz, statt mit der Sortierung zu wandern — nur die Projekte darin (und nicht gruppierte Projekte) werden neu geordnet. Experimentell: standardmäßig deaktiviert.';
 
   @override
+  String get mergeSmartFoldersByName =>
+      'Smart-Ordner mit demselben Namen zusammenführen';
+
+  @override
+  String get mergeSmartFoldersByNameDescription =>
+      'Wenn zwei Scan-Stammordner (z. B. verschiedene DAWs) einen Ordner oberster Ebene mit demselben Namen haben, werden sie in der Projekttabelle als eine einzige zusammengeführte Gruppe behandelt statt als zwei getrennte.';
+
+  @override
   String get scanModeFlat => 'Einfach';
 
   @override

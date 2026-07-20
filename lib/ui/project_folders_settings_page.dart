@@ -759,6 +759,17 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
                     contentPadding: EdgeInsets.zero,
                     dense: true,
                   ),
+                  SwitchListTile(
+                    value: ref.watch(mergeSmartFoldersByNameProvider),
+                    onChanged: (v) => ref.read(mergeSmartFoldersByNameProvider.notifier).set(v),
+                    title: Text(l10n.mergeSmartFoldersByName),
+                    subtitle: Text(
+                      l10n.mergeSmartFoldersByNameDescription,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                  ),
                 ],
               ),
             ),

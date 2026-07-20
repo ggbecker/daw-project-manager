@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as path;
 import 'package:trina_grid/trina_grid.dart';
 
 import 'package:daw_project_manager/ui/dashboard_page.dart';
@@ -394,6 +395,86 @@ void main() {
         group.type.group.children.originalList.map((r) => r.cells['name']!.value),
         ['Alpha', 'Charlie'],
       );
+    });
+  });
+
+  group('smartFolderGroupKey', () {
+    // Regression coverage for issue #67: a user with the same top-level
+    // folder layout (e.g. "0-Ideas") replicated under two different scan
+    // roots (one per DAW, e.g. Cubase and Studio One) got two separate,
+    // identically-labeled smart-folder groups instead of one. This is the
+    // pure grouping-key logic behind the opt-in
+    // mergeSmartFoldersByNameProvider that lets those collapse into one.
+
+    test('keys by the full top-level path when not merging by name', () {
+      final key = smartFolderGroupKey(
+        '/Music/Cubase Projects',
+        ['0-Ideas', 'Song.cpr'],
+        mergeSameName: false,
+      );
+
+      expect(key, path.join('/Music/Cubase Projects', '0-Ideas'));
+    });
+
+    test('two roots with an identically-named subfolder produce different keys when off', () {
+      final cubaseKey = smartFolderGroupKey(
+        '/Music/Cubase Projects',
+        ['0-Ideas', 'Song.cpr'],
+        mergeSameName: false,
+      );
+      final studioOneKey = smartFolderGroupKey(
+        '/Music/Studio One Projects',
+        ['0-Ideas', 'Song.song'],
+        mergeSameName: false,
+      );
+
+      expect(cubaseKey, isNot(studioOneKey));
+    });
+
+    test('two roots with an identically-named subfolder collapse to the same key when on', () {
+      final cubaseKey = smartFolderGroupKey(
+        '/Music/Cubase Projects',
+        ['0-Ideas', 'Song.cpr'],
+        mergeSameName: true,
+      );
+      final studioOneKey = smartFolderGroupKey(
+        '/Music/Studio One Projects',
+        ['0-Ideas', 'Song.song'],
+        mergeSameName: true,
+      );
+
+      expect(cubaseKey, studioOneKey);
+      expect(cubaseKey, '0-Ideas');
+    });
+
+    test('differently-named subfolders still key separately even when merging by name', () {
+      final ideasKey = smartFolderGroupKey(
+        '/Music/Cubase Projects',
+        ['0-Ideas', 'Song.cpr'],
+        mergeSameName: true,
+      );
+      final activeKey = smartFolderGroupKey(
+        '/Music/Cubase Projects',
+        ['1-Active Projects', 'Song.cpr'],
+        mergeSameName: true,
+      );
+
+      expect(ideasKey, isNot(activeKey));
+    });
+
+    test('only the top-level segment participates in the key, nested depth is ignored', () {
+      final shallow = smartFolderGroupKey(
+        '/Music/Cubase Projects',
+        ['0-Ideas', 'Song.cpr'],
+        mergeSameName: false,
+      );
+      final nested = smartFolderGroupKey(
+        '/Music/Cubase Projects',
+        ['0-Ideas', 'Sub', 'Song.cpr'],
+        mergeSameName: false,
+      );
+
+      expect(shallow, nested);
     });
   });
 

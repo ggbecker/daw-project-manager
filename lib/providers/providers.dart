@@ -2413,6 +2413,44 @@ final excludeSmartFoldersFromSortProvider =
         ExcludeSmartFoldersFromSortNotifier.new);
 
 // ---------------------------------------------------------------------------
+// Smart Folder Merge-by-Name
+// ---------------------------------------------------------------------------
+
+/// Whether top-level smart-folder groups that share the same folder name
+/// across different scan roots (e.g. a "0-Ideas" folder under both a Cubase
+/// and a Studio One root) should be merged into a single group in the
+/// Projects table instead of appearing as separate, identically-labeled
+/// groups. Off by default: this changes long-standing grouping behavior, so
+/// it ships opt-in like excludeSmartFoldersFromSortProvider above.
+class MergeSmartFoldersByNameNotifier extends Notifier<bool> {
+  static const _key = 'mergeSmartFoldersByName';
+
+  // Same synchronous-read rationale as ExcludeSmartFoldersFromSortNotifier:
+  // this value feeds the Projects grid's remount key.
+  @override
+  bool build() {
+    try {
+      final saved = Hive.box<String>('settings').get(_key);
+      if (saved != null) return saved == 'true';
+    } catch (_) {
+      // Box not open yet on the very first frame — falls back to the
+      // opt-in default (false) rather than crash.
+    }
+    return false;
+  }
+
+  Future<void> set(bool value) async {
+    state = value;
+    final box = await Hive.openBox<String>('settings');
+    await box.put(_key, value.toString());
+  }
+}
+
+final mergeSmartFoldersByNameProvider =
+    NotifierProvider<MergeSmartFoldersByNameNotifier, bool>(
+        MergeSmartFoldersByNameNotifier.new);
+
+// ---------------------------------------------------------------------------
 // Work Timer Notification Settings
 // ---------------------------------------------------------------------------
 

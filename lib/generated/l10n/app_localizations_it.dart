@@ -3257,6 +3257,14 @@ class AppLocalizationsIt extends AppLocalizations {
       'Quando ordini la tabella dei progetti per colonna, i gruppi di cartelle smart restano al loro posto invece di spostarsi con l\'ordinamento — vengono riordinati solo i progetti al loro interno (e quelli non raggruppati). Sperimentale: disattivato per impostazione predefinita.';
 
   @override
+  String get mergeSmartFoldersByName =>
+      'Unisci le cartelle smart con lo stesso nome';
+
+  @override
+  String get mergeSmartFoldersByNameDescription =>
+      'Quando due cartelle radice di scansione (ad esempio DAW diversi) hanno una cartella di primo livello con lo stesso nome, vengono trattate come un unico gruppo unito nella tabella dei progetti invece che come due gruppi separati.';
+
+  @override
   String get scanModeFlat => 'Piatto';
 
   @override

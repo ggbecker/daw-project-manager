@@ -3277,6 +3277,14 @@ class AppLocalizationsFr extends AppLocalizations {
       'Lorsque vous triez le tableau des projets par colonne, les groupes de dossiers intelligents restent à leur place au lieu de se déplacer avec le tri — seuls les projets qu\'ils contiennent (et les projets non groupés) sont réordonnés. Expérimental : désactivé par défaut.';
 
   @override
+  String get mergeSmartFoldersByName =>
+      'Fusionner les dossiers intelligents portant le même nom';
+
+  @override
+  String get mergeSmartFoldersByNameDescription =>
+      'Lorsque deux dossiers racines de numérisation (par exemple différents DAW) ont un dossier de premier niveau portant le même nom, ils sont traités comme un seul groupe fusionné dans le tableau des projets plutôt que comme deux groupes distincts.';
+
+  @override
   String get scanModeFlat => 'Plat';
 
   @override

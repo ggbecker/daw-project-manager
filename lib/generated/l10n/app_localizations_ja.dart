@@ -3175,6 +3175,13 @@ class AppLocalizationsJa extends AppLocalizations {
       'プロジェクト一覧を列で並べ替えても、スマートフォルダのグループは移動せずその位置にとどまります。並べ替えられるのはグループ内のプロジェクト（およびグループ化されていないプロジェクト）のみです。実験的機能のため、初期設定ではオフです。';
 
   @override
+  String get mergeSmartFoldersByName => '同じ名前のスマートフォルダを統合';
+
+  @override
+  String get mergeSmartFoldersByNameDescription =>
+      '2つのスキャンルート（例えば異なるDAW）に同じ名前のトップレベルフォルダがある場合、プロジェクト一覧では2つの別々のグループではなく、1つに統合されたグループとして扱います。';
+
+  @override
   String get scanModeFlat => 'フラット';
 
   @override
