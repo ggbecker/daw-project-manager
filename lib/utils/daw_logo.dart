@@ -28,6 +28,7 @@ String? getDawLogoPath(String? dawType) {
     'cakewalk sonar': 'cakewalk.png',
     'sonar': 'cakewalk.png',
     'luna': 'luna.png',
+    'magda': 'magda.png',
   };
 
   // Try exact match first

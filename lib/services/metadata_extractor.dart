@@ -80,6 +80,11 @@ class MetadataExtractor {
       bpm = metadata.bpm ?? bpm;
       key = metadata.key ?? key;
       dawVersion = metadata.dawVersion ?? dawVersion;
+    } else if (ext == '.mgd') {
+      final metadata = await _extractFromMagdaFile(filePath);
+      bpm = metadata.bpm ?? bpm;
+      key = metadata.key ?? key;
+      dawVersion = metadata.dawVersion ?? dawVersion;
     }
 
     // Also search for bpm and key files in the project directory
@@ -136,6 +141,8 @@ class MetadataExtractor {
         return 'Sonnar';
       case '.luna':
         return 'LUNA';
+      case '.mgd':
+        return 'MAGDA';
       default:
         return null;
     }
@@ -430,6 +437,56 @@ class MetadataExtractor {
               ? _bitwigRootNotesMinor
               : _bitwigRootNotesMajor;
           key = '${rootNotes[rootNote]} $scaleName';
+        }
+      }
+
+      return ProjectMetadata(bpm: bpm, key: key, dawVersion: dawVersion);
+    } catch (e) {
+      return ProjectMetadata();
+    }
+  }
+
+  /// Extracts version, BPM, and key signature from a MAGDA .mgd project file.
+  /// The file is a single zlib-compressed (RFC 1950) JSON document — the
+  /// project's own ProjectSerializer.hpp saves via a gzip/zlib-wrapped
+  /// juce::var tree — with top-level `magdaVersion` and a `project` object
+  /// holding `tempo`, `keyRoot` (0=C..11=B, -1=none) and `keyQuality`
+  /// (0=major, 1=minor). See github.com/Conceptual-Machines/magda-core.
+  static Future<ProjectMetadata> _extractFromMagdaFile(String filePath) async {
+    try {
+      final file = File(filePath);
+      if (!await file.exists()) {
+        return ProjectMetadata();
+      }
+
+      final bytes = await file.readAsBytes();
+      final decompressed = zlib.decode(bytes);
+      final json = jsonDecode(utf8.decode(decompressed)) as Map<String, dynamic>;
+
+      String? dawVersion;
+      final magdaVersion = json['magdaVersion'];
+      if (magdaVersion is String && magdaVersion.isNotEmpty) {
+        // MAGDA is still pre-1.0, so the major version alone ("0") is
+        // meaningless — use "major.minor" (e.g. "0.15.0" -> "0.15") instead.
+        final parts = magdaVersion.split('.');
+        dawVersion = parts.length >= 2 ? '${parts[0]}.${parts[1]}' : parts[0];
+      }
+
+      double? bpm;
+      String? key;
+      final project = json['project'];
+      if (project is Map<String, dynamic>) {
+        final tempo = project['tempo'];
+        if (tempo is num) bpm = tempo.toDouble();
+
+        final keyRoot = project['keyRoot'];
+        final keyQuality = project['keyQuality'];
+        if (keyRoot is int && keyRoot >= 0) {
+          final rootNote = _getRootNote(keyRoot);
+          if (rootNote != null) {
+            final quality = keyQuality == 1 ? 'Minor' : 'Major';
+            key = '$rootNote $quality';
+          }
         }
       }
 
