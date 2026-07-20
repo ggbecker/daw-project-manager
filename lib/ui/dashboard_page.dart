@@ -3695,9 +3695,23 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     final newField = sortedColumn?.field;
     final newDirection = sortedColumn?.sort;
     if (newField != _lastKnownSortField || newDirection != _lastKnownSortDirection) {
+      final hadSort = _lastKnownSortField != null;
       _lastKnownSortField = newField;
       _lastKnownSortDirection = newDirection;
       _persistSortPreference(newField, newDirection);
+      // Clicking a column header a third time clears its sort by calling
+      // TrinaGrid's own sortBySortIdx(), which restores each row's *baked-in*
+      // sortIdx — the row order from whenever rows were last (re)built, not
+      // necessarily our app's actual default order. Those two only coincide
+      // if nothing was ever sorted since that last build; if the table was
+      // last rebuilt while some other column's sort was active (e.g. after a
+      // background refresh), sortIdx bakes in that stale order instead.
+      // Force a full rebuild so cycling any column back to "no sort" always
+      // lands on the same newest-first default _mapProjectsToRows()
+      // establishes on a fresh mount, not whatever TrinaGrid had cached.
+      if (hadSort && newField == null) {
+        _rebuildRows();
+      }
     }
   }
 
@@ -5428,6 +5442,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         field: 'launch',
         type: TrinaColumnType.text(),
         enableEditingMode: false,
+        enableSorting: false,
         width: 290, // Increased width to accommodate all action buttons
         minWidth: 250,
         renderer: (ctx) {

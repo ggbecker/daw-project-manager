@@ -709,6 +709,92 @@ void main() {
     });
   });
 
+  group('cycling a column sort back to "no sort" must reset to the default order', () {
+    // Regression test: clicking a column header a third time clears its
+    // sort by calling TrinaGrid's own sortBySortIdx(), which restores every
+    // row's *baked-in* sortIdx — the row order from whenever the rows were
+    // last (re)built, not necessarily the app's actual default (newest-
+    // first) order. Those two only coincide if nothing was ever sorted
+    // since that last build; if the table was last rebuilt while some
+    // other sort was active (e.g. after a background refresh), sortIdx
+    // bakes in that stale order instead, and the table then silently stays
+    // in it even though the header shows "no sort" — reported as sorting
+    // through to the last step not refreshing back to the last-modified
+    // default. Mirrors _captureTableStateSnapshot()'s fix: detect the
+    // transition from "had a sort" to "no sort" and force a fresh rebuild
+    // instead of trusting TrinaGrid's cached sortIdx order.
+
+    List<TrinaColumn> columns() => [
+          TrinaColumn(title: 'Name', field: 'name', type: TrinaColumnType.text()),
+        ];
+
+    TrinaRow flat(String name) => TrinaRow(cells: {'name': TrinaCell(value: name)});
+
+    Future<TrinaGridStateManager> pumpGrid(WidgetTester tester, Key key, List<TrinaRow> rows) async {
+      late TrinaGridStateManager sm;
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 400,
+            height: 400,
+            child: TrinaGrid(
+              key: key,
+              columns: columns(),
+              rows: rows,
+              onLoaded: (e) => sm = e.stateManager,
+            ),
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+      return sm;
+    }
+
+    testWidgets(
+        "sortBySortIdx alone leaves rows in the stale pre-sort order (demonstrates the bug)",
+        (tester) async {
+      // Rows were last built while sorted descending by name (Zeta, Charlie,
+      // Alpha is the baked-in sortIdx order) — even though the table is
+      // about to be cycled back to "no sort".
+      final rows = [flat('Zeta'), flat('Charlie'), flat('Alpha')];
+      final sm = await pumpGrid(tester, const ValueKey('buggy'), rows);
+      final nameColumn = sm.columns.first;
+
+      sm.sortAscending(nameColumn);
+      sm.sortDescending(nameColumn);
+      sm.sortBySortIdx(nameColumn); // the third header click
+
+      expect(sm.getSortedColumn, isNull, reason: 'sort is genuinely cleared');
+      // ...but the row order is whatever sortIdx happened to bake in, not
+      // any sensible default — this is the bug.
+      expect(sm.rows.map((r) => r.cells['name']!.value), ['Zeta', 'Charlie', 'Alpha']);
+    });
+
+    testWidgets(
+        'detecting the had-sort-to-no-sort transition and rebuilding restores the true default',
+        (tester) async {
+      final rows = [flat('Zeta'), flat('Charlie'), flat('Alpha')];
+      final sm = await pumpGrid(tester, const ValueKey('fixed'), rows);
+      final nameColumn = sm.columns.first;
+
+      sm.sortAscending(nameColumn);
+      sm.sortDescending(nameColumn);
+      sm.sortBySortIdx(nameColumn);
+
+      // Mirrors _captureTableStateSnapshot()'s new branch: a sort was
+      // active before this change (hadSort) and the column is now cleared
+      // (newField == null), so production would call _rebuildRows() here.
+      expect(sm.getSortedColumn, isNull);
+      // Mirrors _rebuildRows(): swap in a freshly-built row order — the
+      // app's real default — instead of trusting sortIdx.
+      final freshDefaultOrder = [flat('Alpha'), flat('Charlie'), flat('Zeta')];
+      sm.removeRows(sm.rows, notify: false);
+      sm.insertRows(0, freshDefaultOrder);
+
+      expect(sm.rows.map((r) => r.cells['name']!.value), ['Alpha', 'Charlie', 'Zeta']);
+    });
+  });
+
   group('_rebuildRows-style expand restore must be idempotent', () {
     // Regression test for a bug introduced by making _mapProjectsToRows()
     // pre-expand groups from the persisted snapshot (to fix the sort/expand
