@@ -3271,6 +3271,13 @@ class AppLocalizationsDe extends AppLocalizations {
       'Wenn zwei Scan-Stammordner (z. B. verschiedene DAWs) einen Ordner oberster Ebene mit demselben Namen haben, werden sie in der Projekttabelle als eine einzige zusammengeführte Gruppe behandelt statt als zwei getrennte.';
 
   @override
+  String get alwaysShowSmartFolders => 'Smart-Ordner immer anzeigen';
+
+  @override
+  String get alwaysShowSmartFoldersDescription =>
+      'Zeigt einen Smart-Ordner als eigene Gruppenzeile an, auch wenn gerade nur eines seiner Projekte sichtbar ist (z. B. nach einer Suche oder einem Filter), statt ihn zu einer einfachen, nicht gruppierten Zeile zusammenzufassen.';
+
+  @override
   String get scanModeFlat => 'Einfach';
 
   @override

@@ -490,20 +490,38 @@ void main() {
     // demote just because a filter narrowed its currently-visible members
     // down to one.
 
-    test('demotes a lone project to flat when merge-by-name is off', () {
-      expect(smartFolderShouldRenderAsGroup(1, mergeByName: false), isFalse);
+    test('demotes a lone project to flat when both settings are off', () {
+      expect(smartFolderShouldRenderAsGroup(1, mergeByName: false, alwaysShow: false), isFalse);
     });
 
-    test('keeps rendering as a group once there are 2+ members, merge-by-name off', () {
-      expect(smartFolderShouldRenderAsGroup(2, mergeByName: false), isTrue);
+    test('keeps rendering as a group once there are 2+ members, both settings off', () {
+      expect(smartFolderShouldRenderAsGroup(2, mergeByName: false, alwaysShow: false), isTrue);
     });
 
     test('never demotes to flat when merge-by-name is on, even with a single visible member', () {
-      expect(smartFolderShouldRenderAsGroup(1, mergeByName: true), isTrue);
+      expect(smartFolderShouldRenderAsGroup(1, mergeByName: true, alwaysShow: false), isTrue);
     });
 
     test('still renders as a group with 2+ members when merge-by-name is on', () {
-      expect(smartFolderShouldRenderAsGroup(2, mergeByName: true), isTrue);
+      expect(smartFolderShouldRenderAsGroup(2, mergeByName: true, alwaysShow: false), isTrue);
+    });
+
+    // alwaysShowSmartFoldersProvider: a general-purpose version of the same
+    // override, independent of merge-by-name — for anyone who wants a smart
+    // folder to never collapse away, whatever narrowed it down to one
+    // visible member (a search, a phase filter, a DAW filter with no merge
+    // involved at all, etc.).
+
+    test('never demotes to flat when always-show is on, even with a single visible member', () {
+      expect(smartFolderShouldRenderAsGroup(1, mergeByName: false, alwaysShow: true), isTrue);
+    });
+
+    test('still renders as a group with 2+ members when always-show is on', () {
+      expect(smartFolderShouldRenderAsGroup(2, mergeByName: false, alwaysShow: true), isTrue);
+    });
+
+    test('either setting alone is enough to keep a lone member grouped', () {
+      expect(smartFolderShouldRenderAsGroup(1, mergeByName: true, alwaysShow: true), isTrue);
     });
   });
 

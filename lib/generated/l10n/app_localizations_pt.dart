@@ -3259,6 +3259,13 @@ class AppLocalizationsPt extends AppLocalizations {
       'Quando duas pastas raiz de digitalização (por exemplo, DAWs diferentes) têm uma pasta de nível superior com o mesmo nome, elas são tratadas como um único grupo mesclado na tabela de projetos, em vez de dois grupos separados.';
 
   @override
+  String get alwaysShowSmartFolders => 'Sempre mostrar pastas inteligentes';
+
+  @override
+  String get alwaysShowSmartFoldersDescription =>
+      'Mostra uma pasta inteligente como sua própria linha de grupo mesmo quando apenas um de seus projetos está visível no momento (por exemplo, após uma busca ou filtro), em vez de reduzi-la a uma linha simples sem agrupamento.';
+
+  @override
   String get scanModeFlat => 'Simples';
 
   @override

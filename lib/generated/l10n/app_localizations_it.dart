@@ -3265,6 +3265,13 @@ class AppLocalizationsIt extends AppLocalizations {
       'Quando due cartelle radice di scansione (ad esempio DAW diversi) hanno una cartella di primo livello con lo stesso nome, vengono trattate come un unico gruppo unito nella tabella dei progetti invece che come due gruppi separati.';
 
   @override
+  String get alwaysShowSmartFolders => 'Mostra sempre le cartelle smart';
+
+  @override
+  String get alwaysShowSmartFoldersDescription =>
+      'Mostra una cartella smart come una propria riga di gruppo anche quando è visibile solo uno dei suoi progetti (ad esempio dopo una ricerca o un filtro), invece di ridurla a una semplice riga non raggruppata.';
+
+  @override
   String get scanModeFlat => 'Piatto';
 
   @override

@@ -5537,6 +5537,18 @@ abstract class AppLocalizations {
   /// **'When two scan roots (e.g. different DAWs) have a top-level folder with the same name, treat them as a single merged group in the Projects table instead of two separate ones.'**
   String get mergeSmartFoldersByNameDescription;
 
+  /// No description provided for @alwaysShowSmartFolders.
+  ///
+  /// In en, this message translates to:
+  /// **'Always show smart folders'**
+  String get alwaysShowSmartFolders;
+
+  /// No description provided for @alwaysShowSmartFoldersDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Show a smart folder as its own group row even when only one of its projects is currently visible (e.g. after a search or filter), instead of collapsing it into a plain ungrouped row.'**
+  String get alwaysShowSmartFoldersDescription;
+
   /// No description provided for @scanModeFlat.
   ///
   /// In en, this message translates to:

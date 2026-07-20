@@ -3285,6 +3285,14 @@ class AppLocalizationsFr extends AppLocalizations {
       'Lorsque deux dossiers racines de numérisation (par exemple différents DAW) ont un dossier de premier niveau portant le même nom, ils sont traités comme un seul groupe fusionné dans le tableau des projets plutôt que comme deux groupes distincts.';
 
   @override
+  String get alwaysShowSmartFolders =>
+      'Toujours afficher les dossiers intelligents';
+
+  @override
+  String get alwaysShowSmartFoldersDescription =>
+      'Affiche un dossier intelligent comme sa propre ligne de groupe même lorsqu\'un seul de ses projets est actuellement visible (par exemple après une recherche ou un filtre), au lieu de le réduire à une simple ligne non groupée.';
+
+  @override
   String get scanModeFlat => 'Plat';
 
   @override

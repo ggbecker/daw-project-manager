@@ -3458,21 +3458,29 @@ String smartFolderGroupKey(
 /// lone member to a plain flat row.
 ///
 /// Normally a folder with only one *currently visible* project isn't worth
-/// wrapping in a group row, so it demotes to flat. But when [mergeByName] is
-/// on (see `mergeSmartFoldersByNameProvider`), a member count of 1 is often
-/// just the active DAW-type filter hiding that folder's merge partner(s)
-/// from another scan root — reported after the merge feature shipped: a
-/// brand-new Cubase project dropped into a "1-Active Projects" folder
-/// correctly merged with an existing same-named Studio One folder while
-/// showing all DAWs, but filtering the view down to Cubase only made it
-/// "disappear" back into an orphaned flat row, since only that one Cubase
-/// project remained in the bucket once its Studio One siblings were
-/// filtered out. Keeping every group intact while merging is enabled avoids
-/// that flicker between grouped and orphaned depending on which DAW filter
-/// happens to be active.
+/// wrapping in a group row, so it demotes to flat. Two opt-in settings
+/// override that:
+/// - [mergeByName] (`mergeSmartFoldersByNameProvider`): a member count of 1
+///   is often just the active DAW-type filter hiding that folder's merge
+///   partner(s) from another scan root — reported after the merge feature
+///   shipped: a brand-new Cubase project dropped into a "1-Active Projects"
+///   folder correctly merged with an existing same-named Studio One folder
+///   while showing all DAWs, but filtering the view down to Cubase only made
+///   it "disappear" back into an orphaned flat row, since only that one
+///   Cubase project remained in the bucket once its Studio One siblings were
+///   filtered out.
+/// - [alwaysShow] (`alwaysShowSmartFoldersProvider`): a general-purpose
+///   version of the same override for anyone who'd simply rather a smart
+///   folder never collapse away, regardless of why it's down to one visible
+///   member (a search, a phase filter, etc.), not just the merge-by-name
+///   case above.
 @visibleForTesting
-bool smartFolderShouldRenderAsGroup(int memberCount, {required bool mergeByName}) {
-  if (mergeByName) return true;
+bool smartFolderShouldRenderAsGroup(
+  int memberCount, {
+  required bool mergeByName,
+  required bool alwaysShow,
+}) {
+  if (mergeByName || alwaysShow) return true;
   return memberCount > 1;
 }
 
@@ -4768,6 +4776,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     }
 
     final mergeFoldersByName = ref.read(mergeSmartFoldersByNameProvider);
+    final alwaysShowSmartFolders = ref.read(alwaysShowSmartFoldersProvider);
     final flatProjects = <MusicProject>[];
     final folderGroups = <String, List<MusicProject>>{};
 
@@ -4795,15 +4804,24 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     }
 
     // Groups with only 1 currently-visible project are demoted to flat
-    // (unless merge-by-name is on — see smartFolderShouldRenderAsGroup).
+    // (unless merge-by-name or always-show is on — see
+    // smartFolderShouldRenderAsGroup).
     for (final entry in folderGroups.entries) {
-      if (!smartFolderShouldRenderAsGroup(entry.value.length, mergeByName: mergeFoldersByName)) {
+      if (!smartFolderShouldRenderAsGroup(
+        entry.value.length,
+        mergeByName: mergeFoldersByName,
+        alwaysShow: alwaysShowSmartFolders,
+      )) {
         flatProjects.add(entry.value.first);
       }
     }
     final realGroups = Map.fromEntries(
       folderGroups.entries.where(
-        (e) => smartFolderShouldRenderAsGroup(e.value.length, mergeByName: mergeFoldersByName),
+        (e) => smartFolderShouldRenderAsGroup(
+          e.value.length,
+          mergeByName: mergeFoldersByName,
+          alwaysShow: alwaysShowSmartFolders,
+        ),
       ),
     );
 
@@ -5619,6 +5637,9 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     // which group (see smartFolderGroupKey), so the grid needs a fresh key
     // to rebuild its row-group tree rather than diffing stale groups.
     final mergeFoldersByName = ref.watch(mergeSmartFoldersByNameProvider);
+    // Same remount rationale again: toggling this changes which groups
+    // demote to flat rows (see smartFolderShouldRenderAsGroup).
+    final alwaysShowSmartFolders = ref.watch(alwaysShowSmartFoldersProvider);
     final initialRows = _mapProjectsToRows(widget.projects);
 
     if (widget.projects.isEmpty) {
@@ -5677,7 +5698,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
 
     final grid = TrinaGrid(
           key: ValueKey(
-            'trina_grid_${l10n.localeName}_${ref.watch(themeTypeProvider).name}_${excludeFoldersFromSort}_$mergeFoldersByName',
+            'trina_grid_${l10n.localeName}_${ref.watch(themeTypeProvider).name}_${excludeFoldersFromSort}_${mergeFoldersByName}_$alwaysShowSmartFolders',
           ),
           columnMenuDelegate: _FitAllColumnsMenuDelegate(),
           columns: columns,

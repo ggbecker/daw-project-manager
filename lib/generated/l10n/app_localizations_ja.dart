@@ -3182,6 +3182,13 @@ class AppLocalizationsJa extends AppLocalizations {
       '2つのスキャンルート（例えば異なるDAW）に同じ名前のトップレベルフォルダがある場合、プロジェクト一覧では2つの別々のグループではなく、1つに統合されたグループとして扱います。';
 
   @override
+  String get alwaysShowSmartFolders => 'スマートフォルダを常に表示';
+
+  @override
+  String get alwaysShowSmartFoldersDescription =>
+      '検索やフィルターの結果、フォルダ内のプロジェクトが1件だけ表示されている場合でも、グループ化されていない単純な行にまとめず、スマートフォルダを独立したグループ行として表示します。';
+
+  @override
   String get scanModeFlat => 'フラット';
 
   @override
