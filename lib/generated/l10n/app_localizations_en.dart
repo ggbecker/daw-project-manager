@@ -250,7 +250,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deepScanConfirm =>
-      'Deep Scan extracts full metadata from project files:\n• BPM (Beats Per Minute)\n• Musical Key\n• DAW Version\nCurrently supported: Ableton Live, Cubase and Bitwig Studio.\n\nThis is slower than a regular scan and may take a while. Continue?';
+      'Deep Scan extracts full metadata from project files:\n• BPM (Beats Per Minute)\n• Musical Key\n• DAW Version\nCurrently supported: Ableton Live, Cubase, Bitwig Studio and MAGDA.\n\nThis is slower than a regular scan and may take a while. Continue?';
 
   @override
   String get deepScanOnlyUnscanned => 'Only scan projects without metadata';
@@ -1068,6 +1068,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get importBackup => 'Import Backup';
+
+  @override
+  String get exportProjectInfo => 'Export Info';
+
+  @override
+  String get exportProjectInfoTooltip =>
+      'Save this project\'s info to a text file';
+
+  @override
+  String get exportAllProjectsInfo => 'Export All Projects to TXT';
+
+  @override
+  String get exportAllProjectsInfoSubtitle =>
+      'Save a plain text record of every project\'s info, so it\'s kept even if you delete the DAW file later';
+
+  @override
+  String get projectInfoExported => 'Project info exported';
+
+  @override
+  String allProjectsInfoExported(int count) {
+    return 'Exported info for $count projects';
+  }
+
+  @override
+  String failedToExportProjectInfo(String error) {
+    return 'Failed to export project info: $error';
+  }
+
+  @override
+  String get noProjectsToExport => 'No projects to export';
 
   @override
   String get backupExportedSuccessfully => 'Backup exported successfully';

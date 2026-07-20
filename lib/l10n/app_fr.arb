@@ -112,7 +112,7 @@
   "noReleasesFound": "Aucune sortie trouvée",
   "noPlaylistsFound": "Aucune playlist trouvée",
   "tryDifferentSearch": "Essayez un terme de recherche différent",
-  "deepScanConfirm": "Le Scan Approfondi extrait les métadonnées complètes des fichiers de projet:\n• BPM (Battements Par Minute)\n• Tonalité Musicale\n• Version du DAW\nActuellement pris en charge : Ableton Live, Cubase et Bitwig Studio.\n\nC'est plus lent qu'un scan régulier et peut prendre un certain temps. Continuer?",
+  "deepScanConfirm": "Le Scan Approfondi extrait les métadonnées complètes des fichiers de projet:\n• BPM (Battements Par Minute)\n• Tonalité Musicale\n• Version du DAW\nActuellement pris en charge : Ableton Live, Cubase, Bitwig Studio et MAGDA.\n\nC'est plus lent qu'un scan régulier et peut prendre un certain temps. Continuer?",
   "deepScanOnlyUnscanned": "Scanner uniquement les projets sans métadonnées",
   "metadataExtractedSuccessfully": "Métadonnées extraites avec succès",
   "failedToExtractMetadata": "Échec de l'extraction des métadonnées: {error}",
@@ -836,6 +836,30 @@
   "backupAndRestore": "Sauvegarde et Restauration",
   "exportBackup": "Exporter la Sauvegarde",
   "importBackup": "Importer la Sauvegarde",
+  "exportProjectInfo": "Exporter les infos",
+  "exportProjectInfoTooltip": "Enregistrer les informations de ce projet dans un fichier texte",
+  "exportAllProjectsInfo": "Exporter tous les projets en TXT",
+  "exportAllProjectsInfoSubtitle": "Enregistre un fichier texte avec les informations de tous les projets, conservé même après la suppression du fichier DAW",
+  "projectInfoExported": "Informations du projet exportées",
+  "allProjectsInfoExported": "Informations exportées pour {count} projets",
+  "@allProjectsInfoExported": {
+    "description": "Message de succès après l'export des informations de tous les projets",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "failedToExportProjectInfo": "Échec de l'exportation des informations du projet : {error}",
+  "@failedToExportProjectInfo": {
+    "description": "Message d'erreur en cas d'échec de l'exportation des informations du projet",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noProjectsToExport": "Aucun projet à exporter",
   "backupExportedSuccessfully": "Sauvegarde exportée avec succès",
   "failedToExportBackup": "Échec de l'exportation de la sauvegarde : {error}",
   "@failedToExportBackup": {
@@ -2045,9 +2069,9 @@
   "@scanModeSectionTitle": {},
   "scanModeSectionDescription": "Contrôle comment les projets de chaque dossier sont affichés dans le tableau — sous forme de liste simple ou regroupés par sous-dossier.",
   "@scanModeSectionDescription": {},
-  "excludeSmartFoldersFromSort": "Keep smart folders out of sorting",
+  "excludeSmartFoldersFromSort": "Exclure les dossiers intelligents du tri",
   "@excludeSmartFoldersFromSort": {},
-  "excludeSmartFoldersFromSortDescription": "When you sort the Projects table by a column, smart-folder groups stay in place instead of moving with the sort — only the projects inside them (and any ungrouped projects) get reordered. Experimental: off by default.",
+  "excludeSmartFoldersFromSortDescription": "Lorsque vous triez le tableau des projets par colonne, les groupes de dossiers intelligents restent à leur place au lieu de se déplacer avec le tri — seuls les projets qu'ils contiennent (et les projets non groupés) sont réordonnés. Expérimental : désactivé par défaut.",
   "@excludeSmartFoldersFromSortDescription": {},
   "scanModeFlat": "Plat",
   "@scanModeFlat": {},

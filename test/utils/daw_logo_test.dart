@@ -26,6 +26,7 @@ void main() {
         'Studio One': 'studio-one.png',
         'Waveform': 'tracktion-waveform.png',
         'LUNA': 'luna.png',
+        'MAGDA': 'magda.png',
       };
 
       for (final entry in expected.entries) {

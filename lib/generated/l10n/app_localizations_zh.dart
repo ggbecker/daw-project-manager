@@ -242,7 +242,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get deepScanConfirm =>
-      '深度扫描从项目文件中提取完整的元数据：\n• BPM（每分钟节拍数）\n• 音乐调性\n• DAW版本\n目前支持：Ableton Live、Cubase 和 Bitwig Studio。\n\n这比常规扫描慢，可能需要一些时间。继续吗？';
+      '深度扫描从项目文件中提取完整的元数据：\n• BPM（每分钟节拍数）\n• 音乐调性\n• DAW版本\n目前支持：Ableton Live、Cubase、Bitwig Studio 和 MAGDA。\n\n这比常规扫描慢，可能需要一些时间。继续吗？';
 
   @override
   String get deepScanOnlyUnscanned => '仅扫描没有元数据的项目';
@@ -1051,6 +1051,34 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get importBackup => '导入备份';
+
+  @override
+  String get exportProjectInfo => '导出信息';
+
+  @override
+  String get exportProjectInfoTooltip => '将此项目的信息保存为文本文件';
+
+  @override
+  String get exportAllProjectsInfo => '将所有项目导出为TXT';
+
+  @override
+  String get exportAllProjectsInfoSubtitle => '保存所有项目信息的文本记录，即使以后删除DAW文件也能保留';
+
+  @override
+  String get projectInfoExported => '项目信息已导出';
+
+  @override
+  String allProjectsInfoExported(int count) {
+    return '已导出 $count 个项目的信息';
+  }
+
+  @override
+  String failedToExportProjectInfo(String error) {
+    return '导出项目信息失败：$error';
+  }
+
+  @override
+  String get noProjectsToExport => '没有可导出的项目';
 
   @override
   String get backupExportedSuccessfully => '备份导出成功';
@@ -3110,11 +3138,11 @@ class AppLocalizationsZh extends AppLocalizations {
       '控制每个文件夹中的项目在表格中的显示方式——作为简单的平铺列表或按子文件夹分组。';
 
   @override
-  String get excludeSmartFoldersFromSort => 'Keep smart folders out of sorting';
+  String get excludeSmartFoldersFromSort => '排序时排除智能文件夹';
 
   @override
   String get excludeSmartFoldersFromSortDescription =>
-      'When you sort the Projects table by a column, smart-folder groups stay in place instead of moving with the sort — only the projects inside them (and any ungrouped projects) get reordered. Experimental: off by default.';
+      '按列对项目表排序时，智能文件夹分组会保持原位，不随排序移动——只有分组内的项目（以及未分组的项目）会重新排序。实验性功能，默认关闭。';
 
   @override
   String get scanModeFlat => '平铺';

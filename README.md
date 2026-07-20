@@ -16,6 +16,7 @@ Supports **macOS**, **Windows**, **Android**, and **iOS**. Primary development t
 | Cubase | `.cpr` |
 | FL Studio | `.flp` |
 | Logic Pro | `.logicx` |
+| MAGDA | `.mgd` |
 | Maschine | `.maschine`, `.maschine2` |
 | Nuendo | `.npr` |
 | Pro Tools | `.ptx`, `.pts` |

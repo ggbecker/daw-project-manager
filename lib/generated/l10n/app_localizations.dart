@@ -559,7 +559,7 @@ abstract class AppLocalizations {
   /// No description provided for @deepScanConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Deep Scan extracts full metadata from project files:\n• BPM (Beats Per Minute)\n• Musical Key\n• DAW Version\nCurrently supported: Ableton Live, Cubase and Bitwig Studio.\n\nThis is slower than a regular scan and may take a while. Continue?'**
+  /// **'Deep Scan extracts full metadata from project files:\n• BPM (Beats Per Minute)\n• Musical Key\n• DAW Version\nCurrently supported: Ableton Live, Cubase, Bitwig Studio and MAGDA.\n\nThis is slower than a regular scan and may take a while. Continue?'**
   String get deepScanConfirm;
 
   /// No description provided for @deepScanOnlyUnscanned.
@@ -1894,6 +1894,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Import Backup'**
   String get importBackup;
+
+  /// No description provided for @exportProjectInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Info'**
+  String get exportProjectInfo;
+
+  /// No description provided for @exportProjectInfoTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Save this project\'s info to a text file'**
+  String get exportProjectInfoTooltip;
+
+  /// No description provided for @exportAllProjectsInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Export All Projects to TXT'**
+  String get exportAllProjectsInfo;
+
+  /// No description provided for @exportAllProjectsInfoSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save a plain text record of every project\'s info, so it\'s kept even if you delete the DAW file later'**
+  String get exportAllProjectsInfoSubtitle;
+
+  /// No description provided for @projectInfoExported.
+  ///
+  /// In en, this message translates to:
+  /// **'Project info exported'**
+  String get projectInfoExported;
+
+  /// Success message after exporting all projects' info to a text file
+  ///
+  /// In en, this message translates to:
+  /// **'Exported info for {count} projects'**
+  String allProjectsInfoExported(int count);
+
+  /// Error message when exporting project info to text fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to export project info: {error}'**
+  String failedToExportProjectInfo(String error);
+
+  /// No description provided for @noProjectsToExport.
+  ///
+  /// In en, this message translates to:
+  /// **'No projects to export'**
+  String get noProjectsToExport;
 
   /// No description provided for @backupExportedSuccessfully.
   ///

@@ -246,7 +246,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get deepScanConfirm =>
-      '詳細スキャンは、プロジェクトファイルから完全なメタデータを抽出します：\n• BPM（1分あたりのビート数）\n• 音楽キー\n• DAWバージョン\n現在対応: Ableton Live、CubaseとBitwig Studio。\n\n通常のスキャンより時間がかかります。続行しますか？';
+      '詳細スキャンは、プロジェクトファイルから完全なメタデータを抽出します：\n• BPM（1分あたりのビート数）\n• 音楽キー\n• DAWバージョン\n現在対応: Ableton Live、Cubase、Bitwig StudioとMAGDA。\n\n通常のスキャンより時間がかかります。続行しますか？';
 
   @override
   String get deepScanOnlyUnscanned => 'メタデータのないプロジェクトのみスキャン';
@@ -1056,6 +1056,35 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get importBackup => 'バックアップをインポート';
+
+  @override
+  String get exportProjectInfo => '情報をエクスポート';
+
+  @override
+  String get exportProjectInfoTooltip => 'このプロジェクトの情報をテキストファイルに保存';
+
+  @override
+  String get exportAllProjectsInfo => '全プロジェクトをTXTにエクスポート';
+
+  @override
+  String get exportAllProjectsInfoSubtitle =>
+      'DAWファイルを削除した後も残るよう、すべてのプロジェクト情報をテキストで保存します';
+
+  @override
+  String get projectInfoExported => 'プロジェクト情報をエクスポートしました';
+
+  @override
+  String allProjectsInfoExported(int count) {
+    return '$count件のプロジェクト情報をエクスポートしました';
+  }
+
+  @override
+  String failedToExportProjectInfo(String error) {
+    return 'プロジェクト情報のエクスポートに失敗しました: $error';
+  }
+
+  @override
+  String get noProjectsToExport => 'エクスポートするプロジェクトがありません';
 
   @override
   String get backupExportedSuccessfully => 'バックアップのエクスポートに成功しました';
@@ -3139,11 +3168,11 @@ class AppLocalizationsJa extends AppLocalizations {
       '各フォルダー内のプロジェクトをテーブルに表示する方法を制御します — 単純なフラットリストまたはサブフォルダーでグループ化。';
 
   @override
-  String get excludeSmartFoldersFromSort => 'Keep smart folders out of sorting';
+  String get excludeSmartFoldersFromSort => 'スマートフォルダを並べ替えの対象外にする';
 
   @override
   String get excludeSmartFoldersFromSortDescription =>
-      'When you sort the Projects table by a column, smart-folder groups stay in place instead of moving with the sort — only the projects inside them (and any ungrouped projects) get reordered. Experimental: off by default.';
+      'プロジェクト一覧を列で並べ替えても、スマートフォルダのグループは移動せずその位置にとどまります。並べ替えられるのはグループ内のプロジェクト（およびグループ化されていないプロジェクト）のみです。実験的機能のため、初期設定ではオフです。';
 
   @override
   String get scanModeFlat => 'フラット';

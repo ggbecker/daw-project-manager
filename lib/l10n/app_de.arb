@@ -112,7 +112,7 @@
   "noReleasesFound": "Keine Veröffentlichungen gefunden",
   "noPlaylistsFound": "Keine Playlists gefunden",
   "tryDifferentSearch": "Versuchen Sie einen anderen Suchbegriff",
-  "deepScanConfirm": "Der Tiefenscan extrahiert vollständige Metadaten aus Projektdateien:\n• BPM (Schläge Pro Minute)\n• Tonart\n• DAW-Version\nDerzeit unterstützt: Ableton Live, Cubase und Bitwig Studio.\n\nDies ist langsamer als ein regulärer Scan und kann eine Weile dauern. Fortfahren?",
+  "deepScanConfirm": "Der Tiefenscan extrahiert vollständige Metadaten aus Projektdateien:\n• BPM (Schläge Pro Minute)\n• Tonart\n• DAW-Version\nDerzeit unterstützt: Ableton Live, Cubase, Bitwig Studio und MAGDA.\n\nDies ist langsamer als ein regulärer Scan und kann eine Weile dauern. Fortfahren?",
   "deepScanOnlyUnscanned": "Nur Projekte ohne Metadaten scannen",
   "metadataExtractedSuccessfully": "Metadaten erfolgreich extrahiert",
   "failedToExtractMetadata": "Metadatenextraktion fehlgeschlagen: {error}",
@@ -836,6 +836,30 @@
   "backupAndRestore": "Sicherung und Wiederherstellung",
   "exportBackup": "Sicherung Exportieren",
   "importBackup": "Sicherung Importieren",
+  "exportProjectInfo": "Info exportieren",
+  "exportProjectInfoTooltip": "Projektinfo als Textdatei speichern",
+  "exportAllProjectsInfo": "Alle Projekte als TXT exportieren",
+  "exportAllProjectsInfoSubtitle": "Speichert eine Textübersicht aller Projektinformationen, damit sie auch nach dem Löschen der DAW-Datei erhalten bleibt",
+  "projectInfoExported": "Projektinfo exportiert",
+  "allProjectsInfoExported": "Info für {count} Projekte exportiert",
+  "@allProjectsInfoExported": {
+    "description": "Erfolgsmeldung nach dem Export der Projektinfo aller Projekte",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "failedToExportProjectInfo": "Fehler beim Exportieren der Projektinfo: {error}",
+  "@failedToExportProjectInfo": {
+    "description": "Fehlermeldung, wenn der Export der Projektinfo fehlschlägt",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noProjectsToExport": "Keine Projekte zum Exportieren",
   "backupExportedSuccessfully": "Sicherung erfolgreich exportiert",
   "failedToExportBackup": "Fehler beim Exportieren der Sicherung: {error}",
   "@failedToExportBackup": {
@@ -2045,9 +2069,9 @@
   "@scanModeSectionTitle": {},
   "scanModeSectionDescription": "Steuert, wie Projekte in jedem Ordner in der Tabelle angezeigt werden — als einfache Liste oder nach Unterordner gruppiert.",
   "@scanModeSectionDescription": {},
-  "excludeSmartFoldersFromSort": "Keep smart folders out of sorting",
+  "excludeSmartFoldersFromSort": "Smart-Ordner von der Sortierung ausschließen",
   "@excludeSmartFoldersFromSort": {},
-  "excludeSmartFoldersFromSortDescription": "When you sort the Projects table by a column, smart-folder groups stay in place instead of moving with the sort — only the projects inside them (and any ungrouped projects) get reordered. Experimental: off by default.",
+  "excludeSmartFoldersFromSortDescription": "Wenn du die Projekttabelle nach einer Spalte sortierst, bleiben Smart-Ordner-Gruppen an ihrem Platz, statt mit der Sortierung zu wandern — nur die Projekte darin (und nicht gruppierte Projekte) werden neu geordnet. Experimentell: standardmäßig deaktiviert.",
   "@excludeSmartFoldersFromSortDescription": {},
   "scanModeFlat": "Einfach",
   "@scanModeFlat": {},

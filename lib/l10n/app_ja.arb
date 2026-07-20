@@ -112,7 +112,7 @@
   "noReleasesFound": "リリースが見つかりません",
   "noPlaylistsFound": "プレイリストが見つかりません",
   "tryDifferentSearch": "別の検索用語を試してください",
-  "deepScanConfirm": "詳細スキャンは、プロジェクトファイルから完全なメタデータを抽出します：\n• BPM（1分あたりのビート数）\n• 音楽キー\n• DAWバージョン\n現在対応: Ableton Live、CubaseとBitwig Studio。\n\n通常のスキャンより時間がかかります。続行しますか？",
+  "deepScanConfirm": "詳細スキャンは、プロジェクトファイルから完全なメタデータを抽出します：\n• BPM（1分あたりのビート数）\n• 音楽キー\n• DAWバージョン\n現在対応: Ableton Live、Cubase、Bitwig StudioとMAGDA。\n\n通常のスキャンより時間がかかります。続行しますか？",
   "deepScanOnlyUnscanned": "メタデータのないプロジェクトのみスキャン",
   "metadataExtractedSuccessfully": "メタデータの抽出に成功しました",
   "failedToExtractMetadata": "メタデータの抽出に失敗しました: {error}",
@@ -836,6 +836,30 @@
   "backupAndRestore": "バックアップと復元",
   "exportBackup": "バックアップをエクスポート",
   "importBackup": "バックアップをインポート",
+  "exportProjectInfo": "情報をエクスポート",
+  "exportProjectInfoTooltip": "このプロジェクトの情報をテキストファイルに保存",
+  "exportAllProjectsInfo": "全プロジェクトをTXTにエクスポート",
+  "exportAllProjectsInfoSubtitle": "DAWファイルを削除した後も残るよう、すべてのプロジェクト情報をテキストで保存します",
+  "projectInfoExported": "プロジェクト情報をエクスポートしました",
+  "allProjectsInfoExported": "{count}件のプロジェクト情報をエクスポートしました",
+  "@allProjectsInfoExported": {
+    "description": "すべてのプロジェクト情報のエクスポート成功時のメッセージ",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "failedToExportProjectInfo": "プロジェクト情報のエクスポートに失敗しました: {error}",
+  "@failedToExportProjectInfo": {
+    "description": "プロジェクト情報のエクスポート失敗時のエラーメッセージ",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noProjectsToExport": "エクスポートするプロジェクトがありません",
   "backupExportedSuccessfully": "バックアップのエクスポートに成功しました",
   "failedToExportBackup": "バックアップのエクスポートに失敗しました: {error}",
   "@failedToExportBackup": {
@@ -2045,9 +2069,9 @@
   "@scanModeSectionTitle": {},
   "scanModeSectionDescription": "各フォルダー内のプロジェクトをテーブルに表示する方法を制御します — 単純なフラットリストまたはサブフォルダーでグループ化。",
   "@scanModeSectionDescription": {},
-  "excludeSmartFoldersFromSort": "Keep smart folders out of sorting",
+  "excludeSmartFoldersFromSort": "スマートフォルダを並べ替えの対象外にする",
   "@excludeSmartFoldersFromSort": {},
-  "excludeSmartFoldersFromSortDescription": "When you sort the Projects table by a column, smart-folder groups stay in place instead of moving with the sort — only the projects inside them (and any ungrouped projects) get reordered. Experimental: off by default.",
+  "excludeSmartFoldersFromSortDescription": "プロジェクト一覧を列で並べ替えても、スマートフォルダのグループは移動せずその位置にとどまります。並べ替えられるのはグループ内のプロジェクト（およびグループ化されていないプロジェクト）のみです。実験的機能のため、初期設定ではオフです。",
   "@excludeSmartFoldersFromSortDescription": {},
   "scanModeFlat": "フラット",
   "@scanModeFlat": {},

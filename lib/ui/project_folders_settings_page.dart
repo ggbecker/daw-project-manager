@@ -17,6 +17,7 @@ import 'onboarding_wizard_page.dart';
 import '../providers/providers.dart';
 import '../repository/project_repository.dart';
 import '../services/mixdown_detector_service.dart';
+import '../services/project_text_export_service.dart';
 import '../services/scanner_service.dart';
 import '../services/update_check_service.dart';
 import '../utils/file_launcher.dart';
@@ -66,6 +67,46 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
     final repo = await ref.read(repositoryProvider.future);
     await repo.setCustomMixdownFolders(current.where((f) => f != folder).toList());
     ref.invalidate(customMixdownFoldersProvider);
+  }
+
+  Future<void> _exportAllProjectsInfo() async {
+    final l10n = AppLocalizations.of(context)!;
+    final repo = await ref.read(repositoryProvider.future);
+    final projects = repo.getAllProjects();
+
+    if (projects.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.noProjectsToExport)),
+        );
+      }
+      return;
+    }
+
+    try {
+      final text = ProjectTextExportService.formatProjects(projects);
+      final destPath = await FilePicker.saveFile(
+        dialogTitle: l10n.exportAllProjectsInfo,
+        fileName: ProjectTextExportService.suggestedBulkFileName(),
+        type: FileType.custom,
+        allowedExtensions: ['txt'],
+      );
+      if (destPath == null) return; // user cancelled
+
+      await File(destPath).writeAsString(text);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.allProjectsInfoExported(projects.length))),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.failedToExportProjectInfo(e.toString()))),
+        );
+      }
+    }
   }
 
   void _showMixdownInfoDialog() {
@@ -859,6 +900,41 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
                       child: Text(l10n.addMixdownFolder),
                     ),
                   ],
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        // Data / export section
+        Card(
+          clipBehavior: Clip.antiAlias,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                const Icon(Icons.description_outlined),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(l10n.exportAllProjectsInfo, style: Theme.of(context).textTheme.titleMedium),
+                      const SizedBox(height: 2),
+                      Text(
+                        l10n.exportAllProjectsInfoSubtitle,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                FilledButton.tonalIcon(
+                  onPressed: _busy ? null : _exportAllProjectsInfo,
+                  icon: const Icon(Icons.description_outlined),
+                  label: Text(l10n.exportAllProjectsInfo),
                 ),
               ],
             ),

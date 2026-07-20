@@ -112,7 +112,7 @@
   "noReleasesFound": "Nenhum lançamento encontrado",
   "noPlaylistsFound": "Nenhuma playlist encontrada",
   "tryDifferentSearch": "Tente um termo de busca diferente",
-  "deepScanConfirm": "A Varredura Profunda extrai metadados completos dos arquivos de projeto:\n• BPM (Batidas Por Minuto)\n• Tom Musical\n• Versão do DAW\nSuportado atualmente: Ableton Live, Cubase e Bitwig Studio.\n\nIsso é mais lento que uma varredura comum e pode levar um tempo. Continuar?",
+  "deepScanConfirm": "A Varredura Profunda extrai metadados completos dos arquivos de projeto:\n• BPM (Batidas Por Minuto)\n• Tom Musical\n• Versão do DAW\nSuportado atualmente: Ableton Live, Cubase, Bitwig Studio e MAGDA.\n\nIsso é mais lento que uma varredura comum e pode levar um tempo. Continuar?",
   "deepScanOnlyUnscanned": "Escanear apenas projetos sem metadados",
   "metadataExtractedSuccessfully": "Metadados extraídos com sucesso",
   "failedToExtractMetadata": "Falha ao extrair metadados: {error}",
@@ -836,6 +836,30 @@
   "backupAndRestore": "Backup e Restauração",
   "exportBackup": "Exportar Backup",
   "importBackup": "Importar Backup",
+  "exportProjectInfo": "Exportar informações",
+  "exportProjectInfoTooltip": "Salvar as informações deste projeto em um arquivo de texto",
+  "exportAllProjectsInfo": "Exportar todos os projetos para TXT",
+  "exportAllProjectsInfoSubtitle": "Salva um registro em texto com as informações de todos os projetos, mantido mesmo após excluir o arquivo do DAW",
+  "projectInfoExported": "Informações do projeto exportadas",
+  "allProjectsInfoExported": "Informações exportadas de {count} projetos",
+  "@allProjectsInfoExported": {
+    "description": "Mensagem de sucesso após exportar as informações de todos os projetos",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "failedToExportProjectInfo": "Falha ao exportar informações do projeto: {error}",
+  "@failedToExportProjectInfo": {
+    "description": "Mensagem de erro quando a exportação das informações do projeto falha",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noProjectsToExport": "Nenhum projeto para exportar",
   "backupExportedSuccessfully": "Backup exportado com sucesso",
   "failedToExportBackup": "Falha ao exportar backup: {error}",
   "@failedToExportBackup": {
@@ -2069,9 +2093,9 @@
   "@scanModeSectionTitle": {},
   "scanModeSectionDescription": "Controla como os projetos em cada pasta são exibidos na tabela — como uma lista simples ou agrupados por subpasta.",
   "@scanModeSectionDescription": {},
-  "excludeSmartFoldersFromSort": "Keep smart folders out of sorting",
+  "excludeSmartFoldersFromSort": "Manter as pastas inteligentes fora da ordenação",
   "@excludeSmartFoldersFromSort": {},
-  "excludeSmartFoldersFromSortDescription": "When you sort the Projects table by a column, smart-folder groups stay in place instead of moving with the sort — only the projects inside them (and any ungrouped projects) get reordered. Experimental: off by default.",
+  "excludeSmartFoldersFromSortDescription": "Ao ordenar a tabela de projetos por uma coluna, os grupos de pastas inteligentes permanecem no lugar em vez de se mover com a ordenação — apenas os projetos dentro deles (e os projetos não agrupados) são reordenados. Experimental: desativado por padrão.",
   "@excludeSmartFoldersFromSortDescription": {},
   "scanModeFlat": "Simples",
   "@scanModeFlat": {},

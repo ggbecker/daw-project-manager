@@ -250,7 +250,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get deepScanConfirm =>
-      'Глубокое сканирование извлекает полные метаданные из файлов проекта:\n• BPM (ударов в минуту)\n• Музыкальная тональность\n• Версия DAW\nПоддерживается: Ableton Live, Cubase и Bitwig Studio.\n\nЭто медленнее обычного сканирования и может занять некоторое время. Продолжить?';
+      'Глубокое сканирование извлекает полные метаданные из файлов проекта:\n• BPM (ударов в минуту)\n• Музыкальная тональность\n• Версия DAW\nПоддерживается: Ableton Live, Cubase, Bitwig Studio и MAGDA.\n\nЭто медленнее обычного сканирования и может занять некоторое время. Продолжить?';
 
   @override
   String get deepScanOnlyUnscanned =>
@@ -1067,6 +1067,36 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get importBackup => 'Импорт резервной копии';
+
+  @override
+  String get exportProjectInfo => 'Экспорт информации';
+
+  @override
+  String get exportProjectInfoTooltip =>
+      'Сохранить информацию об этом проекте в текстовый файл';
+
+  @override
+  String get exportAllProjectsInfo => 'Экспортировать все проекты в TXT';
+
+  @override
+  String get exportAllProjectsInfoSubtitle =>
+      'Сохраняет текстовую запись информации обо всех проектах, чтобы она осталась даже после удаления файла DAW';
+
+  @override
+  String get projectInfoExported => 'Информация о проекте экспортирована';
+
+  @override
+  String allProjectsInfoExported(int count) {
+    return 'Экспортирована информация о $count проектах';
+  }
+
+  @override
+  String failedToExportProjectInfo(String error) {
+    return 'Не удалось экспортировать информацию о проекте: $error';
+  }
+
+  @override
+  String get noProjectsToExport => 'Нет проектов для экспорта';
 
   @override
   String get backupExportedSuccessfully =>
@@ -3213,11 +3243,12 @@ class AppLocalizationsRu extends AppLocalizations {
       'Управляет отображением проектов в каждой папке в таблице — в виде обычного плоского списка или сгруппированных по подпапке.';
 
   @override
-  String get excludeSmartFoldersFromSort => 'Keep smart folders out of sorting';
+  String get excludeSmartFoldersFromSort =>
+      'Не учитывать умные папки при сортировке';
 
   @override
   String get excludeSmartFoldersFromSortDescription =>
-      'When you sort the Projects table by a column, smart-folder groups stay in place instead of moving with the sort — only the projects inside them (and any ungrouped projects) get reordered. Experimental: off by default.';
+      'При сортировке таблицы проектов по столбцу группы умных папок остаются на месте, а не перемещаются вместе с сортировкой — переупорядочиваются только проекты внутри них (и любые несгруппированные проекты). Экспериментальная функция: по умолчанию отключена.';
 
   @override
   String get scanModeFlat => 'Простой';

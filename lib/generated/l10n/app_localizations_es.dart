@@ -251,7 +251,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get deepScanConfirm =>
-      'El Escaneo Profundo extrae metadatos completos de los archivos de proyecto:\n• BPM (Pulsos Por Minuto)\n• Tonalidad Musical\n• Versión del DAW\nCompatible actualmente: Ableton Live, Cubase y Bitwig Studio.\n\nEsto es más lento que un escaneo regular y puede tardar un tiempo. ¿Continuar?';
+      'El Escaneo Profundo extrae metadatos completos de los archivos de proyecto:\n• BPM (Pulsos Por Minuto)\n• Tonalidad Musical\n• Versión del DAW\nCompatible actualmente: Ableton Live, Cubase, Bitwig Studio y MAGDA.\n\nEsto es más lento que un escaneo regular y puede tardar un tiempo. ¿Continuar?';
 
   @override
   String get deepScanOnlyUnscanned => 'Solo escanear proyectos sin metadatos';
@@ -1071,6 +1071,36 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get importBackup => 'Importar Respaldo';
+
+  @override
+  String get exportProjectInfo => 'Exportar información';
+
+  @override
+  String get exportProjectInfoTooltip =>
+      'Guardar la información de este proyecto en un archivo de texto';
+
+  @override
+  String get exportAllProjectsInfo => 'Exportar todos los proyectos a TXT';
+
+  @override
+  String get exportAllProjectsInfoSubtitle =>
+      'Guarda un registro de texto con la información de todos los proyectos, para conservarla aunque elimines el archivo del DAW';
+
+  @override
+  String get projectInfoExported => 'Información del proyecto exportada';
+
+  @override
+  String allProjectsInfoExported(int count) {
+    return 'Información exportada de $count proyectos';
+  }
+
+  @override
+  String failedToExportProjectInfo(String error) {
+    return 'Error al exportar la información del proyecto: $error';
+  }
+
+  @override
+  String get noProjectsToExport => 'No hay proyectos para exportar';
 
   @override
   String get backupExportedSuccessfully => 'Respaldo exportado exitosamente';
@@ -3228,11 +3258,12 @@ class AppLocalizationsEs extends AppLocalizations {
       'Controla cómo se muestran los proyectos de cada carpeta en la tabla: como una lista plana o agrupados por subcarpeta.';
 
   @override
-  String get excludeSmartFoldersFromSort => 'Keep smart folders out of sorting';
+  String get excludeSmartFoldersFromSort =>
+      'Mantener las carpetas inteligentes fuera del orden';
 
   @override
   String get excludeSmartFoldersFromSortDescription =>
-      'When you sort the Projects table by a column, smart-folder groups stay in place instead of moving with the sort — only the projects inside them (and any ungrouped projects) get reordered. Experimental: off by default.';
+      'Al ordenar la tabla de proyectos por una columna, los grupos de carpetas inteligentes permanecen en su lugar en vez de moverse con el orden — solo se reordenan los proyectos que contienen (y los proyectos sin agrupar). Experimental: desactivado de forma predeterminada.';
 
   @override
   String get scanModeFlat => 'Simple';

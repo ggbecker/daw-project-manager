@@ -37,6 +37,7 @@ class ScannerService {
     '.wrk', // Cakewalk Sonar (legacy)
     '.bun', // Cakewalk Bundle
     '.luna', // Universal Audio LUNA (package bundle)
+    '.mgd', // MAGDA
   };
 
   static const _backupFolderNames = {
