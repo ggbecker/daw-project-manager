@@ -250,7 +250,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get deepScanConfirm =>
-      'Глубокое сканирование извлекает полные метаданные из файлов проекта:\n• BPM (ударов в минуту)\n• Музыкальная тональность\n• Версия DAW\nПоддерживается: Ableton Live, Cubase и Bitwig Studio.\n\nЭто медленнее обычного сканирования и может занять некоторое время. Продолжить?';
+      'Глубокое сканирование извлекает полные метаданные из файлов проекта:\n• BPM (ударов в минуту)\n• Музыкальная тональность\n• Версия DAW\nПоддерживается: Ableton Live, Cubase, Bitwig Studio и MAGDA.\n\nЭто медленнее обычного сканирования и может занять некоторое время. Продолжить?';
 
   @override
   String get deepScanOnlyUnscanned =>
