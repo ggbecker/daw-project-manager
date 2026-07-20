@@ -836,6 +836,30 @@
   "backupAndRestore": "Sicherung und Wiederherstellung",
   "exportBackup": "Sicherung Exportieren",
   "importBackup": "Sicherung Importieren",
+  "exportProjectInfo": "Info exportieren",
+  "exportProjectInfoTooltip": "Projektinfo als Textdatei speichern",
+  "exportAllProjectsInfo": "Alle Projekte als TXT exportieren",
+  "exportAllProjectsInfoSubtitle": "Speichert eine Textübersicht aller Projektinformationen, damit sie auch nach dem Löschen der DAW-Datei erhalten bleibt",
+  "projectInfoExported": "Projektinfo exportiert",
+  "allProjectsInfoExported": "Info für {count} Projekte exportiert",
+  "@allProjectsInfoExported": {
+    "description": "Erfolgsmeldung nach dem Export der Projektinfo aller Projekte",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "failedToExportProjectInfo": "Fehler beim Exportieren der Projektinfo: {error}",
+  "@failedToExportProjectInfo": {
+    "description": "Fehlermeldung, wenn der Export der Projektinfo fehlschlägt",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noProjectsToExport": "Keine Projekte zum Exportieren",
   "backupExportedSuccessfully": "Sicherung erfolgreich exportiert",
   "failedToExportBackup": "Fehler beim Exportieren der Sicherung: {error}",
   "@failedToExportBackup": {

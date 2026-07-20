@@ -1070,6 +1070,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get importBackup => 'Import Backup';
 
   @override
+  String get exportProjectInfo => 'Export Info';
+
+  @override
+  String get exportProjectInfoTooltip =>
+      'Save this project\'s info to a text file';
+
+  @override
+  String get exportAllProjectsInfo => 'Export All Projects to TXT';
+
+  @override
+  String get exportAllProjectsInfoSubtitle =>
+      'Save a plain text record of every project\'s info, so it\'s kept even if you delete the DAW file later';
+
+  @override
+  String get projectInfoExported => 'Project info exported';
+
+  @override
+  String allProjectsInfoExported(int count) {
+    return 'Exported info for $count projects';
+  }
+
+  @override
+  String failedToExportProjectInfo(String error) {
+    return 'Failed to export project info: $error';
+  }
+
+  @override
+  String get noProjectsToExport => 'No projects to export';
+
+  @override
   String get backupExportedSuccessfully => 'Backup exported successfully';
 
   @override

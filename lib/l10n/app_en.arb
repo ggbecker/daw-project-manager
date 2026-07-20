@@ -1023,6 +1023,30 @@
   "backupAndRestore": "Backup & Restore",
   "exportBackup": "Export Backup",
   "importBackup": "Import Backup",
+  "exportProjectInfo": "Export Info",
+  "exportProjectInfoTooltip": "Save this project's info to a text file",
+  "exportAllProjectsInfo": "Export All Projects to TXT",
+  "exportAllProjectsInfoSubtitle": "Save a plain text record of every project's info, so it's kept even if you delete the DAW file later",
+  "projectInfoExported": "Project info exported",
+  "allProjectsInfoExported": "Exported info for {count} projects",
+  "@allProjectsInfoExported": {
+    "description": "Success message after exporting all projects' info to a text file",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "failedToExportProjectInfo": "Failed to export project info: {error}",
+  "@failedToExportProjectInfo": {
+    "description": "Error message when exporting project info to text fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noProjectsToExport": "No projects to export",
   "backupExportedSuccessfully": "Backup exported successfully",
   "failedToExportBackup": "Failed to export backup: {error}",
   "@failedToExportBackup": {

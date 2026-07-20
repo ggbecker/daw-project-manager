@@ -1058,6 +1058,35 @@ class AppLocalizationsJa extends AppLocalizations {
   String get importBackup => 'バックアップをインポート';
 
   @override
+  String get exportProjectInfo => '情報をエクスポート';
+
+  @override
+  String get exportProjectInfoTooltip => 'このプロジェクトの情報をテキストファイルに保存';
+
+  @override
+  String get exportAllProjectsInfo => '全プロジェクトをTXTにエクスポート';
+
+  @override
+  String get exportAllProjectsInfoSubtitle =>
+      'DAWファイルを削除した後も残るよう、すべてのプロジェクト情報をテキストで保存します';
+
+  @override
+  String get projectInfoExported => 'プロジェクト情報をエクスポートしました';
+
+  @override
+  String allProjectsInfoExported(int count) {
+    return '$count件のプロジェクト情報をエクスポートしました';
+  }
+
+  @override
+  String failedToExportProjectInfo(String error) {
+    return 'プロジェクト情報のエクスポートに失敗しました: $error';
+  }
+
+  @override
+  String get noProjectsToExport => 'エクスポートするプロジェクトがありません';
+
+  @override
   String get backupExportedSuccessfully => 'バックアップのエクスポートに成功しました';
 
   @override

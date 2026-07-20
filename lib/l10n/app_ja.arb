@@ -836,6 +836,30 @@
   "backupAndRestore": "バックアップと復元",
   "exportBackup": "バックアップをエクスポート",
   "importBackup": "バックアップをインポート",
+  "exportProjectInfo": "情報をエクスポート",
+  "exportProjectInfoTooltip": "このプロジェクトの情報をテキストファイルに保存",
+  "exportAllProjectsInfo": "全プロジェクトをTXTにエクスポート",
+  "exportAllProjectsInfoSubtitle": "DAWファイルを削除した後も残るよう、すべてのプロジェクト情報をテキストで保存します",
+  "projectInfoExported": "プロジェクト情報をエクスポートしました",
+  "allProjectsInfoExported": "{count}件のプロジェクト情報をエクスポートしました",
+  "@allProjectsInfoExported": {
+    "description": "すべてのプロジェクト情報のエクスポート成功時のメッセージ",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "failedToExportProjectInfo": "プロジェクト情報のエクスポートに失敗しました: {error}",
+  "@failedToExportProjectInfo": {
+    "description": "プロジェクト情報のエクスポート失敗時のエラーメッセージ",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noProjectsToExport": "エクスポートするプロジェクトがありません",
   "backupExportedSuccessfully": "バックアップのエクスポートに成功しました",
   "failedToExportBackup": "バックアップのエクスポートに失敗しました: {error}",
   "@failedToExportBackup": {

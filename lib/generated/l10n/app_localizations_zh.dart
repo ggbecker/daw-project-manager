@@ -1053,6 +1053,34 @@ class AppLocalizationsZh extends AppLocalizations {
   String get importBackup => '导入备份';
 
   @override
+  String get exportProjectInfo => '导出信息';
+
+  @override
+  String get exportProjectInfoTooltip => '将此项目的信息保存为文本文件';
+
+  @override
+  String get exportAllProjectsInfo => '将所有项目导出为TXT';
+
+  @override
+  String get exportAllProjectsInfoSubtitle => '保存所有项目信息的文本记录，即使以后删除DAW文件也能保留';
+
+  @override
+  String get projectInfoExported => '项目信息已导出';
+
+  @override
+  String allProjectsInfoExported(int count) {
+    return '已导出 $count 个项目的信息';
+  }
+
+  @override
+  String failedToExportProjectInfo(String error) {
+    return '导出项目信息失败：$error';
+  }
+
+  @override
+  String get noProjectsToExport => '没有可导出的项目';
+
+  @override
   String get backupExportedSuccessfully => '备份导出成功';
 
   @override

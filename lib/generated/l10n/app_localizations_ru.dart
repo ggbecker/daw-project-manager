@@ -1069,6 +1069,36 @@ class AppLocalizationsRu extends AppLocalizations {
   String get importBackup => 'Импорт резервной копии';
 
   @override
+  String get exportProjectInfo => 'Экспорт информации';
+
+  @override
+  String get exportProjectInfoTooltip =>
+      'Сохранить информацию об этом проекте в текстовый файл';
+
+  @override
+  String get exportAllProjectsInfo => 'Экспортировать все проекты в TXT';
+
+  @override
+  String get exportAllProjectsInfoSubtitle =>
+      'Сохраняет текстовую запись информации обо всех проектах, чтобы она осталась даже после удаления файла DAW';
+
+  @override
+  String get projectInfoExported => 'Информация о проекте экспортирована';
+
+  @override
+  String allProjectsInfoExported(int count) {
+    return 'Экспортирована информация о $count проектах';
+  }
+
+  @override
+  String failedToExportProjectInfo(String error) {
+    return 'Не удалось экспортировать информацию о проекте: $error';
+  }
+
+  @override
+  String get noProjectsToExport => 'Нет проектов для экспорта';
+
+  @override
   String get backupExportedSuccessfully =>
       'Резервная копия успешно экспортирована';
 

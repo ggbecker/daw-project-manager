@@ -29,6 +29,7 @@ import '../generated/l10n/app_localizations.dart';
 import 'session_actions.dart';
 import '../services/audio_analysis_service.dart';
 import '../services/mixdown_detector_service.dart';
+import '../services/project_text_export_service.dart';
 import 'widgets/conversion_progress_dialog.dart';
 import 'widgets/desktop_title_bar.dart';
 import 'widgets/drag_to_share_button.dart';
@@ -281,6 +282,36 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
     }
   }
 
+  /// Saves this project's info to a plain text file, so a readable record of it
+  /// survives even after the DAW file (and eventually the library entry) is gone.
+  Future<void> _exportProjectInfo(MusicProject project) async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final text = ProjectTextExportService.formatProject(project);
+      final destPath = await FilePicker.saveFile(
+        dialogTitle: l10n.exportProjectInfo,
+        fileName: ProjectTextExportService.suggestedFileNameFor(project),
+        type: FileType.custom,
+        allowedExtensions: ['txt'],
+      );
+      if (destPath == null) return; // user cancelled
+
+      await File(destPath).writeAsString(text);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.savedCopyTo(destPath))),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.failedToExportProjectInfo(e.toString()))),
+        );
+      }
+    }
+  }
+
   /// The DAW's logo when one is known for [dawType], falling back to a
   /// generic piano icon tinted with [color] (the theme's primary color).
   /// Sized to match the original icon's footprint (same 16x16 the dashboard
@@ -492,6 +523,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                     context,
                     MaterialPageRoute(builder: (_) => ProjectStatisticsPage(projectId: updatedProject.id)),
                   ),
+                  onExport: () => _exportProjectInfo(updatedProject),
                 ),
                 Expanded(
                   child: Form(
@@ -1113,6 +1145,7 @@ class _ProjectDetailActionBar extends ConsumerWidget {
   final VoidCallback onRename;
   final VoidCallback onOpenInDaw;
   final VoidCallback onStats;
+  final VoidCallback onExport;
 
   const _ProjectDetailActionBar({
     required this.project,
@@ -1122,6 +1155,7 @@ class _ProjectDetailActionBar extends ConsumerWidget {
     required this.onRename,
     required this.onOpenInDaw,
     required this.onStats,
+    required this.onExport,
   });
 
   @override
@@ -1203,6 +1237,12 @@ class _ProjectDetailActionBar extends ConsumerWidget {
               onPressed: onStats,
               icon: const Icon(Icons.bar_chart, size: 16),
               label: Text(l10n.statsSingleProjectActivity),
+            ),
+            const SizedBox(width: 8),
+            OutlinedButton.icon(
+              onPressed: onExport,
+              icon: const Icon(Icons.description_outlined, size: 16),
+              label: Text(l10n.exportProjectInfo),
             ),
           ],
         ],

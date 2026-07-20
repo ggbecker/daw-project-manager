@@ -836,6 +836,30 @@
   "backupAndRestore": "备份和恢复",
   "exportBackup": "导出备份",
   "importBackup": "导入备份",
+  "exportProjectInfo": "导出信息",
+  "exportProjectInfoTooltip": "将此项目的信息保存为文本文件",
+  "exportAllProjectsInfo": "将所有项目导出为TXT",
+  "exportAllProjectsInfoSubtitle": "保存所有项目信息的文本记录，即使以后删除DAW文件也能保留",
+  "projectInfoExported": "项目信息已导出",
+  "allProjectsInfoExported": "已导出 {count} 个项目的信息",
+  "@allProjectsInfoExported": {
+    "description": "导出所有项目信息成功后的提示信息",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "failedToExportProjectInfo": "导出项目信息失败：{error}",
+  "@failedToExportProjectInfo": {
+    "description": "导出项目信息失败时的错误信息",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noProjectsToExport": "没有可导出的项目",
   "backupExportedSuccessfully": "备份导出成功",
   "failedToExportBackup": "导出备份失败: {error}",
   "@failedToExportBackup": {

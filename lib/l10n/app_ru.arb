@@ -836,6 +836,30 @@
   "backupAndRestore": "Резервное копирование и восстановление",
   "exportBackup": "Экспорт резервной копии",
   "importBackup": "Импорт резервной копии",
+  "exportProjectInfo": "Экспорт информации",
+  "exportProjectInfoTooltip": "Сохранить информацию об этом проекте в текстовый файл",
+  "exportAllProjectsInfo": "Экспортировать все проекты в TXT",
+  "exportAllProjectsInfoSubtitle": "Сохраняет текстовую запись информации обо всех проектах, чтобы она осталась даже после удаления файла DAW",
+  "projectInfoExported": "Информация о проекте экспортирована",
+  "allProjectsInfoExported": "Экспортирована информация о {count} проектах",
+  "@allProjectsInfoExported": {
+    "description": "Сообщение об успехе после экспорта информации обо всех проектах",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "failedToExportProjectInfo": "Не удалось экспортировать информацию о проекте: {error}",
+  "@failedToExportProjectInfo": {
+    "description": "Сообщение об ошибке при неудачном экспорте информации о проекте",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noProjectsToExport": "Нет проектов для экспорта",
   "backupExportedSuccessfully": "Резервная копия успешно экспортирована",
   "failedToExportBackup": "Ошибка при экспорте резервной копии: {error}",
   "@failedToExportBackup": {
