@@ -214,4 +214,19 @@ class ScannerService {
   }
 }
 
+/// The subset of [foundPaths] that weren't already in [knownPaths] before
+/// the scan started — i.e. genuinely new since the repository last saw this
+/// root, as opposed to a file just being re-confirmed as still present.
+///
+/// Used to flag newly-discovered projects (see `recentlyDiscoveredProjectsProvider`)
+/// for both the light background scan at app launch and a user-triggered
+/// rescan, now that neither blocks the UI while it runs — without this, a
+/// project that silently appears mid-scan would be indistinguishable from
+/// one that was already there.
+Set<String> newlyFoundPaths(
+  Iterable<String> foundPaths,
+  Set<String> knownPaths,
+) {
+  return foundPaths.where((path) => !knownPaths.contains(path)).toSet();
+}
 

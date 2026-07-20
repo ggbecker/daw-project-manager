@@ -72,10 +72,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get newProjectBadge => 'NEW';
 
   @override
-  String get newlyDetectedProjectTooltip =>
-      'Automatically detected — not yet reviewed';
-
-  @override
   String get projectName => '项目名称';
 
   @override
@@ -461,6 +457,33 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String failedToUnhideProjects(String error) {
     return '显示项目失败: $error';
+  }
+
+  @override
+  String get deleteMissingProjects => 'Delete Missing';
+
+  @override
+  String get deleteMissingProjectsTitle => 'Delete missing projects?';
+
+  @override
+  String deleteMissingProjectsConfirm(int count, String plural) {
+    return '$count project$plural whose file could not be found on this machine will be permanently deleted, along with all notes, deadlines, and session history. This can\'t be undone.';
+  }
+
+  @override
+  String get deleteMissingProjectsConfirmButton => 'Delete Permanently';
+
+  @override
+  String missingProjectsDeleted(int count, String plural) {
+    return '$count missing project$plural deleted.';
+  }
+
+  @override
+  String deleteMissingProjectsAlsoDeleteReleaseTracked(
+    int count,
+    String plural,
+  ) {
+    return 'Also delete $count project$plural that are part of a release (removes them from that release too)';
   }
 
   @override
@@ -3085,6 +3108,13 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get scanModeSectionDescription =>
       '控制每个文件夹中的项目在表格中的显示方式——作为简单的平铺列表或按子文件夹分组。';
+
+  @override
+  String get excludeSmartFoldersFromSort => 'Keep smart folders out of sorting';
+
+  @override
+  String get excludeSmartFoldersFromSortDescription =>
+      'When you sort the Projects table by a column, smart-folder groups stay in place instead of moving with the sort — only the projects inside them (and any ungrouped projects) get reordered. Experimental: off by default.';
 
   @override
   String get scanModeFlat => '平铺';

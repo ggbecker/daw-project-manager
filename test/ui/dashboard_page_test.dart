@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:trina_grid/trina_grid.dart';
@@ -30,6 +32,201 @@ TrinaRow _groupHeaderRow(String name, List<TrinaRow> children, {bool expanded = 
 }
 
 void main() {
+  group('shouldBlockForOperation', () {
+    // Regression test: the full-screen loading overlay used to key off a
+    // flag that also went true during the background initial scan at app
+    // launch and a plain user-triggered rescan, locking the user out of the
+    // app for the duration of either. Both are diff-based scans safe to
+    // browse through (newly-found projects surface via the "New" badge
+    // instead), so neither should block — only deep scan (which rewrites
+    // existing projects' metadata in place) and operations that mutate state
+    // out from under the user (switching profiles, extracting metadata)
+    // still do.
+    bool call({
+      bool scanning = false,
+      bool deepScanning = false,
+      bool profileSwitching = false,
+      bool extractingMetadata = false,
+    }) =>
+        shouldBlockForOperation(
+          scanning: scanning,
+          deepScanning: deepScanning,
+          profileSwitching: profileSwitching,
+          extractingMetadata: extractingMetadata,
+        );
+
+    test('does not block when nothing is happening', () {
+      expect(call(), isFalse);
+    });
+
+    test('does not block for a plain user-initiated rescan', () {
+      expect(call(scanning: true), isFalse);
+    });
+
+    test('blocks for a deep scan', () {
+      // Deep scan always implies `scanning` too (see _scanAll), so exercise
+      // that realistic combination rather than deepScanning in isolation.
+      expect(call(scanning: true, deepScanning: true), isTrue);
+    });
+
+    test('blocks while switching profiles', () {
+      expect(call(profileSwitching: true), isTrue);
+    });
+
+    test('blocks while extracting metadata', () {
+      expect(call(extractingMetadata: true), isTrue);
+    });
+  });
+
+  group('rescanIconState', () {
+    test('shows a spinner while a plain scan runs', () {
+      expect(
+        rescanIconState(isScanning: true, deepScanning: false, justSucceeded: false),
+        ScanIconState.spinning,
+      );
+    });
+
+    test('defers to the dedicated Deep Scan button while deep-scanning', () {
+      // isScanning is true here too (deep scan implies it via _scanAll),
+      // but the Rescan button must not also spin — it has its own icon.
+      expect(
+        rescanIconState(isScanning: true, deepScanning: true, justSucceeded: false),
+        ScanIconState.idle,
+      );
+    });
+
+    test('shows the checkmark once scanning has stopped', () {
+      expect(
+        rescanIconState(isScanning: false, deepScanning: false, justSucceeded: true),
+        ScanIconState.justSucceeded,
+      );
+    });
+
+    test('spinner takes priority over a stale justSucceeded flag', () {
+      expect(
+        rescanIconState(isScanning: true, deepScanning: false, justSucceeded: true),
+        ScanIconState.spinning,
+      );
+    });
+
+    test('idle otherwise', () {
+      expect(
+        rescanIconState(isScanning: false, deepScanning: false, justSucceeded: false),
+        ScanIconState.idle,
+      );
+    });
+  });
+
+  group('deepScanIconState', () {
+    test('shows a spinner while deep-scanning', () {
+      expect(deepScanIconState(deepScanning: true, justSucceeded: false), ScanIconState.spinning);
+    });
+
+    test('shows the checkmark once deep-scanning has stopped', () {
+      expect(deepScanIconState(deepScanning: false, justSucceeded: true), ScanIconState.justSucceeded);
+    });
+
+    test('idle otherwise', () {
+      expect(deepScanIconState(deepScanning: false, justSucceeded: false), ScanIconState.idle);
+    });
+  });
+
+  group('sortDirectionFromPrefsValue / sortDirectionToPrefsValue', () {
+    // Regression coverage for persisting the Projects grid's column sort
+    // across app restarts (see _PlutoProjectsTableState.initState /
+    // _persistSortPreference): these two are the only translation between
+    // TrinaColumnSort and what actually gets written to the `settings` Hive
+    // box, so a bug here would either lose the persisted sort silently or
+    // crash trying to reparse it.
+
+    test('parses the two values ever written', () {
+      expect(sortDirectionFromPrefsValue('ascending'), TrinaColumnSort.ascending);
+      expect(sortDirectionFromPrefsValue('descending'), TrinaColumnSort.descending);
+    });
+
+    test('treats a missing or corrupt stored value as no persisted sort', () {
+      expect(sortDirectionFromPrefsValue(null), isNull);
+      expect(sortDirectionFromPrefsValue(''), isNull);
+      expect(sortDirectionFromPrefsValue('sideways'), isNull);
+    });
+
+    test('serializes ascending/descending back to the same strings it parses', () {
+      expect(sortDirectionToPrefsValue(TrinaColumnSort.ascending), 'ascending');
+      expect(sortDirectionToPrefsValue(TrinaColumnSort.descending), 'descending');
+    });
+
+    test('serializes a cleared/absent sort to null rather than a sentinel value', () {
+      expect(sortDirectionToPrefsValue(TrinaColumnSort.none), isNull);
+      expect(sortDirectionToPrefsValue(null), isNull);
+    });
+
+    test('round-trips through both directions', () {
+      for (final direction in [TrinaColumnSort.ascending, TrinaColumnSort.descending]) {
+        final value = sortDirectionToPrefsValue(direction);
+        expect(sortDirectionFromPrefsValue(value), direction);
+      }
+    });
+  });
+
+  group('groupChildProjectIds', () {
+    test('collects ids of every project inside a group row', () {
+      final group = _groupHeaderRow('Mixes', [_flatRow('a'), _flatRow('b')]);
+
+      expect(groupChildProjectIds(group), {'a', 'b'});
+    });
+
+    test('is empty for a non-group (flat) row', () {
+      expect(groupChildProjectIds(_flatRow('a')), isEmpty);
+    });
+
+    test('is empty for an empty group', () {
+      expect(groupChildProjectIds(_groupHeaderRow('Empty', [])), isEmpty);
+    });
+  });
+
+  group('missingProjectIds', () {
+    // Regression coverage for the "Delete Missing" bulk action: scans no
+    // longer auto-delete a project the moment its file disappears (see
+    // ProjectRepository.deleteProjectsPermanently's doc comment) — deleting
+    // is now this explicit, selection-driven action instead, and it must
+    // only ever touch the selected projects whose file is actually gone.
+
+    test('returns only selected projects whose file does not exist', () async {
+      final dir = await Directory.systemTemp.createTemp('missing_project_ids_');
+      try {
+        final existingFile = File('${dir.path}/exists.als');
+        await existingFile.create();
+        final present = TestFactories.makeProject(id: 'present', filePath: existingFile.path);
+        final missing = TestFactories.makeProject(id: 'missing', filePath: '${dir.path}/gone.als');
+
+        final result = missingProjectIds([present, missing], ['present', 'missing']);
+
+        expect(result, ['missing']);
+      } finally {
+        await dir.delete(recursive: true);
+      }
+    });
+
+    test('ignores a missing project that was not selected', () {
+      final missing = TestFactories.makeProject(id: 'missing', filePath: '/nonexistent/gone.als');
+
+      expect(missingProjectIds([missing], []), isEmpty);
+    });
+
+    test('is empty when every selected project still has its file', () async {
+      final dir = await Directory.systemTemp.createTemp('missing_project_ids_');
+      try {
+        final file = File('${dir.path}/exists.als');
+        await file.create();
+        final present = TestFactories.makeProject(id: 'present', filePath: file.path);
+
+        expect(missingProjectIds([present], ['present']), isEmpty);
+      } finally {
+        await dir.delete(recursive: true);
+      }
+    });
+  });
+
   group('collectProjectRowIds', () {
     test('collects IDs from flat (ungrouped) rows', () {
       final rows = [_flatRow('p1'), _flatRow('p2')];
@@ -173,6 +370,77 @@ void main() {
         group.type.group.children.originalList.map((r) => r.cells['name']!.value),
         ['Alpha', 'Charlie'],
       );
+    });
+
+    test('excludeGroupsFromSort keeps a group row out of the top-level reorder', () {
+      // Regression coverage for excludeSmartFoldersFromSortProvider: a
+      // smart-folder group used to move around the table just like any
+      // other row whenever the user sorted by a column — annoying for
+      // workflows where folders represent a fixed structure (e.g. project
+      // phases) rather than something meant to be sorted alongside files.
+      final group = _groupHeaderRow(
+        'Zeta Folder', // sorts last alphabetically, but must stay put
+        [_namedFlatRow('Charlie'), _namedFlatRow('Alpha')],
+      );
+      final rows = [_namedFlatRow('Bravo'), group, _namedFlatRow('Delta')];
+
+      applySortSnapshot(rows, 'name', TrinaColumnSort.ascending, excludeGroupsFromSort: true);
+
+      // The group stayed at index 1 (its original slot); the flat rows
+      // around it sorted into the remaining slots.
+      expect(rows.map((r) => r.cells['name']!.value), ['Bravo', 'Zeta Folder', 'Delta']);
+      // Children still sort normally — only the top level is exempt.
+      expect(
+        group.type.group.children.originalList.map((r) => r.cells['name']!.value),
+        ['Alpha', 'Charlie'],
+      );
+    });
+  });
+
+  group('sortFlatRowsKeepingGroupsInPlace', () {
+    int byName(TrinaRow a, TrinaRow b) =>
+        (a.cells['name']!.value as String).compareTo(b.cells['name']!.value as String);
+
+    test('leaves every group at its current index', () {
+      final groupA = _groupHeaderRow('Group A', [_namedFlatRow('x')]);
+      final groupB = _groupHeaderRow('Group B', [_namedFlatRow('y')]);
+      final current = [_namedFlatRow('Zeta'), groupA, _namedFlatRow('Alpha'), groupB];
+
+      final result = sortFlatRowsKeepingGroupsInPlace(current, byName);
+
+      expect(result[1], same(groupA));
+      expect(result[3], same(groupB));
+    });
+
+    test('sorts the flat rows into the remaining slots, in order', () {
+      final group = _groupHeaderRow('Folder', [_namedFlatRow('x')]);
+      final current = [_namedFlatRow('Zeta'), group, _namedFlatRow('Alpha'), _namedFlatRow('Mid')];
+
+      final result = sortFlatRowsKeepingGroupsInPlace(current, byName);
+
+      expect(
+        result.map((r) => r.cells['name']!.value),
+        ['Alpha', 'Folder', 'Mid', 'Zeta'],
+      );
+    });
+
+    test('is unchanged when there are no groups', () {
+      final current = [_namedFlatRow('Zeta'), _namedFlatRow('Alpha'), _namedFlatRow('Mid')];
+
+      final result = sortFlatRowsKeepingGroupsInPlace(current, byName);
+
+      expect(result.map((r) => r.cells['name']!.value), ['Alpha', 'Mid', 'Zeta']);
+    });
+
+    test('is unchanged when every row is a group', () {
+      final groupA = _groupHeaderRow('B', [_namedFlatRow('x')]);
+      final groupB = _groupHeaderRow('A', [_namedFlatRow('y')]);
+      final current = [groupA, groupB];
+
+      final result = sortFlatRowsKeepingGroupsInPlace(current, byName);
+
+      // Groups are never reordered by this function, even though 'A' < 'B'.
+      expect(result, [groupA, groupB]);
     });
   });
 

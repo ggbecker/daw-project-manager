@@ -72,10 +72,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get newProjectBadge => 'NEW';
 
   @override
-  String get newlyDetectedProjectTooltip =>
-      'Automatically detected — not yet reviewed';
-
-  @override
   String get projectName => 'Nombre del Proyecto';
 
   @override
@@ -472,6 +468,33 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String failedToUnhideProjects(String error) {
     return 'Error al mostrar proyectos: $error';
+  }
+
+  @override
+  String get deleteMissingProjects => 'Delete Missing';
+
+  @override
+  String get deleteMissingProjectsTitle => 'Delete missing projects?';
+
+  @override
+  String deleteMissingProjectsConfirm(int count, String plural) {
+    return '$count project$plural whose file could not be found on this machine will be permanently deleted, along with all notes, deadlines, and session history. This can\'t be undone.';
+  }
+
+  @override
+  String get deleteMissingProjectsConfirmButton => 'Delete Permanently';
+
+  @override
+  String missingProjectsDeleted(int count, String plural) {
+    return '$count missing project$plural deleted.';
+  }
+
+  @override
+  String deleteMissingProjectsAlsoDeleteReleaseTracked(
+    int count,
+    String plural,
+  ) {
+    return 'Also delete $count project$plural that are part of a release (removes them from that release too)';
   }
 
   @override
@@ -3203,6 +3226,13 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get scanModeSectionDescription =>
       'Controla cómo se muestran los proyectos de cada carpeta en la tabla: como una lista plana o agrupados por subcarpeta.';
+
+  @override
+  String get excludeSmartFoldersFromSort => 'Keep smart folders out of sorting';
+
+  @override
+  String get excludeSmartFoldersFromSortDescription =>
+      'When you sort the Projects table by a column, smart-folder groups stay in place instead of moving with the sort — only the projects inside them (and any ungrouped projects) get reordered. Experimental: off by default.';
 
   @override
   String get scanModeFlat => 'Simple';

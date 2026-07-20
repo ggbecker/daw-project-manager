@@ -29,6 +29,7 @@ import '../services/dock_menu_service.dart';
 import '../utils/daw_logo.dart';
 import '../utils/mobile_utils.dart';
 import '../utils/phase_colors.dart';
+import '../utils/project_file_status.dart';
 import '../providers/theme_provider.dart';
 import '../utils/file_launcher.dart';
 import '../utils/search_utils.dart';
@@ -131,6 +132,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
   bool _scanning = false;
   bool _deepScanning = false;
   bool _extractingMetadata = false;
+  // Briefly true right after a scan finishes successfully, so the
+  // corresponding button's icon can flash a checkmark — see rescanIconState/
+  // deepScanIconState and _flashScanSuccess.
+  bool _rescanJustSucceeded = false;
+  bool _deepScanJustSucceeded = false;
+  Timer? _scanSuccessFlashTimer;
   bool _isSearchingMobile = false;
   bool _isSearchingDesktop = false;
   double _railWidth = 130.0;
@@ -340,7 +347,31 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     _searchFocusNode.dispose();
     _debugKeyboardFocusNode.dispose();
     _searchController.dispose();
+    _scanSuccessFlashTimer?.cancel();
     super.dispose();
+  }
+
+  /// Briefly flags [deep]'s scan button as just-succeeded so its icon can
+  /// flash a checkmark (see rescanIconState/deepScanIconState) before
+  /// reverting to normal — the only feedback a scan gets now that neither a
+  /// plain scan nor (eventually) a deep scan blocks the UI with an overlay.
+  void _flashScanSuccess({required bool deep}) {
+    if (!mounted) return;
+    _scanSuccessFlashTimer?.cancel();
+    setState(() {
+      if (deep) {
+        _deepScanJustSucceeded = true;
+      } else {
+        _rescanJustSucceeded = true;
+      }
+    });
+    _scanSuccessFlashTimer = Timer(const Duration(milliseconds: 1200), () {
+      if (!mounted) return;
+      setState(() {
+        _rescanJustSucceeded = false;
+        _deepScanJustSucceeded = false;
+      });
+    });
   }
   
   // Track last processed key to avoid duplicate processing
@@ -561,7 +592,13 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     try {
       final scanner = ScannerService();
       int foundCount = 0;
-      await repo.clearMissingFiles();
+      // Snapshot before the scan so we can tell genuinely new projects
+      // (surfaced with the "New" badge) apart from ones just re-confirmed
+      // as still present — this scan no longer blocks the UI, so the grid
+      // can visibly change under the user while it runs. Skipped on an empty
+      // repo: that's an initial population, not a "new" discovery.
+      final knownPaths = repo.getAllProjects().map((p) => p.filePath).toSet();
+      final newlyDiscoveredIds = <String>[];
       final ignoredPaths = repo.getIgnoredPaths().map((p) => p.path).toList(growable: false);
       final scanTime = DateTime.now();
       for (final root in repo.getRoots()) {
@@ -572,8 +609,16 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
           foundPaths.add(entity.path);
           foundCount++;
         }
-        await repo.removeOrphanedProjectsFromRoot(root.path, foundPaths);
+        if (knownPaths.isNotEmpty) {
+          for (final path in newlyFoundPaths(foundPaths, knownPaths)) {
+            final saved = repo.getByPath(path);
+            if (saved != null) newlyDiscoveredIds.add(saved.id);
+          }
+        }
         await repo.updateRootLastScanAt(root.id, scanTime);
+      }
+      if (newlyDiscoveredIds.isNotEmpty) {
+        ref.read(recentlyDiscoveredProjectsProvider.notifier).addAll(newlyDiscoveredIds);
       }
 
       // Snapshot pending folders with active session tracking before resolving,
@@ -731,6 +776,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
             : AppLocalizations.of(context)!.scanComplete(scanType, foundCount, foundCount == 1 ? '' : 's');
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
       }
+      _flashScanSuccess(deep: fullMetadata);
     } finally {
       if (mounted) setState(() => _scanning = false);
     }
@@ -857,6 +903,110 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     }
   }
 
+  /// Permanently deletes whichever of [selectedProjectIds] are currently
+  /// missing (file gone from disk) — projects still present on disk are left
+  /// untouched even if selected alongside missing ones. Scans no longer
+  /// auto-delete anything on their own (see
+  /// ProjectRepository.deleteProjectsPermanently's doc comment); this is now
+  /// the only way to actually remove a project's entry.
+  ///
+  /// Missing projects still referenced by a release are excluded by default,
+  /// matching every other deletion path in the app (removeRoot,
+  /// _deleteProjectsUnderPathPrefix, clearAllData) — losing one would
+  /// silently drop a track from that release. The confirmation dialog offers
+  /// an explicit opt-in checkbox to delete them anyway; choosing to also
+  /// scrubs the deleted ids out of every release's trackIds so none are left
+  /// dangling.
+  Future<void> _deleteMissingProjects(BuildContext context, WidgetRef ref, List<String> selectedProjectIds) async {
+    final allProjectsAsync = ref.read(allProjectsStreamProvider);
+    final allProjects = allProjectsAsync.value ?? [];
+    final missingIds = missingProjectIds(allProjects, selectedProjectIds);
+    if (missingIds.isEmpty) return;
+
+    final releases = ref.read(releasesProvider).value ?? [];
+    final protectedIds = releaseProtectedProjectIds(releases);
+    final releaseTrackedIds = missingIds.where(protectedIds.contains).toList();
+    final freeIds = missingIds.where((id) => !protectedIds.contains(id)).toList();
+
+    final l10n = AppLocalizations.of(context)!;
+    var alsoDeleteReleaseTracked = false;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          final idsToDelete = alsoDeleteReleaseTracked ? missingIds : freeIds;
+          final plural = idsToDelete.length == 1 ? '' : 's';
+          return AlertDialog(
+            title: Text(l10n.deleteMissingProjectsTitle),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(l10n.deleteMissingProjectsConfirm(idsToDelete.length, plural)),
+                if (releaseTrackedIds.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  CheckboxListTile(
+                    value: alsoDeleteReleaseTracked,
+                    onChanged: (v) => setDialogState(() => alsoDeleteReleaseTracked = v ?? false),
+                    title: Text(l10n.deleteMissingProjectsAlsoDeleteReleaseTracked(
+                      releaseTrackedIds.length,
+                      releaseTrackedIds.length == 1 ? '' : 's',
+                    )),
+                    controlAffinity: ListTileControlAffinity.leading,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ],
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(l10n.cancel),
+              ),
+              FilledButton(
+                onPressed: idsToDelete.isEmpty ? null : () => Navigator.pop(ctx, true),
+                style: FilledButton.styleFrom(backgroundColor: Colors.red.shade700),
+                child: Text(l10n.deleteMissingProjectsConfirmButton),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    final idsToDelete = alsoDeleteReleaseTracked ? missingIds : freeIds;
+    if (idsToDelete.isEmpty) return;
+
+    try {
+      final repo = await ref.read(repositoryProvider.future);
+      await repo.deleteProjectsPermanently(idsToDelete);
+
+      if (alsoDeleteReleaseTracked) {
+        final deleted = idsToDelete.toSet();
+        for (final release in releases) {
+          if (!release.trackIds.any(deleted.contains)) continue;
+          await repo.updateRelease(release.copyWith(trackIds: trackIdsAfterRemoving(release, deleted)));
+        }
+      }
+
+      ref.invalidate(allProjectsStreamProvider);
+      if (mounted) {
+        final plural = idsToDelete.length == 1 ? '' : 's';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.missingProjectsDeleted(idsToDelete.length, plural))),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${l10n.error}: $e')),
+        );
+      }
+    }
+  }
+
   Future<void> _createRelease(BuildContext context, WidgetRef ref, List<String> selectedProjectIds, String releaseTitle) async {
     try {
       final repo = await ref.read(repositoryProvider.future);
@@ -922,6 +1072,13 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       if (mounted) setState(() => _updateVisibleTabs(next));
     });
 
+    // The background initial scan at app launch also drives the Rescan
+    // button's icon (see isScanning below), so flash the same success
+    // checkmark when it finishes as a manual rescan gets.
+    ref.listen<bool>(initialScanStateProvider, (previous, next) {
+      if (previous == true && next == false) _flashScanSuccess(deep: false);
+    });
+
     // Get current search text based on active tab
     final currentSearch = switch (_currentTab) {
       AppTab.projects   => ref.watch(projectsSearchProvider),
@@ -947,6 +1104,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     final isProfileSwitching = ref.watch(profileSwitchingProvider);
     final isScanning = _scanning || initialScanning;
     final isAnyOperation = isScanning || isProfileSwitching || _extractingMetadata;
+    final blockingOperation = shouldBlockForOperation(
+      scanning: _scanning,
+      deepScanning: _deepScanning,
+      profileSwitching: isProfileSwitching,
+      extractingMetadata: _extractingMetadata,
+    );
     final isLeftRail = !MobileUtils.isMobile() && ref.watch(tabPositionProvider) == TabPosition.left;
     final railCollapsed = ref.watch(railCollapsedProvider);
     
@@ -1694,13 +1857,19 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                               : () async {
                                     await _scanAll();
                                   },
-                          icon: (isScanning && !_deepScanning)
-                              ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                  )
-                              : const Icon(Icons.refresh),
+                          icon: switch (rescanIconState(
+                            isScanning: isScanning,
+                            deepScanning: _deepScanning,
+                            justSucceeded: _rescanJustSucceeded,
+                          )) {
+                            ScanIconState.spinning => const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            ScanIconState.justSucceeded => const Icon(Icons.check, color: Colors.green),
+                            ScanIconState.idle => const Icon(Icons.refresh),
+                          },
                           label: Text((isScanning && !_deepScanning) ? AppLocalizations.of(context)!.scanning : AppLocalizations.of(context)!.rescan),
                         ),
                         if (!isLeftRail) ...[
@@ -1751,13 +1920,18 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                         await _fullScanAll(onlyUnscanned: onlyUnscanned);
                                       }
                                     },
-                            icon: _deepScanning
-                                ? const SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
-                                    )
-                                : const Icon(Icons.search),
+                            icon: switch (deepScanIconState(
+                              deepScanning: _deepScanning,
+                              justSucceeded: _deepScanJustSucceeded,
+                            )) {
+                              ScanIconState.spinning => const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                              ScanIconState.justSucceeded => const Icon(Icons.check, color: Colors.green),
+                              ScanIconState.idle => const Icon(Icons.search),
+                            },
                             label: Text(_deepScanning ? AppLocalizations.of(context)!.scanning : AppLocalizations.of(context)!.deepScan),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Theme.of(context).colorScheme.primary,
@@ -2016,6 +2190,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                       onUnhideProjects: (selectedProjectIds) async {
                                         await _unhideProjects(context, ref, selectedProjectIds);
                                       },
+                                      // No onDeleteMissingProjects here: mobile projects are
+                                      // metadata-only entries synced via Drive, not local files
+                                      // (see FolderWatcher/_scanAll comments) — every one of them
+                                      // would spuriously read as "missing" by a File.existsSync()
+                                      // check against a desktop path, so the concept (and the
+                                      // "cloud_off" indicator it's paired with) is desktop-only.
                                       showHidden: hiddenMode == 1 || hiddenMode == 2,
                                       onRefresh: () => _refreshMobileProjects(),
                                     )
@@ -2031,6 +2211,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                       },
                                       onUnhideProjects: (selectedProjectIds) async {
                                         await _unhideProjects(context, ref, selectedProjectIds);
+                                      },
+                                      onDeleteMissingProjects: (selectedProjectIds) async {
+                                        await _deleteMissingProjects(context, ref, selectedProjectIds);
                                       },
                                       showHidden: hiddenMode == 1 || hiddenMode == 2,
                                       onExtractingMetadataChanged: (extracting) {
@@ -2217,12 +2400,18 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                 const SizedBox(height: 8),
                                 // Rescan
                                 IconButton(
-                                  icon: (isScanning && !_deepScanning)
-                                      ? const SizedBox(
-                                          width: 18, height: 18,
-                                          child: CircularProgressIndicator(strokeWidth: 2),
-                                        )
-                                      : const Icon(Icons.refresh),
+                                  icon: switch (rescanIconState(
+                                    isScanning: isScanning,
+                                    deepScanning: _deepScanning,
+                                    justSucceeded: _rescanJustSucceeded,
+                                  )) {
+                                    ScanIconState.spinning => const SizedBox(
+                                        width: 18, height: 18,
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      ),
+                                    ScanIconState.justSucceeded => const Icon(Icons.check, color: Colors.green),
+                                    ScanIconState.idle => const Icon(Icons.refresh),
+                                  },
                                   onPressed: isAnyOperation ? null : () => _scanAll(),
                                 ),
                                 if (!railCollapsed)
@@ -2235,9 +2424,15 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                 const SizedBox(height: 8),
                                 // Deep scan
                                 IconButton(
-                                  icon: _deepScanning
-                                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                                      : const Icon(Icons.search),
+                                  icon: switch (deepScanIconState(
+                                    deepScanning: _deepScanning,
+                                    justSucceeded: _deepScanJustSucceeded,
+                                  )) {
+                                    ScanIconState.spinning =>
+                                      const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
+                                    ScanIconState.justSucceeded => const Icon(Icons.check, color: Colors.green),
+                                    ScanIconState.idle => const Icon(Icons.search),
+                                  },
                                   onPressed: isAnyOperation
                                       ? null
                                       : () async {
@@ -2344,7 +2539,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                 }),
               ),
               // Loading overlay
-              if (isAnyOperation)
+              if (blockingOperation)
                 Container(
                   color: Colors.black54,
                   child: Center(
@@ -2383,6 +2578,7 @@ class _PlutoProjectsTableWithSelection extends ConsumerStatefulWidget {
   final Function(List<MusicProject>) onCreateRelease;
   final Function(List<String>) onHideProjects;
   final Function(List<String>) onUnhideProjects;
+  final Function(List<String>) onDeleteMissingProjects;
   final bool showHidden;
   final Function(bool) onExtractingMetadataChanged;
   final bool isAnyOperation;
@@ -2396,6 +2592,7 @@ class _PlutoProjectsTableWithSelection extends ConsumerStatefulWidget {
     required this.onCreateRelease,
     required this.onHideProjects,
     required this.onUnhideProjects,
+    required this.onDeleteMissingProjects,
     required this.showHidden,
     required this.onExtractingMetadataChanged,
     required this.isAnyOperation,
@@ -3020,6 +3217,30 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
                         _clearSelection();
                       },
                     ),
+                    Builder(builder: (context) {
+                      final missingIds = missingProjectIds(widget.projects, _selectedProjectIds);
+                      if (missingIds.isEmpty) return const SizedBox.shrink();
+                      // Shown whenever anything selected is missing, even if it later
+                      // turns out to be entirely release-protected — _deleteMissingProjects
+                      // explains that rather than hiding the button with no feedback.
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const SizedBox(width: 8),
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.delete_forever),
+                            label: Text(AppLocalizations.of(context)!.deleteMissingProjects),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red.shade700,
+                            ),
+                            onPressed: () {
+                              widget.onDeleteMissingProjects(_selectedProjectIds.toList());
+                              _clearSelection();
+                            },
+                          ),
+                        ],
+                      );
+                    }),
                   ],
                 )
               else
@@ -3067,6 +3288,107 @@ class _PlutoProjectsTable extends ConsumerStatefulWidget {
   ConsumerState<_PlutoProjectsTable> createState() => _PlutoProjectsTableState();
 }
 
+/// Whether the full-screen loading overlay (which prevents all interaction)
+/// should be shown for the given in-flight operations.
+///
+/// A plain scan — whether the background one at app launch or a
+/// user-triggered "Rescan" — never blocks: both are diff-based against what's
+/// already on screen, so browsing through them is safe. Newly-found projects
+/// surface via the "New" badge (`recentlyDiscoveredProjectsProvider`) instead
+/// of a blocking spinner; any pruning of missing projects or session-
+/// reconciliation dialogs a rescan triggers can happen against a still-
+/// interactive grid.
+///
+/// Deep scan still blocks for now: it rewrites metadata in place on existing
+/// projects, and — unlike a plain scan adding rows the user can simply
+/// ignore until they're ready — an in-place rewrite could show a project
+/// half-updated if opened mid-scan. `scanning` is accepted (deep scan always
+/// implies it) so the call site doesn't need to special-case which flag to
+/// pass, and to leave room to fold deep scan into this same non-blocking
+/// treatment later. Switching profiles or extracting metadata both mutate
+/// state the user could otherwise interact with mid-flight, so those still
+/// block too.
+@visibleForTesting
+bool shouldBlockForOperation({
+  required bool scanning,
+  required bool deepScanning,
+  required bool profileSwitching,
+  required bool extractingMetadata,
+}) {
+  return deepScanning || profileSwitching || extractingMetadata;
+}
+
+/// The subset of [selectedIds] among [projects] whose file no longer exists
+/// on disk — the exact set the "Delete Missing" bulk action targets.
+/// Projects still present on disk are left alone even if selected alongside
+/// missing ones, so a mixed selection only ever deletes the missing half.
+@visibleForTesting
+List<String> missingProjectIds(
+  List<MusicProject> projects,
+  Iterable<String> selectedIds,
+) {
+  final selected = selectedIds.toSet();
+  return projects
+      .where((p) => selected.contains(p.id) && !projectFileExists(p))
+      .map((p) => p.id)
+      .toList();
+}
+
+/// What a scan-triggering button's icon should show: a spinner while its
+/// scan runs, a checkmark for a brief window right after it finishes
+/// successfully (so the user gets positive confirmation the non-blocking
+/// scan actually completed, since there's no overlay forcing their
+/// attention anymore), or the button's normal idle icon otherwise.
+enum ScanIconState { idle, spinning, justSucceeded }
+
+/// Icon state for the "Rescan" button. Deep scan also sets `isScanning`
+/// (see `_scanAll`/`_fullScanAll`) but owns its own spinner via the
+/// dedicated Deep Scan button, so it's explicitly excluded here.
+@visibleForTesting
+ScanIconState rescanIconState({
+  required bool isScanning,
+  required bool deepScanning,
+  required bool justSucceeded,
+}) {
+  if (isScanning && !deepScanning) return ScanIconState.spinning;
+  if (justSucceeded) return ScanIconState.justSucceeded;
+  return ScanIconState.idle;
+}
+
+/// Icon state for the "Deep Scan" button.
+@visibleForTesting
+ScanIconState deepScanIconState({
+  required bool deepScanning,
+  required bool justSucceeded,
+}) {
+  if (deepScanning) return ScanIconState.spinning;
+  if (justSucceeded) return ScanIconState.justSucceeded;
+  return ScanIconState.idle;
+}
+
+/// Parses a persisted `settings` box value back into a [TrinaColumnSort].
+/// Returns null for anything other than the two values this ever writes
+/// ('ascending'/'descending') — including a missing key or a corrupt/stale
+/// value — so a garbled preference is treated as "no persisted sort" rather
+/// than silently defaulting to ascending.
+@visibleForTesting
+TrinaColumnSort? sortDirectionFromPrefsValue(String? value) {
+  return switch (value) {
+    'ascending' => TrinaColumnSort.ascending,
+    'descending' => TrinaColumnSort.descending,
+    _ => null,
+  };
+}
+
+/// The inverse of [sortDirectionFromPrefsValue] — null for
+/// [TrinaColumnSort.none] or a null direction, since "no sort" is persisted
+/// by deleting the key rather than writing a sentinel value.
+@visibleForTesting
+String? sortDirectionToPrefsValue(TrinaColumnSort? direction) {
+  if (direction == null || direction.isNone) return null;
+  return direction.isDescending ? 'descending' : 'ascending';
+}
+
 /// Collects the [MusicProject.id] of every project-backed row in [topLevelRows],
 /// including rows nested inside collapsed or expanded smart-folder groups.
 ///
@@ -3094,6 +3416,21 @@ Set<String> collectProjectRowIds(List<TrinaRow> topLevelRows) {
   return ids;
 }
 
+/// The [MusicProject.id] of every project inside [groupRow] (a single
+/// smart-folder group row), or empty if [groupRow] isn't a group. Used to
+/// derive a group's own "New" badge from whichever of its members were just
+/// discovered — a project that used to sit alone (flat) and gets grouped
+/// with a newly-found sibling should visibly read as "something changed
+/// here" even though the folder row itself isn't new.
+@visibleForTesting
+Set<String> groupChildProjectIds(TrinaRow groupRow) {
+  if (!groupRow.type.isGroup) return {};
+  return groupRow.type.group.children.originalList
+      .map((r) => (r.cells['data']?.value as MusicProject?)?.id)
+      .whereType<String>()
+      .toSet();
+}
+
 /// Sorts [rows] by each row's cell value at [field] — string comparison,
 /// matching `TrinaColumnType.text().compare()`, the type every column in
 /// this table uses — and recursively sorts each group row's children the
@@ -3110,7 +3447,12 @@ Set<String> collectProjectRowIds(List<TrinaRow> topLevelRows) {
 /// includes both) — pre-sorting the initial rows means that first frame is
 /// already correct.
 @visibleForTesting
-void applySortSnapshot(List<TrinaRow> rows, String field, TrinaColumnSort direction) {
+void applySortSnapshot(
+  List<TrinaRow> rows,
+  String field,
+  TrinaColumnSort direction, {
+  bool excludeGroupsFromSort = false,
+}) {
   if (direction.isNone) return;
   int compare(TrinaRow a, TrinaRow b) {
     final av = a.cells[field]?.value;
@@ -3123,10 +3465,75 @@ void applySortSnapshot(List<TrinaRow> rows, String field, TrinaColumnSort direct
 
   final effectiveCompare =
       direction.isDescending ? (TrinaRow a, TrinaRow b) => compare(b, a) : compare;
-  rows.sort(effectiveCompare);
+  if (excludeGroupsFromSort) {
+    rows.setAll(0, sortFlatRowsKeepingGroupsInPlace(rows, effectiveCompare));
+  } else {
+    rows.sort(effectiveCompare);
+  }
   for (final row in rows) {
     if (row.type.isGroup) {
       row.type.group.children.sort(effectiveCompare);
+    }
+  }
+}
+
+/// The row order that results from sorting only the non-group ("flat") rows
+/// in [currentOrder] by [compare] — every group (smart-folder) row keeps its
+/// current top-level index, with sorted flat rows filling the remaining
+/// slots in order. Used so a column sort doesn't move smart-folder groups
+/// around (see `excludeSmartFoldersFromSortProvider`) while the individual
+/// project rows still sort normally.
+@visibleForTesting
+List<TrinaRow> sortFlatRowsKeepingGroupsInPlace(
+  List<TrinaRow> currentOrder,
+  int Function(TrinaRow, TrinaRow) compare,
+) {
+  final sortedFlat = currentOrder.where((r) => !r.type.isGroup).toList()..sort(compare);
+  var flatIndex = 0;
+  return [
+    for (final row in currentOrder)
+      if (row.type.isGroup) row else sortedFlat[flatIndex++],
+  ];
+}
+
+/// Row-group delegate identical to [TrinaRowGroupTreeDelegate] except its
+/// [sort] leaves group (smart-folder) rows in their current top-level order
+/// — only the non-group rows and each group's own children get reordered by
+/// the active column sort. Used for the live grid when
+/// `excludeSmartFoldersFromSortProvider` is on; [applySortSnapshot] mirrors
+/// the same behavior (via [sortFlatRowsKeepingGroupsInPlace]) for the
+/// initial/rebuilt row list, since that's built and pre-sorted before the
+/// grid — and this delegate — ever exist.
+class _GroupOrderStableRowGroupDelegate extends TrinaRowGroupTreeDelegate {
+  _GroupOrderStableRowGroupDelegate({
+    required super.resolveColumnDepth,
+    required super.showText,
+    super.showFirstExpandableIcon,
+    super.showCount,
+  });
+
+  @override
+  void sort({
+    required TrinaColumn column,
+    required FilteredList<TrinaRow> rows,
+    required int Function(TrinaRow, TrinaRow) compare,
+  }) {
+    if (rows.originalList.isEmpty) return;
+
+    // rows.sort() only accepts a Comparator, not an explicit target order —
+    // so express the desired order as one: every row gets a unique target
+    // index, which sidesteps needing List.sort to be stable (it isn't
+    // guaranteed to be) since no two rows ever compare equal.
+    final desiredOrder = sortFlatRowsKeepingGroupsInPlace(rows.originalList, compare);
+    final targetIndex = {for (var i = 0; i < desiredOrder.length; i++) desiredOrder[i]: i};
+    rows.sort((a, b) => targetIndex[a]!.compareTo(targetIndex[b]!));
+
+    final children = TrinaRowGroupHelper.iterateWithFilter(
+      rows.originalList,
+      filter: (r) => r.type.isGroup,
+    );
+    for (final child in children) {
+      child.type.group.children.sort(compare);
     }
   }
 }
@@ -3182,17 +3589,63 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   // all group-expand and sort state, since a fresh grid has nothing to read
   // that state back from. This snapshot survives that remount and is
   // reapplied in onLoaded once the new stateManager is live.
+  //
+  // The sort half is also persisted to the `settings` Hive box (group-expand
+  // deliberately isn't — that's noisier and easy to re-expand by hand) so it
+  // survives a full app restart too, not just an in-session remount. Seeded
+  // synchronously in initState from whatever's on disk, so the very first
+  // frame is already sorted correctly instead of flashing unsorted rows
+  // first (same reasoning as _mapProjectsToRows pre-sorting on remount).
+  static const _sortFieldPrefsKey = 'projectsSortField';
+  static const _sortDirectionPrefsKey = 'projectsSortDirection';
+
   Set<String> _lastKnownExpandedGroupNames = {};
   String? _lastKnownSortField;
   TrinaColumnSort? _lastKnownSortDirection;
+
+  @override
+  void initState() {
+    super.initState();
+    try {
+      final box = Hive.box<String>('settings');
+      final field = box.get(_sortFieldPrefsKey);
+      final direction = sortDirectionFromPrefsValue(box.get(_sortDirectionPrefsKey));
+      if (field != null && direction != null) {
+        _lastKnownSortField = field;
+        _lastKnownSortDirection = direction;
+      }
+    } catch (_) {
+      // 'settings' box isn't open yet — main() should always open it before
+      // runApp(), but fall back to unsorted rather than crash if it isn't.
+    }
+  }
+
+  void _persistSortPreference(String? field, TrinaColumnSort? direction) async {
+    try {
+      final box = await Hive.openBox<String>('settings');
+      final directionValue = sortDirectionToPrefsValue(direction);
+      if (field == null || directionValue == null) {
+        await box.delete(_sortFieldPrefsKey);
+        await box.delete(_sortDirectionPrefsKey);
+      } else {
+        await box.put(_sortFieldPrefsKey, field);
+        await box.put(_sortDirectionPrefsKey, directionValue);
+      }
+    } catch (_) {}
+  }
 
   void _captureTableStateSnapshot() {
     final sm = stateManager;
     if (sm == null) return;
     _lastKnownExpandedGroupNames = expandedGroupNames(sm.rows);
     final sortedColumn = sm.getSortedColumn;
-    _lastKnownSortField = sortedColumn?.field;
-    _lastKnownSortDirection = sortedColumn?.sort;
+    final newField = sortedColumn?.field;
+    final newDirection = sortedColumn?.sort;
+    if (newField != _lastKnownSortField || newDirection != _lastKnownSortDirection) {
+      _lastKnownSortField = newField;
+      _lastKnownSortDirection = newDirection;
+      _persistSortPreference(newField, newDirection);
+    }
   }
 
   // Applies _lastKnownSortField/_lastKnownSortDirection to whichever live
@@ -4349,7 +4802,12 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     final sortField = _lastKnownSortField;
     final sortDirection = _lastKnownSortDirection;
     if (sortField != null && sortDirection != null) {
-      applySortSnapshot(rows, sortField, sortDirection);
+      applySortSnapshot(
+        rows,
+        sortField,
+        sortDirection,
+        excludeGroupsFromSort: ref.read(excludeSmartFoldersFromSortProvider),
+      );
     }
 
     return rows;
@@ -4598,7 +5056,11 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               Expanded(child: Text(rendererContext.cell.value.toString())),
               if (isNewlyDiscovered) ...[
                 const SizedBox(width: 6),
-                const _NewProjectBadge(),
+                _NewProjectBadge(
+                  onDismiss: () => ref
+                      .read(recentlyDiscoveredProjectsProvider.notifier)
+                      .dismiss(project.id),
+                ),
               ],
               if (isNotesMatch)
                 Tooltip(
@@ -5097,6 +5559,11 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       ),
     ]; // <-- Semicolon final do array de colunas
 
+    // Watched (not read) so toggling it rebuilds this widget and — via the
+    // grid's key below — remounts the grid, reusing the same restore path
+    // that already survives a theme/locale remount to reapply expand/sort
+    // state, now also correctly under the new group-sort behavior.
+    final excludeFoldersFromSort = ref.watch(excludeSmartFoldersFromSortProvider);
     final initialRows = _mapProjectsToRows(widget.projects);
 
     if (widget.projects.isEmpty) {
@@ -5154,7 +5621,9 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             : Color.alphaBlend(Colors.black.withValues(alpha: 0.04), activeTheme.cardColor);
 
     final grid = TrinaGrid(
-          key: ValueKey('trina_grid_${l10n.localeName}_${ref.watch(themeTypeProvider).name}'),
+          key: ValueKey(
+            'trina_grid_${l10n.localeName}_${ref.watch(themeTypeProvider).name}_$excludeFoldersFromSort',
+          ),
           columnMenuDelegate: _FitAllColumnsMenuDelegate(),
           columns: columns,
           rows: initialRows,
@@ -5179,14 +5648,21 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           onLoaded: (TrinaGridOnLoadedEvent event) {
             stateManager = event.stateManager;
             stateManager!.setRowGroup(
-              TrinaRowGroupTreeDelegate(
-                // Returning null for all columns disables TrinaGrid's auto
-                // expand icon; we render our own in the checkbox column.
-                resolveColumnDepth: (column) => null,
-                showText: (cell) => true,
-                showFirstExpandableIcon: false,
-                showCount: false,
-              ),
+              excludeFoldersFromSort
+                  ? _GroupOrderStableRowGroupDelegate(
+                      // Returning null for all columns disables TrinaGrid's auto
+                      // expand icon; we render our own in the checkbox column.
+                      resolveColumnDepth: (column) => null,
+                      showText: (cell) => true,
+                      showFirstExpandableIcon: false,
+                      showCount: false,
+                    )
+                  : TrinaRowGroupTreeDelegate(
+                      resolveColumnDepth: (column) => null,
+                      showText: (cell) => true,
+                      showFirstExpandableIcon: false,
+                      showCount: false,
+                    ),
             );
             stateManager!.addListener(_onStateManagerChanged);
             if (_needsThemeRefresh) {
@@ -7476,7 +7952,11 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                       )),
                       if (ref.watch(recentlyDiscoveredProjectsProvider).contains(project.id)) ...[
                         const SizedBox(width: 6),
-                        const _NewProjectBadge(),
+                        _NewProjectBadge(
+                          onDismiss: () => ref
+                              .read(recentlyDiscoveredProjectsProvider.notifier)
+                              .dismiss(project.id),
+                        ),
                       ],
                       if (isNotesMatch)
                         Tooltip(
@@ -8814,18 +9294,21 @@ class _ExpandArrowCellState extends State<_ExpandArrowCell> {
   }
 }
 
-// Small pill shown next to a project's name when the background folder
-// watcher just found it (see FolderWatcherService / recentlyDiscoveredProjectsProvider).
-// Styled to match the existing deadline badge (Container + tinted border)
-// rather than introducing a new visual language.
+// Small pill shown next to a project's (or smart-folder group's) name when
+// the background folder watcher / scan just found it (see
+// FolderWatcherService / recentlyDiscoveredProjectsProvider). Styled to
+// match the existing deadline badge (Container + tinted border) rather than
+// introducing a new visual language. No tooltip by design — hovering it is
+// itself the dismissal, so a tooltip would appear only to vanish immediately
+// (mirrors "peeking" at a snackbar right as it's swiped away).
 class _NewProjectBadge extends StatelessWidget {
-  const _NewProjectBadge();
+  final VoidCallback onDismiss;
+  const _NewProjectBadge({required this.onDismiss});
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return Tooltip(
-      message: l10n.newlyDetectedProjectTooltip,
+    return MouseRegion(
+      onEnter: (_) => onDismiss(),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
         decoration: BoxDecoration(
@@ -8834,7 +9317,7 @@ class _NewProjectBadge extends StatelessWidget {
           border: Border.all(color: Colors.green.withValues(alpha: 0.4), width: 1),
         ),
         child: Text(
-          l10n.newProjectBadge,
+          AppLocalizations.of(context)!.newProjectBadge,
           style: TextStyle(
             fontSize: 10,
             fontWeight: FontWeight.bold,
@@ -8847,7 +9330,7 @@ class _NewProjectBadge extends StatelessWidget {
   }
 }
 
-class _FolderNameCell extends StatefulWidget {
+class _FolderNameCell extends ConsumerStatefulWidget {
   final TrinaRow row;
   final TrinaGridStateManager stateManager;
   final String folderName;
@@ -8858,10 +9341,10 @@ class _FolderNameCell extends StatefulWidget {
   });
 
   @override
-  State<_FolderNameCell> createState() => _FolderNameCellState();
+  ConsumerState<_FolderNameCell> createState() => _FolderNameCellState();
 }
 
-class _FolderNameCellState extends State<_FolderNameCell> {
+class _FolderNameCellState extends ConsumerState<_FolderNameCell> {
   late bool _expanded;
 
   @override
@@ -8885,6 +9368,10 @@ class _FolderNameCellState extends State<_FolderNameCell> {
 
   @override
   Widget build(BuildContext context) {
+    final childIds = groupChildProjectIds(widget.row);
+    final recentlyDiscovered = ref.watch(recentlyDiscoveredProjectsProvider);
+    final hasNewChild = childIds.any(recentlyDiscovered.contains);
+
     return GestureDetector(
       onTap: () =>
           widget.stateManager.toggleExpandedRowGroup(rowGroup: widget.row),
@@ -8903,6 +9390,14 @@ class _FolderNameCellState extends State<_FolderNameCell> {
               overflow: TextOverflow.ellipsis,
             ),
           ),
+          if (hasNewChild) ...[
+            const SizedBox(width: 6),
+            _NewProjectBadge(
+              onDismiss: () => ref
+                  .read(recentlyDiscoveredProjectsProvider.notifier)
+                  .dismissAll(childIds),
+            ),
+          ],
         ],
       ),
     );

@@ -66,3 +66,28 @@ class Release {
     );
   }
 }
+
+/// Every [MusicProject] id referenced by any release in [releases].
+///
+/// These projects are treated as protected throughout the app — removeRoot,
+/// ignoring a path (`_deleteProjectsUnderPathPrefix`), and clearing all data
+/// all skip them, and the dashboard's own project filter keeps showing them
+/// even once their scan root is gone — because losing one would silently
+/// drop a track from someone's release.
+Set<String> releaseProtectedProjectIds(Iterable<Release> releases) {
+  final ids = <String>{};
+  for (final release in releases) {
+    ids.addAll(release.trackIds);
+  }
+  return ids;
+}
+
+/// [release]'s trackIds with every id in [deletedProjectIds] removed.
+///
+/// Used when a user explicitly opts to delete release-tracked missing
+/// projects anyway (see the dashboard's "Delete Missing" bulk action) —
+/// without this, the release would keep pointing at a project id that no
+/// longer exists.
+List<String> trackIdsAfterRemoving(Release release, Set<String> deletedProjectIds) {
+  return release.trackIds.where((id) => !deletedProjectIds.contains(id)).toList();
+}

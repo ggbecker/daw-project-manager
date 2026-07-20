@@ -140,14 +140,11 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
     final excluded = repo.getIgnoredPaths().map((p) => p.path).toList(growable: false);
     final scanTime = DateTime.now();
     int found = 0;
-    final foundPaths = <String>{};
 
     await for (final entity in scanner.scanDirectory(folderPath, ignoredPaths: excluded)) {
       await repo.upsertFromFileSystemEntity(entity, fullMetadata: false);
-      foundPaths.add(entity.path);
       found++;
     }
-    await repo.removeOrphanedProjectsFromRoot(folderPath, foundPaths);
     await repo.updateRootLastScanAt(folderId, scanTime);
 
     if (!mounted) return;
@@ -709,6 +706,18 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
                       },
                     ),
                   ],
+                  const Divider(height: 24),
+                  SwitchListTile(
+                    value: ref.watch(excludeSmartFoldersFromSortProvider),
+                    onChanged: (v) => ref.read(excludeSmartFoldersFromSortProvider.notifier).set(v),
+                    title: Text(l10n.excludeSmartFoldersFromSort),
+                    subtitle: Text(
+                      l10n.excludeSmartFoldersFromSortDescription,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                  ),
                 ],
               ),
             ),

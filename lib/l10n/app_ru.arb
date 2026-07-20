@@ -24,7 +24,6 @@
   "refreshProject": "Обновить",
   "scanning": "Сканирование…",
   "newProjectBadge": "NEW",
-  "newlyDetectedProjectTooltip": "Automatically detected — not yet reviewed",
   "projectName": "Название проекта",
   "bpm": "BPM",
   "key": "Тональность (например: C#m, F мажор)",
@@ -290,6 +289,42 @@
   "@failedToUnhideProjects": {
     "placeholders": {
       "error": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteMissingProjects": "Delete Missing",
+  "deleteMissingProjectsTitle": "Delete missing projects?",
+  "deleteMissingProjectsConfirm": "{count} project{plural} whose file could not be found on this machine will be permanently deleted, along with all notes, deadlines, and session history. This can't be undone.",
+  "@deleteMissingProjectsConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteMissingProjectsConfirmButton": "Delete Permanently",
+  "missingProjectsDeleted": "{count} missing project{plural} deleted.",
+  "@missingProjectsDeleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteMissingProjectsAlsoDeleteReleaseTracked": "Also delete {count} project{plural} that are part of a release (removes them from that release too)",
+  "@deleteMissingProjectsAlsoDeleteReleaseTracked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "plural": {
         "type": "String"
       }
     }
@@ -2010,6 +2045,10 @@
   "@scanModeSectionTitle": {},
   "scanModeSectionDescription": "Управляет отображением проектов в каждой папке в таблице — в виде обычного плоского списка или сгруппированных по подпапке.",
   "@scanModeSectionDescription": {},
+  "excludeSmartFoldersFromSort": "Keep smart folders out of sorting",
+  "@excludeSmartFoldersFromSort": {},
+  "excludeSmartFoldersFromSortDescription": "When you sort the Projects table by a column, smart-folder groups stay in place instead of moving with the sort — only the projects inside them (and any ungrouped projects) get reordered. Experimental: off by default.",
+  "@excludeSmartFoldersFromSortDescription": {},
   "scanModeFlat": "Простой",
   "@scanModeFlat": {},
   "scanModeSmartFolder": "Умная папка",

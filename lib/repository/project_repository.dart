@@ -342,29 +342,14 @@ class ProjectRepository {
     }
   }
 
-  /// Removes projects under [rootPath] whose filePath is NOT in [foundPaths],
-  /// except those referenced by a release. Call this after a shallow rescan to
-  /// prune stale entries (e.g. individual files from a previous deep scan) while
-  /// preserving metadata on projects that were matched and upserted in-place.
-  Future<void> removeOrphanedProjectsFromRoot(String rootPath, Set<String> foundPaths) async {
-    final normalized = p.normalize(rootPath);
-    final prefix = normalized.endsWith(p.separator) ? normalized : normalized + p.separator;
-    final releases = getAllReleases();
-    final protectedIds = <String>{for (final r in releases) ...r.trackIds};
-
-    final normalizedFound = foundPaths.map(p.normalize).toSet();
-    final toDelete = projectsBox.values
-        .where((proj) {
-          final projPath = p.normalize(proj.filePath);
-          final inRoot = projPath.startsWith(prefix) || projPath == normalized;
-          return inRoot &&
-              !normalizedFound.contains(projPath) &&
-              !protectedIds.contains(proj.id);
-        })
-        .map((proj) => proj.id)
-        .toList();
-
-    if (toDelete.isNotEmpty) await projectsBox.deleteAll(toDelete);
+  /// Permanently deletes [projectIds] and all their data (notes, deadlines,
+  /// session/timer history, etc.) — irreversible. Scans never call this on
+  /// their own (see `upsertFromFileSystemEntity`): a project whose file goes
+  /// missing just stays in the list flagged missing (a live filesystem
+  /// check, done in the UI) until the user explicitly deletes it, e.g. via
+  /// the "Delete Missing" bulk action.
+  Future<void> deleteProjectsPermanently(Iterable<String> projectIds) async {
+    await projectsBox.deleteAll(projectIds);
   }
 
   List<ScanRoot> getRoots() => rootsBox.values.toList(growable: false);
@@ -765,50 +750,6 @@ class ProjectRepository {
 
     // Re-initialize with a fresh default profile so the app starts cleanly.
     await ProfileRepository.init();
-  }
-
-  Future<void> clearMissingFiles() async {
-    // On Android, we're only syncing metadata from desktop, so files don't exist locally
-    // Don't delete projects on Android - they're metadata-only
-    if (Platform.isAndroid) {
-      if (kDebugMode) {
-        print('clearMissingFiles: Skipping on Android (metadata-only mode)');
-      }
-      return;
-    }
-
-    // Only consider scan roots that actually exist on this machine.
-    // Projects whose paths fall under a non-existent root (e.g. from a backup
-    // made on another machine) are preserved — deleting them would discard
-    // backup data that was intentionally restored.
-    final localRoots = rootsBox.values
-        .map((r) => r.path)
-        .where((rootPath) => Directory(rootPath).existsSync())
-        .toList(growable: false);
-
-    if (localRoots.isEmpty) {
-      if (kDebugMode) {
-        print('clearMissingFiles: No local scan roots exist on this machine — skipping to preserve backup data');
-      }
-      return;
-    }
-
-    final toDelete = <dynamic>[];
-    for (final entry in projectsBox.values) {
-      final isUnderLocalRoot = localRoots.any(
-        (rootPath) => p.isWithin(rootPath, entry.filePath) || entry.filePath == rootPath,
-      );
-      if (isUnderLocalRoot &&
-          !File(entry.filePath).existsSync() &&
-          !Directory(entry.filePath).existsSync()) {
-        toDelete.add(entry.id);
-      }
-    }
-
-    if (kDebugMode) {
-      print('clearMissingFiles: Deleting ${toDelete.length} missing projects (under ${localRoots.length} local roots)');
-    }
-    await projectsBox.deleteAll(toDelete);
   }
 
   // Releases

@@ -238,12 +238,6 @@ abstract class AppLocalizations {
   /// **'NEW'**
   String get newProjectBadge;
 
-  /// No description provided for @newlyDetectedProjectTooltip.
-  ///
-  /// In en, this message translates to:
-  /// **'Automatically detected — not yet reviewed'**
-  String get newlyDetectedProjectTooltip;
-
   /// No description provided for @projectName.
   ///
   /// In en, this message translates to:
@@ -933,6 +927,45 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to unhide projects: {error}'**
   String failedToUnhideProjects(String error);
+
+  /// No description provided for @deleteMissingProjects.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Missing'**
+  String get deleteMissingProjects;
+
+  /// No description provided for @deleteMissingProjectsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete missing projects?'**
+  String get deleteMissingProjectsTitle;
+
+  /// No description provided for @deleteMissingProjectsConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} project{plural} whose file could not be found on this machine will be permanently deleted, along with all notes, deadlines, and session history. This can\'t be undone.'**
+  String deleteMissingProjectsConfirm(int count, String plural);
+
+  /// No description provided for @deleteMissingProjectsConfirmButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Permanently'**
+  String get deleteMissingProjectsConfirmButton;
+
+  /// No description provided for @missingProjectsDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} missing project{plural} deleted.'**
+  String missingProjectsDeleted(int count, String plural);
+
+  /// No description provided for @deleteMissingProjectsAlsoDeleteReleaseTracked.
+  ///
+  /// In en, this message translates to:
+  /// **'Also delete {count} project{plural} that are part of a release (removes them from that release too)'**
+  String deleteMissingProjectsAlsoDeleteReleaseTracked(
+    int count,
+    String plural,
+  );
 
   /// Confirmation message when hiding a project
   ///
@@ -5431,6 +5464,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Controls how projects in each folder are displayed in the table — as a plain flat list or grouped by subfolder.'**
   String get scanModeSectionDescription;
+
+  /// No description provided for @excludeSmartFoldersFromSort.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep smart folders out of sorting'**
+  String get excludeSmartFoldersFromSort;
+
+  /// No description provided for @excludeSmartFoldersFromSortDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'When you sort the Projects table by a column, smart-folder groups stay in place instead of moving with the sort — only the projects inside them (and any ungrouped projects) get reordered. Experimental: off by default.'**
+  String get excludeSmartFoldersFromSortDescription;
 
   /// No description provided for @scanModeFlat.
   ///

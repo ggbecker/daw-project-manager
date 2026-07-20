@@ -386,20 +386,36 @@ Future<int> _runInitialScan(ProjectRepository repo, ProviderContainer container)
   container.read(initialScanStateProvider.notifier).setScanning(true);
   var foundCount = 0;
   try {
-    // 1. Limpa arquivos que não existem mais
-    await repo.clearMissingFiles();
-
-    // 2. Cria o scanner e processa as raízes de scan
+    // Cria o scanner e processa as raízes de scan. Projects whose file goes
+    // missing are left alone here — see deleteProjectsPermanently's doc
+    // comment for why scans no longer auto-delete anything.
     final scanner = ScannerService();
     final ignoredPaths = repo.getIgnoredPaths().map((p) => p.path).toList(growable: false);
     final scanTime = DateTime.now();
+    // Snapshot before scanning so files found while the app was last closed
+    // can be flagged "New" in the UI. Skipped on a genuinely empty repo (a
+    // fresh profile's very first scan) — there, everything found is just the
+    // initial population, not a "new since last time" discovery.
+    final knownPaths = repo.getAllProjects().map((p) => p.filePath).toSet();
+    final newlyDiscoveredIds = <String>[];
     for (final root in repo.getRoots()) {
+      final foundPaths = <String>{};
       await for (final entity in scanner.scanDirectory(root.path, ignoredPaths: ignoredPaths)) {
         await repo.upsertFromFileSystemEntity(entity);
+        foundPaths.add(entity.path);
         foundCount++;
+      }
+      if (knownPaths.isNotEmpty) {
+        for (final path in newlyFoundPaths(foundPaths, knownPaths)) {
+          final saved = repo.getByPath(path);
+          if (saved != null) newlyDiscoveredIds.add(saved.id);
+        }
       }
       // Update lastScanAt timestamp for this root
       await repo.updateRootLastScanAt(root.id, scanTime);
+    }
+    if (newlyDiscoveredIds.isNotEmpty) {
+      container.read(recentlyDiscoveredProjectsProvider.notifier).addAll(newlyDiscoveredIds);
     }
 
     // 3. Mark initial scan as complete
