@@ -3243,11 +3243,12 @@ class AppLocalizationsRu extends AppLocalizations {
       'Управляет отображением проектов в каждой папке в таблице — в виде обычного плоского списка или сгруппированных по подпапке.';
 
   @override
-  String get excludeSmartFoldersFromSort => 'Keep smart folders out of sorting';
+  String get excludeSmartFoldersFromSort =>
+      'Не учитывать умные папки при сортировке';
 
   @override
   String get excludeSmartFoldersFromSortDescription =>
-      'When you sort the Projects table by a column, smart-folder groups stay in place instead of moving with the sort — only the projects inside them (and any ungrouped projects) get reordered. Experimental: off by default.';
+      'При сортировке таблицы проектов по столбцу группы умных папок остаются на месте, а не перемещаются вместе с сортировкой — переупорядочиваются только проекты внутри них (и любые несгруппированные проекты). Экспериментальная функция: по умолчанию отключена.';
 
   @override
   String get scanModeFlat => 'Простой';

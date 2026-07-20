@@ -3249,11 +3249,12 @@ class AppLocalizationsIt extends AppLocalizations {
       'Controlla come i progetti in ogni cartella vengono visualizzati nella tabella — come un elenco semplice o raggruppati per sottocartella.';
 
   @override
-  String get excludeSmartFoldersFromSort => 'Keep smart folders out of sorting';
+  String get excludeSmartFoldersFromSort =>
+      'Escludi le cartelle smart dall\'ordinamento';
 
   @override
   String get excludeSmartFoldersFromSortDescription =>
-      'When you sort the Projects table by a column, smart-folder groups stay in place instead of moving with the sort — only the projects inside them (and any ungrouped projects) get reordered. Experimental: off by default.';
+      'Quando ordini la tabella dei progetti per colonna, i gruppi di cartelle smart restano al loro posto invece di spostarsi con l\'ordinamento — vengono riordinati solo i progetti al loro interno (e quelli non raggruppati). Sperimentale: disattivato per impostazione predefinita.';
 
   @override
   String get scanModeFlat => 'Piatto';

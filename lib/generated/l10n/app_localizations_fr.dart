@@ -3269,11 +3269,12 @@ class AppLocalizationsFr extends AppLocalizations {
       'Contrôle comment les projets de chaque dossier sont affichés dans le tableau — sous forme de liste simple ou regroupés par sous-dossier.';
 
   @override
-  String get excludeSmartFoldersFromSort => 'Keep smart folders out of sorting';
+  String get excludeSmartFoldersFromSort =>
+      'Exclure les dossiers intelligents du tri';
 
   @override
   String get excludeSmartFoldersFromSortDescription =>
-      'When you sort the Projects table by a column, smart-folder groups stay in place instead of moving with the sort — only the projects inside them (and any ungrouped projects) get reordered. Experimental: off by default.';
+      'Lorsque vous triez le tableau des projets par colonne, les groupes de dossiers intelligents restent à leur place au lieu de se déplacer avec le tri — seuls les projets qu\'ils contiennent (et les projets non groupés) sont réordonnés. Expérimental : désactivé par défaut.';
 
   @override
   String get scanModeFlat => 'Plat';
