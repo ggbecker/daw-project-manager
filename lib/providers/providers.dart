@@ -609,6 +609,12 @@ class SelectedProjectsNotifier extends Notifier<Set<String>> {
     current.addAll(projectIds);
     state = current;
   }
+
+  void removeAll(List<String> projectIds) {
+    final current = Set<String>.from(state);
+    current.removeAll(projectIds);
+    state = current;
+  }
 }
 
 // Recently Discovered Projects Provider — IDs of projects the background

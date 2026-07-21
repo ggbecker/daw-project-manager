@@ -305,6 +305,34 @@ void main() {
     });
   });
 
+  group('groupCheckboxShouldSelect', () {
+    // Backs the checkbox on a smart-folder group's own header row: clicking
+    // it should select every project in that group in one go (a
+    // collapsed group can be bulk-edited without expanding it first), and
+    // clicking an already-fully-selected group should clear just that group.
+
+    test('selects when none of the group is selected', () {
+      expect(groupCheckboxShouldSelect({'a', 'b'}, {}), isTrue);
+    });
+
+    test('selects (fills in the rest) when the group is only partially selected', () {
+      expect(groupCheckboxShouldSelect({'a', 'b'}, {'a'}), isTrue);
+    });
+
+    test('deselects when every member of the group is already selected', () {
+      expect(groupCheckboxShouldSelect({'a', 'b'}, {'a', 'b'}), isFalse);
+    });
+
+    test('is unaffected by selections outside the group', () {
+      expect(groupCheckboxShouldSelect({'a', 'b'}, {'a', 'b', 'unrelated'}), isFalse);
+      expect(groupCheckboxShouldSelect({'a', 'b'}, {'unrelated'}), isTrue);
+    });
+
+    test('an empty group has nothing to fully select, so it reports select', () {
+      expect(groupCheckboxShouldSelect({}, {}), isTrue);
+    });
+  });
+
   group('expandedGroupNames / groupRowsToExpand', () {
     // Regression coverage for: switching theme or language collapsed every
     // smart folder. TrinaGrid's key includes locale + theme, so either

@@ -895,7 +895,12 @@ class GoogleDriveSyncService {
       if (refreshToken != null) {
         await _saveCredentials(refreshToken, accessTokenString, expiryTime);
       }
-      
+
+      // Other GoogleDriveSyncService instances (e.g. the tray service's) hold
+      // their own auth state — notify them so they can pick up the freshly
+      // persisted credentials via restoreSession().
+      _authStateController.add(true);
+
       if (kDebugMode) print('Authenticated client created successfully using googleapis_auth');
       return authClient;
     } catch (e, stackTrace) {
@@ -930,7 +935,8 @@ class GoogleDriveSyncService {
       }
       _driveApi = null;
       _appDataFolderId = null;
-      
+      _authStateController.add(false);
+
       if (kDebugMode) print('✓ Signed out successfully');
     } catch (e) {
       if (kDebugMode) print('Error signing out: $e');
@@ -938,7 +944,21 @@ class GoogleDriveSyncService {
       _currentUser = null;
       _isAuthenticated = false;
       _driveApi = null;
+      _authStateController.add(false);
     }
+  }
+
+  /// Clears this instance's in-memory auth state only — does not touch
+  /// persisted credentials or the auth client (which belongs to whichever
+  /// instance owns it). Used to bring a passive instance (e.g. the tray
+  /// service's) back in sync after another instance's [signOut] broadcast
+  /// on [authStateStream], without re-triggering that broadcast.
+  void forgetLocalSession() {
+    _desktopAuthClient = null;
+    _driveApi = null;
+    _currentUser = null;
+    _isAuthenticated = false;
+    _appDataFolderId = null;
   }
 
   /// Returns the credentials file path for macOS (avoids Keychain prompts).

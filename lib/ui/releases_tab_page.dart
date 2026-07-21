@@ -572,6 +572,7 @@ class _ReleasesTableState extends ConsumerState<_ReleasesTable> {
         title: AppLocalizations.of(context)!.actions,
         field: 'actions',
         type: TrinaColumnType.text(),
+        enableColumnDrag: false,
         width: 200,
         minWidth: 180,
         renderer: (ctx) {
