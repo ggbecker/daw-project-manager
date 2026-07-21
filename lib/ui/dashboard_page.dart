@@ -2640,6 +2640,22 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
         widget.projects.every((p) => _selectedProjectIds.contains(p.id));
   }
 
+  /// Selects or deselects every project inside one smart-folder group,
+  /// leaving the rest of the current selection untouched (unlike the header
+  /// "select all", which is a global select-everything/clear-everything
+  /// toggle). Lets a user pick a single group's checkbox to bulk-edit just
+  /// that folder — e.g. move every project in it to a new phase — without
+  /// first selecting everything else and without needing the group expanded.
+  void _toggleGroupSelection(Set<String> groupProjectIds) {
+    if (groupProjectIds.isEmpty) return;
+    final notifier = ref.read(selectedProjectsProvider.notifier);
+    if (groupCheckboxShouldSelect(groupProjectIds, _selectedProjectIds)) {
+      notifier.addAll(groupProjectIds.toList());
+    } else {
+      notifier.removeAll(groupProjectIds.toList());
+    }
+  }
+
   Future<void> _showChangeStatusDialog(BuildContext context) async {
     String? selectedStatus;
     
@@ -3042,6 +3058,7 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
             dateFormat: widget.dateFormat,
             selectedIds: _selectedProjectIds,
             onToggleSelection: _toggleProjectSelection,
+            onToggleGroupSelection: _toggleGroupSelection,
             onHideProjects: widget.onHideProjects,
             onUnhideProjects: widget.onUnhideProjects,
             areAllSelected: _areAllSelected,
@@ -3263,6 +3280,7 @@ class _PlutoProjectsTable extends ConsumerStatefulWidget {
   final DateFormat dateFormat;
   final Set<String> selectedIds;
   final Function(String) onToggleSelection;
+  final Function(Set<String>) onToggleGroupSelection;
   final Function(List<String>) onHideProjects;
   final Function(List<String>) onUnhideProjects;
   final bool areAllSelected;
@@ -3277,6 +3295,7 @@ class _PlutoProjectsTable extends ConsumerStatefulWidget {
     required this.dateFormat,
     required this.selectedIds,
     required this.onToggleSelection,
+    required this.onToggleGroupSelection,
     required this.onHideProjects,
     required this.onUnhideProjects,
     required this.areAllSelected,
@@ -3443,6 +3462,18 @@ Set<String> groupChildProjectIds(TrinaRow groupRow) {
       .map((r) => (r.cells['data']?.value as MusicProject?)?.id)
       .whereType<String>()
       .toSet();
+}
+
+/// Whether clicking a smart-folder group's own checkbox should select its
+/// members, as opposed to deselecting them. Selects unless every member of
+/// [groupProjectIds] is already in [currentlySelected] — so a partially- or
+/// un-selected group fills in the rest, and a fully-selected group clears
+/// out. Mirrors a standard "select all in this folder" checkbox rather than
+/// a plain per-item toggle, since the group checkbox represents many
+/// projects at once.
+@visibleForTesting
+bool groupCheckboxShouldSelect(Set<String> groupProjectIds, Set<String> currentlySelected) {
+  return !(groupProjectIds.isNotEmpty && groupProjectIds.every(currentlySelected.contains));
 }
 
 /// The key used to bucket a project into its smart-folder group during
@@ -5078,10 +5109,31 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           );
         },
         renderer: (rendererContext) {
-          final project = rendererContext.row.cells['data']?.value as MusicProject?;
+          final row = rendererContext.row;
+          final project = row.cells['data']?.value as MusicProject?;
           if (project == null) {
+            if (row.type.isGroup) {
+              // Selects/deselects every project in this smart-folder group in
+              // one click — the group may be collapsed, or only partially
+              // selected from prior individual clicks, so this reads live
+              // off the group's own children rather than any cached count.
+              final childIds = groupChildProjectIds(row);
+              final allSelected =
+                  childIds.isNotEmpty && childIds.every(widget.selectedIds.contains);
+              final anySelected = childIds.any(widget.selectedIds.contains);
+              return Transform.scale(
+                scale: 0.78,
+                child: Checkbox(
+                  value: allSelected,
+                  tristate: anySelected && !allSelected,
+                  onChanged: childIds.isEmpty
+                      ? null
+                      : (_) => widget.onToggleGroupSelection(childIds),
+                ),
+              );
+            }
             return _ExpandArrowCell(
-              row: rendererContext.row,
+              row: row,
               stateManager: rendererContext.stateManager,
             );
           }
