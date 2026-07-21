@@ -23,6 +23,7 @@ class TrayService with TrayListener {
   final GoogleDriveSyncService _syncService;
 
   bool _initialized = false;
+  StreamSubscription<bool>? _authStateSubscription;
 
   Future<void> init() async {
     if (_initialized) return;
@@ -33,6 +34,19 @@ class TrayService with TrayListener {
     // Localized labels need a BuildContext, which isn't ready until the
     // first frame — build the real menu right after that.
     WidgetsBinding.instance.addPostFrameCallback((_) => unawaited(_rebuildMenu()));
+    // The tray's GoogleDriveSyncService is a separate instance from the one
+    // the sign-in UI uses, so it doesn't see sign-in/out unless notified.
+    _authStateSubscription =
+        GoogleDriveSyncService.authStateStream.listen(_handleAuthStateChanged);
+  }
+
+  Future<void> _handleAuthStateChanged(bool signedIn) async {
+    if (signedIn && !_syncService.isSignedIn) {
+      await _syncService.restoreSession();
+    } else if (!signedIn && _syncService.isSignedIn) {
+      _syncService.forgetLocalSession();
+    }
+    await _rebuildMenu();
   }
 
   AppLocalizations? get _l10n {
@@ -139,5 +153,11 @@ class TrayService with TrayListener {
         unawaited(quitApp());
         break;
     }
+  }
+
+  Future<void> dispose() async {
+    await _authStateSubscription?.cancel();
+    _authStateSubscription = null;
+    trayManager.removeListener(this);
   }
 }

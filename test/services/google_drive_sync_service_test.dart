@@ -63,6 +63,50 @@ void main() {
     });
   });
 
+  group('GoogleDriveSyncService cross-instance auth sync', () {
+    // Regression: the app creates a separate GoogleDriveSyncService instance
+    // per consumer (e.g. one for the tray, one for the sign-in page). Auth
+    // state lives on instance fields, so signing in on one instance left
+    // every other instance's isSignedIn stuck at false (tray "Backup Now"
+    // menu item stayed disabled) until app restart. authStateStream +
+    // forgetLocalSession() let a passive instance reconcile.
+
+    test('forgetLocalSession clears in-memory auth state without touching other instances', () {
+      final signedInInstance = GoogleDriveSyncService();
+      signedInInstance.desktopAuthClient = _FakeAuthClient();
+      signedInInstance.driveApi = drive.DriveApi(http.Client());
+      expect(signedInInstance.isSignedIn, isTrue);
+
+      final passiveInstance = GoogleDriveSyncService();
+      passiveInstance.desktopAuthClient = _FakeAuthClient();
+      passiveInstance.driveApi = drive.DriveApi(http.Client());
+      expect(passiveInstance.isSignedIn, isTrue);
+
+      passiveInstance.forgetLocalSession();
+
+      expect(passiveInstance.isSignedIn, isFalse);
+      expect(signedInInstance.isSignedIn, isTrue,
+          reason: 'clearing one instance must not affect another');
+    });
+
+    test('signOut broadcasts false on the shared authStateStream', () async {
+      final service = GoogleDriveSyncService();
+      service.desktopAuthClient = _FakeAuthClient();
+      service.driveApi = drive.DriveApi(http.Client());
+
+      final events = <bool>[];
+      final sub = GoogleDriveSyncService.authStateStream.listen(events.add);
+
+      await service.signOut();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(events, contains(false));
+      expect(service.isSignedIn, isFalse);
+
+      await sub.cancel();
+    });
+  });
+
   group('GoogleDriveSyncService.mergeData - custom mixdown folders and phase settings', () {
     late Directory tempDir;
     late ProjectRepository projectRepo;
