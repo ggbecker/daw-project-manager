@@ -689,6 +689,8 @@
   "enterTodoText": "Digite o texto da tarefa",
   "addNewTodo": "Adicionar nova tarefa",
   "enterTodoItem": "Digite o item da tarefa",
+  "addTodoAtTimestamp": "Add todo at {timestamp}",
+  "todoAddedAtTimestamp": "Added todo at {timestamp}",
   "todoList": "Lista de Tarefas",
   "todoTemplates": "Templates de TODO",
   "createTemplate": "Criar Template",

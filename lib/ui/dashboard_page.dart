@@ -62,7 +62,9 @@ import '../models/music_project.dart';
 import '../models/release.dart';
 import '../models/scan_mode.dart';
 import '../models/scan_root.dart';
+import '../models/todo_item.dart';
 import '../providers/providers.dart';
+import '../utils/playback_todo_utils.dart';
 import 'package:uuid/uuid.dart';
 
 /// App version embedded at build-time (CI passes `--dart-define=APP_VERSION=x.y.z`).
@@ -7275,6 +7277,66 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
     return h > 0 ? '${two(h)}:$m:$s' : '$m:$s';
   }
 
+  Future<void> _addTodoAtTimestamp() async {
+    final l10n = AppLocalizations.of(context)!;
+    final position = _position;
+    final timestamp = formatPlaybackTimestamp(position);
+    final controller = TextEditingController();
+
+    final note = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: Theme.of(context).cardColor,
+        title: Text(l10n.addTodoAtTimestamp(timestamp)),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: InputDecoration(
+            labelText: l10n.todoText,
+            hintText: l10n.enterTodoText,
+          ),
+          onSubmitted: (value) => Navigator.pop(dialogContext, value),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(dialogContext, controller.text),
+            child: Text(l10n.save),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+
+    final noteText = note?.trim();
+    if (noteText == null || noteText.isEmpty) return;
+    if (!mounted) return;
+
+    final newTodo = TodoItem(
+      id: const Uuid().v4(),
+      text: buildTimestampedTodoText(position, noteText),
+      completed: false,
+      createdAt: DateTime.now(),
+    );
+
+    final repo = await ref.read(repositoryProvider.future);
+    final allProjects = ref.read(allProjectsStreamProvider).value ?? [];
+    final project = allProjects.firstWhere(
+      (p) => p.id == widget.request.project.id,
+      orElse: () => widget.request.project,
+    );
+    await repo.updateProject(project.copyWith(todos: [...project.todos, newTodo]));
+
+    if (!mounted) return;
+    ref.invalidate(allProjectsStreamProvider);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.todoAddedAtTimestamp(timestamp))),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.listen(desktopPlayerProvider, (prev, next) {
@@ -7533,6 +7595,13 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
                       context,
                       MaterialPageRoute(builder: (_) => ProjectDetailPage(projectId: project.id)),
                     ),
+                  ),
+                  // Add todo at current timestamp
+                  IconButton(
+                    icon: const Icon(Icons.add_task),
+                    iconSize: 18, padding: iconPad, constraints: iconConstraints,
+                    tooltip: l10n.addTodoAtTimestamp(_fmt(_position)),
+                    onPressed: _addTodoAtTimestamp,
                   ),
                   // Open Folder
                   IconButton(

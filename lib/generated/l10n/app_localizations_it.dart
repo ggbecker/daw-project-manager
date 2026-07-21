@@ -826,6 +826,16 @@ class AppLocalizationsIt extends AppLocalizations {
   String get enterTodoItem => 'Inserisci l\'elemento dell\'attività';
 
   @override
+  String addTodoAtTimestamp(String timestamp) {
+    return 'Add todo at $timestamp';
+  }
+
+  @override
+  String todoAddedAtTimestamp(String timestamp) {
+    return 'Added todo at $timestamp';
+  }
+
+  @override
   String get todoList => 'Lista Attività';
 
   @override

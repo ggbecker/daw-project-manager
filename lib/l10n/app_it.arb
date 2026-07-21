@@ -689,6 +689,8 @@
   "enterTodoText": "Inserisci il testo dell'attività",
   "addNewTodo": "Aggiungi nuova attività",
   "enterTodoItem": "Inserisci l'elemento dell'attività",
+  "addTodoAtTimestamp": "Add todo at {timestamp}",
+  "todoAddedAtTimestamp": "Added todo at {timestamp}",
   "todoList": "Lista Attività",
   "todoTemplates": "Modelli TODO",
   "createTemplate": "Crea Modello",
