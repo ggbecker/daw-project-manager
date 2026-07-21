@@ -3152,6 +3152,13 @@ class AppLocalizationsZh extends AppLocalizations {
       '当两个扫描根目录（例如不同的 DAW）拥有同名的顶级文件夹时，将它们在项目表中视为一个合并的分组，而不是两个独立的分组。';
 
   @override
+  String get alwaysShowSmartFolders => '始终显示智能文件夹';
+
+  @override
+  String get alwaysShowSmartFoldersDescription =>
+      '即使某个智能文件夹当前只有一个项目可见（例如经过搜索或筛选后），也将其显示为独立的分组行，而不是折叠为普通的未分组行。';
+
+  @override
   String get scanModeFlat => '平铺';
 
   @override

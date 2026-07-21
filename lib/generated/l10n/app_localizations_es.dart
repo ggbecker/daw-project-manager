@@ -3274,6 +3274,14 @@ class AppLocalizationsEs extends AppLocalizations {
       'Cuando dos carpetas raíz de escaneo (por ejemplo, distintos DAW) tienen una carpeta de nivel superior con el mismo nombre, se tratan como un único grupo combinado en la tabla de proyectos en lugar de dos independientes.';
 
   @override
+  String get alwaysShowSmartFolders =>
+      'Mostrar siempre las carpetas inteligentes';
+
+  @override
+  String get alwaysShowSmartFoldersDescription =>
+      'Muestra una carpeta inteligente como su propia fila de grupo incluso cuando solo uno de sus proyectos está visible actualmente (por ejemplo, tras una búsqueda o un filtro), en lugar de reducirla a una simple fila sin agrupar.';
+
+  @override
   String get scanModeFlat => 'Simple';
 
   @override

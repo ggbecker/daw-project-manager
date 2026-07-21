@@ -228,6 +228,36 @@ void main() {
     });
   });
 
+  group('compareLastModifiedCellValues', () {
+    // Regression test: the Last Modified column used to store the already-
+    // formatted display string (e.g. "Jul 21, 2026") as the cell's raw
+    // value, so ascending/descending sort compared that text alphabetically
+    // instead of chronologically — a January date could sort after a July
+    // one because "Jan" < "Jul" has nothing to do with which came first.
+    // The column now stores a raw DateTime and sorts via this comparator.
+
+    test('orders chronologically even when alphabetical month order disagrees', () {
+      final july = DateTime(2026, 7, 1);
+      final january = DateTime(2027, 1, 1); // later date, "smaller" month name
+
+      expect(compareLastModifiedCellValues(july, january), lessThan(0));
+      expect(compareLastModifiedCellValues(january, july), greaterThan(0));
+    });
+
+    test('treats equal DateTimes as equal', () {
+      final date = DateTime(2026, 7, 21, 20, 0);
+
+      expect(compareLastModifiedCellValues(date, DateTime(2026, 7, 21, 20, 0)), 0);
+    });
+
+    test('orders within the same day by time of day', () {
+      final morning = DateTime(2026, 7, 21, 9, 0);
+      final evening = DateTime(2026, 7, 21, 20, 0);
+
+      expect(compareLastModifiedCellValues(morning, evening), lessThan(0));
+    });
+  });
+
   group('collectProjectRowIds', () {
     test('collects IDs from flat (ungrouped) rows', () {
       final rows = [_flatRow('p1'), _flatRow('p2')];
@@ -354,6 +384,26 @@ void main() {
       expect(rows.map((r) => r.cells['name']!.value), ['Charlie', 'Alpha', 'Bravo']);
     });
 
+    test('sorts DateTime cell values (e.g. lastModified) chronologically via toString()', () {
+      // Regression coverage: this pre-sort snapshot (used to avoid a flash
+      // of unsorted rows on a theme/locale remount) falls back to comparing
+      // cells' toString() when no special-case applies. The Last Modified
+      // column now stores a raw DateTime rather than a locale-formatted
+      // display string precisely so this still lands in chronological
+      // order — DateTime.toString() is zero-padded (e.g. "2026-07-01
+      // 00:00:00.000"), unlike a formatted string such as "Jul 1, 2026",
+      // which would sort "Jul" before "Jun" alphabetically regardless of
+      // which year came first.
+      TrinaRow dateRow(DateTime value) => TrinaRow(cells: {'lastModified': TrinaCell(value: value)});
+      final july = dateRow(DateTime(2026, 7, 1));
+      final january = dateRow(DateTime(2027, 1, 1));
+      final rows = [july, january];
+
+      applySortSnapshot(rows, 'lastModified', TrinaColumnSort.ascending);
+
+      expect(rows, [july, january]);
+    });
+
     test('also sorts each group row\'s children, independent of top-level order', () {
       final group = _groupHeaderRow(
         'Mixes',
@@ -475,6 +525,53 @@ void main() {
       );
 
       expect(shallow, nested);
+    });
+  });
+
+  group('smartFolderShouldRenderAsGroup', () {
+    // Regression coverage for a follow-up report on issue #67: a lone
+    // Cubase project newly dropped into a "1-Active Projects" folder merged
+    // correctly with an existing same-named Studio One folder while showing
+    // all DAWs (member count > 1 after merging), but filtering the DAW
+    // type down to Cubase only hid the Studio One siblings, dropping the
+    // visible member count back to 1 and demoting the group to a flat,
+    // seemingly "orphaned" row — even though the folder is a real,
+    // intentionally-merged one. With mergeByName on, a group must never
+    // demote just because a filter narrowed its currently-visible members
+    // down to one.
+
+    test('demotes a lone project to flat when both settings are off', () {
+      expect(smartFolderShouldRenderAsGroup(1, mergeByName: false, alwaysShow: false), isFalse);
+    });
+
+    test('keeps rendering as a group once there are 2+ members, both settings off', () {
+      expect(smartFolderShouldRenderAsGroup(2, mergeByName: false, alwaysShow: false), isTrue);
+    });
+
+    test('never demotes to flat when merge-by-name is on, even with a single visible member', () {
+      expect(smartFolderShouldRenderAsGroup(1, mergeByName: true, alwaysShow: false), isTrue);
+    });
+
+    test('still renders as a group with 2+ members when merge-by-name is on', () {
+      expect(smartFolderShouldRenderAsGroup(2, mergeByName: true, alwaysShow: false), isTrue);
+    });
+
+    // alwaysShowSmartFoldersProvider: a general-purpose version of the same
+    // override, independent of merge-by-name — for anyone who wants a smart
+    // folder to never collapse away, whatever narrowed it down to one
+    // visible member (a search, a phase filter, a DAW filter with no merge
+    // involved at all, etc.).
+
+    test('never demotes to flat when always-show is on, even with a single visible member', () {
+      expect(smartFolderShouldRenderAsGroup(1, mergeByName: false, alwaysShow: true), isTrue);
+    });
+
+    test('still renders as a group with 2+ members when always-show is on', () {
+      expect(smartFolderShouldRenderAsGroup(2, mergeByName: false, alwaysShow: true), isTrue);
+    });
+
+    test('either setting alone is enough to keep a lone member grouped', () {
+      expect(smartFolderShouldRenderAsGroup(1, mergeByName: true, alwaysShow: true), isTrue);
     });
   });
 
@@ -659,6 +756,92 @@ void main() {
       // remount (e.g. switching theme again) has something to restore from.
       expect(lastKnownSortField, 'name');
       expect(lastKnownSortDirection, TrinaColumnSort.ascending);
+    });
+  });
+
+  group('cycling a column sort back to "no sort" must reset to the default order', () {
+    // Regression test: clicking a column header a third time clears its
+    // sort by calling TrinaGrid's own sortBySortIdx(), which restores every
+    // row's *baked-in* sortIdx — the row order from whenever the rows were
+    // last (re)built, not necessarily the app's actual default (newest-
+    // first) order. Those two only coincide if nothing was ever sorted
+    // since that last build; if the table was last rebuilt while some
+    // other sort was active (e.g. after a background refresh), sortIdx
+    // bakes in that stale order instead, and the table then silently stays
+    // in it even though the header shows "no sort" — reported as sorting
+    // through to the last step not refreshing back to the last-modified
+    // default. Mirrors _captureTableStateSnapshot()'s fix: detect the
+    // transition from "had a sort" to "no sort" and force a fresh rebuild
+    // instead of trusting TrinaGrid's cached sortIdx order.
+
+    List<TrinaColumn> columns() => [
+          TrinaColumn(title: 'Name', field: 'name', type: TrinaColumnType.text()),
+        ];
+
+    TrinaRow flat(String name) => TrinaRow(cells: {'name': TrinaCell(value: name)});
+
+    Future<TrinaGridStateManager> pumpGrid(WidgetTester tester, Key key, List<TrinaRow> rows) async {
+      late TrinaGridStateManager sm;
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 400,
+            height: 400,
+            child: TrinaGrid(
+              key: key,
+              columns: columns(),
+              rows: rows,
+              onLoaded: (e) => sm = e.stateManager,
+            ),
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+      return sm;
+    }
+
+    testWidgets(
+        "sortBySortIdx alone leaves rows in the stale pre-sort order (demonstrates the bug)",
+        (tester) async {
+      // Rows were last built while sorted descending by name (Zeta, Charlie,
+      // Alpha is the baked-in sortIdx order) — even though the table is
+      // about to be cycled back to "no sort".
+      final rows = [flat('Zeta'), flat('Charlie'), flat('Alpha')];
+      final sm = await pumpGrid(tester, const ValueKey('buggy'), rows);
+      final nameColumn = sm.columns.first;
+
+      sm.sortAscending(nameColumn);
+      sm.sortDescending(nameColumn);
+      sm.sortBySortIdx(nameColumn); // the third header click
+
+      expect(sm.getSortedColumn, isNull, reason: 'sort is genuinely cleared');
+      // ...but the row order is whatever sortIdx happened to bake in, not
+      // any sensible default — this is the bug.
+      expect(sm.rows.map((r) => r.cells['name']!.value), ['Zeta', 'Charlie', 'Alpha']);
+    });
+
+    testWidgets(
+        'detecting the had-sort-to-no-sort transition and rebuilding restores the true default',
+        (tester) async {
+      final rows = [flat('Zeta'), flat('Charlie'), flat('Alpha')];
+      final sm = await pumpGrid(tester, const ValueKey('fixed'), rows);
+      final nameColumn = sm.columns.first;
+
+      sm.sortAscending(nameColumn);
+      sm.sortDescending(nameColumn);
+      sm.sortBySortIdx(nameColumn);
+
+      // Mirrors _captureTableStateSnapshot()'s new branch: a sort was
+      // active before this change (hadSort) and the column is now cleared
+      // (newField == null), so production would call _rebuildRows() here.
+      expect(sm.getSortedColumn, isNull);
+      // Mirrors _rebuildRows(): swap in a freshly-built row order — the
+      // app's real default — instead of trusting sortIdx.
+      final freshDefaultOrder = [flat('Alpha'), flat('Charlie'), flat('Zeta')];
+      sm.removeRows(sm.rows, notify: false);
+      sm.insertRows(0, freshDefaultOrder);
+
+      expect(sm.rows.map((r) => r.cells['name']!.value), ['Alpha', 'Charlie', 'Zeta']);
     });
   });
 

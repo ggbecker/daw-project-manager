@@ -3389,6 +3389,18 @@ String? sortDirectionToPrefsValue(TrinaColumnSort? direction) {
   return direction.isDescending ? 'descending' : 'ascending';
 }
 
+/// Compares two 'lastModified' cell values chronologically. Used as the
+/// Projects table's Last Modified column `compare` callback: that column's
+/// cell values are raw [DateTime]s (not the formatted display string), so
+/// ascending/descending sort orders by actual date rather than by the
+/// alphabetical order of a formatted date string — e.g. "Jul" sorting after
+/// "Jun" alphabetically would otherwise put a July date after a June one
+/// even in years where July came first chronologically.
+@visibleForTesting
+int compareLastModifiedCellValues(dynamic a, dynamic b) {
+  return (a as DateTime).compareTo(b as DateTime);
+}
+
 /// Collects the [MusicProject.id] of every project-backed row in [topLevelRows],
 /// including rows nested inside collapsed or expanded smart-folder groups.
 ///
@@ -3451,6 +3463,37 @@ String smartFolderGroupKey(
 }) {
   final topLevel = path.join(rootPath, relativeParts[0]);
   return mergeSameName ? path.basename(topLevel) : topLevel;
+}
+
+/// Whether a smart-folder group with [memberCount] currently-visible
+/// projects should render as an actual group row, rather than demoting its
+/// lone member to a plain flat row.
+///
+/// Normally a folder with only one *currently visible* project isn't worth
+/// wrapping in a group row, so it demotes to flat. Two opt-in settings
+/// override that:
+/// - [mergeByName] (`mergeSmartFoldersByNameProvider`): a member count of 1
+///   is often just the active DAW-type filter hiding that folder's merge
+///   partner(s) from another scan root — reported after the merge feature
+///   shipped: a brand-new Cubase project dropped into a "1-Active Projects"
+///   folder correctly merged with an existing same-named Studio One folder
+///   while showing all DAWs, but filtering the view down to Cubase only made
+///   it "disappear" back into an orphaned flat row, since only that one
+///   Cubase project remained in the bucket once its Studio One siblings were
+///   filtered out.
+/// - [alwaysShow] (`alwaysShowSmartFoldersProvider`): a general-purpose
+///   version of the same override for anyone who'd simply rather a smart
+///   folder never collapse away, regardless of why it's down to one visible
+///   member (a search, a phase filter, etc.), not just the merge-by-name
+///   case above.
+@visibleForTesting
+bool smartFolderShouldRenderAsGroup(
+  int memberCount, {
+  required bool mergeByName,
+  required bool alwaysShow,
+}) {
+  if (mergeByName || alwaysShow) return true;
+  return memberCount > 1;
 }
 
 /// Sorts [rows] by each row's cell value at [field] — string comparison,
@@ -3664,9 +3707,23 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     final newField = sortedColumn?.field;
     final newDirection = sortedColumn?.sort;
     if (newField != _lastKnownSortField || newDirection != _lastKnownSortDirection) {
+      final hadSort = _lastKnownSortField != null;
       _lastKnownSortField = newField;
       _lastKnownSortDirection = newDirection;
       _persistSortPreference(newField, newDirection);
+      // Clicking a column header a third time clears its sort by calling
+      // TrinaGrid's own sortBySortIdx(), which restores each row's *baked-in*
+      // sortIdx — the row order from whenever rows were last (re)built, not
+      // necessarily our app's actual default order. Those two only coincide
+      // if nothing was ever sorted since that last build; if the table was
+      // last rebuilt while some other column's sort was active (e.g. after a
+      // background refresh), sortIdx bakes in that stale order instead.
+      // Force a full rebuild so cycling any column back to "no sort" always
+      // lands on the same newest-first default _mapProjectsToRows()
+      // establishes on a fresh mount, not whatever TrinaGrid had cached.
+      if (hadSort && newField == null) {
+        _rebuildRows();
+      }
     }
   }
 
@@ -3763,7 +3820,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       row.cells['dawType']?.value = dawDisplay(updated);
       row.cells['bpm']?.value = updated.bpm?.toString() ?? '';
       row.cells['key']?.value = updated.musicalKey ?? '';
-      row.cells['lastModified']?.value = widget.dateFormat.format(updated.lastModifiedAt);
+      row.cells['lastModified']?.value = updated.lastModifiedAt;
       row.cells['deadline']?.value = updated.deadlineStatus ?? '';
       // Update the launch cell's own value so TrinaGrid re-renders the action
       // column (play button) when preview song data changes.
@@ -3784,7 +3841,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           }
         }
         if (latestModified != null) {
-          row.cells['lastModified']?.value = widget.dateFormat.format(latestModified);
+          row.cells['lastModified']?.value = latestModified;
         }
       } else {
         updateProjectRow(row);
@@ -4716,7 +4773,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         'dawType': TrinaCell(value: dawDisplay),
         'bpm': TrinaCell(value: p.bpm?.toString() ?? ''),
         'key': TrinaCell(value: p.musicalKey ?? ''),
-        'lastModified': TrinaCell(value: widget.dateFormat.format(p.lastModifiedAt)),
+        'lastModified': TrinaCell(value: p.lastModifiedAt),
         'deadline': TrinaCell(value: p.deadlineStatus ?? ''),
         'launch': TrinaCell(value: ''),
         'data': TrinaCell(value: p),
@@ -4745,6 +4802,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     }
 
     final mergeFoldersByName = ref.read(mergeSmartFoldersByNameProvider);
+    final alwaysShowSmartFolders = ref.read(alwaysShowSmartFoldersProvider);
     final flatProjects = <MusicProject>[];
     final folderGroups = <String, List<MusicProject>>{};
 
@@ -4771,12 +4829,26 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       }
     }
 
-    // Groups with exactly 1 project are demoted to flat.
+    // Groups with only 1 currently-visible project are demoted to flat
+    // (unless merge-by-name or always-show is on — see
+    // smartFolderShouldRenderAsGroup).
     for (final entry in folderGroups.entries) {
-      if (entry.value.length == 1) flatProjects.add(entry.value.first);
+      if (!smartFolderShouldRenderAsGroup(
+        entry.value.length,
+        mergeByName: mergeFoldersByName,
+        alwaysShow: alwaysShowSmartFolders,
+      )) {
+        flatProjects.add(entry.value.first);
+      }
     }
     final realGroups = Map.fromEntries(
-      folderGroups.entries.where((e) => e.value.length > 1),
+      folderGroups.entries.where(
+        (e) => smartFolderShouldRenderAsGroup(
+          e.value.length,
+          mergeByName: mergeFoldersByName,
+          alwaysShow: alwaysShowSmartFolders,
+        ),
+      ),
     );
 
     // Build display items as (latestModified, row) so we can sort interleaved.
@@ -4802,7 +4874,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             'dawType': TrinaCell(value: ''),
             'bpm': TrinaCell(value: ''),
             'key': TrinaCell(value: ''),
-            'lastModified': TrinaCell(value: widget.dateFormat.format(latestModified)),
+            'lastModified': TrinaCell(value: latestModified),
             'deadline': TrinaCell(value: ''),
             'launch': TrinaCell(value: ''),
             'data': TrinaCell(value: null),
@@ -4897,7 +4969,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           final project = widget.projects[i];
           final row = stateManager!.rows[i];
           if (row.cells['lastModified'] != null) {
-            row.cells['lastModified']!.value = widget.dateFormat.format(project.lastModifiedAt);
+            row.cells['lastModified']!.value = project.lastModifiedAt;
           }
         }
         stateManager!.notifyListeners();
@@ -5261,7 +5333,11 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       TrinaColumn(
         title: AppLocalizations.of(context)!.lastModifiedColumn,
         field: 'lastModified',
-        type: TrinaColumnType.text(),
+        // Cell values are raw DateTimes (not the formatted display string)
+        // so ascending/descending sort compares chronologically instead of
+        // alphabetically — a locale format like "Jul 21, 2026" would
+        // otherwise sort by month name text, not by actual date.
+        type: TrinaColumnType.custom(compare: compareLastModifiedCellValues),
         enableEditingMode: false,
         width: 200,
         minWidth: 160,
@@ -5299,7 +5375,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               }
 
               return Text(
-                rendererContext.cell.value.toString(),
+                widget.dateFormat.format(project.lastModifiedAt),
                 style: TextStyle(color: textColor),
               );
             },
@@ -5382,6 +5458,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         field: 'launch',
         type: TrinaColumnType.text(),
         enableEditingMode: false,
+        enableSorting: false,
         width: 290, // Increased width to accommodate all action buttons
         minWidth: 250,
         renderer: (ctx) {
@@ -5591,6 +5668,9 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     // which group (see smartFolderGroupKey), so the grid needs a fresh key
     // to rebuild its row-group tree rather than diffing stale groups.
     final mergeFoldersByName = ref.watch(mergeSmartFoldersByNameProvider);
+    // Same remount rationale again: toggling this changes which groups
+    // demote to flat rows (see smartFolderShouldRenderAsGroup).
+    final alwaysShowSmartFolders = ref.watch(alwaysShowSmartFoldersProvider);
     final initialRows = _mapProjectsToRows(widget.projects);
 
     if (widget.projects.isEmpty) {
@@ -5649,7 +5729,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
 
     final grid = TrinaGrid(
           key: ValueKey(
-            'trina_grid_${l10n.localeName}_${ref.watch(themeTypeProvider).name}_${excludeFoldersFromSort}_$mergeFoldersByName',
+            'trina_grid_${l10n.localeName}_${ref.watch(themeTypeProvider).name}_${excludeFoldersFromSort}_${mergeFoldersByName}_$alwaysShowSmartFolders',
           ),
           columnMenuDelegate: _FitAllColumnsMenuDelegate(),
           columns: columns,

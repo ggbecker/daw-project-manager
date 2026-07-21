@@ -770,6 +770,17 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
                     contentPadding: EdgeInsets.zero,
                     dense: true,
                   ),
+                  SwitchListTile(
+                    value: ref.watch(alwaysShowSmartFoldersProvider),
+                    onChanged: (v) => ref.read(alwaysShowSmartFoldersProvider.notifier).set(v),
+                    title: Text(l10n.alwaysShowSmartFolders),
+                    subtitle: Text(
+                      l10n.alwaysShowSmartFoldersDescription,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                  ),
                 ],
               ),
             ),

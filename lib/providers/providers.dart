@@ -2451,6 +2451,45 @@ final mergeSmartFoldersByNameProvider =
         MergeSmartFoldersByNameNotifier.new);
 
 // ---------------------------------------------------------------------------
+// Always Show Smart Folders
+// ---------------------------------------------------------------------------
+
+/// Whether a smart-folder group should always render as its own row in the
+/// Projects table, even when only one of its projects is currently visible
+/// (e.g. after a search or DAW-type filter narrows things down). Off by
+/// default: normally a folder with just one currently-visible project
+/// demotes to a plain flat row instead of wrapping it in a group — see
+/// smartFolderShouldRenderAsGroup() in dashboard_page.dart. Off by default,
+/// ships opt-in like the other smart-folder settings above.
+class AlwaysShowSmartFoldersNotifier extends Notifier<bool> {
+  static const _key = 'alwaysShowSmartFolders';
+
+  // Same synchronous-read rationale as ExcludeSmartFoldersFromSortNotifier:
+  // this value feeds the Projects grid's remount key.
+  @override
+  bool build() {
+    try {
+      final saved = Hive.box<String>('settings').get(_key);
+      if (saved != null) return saved == 'true';
+    } catch (_) {
+      // Box not open yet on the very first frame — falls back to the
+      // opt-in default (false) rather than crash.
+    }
+    return false;
+  }
+
+  Future<void> set(bool value) async {
+    state = value;
+    final box = await Hive.openBox<String>('settings');
+    await box.put(_key, value.toString());
+  }
+}
+
+final alwaysShowSmartFoldersProvider =
+    NotifierProvider<AlwaysShowSmartFoldersNotifier, bool>(
+        AlwaysShowSmartFoldersNotifier.new);
+
+// ---------------------------------------------------------------------------
 // Work Timer Notification Settings
 // ---------------------------------------------------------------------------
 

@@ -3253,6 +3253,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'When two scan roots (e.g. different DAWs) have a top-level folder with the same name, treat them as a single merged group in the Projects table instead of two separate ones.';
 
   @override
+  String get alwaysShowSmartFolders => 'Always show smart folders';
+
+  @override
+  String get alwaysShowSmartFoldersDescription =>
+      'Show a smart folder as its own group row even when only one of its projects is currently visible (e.g. after a search or filter), instead of collapsing it into a plain ungrouped row.';
+
+  @override
   String get scanModeFlat => 'Flat';
 
   @override
