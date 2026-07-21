@@ -5461,6 +5461,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         type: TrinaColumnType.text(),
         enableEditingMode: false,
         enableSorting: false,
+        enableColumnDrag: false,
         width: 290, // Increased width to accommodate all action buttons
         minWidth: 250,
         renderer: (ctx) {
