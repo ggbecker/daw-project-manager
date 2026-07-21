@@ -689,6 +689,8 @@
   "enterTodoText": "Введите текст задачи",
   "addNewTodo": "Добавить новую задачу",
   "enterTodoItem": "Введите элемент задачи",
+  "addTodoAtTimestamp": "Add todo at {timestamp}",
+  "todoAddedAtTimestamp": "Added todo at {timestamp}",
   "todoList": "Список Задач",
   "todoTemplates": "Шаблоны TODO",
   "createTemplate": "Создать Шаблон",

@@ -689,6 +689,8 @@
   "enterTodoText": "输入待办事项文本",
   "addNewTodo": "添加新待办事项",
   "enterTodoItem": "输入待办事项项",
+  "addTodoAtTimestamp": "Add todo at {timestamp}",
+  "todoAddedAtTimestamp": "Added todo at {timestamp}",
   "todoList": "待办事项列表",
   "todoTemplates": "TODO模板",
   "createTemplate": "创建模板",

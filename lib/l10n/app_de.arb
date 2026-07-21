@@ -689,6 +689,8 @@
   "enterTodoText": "Aufgabentext eingeben",
   "addNewTodo": "Neue Aufgabe hinzufügen",
   "enterTodoItem": "Aufgabenelement eingeben",
+  "addTodoAtTimestamp": "Add todo at {timestamp}",
+  "todoAddedAtTimestamp": "Added todo at {timestamp}",
   "todoList": "Aufgabenliste",
   "todoTemplates": "TODO-Vorlagen",
   "createTemplate": "Vorlage Erstellen",

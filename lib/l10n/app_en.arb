@@ -803,6 +803,26 @@
   "enterTodoText": "Enter todo text",
   "addNewTodo": "Add new todo",
   "enterTodoItem": "Enter todo item",
+  "addTodoAtTimestamp": "Add todo at {timestamp}",
+  "@addTodoAtTimestamp": {
+    "placeholders": {
+      "timestamp": {
+        "type": "String"
+
+}
+
+}
+  },
+  "todoAddedAtTimestamp": "Added todo at {timestamp}",
+  "@todoAddedAtTimestamp": {
+    "placeholders": {
+      "timestamp": {
+        "type": "String"
+
+}
+
+}
+  },
   "todoList": "TODO List",
   "todoTemplates": "TODO Templates",
   "createTemplate": "Create Template",

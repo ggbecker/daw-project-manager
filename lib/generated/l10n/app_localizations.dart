@@ -1469,6 +1469,18 @@ abstract class AppLocalizations {
   /// **'Enter todo item'**
   String get enterTodoItem;
 
+  /// No description provided for @addTodoAtTimestamp.
+  ///
+  /// In en, this message translates to:
+  /// **'Add todo at {timestamp}'**
+  String addTodoAtTimestamp(String timestamp);
+
+  /// No description provided for @todoAddedAtTimestamp.
+  ///
+  /// In en, this message translates to:
+  /// **'Added todo at {timestamp}'**
+  String todoAddedAtTimestamp(String timestamp);
+
   /// No description provided for @todoList.
   ///
   /// In en, this message translates to:

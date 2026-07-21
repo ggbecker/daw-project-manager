@@ -824,6 +824,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get enterTodoItem => 'Введите элемент задачи';
 
   @override
+  String addTodoAtTimestamp(String timestamp) {
+    return 'Add todo at $timestamp';
+  }
+
+  @override
+  String todoAddedAtTimestamp(String timestamp) {
+    return 'Added todo at $timestamp';
+  }
+
+  @override
   String get todoList => 'Список Задач';
 
   @override

@@ -689,6 +689,8 @@
   "enterTodoText": "Entrez le texte de la tâche",
   "addNewTodo": "Ajouter une nouvelle tâche",
   "enterTodoItem": "Entrez l'élément de la tâche",
+  "addTodoAtTimestamp": "Add todo at {timestamp}",
+  "todoAddedAtTimestamp": "Added todo at {timestamp}",
   "todoList": "Liste de Tâches",
   "todoTemplates": "Modèles de TODO",
   "createTemplate": "Créer un Modèle",

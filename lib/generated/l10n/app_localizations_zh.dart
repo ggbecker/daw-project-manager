@@ -810,6 +810,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get enterTodoItem => '输入待办事项项';
 
   @override
+  String addTodoAtTimestamp(String timestamp) {
+    return 'Add todo at $timestamp';
+  }
+
+  @override
+  String todoAddedAtTimestamp(String timestamp) {
+    return 'Added todo at $timestamp';
+  }
+
+  @override
   String get todoList => '待办事项列表';
 
   @override

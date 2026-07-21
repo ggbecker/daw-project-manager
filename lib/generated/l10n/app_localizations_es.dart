@@ -826,6 +826,16 @@ class AppLocalizationsEs extends AppLocalizations {
   String get enterTodoItem => 'Ingrese el item de la tarea';
 
   @override
+  String addTodoAtTimestamp(String timestamp) {
+    return 'Add todo at $timestamp';
+  }
+
+  @override
+  String todoAddedAtTimestamp(String timestamp) {
+    return 'Added todo at $timestamp';
+  }
+
+  @override
   String get todoList => 'Lista de Tareas';
 
   @override

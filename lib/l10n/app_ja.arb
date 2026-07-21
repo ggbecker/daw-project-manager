@@ -689,6 +689,8 @@
   "enterTodoText": "タスクテキストを入力",
   "addNewTodo": "新しいタスクを追加",
   "enterTodoItem": "タスク項目を入力",
+  "addTodoAtTimestamp": "Add todo at {timestamp}",
+  "todoAddedAtTimestamp": "Added todo at {timestamp}",
   "todoList": "タスクリスト",
   "todoTemplates": "TODOテンプレート",
   "createTemplate": "テンプレート作成",
