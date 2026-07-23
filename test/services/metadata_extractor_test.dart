@@ -115,6 +115,107 @@ void main() {
     });
   });
 
+  group('MetadataExtractor — Reaper (.rpp) full extraction', () {
+    late Directory tempDir;
+
+    setUp(() async {
+      tempDir = await Directory.systemTemp.createTemp('rpp_test_');
+    });
+
+    tearDown(() async {
+      await tempDir.delete(recursive: true);
+    });
+
+    test('extracts version, BPM, and key signature from Reaper text project files', () async {
+      final file = File('${tempDir.path}/project.rpp');
+      await file.writeAsString('''
+<REAPER_PROJECT 0.1 "7.78/win64" 1784823281 0
+TEMPO 120 4 4 0
+<KEYSIG
+  0 11 1 0x4E9
+>
+''');
+
+      final metadata = await MetadataExtractor.extractMetadata(file.path);
+      expect(metadata.dawType, 'Reaper');
+      expect(metadata.bpm, 120.0);
+      expect(metadata.key, 'B Blues Minor');
+      expect(metadata.dawVersion, '7.78');
+    });
+
+    test('extracts major and minor Reaper scale values from the text signature block', () async {
+      final majorFile = File('${tempDir.path}/project_major.rpp');
+      await majorFile.writeAsString('''
+<REAPER_PROJECT 0.1 "7.78/win64" 1784823281 0
+TEMPO 120 4 4 0
+<KEYSIG
+  0 11 1 0x0AB5
+>
+''');
+
+      final majorMetadata = await MetadataExtractor.extractMetadata(majorFile.path);
+      expect(majorMetadata.key, 'B Major');
+
+      final minorFile = File('${tempDir.path}/project_minor.rpp');
+      await minorFile.writeAsString('''
+<REAPER_PROJECT 0.1 "7.78/win64" 1784823281 0
+TEMPO 120 4 4 0
+<KEYSIG
+  0 0 -1 0x05AD
+>
+''');
+
+      final minorMetadata = await MetadataExtractor.extractMetadata(minorFile.path);
+      expect(minorMetadata.key, 'C Minor');
+    });
+
+    test('accepts both integer and decimal Reaper tempo values', () async {
+      final integerFile = File('${tempDir.path}/project_integer.rpp');
+      await integerFile.writeAsString('''
+<REAPER_PROJECT 0.1 "7.78/win64" 1784823281 0
+TEMPO 120 4 4 0
+''');
+
+      final integerMetadata = await MetadataExtractor.extractMetadata(integerFile.path);
+      expect(integerMetadata.bpm, 120.0);
+
+      final decimalFile = File('${tempDir.path}/project_decimal.rpp');
+      await decimalFile.writeAsString('''
+<REAPER_PROJECT 0.1 "7.78/win64" 1784823281 0
+TEMPO 120.2 4 4 0
+''');
+
+      final decimalMetadata = await MetadataExtractor.extractMetadata(decimalFile.path);
+      expect(decimalMetadata.bpm, 120.2);
+    });
+
+    test('resolves a Reaper scale mask from the same 12-slot bit pattern methodology used by the .reascale file', () async {
+      final file = File('${tempDir.path}/project_scale_mask.rpp');
+      await file.writeAsString('''
+<REAPER_PROJECT 0.1 "7.78/win64" 1784823281 0
+TEMPO 120 4 4 0
+<KEYSIG
+  0 0 0 0x0295
+>
+''');
+
+      final metadata = await MetadataExtractor.extractMetadata(file.path);
+      expect(metadata.key, 'C Major Pentatonic');
+    });
+
+    test('matches only the whole TEMPO token, not TEMPOENVLOCKMODE', () async {
+      final file = File('${tempDir.path}/project_tempoenvlock.rpp');
+      await file.writeAsString('''
+<REAPER_PROJECT 0.1 "7.78/win64" 1784823281 0
+TEMPOENVLOCKMODE 1
+TEMPO 120 4 4 0
+''');
+
+      final metadata = await MetadataExtractor.extractMetadata(file.path);
+      expect(metadata.bpm, 120.0);
+    });
+  });
+
   group('MetadataExtractor — MAGDA (.mgd) full extraction', () {
     // .mgd files are a single zlib-compressed (RFC 1950) JSON document with a
     // top-level `magdaVersion` and a `project` object holding `tempo`,
