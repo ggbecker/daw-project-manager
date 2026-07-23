@@ -54,6 +54,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
   late TextEditingController _bpmCtrl;
   late TextEditingController _keyCtrl;
   late TextEditingController _notesCtrl; // NOVO CONTROLLER
+  late TextEditingController _projectNotesCtrl;
   late FocusNode _nameFocusNode;
   late FocusNode _bpmFocusNode;
   late FocusNode _keyFocusNode;
@@ -113,6 +114,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
     _bpmCtrl = TextEditingController();
     _keyCtrl = TextEditingController();
     _notesCtrl = TextEditingController(); // INICIALIZA
+    _projectNotesCtrl = TextEditingController();
     _nameFocusNode = FocusNode();
     _bpmFocusNode = FocusNode();
     _keyFocusNode = FocusNode();
@@ -133,6 +135,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
     _bpmCtrl.dispose();
     _keyCtrl.dispose();
     _notesCtrl.dispose();
+    _projectNotesCtrl.dispose();
     _nameFocusNode.dispose();
     _bpmFocusNode.dispose();
     _keyFocusNode.dispose();
@@ -353,24 +356,15 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
   /// Read-only display of notes extracted straight from the DAW project
   /// file itself (e.g. Reaper's Title/Author/Notes tab) — distinct from the
   /// user-editable [MusicProject.notes] description field it sits beside.
-  Widget _buildProjectNotesField(String projectNotes) {
-    return SizedBox(
-      key: ValueKey('projectNotesField_${projectNotes.hashCode}'),
-      height: 130,
-      child: TextFormField(
-        initialValue: projectNotes,
-        readOnly: true,
-        expands: true,
-        minLines: null,
-        maxLines: null,
-        textAlignVertical: TextAlignVertical.top,
-        decoration: InputDecoration(
-          labelText: AppLocalizations.of(context)!.projectNotesFromDaw,
-          alignLabelWithHint: true,
-          border: const OutlineInputBorder(),
-          contentPadding: const EdgeInsets.fromLTRB(12, 20, 12, 20),
-        ),
-      ),
+  /// Shares the same expand/collapse and drag-resize affordances as that
+  /// field via [ResizableTextField]'s readOnly mode.
+  Widget _buildProjectNotesField() {
+    return ResizableTextField(
+      controller: _projectNotesCtrl,
+      readOnly: true,
+      labelText: AppLocalizations.of(context)!.projectNotesFromDaw,
+      expandTooltip: AppLocalizations.of(context)!.expandNotes,
+      collapseTooltip: AppLocalizations.of(context)!.collapseNotes,
     );
   }
 
@@ -519,6 +513,12 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
             } else {
               _lastSavedNotes ??= currentNotes;
             }
+          }
+          // Read-only field extracted from the DAW file — no user edits to
+          // preserve, so it can just always mirror the current value.
+          final currentProjectNotes = updatedProject.projectNotes ?? '';
+          if (_projectNotesCtrl.text != currentProjectNotes) {
+            _projectNotesCtrl.text = currentProjectNotes;
           }
           // Sincroniza fase do projeto (only on first load)
           if (!_hasInitializedPhase) {
@@ -925,7 +925,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                               if (projectNotes == null || projectNotes.trim().isEmpty) {
                                 return notesField;
                               }
-                              final projectNotesField = _buildProjectNotesField(projectNotes);
+                              final projectNotesField = _buildProjectNotesField();
                               return isMobile
                                   ? Column(
                                       children: [

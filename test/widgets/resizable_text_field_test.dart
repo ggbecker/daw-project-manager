@@ -12,6 +12,7 @@ Future<void> _pump(
   double maxHeight = 800,
   ValueChanged<String>? onChanged,
   bool? enableDragResize,
+  bool readOnly = false,
 }) {
   return tester.pumpWidget(
     MaterialApp(
@@ -27,6 +28,7 @@ Future<void> _pump(
           maxHeight: maxHeight,
           onChanged: onChanged,
           enableDragResize: enableDragResize,
+          readOnly: readOnly,
         ),
       ),
     ),
@@ -148,6 +150,20 @@ void main() {
 
       expect(changes, contains('hello world'));
       expect(controller.text, 'hello world');
+    });
+
+    testWidgets('readOnly rejects typed input but still allows expand/collapse',
+        (tester) async {
+      final controller = TextEditingController(text: 'extracted notes');
+      await _pump(tester, controller: controller, readOnly: true);
+
+      await tester.enterText(find.byType(TextFormField), 'should not stick');
+      await tester.pump();
+      expect(controller.text, 'extracted notes');
+
+      await tester.tap(find.byIcon(Icons.open_in_full));
+      await tester.pumpAndSettle();
+      expect(_heightOf(tester), 400);
     });
   });
 }

@@ -28,6 +28,11 @@ class ResizableTextField extends StatefulWidget {
   /// on mobile, where a precise corner grab isn't practical with touch.
   final bool enableDragResize;
 
+  /// Whether the field is read-only — used for text extracted from the DAW
+  /// project file itself rather than typed by the user, while still keeping
+  /// the same expand/collapse and drag-resize affordances as an editable field.
+  final bool readOnly;
+
   ResizableTextField({
     super.key,
     required this.controller,
@@ -40,6 +45,7 @@ class ResizableTextField extends StatefulWidget {
     this.minHeight = 100,
     this.maxHeight = 800,
     this.onChanged,
+    this.readOnly = false,
     bool? enableDragResize,
   }) : enableDragResize = enableDragResize ?? !MobileUtils.isMobile();
 
@@ -61,6 +67,7 @@ class _ResizableTextFieldState extends State<ResizableTextField> {
           child: TextFormField(
             controller: widget.controller,
             focusNode: widget.focusNode,
+            readOnly: widget.readOnly,
             expands: true,
             minLines: null,
             maxLines: null,
