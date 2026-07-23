@@ -919,6 +919,86 @@ class AppLocalizationsRu extends AppLocalizations {
   String get errorLoadingTemplates => 'Ошибка загрузки шаблонов';
 
   @override
+  String get createProjectStartFrom => 'Как вы хотите начать?';
+
+  @override
+  String get createProjectStartFromHint =>
+      'Начните с пустой папки или скопируйте зарегистрированный шаблон.';
+
+  @override
+  String get createProjectEmptyFolder => 'Пустая Папка';
+
+  @override
+  String get createProjectFromTemplate => 'Из Шаблона';
+
+  @override
+  String get selectTemplateMainFile => 'Выберите Главный Файл Проекта Шаблона';
+
+  @override
+  String get registerTemplate => 'Зарегистрировать Шаблон';
+
+  @override
+  String get projectTemplates => 'Шаблоны Проектов';
+
+  @override
+  String get searchTemplates => 'Поиск шаблонов...';
+
+  @override
+  String get createFirstProjectTemplate =>
+      'Зарегистрируйте папку шаблона для повторного использования в новых проектах';
+
+  @override
+  String get noMatchingTemplates => 'Нет подходящих шаблонов';
+
+  @override
+  String get templateSourceMissing => 'Исходная папка шаблона не найдена';
+
+  @override
+  String get useTemplate => 'Использовать';
+
+  @override
+  String get selectTemplatesParentFolder =>
+      'Выберите Родительскую Папку Шаблонов';
+
+  @override
+  String get templateSourceFolder => 'Исходная Папка';
+
+  @override
+  String get dateCreatedColumn => 'Создано';
+
+  @override
+  String get manageTemplateFolders => 'Управление Папками';
+
+  @override
+  String get addTemplateFolder => 'Добавить Папку';
+
+  @override
+  String get removeTemplateFolder => 'Удалить Папку Шаблонов';
+
+  @override
+  String removeTemplateFolderConfirm(String path) {
+    return 'Удалить \"$path\" из зарегистрированных папок шаблонов? Уже импортированные шаблоны не будут удалены.';
+  }
+
+  @override
+  String get noTemplateFoldersRegistered =>
+      'Нет зарегистрированных папок шаблонов';
+
+  @override
+  String get refreshTemplateFolders =>
+      'Обновить шаблоны из зарегистрированных папок';
+
+  @override
+  String lastRefreshed(String date) {
+    return 'Последнее обновление $date';
+  }
+
+  @override
+  String templatesRefreshedSummary(int count) {
+    return 'Добавлено новых шаблонов: $count';
+  }
+
+  @override
   String get importTodos => 'Импортировать Задачи из Файла';
 
   @override

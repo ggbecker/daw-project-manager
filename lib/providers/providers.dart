@@ -30,6 +30,8 @@ import '../models/release.dart';
 import '../models/profile.dart';
 import '../models/playlist.dart';
 import '../models/todo_template.dart';
+import '../models/project_template.dart';
+import '../models/template_root.dart';
 import '../models/project_event.dart';
 import '../repository/project_repository.dart';
 import '../utils/search_utils.dart';
@@ -1111,6 +1113,87 @@ class TodoTemplatesNotifier extends Notifier<void> {
 
 final todoTemplatesNotifierProvider = NotifierProvider<TodoTemplatesNotifier, void>(() {
   return TodoTemplatesNotifier();
+});
+
+// Project Templates Provider — "starter kit" folders a new project can be
+// created from. Global (not per-profile), mirrors TodoTemplate's box pattern.
+final projectTemplatesProvider = StreamProvider<List<ProjectTemplate>>((ref) async* {
+  await ensureHiveInitialized();
+  final box = await Hive.openBox<ProjectTemplate>('projectTemplates');
+
+  yield box.values.toList()..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+
+  await for (final _ in box.watch()) {
+    yield box.values.toList()..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+  }
+});
+
+class ProjectTemplatesNotifier extends Notifier<void> {
+  @override
+  void build() {}
+
+  Future<void> addTemplate(ProjectTemplate template) async {
+    await ensureHiveInitialized();
+    final box = await Hive.openBox<ProjectTemplate>('projectTemplates');
+    await box.put(template.id, template);
+  }
+
+  Future<void> updateTemplate(ProjectTemplate template) async {
+    await ensureHiveInitialized();
+    final box = await Hive.openBox<ProjectTemplate>('projectTemplates');
+    await box.put(template.id, template);
+  }
+
+  Future<void> deleteTemplate(String id) async {
+    await ensureHiveInitialized();
+    final box = await Hive.openBox<ProjectTemplate>('projectTemplates');
+    await box.delete(id);
+  }
+}
+
+final projectTemplatesNotifierProvider = NotifierProvider<ProjectTemplatesNotifier, void>(() {
+  return ProjectTemplatesNotifier();
+});
+
+// Template Roots Provider — registered parent folders scanned for template
+// subfolders. Global (not per-profile), refreshed manually (see
+// ProjectTemplateService.discoverTemplateCandidates) rather than watched.
+final templateRootsProvider = StreamProvider<List<TemplateRoot>>((ref) async* {
+  await ensureHiveInitialized();
+  final box = await Hive.openBox<TemplateRoot>('templateRoots');
+
+  yield box.values.toList()..sort((a, b) => b.addedAt.compareTo(a.addedAt));
+
+  await for (final _ in box.watch()) {
+    yield box.values.toList()..sort((a, b) => b.addedAt.compareTo(a.addedAt));
+  }
+});
+
+class TemplateRootsNotifier extends Notifier<void> {
+  @override
+  void build() {}
+
+  Future<void> addRoot(TemplateRoot root) async {
+    await ensureHiveInitialized();
+    final box = await Hive.openBox<TemplateRoot>('templateRoots');
+    await box.put(root.id, root);
+  }
+
+  Future<void> updateRoot(TemplateRoot root) async {
+    await ensureHiveInitialized();
+    final box = await Hive.openBox<TemplateRoot>('templateRoots');
+    await box.put(root.id, root);
+  }
+
+  Future<void> removeRoot(String id) async {
+    await ensureHiveInitialized();
+    final box = await Hive.openBox<TemplateRoot>('templateRoots');
+    await box.delete(id);
+  }
+}
+
+final templateRootsNotifierProvider = NotifierProvider<TemplateRootsNotifier, void>(() {
+  return TemplateRootsNotifier();
 });
 
 // Warn Before Quit Setting

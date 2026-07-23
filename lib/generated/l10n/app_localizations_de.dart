@@ -922,6 +922,86 @@ class AppLocalizationsDe extends AppLocalizations {
   String get errorLoadingTemplates => 'Fehler beim Laden der Vorlagen';
 
   @override
+  String get createProjectStartFrom => 'Wie möchten Sie starten?';
+
+  @override
+  String get createProjectStartFromHint =>
+      'Mit einem leeren Ordner beginnen oder eine registrierte Vorlage kopieren.';
+
+  @override
+  String get createProjectEmptyFolder => 'Leerer Ordner';
+
+  @override
+  String get createProjectFromTemplate => 'Aus Vorlage';
+
+  @override
+  String get selectTemplateMainFile =>
+      'Hauptprojektdatei der Vorlage auswählen';
+
+  @override
+  String get registerTemplate => 'Vorlage Registrieren';
+
+  @override
+  String get projectTemplates => 'Projektvorlagen';
+
+  @override
+  String get searchTemplates => 'Vorlagen suchen...';
+
+  @override
+  String get createFirstProjectTemplate =>
+      'Registrieren Sie einen Vorlagenordner zur Wiederverwendung für neue Projekte';
+
+  @override
+  String get noMatchingTemplates => 'Keine passenden Vorlagen';
+
+  @override
+  String get templateSourceMissing => 'Quellordner der Vorlage nicht gefunden';
+
+  @override
+  String get useTemplate => 'Verwenden';
+
+  @override
+  String get selectTemplatesParentFolder =>
+      'Übergeordneten Ordner der Vorlagen Auswählen';
+
+  @override
+  String get templateSourceFolder => 'Quellordner';
+
+  @override
+  String get dateCreatedColumn => 'Erstellt';
+
+  @override
+  String get manageTemplateFolders => 'Ordner Verwalten';
+
+  @override
+  String get addTemplateFolder => 'Ordner Hinzufügen';
+
+  @override
+  String get removeTemplateFolder => 'Vorlagenordner Entfernen';
+
+  @override
+  String removeTemplateFolderConfirm(String path) {
+    return '\"$path\" aus Ihren registrierten Vorlagenordnern entfernen? Bereits importierte Vorlagen werden nicht gelöscht.';
+  }
+
+  @override
+  String get noTemplateFoldersRegistered => 'Keine Vorlagenordner registriert';
+
+  @override
+  String get refreshTemplateFolders =>
+      'Vorlagen aus registrierten Ordnern aktualisieren';
+
+  @override
+  String lastRefreshed(String date) {
+    return 'Zuletzt aktualisiert $date';
+  }
+
+  @override
+  String templatesRefreshedSummary(int count) {
+    return '$count neue Vorlage(n) hinzugefügt';
+  }
+
+  @override
   String get importTodos => 'Aufgaben aus Datei importieren';
 
   @override

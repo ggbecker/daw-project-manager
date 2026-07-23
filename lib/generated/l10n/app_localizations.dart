@@ -1637,6 +1637,144 @@ abstract class AppLocalizations {
   /// **'Error loading templates'**
   String get errorLoadingTemplates;
 
+  /// No description provided for @createProjectStartFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'How do you want to start?'**
+  String get createProjectStartFrom;
+
+  /// No description provided for @createProjectStartFromHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Start from an empty folder or copy a registered template.'**
+  String get createProjectStartFromHint;
+
+  /// No description provided for @createProjectEmptyFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty Folder'**
+  String get createProjectEmptyFolder;
+
+  /// No description provided for @createProjectFromTemplate.
+  ///
+  /// In en, this message translates to:
+  /// **'From Template'**
+  String get createProjectFromTemplate;
+
+  /// No description provided for @selectTemplateMainFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Select the Template\'s Main Project File'**
+  String get selectTemplateMainFile;
+
+  /// No description provided for @registerTemplate.
+  ///
+  /// In en, this message translates to:
+  /// **'Register Template'**
+  String get registerTemplate;
+
+  /// No description provided for @projectTemplates.
+  ///
+  /// In en, this message translates to:
+  /// **'Project Templates'**
+  String get projectTemplates;
+
+  /// No description provided for @searchTemplates.
+  ///
+  /// In en, this message translates to:
+  /// **'Search templates...'**
+  String get searchTemplates;
+
+  /// No description provided for @createFirstProjectTemplate.
+  ///
+  /// In en, this message translates to:
+  /// **'Register a template folder to reuse for new projects'**
+  String get createFirstProjectTemplate;
+
+  /// No description provided for @noMatchingTemplates.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching templates'**
+  String get noMatchingTemplates;
+
+  /// No description provided for @templateSourceMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Template source folder not found'**
+  String get templateSourceMissing;
+
+  /// No description provided for @useTemplate.
+  ///
+  /// In en, this message translates to:
+  /// **'Use'**
+  String get useTemplate;
+
+  /// No description provided for @selectTemplatesParentFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Parent Folder of Templates'**
+  String get selectTemplatesParentFolder;
+
+  /// No description provided for @templateSourceFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Source Folder'**
+  String get templateSourceFolder;
+
+  /// No description provided for @dateCreatedColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'Created'**
+  String get dateCreatedColumn;
+
+  /// No description provided for @manageTemplateFolders.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Folders'**
+  String get manageTemplateFolders;
+
+  /// No description provided for @addTemplateFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Folder'**
+  String get addTemplateFolder;
+
+  /// No description provided for @removeTemplateFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Template Folder'**
+  String get removeTemplateFolder;
+
+  /// No description provided for @removeTemplateFolderConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove \"{path}\" from your registered template folders? Templates already imported from it will not be deleted.'**
+  String removeTemplateFolderConfirm(String path);
+
+  /// No description provided for @noTemplateFoldersRegistered.
+  ///
+  /// In en, this message translates to:
+  /// **'No template folders registered'**
+  String get noTemplateFoldersRegistered;
+
+  /// No description provided for @refreshTemplateFolders.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh templates from registered folders'**
+  String get refreshTemplateFolders;
+
+  /// No description provided for @lastRefreshed.
+  ///
+  /// In en, this message translates to:
+  /// **'Last refreshed {date}'**
+  String lastRefreshed(String date);
+
+  /// No description provided for @templatesRefreshedSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} new template(s) added'**
+  String templatesRefreshedSummary(int count);
+
   /// No description provided for @importTodos.
   ///
   /// In en, this message translates to:

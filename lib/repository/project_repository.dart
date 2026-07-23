@@ -14,6 +14,8 @@ import '../models/release.dart';
 import '../models/release_file.dart';
 import '../models/todo_item.dart';
 import '../models/todo_template.dart';
+import '../models/project_template.dart';
+import '../models/template_root.dart';
 import '../models/playlist.dart';
 import '../models/project_event.dart';
 import '../services/metadata_extractor.dart';
@@ -205,6 +207,12 @@ class ProjectRepository {
     }
     if (!Hive.isAdapterRegistered(11)) {
       Hive.registerAdapter(ProjectEventAdapter());
+    }
+    if (!Hive.isAdapterRegistered(12)) {
+      Hive.registerAdapter(ProjectTemplateAdapter());
+    }
+    if (!Hive.isAdapterRegistered(13)) {
+      Hive.registerAdapter(TemplateRootAdapter());
     }
 
     // Get current profile
@@ -734,7 +742,7 @@ class ProjectRepository {
     // Clear global boxes.
     const globalBoxNames = [
       'settings', 'app_settings', 'notification_preferences',
-      'todoTemplates', 'profiles', 'backup_timestamps',
+      'todoTemplates', 'projectTemplates', 'templateRoots', 'profiles', 'backup_timestamps',
       // Legacy / misc boxes.
       'music_projects', 'projects', 'releases', 'roots',
     ];

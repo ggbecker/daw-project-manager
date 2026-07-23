@@ -717,6 +717,44 @@
   "noTemplatesAvailable": "No hay plantillas disponibles. Crea una primero.",
   "templateImported": "Plantilla \"{name}\" importada ({count} elementos)",
   "errorLoadingTemplates": "Error al cargar plantillas",
+  "createProjectStartFrom": "¿Cómo quieres empezar?",
+  "createProjectStartFromHint": "Empieza desde una carpeta vacía o copia una plantilla registrada.",
+  "createProjectEmptyFolder": "Carpeta Vacía",
+  "createProjectFromTemplate": "Desde Plantilla",
+  "selectTemplateMainFile": "Selecciona el Archivo Principal de la Plantilla",
+  "registerTemplate": "Registrar Plantilla",
+  "projectTemplates": "Plantillas de Proyecto",
+  "searchTemplates": "Buscar plantillas...",
+  "createFirstProjectTemplate": "Registra una carpeta de plantilla para reutilizar en nuevos proyectos",
+  "noMatchingTemplates": "No hay plantillas coincidentes",
+  "templateSourceMissing": "Carpeta de origen de la plantilla no encontrada",
+  "useTemplate": "Usar",
+  "selectTemplatesParentFolder": "Selecciona la Carpeta Principal de Plantillas",
+  "templateSourceFolder": "Carpeta de Origen",
+  "dateCreatedColumn": "Creado",
+  "manageTemplateFolders": "Gestionar Carpetas",
+  "addTemplateFolder": "Añadir Carpeta",
+  "removeTemplateFolder": "Eliminar Carpeta de Plantillas",
+  "removeTemplateFolderConfirm": "¿Eliminar \"{path}\" de tus carpetas de plantillas registradas? Las plantillas ya importadas no se eliminarán.",
+  "@removeTemplateFolderConfirm": {
+    "placeholders": {
+      "path": { "type": "String" }
+    }
+  },
+  "noTemplateFoldersRegistered": "No hay carpetas de plantillas registradas",
+  "refreshTemplateFolders": "Actualizar plantillas desde las carpetas registradas",
+  "lastRefreshed": "Última actualización {date}",
+  "@lastRefreshed": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "templatesRefreshedSummary": "{count} plantilla(s) nueva(s) añadida(s)",
+  "@templatesRefreshedSummary": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "importTodos": "Importar Tareas desde Archivo",
   "noTodosInFile": "No se encontraron tareas en el archivo",
   "todosImported": "{count} tarea(s) importada(s) exitosamente",

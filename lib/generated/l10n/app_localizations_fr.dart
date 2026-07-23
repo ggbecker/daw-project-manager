@@ -925,6 +925,87 @@ class AppLocalizationsFr extends AppLocalizations {
   String get errorLoadingTemplates => 'Erreur de chargement des modèles';
 
   @override
+  String get createProjectStartFrom => 'Comment souhaitez-vous commencer ?';
+
+  @override
+  String get createProjectStartFromHint =>
+      'Partez d\'un dossier vide ou copiez un modèle enregistré.';
+
+  @override
+  String get createProjectEmptyFolder => 'Dossier Vide';
+
+  @override
+  String get createProjectFromTemplate => 'Depuis un Modèle';
+
+  @override
+  String get selectTemplateMainFile =>
+      'Sélectionner le Fichier Principal du Modèle';
+
+  @override
+  String get registerTemplate => 'Enregistrer le Modèle';
+
+  @override
+  String get projectTemplates => 'Modèles de Projet';
+
+  @override
+  String get searchTemplates => 'Rechercher des modèles...';
+
+  @override
+  String get createFirstProjectTemplate =>
+      'Enregistrez un dossier modèle à réutiliser pour de nouveaux projets';
+
+  @override
+  String get noMatchingTemplates => 'Aucun modèle correspondant';
+
+  @override
+  String get templateSourceMissing => 'Dossier source du modèle introuvable';
+
+  @override
+  String get useTemplate => 'Utiliser';
+
+  @override
+  String get selectTemplatesParentFolder =>
+      'Sélectionner le Dossier Parent des Modèles';
+
+  @override
+  String get templateSourceFolder => 'Dossier Source';
+
+  @override
+  String get dateCreatedColumn => 'Créé';
+
+  @override
+  String get manageTemplateFolders => 'Gérer les Dossiers';
+
+  @override
+  String get addTemplateFolder => 'Ajouter un Dossier';
+
+  @override
+  String get removeTemplateFolder => 'Supprimer le Dossier de Modèles';
+
+  @override
+  String removeTemplateFolderConfirm(String path) {
+    return 'Supprimer \"$path\" de vos dossiers de modèles enregistrés ? Les modèles déjà importés ne seront pas supprimés.';
+  }
+
+  @override
+  String get noTemplateFoldersRegistered =>
+      'Aucun dossier de modèles enregistré';
+
+  @override
+  String get refreshTemplateFolders =>
+      'Actualiser les modèles depuis les dossiers enregistrés';
+
+  @override
+  String lastRefreshed(String date) {
+    return 'Dernière actualisation $date';
+  }
+
+  @override
+  String templatesRefreshedSummary(int count) {
+    return '$count nouveau(x) modèle(s) ajouté(s)';
+  }
+
+  @override
   String get importTodos => 'Importer des Tâches depuis un Fichier';
 
   @override

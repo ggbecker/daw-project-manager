@@ -717,6 +717,44 @@
   "noTemplatesAvailable": "Nessun modello disponibile. Creane uno prima.",
   "templateImported": "Modello \"{name}\" importato ({count} elementi)",
   "errorLoadingTemplates": "Errore caricamento modelli",
+  "createProjectStartFrom": "Come vuoi iniziare?",
+  "createProjectStartFromHint": "Inizia da una cartella vuota o copia un modello registrato.",
+  "createProjectEmptyFolder": "Cartella Vuota",
+  "createProjectFromTemplate": "Da Modello",
+  "selectTemplateMainFile": "Seleziona il File Principale del Modello",
+  "registerTemplate": "Registra Modello",
+  "projectTemplates": "Modelli di Progetto",
+  "searchTemplates": "Cerca modelli...",
+  "createFirstProjectTemplate": "Registra una cartella modello da riutilizzare per nuovi progetti",
+  "noMatchingTemplates": "Nessun modello corrispondente",
+  "templateSourceMissing": "Cartella di origine del modello non trovata",
+  "useTemplate": "Usa",
+  "selectTemplatesParentFolder": "Seleziona la Cartella Principale dei Modelli",
+  "templateSourceFolder": "Cartella di Origine",
+  "dateCreatedColumn": "Creato",
+  "manageTemplateFolders": "Gestisci Cartelle",
+  "addTemplateFolder": "Aggiungi Cartella",
+  "removeTemplateFolder": "Rimuovi Cartella Modello",
+  "removeTemplateFolderConfirm": "Rimuovere \"{path}\" dalle cartelle modello registrate? I modelli già importati non verranno eliminati.",
+  "@removeTemplateFolderConfirm": {
+    "placeholders": {
+      "path": { "type": "String" }
+    }
+  },
+  "noTemplateFoldersRegistered": "Nessuna cartella modello registrata",
+  "refreshTemplateFolders": "Aggiorna i modelli dalle cartelle registrate",
+  "lastRefreshed": "Ultimo aggiornamento {date}",
+  "@lastRefreshed": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "templatesRefreshedSummary": "{count} nuovo/i modello/i aggiunto/i",
+  "@templatesRefreshedSummary": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "importTodos": "Importa Attività da File",
   "noTodosInFile": "Nessuna attività trovata nel file",
   "todosImported": "{count} attività importata/e con successo",

@@ -717,6 +717,44 @@
   "noTemplatesAvailable": "テンプレートがありません。最初に作成してください。",
   "templateImported": "テンプレート「{name}」をインポート（{count}項目）",
   "errorLoadingTemplates": "テンプレート読み込みエラー",
+  "createProjectStartFrom": "どのように開始しますか？",
+  "createProjectStartFromHint": "空のフォルダから開始するか、登録済みテンプレートをコピーします。",
+  "createProjectEmptyFolder": "空のフォルダ",
+  "createProjectFromTemplate": "テンプレートから",
+  "selectTemplateMainFile": "テンプレートのメインプロジェクトファイルを選択",
+  "registerTemplate": "テンプレートを登録",
+  "projectTemplates": "プロジェクトテンプレート",
+  "searchTemplates": "テンプレートを検索...",
+  "createFirstProjectTemplate": "新しいプロジェクトで再利用するテンプレートフォルダを登録します",
+  "noMatchingTemplates": "一致するテンプレートがありません",
+  "templateSourceMissing": "テンプレートの元フォルダが見つかりません",
+  "useTemplate": "使用",
+  "selectTemplatesParentFolder": "テンプレートの親フォルダを選択",
+  "templateSourceFolder": "元フォルダ",
+  "dateCreatedColumn": "作成日",
+  "manageTemplateFolders": "フォルダを管理",
+  "addTemplateFolder": "フォルダを追加",
+  "removeTemplateFolder": "テンプレートフォルダを削除",
+  "removeTemplateFolderConfirm": "登録済みのテンプレートフォルダから「{path}」を削除しますか？すでにインポート済みのテンプレートは削除されません。",
+  "@removeTemplateFolderConfirm": {
+    "placeholders": {
+      "path": { "type": "String" }
+    }
+  },
+  "noTemplateFoldersRegistered": "登録されたテンプレートフォルダがありません",
+  "refreshTemplateFolders": "登録フォルダからテンプレートを更新",
+  "lastRefreshed": "最終更新: {date}",
+  "@lastRefreshed": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "templatesRefreshedSummary": "{count}件の新しいテンプレートを追加しました",
+  "@templatesRefreshedSummary": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "importTodos": "ファイルからタスクをインポート",
   "noTodosInFile": "ファイルにタスクが見つかりません",
   "todosImported": "{count}個のタスクをインポートしました",

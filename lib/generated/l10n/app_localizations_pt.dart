@@ -920,6 +920,88 @@ class AppLocalizationsPt extends AppLocalizations {
   String get errorLoadingTemplates => 'Erro ao carregar templates';
 
   @override
+  String get createProjectStartFrom => 'Como você quer começar?';
+
+  @override
+  String get createProjectStartFromHint =>
+      'Comece com uma pasta vazia ou copie um template registrado.';
+
+  @override
+  String get createProjectEmptyFolder => 'Pasta Vazia';
+
+  @override
+  String get createProjectFromTemplate => 'A partir de Template';
+
+  @override
+  String get selectTemplateMainFile =>
+      'Selecione o Arquivo Principal do Template';
+
+  @override
+  String get registerTemplate => 'Registrar Template';
+
+  @override
+  String get projectTemplates => 'Templates de Projeto';
+
+  @override
+  String get searchTemplates => 'Buscar templates...';
+
+  @override
+  String get createFirstProjectTemplate =>
+      'Registre uma pasta de template para reutilizar em novos projetos';
+
+  @override
+  String get noMatchingTemplates => 'Nenhum template correspondente';
+
+  @override
+  String get templateSourceMissing =>
+      'Pasta de origem do template não encontrada';
+
+  @override
+  String get useTemplate => 'Usar';
+
+  @override
+  String get selectTemplatesParentFolder =>
+      'Selecione a Pasta Principal dos Templates';
+
+  @override
+  String get templateSourceFolder => 'Pasta de Origem';
+
+  @override
+  String get dateCreatedColumn => 'Criado';
+
+  @override
+  String get manageTemplateFolders => 'Gerenciar Pastas';
+
+  @override
+  String get addTemplateFolder => 'Adicionar Pasta';
+
+  @override
+  String get removeTemplateFolder => 'Remover Pasta de Template';
+
+  @override
+  String removeTemplateFolderConfirm(String path) {
+    return 'Remover \"$path\" das suas pastas de templates registradas? Templates já importados não serão excluídos.';
+  }
+
+  @override
+  String get noTemplateFoldersRegistered =>
+      'Nenhuma pasta de template registrada';
+
+  @override
+  String get refreshTemplateFolders =>
+      'Atualizar templates das pastas registradas';
+
+  @override
+  String lastRefreshed(String date) {
+    return 'Última atualização $date';
+  }
+
+  @override
+  String templatesRefreshedSummary(int count) {
+    return '$count novo(s) template(s) adicionado(s)';
+  }
+
+  @override
   String get importTodos => 'Importar Tarefas de Arquivo';
 
   @override

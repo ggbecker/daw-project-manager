@@ -908,6 +908,81 @@ class AppLocalizationsJa extends AppLocalizations {
   String get errorLoadingTemplates => 'テンプレート読み込みエラー';
 
   @override
+  String get createProjectStartFrom => 'どのように開始しますか？';
+
+  @override
+  String get createProjectStartFromHint => '空のフォルダから開始するか、登録済みテンプレートをコピーします。';
+
+  @override
+  String get createProjectEmptyFolder => '空のフォルダ';
+
+  @override
+  String get createProjectFromTemplate => 'テンプレートから';
+
+  @override
+  String get selectTemplateMainFile => 'テンプレートのメインプロジェクトファイルを選択';
+
+  @override
+  String get registerTemplate => 'テンプレートを登録';
+
+  @override
+  String get projectTemplates => 'プロジェクトテンプレート';
+
+  @override
+  String get searchTemplates => 'テンプレートを検索...';
+
+  @override
+  String get createFirstProjectTemplate => '新しいプロジェクトで再利用するテンプレートフォルダを登録します';
+
+  @override
+  String get noMatchingTemplates => '一致するテンプレートがありません';
+
+  @override
+  String get templateSourceMissing => 'テンプレートの元フォルダが見つかりません';
+
+  @override
+  String get useTemplate => '使用';
+
+  @override
+  String get selectTemplatesParentFolder => 'テンプレートの親フォルダを選択';
+
+  @override
+  String get templateSourceFolder => '元フォルダ';
+
+  @override
+  String get dateCreatedColumn => '作成日';
+
+  @override
+  String get manageTemplateFolders => 'フォルダを管理';
+
+  @override
+  String get addTemplateFolder => 'フォルダを追加';
+
+  @override
+  String get removeTemplateFolder => 'テンプレートフォルダを削除';
+
+  @override
+  String removeTemplateFolderConfirm(String path) {
+    return '登録済みのテンプレートフォルダから「$path」を削除しますか？すでにインポート済みのテンプレートは削除されません。';
+  }
+
+  @override
+  String get noTemplateFoldersRegistered => '登録されたテンプレートフォルダがありません';
+
+  @override
+  String get refreshTemplateFolders => '登録フォルダからテンプレートを更新';
+
+  @override
+  String lastRefreshed(String date) {
+    return '最終更新: $date';
+  }
+
+  @override
+  String templatesRefreshedSummary(int count) {
+    return '$count件の新しいテンプレートを追加しました';
+  }
+
+  @override
   String get importTodos => 'ファイルからタスクをインポート';
 
   @override

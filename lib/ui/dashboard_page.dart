@@ -54,6 +54,7 @@ import '../generated/l10n/app_localizations.dart';
 import '../main.dart' show navigatorKey;
 import 'session_actions.dart';
 import 'dialogs/create_project_dialog.dart';
+import 'project_templates_page.dart';
 import '../models/pending_folder.dart';
 
 import 'package:hive_ce_flutter/hive_flutter.dart';
@@ -1966,6 +1967,16 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                         ),
                       ),
                     ),
+                  if (!MobileUtils.isMobile() && !isLeftRail)
+                    Tooltip(
+                      message: AppLocalizations.of(context)!.projectTemplates,
+                      child: IconButton(
+                        icon: const Icon(Icons.folder_copy_outlined),
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const ProjectTemplatesPage()),
+                        ),
+                      ),
+                    ),
                   const SizedBox(width: 16),
                   // Active DAW session chip / idle suggestions.
                   // Fixed height prevents the bar from resizing when the chip appears.
@@ -2382,6 +2393,20 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                 if (!railCollapsed)
                                   Text(
                                     AppLocalizations.of(context)!.createProject,
+                                    style: Theme.of(context).textTheme.labelSmall,
+                                    textAlign: TextAlign.center,
+                                  ),
+                                const SizedBox(height: 8),
+                                // Manage project templates
+                                IconButton(
+                                  icon: const Icon(Icons.folder_copy_outlined),
+                                  onPressed: () => Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (_) => const ProjectTemplatesPage()),
+                                  ),
+                                ),
+                                if (!railCollapsed)
+                                  Text(
+                                    AppLocalizations.of(context)!.projectTemplates,
                                     style: Theme.of(context).textTheme.labelSmall,
                                     textAlign: TextAlign.center,
                                   ),

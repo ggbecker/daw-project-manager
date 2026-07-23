@@ -879,6 +879,44 @@
 }
   },
   "errorLoadingTemplates": "Error loading templates",
+  "createProjectStartFrom": "How do you want to start?",
+  "createProjectStartFromHint": "Start from an empty folder or copy a registered template.",
+  "createProjectEmptyFolder": "Empty Folder",
+  "createProjectFromTemplate": "From Template",
+  "selectTemplateMainFile": "Select the Template's Main Project File",
+  "registerTemplate": "Register Template",
+  "projectTemplates": "Project Templates",
+  "searchTemplates": "Search templates...",
+  "createFirstProjectTemplate": "Register a template folder to reuse for new projects",
+  "noMatchingTemplates": "No matching templates",
+  "templateSourceMissing": "Template source folder not found",
+  "useTemplate": "Use",
+  "selectTemplatesParentFolder": "Select Parent Folder of Templates",
+  "templateSourceFolder": "Source Folder",
+  "dateCreatedColumn": "Created",
+  "manageTemplateFolders": "Manage Folders",
+  "addTemplateFolder": "Add Folder",
+  "removeTemplateFolder": "Remove Template Folder",
+  "removeTemplateFolderConfirm": "Remove \"{path}\" from your registered template folders? Templates already imported from it will not be deleted.",
+  "@removeTemplateFolderConfirm": {
+    "placeholders": {
+      "path": { "type": "String" }
+    }
+  },
+  "noTemplateFoldersRegistered": "No template folders registered",
+  "refreshTemplateFolders": "Refresh templates from registered folders",
+  "lastRefreshed": "Last refreshed {date}",
+  "@lastRefreshed": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "templatesRefreshedSummary": "{count} new template(s) added",
+  "@templatesRefreshedSummary": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "importTodos": "Import Todos from File",
   "noTodosInFile": "No todos found in file",
   "todosImported": "{count} todo(s) imported successfully",

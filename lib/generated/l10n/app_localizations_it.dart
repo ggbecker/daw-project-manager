@@ -921,6 +921,88 @@ class AppLocalizationsIt extends AppLocalizations {
   String get errorLoadingTemplates => 'Errore caricamento modelli';
 
   @override
+  String get createProjectStartFrom => 'Come vuoi iniziare?';
+
+  @override
+  String get createProjectStartFromHint =>
+      'Inizia da una cartella vuota o copia un modello registrato.';
+
+  @override
+  String get createProjectEmptyFolder => 'Cartella Vuota';
+
+  @override
+  String get createProjectFromTemplate => 'Da Modello';
+
+  @override
+  String get selectTemplateMainFile =>
+      'Seleziona il File Principale del Modello';
+
+  @override
+  String get registerTemplate => 'Registra Modello';
+
+  @override
+  String get projectTemplates => 'Modelli di Progetto';
+
+  @override
+  String get searchTemplates => 'Cerca modelli...';
+
+  @override
+  String get createFirstProjectTemplate =>
+      'Registra una cartella modello da riutilizzare per nuovi progetti';
+
+  @override
+  String get noMatchingTemplates => 'Nessun modello corrispondente';
+
+  @override
+  String get templateSourceMissing =>
+      'Cartella di origine del modello non trovata';
+
+  @override
+  String get useTemplate => 'Usa';
+
+  @override
+  String get selectTemplatesParentFolder =>
+      'Seleziona la Cartella Principale dei Modelli';
+
+  @override
+  String get templateSourceFolder => 'Cartella di Origine';
+
+  @override
+  String get dateCreatedColumn => 'Creato';
+
+  @override
+  String get manageTemplateFolders => 'Gestisci Cartelle';
+
+  @override
+  String get addTemplateFolder => 'Aggiungi Cartella';
+
+  @override
+  String get removeTemplateFolder => 'Rimuovi Cartella Modello';
+
+  @override
+  String removeTemplateFolderConfirm(String path) {
+    return 'Rimuovere \"$path\" dalle cartelle modello registrate? I modelli già importati non verranno eliminati.';
+  }
+
+  @override
+  String get noTemplateFoldersRegistered =>
+      'Nessuna cartella modello registrata';
+
+  @override
+  String get refreshTemplateFolders =>
+      'Aggiorna i modelli dalle cartelle registrate';
+
+  @override
+  String lastRefreshed(String date) {
+    return 'Ultimo aggiornamento $date';
+  }
+
+  @override
+  String templatesRefreshedSummary(int count) {
+    return '$count nuovo/i modello/i aggiunto/i';
+  }
+
+  @override
   String get importTodos => 'Importa Attività da File';
 
   @override

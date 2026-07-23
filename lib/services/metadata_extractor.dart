@@ -121,7 +121,11 @@ class MetadataExtractor {
     );
   }
 
-  /// Determines DAW type from file extension
+  /// Determines DAW type from a file extension (e.g. `.rpp` -> `'Reaper'`),
+  /// without touching the filesystem — useful anywhere a DAW icon/name is
+  /// needed for a path that may not exist yet or isn't worth a full extract.
+  static String? getDawTypeFromExtension(String ext) => _getDawTypeFromExtension(ext);
+
   static String? _getDawTypeFromExtension(String ext) {
     switch (ext) {
       case '.als':

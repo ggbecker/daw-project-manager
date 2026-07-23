@@ -920,6 +920,85 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorLoadingTemplates => 'Error loading templates';
 
   @override
+  String get createProjectStartFrom => 'How do you want to start?';
+
+  @override
+  String get createProjectStartFromHint =>
+      'Start from an empty folder or copy a registered template.';
+
+  @override
+  String get createProjectEmptyFolder => 'Empty Folder';
+
+  @override
+  String get createProjectFromTemplate => 'From Template';
+
+  @override
+  String get selectTemplateMainFile =>
+      'Select the Template\'s Main Project File';
+
+  @override
+  String get registerTemplate => 'Register Template';
+
+  @override
+  String get projectTemplates => 'Project Templates';
+
+  @override
+  String get searchTemplates => 'Search templates...';
+
+  @override
+  String get createFirstProjectTemplate =>
+      'Register a template folder to reuse for new projects';
+
+  @override
+  String get noMatchingTemplates => 'No matching templates';
+
+  @override
+  String get templateSourceMissing => 'Template source folder not found';
+
+  @override
+  String get useTemplate => 'Use';
+
+  @override
+  String get selectTemplatesParentFolder => 'Select Parent Folder of Templates';
+
+  @override
+  String get templateSourceFolder => 'Source Folder';
+
+  @override
+  String get dateCreatedColumn => 'Created';
+
+  @override
+  String get manageTemplateFolders => 'Manage Folders';
+
+  @override
+  String get addTemplateFolder => 'Add Folder';
+
+  @override
+  String get removeTemplateFolder => 'Remove Template Folder';
+
+  @override
+  String removeTemplateFolderConfirm(String path) {
+    return 'Remove \"$path\" from your registered template folders? Templates already imported from it will not be deleted.';
+  }
+
+  @override
+  String get noTemplateFoldersRegistered => 'No template folders registered';
+
+  @override
+  String get refreshTemplateFolders =>
+      'Refresh templates from registered folders';
+
+  @override
+  String lastRefreshed(String date) {
+    return 'Last refreshed $date';
+  }
+
+  @override
+  String templatesRefreshedSummary(int count) {
+    return '$count new template(s) added';
+  }
+
+  @override
   String get importTodos => 'Import Todos from File';
 
   @override

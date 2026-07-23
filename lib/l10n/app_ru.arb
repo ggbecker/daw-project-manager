@@ -717,6 +717,44 @@
   "noTemplatesAvailable": "Нет доступных шаблонов. Создайте сначала.",
   "templateImported": "Шаблон \"{name}\" импортирован ({count} элементов)",
   "errorLoadingTemplates": "Ошибка загрузки шаблонов",
+  "createProjectStartFrom": "Как вы хотите начать?",
+  "createProjectStartFromHint": "Начните с пустой папки или скопируйте зарегистрированный шаблон.",
+  "createProjectEmptyFolder": "Пустая Папка",
+  "createProjectFromTemplate": "Из Шаблона",
+  "selectTemplateMainFile": "Выберите Главный Файл Проекта Шаблона",
+  "registerTemplate": "Зарегистрировать Шаблон",
+  "projectTemplates": "Шаблоны Проектов",
+  "searchTemplates": "Поиск шаблонов...",
+  "createFirstProjectTemplate": "Зарегистрируйте папку шаблона для повторного использования в новых проектах",
+  "noMatchingTemplates": "Нет подходящих шаблонов",
+  "templateSourceMissing": "Исходная папка шаблона не найдена",
+  "useTemplate": "Использовать",
+  "selectTemplatesParentFolder": "Выберите Родительскую Папку Шаблонов",
+  "templateSourceFolder": "Исходная Папка",
+  "dateCreatedColumn": "Создано",
+  "manageTemplateFolders": "Управление Папками",
+  "addTemplateFolder": "Добавить Папку",
+  "removeTemplateFolder": "Удалить Папку Шаблонов",
+  "removeTemplateFolderConfirm": "Удалить \"{path}\" из зарегистрированных папок шаблонов? Уже импортированные шаблоны не будут удалены.",
+  "@removeTemplateFolderConfirm": {
+    "placeholders": {
+      "path": { "type": "String" }
+    }
+  },
+  "noTemplateFoldersRegistered": "Нет зарегистрированных папок шаблонов",
+  "refreshTemplateFolders": "Обновить шаблоны из зарегистрированных папок",
+  "lastRefreshed": "Последнее обновление {date}",
+  "@lastRefreshed": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "templatesRefreshedSummary": "Добавлено новых шаблонов: {count}",
+  "@templatesRefreshedSummary": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "importTodos": "Импортировать Задачи из Файла",
   "noTodosInFile": "Задачи не найдены в файле",
   "todosImported": "{count} задач(и) импортировано успешно",

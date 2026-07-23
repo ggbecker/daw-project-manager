@@ -922,6 +922,88 @@ class AppLocalizationsEs extends AppLocalizations {
   String get errorLoadingTemplates => 'Error al cargar plantillas';
 
   @override
+  String get createProjectStartFrom => '¿Cómo quieres empezar?';
+
+  @override
+  String get createProjectStartFromHint =>
+      'Empieza desde una carpeta vacía o copia una plantilla registrada.';
+
+  @override
+  String get createProjectEmptyFolder => 'Carpeta Vacía';
+
+  @override
+  String get createProjectFromTemplate => 'Desde Plantilla';
+
+  @override
+  String get selectTemplateMainFile =>
+      'Selecciona el Archivo Principal de la Plantilla';
+
+  @override
+  String get registerTemplate => 'Registrar Plantilla';
+
+  @override
+  String get projectTemplates => 'Plantillas de Proyecto';
+
+  @override
+  String get searchTemplates => 'Buscar plantillas...';
+
+  @override
+  String get createFirstProjectTemplate =>
+      'Registra una carpeta de plantilla para reutilizar en nuevos proyectos';
+
+  @override
+  String get noMatchingTemplates => 'No hay plantillas coincidentes';
+
+  @override
+  String get templateSourceMissing =>
+      'Carpeta de origen de la plantilla no encontrada';
+
+  @override
+  String get useTemplate => 'Usar';
+
+  @override
+  String get selectTemplatesParentFolder =>
+      'Selecciona la Carpeta Principal de Plantillas';
+
+  @override
+  String get templateSourceFolder => 'Carpeta de Origen';
+
+  @override
+  String get dateCreatedColumn => 'Creado';
+
+  @override
+  String get manageTemplateFolders => 'Gestionar Carpetas';
+
+  @override
+  String get addTemplateFolder => 'Añadir Carpeta';
+
+  @override
+  String get removeTemplateFolder => 'Eliminar Carpeta de Plantillas';
+
+  @override
+  String removeTemplateFolderConfirm(String path) {
+    return '¿Eliminar \"$path\" de tus carpetas de plantillas registradas? Las plantillas ya importadas no se eliminarán.';
+  }
+
+  @override
+  String get noTemplateFoldersRegistered =>
+      'No hay carpetas de plantillas registradas';
+
+  @override
+  String get refreshTemplateFolders =>
+      'Actualizar plantillas desde las carpetas registradas';
+
+  @override
+  String lastRefreshed(String date) {
+    return 'Última actualización $date';
+  }
+
+  @override
+  String templatesRefreshedSummary(int count) {
+    return '$count plantilla(s) nueva(s) añadida(s)';
+  }
+
+  @override
   String get importTodos => 'Importar Tareas desde Archivo';
 
   @override

@@ -717,6 +717,44 @@
   "noTemplatesAvailable": "Aucun modèle disponible. Créez-en un d'abord.",
   "templateImported": "Modèle \"{name}\" importé ({count} éléments)",
   "errorLoadingTemplates": "Erreur de chargement des modèles",
+  "createProjectStartFrom": "Comment souhaitez-vous commencer ?",
+  "createProjectStartFromHint": "Partez d'un dossier vide ou copiez un modèle enregistré.",
+  "createProjectEmptyFolder": "Dossier Vide",
+  "createProjectFromTemplate": "Depuis un Modèle",
+  "selectTemplateMainFile": "Sélectionner le Fichier Principal du Modèle",
+  "registerTemplate": "Enregistrer le Modèle",
+  "projectTemplates": "Modèles de Projet",
+  "searchTemplates": "Rechercher des modèles...",
+  "createFirstProjectTemplate": "Enregistrez un dossier modèle à réutiliser pour de nouveaux projets",
+  "noMatchingTemplates": "Aucun modèle correspondant",
+  "templateSourceMissing": "Dossier source du modèle introuvable",
+  "useTemplate": "Utiliser",
+  "selectTemplatesParentFolder": "Sélectionner le Dossier Parent des Modèles",
+  "templateSourceFolder": "Dossier Source",
+  "dateCreatedColumn": "Créé",
+  "manageTemplateFolders": "Gérer les Dossiers",
+  "addTemplateFolder": "Ajouter un Dossier",
+  "removeTemplateFolder": "Supprimer le Dossier de Modèles",
+  "removeTemplateFolderConfirm": "Supprimer \"{path}\" de vos dossiers de modèles enregistrés ? Les modèles déjà importés ne seront pas supprimés.",
+  "@removeTemplateFolderConfirm": {
+    "placeholders": {
+      "path": { "type": "String" }
+    }
+  },
+  "noTemplateFoldersRegistered": "Aucun dossier de modèles enregistré",
+  "refreshTemplateFolders": "Actualiser les modèles depuis les dossiers enregistrés",
+  "lastRefreshed": "Dernière actualisation {date}",
+  "@lastRefreshed": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "templatesRefreshedSummary": "{count} nouveau(x) modèle(s) ajouté(s)",
+  "@templatesRefreshedSummary": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "importTodos": "Importer des Tâches depuis un Fichier",
   "noTodosInFile": "Aucune tâche trouvée dans le fichier",
   "todosImported": "{count} tâche(s) importée(s) avec succès",

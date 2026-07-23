@@ -9,15 +9,27 @@ import 'package:path/path.dart' as p;
 
 import '../../generated/l10n/app_localizations.dart';
 import '../../models/pending_folder.dart';
+import '../../models/project_template.dart';
 import '../../models/scan_root.dart';
 import '../../providers/providers.dart';
 import '../../services/daw_detector.dart';
+import '../../services/metadata_extractor.dart';
+import '../../services/project_template_service.dart';
+import '../../utils/daw_logo.dart';
 import '../../utils/file_launcher.dart';
+import '../project_templates_page.dart';
 
 enum _NamingScheme { artistTrack, collab, dateTrack, custom }
 
+enum _StartMode { emptyFolder, template }
+
 class CreateProjectDialog extends ConsumerStatefulWidget {
-  const CreateProjectDialog({super.key});
+  /// Pre-selects a template and jumps straight to the template flow — used
+  /// by "Use as new project" on [ProjectTemplatesPage] so the user doesn't
+  /// have to find the same template again inside this wizard.
+  final ProjectTemplate? initialTemplate;
+
+  const CreateProjectDialog({super.key, this.initialTemplate});
 
   @override
   ConsumerState<CreateProjectDialog> createState() => _CreateProjectDialogState();
@@ -39,7 +51,11 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
   bool _isFolderValid = true;
   String? _folderError;
 
-  // Step 3: DAW
+  // Step 3: Start (empty folder vs. template)
+  _StartMode _startMode = _StartMode.emptyFolder;
+  ProjectTemplate? _selectedTemplate;
+
+  // Step 4: DAW (only reachable when _startMode is emptyFolder)
   List<DetectedDaw>? _detectedDaws;
   bool _detectingDaws = false;
   DetectedDaw? _selectedDaw;
@@ -64,6 +80,10 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
     _customNameController.addListener(_onNameChanged);
     _includeTimestamp =
         Hive.box<String>('settings').get('createProjectIncludeDate') == 'true';
+    if (widget.initialTemplate != null) {
+      _startMode = _StartMode.template;
+      _selectedTemplate = widget.initialTemplate;
+    }
   }
 
   @override
@@ -237,6 +257,65 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
     }
   }
 
+  /// Copies the selected template into a new project folder, renames its
+  /// main file to match, and registers the result as a real project (there's
+  /// no PendingFolder placeholder step here — the DAW file already exists
+  /// the moment the copy finishes). If session mode is on, the new project
+  /// becomes the active session directly instead of opening the DAW file;
+  /// otherwise the file is opened the same way "Open in DAW" does elsewhere.
+  Future<void> _finishFromTemplate() async {
+    if (_selectedRoot == null ||
+        _folderName.isEmpty ||
+        !_isFolderValid ||
+        _selectedTemplate == null) {
+      return;
+    }
+
+    final targetPath = p.join(_selectedRoot!.path, _folderName);
+    final folderName = _folderName;
+    final template = _selectedTemplate!;
+
+    final String newMainFilePath;
+    try {
+      newMainFilePath = await ProjectTemplateService.instantiate(
+        template: template,
+        destinationFolderPath: targetPath,
+        newProjectName: folderName,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${AppLocalizations.of(context)!.createProjectError}: $e')),
+        );
+      }
+      return;
+    }
+
+    final repo = await ref.read(repositoryProvider.future);
+    await repo.upsertFromFileSystemEntity(File(newMainFilePath), fullMetadata: true);
+
+    final sessionMode = ref.read(sessionModeProvider);
+    if (sessionMode) {
+      final createdProject = repo.getByPath(newMainFilePath);
+      if (createdProject != null) {
+        ref.read(activeProjectProvider.notifier).set(createdProject);
+      }
+    } else {
+      await FileLauncher.launchProject(newMainFilePath);
+    }
+
+    if (mounted) {
+      setState(() {
+        _folderCreated = true;
+        _createdPath = targetPath;
+        _createdFolderName = folderName;
+        _openedInDaw = false;
+        _trackSessionFromNow = false;
+        _createdPendingFolder = null;
+      });
+    }
+  }
+
   /// Applies session stamping (if opted in) then closes the dialog.
   Future<void> _closeSuccess({bool openFolder = false}) async {
     if (_trackSessionFromNow && _createdPendingFolder != null) {
@@ -382,10 +461,13 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
       );
     }
 
-    final totalSteps = _hasMultipleRoots ? 3 : 2;
-    final steps = _hasMultipleRoots
-        ? [_buildLocationStep(roots, l10n), _buildNamingStep(l10n), _buildDawStep(l10n)]
-        : [_buildNamingStep(l10n), _buildDawStep(l10n)];
+    final steps = [
+      if (_hasMultipleRoots) _buildLocationStep(roots, l10n),
+      _buildNamingStep(l10n),
+      _buildStartStep(l10n),
+      if (_startMode == _StartMode.emptyFolder) _buildDawStep(l10n),
+    ];
+    final totalSteps = steps.length;
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -711,6 +793,130 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
     );
   }
 
+  Widget _buildStartStep(AppLocalizations l10n) {
+    final templatesAsync = ref.watch(projectTemplatesProvider);
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l10n.createProjectStartFrom, style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 8),
+          Text(l10n.createProjectStartFromHint, style: Theme.of(context).textTheme.bodySmall),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _SchemeChip(
+                  label: l10n.createProjectEmptyFolder,
+                  selected: _startMode == _StartMode.emptyFolder,
+                  onTap: () => setState(() => _startMode = _StartMode.emptyFolder),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _SchemeChip(
+                  label: l10n.createProjectFromTemplate,
+                  selected: _startMode == _StartMode.template,
+                  onTap: () => setState(() => _startMode = _StartMode.template),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (_startMode == _StartMode.template)
+            Expanded(
+              child: templatesAsync.when(
+                data: (templates) {
+                  if (templates.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(l10n.noTemplatesYet, style: Theme.of(context).textTheme.bodyMedium),
+                          const SizedBox(height: 8),
+                          TextButton(
+                            onPressed: () => Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => const ProjectTemplatesPage()),
+                            ),
+                            child: Text(l10n.manageTemplates),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: ListView.separated(
+                          itemCount: templates.length,
+                          separatorBuilder: (_, _) => const SizedBox(height: 8),
+                          itemBuilder: (ctx, i) {
+                            final template = templates[i];
+                            final isSelected = _selectedTemplate?.id == template.id;
+                            final ext = p.extension(template.mainFileRelativePath);
+                            final dawType = MetadataExtractor.getDawTypeFromExtension(ext);
+                            final logoPath = getDawLogoPath(dawType);
+                            return InkWell(
+                              borderRadius: BorderRadius.circular(12),
+                              onTap: () => setState(() => _selectedTemplate = template),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 150),
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? Theme.of(context).colorScheme.primary
+                                        : Theme.of(context).dividerColor,
+                                    width: isSelected ? 2 : 1,
+                                  ),
+                                  color: isSelected
+                                      ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08)
+                                      : null,
+                                ),
+                                child: Row(
+                                  children: [
+                                    logoPath != null
+                                        ? Image.asset(logoPath, width: 24, height: 24)
+                                        : const Icon(Icons.piano_outlined),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        template.name,
+                                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                              fontWeight: isSelected ? FontWeight.bold : null,
+                                            ),
+                                      ),
+                                    ),
+                                    if (isSelected)
+                                      Icon(Icons.check_circle, color: Theme.of(context).colorScheme.primary),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const ProjectTemplatesPage()),
+                        ),
+                        child: Text(l10n.manageTemplates),
+                      ),
+                    ],
+                  );
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, stack) => Center(child: Text(l10n.errorLoadingTemplates)),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildDawStep(AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.all(24),
@@ -831,14 +1037,17 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
 
   Widget _buildFooter(AppLocalizations l10n, int totalSteps) {
     final namingStepIndex = _hasMultipleRoots ? 1 : 0;
-    final dawStepIndex = _hasMultipleRoots ? 2 : 1;
+    final startStepIndex = namingStepIndex + 1;
+    final dawStepIndex = startStepIndex + 1;
 
     final isNamingStep = _currentStep == namingStepIndex;
-    final isDawStep = _currentStep == dawStepIndex;
+    final isStartStep = _currentStep == startStepIndex;
+    final isDawStep = _startMode == _StartMode.emptyFolder && _currentStep == dawStepIndex;
     final isLocationStep = _hasMultipleRoots && _currentStep == 0;
 
     final canAdvanceFromLocation = _selectedRoot != null;
     final canAdvanceFromNaming = _isFolderValid && _folderName.isNotEmpty;
+    final canFinishFromTemplate = _startMode == _StartMode.template && _selectedTemplate != null;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
@@ -857,15 +1066,24 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
             )
           else if (isNamingStep)
             FilledButton(
-              onPressed: canAdvanceFromNaming
-                  ? () {
-                      _goToStep(dawStepIndex);
-                      if (_detectedDaws == null) _startDawDetection();
-                    }
-                  : null,
+              onPressed: canAdvanceFromNaming ? () => _goToStep(startStepIndex) : null,
               child: Text(l10n.next),
             )
-          else if (isDawStep) ...[
+          else if (isStartStep) ...[
+            if (_startMode == _StartMode.template)
+              FilledButton(
+                onPressed: canFinishFromTemplate ? _finishFromTemplate : null,
+                child: Text(l10n.createProjectCreateOnly),
+              )
+            else
+              FilledButton(
+                onPressed: () {
+                  _goToStep(dawStepIndex);
+                  if (_detectedDaws == null) _startDawDetection();
+                },
+                child: Text(l10n.next),
+              ),
+          ] else if (isDawStep) ...[
             if (_detectedDaws != null && _detectedDaws!.isNotEmpty) ...[
               OutlinedButton(
                 onPressed: () => _finish(openInDaw: false),

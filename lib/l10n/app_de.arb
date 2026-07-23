@@ -717,6 +717,44 @@
   "noTemplatesAvailable": "Keine Vorlagen verfügbar. Erstellen Sie zuerst eine.",
   "templateImported": "Vorlage \"{name}\" importiert ({count} Elemente)",
   "errorLoadingTemplates": "Fehler beim Laden der Vorlagen",
+  "createProjectStartFrom": "Wie möchten Sie starten?",
+  "createProjectStartFromHint": "Mit einem leeren Ordner beginnen oder eine registrierte Vorlage kopieren.",
+  "createProjectEmptyFolder": "Leerer Ordner",
+  "createProjectFromTemplate": "Aus Vorlage",
+  "selectTemplateMainFile": "Hauptprojektdatei der Vorlage auswählen",
+  "registerTemplate": "Vorlage Registrieren",
+  "projectTemplates": "Projektvorlagen",
+  "searchTemplates": "Vorlagen suchen...",
+  "createFirstProjectTemplate": "Registrieren Sie einen Vorlagenordner zur Wiederverwendung für neue Projekte",
+  "noMatchingTemplates": "Keine passenden Vorlagen",
+  "templateSourceMissing": "Quellordner der Vorlage nicht gefunden",
+  "useTemplate": "Verwenden",
+  "selectTemplatesParentFolder": "Übergeordneten Ordner der Vorlagen Auswählen",
+  "templateSourceFolder": "Quellordner",
+  "dateCreatedColumn": "Erstellt",
+  "manageTemplateFolders": "Ordner Verwalten",
+  "addTemplateFolder": "Ordner Hinzufügen",
+  "removeTemplateFolder": "Vorlagenordner Entfernen",
+  "removeTemplateFolderConfirm": "\"{path}\" aus Ihren registrierten Vorlagenordnern entfernen? Bereits importierte Vorlagen werden nicht gelöscht.",
+  "@removeTemplateFolderConfirm": {
+    "placeholders": {
+      "path": { "type": "String" }
+    }
+  },
+  "noTemplateFoldersRegistered": "Keine Vorlagenordner registriert",
+  "refreshTemplateFolders": "Vorlagen aus registrierten Ordnern aktualisieren",
+  "lastRefreshed": "Zuletzt aktualisiert {date}",
+  "@lastRefreshed": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "templatesRefreshedSummary": "{count} neue Vorlage(n) hinzugefügt",
+  "@templatesRefreshedSummary": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "importTodos": "Aufgaben aus Datei importieren",
   "noTodosInFile": "Keine Aufgaben in Datei gefunden",
   "todosImported": "{count} Aufgabe(n) erfolgreich importiert",

@@ -904,6 +904,81 @@ class AppLocalizationsZh extends AppLocalizations {
   String get errorLoadingTemplates => '加载模板错误';
 
   @override
+  String get createProjectStartFrom => '您想如何开始？';
+
+  @override
+  String get createProjectStartFromHint => '从空文件夹开始，或复制已注册的模板。';
+
+  @override
+  String get createProjectEmptyFolder => '空文件夹';
+
+  @override
+  String get createProjectFromTemplate => '从模板';
+
+  @override
+  String get selectTemplateMainFile => '选择模板的主项目文件';
+
+  @override
+  String get registerTemplate => '注册模板';
+
+  @override
+  String get projectTemplates => '项目模板';
+
+  @override
+  String get searchTemplates => '搜索模板...';
+
+  @override
+  String get createFirstProjectTemplate => '注册一个模板文件夹以供新项目重复使用';
+
+  @override
+  String get noMatchingTemplates => '没有匹配的模板';
+
+  @override
+  String get templateSourceMissing => '未找到模板源文件夹';
+
+  @override
+  String get useTemplate => '使用';
+
+  @override
+  String get selectTemplatesParentFolder => '选择模板的父文件夹';
+
+  @override
+  String get templateSourceFolder => '源文件夹';
+
+  @override
+  String get dateCreatedColumn => '创建时间';
+
+  @override
+  String get manageTemplateFolders => '管理文件夹';
+
+  @override
+  String get addTemplateFolder => '添加文件夹';
+
+  @override
+  String get removeTemplateFolder => '移除模板文件夹';
+
+  @override
+  String removeTemplateFolderConfirm(String path) {
+    return '从已注册的模板文件夹中移除“$path”？已导入的模板不会被删除。';
+  }
+
+  @override
+  String get noTemplateFoldersRegistered => '没有已注册的模板文件夹';
+
+  @override
+  String get refreshTemplateFolders => '从已注册的文件夹刷新模板';
+
+  @override
+  String lastRefreshed(String date) {
+    return '最后刷新时间 $date';
+  }
+
+  @override
+  String templatesRefreshedSummary(int count) {
+    return '已添加$count个新模板';
+  }
+
+  @override
   String get importTodos => '从文件导入待办事项';
 
   @override
