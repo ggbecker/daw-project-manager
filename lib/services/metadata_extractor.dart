@@ -80,6 +80,11 @@ class MetadataExtractor {
       bpm = metadata.bpm ?? bpm;
       key = metadata.key ?? key;
       dawVersion = metadata.dawVersion ?? dawVersion;
+    } else if (ext == '.rpp') {
+      final metadata = await _extractFromReaperFile(filePath);
+      bpm = metadata.bpm ?? bpm;
+      key = metadata.key ?? key;
+      dawVersion = metadata.dawVersion ?? dawVersion;
     } else if (ext == '.mgd') {
       final metadata = await _extractFromMagdaFile(filePath);
       bpm = metadata.bpm ?? bpm;
@@ -87,15 +92,20 @@ class MetadataExtractor {
       dawVersion = metadata.dawVersion ?? dawVersion;
     }
 
-    // Also search for bpm and key files in the project directory
-    final bpmFromFile = await _searchForBpmFile(projectDir.path);
-    if (bpmFromFile != null) {
-      bpm = bpmFromFile;
+    // Also search for bpm and key files in the project directory, but only
+    // use them as a last resort when the project file itself did not supply a value.
+    if (bpm == null) {
+      final bpmFromFile = await _searchForBpmFile(projectDir.path);
+      if (bpmFromFile != null) {
+        bpm = bpmFromFile;
+      }
     }
 
-    final keyFromFile = await _searchForKeyFile(projectDir.path);
-    if (keyFromFile != null) {
-      key = keyFromFile;
+    if (key == null) {
+      final keyFromFile = await _searchForKeyFile(projectDir.path);
+      if (keyFromFile != null) {
+        key = keyFromFile;
+      }
     }
 
     return ProjectMetadata(
@@ -336,6 +346,82 @@ class MetadataExtractor {
     }
   }
 
+  /// Extracts version, BPM, and key signature from a Reaper .rpp project file.
+  /// Reaper stores these values in plain-text XML-like tags:
+  /// - header: <REAPER_PROJECT 0.1 "7.78/win64" ...>
+  /// - tempo: TEMPO 120 4 4 0
+  /// - key signature: <KEYSIG 0 11 1 0x4E9>
+  static Future<ProjectMetadata> _extractFromReaperFile(String filePath) async {
+    try {
+      final file = File(filePath);
+      if (!await file.exists()) {
+        return ProjectMetadata();
+      }
+
+      final content = await file.readAsString(encoding: utf8);
+
+      String? dawVersion;
+      final headerLine = content
+          .split(RegExp(r'\r?\n'))
+          .firstWhere((line) => line.trim().startsWith('<REAPER_PROJECT'), orElse: () => '');
+      if (headerLine.isNotEmpty) {
+        final headerMatch = RegExp(r'"([^\"]+)\/').firstMatch(headerLine);
+        if (headerMatch != null) {
+          final versionString = headerMatch.group(1)?.trim();
+          if (versionString != null && versionString.isNotEmpty) {
+            dawVersion = versionString;
+          }
+        }
+      }
+
+      double? bpm;
+      for (final line in content.split(RegExp(r'\r?\n'))) {
+        final trimmed = line.trim();
+        final tempoMatch = RegExp(r'^TEMPO\s+([0-9]+(?:\.[0-9]+)?)\b').firstMatch(trimmed);
+        if (tempoMatch != null) {
+          final valueToken = tempoMatch.group(1);
+          if (valueToken != null) {
+            final parsed = double.tryParse(valueToken);
+            if (parsed != null && parsed > 0 && parsed < 1000) {
+              bpm = parsed;
+              break;
+            }
+          }
+        }
+      }
+
+      String? key;
+      final keyStart = content.indexOf('<KEYSIG');
+      if (keyStart >= 0) {
+        final keyEnd = content.indexOf('>', keyStart);
+        if (keyEnd > keyStart) {
+          final keyBlock = content.substring(keyStart, keyEnd + 1);
+          final keyTokens = keyBlock
+              .split(RegExp(r'\s+'))
+              .where((token) => token.isNotEmpty)
+              .toList();
+
+          if (keyTokens.length >= 5) {
+            final rootIndex = int.tryParse(keyTokens[2]);
+            final accidental = int.tryParse(keyTokens[3]);
+            final scaleValue = int.tryParse(keyTokens[4].replaceFirst('0x', ''), radix: 16);
+            final scaleName = scaleValue != null ? _bitwigScaleMasks[scaleValue] : null;
+            if (rootIndex != null && accidental != null && scaleName != null) {
+              final rootNote = _getReaperRootNote(rootIndex, accidental: accidental);
+              if (rootNote != null) {
+                key = '$rootNote $scaleName';
+              }
+            }
+          }
+        }
+      }
+
+      return ProjectMetadata(bpm: bpm, key: key, dawVersion: dawVersion);
+    } catch (_) {
+      return ProjectMetadata();
+    }
+  }
+
   /// Extracts version, BPM, and key signature from Bitwig Studio .bwproject file.
   /// The format is a custom binary format with a "BtWg" magic header.
   /// Meta section: key-value pairs where version is under "application_version_name".
@@ -526,6 +612,12 @@ class MetadataExtractor {
     0x0089, // Minor Triad
   };
 
+  // Reaper `.reascale` files define scale shapes as a 12-slot pattern where any non-zero
+  // position means that semitone slot is active. When those 12 active/inactive slots are
+  // converted into a 12-bit binary value, the resulting integer is the same hex mask used
+  // by Bitwig and by Reaper's `KEYSIG` block. In other words, the `.reascale` file gives
+  // us the same semantic source of truth as Bitwig's scale mask table.
+  //
   // 23 scale types in Bitwig 6. Each key is a 12-bit semitone bitmask (bit N = semitone N
   // above C is present), stored as uint16 BE in the .bwproject binary format.
   static const _bitwigScaleMasks = <int, String>{
@@ -1069,6 +1161,31 @@ class MetadataExtractor {
       return rootNotes[value];
     }
     return null;
+  }
+
+  /// Maps a Reaper key-signature root index to note name, respecting the
+  /// accidental direction stored in the signature.
+  static String? _getReaperRootNote(int value, {int? accidental}) {
+    const sharpNotes = [
+      'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B',
+    ];
+    const flatNotes = [
+      'C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'Cb',
+    ];
+
+    if (value < 0 || value >= sharpNotes.length) {
+      return null;
+    }
+
+    if (accidental == -1) {
+      return flatNotes[value];
+    }
+
+    if (accidental == 1) {
+      return sharpNotes[value];
+    }
+
+    return _getRootNote(value);
   }
 
   /// Maps scale type integer (0-34) to scale name

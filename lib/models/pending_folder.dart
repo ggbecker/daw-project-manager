@@ -1,12 +1,16 @@
 import 'dart:io';
+
 import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
+
+import '../services/scanner_service.dart';
 
 class PendingFolder {
   final String id;
   final String path;
   final DateTime createdAt;
   final String? intendedDawName;
+
   /// Set when the user opts in to session tracking at folder-creation time.
   /// Stores the moment the DAW was launched so elapsed time can be credited
   /// to the project once it is saved and the pending entry resolves.
@@ -35,14 +39,13 @@ class PendingFolder {
   // True if the folder contains a recognised DAW project file anywhere inside it.
   bool hasProjectFile() {
     if (!folderExists) return false;
-    const dawExtensions = {
-      '.als', '.alp', '.bwproject', '.cpr', '.flp', '.logicx',
-      '.maschine', '.maschine2', '.npr', '.ptx', '.pts', '.rpp',
-      '.song', '.tracktionedit', '.tracktion',
-    };
+
     try {
       for (final entry in Directory(path).listSync(recursive: true)) {
-        if (entry is File && dawExtensions.contains(p.extension(entry.path).toLowerCase())) {
+        if (entry is File &&
+            ScannerService.supportedExtensions.contains(
+              p.extension(entry.path).toLowerCase(),
+            )) {
           return true;
         }
       }

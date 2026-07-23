@@ -69,6 +69,17 @@ void main() {
       expect(_folder(dir.path).hasProjectFile(), isTrue);
     });
 
+    test('returns true when folder contains a supported DAW bundle like .luna or .mgd', () async {
+      final dir = await Directory.systemTemp.createTemp('pf_bundle_');
+      addTearDown(() => dir.delete(recursive: true));
+
+      await File(p.join(dir.path, 'mix.luna')).create();
+      expect(_folder(dir.path).hasProjectFile(), isTrue);
+
+      await File(p.join(dir.path, 'project.mgd')).create();
+      expect(_folder(dir.path).hasProjectFile(), isTrue);
+    });
+
     test('returns true when DAW file is inside a subdirectory', () async {
       final dir = await Directory.systemTemp.createTemp('pf_sub_');
       addTearDown(() => dir.delete(recursive: true));
