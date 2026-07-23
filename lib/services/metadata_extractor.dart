@@ -1170,7 +1170,7 @@ class MetadataExtractor {
       'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B',
     ];
     const flatNotes = [
-      'C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B',
+      'C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'Cb',
     ];
 
     if (value < 0 || value >= sharpNotes.length) {
