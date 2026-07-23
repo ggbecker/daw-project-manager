@@ -90,6 +90,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get collapseNotes => '收起';
 
   @override
+  String get projectNotesFromDaw => '项目备注（来自DAW文件）';
+
+  @override
   String get projectPhase => '项目阶段';
 
   @override

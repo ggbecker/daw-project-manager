@@ -30,6 +30,7 @@
   "notes": "Notizen",
   "expandNotes": "Erweitern",
   "collapseNotes": "Einklappen",
+  "projectNotesFromDaw": "Projektnotizen (aus der DAW-Datei)",
   "projectPhase": "Projektphase",
   "failedToLoad": "Laden fehlgeschlagen",
   "fileMissing": "Datei fehlt.",

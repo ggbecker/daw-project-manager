@@ -214,6 +214,67 @@ TEMPO 120 4 4 0
       final metadata = await MetadataExtractor.extractMetadata(file.path);
       expect(metadata.bpm, 120.0);
     });
+
+    test('extracts Title, Author and Notes into a single combined projectNotes string', () async {
+      final file = File('${tempDir.path}/project_notes.rpp');
+      await file.writeAsString('''
+<REAPER_PROJECT 0.1 "7.78/win64" 1784823281 0
+  TITLE "Notes 1"
+  AUTHOR "Audio Crawler"
+  <NOTES 0 2
+    |This is notes of the project to be displayed in DAW Project Manager
+    |
+    |Multiple lines
+    |
+    |1
+    |
+    |2
+    |
+    |Test
+  >
+''');
+
+      final metadata = await MetadataExtractor.extractMetadata(file.path);
+      expect(
+        metadata.projectNotes,
+        'Notes 1\n'
+        'by Audio Crawler\n'
+        '\n'
+        'This is notes of the project to be displayed in DAW Project Manager\n'
+        '\n'
+        'Multiple lines\n'
+        '\n'
+        '1\n'
+        '\n'
+        '2\n'
+        '\n'
+        'Test',
+      );
+    });
+
+    test('projectNotes is null when there is no NOTES/TITLE/AUTHOR block', () async {
+      final file = File('${tempDir.path}/project_no_notes.rpp');
+      await file.writeAsString('''
+<REAPER_PROJECT 0.1 "7.78/win64" 1784823281 0
+TEMPO 120 4 4 0
+''');
+
+      final metadata = await MetadataExtractor.extractMetadata(file.path);
+      expect(metadata.projectNotes, isNull);
+    });
+
+    test('projectNotes falls back to just the notes body when TITLE/AUTHOR are absent', () async {
+      final file = File('${tempDir.path}/project_notes_only.rpp');
+      await file.writeAsString('''
+<REAPER_PROJECT 0.1 "7.78/win64" 1784823281 0
+  <NOTES 0 2
+    |Just a quick note
+  >
+''');
+
+      final metadata = await MetadataExtractor.extractMetadata(file.path);
+      expect(metadata.projectNotes, 'Just a quick note');
+    });
   });
 
   group('MetadataExtractor — MAGDA (.mgd) full extraction', () {

@@ -491,7 +491,10 @@ class ProjectRepository {
     final dawType = extractedMetadata?.dawType;
     // Preserve existing DAW version if extraction didn't find anything (e.g., during lightweight scan)
     final dawVersion = extractedMetadata?.dawVersion ?? existing?.dawVersion;
-    
+    // Same fallback as dawVersion: only a full-metadata scan of a supported
+    // DAW (currently Reaper) populates this, so preserve it otherwise.
+    final projectNotes = extractedMetadata?.projectNotes ?? existing?.projectNotes;
+
     // Detect file creation date from filesystem
     // On Windows, stat.changed is the creation time
     // On other platforms, we fall back to lastModified as an approximation
@@ -529,6 +532,7 @@ class ProjectRepository {
       bpm: bpm,                                        // <--- USA EXISTENTE OU EXTRAÍDO
       musicalKey: key,                                 // <--- USA EXISTENTE OU EXTRAÍDO
       notes: existing?.notes,                         // <--- NOVO: PRESERVA NOTAS
+      projectNotes: projectNotes,                     // <--- USA EXISTENTE OU EXTRAÍDO DO ARQUIVO (ex: Reaper)
       todos: existing?.todos ?? const [],             // <--- CRITICAL: PRESERVA TODOS
       hidden: existing?.hidden ?? false,               // <--- CRITICAL: PRESERVA HIDDEN STATUS
       dawType: dawType,                                // <--- SEMPRE ATUALIZA DO ARQUIVO
@@ -603,6 +607,7 @@ class ProjectRepository {
         musicalKey: extractedMetadata.key ?? project.musicalKey,
         dawType: extractedMetadata.dawType ?? project.dawType,
         dawVersion: extractedMetadata.dawVersion ?? project.dawVersion,
+        projectNotes: extractedMetadata.projectNotes ?? project.projectNotes,
         updatedAt: DateTime.now(),
       );
       

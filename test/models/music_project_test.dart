@@ -418,6 +418,17 @@ void main() {
       expect(p.copyWith(dawType: null).dawType, 'FL Studio');
     });
 
+    test('copyWith updates projectNotes when provided', () {
+      final p = TestFactories.makeProject(projectNotes: null);
+      expect(p.copyWith(projectNotes: 'Title\nby Author\n\nSome notes').projectNotes,
+          'Title\nby Author\n\nSome notes');
+    });
+
+    test('passing null projectNotes to copyWith preserves existing value', () {
+      final p = TestFactories.makeProject(projectNotes: 'existing notes');
+      expect(p.copyWith(projectNotes: null).projectNotes, 'existing notes');
+    });
+
     test('clearCustomDisplayName sets customDisplayName to null', () {
       final p = TestFactories.makeProject(customDisplayName: 'My Track');
       expect(p.copyWith(clearCustomDisplayName: true).customDisplayName, isNull);
@@ -442,6 +453,7 @@ void main() {
         todos: [todo],
         dawType: 'FL Studio',
         dawVersion: '21',
+        projectNotes: 'Notes 1\nby Audio Crawler\n\nSome project notes',
       );
 
       final box = await Hive.openBox<MusicProject>('round_trip_test');
@@ -458,6 +470,7 @@ void main() {
       expect(restored.notes, original.notes);
       expect(restored.deadline, original.deadline);
       expect(restored.dawType, original.dawType);
+      expect(restored.projectNotes, original.projectNotes);
       expect(restored.todos.length, 1);
       expect(restored.todos.first.text, todo.text);
     });

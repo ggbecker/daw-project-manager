@@ -30,6 +30,7 @@
   "notes": "备注",
   "expandNotes": "展开",
   "collapseNotes": "收起",
+  "projectNotesFromDaw": "项目备注（来自DAW文件）",
   "projectPhase": "项目阶段",
   "failedToLoad": "加载失败",
   "fileMissing": "文件缺失。",

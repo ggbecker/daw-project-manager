@@ -90,6 +90,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get collapseNotes => 'Collapse';
 
   @override
+  String get projectNotesFromDaw => 'Project Notes (from DAW file)';
+
+  @override
   String get projectPhase => 'Project Phase';
 
   @override

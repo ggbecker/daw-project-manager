@@ -135,6 +135,9 @@ class MusicProject {
   @HiveField(29)
   final String? ignoredNewerSongPath; // Path offered as "newer" that the user explicitly rejected
 
+  @HiveField(30)
+  final String? projectNotes; // Read-only notes extracted from the DAW project file itself (e.g. Reaper's Title/Author/Notes tab)
+
   const MusicProject({
     required this.id,
     required this.filePath,
@@ -166,6 +169,7 @@ class MusicProject {
     this.sessions = const [],
     this.metadataScanned = false,
     this.ignoredNewerSongPath,
+    this.projectNotes,
   });
 
   String get displayName => (customDisplayName != null && customDisplayName!.trim().isNotEmpty)
@@ -458,6 +462,7 @@ class MusicProject {
     bool? metadataScanned,
     String? ignoredNewerSongPath,
     bool clearIgnoredNewerSongPath = false,
+    String? projectNotes,
   }) {
     return MusicProject(
       id: id ?? this.id,
@@ -490,6 +495,7 @@ class MusicProject {
       sessions: sessions ?? this.sessions,
       metadataScanned: metadataScanned ?? this.metadataScanned,
       ignoredNewerSongPath: clearIgnoredNewerSongPath ? null : (ignoredNewerSongPath ?? this.ignoredNewerSongPath),
+      projectNotes: projectNotes ?? this.projectNotes,
     );
   }
 }
@@ -543,13 +549,14 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
           : const [],
       metadataScanned: fields.containsKey(28) ? (fields[28] as bool? ?? false) : false,
       ignoredNewerSongPath: fields.containsKey(29) ? fields[29] as String? : null,
+      projectNotes: fields.containsKey(30) ? fields[30] as String? : null,
     );
   }
 
   @override
   void write(BinaryWriter writer, MusicProject obj) {
     writer
-      ..writeByte(30) // 30 fields (0-29)
+      ..writeByte(31) // 31 fields (0-30)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -609,6 +616,8 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
       ..writeByte(28)
       ..write(obj.metadataScanned)
       ..writeByte(29)
-      ..write(obj.ignoredNewerSongPath);
+      ..write(obj.ignoredNewerSongPath)
+      ..writeByte(30)
+      ..write(obj.projectNotes);
   }
 }

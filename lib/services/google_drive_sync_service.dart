@@ -4670,6 +4670,7 @@ class GoogleDriveSyncService {
       'previewSongAutoPath': project.previewSongAutoPath,
       'parentProjectId': project.parentProjectId,
       'ignoredNewerSongPath': project.ignoredNewerSongPath,
+      'projectNotes': project.projectNotes,
     };
   }
 
@@ -4719,6 +4720,7 @@ class GoogleDriveSyncService {
       previewSongAutoPath: data['previewSongAutoPath'] as String?,
       parentProjectId: data['parentProjectId'] as String?,
       ignoredNewerSongPath: data['ignoredNewerSongPath'] as String?,
+      projectNotes: data['projectNotes'] as String?,
     );
   }
 

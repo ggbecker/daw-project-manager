@@ -90,6 +90,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get collapseNotes => 'Einklappen';
 
   @override
+  String get projectNotesFromDaw => 'Projektnotizen (aus der DAW-Datei)';
+
+  @override
   String get projectPhase => 'Projektphase';
 
   @override

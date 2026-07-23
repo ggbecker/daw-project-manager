@@ -90,6 +90,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get collapseNotes => 'Свернуть';
 
   @override
+  String get projectNotesFromDaw => 'Заметки проекта (из файла DAW)';
+
+  @override
   String get projectPhase => 'Фаза проекта';
 
   @override

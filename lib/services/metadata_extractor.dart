@@ -28,12 +28,14 @@ class ProjectMetadata {
   final String? key;
   final String? dawType;
   final String? dawVersion;
+  final String? projectNotes;
 
   ProjectMetadata({
     this.bpm,
     this.key,
     this.dawType,
     this.dawVersion,
+    this.projectNotes,
   });
 }
 
@@ -62,6 +64,7 @@ class MetadataExtractor {
     double? bpm;
     String? key;
     String? dawVersion;
+    String? projectNotes;
 
     // Try to extract from project file first
     if (ext == '.als' || ext == '.alp') {
@@ -85,6 +88,7 @@ class MetadataExtractor {
       bpm = metadata.bpm ?? bpm;
       key = metadata.key ?? key;
       dawVersion = metadata.dawVersion ?? dawVersion;
+      projectNotes = metadata.projectNotes;
     } else if (ext == '.mgd') {
       final metadata = await _extractFromMagdaFile(filePath);
       bpm = metadata.bpm ?? bpm;
@@ -113,6 +117,7 @@ class MetadataExtractor {
       key: key,
       dawType: dawType,
       dawVersion: dawVersion,
+      projectNotes: projectNotes,
     );
   }
 
@@ -416,10 +421,64 @@ class MetadataExtractor {
         }
       }
 
-      return ProjectMetadata(bpm: bpm, key: key, dawVersion: dawVersion);
+      final projectNotes = _extractReaperNotes(content);
+
+      return ProjectMetadata(bpm: bpm, key: key, dawVersion: dawVersion, projectNotes: projectNotes);
     } catch (_) {
       return ProjectMetadata();
     }
+  }
+
+  /// Extracts Reaper's project notes tab (Title/Author/Notes) into a single
+  /// display string. Reaper stores these as:
+  ///   TITLE "Notes 1"
+  ///   AUTHOR "Audio Crawler"
+  ///   NOTES 0 2
+  ///     |This is notes of the project
+  ///     |
+  ///     |Multiple lines
+  ///   (closing tag)
+  /// Each notes line is prefixed with '|' (possibly after leading
+  /// whitespace) — everything after that first '|' is the literal line
+  /// content, including blank lines (a bare '|' with nothing after it).
+  static String? _extractReaperNotes(String content) {
+    String? tagValue(String tag) {
+      final match = RegExp('^\\s*$tag\\s+"([^"]*)"', multiLine: true).firstMatch(content);
+      final value = match?.group(1)?.trim();
+      return (value == null || value.isEmpty) ? null : value;
+    }
+
+    final title = tagValue('TITLE');
+    final author = tagValue('AUTHOR');
+
+    String? notesBody;
+    final notesStart = content.indexOf('<NOTES');
+    if (notesStart >= 0) {
+      final lines = const LineSplitter().convert(content.substring(notesStart));
+      final noteLines = <String>[];
+      for (final line in lines.skip(1)) {
+        final pipeIndex = line.indexOf('|');
+        if (pipeIndex == -1 || line.substring(0, pipeIndex).trim().isNotEmpty) {
+          break;
+        }
+        noteLines.add(line.substring(pipeIndex + 1));
+      }
+      if (noteLines.isNotEmpty) {
+        final joined = noteLines.join('\n');
+        notesBody = joined.trim().isEmpty ? null : joined;
+      }
+    }
+
+    if (title == null && author == null && notesBody == null) return null;
+
+    final buffer = StringBuffer();
+    if (title != null) buffer.writeln(title);
+    if (author != null) buffer.writeln('by $author');
+    if ((title != null || author != null) && notesBody != null) buffer.writeln();
+    if (notesBody != null) buffer.write(notesBody);
+
+    final result = buffer.toString();
+    return result.trim().isEmpty ? null : result;
   }
 
   /// Extracts version, BPM, and key signature from Bitwig Studio .bwproject file.

@@ -350,6 +350,30 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
     );
   }
 
+  /// Read-only display of notes extracted straight from the DAW project
+  /// file itself (e.g. Reaper's Title/Author/Notes tab) — distinct from the
+  /// user-editable [MusicProject.notes] description field it sits beside.
+  Widget _buildProjectNotesField(String projectNotes) {
+    return SizedBox(
+      key: ValueKey('projectNotesField_${projectNotes.hashCode}'),
+      height: 130,
+      child: TextFormField(
+        initialValue: projectNotes,
+        readOnly: true,
+        expands: true,
+        minLines: null,
+        maxLines: null,
+        textAlignVertical: TextAlignVertical.top,
+        decoration: InputDecoration(
+          labelText: AppLocalizations.of(context)!.projectNotesFromDaw,
+          alignLabelWithHint: true,
+          border: const OutlineInputBorder(),
+          contentPadding: const EdgeInsets.fromLTRB(12, 20, 12, 20),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final repoAsync = ref.watch(repositoryProvider);
@@ -888,14 +912,39 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                             const SizedBox(height: 12),
 
                             // NOVO: CAMPO DE NOTAS
-                            ResizableTextField(
-                              controller: _notesCtrl,
-                              focusNode: _notesFocusNode,
-                              labelText: AppLocalizations.of(context)!.notes,
-                              expandTooltip: AppLocalizations.of(context)!.expandNotes,
-                              collapseTooltip: AppLocalizations.of(context)!.collapseNotes,
-                              onChanged: (_) => _scheduleAutoSave(),
-                            ),
+                            Builder(builder: (context) {
+                              final notesField = ResizableTextField(
+                                controller: _notesCtrl,
+                                focusNode: _notesFocusNode,
+                                labelText: AppLocalizations.of(context)!.notes,
+                                expandTooltip: AppLocalizations.of(context)!.expandNotes,
+                                collapseTooltip: AppLocalizations.of(context)!.collapseNotes,
+                                onChanged: (_) => _scheduleAutoSave(),
+                              );
+                              final projectNotes = updatedProject.projectNotes;
+                              if (projectNotes == null || projectNotes.trim().isEmpty) {
+                                return notesField;
+                              }
+                              final projectNotesField = _buildProjectNotesField(projectNotes);
+                              return isMobile
+                                  ? Column(
+                                      children: [
+                                        notesField,
+                                        const SizedBox(height: 12),
+                                        projectNotesField,
+                                      ],
+                                    )
+                                  : IntrinsicHeight(
+                                      child: Row(
+                                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                                        children: [
+                                          Expanded(child: notesField),
+                                          const SizedBox(width: 8),
+                                          Expanded(child: projectNotesField),
+                                        ],
+                                      ),
+                                    );
+                            }),
 
                             const SizedBox(height: 12),
 

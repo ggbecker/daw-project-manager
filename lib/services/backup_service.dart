@@ -301,6 +301,7 @@ class BackupService {
       'previewSongAutoPath': project.previewSongAutoPath,
       'parentProjectId': project.parentProjectId,
       'ignoredNewerSongPath': project.ignoredNewerSongPath,
+      'projectNotes': project.projectNotes,
     };
   }
 
@@ -339,6 +340,7 @@ class BackupService {
       previewSongAutoPath: json['previewSongAutoPath'] as String?,
       parentProjectId: json['parentProjectId'] as String?,
       ignoredNewerSongPath: json['ignoredNewerSongPath'] as String?,
+      projectNotes: json['projectNotes'] as String?,
     );
   }
 

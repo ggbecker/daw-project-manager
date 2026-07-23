@@ -30,6 +30,7 @@
   "notes": "Заметки",
   "expandNotes": "Развернуть",
   "collapseNotes": "Свернуть",
+  "projectNotesFromDaw": "Заметки проекта (из файла DAW)",
   "projectPhase": "Фаза проекта",
   "failedToLoad": "Ошибка загрузки",
   "fileMissing": "Файл отсутствует.",

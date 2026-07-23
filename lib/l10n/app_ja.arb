@@ -30,6 +30,7 @@
   "notes": "メモ",
   "expandNotes": "展開",
   "collapseNotes": "折りたたむ",
+  "projectNotesFromDaw": "プロジェクトノート（DAWファイルより）",
   "projectPhase": "プロジェクトフェーズ",
   "failedToLoad": "読み込みに失敗しました",
   "fileMissing": "ファイルが見つかりません。",

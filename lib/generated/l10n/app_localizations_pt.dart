@@ -90,6 +90,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get collapseNotes => 'Recolher';
 
   @override
+  String get projectNotesFromDaw => 'Notas do Projeto (do arquivo da DAW)';
+
+  @override
   String get projectPhase => 'Fase do Projeto';
 
   @override

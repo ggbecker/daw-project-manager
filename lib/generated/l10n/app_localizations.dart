@@ -274,6 +274,12 @@ abstract class AppLocalizations {
   /// **'Collapse'**
   String get collapseNotes;
 
+  /// No description provided for @projectNotesFromDaw.
+  ///
+  /// In en, this message translates to:
+  /// **'Project Notes (from DAW file)'**
+  String get projectNotesFromDaw;
+
   /// No description provided for @projectPhase.
   ///
   /// In en, this message translates to:

@@ -90,6 +90,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get collapseNotes => '折りたたむ';
 
   @override
+  String get projectNotesFromDaw => 'プロジェクトノート（DAWファイルより）';
+
+  @override
   String get projectPhase => 'プロジェクトフェーズ';
 
   @override
