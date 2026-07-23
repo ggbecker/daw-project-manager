@@ -913,37 +913,44 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
 
                             // NOVO: CAMPO DE NOTAS
                             Builder(builder: (context) {
-                              final notesField = ResizableTextField(
-                                controller: _notesCtrl,
-                                focusNode: _notesFocusNode,
-                                labelText: AppLocalizations.of(context)!.notes,
-                                expandTooltip: AppLocalizations.of(context)!.expandNotes,
-                                collapseTooltip: AppLocalizations.of(context)!.collapseNotes,
-                                onChanged: (_) => _scheduleAutoSave(),
-                              );
                               final projectNotes = updatedProject.projectNotes;
                               if (projectNotes == null || projectNotes.trim().isEmpty) {
-                                return notesField;
+                                return ResizableTextField(
+                                  controller: _notesCtrl,
+                                  focusNode: _notesFocusNode,
+                                  labelText: AppLocalizations.of(context)!.notes,
+                                  expandTooltip: AppLocalizations.of(context)!.expandNotes,
+                                  collapseTooltip: AppLocalizations.of(context)!.collapseNotes,
+                                  onChanged: (_) => _scheduleAutoSave(),
+                                );
                               }
-                              final projectNotesField = _buildProjectNotesField();
-                              return isMobile
-                                  ? Column(
-                                      children: [
-                                        notesField,
-                                        const SizedBox(height: 12),
-                                        projectNotesField,
-                                      ],
-                                    )
-                                  : IntrinsicHeight(
-                                      child: Row(
-                                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                                        children: [
-                                          Expanded(child: notesField),
-                                          const SizedBox(width: 8),
-                                          Expanded(child: projectNotesField),
-                                        ],
-                                      ),
-                                    );
+                              if (isMobile) {
+                                return Column(
+                                  children: [
+                                    ResizableTextField(
+                                      controller: _notesCtrl,
+                                      focusNode: _notesFocusNode,
+                                      labelText: AppLocalizations.of(context)!.notes,
+                                      expandTooltip: AppLocalizations.of(context)!.expandNotes,
+                                      collapseTooltip: AppLocalizations.of(context)!.collapseNotes,
+                                      onChanged: (_) => _scheduleAutoSave(),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    _buildProjectNotesField(),
+                                  ],
+                                );
+                              }
+                              return SyncedResizableTextFieldPair(
+                                leftController: _notesCtrl,
+                                leftFocusNode: _notesFocusNode,
+                                leftLabelText: AppLocalizations.of(context)!.notes,
+                                leftOnChanged: (_) => _scheduleAutoSave(),
+                                rightController: _projectNotesCtrl,
+                                rightLabelText: AppLocalizations.of(context)!.projectNotesFromDaw,
+                                rightReadOnly: true,
+                                expandTooltip: AppLocalizations.of(context)!.expandNotes,
+                                collapseTooltip: AppLocalizations.of(context)!.collapseNotes,
+                              );
                             }),
 
                             const SizedBox(height: 12),

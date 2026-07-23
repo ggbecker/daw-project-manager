@@ -136,6 +136,175 @@ class _ResizableTextFieldState extends State<ResizableTextField> {
   }
 }
 
+/// Two [ResizableTextField]-style boxes side by side sharing a single
+/// height/expand state, for cases like the project description sitting next
+/// to its read-only DAW-extracted notes — using two independent
+/// [ResizableTextField]s there let one grow while the other stayed put,
+/// which read as broken rather than as two separate boxes. There is exactly
+/// one expand button and one drag grip for the pair, not one per field.
+class SyncedResizableTextFieldPair extends StatefulWidget {
+  final TextEditingController leftController;
+  final FocusNode? leftFocusNode;
+  final String leftLabelText;
+  final bool leftReadOnly;
+  final ValueChanged<String>? leftOnChanged;
+
+  final TextEditingController rightController;
+  final String rightLabelText;
+  final bool rightReadOnly;
+
+  final String expandTooltip;
+  final String collapseTooltip;
+  final double initialHeight;
+  final double expandedHeight;
+  final double minHeight;
+  final double maxHeight;
+  final bool enableDragResize;
+
+  SyncedResizableTextFieldPair({
+    super.key,
+    required this.leftController,
+    this.leftFocusNode,
+    required this.leftLabelText,
+    this.leftReadOnly = false,
+    this.leftOnChanged,
+    required this.rightController,
+    required this.rightLabelText,
+    this.rightReadOnly = false,
+    required this.expandTooltip,
+    required this.collapseTooltip,
+    this.initialHeight = 130,
+    this.expandedHeight = 400,
+    this.minHeight = 100,
+    this.maxHeight = 800,
+    bool? enableDragResize,
+  }) : enableDragResize = enableDragResize ?? !MobileUtils.isMobile();
+
+  @override
+  State<SyncedResizableTextFieldPair> createState() =>
+      _SyncedResizableTextFieldPairState();
+}
+
+class _SyncedResizableTextFieldPairState
+    extends State<SyncedResizableTextFieldPair> {
+  late double _height = widget.initialHeight;
+  bool _expanded = false;
+
+  Widget _field({
+    required TextEditingController controller,
+    FocusNode? focusNode,
+    required String labelText,
+    required bool readOnly,
+    ValueChanged<String>? onChanged,
+    required bool showControls,
+  }) {
+    return TextFormField(
+      controller: controller,
+      focusNode: focusNode,
+      readOnly: readOnly,
+      expands: true,
+      minLines: null,
+      maxLines: null,
+      textAlignVertical: TextAlignVertical.top,
+      decoration: InputDecoration(
+        labelText: labelText,
+        alignLabelWithHint: true,
+        border: const OutlineInputBorder(),
+        contentPadding: EdgeInsets.fromLTRB(12, 20, showControls ? 32 : 12, 20),
+        suffixIcon: showControls
+            ? Align(
+                alignment: Alignment.topRight,
+                widthFactor: 1,
+                heightFactor: 1,
+                child: IconButton(
+                  icon: Icon(_expanded ? Icons.close_fullscreen : Icons.open_in_full),
+                  iconSize: 18,
+                  tooltip: _expanded ? widget.collapseTooltip : widget.expandTooltip,
+                  onPressed: () {
+                    setState(() {
+                      _expanded = !_expanded;
+                      _height = _expanded ? widget.expandedHeight : widget.initialHeight;
+                    });
+                  },
+                ),
+              )
+            : null,
+      ),
+      keyboardType: TextInputType.multiline,
+      onChanged: onChanged,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        SizedBox(
+          key: const Key('syncedResizableTextFieldHeightBox'),
+          height: _height,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: _field(
+                  controller: widget.leftController,
+                  focusNode: widget.leftFocusNode,
+                  labelText: widget.leftLabelText,
+                  readOnly: widget.leftReadOnly,
+                  onChanged: widget.leftOnChanged,
+                  showControls: false,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _field(
+                  controller: widget.rightController,
+                  labelText: widget.rightLabelText,
+                  readOnly: widget.rightReadOnly,
+                  showControls: true,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (widget.enableDragResize)
+          Positioned(
+            right: 2,
+            bottom: 2,
+            child: MouseRegion(
+              cursor: SystemMouseCursors.resizeUpLeftDownRight,
+              child: GestureDetector(
+                key: const Key('syncedResizableTextFieldGrip'),
+                behavior: HitTestBehavior.opaque,
+                onPanUpdate: (details) {
+                  setState(() {
+                    _height = (_height + details.delta.dy)
+                        .clamp(widget.minHeight, widget.maxHeight);
+                    _expanded = _height > widget.initialHeight;
+                  });
+                },
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CustomPaint(
+                    painter: _ResizeGripPainter(
+                      color: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.color
+                              ?.withValues(alpha: 0.5) ??
+                          Colors.grey,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
 /// Paints the classic three-diagonal-line resize grip in the bottom-right
 /// corner of a manually resizable text box.
 class _ResizeGripPainter extends CustomPainter {
