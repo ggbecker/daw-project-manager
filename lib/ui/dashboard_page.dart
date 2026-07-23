@@ -2626,8 +2626,28 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
     ref.read(selectedProjectsProvider.notifier).clear();
   }
 
+  // The last individually-clicked (non-shift) project checkbox — the anchor
+  // a subsequent shift-click range-selects against. Deliberately not synced
+  // to selectedProjectsProvider: it's a transient interaction concept, not
+  // part of the persisted selection.
+  String? _selectionAnchorId;
+
   void _toggleProjectSelection(String projectId) {
     ref.read(selectedProjectsProvider.notifier).toggle(projectId);
+    _selectionAnchorId = projectId;
+  }
+
+  void _selectProjectRange(String targetId) {
+    final anchor = _selectionAnchorId;
+    if (anchor == null) {
+      _toggleProjectSelection(targetId);
+      return;
+    }
+    ref.read(selectedProjectsProvider.notifier).selectRange(
+          widget.projects.map((p) => p.id).toList(),
+          anchor,
+          targetId,
+        );
   }
 
   void _selectAll() {
@@ -3058,6 +3078,7 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
             dateFormat: widget.dateFormat,
             selectedIds: _selectedProjectIds,
             onToggleSelection: _toggleProjectSelection,
+            onSelectRange: _selectProjectRange,
             onToggleGroupSelection: _toggleGroupSelection,
             onHideProjects: widget.onHideProjects,
             onUnhideProjects: widget.onUnhideProjects,
@@ -3280,6 +3301,7 @@ class _PlutoProjectsTable extends ConsumerStatefulWidget {
   final DateFormat dateFormat;
   final Set<String> selectedIds;
   final Function(String) onToggleSelection;
+  final Function(String) onSelectRange;
   final Function(Set<String>) onToggleGroupSelection;
   final Function(List<String>) onHideProjects;
   final Function(List<String>) onUnhideProjects;
@@ -3295,6 +3317,7 @@ class _PlutoProjectsTable extends ConsumerStatefulWidget {
     required this.dateFormat,
     required this.selectedIds,
     required this.onToggleSelection,
+    required this.onSelectRange,
     required this.onToggleGroupSelection,
     required this.onHideProjects,
     required this.onUnhideProjects,
@@ -5143,7 +5166,11 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             child: Checkbox(
               value: isSelected,
               onChanged: (value) {
-                widget.onToggleSelection(project.id);
+                if (HardwareKeyboard.instance.isShiftPressed) {
+                  widget.onSelectRange(project.id);
+                } else {
+                  widget.onToggleSelection(project.id);
+                }
               },
             ),
           );

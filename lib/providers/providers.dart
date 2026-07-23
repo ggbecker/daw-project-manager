@@ -615,6 +615,24 @@ class SelectedProjectsNotifier extends Notifier<Set<String>> {
     current.removeAll(projectIds);
     state = current;
   }
+
+  /// Selects every id between [anchorId] and [targetId] (inclusive) in
+  /// [orderedIds], replacing the current selection — the standard
+  /// shift-click behavior for extending a selection from the last
+  /// individually-clicked row to the one just shift-clicked.
+  /// Falls back to a plain toggle of [targetId] if either id isn't present
+  /// in [orderedIds] (e.g. the anchor scrolled out of a filtered view).
+  void selectRange(List<String> orderedIds, String anchorId, String targetId) {
+    final anchorIndex = orderedIds.indexOf(anchorId);
+    final targetIndex = orderedIds.indexOf(targetId);
+    if (anchorIndex == -1 || targetIndex == -1) {
+      toggle(targetId);
+      return;
+    }
+    final start = anchorIndex < targetIndex ? anchorIndex : targetIndex;
+    final end = anchorIndex < targetIndex ? targetIndex : anchorIndex;
+    state = orderedIds.sublist(start, end + 1).toSet();
+  }
 }
 
 // Recently Discovered Projects Provider — IDs of projects the background

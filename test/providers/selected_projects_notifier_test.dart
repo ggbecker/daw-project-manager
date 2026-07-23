@@ -82,5 +82,70 @@ void main() {
 
       expect(c.read(selectedProjectsProvider), isEmpty);
     });
+
+    group('selectRange', () {
+      const ordered = ['a', 'b', 'c', 'd', 'e'];
+
+      test('selects every id between anchor and target when target is after anchor', () {
+        final c = ProviderContainer();
+        addTearDown(c.dispose);
+        final notifier = c.read(selectedProjectsProvider.notifier);
+
+        notifier.selectRange(ordered, 'b', 'd');
+
+        expect(c.read(selectedProjectsProvider), {'b', 'c', 'd'});
+      });
+
+      test('selects every id between target and anchor when target is before anchor', () {
+        final c = ProviderContainer();
+        addTearDown(c.dispose);
+        final notifier = c.read(selectedProjectsProvider.notifier);
+
+        notifier.selectRange(ordered, 'd', 'b');
+
+        expect(c.read(selectedProjectsProvider), {'b', 'c', 'd'});
+      });
+
+      test('replaces the previous selection rather than adding to it', () {
+        final c = ProviderContainer();
+        addTearDown(c.dispose);
+        final notifier = c.read(selectedProjectsProvider.notifier);
+
+        notifier.addAll(['e']);
+        notifier.selectRange(ordered, 'a', 'b');
+
+        expect(c.read(selectedProjectsProvider), {'a', 'b'});
+      });
+
+      test('anchor equal to target selects just that one id', () {
+        final c = ProviderContainer();
+        addTearDown(c.dispose);
+        final notifier = c.read(selectedProjectsProvider.notifier);
+
+        notifier.selectRange(ordered, 'c', 'c');
+
+        expect(c.read(selectedProjectsProvider), {'c'});
+      });
+
+      test('falls back to toggling target when anchor is not in orderedIds', () {
+        final c = ProviderContainer();
+        addTearDown(c.dispose);
+        final notifier = c.read(selectedProjectsProvider.notifier);
+
+        notifier.selectRange(ordered, 'not-in-list', 'c');
+
+        expect(c.read(selectedProjectsProvider), {'c'});
+      });
+
+      test('falls back to toggling target when target is not in orderedIds', () {
+        final c = ProviderContainer();
+        addTearDown(c.dispose);
+        final notifier = c.read(selectedProjectsProvider.notifier);
+
+        notifier.selectRange(ordered, 'a', 'not-in-list');
+
+        expect(c.read(selectedProjectsProvider), {'not-in-list'});
+      });
+    });
   });
 }
