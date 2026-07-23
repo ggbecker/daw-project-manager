@@ -117,9 +117,13 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
     _bpmFocusNode = FocusNode();
     _keyFocusNode = FocusNode();
     _notesFocusNode = FocusNode();
-    // Single choke point for clearing the "newly discovered" badge, regardless
-    // of which of the several call sites navigated here.
-    ref.read(recentlyDiscoveredProjectsProvider.notifier).dismiss(widget.projectId);
+
+    // Defer the badge dismissal until after the first frame has finished building.
+    // Mutating a provider during initState can trip Riverpod's widget-build guard.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(recentlyDiscoveredProjectsProvider.notifier).dismiss(widget.projectId);
+    });
   }
 
   @override
