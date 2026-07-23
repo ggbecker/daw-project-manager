@@ -370,6 +370,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get daw => 'DAW';
 
   @override
+  String get clearDaw => 'DAWをクリア';
+
+  @override
   String get lastModifiedColumn => '最終更新';
 
   @override

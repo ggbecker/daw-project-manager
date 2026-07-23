@@ -205,6 +205,7 @@
   "filterByDaw": "按DAW筛选",
   "allDaws": "所有DAW",
   "daw": "DAW",
+  "clearDaw": "清除DAW",
   "lastModifiedColumn": "最后修改",
   "actions": "操作",
   "hide": "隐藏",

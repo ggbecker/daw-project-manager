@@ -366,6 +366,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get daw => 'DAW';
 
   @override
+  String get clearDaw => '清除DAW';
+
+  @override
   String get lastModifiedColumn => '最后修改';
 
   @override

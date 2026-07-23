@@ -205,6 +205,7 @@
   "filterByDaw": "Фильтр по DAW",
   "allDaws": "Все DAW",
   "daw": "DAW",
+  "clearDaw": "Очистить DAW",
   "lastModifiedColumn": "Последнее Изменение",
   "actions": "Действия",
   "hide": "Скрыть",

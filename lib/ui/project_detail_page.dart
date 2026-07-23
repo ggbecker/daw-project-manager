@@ -186,6 +186,19 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
     _lastSavedNotes = newNotes ?? '';
   }
 
+  Future<void> _clearDawInfo() async {
+    final allProjects = ref.read(allProjectsStreamProvider).value;
+    if (allProjects == null) return;
+    final MusicProject project;
+    try {
+      project = allProjects.firstWhere((p) => p.id == widget.projectId);
+    } catch (_) {
+      return;
+    }
+    final repo = await ref.read(repositoryProvider.future);
+    await repo.updateProject(project.copyWith(clearDawType: true, clearDawVersion: true));
+  }
+
   // NOVO: Função para abrir o diretório pai
   Future<void> _openProjectFolder(String filePath) async {
     // Determina o caminho da pasta: Se for um arquivo, pega o diretório pai. Se for um diretório, pega ele mesmo.
@@ -650,6 +663,11 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                                 ),
                                               ),
                                               prefixIcon: _buildDawPrefixIcon(updatedProject.dawType, dawColor),
+                                              suffixIcon: IconButton(
+                                                icon: const Icon(Icons.close, size: 18),
+                                                tooltip: AppLocalizations.of(context)!.clearDaw,
+                                                onPressed: _clearDawInfo,
+                                              ),
                                             ),
                                             style: TextStyle(
                                               color: dawColor,
@@ -672,6 +690,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                             )!.bpm,
                                           ),
                                           keyboardType: TextInputType.number,
+                                          onChanged: (_) => _scheduleAutoSave(),
                                         ),
                                       ),
                                       const SizedBox(width: 8),
@@ -687,6 +706,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                           onChanged: (value) {
                                             // Force rebuild to update Camelot code display
                                             setState(() {});
+                                            _scheduleAutoSave();
                                           },
                                         ),
                                       ),
@@ -742,6 +762,11 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                                   ),
                                                 ),
                                                 prefixIcon: _buildDawPrefixIcon(updatedProject.dawType, dawColor),
+                                                suffixIcon: IconButton(
+                                                  icon: const Icon(Icons.close, size: 18),
+                                                  tooltip: AppLocalizations.of(context)!.clearDaw,
+                                                  onPressed: _clearDawInfo,
+                                                ),
                                               ),
                                               style: TextStyle(
                                                 color: dawColor,

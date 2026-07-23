@@ -772,6 +772,12 @@ abstract class AppLocalizations {
   /// **'DAW'**
   String get daw;
 
+  /// No description provided for @clearDaw.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear DAW'**
+  String get clearDaw;
+
   /// No description provided for @lastModifiedColumn.
   ///
   /// In en, this message translates to:

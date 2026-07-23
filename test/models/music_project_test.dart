@@ -406,6 +406,18 @@ void main() {
       expect(p.copyWith(musicalKey: null).musicalKey, 'C minor');
     });
 
+    test('clearDawType and clearDawVersion set both to null', () {
+      final p = TestFactories.makeProject(dawType: 'FL Studio', dawVersion: '21');
+      final cleared = p.copyWith(clearDawType: true, clearDawVersion: true);
+      expect(cleared.dawType, isNull);
+      expect(cleared.dawVersion, isNull);
+    });
+
+    test('passing null dawType without clearDawType preserves existing value', () {
+      final p = TestFactories.makeProject(dawType: 'FL Studio');
+      expect(p.copyWith(dawType: null).dawType, 'FL Studio');
+    });
+
     test('clearCustomDisplayName sets customDisplayName to null', () {
       final p = TestFactories.makeProject(customDisplayName: 'My Track');
       expect(p.copyWith(clearCustomDisplayName: true).customDisplayName, isNull);

@@ -375,6 +375,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get daw => 'DAW';
 
   @override
+  String get clearDaw => 'Clear DAW';
+
+  @override
   String get lastModifiedColumn => 'Last Modified';
 
   @override

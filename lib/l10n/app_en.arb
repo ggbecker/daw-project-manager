@@ -231,6 +231,7 @@
   "filterByDaw": "Filter by DAW",
   "allDaws": "All DAWs",
   "daw": "DAW",
+  "clearDaw": "Clear DAW",
   "lastModifiedColumn": "Last Modified",
   "actions": "Actions",
   "hide": "Hide",

@@ -376,6 +376,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get daw => 'DAW';
 
   @override
+  String get clearDaw => 'Очистить DAW';
+
+  @override
   String get lastModifiedColumn => 'Последнее Изменение';
 
   @override
