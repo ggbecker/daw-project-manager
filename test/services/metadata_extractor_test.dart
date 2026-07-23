@@ -203,6 +203,24 @@ TEMPO 120 4 4 0
       expect(metadata.key, 'C Major Pentatonic');
     });
 
+    test('resolves a scale mask beyond Bitwig\'s original 23, sourced from the expanded '
+        '.reascale-derived table', () async {
+      // 0x0d39 ("Chromatic Phrygian") is not one of Bitwig's 23 scale types —
+      // before the scale table was expanded from ZD-complete.reascale, this
+      // mask fell through to a null key entirely.
+      final file = File('${tempDir.path}/project_expanded_scale_mask.rpp');
+      await file.writeAsString('''
+<REAPER_PROJECT 0.1 "7.78/win64" 1784823281 0
+TEMPO 120 4 4 0
+<KEYSIG
+  0 0 0 0x0d39
+>
+''');
+
+      final metadata = await MetadataExtractor.extractMetadata(file.path);
+      expect(metadata.key, 'C Chromatic Phrygian');
+    });
+
     test('matches only the whole TEMPO token, not TEMPOENVLOCKMODE', () async {
       final file = File('${tempDir.path}/project_tempoenvlock.rpp');
       await file.writeAsString('''
