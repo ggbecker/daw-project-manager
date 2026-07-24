@@ -197,13 +197,28 @@ class MetadataExtractor {
       String? key;
       String? dawVersion;
 
-      // Extract version from MinorVersion attribute
-      final minorVersion = root.getAttribute('MinorVersion');
-      if (minorVersion != null && minorVersion.isNotEmpty) {
-        // Extract major version (e.g., "12.0_12300" -> "12")
-        final parts = minorVersion.split('.');
-        if (parts.isNotEmpty) {
-          dawVersion = parts[0];
+      // Extract version from the Creator attribute (e.g., "Ableton Live 12.3")
+      // which carries the real major.minor version. MinorVersion (e.g.
+      // "12.0_12300") does not reflect the minor release shown in the UI.
+      final creator = root.getAttribute('Creator');
+      if (creator != null && creator.isNotEmpty) {
+        final match = RegExp(r'Live\s+(\d+(?:\.\d+)*)').firstMatch(creator);
+        if (match != null) {
+          final versionParts = match.group(1)!.split('.');
+          dawVersion = versionParts.length >= 2
+              ? '${versionParts[0]}.${versionParts[1]}'
+              : versionParts[0];
+        }
+      }
+
+      // Fallback: major version only, from MinorVersion attribute
+      if (dawVersion == null) {
+        final minorVersion = root.getAttribute('MinorVersion');
+        if (minorVersion != null && minorVersion.isNotEmpty) {
+          final parts = minorVersion.split('.');
+          if (parts.isNotEmpty) {
+            dawVersion = parts[0];
+          }
         }
       }
 

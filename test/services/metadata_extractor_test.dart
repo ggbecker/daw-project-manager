@@ -374,4 +374,117 @@ TEMPO 120 4 4 0
       expect(metadata.dawVersion, isNull);
     });
   });
+
+  group('MetadataExtractor — Ableton Live (.als) full extraction', () {
+    // .als files are gzipped XML. The root <Ableton> element's Creator
+    // attribute (e.g. "Ableton Live 12.3") carries the real major.minor
+    // version — MinorVersion (e.g. "12.0_12300") does not reflect it.
+    late Directory tempDir;
+
+    setUp(() async {
+      tempDir = await Directory.systemTemp.createTemp('als_test_');
+    });
+
+    tearDown(() async {
+      await tempDir.delete(recursive: true);
+    });
+
+    Future<String> writeAlsFixture(String xml) async {
+      final file = File('${tempDir.path}/project.als');
+      final compressed = gzip.encode(utf8.encode(xml));
+      await file.writeAsBytes(compressed);
+      return file.path;
+    }
+
+    test('extracts major.minor DAW version from the Creator attribute', () async {
+      final path = await writeAlsFixture('''
+<?xml version="1.0" encoding="UTF-8"?>
+<Ableton MajorVersion="5" MinorVersion="12.0_12300" SchemaChangeCount="1" Creator="Ableton Live 12.3" Revision="49ca8995cfdbe384bd4648a2e0d5a14dba7b993d">
+	<LiveSet>
+		<Tracks>
+		</Tracks>
+	</LiveSet>
+</Ableton>
+''');
+
+      final metadata = await MetadataExtractor.extractMetadata(path);
+      expect(metadata.dawType, 'Ableton Live');
+      expect(metadata.dawVersion, '12.3');
+    });
+
+    test('ignores a misleading MinorVersion suffix when Creator disagrees', () async {
+      // Real sample from an older project: MinorVersion's "9.0_305" suffix
+      // does not encode "9.1.7" in any way (unlike the 12.3 fixture above,
+      // where "12300" coincidentally lines up with "12.3") — Creator must
+      // always win, never a parse of the MinorVersion suffix.
+      final path = await writeAlsFixture('''
+<?xml version="1.0" encoding="UTF-8"?>
+<Ableton MajorVersion="4" MinorVersion="9.0_305" SchemaChangeCount="10" Creator="Ableton Live 9.1.7" Revision="411c6f82371175a563be02dd24e0409fdb4c3d87">
+	<LiveSet>
+		<Tracks>
+		</Tracks>
+	</LiveSet>
+</Ableton>
+''');
+
+      final metadata = await MetadataExtractor.extractMetadata(path);
+      expect(metadata.dawVersion, '9.1');
+    });
+
+    test('falls back to MinorVersion major when Creator is missing', () async {
+      final path = await writeAlsFixture('''
+<?xml version="1.0" encoding="UTF-8"?>
+<Ableton MajorVersion="5" MinorVersion="12.0_12300" SchemaChangeCount="1">
+	<LiveSet>
+		<Tracks>
+		</Tracks>
+	</LiveSet>
+</Ableton>
+''');
+
+      final metadata = await MetadataExtractor.extractMetadata(path);
+      expect(metadata.dawVersion, '12');
+    });
+
+    test('extracts BPM from the Tempo/Manual element', () async {
+      final path = await writeAlsFixture('''
+<?xml version="1.0" encoding="UTF-8"?>
+<Ableton MajorVersion="5" MinorVersion="12.0_12300" Creator="Ableton Live 12.3">
+	<LiveSet>
+		<MasterTrack>
+			<DeviceChain>
+				<Mixer>
+					<Tempo>
+						<Manual Value="126.5" />
+					</Tempo>
+				</Mixer>
+			</DeviceChain>
+		</MasterTrack>
+	</LiveSet>
+</Ableton>
+''');
+
+      final metadata = await MetadataExtractor.extractMetadata(path);
+      expect(metadata.bpm, 126.5);
+    });
+
+    test('malformed file returns empty metadata instead of throwing', () async {
+      final file = File('${tempDir.path}/broken.als');
+      await file.writeAsBytes([0x00, 0x01, 0x02]);
+
+      final metadata = await MetadataExtractor.extractMetadata(file.path);
+      expect(metadata.bpm, isNull);
+      expect(metadata.key, isNull);
+      expect(metadata.dawVersion, isNull);
+      expect(metadata.dawType, 'Ableton Live');
+    });
+
+    test('missing file returns empty metadata', () async {
+      final metadata =
+          await MetadataExtractor.extractMetadata('${tempDir.path}/missing.als');
+      expect(metadata.bpm, isNull);
+      expect(metadata.key, isNull);
+      expect(metadata.dawVersion, isNull);
+    });
+  });
 }
