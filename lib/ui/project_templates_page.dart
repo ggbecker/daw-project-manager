@@ -712,32 +712,14 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
         renderer: (ctx) {
           final date = ctx.cell.value as DateTime?;
           if (date == null) return const SizedBox.shrink();
+          // Unlike the dashboard's lastModified column, this is intentionally
+          // plain text — no staleness color gradient. Templates aren't
+          // "worked on" the way projects are, so how long ago the file was
+          // touched isn't a meaningful signal here.
           return Consumer(
             builder: (context, ref, _) {
-              final colorEnabled = ref.watch(lastModifiedColorProvider);
               final dateFormat = ref.watch(dateFormatProvider);
-              final defaultColor = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
-
-              Color textColor;
-              if (!colorEnabled) {
-                textColor = defaultColor;
-              } else {
-                final daysSinceModified = DateTime.now().difference(date).inDays;
-                if (daysSinceModified < 21) {
-                  textColor = defaultColor;
-                } else if (daysSinceModified < 60) {
-                  final ratio = (daysSinceModified - 21) / 39.0;
-                  textColor = Color.lerp(Colors.yellow.shade300, Colors.orange.shade400, ratio)!;
-                } else {
-                  final ratio = ((daysSinceModified - 60) / 60.0).clamp(0.0, 1.0);
-                  textColor = Color.lerp(Colors.orange.shade400, Colors.red.shade400, ratio)!;
-                }
-              }
-
-              return Text(
-                dateFormat.format(date),
-                style: TextStyle(color: textColor),
-              );
+              return Text(dateFormat.format(date));
             },
           );
         },
