@@ -4928,6 +4928,9 @@ class GoogleDriveSyncService {
       'mainFileRelativePath': template.mainFileRelativePath,
       'createdAt': template.createdAt.toIso8601String(),
       'updatedAt': template.updatedAt.toIso8601String(),
+      'bpm': template.bpm,
+      'musicalKey': template.musicalKey,
+      'dawVersion': template.dawVersion,
     };
   }
 
@@ -4939,6 +4942,9 @@ class GoogleDriveSyncService {
       mainFileRelativePath: data['mainFileRelativePath'] as String,
       createdAt: DateTime.parse(data['createdAt'] as String),
       updatedAt: DateTime.parse(data['updatedAt'] as String),
+      bpm: (data['bpm'] as num?)?.toDouble(),
+      musicalKey: data['musicalKey'] as String?,
+      dawVersion: data['dawVersion'] as String?,
     );
   }
 

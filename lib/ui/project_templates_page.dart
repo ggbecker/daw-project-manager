@@ -1,8 +1,10 @@
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hive_ce/hive.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:trina_grid/trina_grid.dart';
@@ -16,6 +18,7 @@ import '../providers/theme_provider.dart';
 import '../services/metadata_extractor.dart';
 import '../services/project_template_service.dart';
 import '../services/scanner_service.dart';
+import '../utils/app_paths.dart';
 import '../utils/daw_logo.dart';
 import '../utils/mobile_utils.dart';
 import 'dialogs/create_project_dialog.dart';
@@ -59,6 +62,14 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
     final mainFilePath = result.files.single.path!;
     final nameController = TextEditingController(text: p.basenameWithoutExtension(mainFilePath));
 
+    ProjectMetadata? metadata;
+    try {
+      metadata = await MetadataExtractor.extractMetadata(mainFilePath);
+    } catch (_) {
+      // Best-effort — registration still proceeds without bpm/key/version.
+    }
+    if (!mounted) return;
+
     await showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -94,6 +105,9 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
                 name: name,
                 sourceFolderPath: p.dirname(mainFilePath),
                 mainFileRelativePath: p.basename(mainFilePath),
+                bpm: metadata?.bpm,
+                musicalKey: metadata?.key,
+                dawVersion: metadata?.dawVersion,
                 createdAt: DateTime.now(),
                 updatedAt: DateTime.now(),
               );
@@ -136,7 +150,15 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
   /// templates. Reports how many were added in a snackbar.
   Future<void> _refreshTemplateRoots() async {
     final l10n = AppLocalizations.of(context)!;
-    final roots = await ref.read(templateRootsProvider.future);
+
+    // Read straight from the Hive boxes rather than through the
+    // StreamProvider — `box.watch()` events are delivered asynchronously, so
+    // a provider read immediately after `addRoot()`/`addTemplate()` can race
+    // ahead of the box's own watch event and observe a stale list. The boxes
+    // themselves are always current the instant a `put`/`delete` completes.
+    await ensureHiveInitialized();
+    final rootsBox = await Hive.openBox<TemplateRoot>('templateRoots');
+    final roots = rootsBox.values.toList();
     if (roots.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -146,30 +168,58 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
       return;
     }
 
-    final existingTemplates = await ref.read(projectTemplatesProvider.future);
-    final existingPaths = existingTemplates.map((t) => t.sourceFolderPath).toSet();
+    final templatesBox = await Hive.openBox<ProjectTemplate>('projectTemplates');
+    // Keyed by full main-file path, not just the folder — a single folder
+    // can now yield multiple templates (see discoverTemplateCandidates), so
+    // registering one must not shadow its siblings on the next refresh.
+    final existingPaths =
+        templatesBox.values.map((t) => p.join(t.sourceFolderPath, t.mainFileRelativePath)).toSet();
+
+    if (kDebugMode) {
+      print('[ProjectTemplatesPage] Refreshing ${roots.length} root(s): '
+          '${roots.map((r) => r.path).join(' | ')}');
+    }
 
     final allCandidates = <TemplateFolderCandidate>[];
     for (final root in roots) {
+      // Each root is scanned independently and failures are swallowed inside
+      // discoverTemplateCandidates itself, so one missing/inaccessible root
+      // never prevents the remaining roots from being scanned.
       allCandidates.addAll(ProjectTemplateService.discoverTemplateCandidates(root.path));
     }
     final newCandidates = ProjectTemplateService.filterNewCandidates(allCandidates, existingPaths);
 
-    final templatesNotifier = ref.read(projectTemplatesNotifierProvider.notifier);
+    if (kDebugMode) {
+      final alreadyRegistered = allCandidates.length - newCandidates.length;
+      print('[ProjectTemplatesPage] ${allCandidates.length} candidate(s) found across all roots, '
+          '$alreadyRegistered already registered, ${newCandidates.length} new');
+    }
+
     for (final candidate in newCandidates) {
-      await templatesNotifier.addTemplate(ProjectTemplate(
+      final mainFilePath = p.join(candidate.sourceFolderPath, candidate.mainFileRelativePath);
+      ProjectMetadata? metadata;
+      try {
+        metadata = await MetadataExtractor.extractMetadata(mainFilePath);
+      } catch (_) {
+        // Extraction is best-effort here — an unreadable/corrupt file
+        // shouldn't stop the template from being registered.
+      }
+      final newTemplate = ProjectTemplate(
         id: _uuid.v4(),
         name: candidate.name,
         sourceFolderPath: candidate.sourceFolderPath,
         mainFileRelativePath: candidate.mainFileRelativePath,
+        bpm: metadata?.bpm,
+        musicalKey: metadata?.key,
+        dawVersion: metadata?.dawVersion,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
-      ));
+      );
+      await templatesBox.put(newTemplate.id, newTemplate);
     }
 
-    final rootsNotifier = ref.read(templateRootsNotifierProvider.notifier);
     for (final root in roots) {
-      await rootsNotifier.updateRoot(root.copyWith(lastRefreshedAt: DateTime.now()));
+      await rootsBox.put(root.id, root.copyWith(lastRefreshedAt: DateTime.now()));
     }
 
     if (mounted) {
@@ -269,15 +319,44 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
   Future<void> _renameTemplate(ProjectTemplate template) async {
     final l10n = AppLocalizations.of(context)!;
     final nameController = TextEditingController(text: template.name);
+    final bpmController = TextEditingController(text: template.bpm?.toString() ?? '');
+    final keyController = TextEditingController(text: template.musicalKey ?? '');
 
     await showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(l10n.editTemplate),
-        content: TextField(
-          controller: nameController,
-          decoration: InputDecoration(labelText: l10n.templateName),
-          autofocus: true,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: InputDecoration(labelText: l10n.templateName),
+              autofocus: true,
+            ),
+            const SizedBox(height: 12),
+            // bpm/key aren't auto-detectable for every DAW format — this
+            // lets the user fill them in manually, same as a real project's
+            // bpm/key fields.
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: bpmController,
+                    decoration: InputDecoration(labelText: l10n.bpm),
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextField(
+                    controller: keyController,
+                    decoration: InputDecoration(labelText: l10n.key),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -288,8 +367,17 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
             onPressed: () {
               final name = nameController.text.trim();
               if (name.isEmpty) return;
+              final bpmText = bpmController.text.trim();
+              final keyText = keyController.text.trim();
               ref.read(projectTemplatesNotifierProvider.notifier).updateTemplate(
-                    template.copyWith(name: name, updatedAt: DateTime.now()),
+                    template.copyWith(
+                      name: name,
+                      bpm: bpmText.isEmpty ? null : double.tryParse(bpmText),
+                      clearBpm: bpmText.isEmpty,
+                      musicalKey: keyText.isEmpty ? null : keyText,
+                      clearMusicalKey: keyText.isEmpty,
+                      updatedAt: DateTime.now(),
+                    ),
                   );
               Navigator.pop(dialogContext);
               ScaffoldMessenger.of(context).showSnackBar(
@@ -409,8 +497,26 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
         },
       ),
       TrinaColumn(
-        title: l10n.dateCreatedColumn,
-        field: 'createdAt',
+        title: l10n.bpm,
+        field: 'bpm',
+        type: TrinaColumnType.text(),
+        enableEditingMode: false,
+        enableContextMenu: false,
+        width: 90,
+        minWidth: 80,
+      ),
+      TrinaColumn(
+        title: l10n.key,
+        field: 'key',
+        type: TrinaColumnType.text(),
+        enableEditingMode: false,
+        enableContextMenu: false,
+        width: 130,
+        minWidth: 110,
+      ),
+      TrinaColumn(
+        title: l10n.dateModifiedColumn,
+        field: 'modifiedAt',
         type: TrinaColumnType.text(),
         enableEditingMode: false,
         enableContextMenu: false,
@@ -460,12 +566,23 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
     ];
   }
 
+  /// The main file's own last-modified timestamp on disk — not
+  /// [ProjectTemplate.createdAt]/[updatedAt], which only track when the
+  /// template record itself was registered/edited in the app.
+  String _lastModifiedLabel(ProjectTemplate template) {
+    final file = File(p.join(template.sourceFolderPath, template.mainFileRelativePath));
+    if (!file.existsSync()) return '';
+    return DateFormat('yyyy-MM-dd').format(file.lastModifiedSync());
+  }
+
   List<TrinaRow> _buildRows(List<ProjectTemplate> templates) {
     return templates
         .map((template) => TrinaRow(cells: {
               'name': TrinaCell(value: template.name),
               'path': TrinaCell(value: template.sourceFolderPath),
-              'createdAt': TrinaCell(value: DateFormat('yyyy-MM-dd').format(template.createdAt)),
+              'bpm': TrinaCell(value: template.bpm != null ? template.bpm!.toStringAsFixed(template.bpm! % 1 == 0 ? 0 : 2) : ''),
+              'key': TrinaCell(value: template.musicalKey ?? ''),
+              'modifiedAt': TrinaCell(value: _lastModifiedLabel(template)),
               'actions': TrinaCell(value: ''),
               'data': TrinaCell(value: template),
             }))

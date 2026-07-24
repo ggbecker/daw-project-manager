@@ -949,6 +949,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get dateCreatedColumn => '创建时间';
 
   @override
+  String get dateModifiedColumn => '修改时间';
+
+  @override
   String get manageTemplateFolders => '管理文件夹';
 
   @override

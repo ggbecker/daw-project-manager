@@ -732,6 +732,7 @@
   "selectTemplatesParentFolder": "Selecione a Pasta Principal dos Templates",
   "templateSourceFolder": "Pasta de Origem",
   "dateCreatedColumn": "Criado",
+  "dateModifiedColumn": "Modificado",
   "manageTemplateFolders": "Gerenciar Pastas",
   "addTemplateFolder": "Adicionar Pasta",
   "removeTemplateFolder": "Remover Pasta de Template",

@@ -54,6 +54,8 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
   // Step 3: Start (empty folder vs. template)
   _StartMode _startMode = _StartMode.emptyFolder;
   ProjectTemplate? _selectedTemplate;
+  final _templateSearchController = TextEditingController();
+  String _templateQuery = '';
 
   // Step 4: DAW (only reachable when _startMode is emptyFolder)
   List<DetectedDaw>? _detectedDaws;
@@ -78,6 +80,9 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
     _trackNameController.addListener(_onNameChanged);
     _primaryArtistController.addListener(_onNameChanged);
     _customNameController.addListener(_onNameChanged);
+    _templateSearchController.addListener(() {
+      setState(() => _templateQuery = _templateSearchController.text.trim().toLowerCase());
+    });
     _includeTimestamp =
         Hive.box<String>('settings').get('createProjectIncludeDate') == 'true';
     if (widget.initialTemplate != null) {
@@ -92,6 +97,7 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
     _primaryArtistController.dispose();
     _trackNameController.dispose();
     _customNameController.dispose();
+    _templateSearchController.dispose();
     for (final c in _collabControllers) {
       c.dispose();
     }
@@ -294,9 +300,24 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
     final repo = await ref.read(repositoryProvider.future);
     await repo.upsertFromFileSystemEntity(File(newMainFilePath), fullMetadata: true);
 
+    // The template's main file format may not support auto-extraction (e.g.
+    // FL Studio, Logic) — fall back to whatever bpm/key the user filled in
+    // manually on the template itself, same as a project's own manual fields.
+    var createdProject = repo.getByPath(newMainFilePath);
+    if (createdProject != null && (template.bpm != null || template.musicalKey != null)) {
+      final needsBpm = createdProject.bpm == null && template.bpm != null;
+      final needsKey = createdProject.musicalKey == null && template.musicalKey != null;
+      if (needsBpm || needsKey) {
+        createdProject = createdProject.copyWith(
+          bpm: needsBpm ? template.bpm : null,
+          musicalKey: needsKey ? template.musicalKey : null,
+        );
+        await repo.updateProject(createdProject);
+      }
+    }
+
     final sessionMode = ref.read(sessionModeProvider);
     if (sessionMode) {
-      final createdProject = repo.getByPath(newMainFilePath);
       if (createdProject != null) {
         ref.read(activeProjectProvider.notifier).set(createdProject);
       }
@@ -845,59 +866,89 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
                       ),
                     );
                   }
+                  final filteredTemplates = _templateQuery.isEmpty
+                      ? templates
+                      : templates.where((t) => t.name.toLowerCase().contains(_templateQuery)).toList();
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      TextField(
+                        controller: _templateSearchController,
+                        decoration: InputDecoration(
+                          hintText: l10n.searchTemplates,
+                          prefixIcon: const Icon(Icons.search),
+                          border: const OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
                       Expanded(
-                        child: ListView.separated(
-                          itemCount: templates.length,
-                          separatorBuilder: (_, _) => const SizedBox(height: 8),
-                          itemBuilder: (ctx, i) {
-                            final template = templates[i];
-                            final isSelected = _selectedTemplate?.id == template.id;
-                            final ext = p.extension(template.mainFileRelativePath);
-                            final dawType = MetadataExtractor.getDawTypeFromExtension(ext);
-                            final logoPath = getDawLogoPath(dawType);
-                            return InkWell(
-                              borderRadius: BorderRadius.circular(12),
-                              onTap: () => setState(() => _selectedTemplate = template),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 150),
-                                padding: const EdgeInsets.all(14),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: isSelected
-                                        ? Theme.of(context).colorScheme.primary
-                                        : Theme.of(context).dividerColor,
-                                    width: isSelected ? 2 : 1,
-                                  ),
-                                  color: isSelected
-                                      ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08)
-                                      : null,
-                                ),
-                                child: Row(
-                                  children: [
-                                    logoPath != null
-                                        ? Image.asset(logoPath, width: 24, height: 24)
-                                        : const Icon(Icons.piano_outlined),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Text(
-                                        template.name,
-                                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                              fontWeight: isSelected ? FontWeight.bold : null,
+                        child: filteredTemplates.isEmpty
+                            ? Center(child: Text(l10n.noMatchingTemplates))
+                            : ListView.separated(
+                                itemCount: filteredTemplates.length,
+                                separatorBuilder: (_, _) => const SizedBox(height: 8),
+                                itemBuilder: (ctx, i) {
+                                  final template = filteredTemplates[i];
+                                  final isSelected = _selectedTemplate?.id == template.id;
+                                  final ext = p.extension(template.mainFileRelativePath);
+                                  final dawType = MetadataExtractor.getDawTypeFromExtension(ext);
+                                  final logoPath = getDawLogoPath(dawType);
+                                  final details = [
+                                    if (template.bpm != null) '${template.bpm!.toStringAsFixed(template.bpm! % 1 == 0 ? 0 : 2)} BPM',
+                                    if (template.musicalKey != null) template.musicalKey!,
+                                    if (template.dawVersion != null) '${dawType ?? ''} ${template.dawVersion}'.trim(),
+                                  ].join(' • ');
+                                  return InkWell(
+                                    borderRadius: BorderRadius.circular(12),
+                                    onTap: () => setState(() => _selectedTemplate = template),
+                                    child: AnimatedContainer(
+                                      duration: const Duration(milliseconds: 150),
+                                      padding: const EdgeInsets.all(14),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: isSelected
+                                              ? Theme.of(context).colorScheme.primary
+                                              : Theme.of(context).dividerColor,
+                                          width: isSelected ? 2 : 1,
+                                        ),
+                                        color: isSelected
+                                            ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08)
+                                            : null,
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          logoPath != null
+                                              ? Image.asset(logoPath, width: 24, height: 24)
+                                              : const Icon(Icons.piano_outlined),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  template.name,
+                                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                                        fontWeight: isSelected ? FontWeight.bold : null,
+                                                      ),
+                                                ),
+                                                if (details.isNotEmpty)
+                                                  Text(
+                                                    details,
+                                                    style: Theme.of(context).textTheme.bodySmall,
+                                                  ),
+                                              ],
                                             ),
+                                          ),
+                                          if (isSelected)
+                                            Icon(Icons.check_circle, color: Theme.of(context).colorScheme.primary),
+                                        ],
                                       ),
                                     ),
-                                    if (isSelected)
-                                      Icon(Icons.check_circle, color: Theme.of(context).colorScheme.primary),
-                                  ],
-                                ),
+                                  );
+                                },
                               ),
-                            );
-                          },
-                        ),
                       ),
                       TextButton(
                         onPressed: () => Navigator.of(context).push(

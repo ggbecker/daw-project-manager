@@ -13,6 +13,7 @@ import 'package:daw_project_manager/models/project_template.dart';
 import 'package:daw_project_manager/models/release.dart';
 import 'package:daw_project_manager/models/release_file.dart';
 import 'package:daw_project_manager/models/scan_root.dart';
+import 'package:daw_project_manager/models/template_root.dart';
 import 'package:daw_project_manager/models/todo_item.dart';
 import 'package:daw_project_manager/models/todo_template.dart';
 
@@ -28,6 +29,7 @@ extension HiveRegistrar on HiveInterface {
     registerAdapter(ReleaseAdapter());
     registerAdapter(ReleaseFileAdapter());
     registerAdapter(ScanRootAdapter());
+    registerAdapter(TemplateRootAdapter());
     registerAdapter(TodoItemAdapter());
     registerAdapter(TodoTemplateAdapter());
   }
@@ -45,6 +47,7 @@ extension IsolatedHiveRegistrar on IsolatedHiveInterface {
     registerAdapter(ReleaseAdapter());
     registerAdapter(ReleaseFileAdapter());
     registerAdapter(ScanRootAdapter());
+    registerAdapter(TemplateRootAdapter());
     registerAdapter(TodoItemAdapter());
     registerAdapter(TodoTemplateAdapter());
   }

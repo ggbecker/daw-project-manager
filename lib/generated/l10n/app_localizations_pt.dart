@@ -970,6 +970,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get dateCreatedColumn => 'Criado';
 
   @override
+  String get dateModifiedColumn => 'Modificado';
+
+  @override
   String get manageTemplateFolders => 'Gerenciar Pastas';
 
   @override

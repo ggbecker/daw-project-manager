@@ -92,6 +92,43 @@ void main() {
       expect(File(p.join(destination, 'notes.txt')).existsSync(), isTrue);
     });
 
+    test('excludes sibling DAW project files in the same folder as the main file', () async {
+      // Two self-contained songs sharing one folder/sample pool — see
+      // discoverTemplateCandidates. Instantiating one must not drag the
+      // other project file along.
+      File(p.join(sourceDir.path, 'Song Template.als')).writeAsStringSync('als data');
+      File(p.join(sourceDir.path, 'Other Version.als')).writeAsStringSync('other data');
+      File(p.join(sourceDir.path, 'Kick.wav')).writeAsStringSync('kick data');
+      final destination = p.join(destinationsDir.path, 'My New Track');
+
+      await ProjectTemplateService.instantiate(
+        template: makeTemplate(),
+        destinationFolderPath: destination,
+        newProjectName: 'My New Track',
+      );
+
+      expect(File(p.join(destination, 'My New Track.als')).existsSync(), isTrue);
+      expect(File(p.join(destination, 'Other Version.als')).existsSync(), isFalse);
+      // Non-project sibling files are still copied.
+      expect(File(p.join(destination, 'Kick.wav')).existsSync(), isTrue);
+    });
+
+    test('does not exclude DAW project files that live in a different subfolder', () async {
+      File(p.join(sourceDir.path, 'Song Template.als')).writeAsStringSync('als data');
+      final rendersDir = Directory(p.join(sourceDir.path, 'Renders'));
+      await rendersDir.create(recursive: true);
+      File(p.join(rendersDir.path, 'Export Session.als')).writeAsStringSync('export data');
+      final destination = p.join(destinationsDir.path, 'My New Track');
+
+      await ProjectTemplateService.instantiate(
+        template: makeTemplate(),
+        destinationFolderPath: destination,
+        newProjectName: 'My New Track',
+      );
+
+      expect(File(p.join(destination, 'Renders', 'Export Session.als')).existsSync(), isTrue);
+    });
+
     test('throws when the template source folder no longer exists', () async {
       File(p.join(sourceDir.path, 'Song Template.als')).writeAsStringSync('als data');
       await sourceDir.delete(recursive: true);
@@ -161,16 +198,28 @@ void main() {
       expect(candidates, isEmpty);
     });
 
-    test('skips a subfolder with multiple recognized DAW files rather than guessing', () {
+    test('registers one candidate per file when a subfolder has multiple DAW project files', () {
+      // A "shared" folder — several self-contained songs sitting side by
+      // side (e.g. sharing one sample pool) — must not be skipped as
+      // ambiguous; each project file becomes its own template instead.
       final parent = Directory(p.join(tempDir.path, 'parent'));
-      final ambiguous = Directory(p.join(parent.path, 'Ambiguous'));
-      ambiguous.createSync(recursive: true);
-      File(p.join(ambiguous.path, 'Version 1.als')).writeAsStringSync('data');
-      File(p.join(ambiguous.path, 'Version 2.als')).writeAsStringSync('data');
+      final shared = Directory(p.join(parent.path, 'Shared'));
+      shared.createSync(recursive: true);
+      File(p.join(shared.path, 'Version 1.als')).writeAsStringSync('data');
+      File(p.join(shared.path, 'Version 2.als')).writeAsStringSync('data');
 
       final candidates = ProjectTemplateService.discoverTemplateCandidates(parent.path);
 
-      expect(candidates, isEmpty);
+      expect(candidates, hasLength(2));
+      expect(candidates.every((c) => c.sourceFolderPath == shared.path), isTrue);
+      expect(
+        candidates.map((c) => c.mainFileRelativePath).toSet(),
+        {'Version 1.als', 'Version 2.als'},
+      );
+      expect(
+        candidates.map((c) => c.name).toSet(),
+        {'Shared — Version 1', 'Shared — Version 2'},
+      );
     });
 
     test('ignores loose files directly in the parent folder, only descends into subfolders', () {
@@ -196,6 +245,34 @@ void main() {
 
       expect(candidates.map((c) => c.name).toSet(), {'Song A', 'Song B'});
     });
+
+    test('returns no candidates (instead of throwing) for a missing parent folder', () {
+      // Regression test: when scanning multiple registered template roots in
+      // a loop, one root that no longer exists (moved/deleted/unmounted
+      // drive) used to throw and abort the whole loop, silently skipping
+      // every root after it. This must degrade to "no candidates" instead.
+      final missingParent = Directory(p.join(tempDir.path, 'does-not-exist'));
+
+      final candidates = ProjectTemplateService.discoverTemplateCandidates(missingParent.path);
+
+      expect(candidates, isEmpty);
+    });
+
+    test('scanning a missing root does not prevent scanning a second, valid root', () {
+      final missingParent = Directory(p.join(tempDir.path, 'does-not-exist'));
+      final validParent = Directory(p.join(tempDir.path, 'valid-parent'));
+      final songA = Directory(p.join(validParent.path, 'Song A'));
+      songA.createSync(recursive: true);
+      File(p.join(songA.path, 'Song A.als')).writeAsStringSync('data');
+
+      final roots = [missingParent.path, validParent.path];
+      final allCandidates = <TemplateFolderCandidate>[];
+      for (final root in roots) {
+        allCandidates.addAll(ProjectTemplateService.discoverTemplateCandidates(root));
+      }
+
+      expect(allCandidates.map((c) => c.name), ['Song A']);
+    });
   });
 
   group('ProjectTemplateService.filterNewCandidates', () {
@@ -209,8 +286,9 @@ void main() {
       sourceFolderPath: '/roots/parent/Song B',
       mainFileRelativePath: 'Song B.rpp',
     );
+    String mainFilePath(TemplateFolderCandidate c) => p.join(c.sourceFolderPath, c.mainFileRelativePath);
 
-    test('keeps candidates whose sourceFolderPath is not already registered', () {
+    test('keeps candidates whose main file path is not already registered', () {
       final result = ProjectTemplateService.filterNewCandidates(
         [candidateA, candidateB],
         <String>{},
@@ -219,10 +297,10 @@ void main() {
       expect(result, [candidateA, candidateB]);
     });
 
-    test('drops candidates whose sourceFolderPath is already registered', () {
+    test('drops candidates whose main file path is already registered', () {
       final result = ProjectTemplateService.filterNewCandidates(
         [candidateA, candidateB],
-        {candidateA.sourceFolderPath},
+        {mainFilePath(candidateA)},
       );
 
       expect(result, [candidateB]);
@@ -231,10 +309,34 @@ void main() {
     test('returns an empty list when every candidate is already registered', () {
       final result = ProjectTemplateService.filterNewCandidates(
         [candidateA, candidateB],
-        {candidateA.sourceFolderPath, candidateB.sourceFolderPath},
+        {mainFilePath(candidateA), mainFilePath(candidateB)},
       );
 
       expect(result, isEmpty);
+    });
+
+    test('registering one candidate in a shared folder does not shadow its siblings', () {
+      // Regression test: two candidates from the same "shared" folder (see
+      // discoverTemplateCandidates) must be tracked independently by their
+      // full file path — keying on sourceFolderPath alone would make
+      // registering one filter out the other on every future refresh.
+      const sharedA = TemplateFolderCandidate(
+        name: 'Shared — Version 1',
+        sourceFolderPath: '/roots/parent/Shared',
+        mainFileRelativePath: 'Version 1.als',
+      );
+      const sharedB = TemplateFolderCandidate(
+        name: 'Shared — Version 2',
+        sourceFolderPath: '/roots/parent/Shared',
+        mainFileRelativePath: 'Version 2.als',
+      );
+
+      final result = ProjectTemplateService.filterNewCandidates(
+        [sharedA, sharedB],
+        {mainFilePath(sharedA)},
+      );
+
+      expect(result, [sharedB]);
     });
   });
 }

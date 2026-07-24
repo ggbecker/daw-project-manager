@@ -732,6 +732,7 @@
   "selectTemplatesParentFolder": "Selecciona la Carpeta Principal de Plantillas",
   "templateSourceFolder": "Carpeta de Origen",
   "dateCreatedColumn": "Creado",
+  "dateModifiedColumn": "Modificado",
   "manageTemplateFolders": "Gestionar Carpetas",
   "addTemplateFolder": "Añadir Carpeta",
   "removeTemplateFolder": "Eliminar Carpeta de Plantillas",

@@ -732,6 +732,7 @@
   "selectTemplatesParentFolder": "Sélectionner le Dossier Parent des Modèles",
   "templateSourceFolder": "Dossier Source",
   "dateCreatedColumn": "Créé",
+  "dateModifiedColumn": "Modifié",
   "manageTemplateFolders": "Gérer les Dossiers",
   "addTemplateFolder": "Ajouter un Dossier",
   "removeTemplateFolder": "Supprimer le Dossier de Modèles",

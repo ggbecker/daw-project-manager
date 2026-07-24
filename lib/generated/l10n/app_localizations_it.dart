@@ -971,6 +971,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get dateCreatedColumn => 'Creato';
 
   @override
+  String get dateModifiedColumn => 'Modificato';
+
+  @override
   String get manageTemplateFolders => 'Gestisci Cartelle';
 
   @override

@@ -23,13 +23,16 @@ class ProjectTemplateAdapter extends TypeAdapter<ProjectTemplate> {
       mainFileRelativePath: fields[3] as String,
       createdAt: fields[4] as DateTime,
       updatedAt: fields[5] as DateTime,
+      bpm: (fields[6] as num?)?.toDouble(),
+      musicalKey: fields[7] as String?,
+      dawVersion: fields[8] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, ProjectTemplate obj) {
     writer
-      ..writeByte(6)
+      ..writeByte(9)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -41,7 +44,13 @@ class ProjectTemplateAdapter extends TypeAdapter<ProjectTemplate> {
       ..writeByte(4)
       ..write(obj.createdAt)
       ..writeByte(5)
-      ..write(obj.updatedAt);
+      ..write(obj.updatedAt)
+      ..writeByte(6)
+      ..write(obj.bpm)
+      ..writeByte(7)
+      ..write(obj.musicalKey)
+      ..writeByte(8)
+      ..write(obj.dawVersion);
   }
 
   @override

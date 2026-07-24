@@ -732,6 +732,7 @@
   "selectTemplatesParentFolder": "Выберите Родительскую Папку Шаблонов",
   "templateSourceFolder": "Исходная Папка",
   "dateCreatedColumn": "Создано",
+  "dateModifiedColumn": "Изменено",
   "manageTemplateFolders": "Управление Папками",
   "addTemplateFolder": "Добавить Папку",
   "removeTemplateFolder": "Удалить Папку Шаблонов",

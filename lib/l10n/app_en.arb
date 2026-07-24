@@ -894,6 +894,7 @@
   "selectTemplatesParentFolder": "Select Parent Folder of Templates",
   "templateSourceFolder": "Source Folder",
   "dateCreatedColumn": "Created",
+  "dateModifiedColumn": "Modified",
   "manageTemplateFolders": "Manage Folders",
   "addTemplateFolder": "Add Folder",
   "removeTemplateFolder": "Remove Template Folder",

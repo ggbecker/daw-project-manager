@@ -732,6 +732,7 @@
   "selectTemplatesParentFolder": "Übergeordneten Ordner der Vorlagen Auswählen",
   "templateSourceFolder": "Quellordner",
   "dateCreatedColumn": "Erstellt",
+  "dateModifiedColumn": "Geändert",
   "manageTemplateFolders": "Ordner Verwalten",
   "addTemplateFolder": "Ordner Hinzufügen",
   "removeTemplateFolder": "Vorlagenordner Entfernen",

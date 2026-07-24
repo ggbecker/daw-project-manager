@@ -32,6 +32,22 @@ class ProjectTemplate extends HiveObject {
   @HiveField(5)
   final DateTime updatedAt;
 
+  /// Beats per minute — auto-extracted from the main file when supported,
+  /// otherwise left null for the user to fill in manually (same as
+  /// `MusicProject.bpm`).
+  @HiveField(6)
+  final double? bpm;
+
+  /// e.g. `C#m`, `F major` — auto-extracted when supported, otherwise
+  /// user-editable (same as `MusicProject.musicalKey`).
+  @HiveField(7)
+  final String? musicalKey;
+
+  /// DAW version string (e.g. `'12.0.4'`) — auto-extracted only, no manual
+  /// entry UI, mirroring how `MusicProject.dawVersion` is read-only.
+  @HiveField(8)
+  final String? dawVersion;
+
   ProjectTemplate({
     required this.id,
     required this.name,
@@ -39,6 +55,9 @@ class ProjectTemplate extends HiveObject {
     required this.mainFileRelativePath,
     required this.createdAt,
     required this.updatedAt,
+    this.bpm,
+    this.musicalKey,
+    this.dawVersion,
   });
 
   ProjectTemplate copyWith({
@@ -48,6 +67,11 @@ class ProjectTemplate extends HiveObject {
     String? mainFileRelativePath,
     DateTime? createdAt,
     DateTime? updatedAt,
+    double? bpm,
+    bool clearBpm = false,
+    String? musicalKey,
+    bool clearMusicalKey = false,
+    String? dawVersion,
   }) {
     return ProjectTemplate(
       id: id ?? this.id,
@@ -56,6 +80,9 @@ class ProjectTemplate extends HiveObject {
       mainFileRelativePath: mainFileRelativePath ?? this.mainFileRelativePath,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      bpm: clearBpm ? null : (bpm ?? this.bpm),
+      musicalKey: clearMusicalKey ? null : (musicalKey ?? this.musicalKey),
+      dawVersion: dawVersion ?? this.dawVersion,
     );
   }
 }

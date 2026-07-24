@@ -972,6 +972,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get dateCreatedColumn => 'Creado';
 
   @override
+  String get dateModifiedColumn => 'Modificado';
+
+  @override
   String get manageTemplateFolders => 'Gestionar Carpetas';
 
   @override

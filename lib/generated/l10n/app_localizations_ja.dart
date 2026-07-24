@@ -953,6 +953,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get dateCreatedColumn => '作成日';
 
   @override
+  String get dateModifiedColumn => '更新日';
+
+  @override
   String get manageTemplateFolders => 'フォルダを管理';
 
   @override

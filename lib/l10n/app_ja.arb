@@ -732,6 +732,7 @@
   "selectTemplatesParentFolder": "テンプレートの親フォルダを選択",
   "templateSourceFolder": "元フォルダ",
   "dateCreatedColumn": "作成日",
+  "dateModifiedColumn": "更新日",
   "manageTemplateFolders": "フォルダを管理",
   "addTemplateFolder": "フォルダを追加",
   "removeTemplateFolder": "テンプレートフォルダを削除",

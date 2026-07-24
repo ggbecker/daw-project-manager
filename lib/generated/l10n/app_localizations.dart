@@ -1727,6 +1727,12 @@ abstract class AppLocalizations {
   /// **'Created'**
   String get dateCreatedColumn;
 
+  /// No description provided for @dateModifiedColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'Modified'**
+  String get dateModifiedColumn;
+
   /// No description provided for @manageTemplateFolders.
   ///
   /// In en, this message translates to:

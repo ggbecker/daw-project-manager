@@ -971,6 +971,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get dateCreatedColumn => 'Erstellt';
 
   @override
+  String get dateModifiedColumn => 'Geändert';
+
+  @override
   String get manageTemplateFolders => 'Ordner Verwalten';
 
   @override

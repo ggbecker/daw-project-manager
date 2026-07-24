@@ -732,6 +732,7 @@
   "selectTemplatesParentFolder": "选择模板的父文件夹",
   "templateSourceFolder": "源文件夹",
   "dateCreatedColumn": "创建时间",
+  "dateModifiedColumn": "修改时间",
   "manageTemplateFolders": "管理文件夹",
   "addTemplateFolder": "添加文件夹",
   "removeTemplateFolder": "移除模板文件夹",

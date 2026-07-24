@@ -974,6 +974,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get dateCreatedColumn => 'Créé';
 
   @override
+  String get dateModifiedColumn => 'Modifié';
+
+  @override
   String get manageTemplateFolders => 'Gérer les Dossiers';
 
   @override

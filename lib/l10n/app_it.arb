@@ -732,6 +732,7 @@
   "selectTemplatesParentFolder": "Seleziona la Cartella Principale dei Modelli",
   "templateSourceFolder": "Cartella di Origine",
   "dateCreatedColumn": "Creato",
+  "dateModifiedColumn": "Modificato",
   "manageTemplateFolders": "Gestisci Cartelle",
   "addTemplateFolder": "Aggiungi Cartella",
   "removeTemplateFolder": "Rimuovi Cartella Modello",

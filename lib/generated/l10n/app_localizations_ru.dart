@@ -967,6 +967,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get dateCreatedColumn => 'Создано';
 
   @override
+  String get dateModifiedColumn => 'Изменено';
+
+  @override
   String get manageTemplateFolders => 'Управление Папками';
 
   @override
