@@ -2380,8 +2380,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 // Create new project
-                                IconButton(
+                                RailAction(
                                   icon: const Icon(Icons.create_new_folder_outlined),
+                                  label: AppLocalizations.of(context)!.createProject,
+                                  showLabel: !railCollapsed,
                                   onPressed: () {
                                     showDialog<String>(
                                       context: context,
@@ -2390,43 +2392,29 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                     );
                                   },
                                 ),
-                                if (!railCollapsed)
-                                  Text(
-                                    AppLocalizations.of(context)!.createProject,
-                                    style: Theme.of(context).textTheme.labelSmall,
-                                    textAlign: TextAlign.center,
-                                  ),
                                 const SizedBox(height: 8),
                                 // Manage project templates
-                                IconButton(
+                                RailAction(
                                   icon: const Icon(Icons.folder_copy_outlined),
+                                  label: AppLocalizations.of(context)!.projectTemplates,
+                                  showLabel: !railCollapsed,
                                   onPressed: () => Navigator.of(context).push(
                                     MaterialPageRoute(builder: (_) => const ProjectTemplatesPage()),
                                   ),
                                 ),
-                                if (!railCollapsed)
-                                  Text(
-                                    AppLocalizations.of(context)!.projectTemplates,
-                                    style: Theme.of(context).textTheme.labelSmall,
-                                    textAlign: TextAlign.center,
-                                  ),
                                 const SizedBox(height: 8),
                                 // Google Drive sync
-                                IconButton(
+                                RailAction(
                                   icon: const Icon(Icons.cloud_outlined),
+                                  label: AppLocalizations.of(context)!.googleDrive,
+                                  showLabel: !railCollapsed,
                                   onPressed: () => Navigator.of(context).push(
                                     MaterialPageRoute(builder: (_) => const GoogleDriveSyncPage()),
                                   ),
                                 ),
-                                if (!railCollapsed)
-                                  Text(
-                                    AppLocalizations.of(context)!.googleDrive,
-                                    style: Theme.of(context).textTheme.labelSmall,
-                                    textAlign: TextAlign.center,
-                                  ),
                                 const SizedBox(height: 8),
                                 // Rescan
-                                IconButton(
+                                RailAction(
                                   icon: switch (rescanIconState(
                                     isScanning: isScanning,
                                     deepScanning: _deepScanning,
@@ -2439,18 +2427,15 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                     ScanIconState.justSucceeded => const Icon(Icons.check, color: Colors.green),
                                     ScanIconState.idle => const Icon(Icons.refresh),
                                   },
+                                  label: (isScanning && !_deepScanning)
+                                      ? AppLocalizations.of(context)!.scanning
+                                      : AppLocalizations.of(context)!.rescan,
+                                  showLabel: !railCollapsed,
                                   onPressed: isAnyOperation ? null : () => _scanAll(),
                                 ),
-                                if (!railCollapsed)
-                                  Text(
-                                    (isScanning && !_deepScanning)
-                                        ? AppLocalizations.of(context)!.scanning
-                                        : AppLocalizations.of(context)!.rescan,
-                                    style: Theme.of(context).textTheme.labelSmall,
-                                  ),
                                 const SizedBox(height: 8),
                                 // Deep scan
-                                IconButton(
+                                RailAction(
                                   icon: switch (deepScanIconState(
                                     deepScanning: _deepScanning,
                                     justSucceeded: _deepScanJustSucceeded,
@@ -2460,6 +2445,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                     ScanIconState.justSucceeded => const Icon(Icons.check, color: Colors.green),
                                     ScanIconState.idle => const Icon(Icons.search),
                                   },
+                                  label: AppLocalizations.of(context)!.deepScan,
+                                  showLabel: !railCollapsed,
                                   onPressed: isAnyOperation
                                       ? null
                                       : () async {
@@ -2502,26 +2489,18 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                           if (confirm == true) await _fullScanAll(onlyUnscanned: onlyUnscanned);
                                         },
                                 ),
-                                if (!railCollapsed)
-                                  Text(
-                                    AppLocalizations.of(context)!.deepScan,
-                                    style: Theme.of(context).textTheme.labelSmall,
-                                  ),
                                 const SizedBox(height: 8),
                                 // Settings
-                                IconButton(
+                                RailAction(
                                   icon: const Icon(Icons.settings_outlined),
+                                  label: AppLocalizations.of(context)!.settings,
+                                  showLabel: !railCollapsed,
                                   onPressed: () => Navigator.of(context).push(
                                     MaterialPageRoute(
                                       builder: (_) => const ProjectFoldersSettingsPage(),
                                     ),
                                   ),
                                 ),
-                                if (!railCollapsed)
-                                  Text(
-                                    AppLocalizations.of(context)!.settings,
-                                    style: Theme.of(context).textTheme.labelSmall,
-                                  ),
                               ],
                             ),
                           ),
@@ -3401,6 +3380,51 @@ List<String> missingProjectIds(
       .where((p) => selected.contains(p.id) && !projectFileExists(p))
       .map((p) => p.id)
       .toList();
+}
+
+/// A left-rail trailing action: an icon with an optional label below it,
+/// where the whole tile (icon + label) is a single tap target rather than
+/// just the icon.
+class RailAction extends StatelessWidget {
+  const RailAction({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.showLabel,
+    required this.onPressed,
+  });
+
+  final Widget icon;
+  final String label;
+  final bool showLabel;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final color = onPressed == null ? Theme.of(context).disabledColor : cs.onSurfaceVariant;
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: onPressed,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconTheme.merge(data: IconThemeData(color: color), child: icon),
+            if (showLabel) ...[
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(color: color),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 /// What a scan-triggering button's icon should show: a spinner while its

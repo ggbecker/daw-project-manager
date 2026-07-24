@@ -33,6 +33,70 @@ TrinaRow _groupHeaderRow(String name, List<TrinaRow> children, {bool expanded = 
 }
 
 void main() {
+  group('RailAction', () {
+    // Regression test: the left rail's trailing actions (Create Project,
+    // Rescan, Settings, etc.) used to be a bare IconButton with a sibling
+    // Text label — only the icon itself was tappable, so clicking the label
+    // shown when the rail is expanded did nothing. RailAction wraps the icon
+    // and label in one InkWell so the whole tile is a single tap target.
+
+    Widget wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
+
+    testWidgets('tapping the label (not just the icon) invokes onPressed', (tester) async {
+      var tapped = false;
+      await tester.pumpWidget(wrap(RailAction(
+        icon: const Icon(Icons.settings_outlined),
+        label: 'Settings',
+        showLabel: true,
+        onPressed: () => tapped = true,
+      )));
+
+      await tester.tap(find.text('Settings'));
+      await tester.pump();
+
+      expect(tapped, isTrue);
+    });
+
+    testWidgets('tapping the icon still invokes onPressed', (tester) async {
+      var tapped = false;
+      await tester.pumpWidget(wrap(RailAction(
+        icon: const Icon(Icons.settings_outlined),
+        label: 'Settings',
+        showLabel: true,
+        onPressed: () => tapped = true,
+      )));
+
+      await tester.tap(find.byIcon(Icons.settings_outlined));
+      await tester.pump();
+
+      expect(tapped, isTrue);
+    });
+
+    testWidgets('label is hidden when showLabel is false (rail collapsed)', (tester) async {
+      await tester.pumpWidget(wrap(const RailAction(
+        icon: Icon(Icons.settings_outlined),
+        label: 'Settings',
+        showLabel: false,
+        onPressed: null,
+      )));
+
+      expect(find.text('Settings'), findsNothing);
+      expect(find.byIcon(Icons.settings_outlined), findsOneWidget);
+    });
+
+    testWidgets('a null onPressed disables the tile (no tap handler)', (tester) async {
+      await tester.pumpWidget(wrap(const RailAction(
+        icon: Icon(Icons.settings_outlined),
+        label: 'Settings',
+        showLabel: true,
+        onPressed: null,
+      )));
+
+      final inkWell = tester.widget<InkWell>(find.byType(InkWell));
+      expect(inkWell.onTap, isNull);
+    });
+  });
+
   group('shouldBlockForOperation', () {
     // Regression test: the full-screen loading overlay used to key off a
     // flag that also went true during the background initial scan at app
