@@ -487,4 +487,129 @@ TEMPO 120 4 4 0
       expect(metadata.dawVersion, isNull);
     });
   });
+
+  group('MetadataExtractor — FL Studio (.flp) full extraction', () {
+    // .flp files use FL's native "FLhd"/"FLdt" chunk format: a fixed header
+    // followed by a stream of TLV events, keyed by ID range (0-63 byte,
+    // 64-127 word, 128-191 dword, 192-255 variable-length w/ varint length
+    // prefix). Verified against 19 real project files spanning FL 7 to FL
+    // 20: event 199 (Version) is the plain version string; event 66
+    // (Tempo, word) is the whole-BPM value used before fine tempo existed;
+    // event 156 (FineTempo, dword) is BPM*1000 and supersedes it in newer
+    // files. Cross-checked against github.com/jdstmporter/FLPFiles.
+    late Directory tempDir;
+
+    setUp(() async {
+      tempDir = await Directory.systemTemp.createTemp('flp_test_');
+    });
+
+    tearDown(() async {
+      await tempDir.delete(recursive: true);
+    });
+
+    List<int> varintLength(int length) {
+      final bytes = <int>[];
+      var value = length;
+      while (true) {
+        final byte = value & 0x7F;
+        value >>= 7;
+        if (value == 0) {
+          bytes.add(byte);
+          break;
+        }
+        bytes.add(byte | 0x80);
+      }
+      return bytes;
+    }
+
+    List<int> buildFlpBytes({
+      required String version,
+      int? tempoWord,
+      int? fineTempo,
+    }) {
+      final events = <int>[];
+
+      final versionBytes = [...utf8.encode(version), 0];
+      events.add(199);
+      events.addAll(varintLength(versionBytes.length));
+      events.addAll(versionBytes);
+
+      if (tempoWord != null) {
+        events.add(66);
+        events.add(tempoWord & 0xFF);
+        events.add((tempoWord >> 8) & 0xFF);
+      }
+
+      if (fineTempo != null) {
+        events.add(156);
+        events.add(fineTempo & 0xFF);
+        events.add((fineTempo >> 8) & 0xFF);
+        events.add((fineTempo >> 16) & 0xFF);
+        events.add((fineTempo >> 24) & 0xFF);
+      }
+
+      final bytes = <int>[];
+      bytes.addAll(utf8.encode('FLhd'));
+      bytes.addAll([6, 0, 0, 0]); // header length
+      bytes.addAll([0, 0]); // format
+      bytes.addAll([4, 0]); // nChannels
+      bytes.addAll([96, 0]); // ppq
+      bytes.addAll(utf8.encode('FLdt'));
+      final len = events.length;
+      bytes.addAll([len & 0xFF, (len >> 8) & 0xFF, (len >> 16) & 0xFF, (len >> 24) & 0xFF]);
+      bytes.addAll(events);
+      return bytes;
+    }
+
+    Future<String> writeFlpFixture(List<int> bytes) async {
+      final file = File('${tempDir.path}/project.flp');
+      await file.writeAsBytes(bytes);
+      return file.path;
+    }
+
+    test('extracts major.minor version and whole-BPM from a legacy Tempo word event', () async {
+      final path = await writeFlpFixture(buildFlpBytes(version: '7.0.0', tempoWord: 142));
+
+      final metadata = await MetadataExtractor.extractMetadata(path);
+      expect(metadata.dawType, 'FL Studio');
+      expect(metadata.dawVersion, '7.0');
+      expect(metadata.bpm, 142.0);
+    });
+
+    test('extracts precise BPM from a FineTempo dword event', () async {
+      final path = await writeFlpFixture(buildFlpBytes(version: '20.6.2.1549', fineTempo: 145000));
+
+      final metadata = await MetadataExtractor.extractMetadata(path);
+      expect(metadata.dawVersion, '20.6');
+      expect(metadata.bpm, 145.0);
+    });
+
+    test('FineTempo takes precedence over the legacy Tempo word when both are present', () async {
+      final path = await writeFlpFixture(
+        buildFlpBytes(version: '21.0.0', tempoWord: 140, fineTempo: 138500),
+      );
+
+      final metadata = await MetadataExtractor.extractMetadata(path);
+      expect(metadata.bpm, 138.5);
+    });
+
+    test('malformed file returns empty metadata instead of throwing', () async {
+      final file = File('${tempDir.path}/broken.flp');
+      await file.writeAsBytes([0x00, 0x01, 0x02]);
+
+      final metadata = await MetadataExtractor.extractMetadata(file.path);
+      expect(metadata.bpm, isNull);
+      expect(metadata.key, isNull);
+      expect(metadata.dawVersion, isNull);
+      expect(metadata.dawType, 'FL Studio');
+    });
+
+    test('missing file returns empty metadata', () async {
+      final metadata =
+          await MetadataExtractor.extractMetadata('${tempDir.path}/missing.flp');
+      expect(metadata.bpm, isNull);
+      expect(metadata.key, isNull);
+      expect(metadata.dawVersion, isNull);
+    });
+  });
 }

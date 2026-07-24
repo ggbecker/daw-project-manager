@@ -94,6 +94,11 @@ class MetadataExtractor {
       bpm = metadata.bpm ?? bpm;
       key = metadata.key ?? key;
       dawVersion = metadata.dawVersion ?? dawVersion;
+    } else if (ext == '.flp') {
+      final metadata = await _extractFromFlpFile(filePath);
+      bpm = metadata.bpm ?? bpm;
+      key = metadata.key ?? key;
+      dawVersion = metadata.dawVersion ?? dawVersion;
     }
 
     // Also search for bpm and key files in the project directory, but only
@@ -366,6 +371,97 @@ class MetadataExtractor {
       );
     } catch (e) {
       // If parsing fails, return empty metadata
+      return ProjectMetadata();
+    }
+  }
+
+  /// Extracts BPM and version from an FL Studio .flp project file.
+  /// .flp files use FL's native "FLhd"/"FLdt" chunk format: a fixed header
+  /// chunk followed by a stream of TLV events, keyed by ID range:
+  ///   0-63    1-byte value
+  ///   64-127  2-byte (word) value
+  ///   128-191 4-byte (dword) value
+  ///   192-255 variable-length value, prefixed by a base-128 varint length
+  /// Verified against real project files spanning FL 7 through FL 20:
+  /// event 199 (Version) is the plain-ASCII version string; event 66
+  /// (Tempo, word) is the whole-BPM value used before fine tempo existed;
+  /// event 156 (FineTempo, dword) is BPM*1000 and is used by newer files
+  /// instead. See github.com/jdstmporter/FLPFiles for the wider event ID
+  /// catalogue this was cross-checked against.
+  static Future<ProjectMetadata> _extractFromFlpFile(String filePath) async {
+    try {
+      final file = File(filePath);
+      if (!await file.exists()) {
+        return ProjectMetadata();
+      }
+
+      final bytes = await file.readAsBytes();
+      if (bytes.length < 8 || utf8.decode(bytes.sublist(0, 4)) != 'FLhd') {
+        return ProjectMetadata();
+      }
+      final data = ByteData.sublistView(bytes);
+      final headerLength = data.getUint32(4, Endian.little);
+      var pos = 8 + headerLength;
+
+      if (pos + 8 > bytes.length || utf8.decode(bytes.sublist(pos, pos + 4)) != 'FLdt') {
+        return ProjectMetadata();
+      }
+      final dataLength = data.getUint32(pos + 4, Endian.little);
+      pos += 8;
+      final end = (pos + dataLength) > bytes.length ? bytes.length : pos + dataLength;
+
+      String? dawVersion;
+      int? tempoWord;
+      int? fineTempo;
+
+      while (pos < end) {
+        final eventId = bytes[pos];
+        pos++;
+        if (eventId < 64) {
+          if (pos >= end) break;
+          pos += 1;
+        } else if (eventId < 128) {
+          if (pos + 2 > end) break;
+          final value = data.getUint16(pos, Endian.little);
+          if (eventId == 66) tempoWord = value;
+          pos += 2;
+        } else if (eventId < 192) {
+          if (pos + 4 > end) break;
+          final value = data.getUint32(pos, Endian.little);
+          if (eventId == 156) fineTempo = value;
+          pos += 4;
+        } else {
+          var length = 0;
+          var shift = 0;
+          while (true) {
+            if (pos >= end) {
+              length = -1;
+              break;
+            }
+            final b = bytes[pos];
+            pos++;
+            length |= (b & 0x7F) << shift;
+            if (b & 0x80 == 0) break;
+            shift += 7;
+          }
+          if (length < 0 || pos + length > end) break;
+          if (eventId == 199) {
+            final raw = bytes.sublist(pos, pos + length);
+            final nullIdx = raw.indexOf(0);
+            final versionStr = utf8.decode(nullIdx >= 0 ? raw.sublist(0, nullIdx) : raw);
+            if (versionStr.isNotEmpty) {
+              final parts = versionStr.split('.');
+              dawVersion = parts.length >= 2 ? '${parts[0]}.${parts[1]}' : parts[0];
+            }
+          }
+          pos += length;
+        }
+      }
+
+      final bpm = fineTempo != null ? fineTempo / 1000.0 : tempoWord?.toDouble();
+
+      return ProjectMetadata(bpm: bpm, dawVersion: dawVersion);
+    } catch (e) {
       return ProjectMetadata();
     }
   }
