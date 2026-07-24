@@ -355,6 +355,21 @@ void main() {
     });
   });
 
+  group('camelotCodeForKey (top-level)', () {
+    // MusicProject.camelotCode delegates to this function so templates (and
+    // anything else without a MusicProject instance) can reuse the same
+    // lookup table without duplicating it.
+    test('matches MusicProject.camelotCode for the same key', () {
+      final p = TestFactories.makeProject(musicalKey: 'c minor');
+      expect(camelotCodeForKey('c minor'), p.camelotCode);
+    });
+
+    test('returns null for null or empty input', () {
+      expect(camelotCodeForKey(null), isNull);
+      expect(camelotCodeForKey(''), isNull);
+    });
+  });
+
   group('MusicProject.copyWith', () {
     test('preserves unchanged fields', () {
       final original = TestFactories.makeProject(bpm: 128.0, notes: 'cool track');

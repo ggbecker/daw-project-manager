@@ -731,6 +731,7 @@
   "useTemplate": "Utiliser",
   "selectTemplatesParentFolder": "Sélectionner le Dossier Parent des Modèles",
   "templateSourceFolder": "Dossier Source",
+  "templateFile": "Fichier",
   "dateCreatedColumn": "Créé",
   "dateModifiedColumn": "Modifié",
   "manageTemplateFolders": "Gérer les Dossiers",
@@ -754,6 +755,28 @@
   "@templatesRefreshedSummary": {
     "placeholders": {
       "count": { "type": "int" }
+    }
+  },
+  "templatesSelected": "{count} modèle{plural} sélectionné{plural}",
+  "@templatesSelected": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
+  "deleteSelectedTemplates": "Supprimer la sélection",
+  "deleteSelectedTemplatesConfirm": "Voulez-vous vraiment supprimer {count} modèle{plural} ?",
+  "@deleteSelectedTemplatesConfirm": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
+  "templatesDeleted": "{count} modèle{plural} supprimé{plural}",
+  "@templatesDeleted": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
     }
   },
   "importTodos": "Importer des Tâches depuis un Fichier",

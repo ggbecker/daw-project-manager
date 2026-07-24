@@ -731,6 +731,7 @@
   "useTemplate": "使用",
   "selectTemplatesParentFolder": "选择模板的父文件夹",
   "templateSourceFolder": "源文件夹",
+  "templateFile": "文件",
   "dateCreatedColumn": "创建时间",
   "dateModifiedColumn": "修改时间",
   "manageTemplateFolders": "管理文件夹",
@@ -754,6 +755,28 @@
   "@templatesRefreshedSummary": {
     "placeholders": {
       "count": { "type": "int" }
+    }
+  },
+  "templatesSelected": "已选择{count}个模板{plural}",
+  "@templatesSelected": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
+  "deleteSelectedTemplates": "删除所选",
+  "deleteSelectedTemplatesConfirm": "确定要删除{count}个模板{plural}吗?",
+  "@deleteSelectedTemplatesConfirm": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
+  "templatesDeleted": "已删除{count}个模板{plural}",
+  "@templatesDeleted": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
     }
   },
   "importTodos": "从文件导入待办事项",

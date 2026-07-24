@@ -1721,6 +1721,12 @@ abstract class AppLocalizations {
   /// **'Source Folder'**
   String get templateSourceFolder;
 
+  /// No description provided for @templateFile.
+  ///
+  /// In en, this message translates to:
+  /// **'File'**
+  String get templateFile;
+
   /// No description provided for @dateCreatedColumn.
   ///
   /// In en, this message translates to:
@@ -1780,6 +1786,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} new template(s) added'**
   String templatesRefreshedSummary(int count);
+
+  /// No description provided for @templatesSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} template{plural} selected'**
+  String templatesSelected(int count, String plural);
+
+  /// No description provided for @deleteSelectedTemplates.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Selected'**
+  String get deleteSelectedTemplates;
+
+  /// No description provided for @deleteSelectedTemplatesConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete {count} template{plural}?'**
+  String deleteSelectedTemplatesConfirm(int count, String plural);
+
+  /// No description provided for @templatesDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} template{plural} deleted'**
+  String templatesDeleted(int count, String plural);
 
   /// No description provided for @importTodos.
   ///

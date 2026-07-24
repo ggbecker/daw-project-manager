@@ -946,6 +946,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get templateSourceFolder => '源文件夹';
 
   @override
+  String get templateFile => '文件';
+
+  @override
   String get dateCreatedColumn => '创建时间';
 
   @override
@@ -979,6 +982,24 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String templatesRefreshedSummary(int count) {
     return '已添加$count个新模板';
+  }
+
+  @override
+  String templatesSelected(int count, String plural) {
+    return '已选择$count个模板$plural';
+  }
+
+  @override
+  String get deleteSelectedTemplates => '删除所选';
+
+  @override
+  String deleteSelectedTemplatesConfirm(int count, String plural) {
+    return '确定要删除$count个模板$plural吗?';
+  }
+
+  @override
+  String templatesDeleted(int count, String plural) {
+    return '已删除$count个模板$plural';
   }
 
   @override

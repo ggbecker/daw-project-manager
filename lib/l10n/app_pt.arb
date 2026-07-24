@@ -731,6 +731,7 @@
   "useTemplate": "Usar",
   "selectTemplatesParentFolder": "Selecione a Pasta Principal dos Templates",
   "templateSourceFolder": "Pasta de Origem",
+  "templateFile": "Arquivo",
   "dateCreatedColumn": "Criado",
   "dateModifiedColumn": "Modificado",
   "manageTemplateFolders": "Gerenciar Pastas",
@@ -754,6 +755,28 @@
   "@templatesRefreshedSummary": {
     "placeholders": {
       "count": { "type": "int" }
+    }
+  },
+  "templatesSelected": "{count} template{plural} selecionado{plural}",
+  "@templatesSelected": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
+  "deleteSelectedTemplates": "Excluir selecionados",
+  "deleteSelectedTemplatesConfirm": "Tem certeza de que deseja excluir {count} template{plural}?",
+  "@deleteSelectedTemplatesConfirm": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
+  "templatesDeleted": "{count} template{plural} excluído{plural}",
+  "@templatesDeleted": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
     }
   },
   "importTodos": "Importar Tarefas de Arquivo",

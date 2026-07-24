@@ -950,6 +950,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get templateSourceFolder => '元フォルダ';
 
   @override
+  String get templateFile => 'ファイル';
+
+  @override
   String get dateCreatedColumn => '作成日';
 
   @override
@@ -983,6 +986,24 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String templatesRefreshedSummary(int count) {
     return '$count件の新しいテンプレートを追加しました';
+  }
+
+  @override
+  String templatesSelected(int count, String plural) {
+    return '$count件のテンプレート$pluralを選択しました';
+  }
+
+  @override
+  String get deleteSelectedTemplates => '選択項目を削除';
+
+  @override
+  String deleteSelectedTemplatesConfirm(int count, String plural) {
+    return '$count件のテンプレート$pluralを削除してもよろしいですか?';
+  }
+
+  @override
+  String templatesDeleted(int count, String plural) {
+    return '$count件のテンプレート$pluralを削除しました';
   }
 
   @override

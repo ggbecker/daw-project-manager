@@ -968,6 +968,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get templateSourceFolder => 'Quellordner';
 
   @override
+  String get templateFile => 'Datei';
+
+  @override
   String get dateCreatedColumn => 'Erstellt';
 
   @override
@@ -1002,6 +1005,24 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String templatesRefreshedSummary(int count) {
     return '$count neue Vorlage(n) hinzugefügt';
+  }
+
+  @override
+  String templatesSelected(int count, String plural) {
+    return '$count Vorlage$plural ausgewählt';
+  }
+
+  @override
+  String get deleteSelectedTemplates => 'Auswahl löschen';
+
+  @override
+  String deleteSelectedTemplatesConfirm(int count, String plural) {
+    return 'Möchten Sie $count Vorlage$plural wirklich löschen?';
+  }
+
+  @override
+  String templatesDeleted(int count, String plural) {
+    return '$count Vorlage$plural gelöscht';
   }
 
   @override

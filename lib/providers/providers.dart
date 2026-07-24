@@ -618,10 +618,13 @@ class SelectedProjectsNotifier extends Notifier<Set<String>> {
     state = current;
   }
 
-  /// Selects every id between [anchorId] and [targetId] (inclusive) in
-  /// [orderedIds], replacing the current selection — the standard
-  /// shift-click behavior for extending a selection from the last
-  /// individually-clicked row to the one just shift-clicked.
+  /// Adds every id between [anchorId] and [targetId] (inclusive) in
+  /// [orderedIds] to the current selection — the standard shift-click
+  /// behavior for extending a selection from the last individually-clicked
+  /// row to the one just shift-clicked. Merges with whatever was already
+  /// selected (e.g. from an earlier, unrelated shift-click range) instead of
+  /// replacing it, so an earlier range-select isn't lost when the user
+  /// clicks a new anchor and shift-clicks again elsewhere in the table.
   /// Falls back to a plain toggle of [targetId] if either id isn't present
   /// in [orderedIds] (e.g. the anchor scrolled out of a filtered view).
   void selectRange(List<String> orderedIds, String anchorId, String targetId) {
@@ -633,7 +636,49 @@ class SelectedProjectsNotifier extends Notifier<Set<String>> {
     }
     final start = anchorIndex < targetIndex ? anchorIndex : targetIndex;
     final end = anchorIndex < targetIndex ? targetIndex : anchorIndex;
-    state = orderedIds.sublist(start, end + 1).toSet();
+    state = {...state, ...orderedIds.sublist(start, end + 1)};
+  }
+}
+
+// Selected Templates Provider — same shape as SelectedProjectsNotifier but
+// kept separate since it tracks a different screen's selection (the
+// Project Templates table), not project ids.
+final selectedTemplatesProvider = NotifierProvider<SelectedTemplatesNotifier, Set<String>>(() {
+  return SelectedTemplatesNotifier();
+});
+
+class SelectedTemplatesNotifier extends Notifier<Set<String>> {
+  @override
+  Set<String> build() => <String>{};
+
+  void toggle(String templateId) {
+    final current = Set<String>.from(state);
+    if (current.contains(templateId)) {
+      current.remove(templateId);
+    } else {
+      current.add(templateId);
+    }
+    state = current;
+  }
+
+  void selectAll(List<String> templateIds) {
+    state = Set<String>.from(templateIds);
+  }
+
+  void clear() {
+    state = <String>{};
+  }
+
+  void selectRange(List<String> orderedIds, String anchorId, String targetId) {
+    final anchorIndex = orderedIds.indexOf(anchorId);
+    final targetIndex = orderedIds.indexOf(targetId);
+    if (anchorIndex == -1 || targetIndex == -1) {
+      toggle(targetId);
+      return;
+    }
+    final start = anchorIndex < targetIndex ? anchorIndex : targetIndex;
+    final end = anchorIndex < targetIndex ? targetIndex : anchorIndex;
+    state = {...state, ...orderedIds.sublist(start, end + 1)};
   }
 }
 

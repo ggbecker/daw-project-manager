@@ -731,6 +731,7 @@
   "useTemplate": "Usa",
   "selectTemplatesParentFolder": "Seleziona la Cartella Principale dei Modelli",
   "templateSourceFolder": "Cartella di Origine",
+  "templateFile": "File",
   "dateCreatedColumn": "Creato",
   "dateModifiedColumn": "Modificato",
   "manageTemplateFolders": "Gestisci Cartelle",
@@ -754,6 +755,28 @@
   "@templatesRefreshedSummary": {
     "placeholders": {
       "count": { "type": "int" }
+    }
+  },
+  "templatesSelected": "{count} modello{plural} selezionato{plural}",
+  "@templatesSelected": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
+  "deleteSelectedTemplates": "Elimina selezione",
+  "deleteSelectedTemplatesConfirm": "Eliminare {count} modello{plural}?",
+  "@deleteSelectedTemplatesConfirm": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
+  "templatesDeleted": "{count} modello{plural} eliminato{plural}",
+  "@templatesDeleted": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
     }
   },
   "importTodos": "Importa Attività da File",

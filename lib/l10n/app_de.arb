@@ -731,6 +731,7 @@
   "useTemplate": "Verwenden",
   "selectTemplatesParentFolder": "Übergeordneten Ordner der Vorlagen Auswählen",
   "templateSourceFolder": "Quellordner",
+  "templateFile": "Datei",
   "dateCreatedColumn": "Erstellt",
   "dateModifiedColumn": "Geändert",
   "manageTemplateFolders": "Ordner Verwalten",
@@ -754,6 +755,28 @@
   "@templatesRefreshedSummary": {
     "placeholders": {
       "count": { "type": "int" }
+    }
+  },
+  "templatesSelected": "{count} Vorlage{plural} ausgewählt",
+  "@templatesSelected": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
+  "deleteSelectedTemplates": "Auswahl löschen",
+  "deleteSelectedTemplatesConfirm": "Möchten Sie {count} Vorlage{plural} wirklich löschen?",
+  "@deleteSelectedTemplatesConfirm": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
+  "templatesDeleted": "{count} Vorlage{plural} gelöscht",
+  "@templatesDeleted": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
     }
   },
   "importTodos": "Aufgaben aus Datei importieren",

@@ -893,6 +893,7 @@
   "useTemplate": "Use",
   "selectTemplatesParentFolder": "Select Parent Folder of Templates",
   "templateSourceFolder": "Source Folder",
+  "templateFile": "File",
   "dateCreatedColumn": "Created",
   "dateModifiedColumn": "Modified",
   "manageTemplateFolders": "Manage Folders",
@@ -916,6 +917,28 @@
   "@templatesRefreshedSummary": {
     "placeholders": {
       "count": { "type": "int" }
+    }
+  },
+  "templatesSelected": "{count} template{plural} selected",
+  "@templatesSelected": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
+  "deleteSelectedTemplates": "Delete Selected",
+  "deleteSelectedTemplatesConfirm": "Are you sure you want to delete {count} template{plural}?",
+  "@deleteSelectedTemplatesConfirm": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
+  "templatesDeleted": "{count} template{plural} deleted",
+  "@templatesDeleted": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
     }
   },
   "importTodos": "Import Todos from File",

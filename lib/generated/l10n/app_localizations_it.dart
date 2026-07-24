@@ -968,6 +968,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get templateSourceFolder => 'Cartella di Origine';
 
   @override
+  String get templateFile => 'File';
+
+  @override
   String get dateCreatedColumn => 'Creato';
 
   @override
@@ -1003,6 +1006,24 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String templatesRefreshedSummary(int count) {
     return '$count nuovo/i modello/i aggiunto/i';
+  }
+
+  @override
+  String templatesSelected(int count, String plural) {
+    return '$count modello$plural selezionato$plural';
+  }
+
+  @override
+  String get deleteSelectedTemplates => 'Elimina selezione';
+
+  @override
+  String deleteSelectedTemplatesConfirm(int count, String plural) {
+    return 'Eliminare $count modello$plural?';
+  }
+
+  @override
+  String templatesDeleted(int count, String plural) {
+    return '$count modello$plural eliminato$plural';
   }
 
   @override

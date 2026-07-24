@@ -731,6 +731,7 @@
   "useTemplate": "Usar",
   "selectTemplatesParentFolder": "Selecciona la Carpeta Principal de Plantillas",
   "templateSourceFolder": "Carpeta de Origen",
+  "templateFile": "Archivo",
   "dateCreatedColumn": "Creado",
   "dateModifiedColumn": "Modificado",
   "manageTemplateFolders": "Gestionar Carpetas",
@@ -754,6 +755,28 @@
   "@templatesRefreshedSummary": {
     "placeholders": {
       "count": { "type": "int" }
+    }
+  },
+  "templatesSelected": "{count} plantilla{plural} seleccionada{plural}",
+  "@templatesSelected": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
+  "deleteSelectedTemplates": "Eliminar selección",
+  "deleteSelectedTemplatesConfirm": "¿Seguro que quieres eliminar {count} plantilla{plural}?",
+  "@deleteSelectedTemplatesConfirm": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
+  "templatesDeleted": "{count} plantilla{plural} eliminada{plural}",
+  "@templatesDeleted": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
     }
   },
   "importTodos": "Importar Tareas desde Archivo",

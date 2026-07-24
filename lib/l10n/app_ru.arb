@@ -731,6 +731,7 @@
   "useTemplate": "Использовать",
   "selectTemplatesParentFolder": "Выберите Родительскую Папку Шаблонов",
   "templateSourceFolder": "Исходная Папка",
+  "templateFile": "Файл",
   "dateCreatedColumn": "Создано",
   "dateModifiedColumn": "Изменено",
   "manageTemplateFolders": "Управление Папками",
@@ -754,6 +755,28 @@
   "@templatesRefreshedSummary": {
     "placeholders": {
       "count": { "type": "int" }
+    }
+  },
+  "templatesSelected": "Выбрано шаблонов: {count}{plural}",
+  "@templatesSelected": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
+  "deleteSelectedTemplates": "Удалить выбранное",
+  "deleteSelectedTemplatesConfirm": "Удалить выбранные шаблоны ({count}{plural})?",
+  "@deleteSelectedTemplatesConfirm": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
+  "templatesDeleted": "Удалено шаблонов: {count}{plural}",
+  "@templatesDeleted": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
     }
   },
   "importTodos": "Импортировать Задачи из Файла",

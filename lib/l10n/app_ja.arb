@@ -731,6 +731,7 @@
   "useTemplate": "使用",
   "selectTemplatesParentFolder": "テンプレートの親フォルダを選択",
   "templateSourceFolder": "元フォルダ",
+  "templateFile": "ファイル",
   "dateCreatedColumn": "作成日",
   "dateModifiedColumn": "更新日",
   "manageTemplateFolders": "フォルダを管理",
@@ -754,6 +755,28 @@
   "@templatesRefreshedSummary": {
     "placeholders": {
       "count": { "type": "int" }
+    }
+  },
+  "templatesSelected": "{count}件のテンプレート{plural}を選択しました",
+  "@templatesSelected": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
+  "deleteSelectedTemplates": "選択項目を削除",
+  "deleteSelectedTemplatesConfirm": "{count}件のテンプレート{plural}を削除してもよろしいですか?",
+  "@deleteSelectedTemplatesConfirm": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
+  "templatesDeleted": "{count}件のテンプレート{plural}を削除しました",
+  "@templatesDeleted": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
     }
   },
   "importTodos": "ファイルからタスクをインポート",

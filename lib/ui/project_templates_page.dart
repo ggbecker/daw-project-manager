@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show HardwareKeyboard;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:intl/intl.dart';
@@ -11,6 +12,7 @@ import 'package:trina_grid/trina_grid.dart';
 import 'package:uuid/uuid.dart';
 
 import '../generated/l10n/app_localizations.dart';
+import '../models/music_project.dart' show camelotCodeForKey;
 import '../models/project_template.dart';
 import '../models/template_root.dart';
 import '../providers/providers.dart';
@@ -24,6 +26,20 @@ import '../utils/mobile_utils.dart';
 import 'dialogs/create_project_dialog.dart';
 import 'widgets/desktop_title_bar.dart';
 
+/// Same comparator shape as the main dashboard table's
+/// `compareLastModifiedCellValues` — cell values are raw `DateTime?`s (not
+/// the formatted display string) so sorting is chronological. A missing
+/// source file (no on-disk timestamp) sorts before everything with a date.
+/// Public (rather than private) so it can be unit tested the same way.
+int compareTemplateModifiedCellValues(dynamic a, dynamic b) {
+  final dateA = a as DateTime?;
+  final dateB = b as DateTime?;
+  if (dateA == null && dateB == null) return 0;
+  if (dateA == null) return -1;
+  if (dateB == null) return 1;
+  return dateA.compareTo(dateB);
+}
+
 class ProjectTemplatesPage extends ConsumerStatefulWidget {
   const ProjectTemplatesPage({super.key});
 
@@ -35,6 +51,12 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
   final _uuid = const Uuid();
   final _searchController = TextEditingController();
   String _query = '';
+
+  // The last individually-clicked (non-shift) template checkbox — the
+  // anchor a shift-click range-selects from. Mirrors the dashboard's
+  // project-table selection UX; intentionally not persisted to
+  // selectedTemplatesProvider since it's a transient interaction concept.
+  String? _selectionAnchorId;
 
   @override
   void initState() {
@@ -48,6 +70,63 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  Set<String> get _selectedTemplateIds => ref.watch(selectedTemplatesProvider);
+
+  void _toggleTemplateSelection(String templateId) {
+    _selectionAnchorId = templateId;
+    ref.read(selectedTemplatesProvider.notifier).toggle(templateId);
+  }
+
+  void _selectTemplateRange(List<String> orderedIds, String targetId) {
+    final anchor = _selectionAnchorId;
+    if (anchor == null) {
+      _toggleTemplateSelection(targetId);
+      return;
+    }
+    ref.read(selectedTemplatesProvider.notifier).selectRange(orderedIds, anchor, targetId);
+    _selectionAnchorId = targetId;
+  }
+
+  void _clearTemplateSelection() {
+    _selectionAnchorId = null;
+    ref.read(selectedTemplatesProvider.notifier).clear();
+  }
+
+  Future<void> _deleteSelectedTemplates(List<ProjectTemplate> selected) async {
+    final l10n = AppLocalizations.of(context)!;
+    final plural = selected.length == 1 ? '' : 's';
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.deleteSelectedTemplates),
+        content: Text(l10n.deleteSelectedTemplatesConfirm(selected.length, plural)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: Text(l10n.delete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    final notifier = ref.read(projectTemplatesNotifierProvider.notifier);
+    for (final template in selected) {
+      await notifier.deleteTemplate(template.id);
+    }
+    _clearTemplateSelection();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.templatesDeleted(selected.length, plural))),
+      );
+    }
   }
 
   Future<void> _pickMainFile() async {
@@ -414,6 +493,9 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
 
     if (confirmed == true) {
       ref.read(projectTemplatesNotifierProvider.notifier).deleteTemplate(template.id);
+      if (ref.read(selectedTemplatesProvider).contains(template.id)) {
+        ref.read(selectedTemplatesProvider.notifier).toggle(template.id);
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.templateDeleted)),
@@ -429,50 +511,86 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
     );
   }
 
-  List<TrinaColumn> _buildColumns(AppLocalizations l10n) {
+  /// [orderedIds] is the current filtered/visible row order — needed by the
+  /// header "select all" checkbox and by shift-click range selection, the
+  /// same way the main dashboard table's checkbox column works.
+  List<TrinaColumn> _buildColumns(AppLocalizations l10n, List<String> orderedIds) {
     return [
+      TrinaColumn(
+        title: '',
+        field: 'checkbox',
+        type: TrinaColumnType.text(),
+        width: 50,
+        minWidth: 50,
+        frozen: TrinaColumnFrozen.start,
+        enableColumnDrag: false,
+        enableContextMenu: false,
+        enableFilterMenuItem: false,
+        enableSorting: false,
+        enableEditingMode: false,
+        titleRenderer: (rendererContext) {
+          final selected = _selectedTemplateIds;
+          final allSelected = orderedIds.isNotEmpty && orderedIds.every(selected.contains);
+          final style = rendererContext.stateManager.configuration.style;
+          return DecoratedBox(
+            decoration: BoxDecoration(
+              color: rendererContext.column.backgroundColor,
+              border: BorderDirectional(
+                end: style.enableColumnBorderVertical ? BorderSide(color: style.borderColor) : BorderSide.none,
+              ),
+            ),
+            child: Center(
+              child: Transform.scale(
+                scale: 0.78,
+                child: Checkbox(
+                  value: allSelected,
+                  tristate: selected.isNotEmpty && !allSelected,
+                  onChanged: (_) => allSelected ? _clearTemplateSelection() : ref.read(selectedTemplatesProvider.notifier).selectAll(orderedIds),
+                ),
+              ),
+            ),
+          );
+        },
+        renderer: (ctx) {
+          final template = ctx.row.cells['data']!.value as ProjectTemplate;
+          final isSelected = _selectedTemplateIds.contains(template.id);
+          return Transform.scale(
+            scale: 0.78,
+            child: Checkbox(
+              value: isSelected,
+              onChanged: (value) {
+                if (HardwareKeyboard.instance.isShiftPressed) {
+                  _selectTemplateRange(orderedIds, template.id);
+                } else {
+                  _toggleTemplateSelection(template.id);
+                }
+              },
+            ),
+          );
+        },
+      ),
       TrinaColumn(
         title: l10n.templateName,
         field: 'name',
         type: TrinaColumnType.text(),
         enableEditingMode: false,
         enableContextMenu: false,
-        width: 260,
+        width: 240,
         minWidth: 160,
+        frozen: TrinaColumnFrozen.start,
         renderer: (ctx) {
           final template = ctx.row.cells['data']!.value as ProjectTemplate;
-          final ext = p.extension(template.mainFileRelativePath);
-          final dawType = MetadataExtractor.getDawTypeFromExtension(ext);
-          final logoPath = getDawLogoPath(dawType);
-          return Row(
-            children: [
-              logoPath != null
-                  ? Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: Image.asset(
-                        logoPath,
-                        width: 20,
-                        height: 20,
-                        errorBuilder: (context, error, stackTrace) => const Icon(Icons.piano_outlined, size: 20),
-                      ),
-                    )
-                  : const Padding(
-                      padding: EdgeInsets.only(right: 8),
-                      child: Icon(Icons.piano_outlined, size: 20),
-                    ),
-              Expanded(child: Text(template.name, overflow: TextOverflow.ellipsis)),
-            ],
-          );
+          return Text(template.name, overflow: TextOverflow.ellipsis);
         },
       ),
       TrinaColumn(
-        title: l10n.templateSourceFolder,
-        field: 'path',
+        title: l10n.templateFile,
+        field: 'file',
         type: TrinaColumnType.text(),
         enableEditingMode: false,
         enableContextMenu: false,
-        width: 380,
-        minWidth: 200,
+        width: 260,
+        minWidth: 160,
         renderer: (ctx) {
           final template = ctx.row.cells['data']!.value as ProjectTemplate;
           final fullPath = p.join(template.sourceFolderPath, template.mainFileRelativePath);
@@ -487,11 +605,40 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
                 child: Tooltip(
                   message: fullPath,
                   child: Text(
-                    sourceExists ? fullPath : AppLocalizations.of(context)!.templateSourceMissing,
+                    sourceExists ? template.mainFileRelativePath : AppLocalizations.of(context)!.templateSourceMissing,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ),
+            ],
+          );
+        },
+      ),
+      TrinaColumn(
+        title: l10n.daw,
+        field: 'dawType',
+        type: TrinaColumnType.text(),
+        enableEditingMode: false,
+        enableContextMenu: false,
+        width: 140,
+        minWidth: 100,
+        renderer: (ctx) {
+          final dawType = ctx.cell.value as String? ?? '';
+          final logoPath = getDawLogoPath(dawType);
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (logoPath != null)
+                Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: Image.asset(
+                    logoPath,
+                    width: 16,
+                    height: 16,
+                    errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                  ),
+                ),
+              Flexible(child: Text(dawType, overflow: TextOverflow.ellipsis)),
             ],
           );
         },
@@ -506,22 +653,94 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
         minWidth: 80,
       ),
       TrinaColumn(
-        title: l10n.key,
+        title: l10n.key.split(' ').first,
         field: 'key',
         type: TrinaColumnType.text(),
         enableEditingMode: false,
         enableContextMenu: false,
-        width: 130,
-        minWidth: 110,
+        width: 150,
+        minWidth: 120,
+        renderer: (ctx) {
+          final template = ctx.row.cells['data']!.value as ProjectTemplate;
+          final key = template.musicalKey;
+          if (key == null || key.isEmpty) return const SizedBox.shrink();
+          final camelot = camelotCodeForKey(key);
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Flexible(
+                child: Text(
+                  key,
+                  style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color, fontSize: 12),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (camelot != null) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  child: Container(width: 1, height: 14, color: Colors.grey.withValues(alpha: 0.3)),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(3),
+                    border: Border.all(color: Colors.blue.withValues(alpha: 0.4), width: 1),
+                  ),
+                  child: Text(
+                    camelot,
+                    style: const TextStyle(color: Colors.blue, fontSize: 10, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ],
+          );
+        },
       ),
       TrinaColumn(
         title: l10n.dateModifiedColumn,
         field: 'modifiedAt',
-        type: TrinaColumnType.text(),
+        // Cell values are raw DateTimes (not the formatted display string),
+        // same as the main dashboard table's lastModified column, so sorting
+        // compares chronologically instead of alphabetically.
+        type: TrinaColumnType.custom(compare: compareTemplateModifiedCellValues),
         enableEditingMode: false,
         enableContextMenu: false,
-        width: 130,
-        minWidth: 110,
+        width: 200,
+        minWidth: 160,
+        renderer: (ctx) {
+          final date = ctx.cell.value as DateTime?;
+          if (date == null) return const SizedBox.shrink();
+          return Consumer(
+            builder: (context, ref, _) {
+              final colorEnabled = ref.watch(lastModifiedColorProvider);
+              final dateFormat = ref.watch(dateFormatProvider);
+              final defaultColor = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
+
+              Color textColor;
+              if (!colorEnabled) {
+                textColor = defaultColor;
+              } else {
+                final daysSinceModified = DateTime.now().difference(date).inDays;
+                if (daysSinceModified < 21) {
+                  textColor = defaultColor;
+                } else if (daysSinceModified < 60) {
+                  final ratio = (daysSinceModified - 21) / 39.0;
+                  textColor = Color.lerp(Colors.yellow.shade300, Colors.orange.shade400, ratio)!;
+                } else {
+                  final ratio = ((daysSinceModified - 60) / 60.0).clamp(0.0, 1.0);
+                  textColor = Color.lerp(Colors.orange.shade400, Colors.red.shade400, ratio)!;
+                }
+              }
+
+              return Text(
+                dateFormat.format(date),
+                style: TextStyle(color: textColor),
+              );
+            },
+          );
+        },
       ),
       TrinaColumn(
         title: l10n.actions,
@@ -568,21 +787,26 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
 
   /// The main file's own last-modified timestamp on disk — not
   /// [ProjectTemplate.createdAt]/[updatedAt], which only track when the
-  /// template record itself was registered/edited in the app.
-  String _lastModifiedLabel(ProjectTemplate template) {
+  /// template record itself was registered/edited in the app. Null if the
+  /// source file is missing.
+  DateTime? _lastModifiedDate(ProjectTemplate template) {
     final file = File(p.join(template.sourceFolderPath, template.mainFileRelativePath));
-    if (!file.existsSync()) return '';
-    return DateFormat('yyyy-MM-dd').format(file.lastModifiedSync());
+    if (!file.existsSync()) return null;
+    return file.lastModifiedSync();
   }
 
   List<TrinaRow> _buildRows(List<ProjectTemplate> templates) {
     return templates
         .map((template) => TrinaRow(cells: {
+              'checkbox': TrinaCell(value: ''),
               'name': TrinaCell(value: template.name),
-              'path': TrinaCell(value: template.sourceFolderPath),
+              'file': TrinaCell(value: template.mainFileRelativePath),
+              'dawType': TrinaCell(
+                value: MetadataExtractor.getDawTypeFromExtension(p.extension(template.mainFileRelativePath)) ?? '',
+              ),
               'bpm': TrinaCell(value: template.bpm != null ? template.bpm!.toStringAsFixed(template.bpm! % 1 == 0 ? 0 : 2) : ''),
               'key': TrinaCell(value: template.musicalKey ?? ''),
-              'modifiedAt': TrinaCell(value: _lastModifiedLabel(template)),
+              'modifiedAt': TrinaCell(value: _lastModifiedDate(template)),
               'actions': TrinaCell(value: ''),
               'data': TrinaCell(value: template),
             }))
@@ -688,52 +912,96 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
                   return Center(child: Text(l10n.noMatchingTemplates));
                 }
 
-                return TrinaGrid(
-                  key: ValueKey(
-                    'project_templates_grid_${l10n.localeName}_${ref.watch(themeTypeProvider).name}_${filtered.map((t) => '${t.id}_${t.updatedAt}').join(',')}',
-                  ),
-                  columns: _buildColumns(l10n),
-                  rows: _buildRows(filtered),
-                  rowColorCallback: (TrinaRowColorContext ctx) => ctx.rowIdx.isOdd ? oddColor : evenColor,
-                  configuration: TrinaGridConfiguration(
-                    style: TrinaGridStyleConfig(
-                      gridBackgroundColor: activeTheme.cardColor,
-                      gridBorderColor: isNeon
-                          ? activeTheme.colorScheme.primary.withValues(alpha: 0.25)
-                          : activeTheme.dividerColor.withValues(alpha: 0.4),
-                      borderColor: isNeon
-                          ? activeTheme.colorScheme.primary.withValues(alpha: 0.15)
-                          : activeTheme.dividerColor.withValues(alpha: 0.25),
-                      gridBorderRadius: BorderRadius.zero,
-                      rowColor: activeTheme.cardColor,
-                      cellColorInEditState: Colors.transparent,
-                      cellColorInReadOnlyState: Colors.transparent,
-                      columnTextStyle: TextStyle(
-                        color: isNeon ? activeTheme.colorScheme.primary : activeTheme.textTheme.titleMedium?.color,
-                        fontWeight: FontWeight.w600,
+                final orderedIds = filtered.map((t) => t.id).toList();
+                final selectedIds = _selectedTemplateIds;
+                final selectedTemplates = templates.where((t) => selectedIds.contains(t.id)).toList();
+
+                return Column(
+                  children: [
+                    Expanded(
+                      child: TrinaGrid(
+                        key: ValueKey(
+                          'project_templates_grid_${l10n.localeName}_${ref.watch(themeTypeProvider).name}_'
+                          '${filtered.map((t) => '${t.id}_${t.updatedAt}').join(',')}_${selectedIds.join(',')}',
+                        ),
+                        columns: _buildColumns(l10n, orderedIds),
+                        rows: _buildRows(filtered),
+                        rowColorCallback: (TrinaRowColorContext ctx) => ctx.rowIdx.isOdd ? oddColor : evenColor,
+                        configuration: TrinaGridConfiguration(
+                          style: TrinaGridStyleConfig(
+                            gridBackgroundColor: activeTheme.cardColor,
+                            gridBorderColor: isNeon
+                                ? activeTheme.colorScheme.primary.withValues(alpha: 0.25)
+                                : activeTheme.dividerColor.withValues(alpha: 0.4),
+                            borderColor: isNeon
+                                ? activeTheme.colorScheme.primary.withValues(alpha: 0.15)
+                                : activeTheme.dividerColor.withValues(alpha: 0.25),
+                            gridBorderRadius: BorderRadius.zero,
+                            rowColor: activeTheme.cardColor,
+                            cellColorInEditState: Colors.transparent,
+                            cellColorInReadOnlyState: Colors.transparent,
+                            columnTextStyle: TextStyle(
+                              color: isNeon ? activeTheme.colorScheme.primary : activeTheme.textTheme.titleMedium?.color,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            cellTextStyle: TextStyle(color: activeTheme.textTheme.bodyMedium?.color),
+                            columnHeight: 44,
+                            rowHeight: 48,
+                            activatedBorderColor: activeTheme.colorScheme.primary,
+                            activatedColor: Colors.transparent,
+                            iconColor: isNeon
+                                ? activeTheme.colorScheme.primary.withValues(alpha: 0.7)
+                                : activeTheme.textTheme.bodyMedium?.color ?? Colors.grey,
+                            menuBackgroundColor: activeTheme.cardColor,
+                            oddRowColor: oddColor,
+                            evenRowColor: evenColor,
+                          ),
+                          columnSize: const TrinaGridColumnSizeConfig(
+                            autoSizeMode: TrinaAutoSizeMode.scale,
+                            resizeMode: TrinaResizeMode.pushAndPull,
+                          ),
+                        ),
                       ),
-                      cellTextStyle: TextStyle(color: activeTheme.textTheme.bodyMedium?.color),
-                      columnHeight: 44,
-                      rowHeight: 48,
-                      activatedBorderColor: activeTheme.colorScheme.primary,
-                      activatedColor: Colors.transparent,
-                      iconColor: isNeon
-                          ? activeTheme.colorScheme.primary.withValues(alpha: 0.7)
-                          : activeTheme.textTheme.bodyMedium?.color ?? Colors.grey,
-                      menuBackgroundColor: activeTheme.cardColor,
-                      oddRowColor: oddColor,
-                      evenRowColor: evenColor,
                     ),
-                    columnSize: const TrinaGridColumnSizeConfig(
-                      autoSizeMode: TrinaAutoSizeMode.scale,
-                      resizeMode: TrinaResizeMode.pushAndPull,
-                    ),
-                  ),
+                    if (selectedIds.isNotEmpty) _buildSelectionBar(l10n, selectedTemplates),
+                  ],
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, stack) => Center(child: Text(l10n.errorLoadingTemplates)),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSelectionBar(AppLocalizations l10n, List<ProjectTemplate> selected) {
+    final plural = selected.length == 1 ? '' : 's';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color: Theme.of(context).cardColor,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            l10n.templatesSelected(selected.length, plural),
+            style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
+          ),
+          Row(
+            children: [
+              TextButton(
+                onPressed: _clearTemplateSelection,
+                child: Text(l10n.clearSelection),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.delete),
+                label: Text(l10n.deleteSelectedTemplates),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade700),
+                onPressed: () => _deleteSelectedTemplates(selected),
+              ),
+            ],
           ),
         ],
       ),

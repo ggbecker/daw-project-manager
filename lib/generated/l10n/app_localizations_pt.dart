@@ -967,6 +967,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get templateSourceFolder => 'Pasta de Origem';
 
   @override
+  String get templateFile => 'Arquivo';
+
+  @override
   String get dateCreatedColumn => 'Criado';
 
   @override
@@ -1002,6 +1005,24 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String templatesRefreshedSummary(int count) {
     return '$count novo(s) template(s) adicionado(s)';
+  }
+
+  @override
+  String templatesSelected(int count, String plural) {
+    return '$count template$plural selecionado$plural';
+  }
+
+  @override
+  String get deleteSelectedTemplates => 'Excluir selecionados';
+
+  @override
+  String deleteSelectedTemplatesConfirm(int count, String plural) {
+    return 'Tem certeza de que deseja excluir $count template$plural?';
+  }
+
+  @override
+  String templatesDeleted(int count, String plural) {
+    return '$count template$plural excluído$plural';
   }
 
   @override

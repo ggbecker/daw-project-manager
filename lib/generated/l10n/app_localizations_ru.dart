@@ -964,6 +964,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get templateSourceFolder => 'Исходная Папка';
 
   @override
+  String get templateFile => 'Файл';
+
+  @override
   String get dateCreatedColumn => 'Создано';
 
   @override
@@ -999,6 +1002,24 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String templatesRefreshedSummary(int count) {
     return 'Добавлено новых шаблонов: $count';
+  }
+
+  @override
+  String templatesSelected(int count, String plural) {
+    return 'Выбрано шаблонов: $count$plural';
+  }
+
+  @override
+  String get deleteSelectedTemplates => 'Удалить выбранное';
+
+  @override
+  String deleteSelectedTemplatesConfirm(int count, String plural) {
+    return 'Удалить выбранные шаблоны ($count$plural)?';
+  }
+
+  @override
+  String templatesDeleted(int count, String plural) {
+    return 'Удалено шаблонов: $count$plural';
   }
 
   @override
