@@ -967,9 +967,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get templateSourceFolder => 'Pasta de Origem';
 
   @override
-  String get templateFile => 'Arquivo';
-
-  @override
   String get dateCreatedColumn => 'Criado';
 
   @override
@@ -3413,6 +3410,9 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get suggestionsEmptyState =>
       'Sem sugestões no momento. Toque em Atualizar para redefinir os itens descartados.';
+
+  @override
+  String get suggestionNewProject => 'Novo';
 
   @override
   String get showSuggestions => 'Mostrar sugestões';

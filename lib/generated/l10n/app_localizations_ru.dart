@@ -964,9 +964,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get templateSourceFolder => 'Исходная Папка';
 
   @override
-  String get templateFile => 'Файл';
-
-  @override
   String get dateCreatedColumn => 'Создано';
 
   @override
@@ -3411,6 +3408,9 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get suggestionsEmptyState =>
       'Нет предложений. Нажмите «Обновить», чтобы сбросить скрытые элементы.';
+
+  @override
+  String get suggestionNewProject => 'Новый';
 
   @override
   String get showSuggestions => 'Показывать предложения';

@@ -968,9 +968,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get templateSourceFolder => 'Cartella di Origine';
 
   @override
-  String get templateFile => 'File';
-
-  @override
   String get dateCreatedColumn => 'Creato';
 
   @override
@@ -3419,6 +3416,9 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get suggestionsEmptyState =>
       'Nessun suggerimento al momento. Tocca Aggiorna per ripristinare gli elementi ignorati.';
+
+  @override
+  String get suggestionNewProject => 'Nuovo';
 
   @override
   String get showSuggestions => 'Mostra suggerimenti';

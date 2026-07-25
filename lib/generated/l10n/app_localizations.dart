@@ -1721,12 +1721,6 @@ abstract class AppLocalizations {
   /// **'Source Folder'**
   String get templateSourceFolder;
 
-  /// No description provided for @templateFile.
-  ///
-  /// In en, this message translates to:
-  /// **'File'**
-  String get templateFile;
-
   /// No description provided for @dateCreatedColumn.
   ///
   /// In en, this message translates to:
@@ -5794,6 +5788,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No suggestions right now. Tap Refresh to reset dismissed items.'**
   String get suggestionsEmptyState;
+
+  /// No description provided for @suggestionNewProject.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get suggestionNewProject;
 
   /// No description provided for @showSuggestions.
   ///

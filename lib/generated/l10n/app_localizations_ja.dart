@@ -950,9 +950,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get templateSourceFolder => '元フォルダ';
 
   @override
-  String get templateFile => 'ファイル';
-
-  @override
   String get dateCreatedColumn => '作成日';
 
   @override
@@ -3328,6 +3325,9 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get suggestionsEmptyState =>
       '現在おすすめはありません。更新をタップして非表示アイテムをリセットしてください。';
+
+  @override
+  String get suggestionNewProject => '新規';
 
   @override
   String get showSuggestions => 'おすすめを表示';

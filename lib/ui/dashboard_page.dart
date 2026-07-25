@@ -7,7 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/foundation.dart'
     show kDebugMode, kIsWeb, listEquals, visibleForTesting;
-import 'package:flutter/services.dart'; 
+import 'package:flutter/services.dart';
 import 'package:path/path.dart' as path; // 🚨 NOVO IMPORT
 import 'package:url_launcher/url_launcher.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -70,7 +70,10 @@ import 'package:uuid/uuid.dart';
 
 /// App version embedded at build-time (CI passes `--dart-define=APP_VERSION=x.y.z`).
 /// For PR/local builds, we fall back to a dummy version.
-const String appVersion = String.fromEnvironment('APP_VERSION', defaultValue: '0.0.0');
+const String appVersion = String.fromEnvironment(
+  'APP_VERSION',
+  defaultValue: '0.0.0',
+);
 
 /// Returns true when any text input (TextField / EditableText) currently has
 /// focus. Used by keyboard handlers to avoid stealing Space / arrow keys while
@@ -152,7 +155,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
 
   // Ordered list of currently visible tabs (derived from provider, updated via ref.listen)
   List<AppTab> _currentVisibleTabs = [
-    AppTab.projects, AppTab.releases, AppTab.queue, AppTab.statistics,
+    AppTab.projects,
+    AppTab.releases,
+    AppTab.queue,
+    AppTab.statistics,
   ];
 
   // The tab the user is currently on, by identity (not index).
@@ -163,12 +169,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
   }
 
   // Compute the ordered list from the provider's Set, filtered for the current platform.
-  List<AppTab> _orderedFrom(Set<AppTab> visible) =>
-      VisibleTabsNotifier.canonicalOrder
-          .where((t) => visible.contains(t))
-          .where((t) => MobileUtils.isMobile() || t != AppTab.playlists)
-          .where((t) => !MobileUtils.isMobile() || t != AppTab.player)
-          .toList();
+  List<AppTab> _orderedFrom(Set<AppTab> visible) => VisibleTabsNotifier
+      .canonicalOrder
+      .where((t) => visible.contains(t))
+      .where((t) => MobileUtils.isMobile() || t != AppTab.playlists)
+      .where((t) => !MobileUtils.isMobile() || t != AppTab.player)
+      .toList();
 
   // Generation counter — incremented each time we schedule a tab update so that
   // stale post-frame callbacks (from rapid toggles) are silently dropped.
@@ -187,10 +193,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       if (listEquals(_currentVisibleTabs, reordered)) return;
 
       final previousTab = _currentTab;
-      final newIndex = (reordered.contains(previousTab)
-              ? reordered.indexOf(previousTab)
-              : 0)
-          .clamp(0, reordered.length - 1);
+      final newIndex =
+          (reordered.contains(previousTab) ? reordered.indexOf(previousTab) : 0)
+              .clamp(0, reordered.length - 1);
 
       // Create new controller BEFORE disposing the old one.
       final newCtrl = TabController(
@@ -223,7 +228,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
 
   // TextEditingController para a barra de pesquisa
   late final TextEditingController _searchController;
-  
+
   // Flag to track if Ctrl+F was recently pressed (to prevent aggressive focus recovery)
   bool _shouldMaintainSearchFocus = false;
   DateTime? _lastCtrlFPressTime;
@@ -232,24 +237,30 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
   void initState() {
     super.initState();
     _currentVisibleTabs = _orderedFrom(ref.read(visibleTabsProvider));
-    _tabController = TabController(length: _currentVisibleTabs.length, vsync: this);
+    _tabController = TabController(
+      length: _currentVisibleTabs.length,
+      vsync: this,
+    );
     _searchController = TextEditingController();
     if (!MobileUtils.isMobile()) {
       loadHideStartupDialog().then((v) {
         if (mounted) setState(() => _hideStartupDialog = v);
       });
     }
-    
+
     // Add listener to TabController to rebuild when tab changes (for search placeholder update)
     _tabController.addListener(_onTabChanged);
-    
+
     // Add listener to FocusNode to track focus changes
     // Only aggressively recover focus if Ctrl+F was recently pressed
     _searchFocusNode.addListener(() {
       // Only try to recover focus if Ctrl+F was recently pressed (within last 1 second)
-      if (!_searchFocusNode.hasFocus && _shouldMaintainSearchFocus && _searchFocusNode.canRequestFocus) {
+      if (!_searchFocusNode.hasFocus &&
+          _shouldMaintainSearchFocus &&
+          _searchFocusNode.canRequestFocus) {
         final now = DateTime.now();
-        if (_lastCtrlFPressTime != null && now.difference(_lastCtrlFPressTime!).inSeconds < 1) {
+        if (_lastCtrlFPressTime != null &&
+            now.difference(_lastCtrlFPressTime!).inSeconds < 1) {
           // Check if something else stole the focus
           final thief = FocusManager.instance.primaryFocus;
           if (thief != null && thief != _searchFocusNode) {
@@ -292,21 +303,26 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       switch (_currentTab) {
         case AppTab.projects:
           final projectsSearch = ref.read(projectsSearchProvider);
-          if (_searchController.text != projectsSearch) _searchController.text = projectsSearch;
+          if (_searchController.text != projectsSearch)
+            _searchController.text = projectsSearch;
         case AppTab.releases:
           final releasesSearch = ref.read(releasesSearchProvider);
-          if (_searchController.text != releasesSearch) _searchController.text = releasesSearch;
+          if (_searchController.text != releasesSearch)
+            _searchController.text = releasesSearch;
         case AppTab.queue:
           final queueSearch = ref.read(queueSearchProvider);
-          if (_searchController.text != queueSearch) _searchController.text = queueSearch;
+          if (_searchController.text != queueSearch)
+            _searchController.text = queueSearch;
         case AppTab.statistics:
           final statsSearch = ref.read(statisticsSearchProvider);
-          if (_searchController.text != statsSearch) _searchController.text = statsSearch;
+          if (_searchController.text != statsSearch)
+            _searchController.text = statsSearch;
         case AppTab.playlists:
         case AppTab.player:
           _searchController.clear();
       }
-      if (MobileUtils.isMobile() && _isSearchingMobile) _isSearchingMobile = false;
+      if (MobileUtils.isMobile() && _isSearchingMobile)
+        _isSearchingMobile = false;
       setState(() {});
     }
   }
@@ -376,41 +392,41 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       });
     });
   }
-  
+
   // Track last processed key to avoid duplicate processing
   LogicalKeyboardKey? _lastProcessedKey;
   DateTime? _lastProcessedTime;
-  
+
   // Method to track all keyboard events and handle shortcuts directly
   void _handleDebugKeyEvent(RawKeyEvent event) {
     if (event is! RawKeyDownEvent) return;
-    
+
     final logicalKey = event.logicalKey;
     final isControl = event.isControlPressed;
     final isMeta = event.isMetaPressed;
-    
+
     // Handle Ctrl+F / Cmd+F directly in RawKeyboardListener
     if (logicalKey == LogicalKeyboardKey.keyF && (isControl || isMeta)) {
       // Prevent duplicate processing (same key pressed multiple times in quick succession)
       final now = DateTime.now();
-      if (_lastProcessedKey == logicalKey && 
-          _lastProcessedTime != null && 
+      if (_lastProcessedKey == logicalKey &&
+          _lastProcessedTime != null &&
           now.difference(_lastProcessedTime!).inMilliseconds < 100) {
         return;
       }
-      
+
       _lastProcessedKey = logicalKey;
       _lastProcessedTime = now;
-      
+
       // Set flag to maintain focus for the next 1 second (only when Ctrl+F is pressed)
       _shouldMaintainSearchFocus = true;
       _lastCtrlFPressTime = DateTime.now();
-      
+
       // Execute the action directly
       _focusSearchAndSelectAll();
       return;
     }
-    
+
     // Handle Ctrl+R / Cmd+R directly in RawKeyboardListener
     if (logicalKey == LogicalKeyboardKey.keyR && (isControl || isMeta)) {
       // Prevent duplicate processing
@@ -446,7 +462,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     }
   }
 
-
   void _collapseDesktopSearch() {
     _clearCurrentTabSearch();
     _shouldMaintainSearchFocus = false;
@@ -462,13 +477,13 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     // Set flag to maintain focus for the next 1 second (only when Ctrl+F is pressed)
     _shouldMaintainSearchFocus = true;
     _lastCtrlFPressTime = DateTime.now();
-    
+
     // CRITICAL: First, unfocus ALL widgets to prevent PlutoGrid or other widgets from stealing focus
     final primaryFocus = FocusManager.instance.primaryFocus;
     if (primaryFocus != null && primaryFocus != _searchFocusNode) {
       primaryFocus.unfocus();
     }
-    
+
     // Use multiple post-frame callbacks to ensure focus is maintained
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Unfocus again to be sure (in case something grabbed focus in the meantime)
@@ -476,11 +491,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       if (currentFocus != null && currentFocus != _searchFocusNode) {
         currentFocus.unfocus();
       }
-      
+
       // First attempt: request focus
       if (_searchFocusNode.canRequestFocus) {
         _searchFocusNode.requestFocus();
-        
+
         // Second post-frame callback to ensure focus is maintained and select text
         WidgetsBinding.instance.addPostFrameCallback((_) {
           // If focus was lost or stolen, unfocus the thief and try again
@@ -489,12 +504,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
             if (thief != null && thief != _searchFocusNode) {
               thief.unfocus();
             }
-            
+
             if (_searchFocusNode.canRequestFocus) {
               _searchFocusNode.requestFocus();
             }
           }
-          
+
           // Select text if there is any
           if (_searchController.text.isNotEmpty) {
             _searchController.selection = TextSelection(
@@ -502,7 +517,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
               extentOffset: _searchController.text.length,
             );
           }
-          
+
           // Third post-frame callback as final check
           WidgetsBinding.instance.addPostFrameCallback((_) {
             // Final attempt if focus is still lost
@@ -511,15 +526,16 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
               if (thief != null && thief != _searchFocusNode) {
                 thief.unfocus();
               }
-              
+
               if (_searchFocusNode.canRequestFocus) {
                 _searchFocusNode.requestFocus();
               }
             }
-            
+
             // Fourth callback - aggressive focus maintenance
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (!_searchFocusNode.hasFocus && _searchFocusNode.canRequestFocus) {
+              if (!_searchFocusNode.hasFocus &&
+                  _searchFocusNode.canRequestFocus) {
                 final thief = FocusManager.instance.primaryFocus;
                 if (thief != null && thief != _searchFocusNode) {
                   thief.unfocus();
@@ -532,7 +548,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       }
     });
   }
-
 
   Future<void> _quickSwitchProfile(BuildContext context) async {
     final allProfiles = ref.read(allProfilesProvider).value;
@@ -554,10 +569,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
           title: Text(AppLocalizations.of(ctx)!.switchProfile),
           children: allProfiles
               .where((p) => p.id != currentProfile?.id)
-              .map((p) => SimpleDialogOption(
-                    onPressed: () => Navigator.of(ctx).pop(p.id),
-                    child: Text(p.name),
-                  ))
+              .map(
+                (p) => SimpleDialogOption(
+                  onPressed: () => Navigator.of(ctx).pop(p.id),
+                  child: Text(p.name),
+                ),
+              )
               .toList(),
         ),
       );
@@ -567,7 +584,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
 
   Future<void> _performProfileSwitch(String profileId) async {
     final profileRepo = await ref.read(profileRepositoryProvider.future);
-    final profileSwitchingNotifier = ref.read(profileSwitchingProvider.notifier);
+    final profileSwitchingNotifier = ref.read(
+      profileSwitchingProvider.notifier,
+    );
     final container = ProviderScope.containerOf(context);
 
     try {
@@ -588,7 +607,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     }
   }
 
-  Future<void> _scanAll({bool fullMetadata = false, bool onlyUnscanned = false}) async {
+  Future<void> _scanAll({
+    bool fullMetadata = false,
+    bool onlyUnscanned = false,
+  }) async {
     if (_scanning) return;
     final repo = await ref.read(repositoryProvider.future);
     setState(() => _scanning = true);
@@ -602,13 +624,25 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       // repo: that's an initial population, not a "new" discovery.
       final knownPaths = repo.getAllProjects().map((p) => p.filePath).toSet();
       final newlyDiscoveredIds = <String>[];
-      final ignoredPaths = repo.getIgnoredPaths().map((p) => p.path).toList(growable: false);
+      final ignoredPaths = repo
+          .getIgnoredPaths()
+          .map((p) => p.path)
+          .toList(growable: false);
       final scanTime = DateTime.now();
       for (final root in repo.getRoots()) {
         final foundPaths = <String>{};
-        await for (final entity in scanner.scanDirectory(root.path, ignoredPaths: ignoredPaths)) {
-          final useFullMetadata = fullMetadata && (!onlyUnscanned || repo.getByPath(entity.path)?.metadataScanned != true);
-          await repo.upsertFromFileSystemEntity(entity, fullMetadata: useFullMetadata);
+        await for (final entity in scanner.scanDirectory(
+          root.path,
+          ignoredPaths: ignoredPaths,
+        )) {
+          final useFullMetadata =
+              fullMetadata &&
+              (!onlyUnscanned ||
+                  repo.getByPath(entity.path)?.metadataScanned != true);
+          await repo.upsertFromFileSystemEntity(
+            entity,
+            fullMetadata: useFullMetadata,
+          );
           foundPaths.add(entity.path);
           foundCount++;
         }
@@ -621,7 +655,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
         await repo.updateRootLastScanAt(root.id, scanTime);
       }
       if (newlyDiscoveredIds.isNotEmpty) {
-        ref.read(recentlyDiscoveredProjectsProvider.notifier).addAll(newlyDiscoveredIds);
+        ref
+            .read(recentlyDiscoveredProjectsProvider.notifier)
+            .addAll(newlyDiscoveredIds);
       }
 
       // Snapshot pending folders with active session tracking before resolving,
@@ -631,7 +667,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
           .where((pf) => pf.sessionStartedAt != null)
           .toList(growable: false);
       if (kDebugMode) {
-        print('[_scanAll] pendingWithSession count=${pendingWithSession.length}');
+        print(
+          '[_scanAll] pendingWithSession count=${pendingWithSession.length}',
+        );
       }
 
       // Resolve pending folders: remove entries whose folder now has a real project
@@ -655,7 +693,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
             .where((p) => p.filePath.startsWith(pf.path))
             .firstOrNull;
         if (kDebugMode) {
-          print('[_scanAll] session pf=${pf.id} project=${project?.displayName}');
+          print(
+            '[_scanAll] session pf=${pf.id} project=${project?.displayName}',
+          );
         }
         if (project == null || !mounted) continue;
 
@@ -670,11 +710,14 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
           barrierDismissible: false,
           builder: (ctx) => AlertDialog(
             title: Text(l10n.pendingFolderSessionTitle),
-            content: Text(l10n.pendingFolderSessionBody(
+            content: Text(
+              l10n.pendingFolderSessionBody(
                 project.displayName.isNotEmpty
                     ? project.displayName
                     : pf.folderName,
-                durationLabel)),
+                durationLabel,
+              ),
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
@@ -711,13 +754,20 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
               phase: latest.status,
             );
             final newSessions = [...latest.sessions, record];
-            await repo.updateProject(latest.copyWith(
-              totalWorkSeconds: newSessions.fold<int>(0, (s, r) => s + r.durationSeconds),
-              sessions: newSessions,
-              updatedAt: now,
-            ));
+            await repo.updateProject(
+              latest.copyWith(
+                totalWorkSeconds: newSessions.fold<int>(
+                  0,
+                  (s, r) => s + r.durationSeconds,
+                ),
+                sessions: newSessions,
+                updatedAt: now,
+              ),
+            );
             if (kDebugMode) {
-              print('[_scanAll] session saved elapsedSecs=$elapsedSecs for ${project.id}');
+              print(
+                '[_scanAll] session saved elapsedSecs=$elapsedSecs for ${project.id}',
+              );
             }
           }
         } else if (mounted) {
@@ -725,20 +775,24 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
           // is eventually deactivated. Don't record a duplicate now.
           final updated = repo.getById(project.id) ?? project;
           final currentActive = ref.read(activeProjectProvider);
-          if (currentActive != null && currentActive.id != updated.id && mounted) {
+          if (currentActive != null &&
+              currentActive.id != updated.id &&
+              mounted) {
             final l = AppLocalizations.of(context)!;
             final confirmSwitch = await showDialog<bool>(
               context: context,
               builder: (ctx) => AlertDialog(
                 title: Text(l.activeSessionSwitchTitle),
-                content: Text(l.activeSessionSwitchBody(
-                  currentActive.displayName.isNotEmpty
-                      ? currentActive.displayName
-                      : currentActive.fileName,
-                  updated.displayName.isNotEmpty
-                      ? updated.displayName
-                      : updated.fileName,
-                )),
+                content: Text(
+                  l.activeSessionSwitchBody(
+                    currentActive.displayName.isNotEmpty
+                        ? currentActive.displayName
+                        : currentActive.fileName,
+                    updated.displayName.isNotEmpty
+                        ? updated.displayName
+                        : updated.fileName,
+                  ),
+                ),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(ctx, false),
@@ -763,21 +817,34 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       // are committed before we read back the project list.
       final customFolders = ref.read(customMixdownFoldersProvider).value;
       for (final project in repo.getAllProjects()) {
-        if (project.previewSongPath != null || project.previewSongAutoPath != null) continue;
-        final detected = MixdownDetectorService.findLatestMixdown(project, customFolders: customFolders);
+        if (project.previewSongPath != null ||
+            project.previewSongAutoPath != null)
+          continue;
+        final detected = MixdownDetectorService.findLatestMixdown(
+          project,
+          customFolders: customFolders,
+        );
         if (detected != null) {
-          await repo.updateProject(project.copyWith(previewSongAutoPath: detected.path));
+          await repo.updateProject(
+            project.copyWith(previewSongAutoPath: detected.path),
+          );
         }
       }
 
       ref.invalidate(allProjectsStreamProvider);
 
       if (mounted) {
-        final scanType = fullMetadata ? AppLocalizations.of(context)!.deepScan : AppLocalizations.of(context)!.rescan;
+        final scanType = fullMetadata
+            ? AppLocalizations.of(context)!.deepScan
+            : AppLocalizations.of(context)!.rescan;
         final msg = foundCount == 0
             ? AppLocalizations.of(context)!.noProjectsFoundInRoots
-            : AppLocalizations.of(context)!.scanComplete(scanType, foundCount, foundCount == 1 ? '' : 's');
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+            : AppLocalizations.of(
+                context,
+              )!.scanComplete(scanType, foundCount, foundCount == 1 ? '' : 's');
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(msg)));
       }
       _flashScanSuccess(deep: fullMetadata);
     } finally {
@@ -804,11 +871,15 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     }
   }
 
-  Future<void> _createReleaseFromSelectedProjects(BuildContext context, WidgetRef ref, List<MusicProject> selectedProjects) async {
+  Future<void> _createReleaseFromSelectedProjects(
+    BuildContext context,
+    WidgetRef ref,
+    List<MusicProject> selectedProjects,
+  ) async {
     if (selectedProjects.isEmpty) return;
 
     String releaseTitle;
-    
+
     // If single project, use project name; otherwise create with empty title
     if (selectedProjects.length == 1) {
       releaseTitle = selectedProjects.first.displayName;
@@ -818,26 +889,37 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
 
     final selectedProjectIds = selectedProjects.map((p) => p.id).toList();
     await _createRelease(context, ref, selectedProjectIds, releaseTitle);
-    
+
     // Clear selection after creating release
     ref.read(selectedProjectsProvider.notifier).clear();
   }
 
-  Future<void> _hideProjects(BuildContext context, WidgetRef ref, List<String> selectedProjectIds) async {
+  Future<void> _hideProjects(
+    BuildContext context,
+    WidgetRef ref,
+    List<String> selectedProjectIds,
+  ) async {
     try {
       final repo = await ref.read(repositoryProvider.future);
       final allProjectsAsync = ref.read(allProjectsStreamProvider);
       final allProjects = allProjectsAsync.value ?? [];
-      
+
       for (final projectId in selectedProjectIds) {
         final project = allProjects.firstWhere((p) => p.id == projectId);
         final updated = project.copyWith(hidden: true);
         await repo.updateProject(updated);
       }
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.projectsHidden(selectedProjectIds.length, selectedProjectIds.length == 1 ? '' : 's'))),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.projectsHidden(
+                selectedProjectIds.length,
+                selectedProjectIds.length == 1 ? '' : 's',
+              ),
+            ),
+          ),
         );
         // Invalidate to refresh the list
         ref.invalidate(allProjectsStreamProvider);
@@ -845,62 +927,91 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.failedToHideProjects(e.toString()))),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.failedToHideProjects(e.toString()),
+            ),
+          ),
         );
       }
     }
   }
 
-  Future<void> _unhideProjects(BuildContext context, WidgetRef ref, List<String> selectedProjectIds) async {
+  Future<void> _unhideProjects(
+    BuildContext context,
+    WidgetRef ref,
+    List<String> selectedProjectIds,
+  ) async {
     try {
       final repo = await ref.read(repositoryProvider.future);
       final allProjectsAsync = ref.read(allProjectsStreamProvider);
       final allProjects = allProjectsAsync.value ?? [];
-      
+
       // Check if we're in "show only hidden" mode
       final hiddenMode = ref.read(showHiddenProjectsProvider);
       final isShowingOnlyHidden = hiddenMode == 2;
-      
+
       // Unhide all selected projects
       for (final projectId in selectedProjectIds) {
         final project = allProjects.firstWhere((p) => p.id == projectId);
         if (kDebugMode) {
-          print('DEBUG [Unhide]: Project ${project.displayName} - hidden before: ${project.hidden}');
+          print(
+            'DEBUG [Unhide]: Project ${project.displayName} - hidden before: ${project.hidden}',
+          );
         }
         // Always set hidden to false, regardless of current state
         final updated = project.copyWith(hidden: false);
         await repo.updateProject(updated);
-        
+
         // Verify the update was saved
         if (kDebugMode) {
-          final verifyProject = repo.getAllProjects().firstWhere((p) => p.id == projectId);
-          print('DEBUG [Unhide]: Project ${verifyProject.displayName} - hidden after: ${verifyProject.hidden}');
+          final verifyProject = repo.getAllProjects().firstWhere(
+            (p) => p.id == projectId,
+          );
+          print(
+            'DEBUG [Unhide]: Project ${verifyProject.displayName} - hidden after: ${verifyProject.hidden}',
+          );
         }
       }
-      
+
       // Invalidate to refresh the list
       ref.invalidate(allProjectsStreamProvider);
-      
+
       // Wait a bit for the data to refresh, then check if there are any hidden projects left
       await Future.delayed(const Duration(milliseconds: 100));
       final updatedProjectsAsync = ref.read(allProjectsStreamProvider);
       final updatedProjects = updatedProjectsAsync.value ?? [];
-      final remainingHiddenCount = updatedProjects.where((p) => p.hidden).length;
-      
+      final remainingHiddenCount = updatedProjects
+          .where((p) => p.hidden)
+          .length;
+
       // If we were showing only hidden and there are no hidden projects left, switch back to visible
       if (isShowingOnlyHidden && remainingHiddenCount == 0) {
         ref.read(showHiddenProjectsProvider.notifier).setShowOnlyHidden(false);
       }
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.projectsUnhidden(selectedProjectIds.length, selectedProjectIds.length == 1 ? '' : 's'))),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.projectsUnhidden(
+                selectedProjectIds.length,
+                selectedProjectIds.length == 1 ? '' : 's',
+              ),
+            ),
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.failedToUnhideProjects(e.toString()))),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(
+                context,
+              )!.failedToUnhideProjects(e.toString()),
+            ),
+          ),
         );
       }
     }
@@ -920,7 +1031,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
   /// an explicit opt-in checkbox to delete them anyway; choosing to also
   /// scrubs the deleted ids out of every release's trackIds so none are left
   /// dangling.
-  Future<void> _deleteMissingProjects(BuildContext context, WidgetRef ref, List<String> selectedProjectIds) async {
+  Future<void> _deleteMissingProjects(
+    BuildContext context,
+    WidgetRef ref,
+    List<String> selectedProjectIds,
+  ) async {
     final allProjectsAsync = ref.read(allProjectsStreamProvider);
     final allProjects = allProjectsAsync.value ?? [];
     final missingIds = missingProjectIds(allProjects, selectedProjectIds);
@@ -929,7 +1044,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     final releases = ref.read(releasesProvider).value ?? [];
     final protectedIds = releaseProtectedProjectIds(releases);
     final releaseTrackedIds = missingIds.where(protectedIds.contains).toList();
-    final freeIds = missingIds.where((id) => !protectedIds.contains(id)).toList();
+    final freeIds = missingIds
+        .where((id) => !protectedIds.contains(id))
+        .toList();
 
     final l10n = AppLocalizations.of(context)!;
     var alsoDeleteReleaseTracked = false;
@@ -946,16 +1063,22 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(l10n.deleteMissingProjectsConfirm(idsToDelete.length, plural)),
+                Text(
+                  l10n.deleteMissingProjectsConfirm(idsToDelete.length, plural),
+                ),
                 if (releaseTrackedIds.isNotEmpty) ...[
                   const SizedBox(height: 12),
                   CheckboxListTile(
                     value: alsoDeleteReleaseTracked,
-                    onChanged: (v) => setDialogState(() => alsoDeleteReleaseTracked = v ?? false),
-                    title: Text(l10n.deleteMissingProjectsAlsoDeleteReleaseTracked(
-                      releaseTrackedIds.length,
-                      releaseTrackedIds.length == 1 ? '' : 's',
-                    )),
+                    onChanged: (v) => setDialogState(
+                      () => alsoDeleteReleaseTracked = v ?? false,
+                    ),
+                    title: Text(
+                      l10n.deleteMissingProjectsAlsoDeleteReleaseTracked(
+                        releaseTrackedIds.length,
+                        releaseTrackedIds.length == 1 ? '' : 's',
+                      ),
+                    ),
                     controlAffinity: ListTileControlAffinity.leading,
                     contentPadding: EdgeInsets.zero,
                   ),
@@ -968,8 +1091,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                 child: Text(l10n.cancel),
               ),
               FilledButton(
-                onPressed: idsToDelete.isEmpty ? null : () => Navigator.pop(ctx, true),
-                style: FilledButton.styleFrom(backgroundColor: Colors.red.shade700),
+                onPressed: idsToDelete.isEmpty
+                    ? null
+                    : () => Navigator.pop(ctx, true),
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.red.shade700,
+                ),
                 child: Text(l10n.deleteMissingProjectsConfirmButton),
               ),
             ],
@@ -990,7 +1117,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
         final deleted = idsToDelete.toSet();
         for (final release in releases) {
           if (!release.trackIds.any(deleted.contains)) continue;
-          await repo.updateRelease(release.copyWith(trackIds: trackIdsAfterRemoving(release, deleted)));
+          await repo.updateRelease(
+            release.copyWith(trackIds: trackIdsAfterRemoving(release, deleted)),
+          );
         }
       }
 
@@ -998,19 +1127,28 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       if (mounted) {
         final plural = idsToDelete.length == 1 ? '' : 's';
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.missingProjectsDeleted(idsToDelete.length, plural))),
+          SnackBar(
+            content: Text(
+              l10n.missingProjectsDeleted(idsToDelete.length, plural),
+            ),
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${l10n.error}: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('${l10n.error}: $e')));
       }
     }
   }
 
-  Future<void> _createRelease(BuildContext context, WidgetRef ref, List<String> selectedProjectIds, String releaseTitle) async {
+  Future<void> _createRelease(
+    BuildContext context,
+    WidgetRef ref,
+    List<String> selectedProjectIds,
+    String releaseTitle,
+  ) async {
     try {
       final repo = await ref.read(repositoryProvider.future);
       final newRelease = Release(
@@ -1023,7 +1161,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.releaseCreated(releaseTitle))),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.releaseCreated(releaseTitle),
+            ),
+          ),
         );
         // Switch to releases tab and navigate to the new release
         _tabController.animateTo(1);
@@ -1043,7 +1185,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.failedToCreateRelease(e.toString()))),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.failedToCreateRelease(e.toString()),
+            ),
+          ),
         );
       }
     }
@@ -1084,16 +1230,19 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
 
     // Get current search text based on active tab
     final currentSearch = switch (_currentTab) {
-      AppTab.projects   => ref.watch(projectsSearchProvider),
-      AppTab.releases   => ref.watch(releasesSearchProvider),
-      AppTab.queue      => ref.watch(queueSearchProvider),
+      AppTab.projects => ref.watch(projectsSearchProvider),
+      AppTab.releases => ref.watch(releasesSearchProvider),
+      AppTab.queue => ref.watch(queueSearchProvider),
       AppTab.statistics => ref.watch(statisticsSearchProvider),
-      AppTab.playlists  => '',
-      AppTab.player     => '',
+      AppTab.playlists => '',
+      AppTab.player => '',
     };
     final projects = ref.watch(projectsProvider);
     // Keep macOS dock menu (and Windows jump list) in sync with latest projects
-    ref.listen(projectsProvider, (_, next) => DockMenuService.updateRecentProjects(next));
+    ref.listen(
+      projectsProvider,
+      (_, next) => DockMenuService.updateRecentProjects(next),
+    );
     final hiddenMode = ref.watch(showHiddenProjectsProvider);
     final hiddenNotifier = ref.read(showHiddenProjectsProvider.notifier);
     final finishedMode = ref.watch(showFinishedProjectsProvider);
@@ -1106,28 +1255,33 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     final initialScanning = ref.watch(initialScanStateProvider);
     final isProfileSwitching = ref.watch(profileSwitchingProvider);
     final isScanning = _scanning || initialScanning;
-    final isAnyOperation = isScanning || isProfileSwitching || _extractingMetadata;
+    final isAnyOperation =
+        isScanning || isProfileSwitching || _extractingMetadata;
     final blockingOperation = shouldBlockForOperation(
       scanning: _scanning,
       deepScanning: _deepScanning,
       profileSwitching: isProfileSwitching,
       extractingMetadata: _extractingMetadata,
     );
-    final isLeftRail = !MobileUtils.isMobile() && ref.watch(tabPositionProvider) == TabPosition.left;
+    final isLeftRail =
+        !MobileUtils.isMobile() &&
+        ref.watch(tabPositionProvider) == TabPosition.left;
     final railCollapsed = ref.watch(railCollapsedProvider);
-    
+
     // Sync search controller with provider state
     if (_searchController.text != currentSearch) {
       _searchController.text = currentSearch;
-      _searchController.selection = TextSelection.fromPosition(TextPosition(offset: currentSearch.length));
+      _searchController.selection = TextSelection.fromPosition(
+        TextPosition(offset: currentSearch.length),
+      );
     }
-    
+
     // Get all projects and filter out preserved projects (same logic as projectsProvider)
     final allProjectsAsync = ref.watch(allProjectsStreamProvider);
     final allProjects = allProjectsAsync.value ?? [];
     final releasesAsync = ref.watch(releasesProvider);
     final scanRoots = ref.watch(scanRootsProvider);
-    
+
     // Filter out preserved projects (in releases but not in any active scan root)
     // On mobile, we're only syncing metadata, so show ALL projects (both in releases and not)
     // On desktop, filter preserved projects that aren't in active scan roots
@@ -1142,33 +1296,35 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       for (final release in releases) {
         protectedProjectIds.addAll(release.trackIds);
       }
-      
+
       // Get all active scan root paths (normalized for comparison)
       final activeRootPaths = scanRoots.map((root) {
         final normalized = path.normalize(root.path);
         // Ensure root path ends with separator for proper prefix matching
-        return normalized.endsWith(path.separator) ? normalized : normalized + path.separator;
+        return normalized.endsWith(path.separator)
+            ? normalized
+            : normalized + path.separator;
       }).toList();
-      
+
       // Filter out preserved projects before counting
       filteredProjects = allProjects.where((project) {
         // If project is not in any release, always include it
         if (!protectedProjectIds.contains(project.id)) {
           return true;
         }
-        
+
         // If project is in a release, check if it's in any active scan root
         final projectPath = path.normalize(project.filePath);
         final isInActiveRoot = activeRootPaths.any((rootPath) {
           // Check if project path starts with the root path
           return projectPath.startsWith(rootPath);
         });
-        
+
         // Only include if it's in an active root (preserved projects not in active roots are excluded)
         return isInActiveRoot;
       }).toList();
     }
-    
+
     // Count visible and hidden from filtered projects only
     final visibleCount = filteredProjects.where((p) => !p.hidden).length;
     final hiddenCount = filteredProjects.where((p) => p.hidden).length;
@@ -1183,15 +1339,21 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
         child: Shortcuts(
           shortcuts: <LogicalKeySet, Intent>{
             LogicalKeySet(
-              Platform.isMacOS ? LogicalKeyboardKey.meta : LogicalKeyboardKey.control,
+              Platform.isMacOS
+                  ? LogicalKeyboardKey.meta
+                  : LogicalKeyboardKey.control,
               LogicalKeyboardKey.keyF,
             ): const _SearchIntent(),
             LogicalKeySet(
-              Platform.isMacOS ? LogicalKeyboardKey.meta : LogicalKeyboardKey.control,
+              Platform.isMacOS
+                  ? LogicalKeyboardKey.meta
+                  : LogicalKeyboardKey.control,
               LogicalKeyboardKey.keyR,
             ): const _RescanIntent(),
             LogicalKeySet(
-              Platform.isMacOS ? LogicalKeyboardKey.meta : LogicalKeyboardKey.control,
+              Platform.isMacOS
+                  ? LogicalKeyboardKey.meta
+                  : LogicalKeyboardKey.control,
               LogicalKeyboardKey.keyT,
             ): const _FocusTableIntent(),
           },
@@ -1207,1298 +1369,2388 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                 onInvoke: (_) => _tableKey.currentState?.focusTable(),
               ),
             },
-          child: Focus(
-            autofocus: true,
-            canRequestFocus: true,
-            child: Stack(
-            children: [
-              Scaffold(
-                appBar: MobileUtils.isMobile()
-                    ? AppBar(
-                        leading: _isSearchingMobile
-                            ? IconButton(
-                                icon: const Icon(Icons.arrow_back),
-                                onPressed: () {
-                                  setState(() => _isSearchingMobile = false);
-                                  _clearCurrentTabSearch();
-                                },
-                              )
-                            : null,
-                        title: _isSearchingMobile
-                            ? TextField(
-                                autofocus: true,
-                                controller: _searchController,
-                                decoration: InputDecoration(
-                                  hintText: switch (_currentTab) {
-                                    AppTab.projects   => AppLocalizations.of(context)!.searchProjects,
-                                    AppTab.releases   => AppLocalizations.of(context)!.searchReleases,
-                                    AppTab.queue      => AppLocalizations.of(context)!.queueSearchHint,
-                                    _                 => AppLocalizations.of(context)!.statsSearchProjects,
-                                  },
-                                  border: InputBorder.none,
-                                  hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
-                                ),
-                                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                                onChanged: _updateCurrentTabSearch,
-                              )
-                            : Image.asset('app_icon.png', height: 32),
-                        actions: _isSearchingMobile
-                            ? [
-                                if (currentSearch.isNotEmpty)
-                                  IconButton(
-                                    icon: const Icon(Icons.close),
+            child: Focus(
+              autofocus: true,
+              canRequestFocus: true,
+              child: Stack(
+                children: [
+                  Scaffold(
+                    appBar: MobileUtils.isMobile()
+                        ? AppBar(
+                            leading: _isSearchingMobile
+                                ? IconButton(
+                                    icon: const Icon(Icons.arrow_back),
                                     onPressed: () {
+                                      setState(
+                                        () => _isSearchingMobile = false,
+                                      );
                                       _clearCurrentTabSearch();
                                     },
-                                  ),
-                              ]
-                            : [
-                                // Search icon (hidden on Playlists tab)
-                                if (_currentTab != AppTab.playlists)
-                                  IconButton(
-                                    icon: const Icon(Icons.search),
-                                    onPressed: () => setState(() => _isSearchingMobile = true),
-                                  ),
-                                // Notification settings button (Android only)
-                                if (Platform.isAndroid)
-                                  IconButton(
-                                    icon: const Icon(Icons.notifications),
-                                    onPressed: () {
-                                      Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (_) => const NotificationSettingsPage(),
-                                        ),
-                                      );
-                                    },
-                                    tooltip: AppLocalizations.of(context)!.notificationSettings,
-                                  ),
-                                // Google Drive sync (hidden when left rail — shown there instead)
-                                if (!isLeftRail)
-                                  IconButton(
-                                    icon: const Icon(Icons.cloud_outlined),
-                                    tooltip: AppLocalizations.of(context)!.syncWithGoogleDrive,
-                                    onPressed: () => Navigator.of(context).push(
-                                      MaterialPageRoute(builder: (_) => const GoogleDriveSyncPage()),
+                                  )
+                                : null,
+                            title: _isSearchingMobile
+                                ? TextField(
+                                    autofocus: true,
+                                    controller: _searchController,
+                                    decoration: InputDecoration(
+                                      hintText: switch (_currentTab) {
+                                        AppTab.projects => AppLocalizations.of(
+                                          context,
+                                        )!.searchProjects,
+                                        AppTab.releases => AppLocalizations.of(
+                                          context,
+                                        )!.searchReleases,
+                                        AppTab.queue => AppLocalizations.of(
+                                          context,
+                                        )!.queueSearchHint,
+                                        _ => AppLocalizations.of(
+                                          context,
+                                        )!.statsSearchProjects,
+                                      },
+                                      border: InputBorder.none,
+                                      hintStyle: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withValues(alpha: 0.5),
+                                      ),
                                     ),
-                                  ),
-                                // Quick profile switch button (hidden when left rail)
-                                if (!isLeftRail)
-                                  Consumer(
-                                    builder: (context, ref, child) {
-                                      final allProfiles = ref.watch(allProfilesProvider).value;
-                                      if (allProfiles == null || allProfiles.length < 2) return const SizedBox.shrink();
-                                      return IconButton(
-                                        icon: const Icon(Icons.swap_horiz),
-                                        tooltip: AppLocalizations.of(context)!.switchProfile,
-                                        onPressed: () => _quickSwitchProfile(context),
-                                      );
-                                    },
-                                  ),
-                                // Profile button (hidden when left rail)
-                                if (!isLeftRail)
-                                  Consumer(
-                                    builder: (context, ref, child) {
-                                      final currentProfileAsync = ref.watch(currentProfileProvider);
-                                      return currentProfileAsync.when(
-                                        loading: () => IconButton(
-                                          icon: const Icon(Icons.person),
-                                          onPressed: () {
-                                            Navigator.of(context).push(
-                                              MaterialPageRoute(
-                                                builder: (_) => const ProfileManagerPage(),
-                                              ),
-                                            );
-                                          },
-                                          tooltip: AppLocalizations.of(context)!.profileManager,
+                                    style: TextStyle(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface,
+                                    ),
+                                    onChanged: _updateCurrentTabSearch,
+                                  )
+                                : Image.asset('app_icon.png', height: 32),
+                            actions: _isSearchingMobile
+                                ? [
+                                    if (currentSearch.isNotEmpty)
+                                      IconButton(
+                                        icon: const Icon(Icons.close),
+                                        onPressed: () {
+                                          _clearCurrentTabSearch();
+                                        },
+                                      ),
+                                  ]
+                                : [
+                                    // Search icon (hidden on Playlists tab)
+                                    if (_currentTab != AppTab.playlists)
+                                      IconButton(
+                                        icon: const Icon(Icons.search),
+                                        onPressed: () => setState(
+                                          () => _isSearchingMobile = true,
                                         ),
-                                        error: (_, _) => IconButton(
-                                          icon: const Icon(Icons.person),
-                                          onPressed: () {
-                                            Navigator.of(context).push(
-                                              MaterialPageRoute(
-                                                builder: (_) => const ProfileManagerPage(),
-                                              ),
-                                            );
-                                          },
-                                          tooltip: AppLocalizations.of(context)!.profileManager,
-                                        ),
-                                        data: (currentProfile) {
-                                          Widget profileIcon;
-                                          if (currentProfile?.photoPath != null &&
-                                              File(currentProfile!.photoPath!).existsSync()) {
-                                            profileIcon = ClipRRect(
-                                              borderRadius: BorderRadius.circular(16),
-                                              child: Image.file(
-                                                File(currentProfile.photoPath!),
-                                                width: 32,
-                                                height: 32,
-                                                fit: BoxFit.cover,
-                                                errorBuilder: (context, error, stackTrace) {
-                                                  return const Icon(Icons.person);
-                                                },
-                                              ),
-                                            );
-                                          } else {
-                                            profileIcon = const Icon(Icons.person);
-                                          }
-                                          return IconButton(
-                                            icon: profileIcon,
-                                            onPressed: () {
-                                              Navigator.of(context).push(
-                                                MaterialPageRoute(
-                                                  builder: (_) => const ProfileManagerPage(),
-                                                ),
-                                              );
-                                            },
-                                            tooltip: currentProfile?.name ?? AppLocalizations.of(context)!.profileManager,
+                                      ),
+                                    // Notification settings button (Android only)
+                                    if (Platform.isAndroid)
+                                      IconButton(
+                                        icon: const Icon(Icons.notifications),
+                                        onPressed: () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (_) =>
+                                                  const NotificationSettingsPage(),
+                                            ),
                                           );
                                         },
-                                      );
-                                    },
-                                  ),
-                              ],
-                      )
-                    : null,
-                bottomNavigationBar: MobileUtils.isMobile()
-                    ? Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const MobileMiniPlayer(),
-                          NavigationBar(
-                            selectedIndex: _tabController.index,
-                            onDestinationSelected: (i) {
-                              _tabController.animateTo(i);
-                              setState(() {});
-                            },
-                            destinations: [
-                              for (final tab in _currentVisibleTabs)
-                                switch (tab) {
-                                  AppTab.projects => NavigationDestination(
-                                      icon: const Icon(Icons.library_music_outlined),
-                                      selectedIcon: const Icon(Icons.library_music),
-                                      label: AppLocalizations.of(context)!.projects,
-                                    ),
-                                  AppTab.releases => NavigationDestination(
-                                      icon: const Icon(Icons.album_outlined),
-                                      selectedIcon: const Icon(Icons.album),
-                                      label: AppLocalizations.of(context)!.releasesTab,
-                                    ),
-                                  AppTab.playlists => NavigationDestination(
-                                      icon: const Icon(Icons.playlist_play_outlined),
-                                      selectedIcon: const Icon(Icons.playlist_play),
-                                      label: AppLocalizations.of(context)!.playlists,
-                                    ),
-                                  AppTab.queue => NavigationDestination(
-                                      icon: const Icon(Icons.checklist_outlined),
-                                      selectedIcon: const Icon(Icons.checklist),
-                                      label: AppLocalizations.of(context)!.queueTab,
-                                    ),
-                                  AppTab.statistics => NavigationDestination(
-                                      icon: const Icon(Icons.bar_chart_outlined),
-                                      selectedIcon: const Icon(Icons.bar_chart_rounded),
-                                      label: AppLocalizations.of(context)!.statisticsTab,
-                                    ),
-                                  AppTab.player => NavigationDestination(
-                                      icon: const Icon(Icons.headphones_outlined),
-                                      selectedIcon: const Icon(Icons.headphones),
-                                      label: AppLocalizations.of(context)!.playerTitle,
-                                    ),
-                                },
-                            ],
-                          ),
-                        ],
-                      )
-                    : () {
-                        final playerRequest = ref.watch(desktopPlayerProvider);
-                        if (playerRequest == null) return null;
-                        return _DesktopPlayerBar(
-                          key: const Key('desktop_player_bar'),
-                          request: playerRequest,
-                        );
-                      }(),
-                body: Builder(builder: (context) {
-
-                  // Action bar: search field and filter toolbar.
-                  final actionBar = Builder(
-              builder: (context) {
-                final isMobile = MobileUtils.isMobile();
-                if (isMobile) return const SizedBox.shrink();
-                return Padding(
-                  padding: Platform.isMacOS
-                      ? const EdgeInsets.fromLTRB(16, 14, 16, 16)
-                      : MobileUtils.getResponsivePadding(context),
-                  child: isMobile
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Search bar on top for mobile (hidden on Playlists tab)
-                            if (_currentTab != AppTab.playlists) TextField(
-                              focusNode: _searchFocusNode,
-                              controller: _searchController,
-                              decoration: InputDecoration(
-                                hintText: switch (_currentTab) {
-                                  AppTab.projects  => AppLocalizations.of(context)!.searchProjects,
-                                  AppTab.releases  => AppLocalizations.of(context)!.searchReleases,
-                                  AppTab.queue     => AppLocalizations.of(context)!.queueSearchHint,
-                                  _                => AppLocalizations.of(context)!.statsSearchProjects,
-                                },
-                                isDense: true,
-                                border: const OutlineInputBorder(),
-                                prefixIcon: const Icon(Icons.search),
-                                suffixIcon: () {
-                                  final cs = currentSearch;
-                                  return cs.isNotEmpty
-                                      ? IconButton(
-                                          icon: const Icon(Icons.close),
-                                          onPressed: _clearCurrentTabSearch,
-                                        )
-                                      : null;
-                                }(),
-                              ),
-                              onChanged: _updateCurrentTabSearch,
-                            ),
-                            if (_currentTab != AppTab.playlists)
-                              const SizedBox(height: 12),
-                            // Filters and info row (only show on Projects tab)
-                            if (_currentTab == AppTab.projects) ...[
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: repoAsync.when(
-                                      loading: () => const SizedBox.shrink(),
-                                      error: (_, _) => const SizedBox.shrink(),
-                                      data: (repo) {
-                                        String projectText;
-                                        final l10n = AppLocalizations.of(context)!;
-                                        // On mobile, don't show roots count (Android doesn't use scan roots)
-                                        if (hiddenMode == 2) {
-                                          projectText = '${l10n.projectsCount(hiddenCount)} ${l10n.hiddenOnly}';
-                                        } else {
-                                          projectText = l10n.projectsCount(visibleCount);
-                                          if (hiddenCount > 0 && hiddenMode == 0) {
-                                            projectText += ' ${l10n.hiddenCount(hiddenCount)}';
-                                          }
-                                        }
-                                        return Text(
-                                          projectText,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: hiddenMode == 2 ? Colors.orange.shade300 : null,
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              // Filter row
-                              Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              children: [
-                                // Show Hidden Projects checkbox (Mobile) - only show if there are hidden projects
-                                if (hiddenCount > 0)
-                                  InkWell(
-                                    onTap: () {
-                                      final currentValue = hiddenMode == 1;
-                                      if (!currentValue) {
-                                        hiddenNotifier.setShowAll(true);
-                                      } else {
-                                        hiddenNotifier.setShowAll(false);
-                                      }
-                                    },
-                                    borderRadius: BorderRadius.circular(4),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Checkbox(
-                                          value: hiddenMode == 1,
-                                          onChanged: (value) {
-                                            if (value == true) {
-                                              hiddenNotifier.setShowAll(true);
-                                            } else {
-                                              hiddenNotifier.setShowAll(false);
-                                            }
-                                          },
-                                        ),
-                                        Text(
-                                          AppLocalizations.of(context)!.showHidden,
-                                          style: const TextStyle(fontSize: 12),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                // Hide Finished Projects checkbox (Mobile)
-                                InkWell(
-                                  onTap: () {
-                                    final currentValue = finishedMode == 1;
-                                    if (!currentValue) {
-                                      finishedNotifier.setHideFinished(true);
-                                    } else {
-                                      finishedNotifier.setHideFinished(false);
-                                    }
-                                  },
-                                  borderRadius: BorderRadius.circular(4),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Checkbox(
-                                        value: finishedMode == 1,
-                                        onChanged: (value) {
-                                          if (value == true) {
-                                            finishedNotifier.setHideFinished(true);
-                                          } else {
-                                            finishedNotifier.setHideFinished(false);
-                                          }
+                                        tooltip: AppLocalizations.of(
+                                          context,
+                                        )!.notificationSettings,
+                                      ),
+                                    // Google Drive sync (hidden when left rail — shown there instead)
+                                    if (!isLeftRail)
+                                      IconButton(
+                                        icon: const Icon(Icons.cloud_outlined),
+                                        tooltip: AppLocalizations.of(
+                                          context,
+                                        )!.syncWithGoogleDrive,
+                                        onPressed: () =>
+                                            Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                builder: (_) =>
+                                                    const GoogleDriveSyncPage(),
+                                              ),
+                                            ),
+                                      ),
+                                    // Quick profile switch button (hidden when left rail)
+                                    if (!isLeftRail)
+                                      Consumer(
+                                        builder: (context, ref, child) {
+                                          final allProfiles = ref
+                                              .watch(allProfilesProvider)
+                                              .value;
+                                          if (allProfiles == null ||
+                                              allProfiles.length < 2)
+                                            return const SizedBox.shrink();
+                                          return IconButton(
+                                            icon: const Icon(Icons.swap_horiz),
+                                            tooltip: AppLocalizations.of(
+                                              context,
+                                            )!.switchProfile,
+                                            onPressed: () =>
+                                                _quickSwitchProfile(context),
+                                          );
                                         },
                                       ),
-                                      Text(
-                                        AppLocalizations.of(context)!.hideFinished,
-                                        style: const TextStyle(fontSize: 12),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                // Show Deadline checkbox (Mobile)
-                                InkWell(
-                                  onTap: () {
-                                    final currentValue = ref.read(showOnlyWithDeadlineProvider);
-                                    ref.read(showOnlyWithDeadlineProvider.notifier).setShowOnlyWithDeadline(!currentValue);
-                                  },
-                                  borderRadius: BorderRadius.circular(4),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Checkbox(
-                                        value: ref.watch(showOnlyWithDeadlineProvider),
-                                        onChanged: (value) {
-                                          ref.read(showOnlyWithDeadlineProvider.notifier).setShowOnlyWithDeadline(value == true);
+                                    // Profile button (hidden when left rail)
+                                    if (!isLeftRail)
+                                      Consumer(
+                                        builder: (context, ref, child) {
+                                          final currentProfileAsync = ref.watch(
+                                            currentProfileProvider,
+                                          );
+                                          return currentProfileAsync.when(
+                                            loading: () => IconButton(
+                                              icon: const Icon(Icons.person),
+                                              onPressed: () {
+                                                Navigator.of(context).push(
+                                                  MaterialPageRoute(
+                                                    builder: (_) =>
+                                                        const ProfileManagerPage(),
+                                                  ),
+                                                );
+                                              },
+                                              tooltip: AppLocalizations.of(
+                                                context,
+                                              )!.profileManager,
+                                            ),
+                                            error: (_, _) => IconButton(
+                                              icon: const Icon(Icons.person),
+                                              onPressed: () {
+                                                Navigator.of(context).push(
+                                                  MaterialPageRoute(
+                                                    builder: (_) =>
+                                                        const ProfileManagerPage(),
+                                                  ),
+                                                );
+                                              },
+                                              tooltip: AppLocalizations.of(
+                                                context,
+                                              )!.profileManager,
+                                            ),
+                                            data: (currentProfile) {
+                                              Widget profileIcon;
+                                              if (currentProfile?.photoPath !=
+                                                      null &&
+                                                  File(
+                                                    currentProfile!.photoPath!,
+                                                  ).existsSync()) {
+                                                profileIcon = ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(16),
+                                                  child: Image.file(
+                                                    File(
+                                                      currentProfile.photoPath!,
+                                                    ),
+                                                    width: 32,
+                                                    height: 32,
+                                                    fit: BoxFit.cover,
+                                                    errorBuilder:
+                                                        (
+                                                          context,
+                                                          error,
+                                                          stackTrace,
+                                                        ) {
+                                                          return const Icon(
+                                                            Icons.person,
+                                                          );
+                                                        },
+                                                  ),
+                                                );
+                                              } else {
+                                                profileIcon = const Icon(
+                                                  Icons.person,
+                                                );
+                                              }
+                                              return IconButton(
+                                                icon: profileIcon,
+                                                onPressed: () {
+                                                  Navigator.of(context).push(
+                                                    MaterialPageRoute(
+                                                      builder: (_) =>
+                                                          const ProfileManagerPage(),
+                                                    ),
+                                                  );
+                                                },
+                                                tooltip:
+                                                    currentProfile?.name ??
+                                                    AppLocalizations.of(
+                                                      context,
+                                                    )!.profileManager,
+                                              );
+                                            },
+                                          );
                                         },
                                       ),
-                                      Text(
-                                        AppLocalizations.of(context)!.showOnlyDeadlines,
-                                        style: const TextStyle(fontSize: 12),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                if (hiddenCount > 0)
-                                  TextButton.icon(
-                                    icon: Icon(
-                                      hiddenMode == 2 ? Icons.visibility : Icons.visibility_off_outlined,
-                                      size: 16,
-                                    ),
-                                    label: Text(
-                                      hiddenMode == 2 ? AppLocalizations.of(context)!.showAll : AppLocalizations.of(context)!.showOnlyHidden,
-                                      style: const TextStyle(fontSize: 12),
-                                    ),
-                                    style: TextButton.styleFrom(
-                                      backgroundColor: hiddenMode == 2 ? Colors.orange.shade700 : null,
-                                      foregroundColor: hiddenMode == 2 ? Colors.white : Theme.of(context).textTheme.bodyMedium?.color,
-                                    ),
-                                    onPressed: () {
-                                      if (hiddenMode == 2) {
-                                        hiddenNotifier.setShowOnlyHidden(false);
-                                      } else {
-                                        hiddenNotifier.setShowOnlyHidden(true);
-                                      }
-                                    },
-                                  ),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.filter_list, size: 16, color: Theme.of(context).textTheme.bodyMedium?.color),
-                                    const SizedBox(width: 4),
-                                    DropdownButton<String>(
-                                      value: phaseFilter,
-                                      hint: Text(
-                                        AppLocalizations.of(context)!.filterByPhase,
-                                        style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
-                                      ),
-                                      underline: const SizedBox.shrink(),
-                                      style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color),
-                                      icon: const SizedBox.shrink(),
-                                      items: [
-                                        DropdownMenuItem<String>(
-                                          value: null,
-                                          child: Text(AppLocalizations.of(context)!.allPhases),
-                                        ),
-                                        ...customPhases.map((phase) => DropdownMenuItem<String>(
-                                          value: phase,
-                                          child: Text(phase),
-                                        )),
-                                      ],
-                                      onChanged: (String? value) {
-                                        ref.read(phaseFilterProvider.notifier).setPhase(value);
-                                      },
-                                    ),
                                   ],
-                                ),
-                        // DAW Filter dropdown — only offers DAWs actually present in this profile
-                        if (availableDaws.isNotEmpty)
-                          Row(
+                          )
+                        : null,
+                    bottomNavigationBar: MobileUtils.isMobile()
+                        ? Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.piano, size: 16, color: Theme.of(context).textTheme.bodyMedium?.color),
-                              const SizedBox(width: 4),
-                              DropdownButton<String>(
-                                value: dawFilter,
-                                hint: Text(
-                                  AppLocalizations.of(context)!.filterByDaw,
-                                  style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
-                                ),
-                                underline: const SizedBox.shrink(),
-                                style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color),
-                                icon: const SizedBox.shrink(),
-                                items: [
-                                  DropdownMenuItem<String>(
-                                    value: null,
-                                    child: Text(AppLocalizations.of(context)!.allDaws),
-                                  ),
-                                  ...availableDaws.map((daw) => DropdownMenuItem<String>(
-                                    value: daw,
-                                    child: Text(daw),
-                                  )),
+                              const MobileMiniPlayer(),
+                              NavigationBar(
+                                selectedIndex: _tabController.index,
+                                onDestinationSelected: (i) {
+                                  _tabController.animateTo(i);
+                                  setState(() {});
+                                },
+                                destinations: [
+                                  for (final tab in _currentVisibleTabs)
+                                    switch (tab) {
+                                      AppTab.projects => NavigationDestination(
+                                        icon: const Icon(
+                                          Icons.library_music_outlined,
+                                        ),
+                                        selectedIcon: const Icon(
+                                          Icons.library_music,
+                                        ),
+                                        label: AppLocalizations.of(
+                                          context,
+                                        )!.projects,
+                                      ),
+                                      AppTab.releases => NavigationDestination(
+                                        icon: const Icon(Icons.album_outlined),
+                                        selectedIcon: const Icon(Icons.album),
+                                        label: AppLocalizations.of(
+                                          context,
+                                        )!.releasesTab,
+                                      ),
+                                      AppTab.playlists => NavigationDestination(
+                                        icon: const Icon(
+                                          Icons.playlist_play_outlined,
+                                        ),
+                                        selectedIcon: const Icon(
+                                          Icons.playlist_play,
+                                        ),
+                                        label: AppLocalizations.of(
+                                          context,
+                                        )!.playlists,
+                                      ),
+                                      AppTab.queue => NavigationDestination(
+                                        icon: const Icon(
+                                          Icons.checklist_outlined,
+                                        ),
+                                        selectedIcon: const Icon(
+                                          Icons.checklist,
+                                        ),
+                                        label: AppLocalizations.of(
+                                          context,
+                                        )!.queueTab,
+                                      ),
+                                      AppTab.statistics =>
+                                        NavigationDestination(
+                                          icon: const Icon(
+                                            Icons.bar_chart_outlined,
+                                          ),
+                                          selectedIcon: const Icon(
+                                            Icons.bar_chart_rounded,
+                                          ),
+                                          label: AppLocalizations.of(
+                                            context,
+                                          )!.statisticsTab,
+                                        ),
+                                      AppTab.player => NavigationDestination(
+                                        icon: const Icon(
+                                          Icons.headphones_outlined,
+                                        ),
+                                        selectedIcon: const Icon(
+                                          Icons.headphones,
+                                        ),
+                                        label: AppLocalizations.of(
+                                          context,
+                                        )!.playerTitle,
+                                      ),
+                                    },
                                 ],
-                                onChanged: (String? value) {
-                                  ref.read(dawFilterProvider.notifier).setDaw(value);
-                                },
                               ),
                             ],
-                          ),
-                        // Deadline Filter dropdown (Desktop only)
-                        if (!MobileUtils.isMobile())
-                          DropdownButton<DeadlineFilter>(
-                            value: deadlineFilter,
-                            hint: Text(
-                              AppLocalizations.of(context)!.filterByDeadline,
-                              style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
-                            ),
-                            underline: const SizedBox.shrink(),
-                            style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color),
-                            icon: Icon(Icons.schedule, size: 16, color: Theme.of(context).textTheme.bodyMedium?.color),
-                            items: [
-                              DropdownMenuItem<DeadlineFilter>(
-                                value: DeadlineFilter.all,
-                                child: Text(AppLocalizations.of(context)!.allDeadlines),
-                              ),
-                              DropdownMenuItem<DeadlineFilter>(
-                                value: DeadlineFilter.hasDeadline,
-                                child: Text(AppLocalizations.of(context)!.hasDeadline),
-                              ),
-                              DropdownMenuItem<DeadlineFilter>(
-                                value: DeadlineFilter.overdue,
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.warning, color: Colors.red, size: 16),
-                                    const SizedBox(width: 4),
-                                    Text(AppLocalizations.of(context)!.overdue),
-                                  ],
-                                ),
-                              ),
-                              DropdownMenuItem<DeadlineFilter>(
-                                value: DeadlineFilter.dueSoon,
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.schedule, color: Colors.orange, size: 16),
-                                    const SizedBox(width: 4),
-                                    Text(AppLocalizations.of(context)!.dueSoon),
-                                  ],
-                                ),
-                              ),
-                              DropdownMenuItem<DeadlineFilter>(
-                                value: DeadlineFilter.dueToday,
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.today, color: Colors.red, size: 16),
-                                    const SizedBox(width: 4),
-                                    Text(AppLocalizations.of(context)!.dueToday),
-                                  ],
-                                ),
-                              ),
-                            ],
-                            onChanged: (DeadlineFilter? value) {
-                              if (value != null) {
-                                ref.read(deadlineFilterProvider.notifier).setFilter(value);
-                              }
-                            },
-                          ),
-                      ],
-                    ),
-                            ],
-                          ],
-                        )
-                      : Row(
-                          children: [
-                  // Ações de Root e Scan
-                  Row(
-                      children: [
-                        // Quick profile switch button (hidden when left rail)
-                        if (!isLeftRail)
-                          Consumer(
-                            builder: (context, ref, child) {
-                              final allProfiles = ref.watch(allProfilesProvider).value;
-                              if (allProfiles == null || allProfiles.length < 2) return const SizedBox.shrink();
-                              return IconButton(
-                                icon: const Icon(Icons.swap_horiz),
-                                tooltip: AppLocalizations.of(context)!.switchProfile,
-                                onPressed: () => _quickSwitchProfile(context),
-                              );
-                            },
-                          ),
-                        // Profile button (hidden when left rail)
-                        if (!isLeftRail)
-                          Consumer(
-                            builder: (context, ref, child) {
-                              final currentProfileAsync = ref.watch(currentProfileProvider);
-                              return currentProfileAsync.when(
-                                loading: () => Tooltip(
-                                  message: AppLocalizations.of(context)!.profileManager,
-                                  child: TextButton.icon(
-                                    icon: const Icon(Icons.person, size: 24),
-                                    label: Text(AppLocalizations.of(context)!.profileManager),
-                                    onPressed: () {
-                                      Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (_) => const ProfileManagerPage(),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                                error: (_, _) => Tooltip(
-                                  message: AppLocalizations.of(context)!.profileManager,
-                                  child: TextButton.icon(
-                                    icon: const Icon(Icons.person, size: 24),
-                                    label: Text(AppLocalizations.of(context)!.profileManager),
-                                    onPressed: () {
-                                      Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (_) => const ProfileManagerPage(),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                                data: (currentProfile) {
-                                  Widget profileIcon;
-                                  if (currentProfile?.photoPath != null &&
-                                      File(currentProfile!.photoPath!).existsSync()) {
-                                    profileIcon = ClipRRect(
-                                      borderRadius: BorderRadius.circular(12),
-                                      child: Image.file(
-                                        File(currentProfile.photoPath!),
-                                        width: 24,
-                                        height: 24,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) {
-                                          return const Icon(Icons.person, size: 24);
-                                        },
-                                      ),
-                                    );
-                                  } else {
-                                    profileIcon = const Icon(Icons.person, size: 24);
-                                  }
-
-                                  final profileName = currentProfile?.name ?? AppLocalizations.of(context)!.profileManager;
-
-                                  return Tooltip(
-                                    message: profileName,
-                                    child: TextButton(
-                                      onPressed: () {
-                                        Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                            builder: (_) => const ProfileManagerPage(),
-                                          ),
-                                        );
-                                      },
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          profileIcon,
-                                          const SizedBox(width: 8),
-                                          Flexible(
-                                            child: ConstrainedBox(
-                                              constraints: const BoxConstraints(maxWidth: 150),
-                                              child: Text(
-                                                profileName,
-                                                overflow: TextOverflow.ellipsis,
-                                                maxLines: 1,
+                          )
+                        : () {
+                            final playerRequest = ref.watch(
+                              desktopPlayerProvider,
+                            );
+                            if (playerRequest == null) return null;
+                            return _DesktopPlayerBar(
+                              key: const Key('desktop_player_bar'),
+                              request: playerRequest,
+                            );
+                          }(),
+                    body: Builder(
+                      builder: (context) {
+                        // Action bar: search field and filter toolbar.
+                        final actionBar = Builder(
+                          builder: (context) {
+                            final isMobile = MobileUtils.isMobile();
+                            if (isMobile) return const SizedBox.shrink();
+                            return Padding(
+                              padding: Platform.isMacOS
+                                  ? const EdgeInsets.fromLTRB(16, 14, 16, 16)
+                                  : MobileUtils.getResponsivePadding(context),
+                              child: isMobile
+                                  ? Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        // Search bar on top for mobile (hidden on Playlists tab)
+                                        if (_currentTab != AppTab.playlists)
+                                          TextField(
+                                            focusNode: _searchFocusNode,
+                                            controller: _searchController,
+                                            decoration: InputDecoration(
+                                              hintText: switch (_currentTab) {
+                                                AppTab.projects =>
+                                                  AppLocalizations.of(
+                                                    context,
+                                                  )!.searchProjects,
+                                                AppTab.releases =>
+                                                  AppLocalizations.of(
+                                                    context,
+                                                  )!.searchReleases,
+                                                AppTab.queue =>
+                                                  AppLocalizations.of(
+                                                    context,
+                                                  )!.queueSearchHint,
+                                                _ => AppLocalizations.of(
+                                                  context,
+                                                )!.statsSearchProjects,
+                                              },
+                                              isDense: true,
+                                              border:
+                                                  const OutlineInputBorder(),
+                                              prefixIcon: const Icon(
+                                                Icons.search,
                                               ),
+                                              suffixIcon: () {
+                                                final cs = currentSearch;
+                                                return cs.isNotEmpty
+                                                    ? IconButton(
+                                                        icon: const Icon(
+                                                          Icons.close,
+                                                        ),
+                                                        onPressed:
+                                                            _clearCurrentTabSearch,
+                                                      )
+                                                    : null;
+                                              }(),
                                             ),
+                                            onChanged: _updateCurrentTabSearch,
                                           ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                },
-                              );
-                            },
-                          ),
-                        if (!isLeftRail) const SizedBox(width: 8),
-                        if (!isLeftRail && !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) ...[
-                          OutlinedButton.icon(
-                            onPressed: isAnyOperation
-                                ? null
-                                : () async {
-                                    await Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) => const ProjectFoldersSettingsPage(),
-                                      ),
-                                    );
-                                  },
-                            icon: const Icon(Icons.settings_outlined),
-                            label: Text(AppLocalizations.of(context)!.settings),
-                          ),
-                          const SizedBox(width: 12),
-                        ],
-                        if (!isLeftRail) ElevatedButton.icon(
-                          onPressed: isAnyOperation
-                              ? null
-                              : () async {
-                                    await _scanAll();
-                                  },
-                          icon: switch (rescanIconState(
-                            isScanning: isScanning,
-                            deepScanning: _deepScanning,
-                            justSucceeded: _rescanJustSucceeded,
-                          )) {
-                            ScanIconState.spinning => const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              ),
-                            ScanIconState.justSucceeded => const Icon(Icons.check, color: Colors.green),
-                            ScanIconState.idle => const Icon(Icons.refresh),
-                          },
-                          label: Text((isScanning && !_deepScanning) ? AppLocalizations.of(context)!.scanning : AppLocalizations.of(context)!.rescan),
-                        ),
-                        if (!isLeftRail) ...[
-                          const SizedBox(width: 12),
-                          ElevatedButton.icon(
-                            onPressed: isAnyOperation
-                                ? null
-                                : () async {
-                                      bool onlyUnscanned = true;
-                                      final confirm = await showDialog<bool>(
-                                        context: context,
-                                        builder: (ctx) => StatefulBuilder(
-                                          builder: (ctx, setDialogState) => AlertDialog(
-                                            backgroundColor: Theme.of(context).cardColor,
-                                            title: Text(AppLocalizations.of(context)!.deepScan),
-                                            content: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Text(AppLocalizations.of(context)!.deepScanConfirm),
-                                                const SizedBox(height: 12),
-                                                CheckboxListTile(
-                                                  value: onlyUnscanned,
-                                                  onChanged: (v) => setDialogState(() => onlyUnscanned = v ?? true),
-                                                  title: Text(AppLocalizations.of(context)!.deepScanOnlyUnscanned),
-                                                  controlAffinity: ListTileControlAffinity.leading,
-                                                  contentPadding: EdgeInsets.zero,
+                                        if (_currentTab != AppTab.playlists)
+                                          const SizedBox(height: 12),
+                                        // Filters and info row (only show on Projects tab)
+                                        if (_currentTab == AppTab.projects) ...[
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: repoAsync.when(
+                                                  loading: () =>
+                                                      const SizedBox.shrink(),
+                                                  error: (_, _) =>
+                                                      const SizedBox.shrink(),
+                                                  data: (repo) {
+                                                    String projectText;
+                                                    final l10n =
+                                                        AppLocalizations.of(
+                                                          context,
+                                                        )!;
+                                                    // On mobile, don't show roots count (Android doesn't use scan roots)
+                                                    if (hiddenMode == 2) {
+                                                      projectText =
+                                                          '${l10n.projectsCount(hiddenCount)} ${l10n.hiddenOnly}';
+                                                    } else {
+                                                      projectText = l10n
+                                                          .projectsCount(
+                                                            visibleCount,
+                                                          );
+                                                      if (hiddenCount > 0 &&
+                                                          hiddenMode == 0) {
+                                                        projectText +=
+                                                            ' ${l10n.hiddenCount(hiddenCount)}';
+                                                      }
+                                                    }
+                                                    return Text(
+                                                      projectText,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                      style: TextStyle(
+                                                        fontSize: 12,
+                                                        color: hiddenMode == 2
+                                                            ? Colors
+                                                                  .orange
+                                                                  .shade300
+                                                            : null,
+                                                      ),
+                                                    );
+                                                  },
                                                 ),
-                                              ],
-                                            ),
-                                            actions: [
-                                              TextButton(
-                                                onPressed: () => Navigator.pop(ctx, false),
-                                                child: Text(AppLocalizations.of(context)!.cancel),
-                                              ),
-                                              ElevatedButton(
-                                                onPressed: () => Navigator.pop(ctx, true),
-                                                style: ElevatedButton.styleFrom(
-                                                  backgroundColor: Theme.of(context).colorScheme.primary,
-                                                ),
-                                                child: Text(AppLocalizations.of(context)!.deepScan),
                                               ),
                                             ],
                                           ),
-                                        ),
-                                      );
-                                      if (confirm == true) {
-                                        await _fullScanAll(onlyUnscanned: onlyUnscanned);
-                                      }
-                                    },
-                            icon: switch (deepScanIconState(
-                              deepScanning: _deepScanning,
-                              justSucceeded: _deepScanJustSucceeded,
-                            )) {
-                              ScanIconState.spinning => const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                ),
-                              ScanIconState.justSucceeded => const Icon(Icons.check, color: Colors.green),
-                              ScanIconState.idle => const Icon(Icons.search),
-                            },
-                            label: Text(_deepScanning ? AppLocalizations.of(context)!.scanning : AppLocalizations.of(context)!.deepScan),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Theme.of(context).colorScheme.primary,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  const SizedBox(width: 8),
-                  // Google Drive sync (hidden when left rail — shown there instead)
-                  if (!MobileUtils.isMobile() && !isLeftRail)
-                    Tooltip(
-                      message: AppLocalizations.of(context)!.syncWithGoogleDrive,
-                      child: IconButton(
-                        icon: const Icon(Icons.cloud_outlined),
-                        onPressed: () => Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const GoogleDriveSyncPage()),
-                        ),
-                      ),
-                    ),
-                  if (!MobileUtils.isMobile() && !isLeftRail)
-                    Tooltip(
-                      message: AppLocalizations.of(context)!.createProjectTooltip,
-                      child: IconButton(
-                        icon: const Icon(Icons.create_new_folder_outlined),
-                        onPressed: () => showDialog<String>(
-                          context: context,
-                          barrierDismissible: false,
-                          builder: (_) => const CreateProjectDialog(),
-                        ),
-                      ),
-                    ),
-                  if (!MobileUtils.isMobile() && !isLeftRail)
-                    Tooltip(
-                      message: AppLocalizations.of(context)!.projectTemplates,
-                      child: IconButton(
-                        icon: const Icon(Icons.folder_copy_outlined),
-                        onPressed: () => Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const ProjectTemplatesPage()),
-                        ),
-                      ),
-                    ),
-                  const SizedBox(width: 16),
-                  // Active DAW session chip / idle suggestions.
-                  // Fixed height prevents the bar from resizing when the chip appears.
-                  SizedBox(
-                    height: 56,
-                    child: Align(
-                      alignment: Alignment.center,
-                      child: Consumer(
-                        builder: (ctx, cRef, _) {
-                          final active = cRef.watch(activeProjectProvider);
-                          final suggestionsOn =
-                              cRef.watch(suggestionsEnabledProvider);
-                          if (active != null) return const _ActiveProjectChip();
-                          if (suggestionsOn) {
-                            return const _SessionIdleSuggestions();
-                          }
-                          return const SizedBox.shrink();
-                        },
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  // Search bar (desktop only — hidden on Playlists tab)
-                  if (!MobileUtils.isMobile())
-                  Expanded(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        ClipRect(
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            curve: Curves.easeInOut,
-                            width: (isLeftRail || _isSearchingDesktop) ? 400 : 0,
-                            child: Focus(
-                              onKeyEvent: (node, event) {
-                                if (event is KeyDownEvent &&
-                                    event.logicalKey == LogicalKeyboardKey.escape) {
-                                  _collapseDesktopSearch();
-                                  return KeyEventResult.handled;
-                                }
-                                return KeyEventResult.ignored;
-                              },
-                              child: TextField(
-                              focusNode: _searchFocusNode,
-                              controller: _searchController,
-                              decoration: InputDecoration(
-                                hintText: () {
-                                  final base = switch (_currentTab) {
-                                    AppTab.projects   => AppLocalizations.of(context)!.searchProjects,
-                                    AppTab.releases   => AppLocalizations.of(context)!.searchReleases,
-                                    AppTab.queue      => AppLocalizations.of(context)!.queueSearchHint,
-                                    _                 => AppLocalizations.of(context)!.statsSearchProjects,
-                                  };
-                                  if (!isLeftRail) return base;
-                                  final shortcut = Platform.isMacOS ? '⌘F' : 'Ctrl+F';
-                                  return '$base ($shortcut)';
-                                }(),
-                                isDense: true,
-                                border: const OutlineInputBorder(),
-                                prefixIcon: const Icon(Icons.search),
-                                suffixIcon: isLeftRail
-                                    ? (ref.watch(sessionModeProvider) && _searchController.text.isNotEmpty
-                                        ? IconButton(
-                                            icon: const Icon(Icons.close, size: 18),
-                                            tooltip: AppLocalizations.of(context)!.clear,
-                                            onPressed: () {
-                                              _searchController.clear();
-                                              _updateCurrentTabSearch('');
-                                            },
-                                          )
-                                        : null)
-                                    : IconButton(
-                                        icon: const Icon(Icons.close, size: 18),
-                                        onPressed: _collapseDesktopSearch,
-                                      ),
-                              ),
-                              onChanged: _updateCurrentTabSearch,
-                            ),
-                          ),
-                        ),
-                        ),
-                        if (!isLeftRail)
-                          Tooltip(
-                            message: '${AppLocalizations.of(context)!.searchProjects} (${Platform.isMacOS ? 'Cmd+F' : 'Ctrl+F'})',
-                            child: IconButton(
-                              icon: const Icon(Icons.search),
-                              onPressed: _focusSearchAndSelectAll,
-                            ),
-                          ),
-                        const SizedBox(width: 4),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            );
-            },
-                  );
-
-
-                  // Title bar (Windows/Linux) or traffic-light spacer (macOS).
-                  final titleBar = DesktopTitleBar(
-                    title: AppLocalizations.of(context)!.appTitleWithVersion(appVersion),
-                    actions: [
-                      // Donate button
-                      Consumer(
-                        builder: (context, ref, child) {
-                          final l10n = AppLocalizations.of(context)!;
-                          return Tooltip(
-                            message: l10n.supportTheProject,
-                            child: TextButton.icon(
-                              icon: Icon(Icons.card_giftcard, size: 18, color: Theme.of(context).textTheme.bodySmall?.color),
-                              label: Text(
-                                l10n.support,
-                                style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color, fontSize: 14),
-                              ),
-                              onPressed: () async {
-                                final uri = Uri.parse('https://www.paypal.com/donate/?hosted_button_id=QHVVZ3LAF39BL');
-                                if (await canLaunchUrl(uri)) {
-                                  await launchUrl(uri, mode: LaunchMode.externalApplication);
-                                }
-                              },
-                            ),
-                          );
-                        },
-                      ),
-                      const SizedBox(width: 8),
-                      const ThemeSwitcher(),
-                      const SizedBox(width: 8),
-                      const LanguageSwitcher(),
-                      const SizedBox(width: 8),
-                      Tooltip(
-                        message: AppLocalizations.of(context)!.menuDocumentation,
-                        child: IconButton(
-                          icon: Icon(Icons.menu_book_outlined, size: 18, color: Theme.of(context).textTheme.bodySmall?.color),
-                          onPressed: () => launchUrl(
-                            Uri.parse('https://dpm.bandpassrecords.com/docs.html'),
-                            mode: LaunchMode.externalApplication,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Tooltip(
-                        message: AppLocalizations.of(context)!.keyboardShortcuts,
-                        child: IconButton(
-                          icon: Icon(Icons.keyboard_outlined, size: 18, color: Theme.of(context).textTheme.bodySmall?.color),
-                          onPressed: () => showShortcutsHelpDialog(context),
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Tooltip(
-                        message: AppLocalizations.of(context)!.customizeTabs,
-                        child: IconButton(
-                          icon: Icon(Icons.tab_outlined, size: 18, color: Theme.of(context).textTheme.bodySmall?.color),
-                          onPressed: () => showTabCustomizationDialog(context),
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                    ],
-                  );
-
-                  final col = Column(
-          children: [
-            // Kept here when not using the left rail. When the left rail is
-            // active, the title bar is either hoisted (Windows/Linux) or omitted
-            // from the content column entirely (macOS — traffic-light clearance is
-            // in the rail's leading instead).
-            if (!isLeftRail) titleBar,
-
-            actionBar,
-
-            // Zero-height anchor used to position the suggestions overlay.
-            if (!MobileUtils.isMobile())
-              SizedBox(key: _suggestionsPanelAnchorKey, height: 0),
-
-            // Project folders are managed in the dedicated desktop-only settings page.
-            // Tab Bar (desktop only - mobile uses AppBar bottom)
-            if (!MobileUtils.isMobile() && ref.watch(tabPositionProvider) == TabPosition.top)
-              Builder(
-                builder: (context) => TabBar(
-                  controller: _tabController,
-                  tabs: [
-                    for (final tab in _currentVisibleTabs)
-                      switch (tab) {
-                        AppTab.projects   => Tab(icon: const Icon(Icons.library_music), text: AppLocalizations.of(context)!.projectsTab),
-                        AppTab.releases   => Tab(icon: const Icon(Icons.album), text: AppLocalizations.of(context)!.releasesTab),
-                        AppTab.playlists  => Tab(icon: const Icon(Icons.playlist_play), text: AppLocalizations.of(context)!.playlists),
-                        AppTab.queue      => Tab(icon: const Icon(Icons.checklist), text: AppLocalizations.of(context)!.queueTab),
-                        AppTab.statistics => Tab(icon: const Icon(Icons.bar_chart_rounded), text: AppLocalizations.of(context)!.statisticsTab),
-                        AppTab.player     => const Tab(icon: Icon(Icons.headphones), text: 'Music Player'),
-                      },
-                  ],
-                  labelColor: Theme.of(context).textTheme.titleMedium?.color,
-                  unselectedLabelColor: Theme.of(context).textTheme.bodySmall?.color,
-                  indicatorColor: Theme.of(context).colorScheme.primary,
-                ),
-              ),
-            // Tab Bar View (with optional left NavigationRail)
-            Expanded(
-              child: Builder(builder: (context) {
-                final tabView = TabBarView(
-                  controller: _tabController,
-                  // On mobile, tabs are switched via the bottom NavigationBar;
-                  // swiping between them is easy to trigger by accident while
-                  // scrolling a list, so disable the swipe gesture there.
-                  physics: MobileUtils.isMobile() ? const NeverScrollableScrollPhysics() : null,
-                  children: [
-                    for (final tab in _currentVisibleTabs)
-                      switch (tab) {
-                        AppTab.projects => Column(
-                            children: [
-                              const _PendingFoldersSection(),
-                              Expanded(
-                                child: MobileUtils.isMobile()
-                                  ? _MobileProjectsList(
-                                      projects: projects,
-                                      dateFormat: dateFormat,
-                                      onCreateRelease: (selectedProjects) {
-                                        _createReleaseFromSelectedProjects(context, ref, selectedProjects);
-                                      },
-                                      onHideProjects: (selectedProjectIds) async {
-                                        await _hideProjects(context, ref, selectedProjectIds);
-                                      },
-                                      onUnhideProjects: (selectedProjectIds) async {
-                                        await _unhideProjects(context, ref, selectedProjectIds);
-                                      },
-                                      // No onDeleteMissingProjects here: mobile projects are
-                                      // metadata-only entries synced via Drive, not local files
-                                      // (see FolderWatcher/_scanAll comments) — every one of them
-                                      // would spuriously read as "missing" by a File.existsSync()
-                                      // check against a desktop path, so the concept (and the
-                                      // "cloud_off" indicator it's paired with) is desktop-only.
-                                      showHidden: hiddenMode == 1 || hiddenMode == 2,
-                                      onRefresh: () => _refreshMobileProjects(),
+                                          const SizedBox(height: 8),
+                                          // Filter row
+                                          Wrap(
+                                            spacing: 8,
+                                            runSpacing: 8,
+                                            children: [
+                                              // Show Hidden Projects checkbox (Mobile) - only show if there are hidden projects
+                                              if (hiddenCount > 0)
+                                                InkWell(
+                                                  onTap: () {
+                                                    final currentValue =
+                                                        hiddenMode == 1;
+                                                    if (!currentValue) {
+                                                      hiddenNotifier.setShowAll(
+                                                        true,
+                                                      );
+                                                    } else {
+                                                      hiddenNotifier.setShowAll(
+                                                        false,
+                                                      );
+                                                    }
+                                                  },
+                                                  borderRadius:
+                                                      BorderRadius.circular(4),
+                                                  child: Row(
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+                                                    children: [
+                                                      Checkbox(
+                                                        value: hiddenMode == 1,
+                                                        onChanged: (value) {
+                                                          if (value == true) {
+                                                            hiddenNotifier
+                                                                .setShowAll(
+                                                                  true,
+                                                                );
+                                                          } else {
+                                                            hiddenNotifier
+                                                                .setShowAll(
+                                                                  false,
+                                                                );
+                                                          }
+                                                        },
+                                                      ),
+                                                      Text(
+                                                        AppLocalizations.of(
+                                                          context,
+                                                        )!.showHidden,
+                                                        style: const TextStyle(
+                                                          fontSize: 12,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              // Hide Finished Projects checkbox (Mobile)
+                                              InkWell(
+                                                onTap: () {
+                                                  final currentValue =
+                                                      finishedMode == 1;
+                                                  if (!currentValue) {
+                                                    finishedNotifier
+                                                        .setHideFinished(true);
+                                                  } else {
+                                                    finishedNotifier
+                                                        .setHideFinished(false);
+                                                  }
+                                                },
+                                                borderRadius:
+                                                    BorderRadius.circular(4),
+                                                child: Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Checkbox(
+                                                      value: finishedMode == 1,
+                                                      onChanged: (value) {
+                                                        if (value == true) {
+                                                          finishedNotifier
+                                                              .setHideFinished(
+                                                                true,
+                                                              );
+                                                        } else {
+                                                          finishedNotifier
+                                                              .setHideFinished(
+                                                                false,
+                                                              );
+                                                        }
+                                                      },
+                                                    ),
+                                                    Text(
+                                                      AppLocalizations.of(
+                                                        context,
+                                                      )!.hideFinished,
+                                                      style: const TextStyle(
+                                                        fontSize: 12,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              // Show Deadline checkbox (Mobile)
+                                              InkWell(
+                                                onTap: () {
+                                                  final currentValue = ref.read(
+                                                    showOnlyWithDeadlineProvider,
+                                                  );
+                                                  ref
+                                                      .read(
+                                                        showOnlyWithDeadlineProvider
+                                                            .notifier,
+                                                      )
+                                                      .setShowOnlyWithDeadline(
+                                                        !currentValue,
+                                                      );
+                                                },
+                                                borderRadius:
+                                                    BorderRadius.circular(4),
+                                                child: Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Checkbox(
+                                                      value: ref.watch(
+                                                        showOnlyWithDeadlineProvider,
+                                                      ),
+                                                      onChanged: (value) {
+                                                        ref
+                                                            .read(
+                                                              showOnlyWithDeadlineProvider
+                                                                  .notifier,
+                                                            )
+                                                            .setShowOnlyWithDeadline(
+                                                              value == true,
+                                                            );
+                                                      },
+                                                    ),
+                                                    Text(
+                                                      AppLocalizations.of(
+                                                        context,
+                                                      )!.showOnlyDeadlines,
+                                                      style: const TextStyle(
+                                                        fontSize: 12,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              if (hiddenCount > 0)
+                                                TextButton.icon(
+                                                  icon: Icon(
+                                                    hiddenMode == 2
+                                                        ? Icons.visibility
+                                                        : Icons
+                                                              .visibility_off_outlined,
+                                                    size: 16,
+                                                  ),
+                                                  label: Text(
+                                                    hiddenMode == 2
+                                                        ? AppLocalizations.of(
+                                                            context,
+                                                          )!.showAll
+                                                        : AppLocalizations.of(
+                                                            context,
+                                                          )!.showOnlyHidden,
+                                                    style: const TextStyle(
+                                                      fontSize: 12,
+                                                    ),
+                                                  ),
+                                                  style: TextButton.styleFrom(
+                                                    backgroundColor:
+                                                        hiddenMode == 2
+                                                        ? Colors.orange.shade700
+                                                        : null,
+                                                    foregroundColor:
+                                                        hiddenMode == 2
+                                                        ? Colors.white
+                                                        : Theme.of(context)
+                                                              .textTheme
+                                                              .bodyMedium
+                                                              ?.color,
+                                                  ),
+                                                  onPressed: () {
+                                                    if (hiddenMode == 2) {
+                                                      hiddenNotifier
+                                                          .setShowOnlyHidden(
+                                                            false,
+                                                          );
+                                                    } else {
+                                                      hiddenNotifier
+                                                          .setShowOnlyHidden(
+                                                            true,
+                                                          );
+                                                    }
+                                                  },
+                                                ),
+                                              Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(
+                                                    Icons.filter_list,
+                                                    size: 16,
+                                                    color: Theme.of(context)
+                                                        .textTheme
+                                                        .bodyMedium
+                                                        ?.color,
+                                                  ),
+                                                  const SizedBox(width: 4),
+                                                  DropdownButton<String>(
+                                                    value: phaseFilter,
+                                                    hint: Text(
+                                                      AppLocalizations.of(
+                                                        context,
+                                                      )!.filterByPhase,
+                                                      style: TextStyle(
+                                                        fontSize: 12,
+                                                        color: Theme.of(context)
+                                                            .textTheme
+                                                            .bodySmall
+                                                            ?.color,
+                                                      ),
+                                                    ),
+                                                    underline:
+                                                        const SizedBox.shrink(),
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                      color: Theme.of(context)
+                                                          .textTheme
+                                                          .bodyMedium
+                                                          ?.color,
+                                                    ),
+                                                    icon:
+                                                        const SizedBox.shrink(),
+                                                    items: [
+                                                      DropdownMenuItem<String>(
+                                                        value: null,
+                                                        child: Text(
+                                                          AppLocalizations.of(
+                                                            context,
+                                                          )!.allPhases,
+                                                        ),
+                                                      ),
+                                                      ...customPhases.map(
+                                                        (phase) =>
+                                                            DropdownMenuItem<
+                                                              String
+                                                            >(
+                                                              value: phase,
+                                                              child: Text(
+                                                                phase,
+                                                              ),
+                                                            ),
+                                                      ),
+                                                    ],
+                                                    onChanged: (String? value) {
+                                                      ref
+                                                          .read(
+                                                            phaseFilterProvider
+                                                                .notifier,
+                                                          )
+                                                          .setPhase(value);
+                                                    },
+                                                  ),
+                                                ],
+                                              ),
+                                              // DAW Filter dropdown — only offers DAWs actually present in this profile
+                                              if (availableDaws.isNotEmpty)
+                                                Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Icon(
+                                                      Icons.piano,
+                                                      size: 16,
+                                                      color: Theme.of(context)
+                                                          .textTheme
+                                                          .bodyMedium
+                                                          ?.color,
+                                                    ),
+                                                    const SizedBox(width: 4),
+                                                    DropdownButton<String>(
+                                                      value: dawFilter,
+                                                      hint: Text(
+                                                        AppLocalizations.of(
+                                                          context,
+                                                        )!.filterByDaw,
+                                                        style: TextStyle(
+                                                          fontSize: 12,
+                                                          color:
+                                                              Theme.of(context)
+                                                                  .textTheme
+                                                                  .bodySmall
+                                                                  ?.color,
+                                                        ),
+                                                      ),
+                                                      underline:
+                                                          const SizedBox.shrink(),
+                                                      style: TextStyle(
+                                                        fontSize: 12,
+                                                        color: Theme.of(context)
+                                                            .textTheme
+                                                            .bodyMedium
+                                                            ?.color,
+                                                      ),
+                                                      icon:
+                                                          const SizedBox.shrink(),
+                                                      items: [
+                                                        DropdownMenuItem<
+                                                          String
+                                                        >(
+                                                          value: null,
+                                                          child: Text(
+                                                            AppLocalizations.of(
+                                                              context,
+                                                            )!.allDaws,
+                                                          ),
+                                                        ),
+                                                        ...availableDaws.map(
+                                                          (daw) =>
+                                                              DropdownMenuItem<
+                                                                String
+                                                              >(
+                                                                value: daw,
+                                                                child: Text(
+                                                                  daw,
+                                                                ),
+                                                              ),
+                                                        ),
+                                                      ],
+                                                      onChanged: (String? value) {
+                                                        ref
+                                                            .read(
+                                                              dawFilterProvider
+                                                                  .notifier,
+                                                            )
+                                                            .setDaw(value);
+                                                      },
+                                                    ),
+                                                  ],
+                                                ),
+                                              // Deadline Filter dropdown (Desktop only)
+                                              if (!MobileUtils.isMobile())
+                                                DropdownButton<DeadlineFilter>(
+                                                  value: deadlineFilter,
+                                                  hint: Text(
+                                                    AppLocalizations.of(
+                                                      context,
+                                                    )!.filterByDeadline,
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                      color: Theme.of(context)
+                                                          .textTheme
+                                                          .bodySmall
+                                                          ?.color,
+                                                    ),
+                                                  ),
+                                                  underline:
+                                                      const SizedBox.shrink(),
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Theme.of(context)
+                                                        .textTheme
+                                                        .bodyMedium
+                                                        ?.color,
+                                                  ),
+                                                  icon: Icon(
+                                                    Icons.schedule,
+                                                    size: 16,
+                                                    color: Theme.of(context)
+                                                        .textTheme
+                                                        .bodyMedium
+                                                        ?.color,
+                                                  ),
+                                                  items: [
+                                                    DropdownMenuItem<
+                                                      DeadlineFilter
+                                                    >(
+                                                      value: DeadlineFilter.all,
+                                                      child: Text(
+                                                        AppLocalizations.of(
+                                                          context,
+                                                        )!.allDeadlines,
+                                                      ),
+                                                    ),
+                                                    DropdownMenuItem<
+                                                      DeadlineFilter
+                                                    >(
+                                                      value: DeadlineFilter
+                                                          .hasDeadline,
+                                                      child: Text(
+                                                        AppLocalizations.of(
+                                                          context,
+                                                        )!.hasDeadline,
+                                                      ),
+                                                    ),
+                                                    DropdownMenuItem<
+                                                      DeadlineFilter
+                                                    >(
+                                                      value: DeadlineFilter
+                                                          .overdue,
+                                                      child: Row(
+                                                        children: [
+                                                          Icon(
+                                                            Icons.warning,
+                                                            color: Colors.red,
+                                                            size: 16,
+                                                          ),
+                                                          const SizedBox(
+                                                            width: 4,
+                                                          ),
+                                                          Text(
+                                                            AppLocalizations.of(
+                                                              context,
+                                                            )!.overdue,
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                    DropdownMenuItem<
+                                                      DeadlineFilter
+                                                    >(
+                                                      value: DeadlineFilter
+                                                          .dueSoon,
+                                                      child: Row(
+                                                        children: [
+                                                          Icon(
+                                                            Icons.schedule,
+                                                            color:
+                                                                Colors.orange,
+                                                            size: 16,
+                                                          ),
+                                                          const SizedBox(
+                                                            width: 4,
+                                                          ),
+                                                          Text(
+                                                            AppLocalizations.of(
+                                                              context,
+                                                            )!.dueSoon,
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                    DropdownMenuItem<
+                                                      DeadlineFilter
+                                                    >(
+                                                      value: DeadlineFilter
+                                                          .dueToday,
+                                                      child: Row(
+                                                        children: [
+                                                          Icon(
+                                                            Icons.today,
+                                                            color: Colors.red,
+                                                            size: 16,
+                                                          ),
+                                                          const SizedBox(
+                                                            width: 4,
+                                                          ),
+                                                          Text(
+                                                            AppLocalizations.of(
+                                                              context,
+                                                            )!.dueToday,
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ],
+                                                  onChanged:
+                                                      (DeadlineFilter? value) {
+                                                        if (value != null) {
+                                                          ref
+                                                              .read(
+                                                                deadlineFilterProvider
+                                                                    .notifier,
+                                                              )
+                                                              .setFilter(value);
+                                                        }
+                                                      },
+                                                ),
+                                            ],
+                                          ),
+                                        ],
+                                      ],
                                     )
-                                  : _PlutoProjectsTableWithSelection(
-                                      key: _tableKey,
-                                      projects: projects,
-                                      dateFormat: dateFormat,
-                                      onCreateRelease: (selectedProjects) {
-                                        _createReleaseFromSelectedProjects(context, ref, selectedProjects);
-                                      },
-                                      onHideProjects: (selectedProjectIds) async {
-                                        await _hideProjects(context, ref, selectedProjectIds);
-                                      },
-                                      onUnhideProjects: (selectedProjectIds) async {
-                                        await _unhideProjects(context, ref, selectedProjectIds);
-                                      },
-                                      onDeleteMissingProjects: (selectedProjectIds) async {
-                                        await _deleteMissingProjects(context, ref, selectedProjectIds);
-                                      },
-                                      showHidden: hiddenMode == 1 || hiddenMode == 2,
-                                      onExtractingMetadataChanged: (extracting) {
-                                        setState(() => _extractingMetadata = extracting);
-                                      },
-                                      isAnyOperation: isAnyOperation,
-                                      visibleCount: visibleCount,
-                                      hiddenCount: hiddenCount,
-                                    ),
-                              ),
-                            ],
-                          ),
-                      AppTab.releases   => const ReleasesTabPage(),
-                      AppTab.playlists  => const PlaylistsPage(),
-                      AppTab.queue      => const QueuePage(),
-                      AppTab.statistics => const StatisticsPage(),
-                      AppTab.player     => const MusicPlayerPage(),
-                    },
-                  ],
-                );
-                return tabView;
-              }),
-            ),
-          ],
-                );
-                if (!isLeftRail) return col;
-                final row = Row(
-                  children: [
-                    NavigationRail(
-                      selectedIndex: _tabController.index,
-                      onDestinationSelected: (i) => _tabController.animateTo(i),
-                      minWidth: railCollapsed ? (Platform.isMacOS ? 80.0 : 64.0) : _railWidth,
-                      labelType: railCollapsed
-                          ? NavigationRailLabelType.none
-                          : NavigationRailLabelType.all,
-                      leading: Column(
-                        children: [
-                          // Clear macOS traffic-light buttons (float over top-left).
-                          if (Platform.isMacOS) const SizedBox(height: 28),
-                          // Collapse/expand toggle
-                          Tooltip(
-                            message: railCollapsed
-                                ? AppLocalizations.of(context)!.expand
-                                : AppLocalizations.of(context)!.collapse,
-                            child: IconButton(
-                              icon: Icon(railCollapsed
-                                  ? Icons.chevron_right
-                                  : Icons.chevron_left),
-                              onPressed: () {
-                                if (railCollapsed) setState(() => _railWidth = 130.0);
-                                ref.read(railCollapsedProvider.notifier).set(!railCollapsed);
-                              },
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          // Profile avatar + name
-                          Consumer(builder: (ctx, ref, _) {
-                            final profile = ref.watch(currentProfileProvider).value;
-                            final hasPhoto = profile?.photoPath != null &&
-                                File(profile!.photoPath!).existsSync();
-                            const avatarSize = 44.0;
-                            final Widget avatar = hasPhoto
-                                ? ClipRRect(
-                                    borderRadius: BorderRadius.circular(avatarSize),
-                                    child: Image.file(
-                                      File(profile.photoPath!),
-                                      width: avatarSize,
-                                      height: avatarSize,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  )
-                                : Container(
-                                    width: avatarSize,
-                                    height: avatarSize,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                                    ),
-                                    child: const Icon(Icons.person, size: 26),
-                                  );
-                            final inkWell = InkWell(
-                                borderRadius: BorderRadius.circular(8),
-                                onTap: () => Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) => const ProfileManagerPage(),
-                                  ),
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 4, horizontal: 4),
-                                  child: railCollapsed
-                                      ? avatar
-                                      : Column(
+                                  : Row(
+                                      children: [
+                                        // Ações de Root e Scan
+                                        Row(
                                           children: [
-                                            avatar,
-                                            if (profile?.name != null) ...[
-                                              const SizedBox(height: 4),
-                                              SizedBox(
-                                                width: _railWidth - 24,
-                                                child: Text(
-                                                  profile!.name,
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .labelSmall,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  textAlign: TextAlign.center,
-                                                  maxLines: 2,
+                                            // Quick profile switch button (hidden when left rail)
+                                            if (!isLeftRail)
+                                              Consumer(
+                                                builder: (context, ref, child) {
+                                                  final allProfiles = ref
+                                                      .watch(
+                                                        allProfilesProvider,
+                                                      )
+                                                      .value;
+                                                  if (allProfiles == null ||
+                                                      allProfiles.length < 2)
+                                                    return const SizedBox.shrink();
+                                                  return IconButton(
+                                                    icon: const Icon(
+                                                      Icons.swap_horiz,
+                                                    ),
+                                                    tooltip:
+                                                        AppLocalizations.of(
+                                                          context,
+                                                        )!.switchProfile,
+                                                    onPressed: () =>
+                                                        _quickSwitchProfile(
+                                                          context,
+                                                        ),
+                                                  );
+                                                },
+                                              ),
+                                            // Profile button (hidden when left rail)
+                                            if (!isLeftRail)
+                                              Consumer(
+                                                builder: (context, ref, child) {
+                                                  final currentProfileAsync =
+                                                      ref.watch(
+                                                        currentProfileProvider,
+                                                      );
+                                                  return currentProfileAsync.when(
+                                                    loading: () => Tooltip(
+                                                      message:
+                                                          AppLocalizations.of(
+                                                            context,
+                                                          )!.profileManager,
+                                                      child: TextButton.icon(
+                                                        icon: const Icon(
+                                                          Icons.person,
+                                                          size: 24,
+                                                        ),
+                                                        label: Text(
+                                                          AppLocalizations.of(
+                                                            context,
+                                                          )!.profileManager,
+                                                        ),
+                                                        onPressed: () {
+                                                          Navigator.of(
+                                                            context,
+                                                          ).push(
+                                                            MaterialPageRoute(
+                                                              builder: (_) =>
+                                                                  const ProfileManagerPage(),
+                                                            ),
+                                                          );
+                                                        },
+                                                      ),
+                                                    ),
+                                                    error: (_, _) => Tooltip(
+                                                      message:
+                                                          AppLocalizations.of(
+                                                            context,
+                                                          )!.profileManager,
+                                                      child: TextButton.icon(
+                                                        icon: const Icon(
+                                                          Icons.person,
+                                                          size: 24,
+                                                        ),
+                                                        label: Text(
+                                                          AppLocalizations.of(
+                                                            context,
+                                                          )!.profileManager,
+                                                        ),
+                                                        onPressed: () {
+                                                          Navigator.of(
+                                                            context,
+                                                          ).push(
+                                                            MaterialPageRoute(
+                                                              builder: (_) =>
+                                                                  const ProfileManagerPage(),
+                                                            ),
+                                                          );
+                                                        },
+                                                      ),
+                                                    ),
+                                                    data: (currentProfile) {
+                                                      Widget profileIcon;
+                                                      if (currentProfile
+                                                                  ?.photoPath !=
+                                                              null &&
+                                                          File(
+                                                            currentProfile!
+                                                                .photoPath!,
+                                                          ).existsSync()) {
+                                                        profileIcon = ClipRRect(
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                12,
+                                                              ),
+                                                          child: Image.file(
+                                                            File(
+                                                              currentProfile
+                                                                  .photoPath!,
+                                                            ),
+                                                            width: 24,
+                                                            height: 24,
+                                                            fit: BoxFit.cover,
+                                                            errorBuilder:
+                                                                (
+                                                                  context,
+                                                                  error,
+                                                                  stackTrace,
+                                                                ) {
+                                                                  return const Icon(
+                                                                    Icons
+                                                                        .person,
+                                                                    size: 24,
+                                                                  );
+                                                                },
+                                                          ),
+                                                        );
+                                                      } else {
+                                                        profileIcon =
+                                                            const Icon(
+                                                              Icons.person,
+                                                              size: 24,
+                                                            );
+                                                      }
+
+                                                      final profileName =
+                                                          currentProfile
+                                                              ?.name ??
+                                                          AppLocalizations.of(
+                                                            context,
+                                                          )!.profileManager;
+
+                                                      return Tooltip(
+                                                        message: profileName,
+                                                        child: TextButton(
+                                                          onPressed: () {
+                                                            Navigator.of(
+                                                              context,
+                                                            ).push(
+                                                              MaterialPageRoute(
+                                                                builder: (_) =>
+                                                                    const ProfileManagerPage(),
+                                                              ),
+                                                            );
+                                                          },
+                                                          child: Row(
+                                                            mainAxisSize:
+                                                                MainAxisSize
+                                                                    .min,
+                                                            children: [
+                                                              profileIcon,
+                                                              const SizedBox(
+                                                                width: 8,
+                                                              ),
+                                                              Flexible(
+                                                                child: ConstrainedBox(
+                                                                  constraints:
+                                                                      const BoxConstraints(
+                                                                        maxWidth:
+                                                                            150,
+                                                                      ),
+                                                                  child: Text(
+                                                                    profileName,
+                                                                    overflow:
+                                                                        TextOverflow
+                                                                            .ellipsis,
+                                                                    maxLines: 1,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      );
+                                                    },
+                                                  );
+                                                },
+                                              ),
+                                            if (!isLeftRail)
+                                              const SizedBox(width: 8),
+                                            if (!isLeftRail &&
+                                                !kIsWeb &&
+                                                (Platform.isWindows ||
+                                                    Platform.isMacOS ||
+                                                    Platform.isLinux)) ...[
+                                              OutlinedButton.icon(
+                                                onPressed: isAnyOperation
+                                                    ? null
+                                                    : () async {
+                                                        await Navigator.of(
+                                                          context,
+                                                        ).push(
+                                                          MaterialPageRoute(
+                                                            builder: (_) =>
+                                                                const ProjectFoldersSettingsPage(),
+                                                          ),
+                                                        );
+                                                      },
+                                                icon: const Icon(
+                                                  Icons.settings_outlined,
+                                                ),
+                                                label: Text(
+                                                  AppLocalizations.of(
+                                                    context,
+                                                  )!.settings,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 12),
+                                            ],
+                                            if (!isLeftRail)
+                                              ElevatedButton.icon(
+                                                onPressed: isAnyOperation
+                                                    ? null
+                                                    : () async {
+                                                        await _scanAll();
+                                                      },
+                                                icon: switch (rescanIconState(
+                                                  isScanning: isScanning,
+                                                  deepScanning: _deepScanning,
+                                                  justSucceeded:
+                                                      _rescanJustSucceeded,
+                                                )) {
+                                                  ScanIconState.spinning =>
+                                                    const SizedBox(
+                                                      width: 16,
+                                                      height: 16,
+                                                      child:
+                                                          CircularProgressIndicator(
+                                                            strokeWidth: 2,
+                                                          ),
+                                                    ),
+                                                  ScanIconState.justSucceeded =>
+                                                    const Icon(
+                                                      Icons.check,
+                                                      color: Colors.green,
+                                                    ),
+                                                  ScanIconState.idle =>
+                                                    const Icon(Icons.refresh),
+                                                },
+                                                label: Text(
+                                                  (isScanning && !_deepScanning)
+                                                      ? AppLocalizations.of(
+                                                          context,
+                                                        )!.scanning
+                                                      : AppLocalizations.of(
+                                                          context,
+                                                        )!.rescan,
+                                                ),
+                                              ),
+                                            if (!isLeftRail) ...[
+                                              const SizedBox(width: 12),
+                                              ElevatedButton.icon(
+                                                onPressed: isAnyOperation
+                                                    ? null
+                                                    : () async {
+                                                        bool onlyUnscanned =
+                                                            true;
+                                                        final confirm = await showDialog<bool>(
+                                                          context: context,
+                                                          builder: (ctx) => StatefulBuilder(
+                                                            builder: (ctx, setDialogState) => AlertDialog(
+                                                              backgroundColor:
+                                                                  Theme.of(
+                                                                    context,
+                                                                  ).cardColor,
+                                                              title: Text(
+                                                                AppLocalizations.of(
+                                                                  context,
+                                                                )!.deepScan,
+                                                              ),
+                                                              content: Column(
+                                                                mainAxisSize:
+                                                                    MainAxisSize
+                                                                        .min,
+                                                                crossAxisAlignment:
+                                                                    CrossAxisAlignment
+                                                                        .start,
+                                                                children: [
+                                                                  Text(
+                                                                    AppLocalizations.of(
+                                                                      context,
+                                                                    )!.deepScanConfirm,
+                                                                  ),
+                                                                  const SizedBox(
+                                                                    height: 12,
+                                                                  ),
+                                                                  CheckboxListTile(
+                                                                    value:
+                                                                        onlyUnscanned,
+                                                                    onChanged: (v) => setDialogState(
+                                                                      () => onlyUnscanned =
+                                                                          v ??
+                                                                          true,
+                                                                    ),
+                                                                    title: Text(
+                                                                      AppLocalizations.of(
+                                                                        context,
+                                                                      )!.deepScanOnlyUnscanned,
+                                                                    ),
+                                                                    controlAffinity:
+                                                                        ListTileControlAffinity
+                                                                            .leading,
+                                                                    contentPadding:
+                                                                        EdgeInsets
+                                                                            .zero,
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                              actions: [
+                                                                TextButton(
+                                                                  onPressed: () =>
+                                                                      Navigator.pop(
+                                                                        ctx,
+                                                                        false,
+                                                                      ),
+                                                                  child: Text(
+                                                                    AppLocalizations.of(
+                                                                      context,
+                                                                    )!.cancel,
+                                                                  ),
+                                                                ),
+                                                                ElevatedButton(
+                                                                  onPressed: () =>
+                                                                      Navigator.pop(
+                                                                        ctx,
+                                                                        true,
+                                                                      ),
+                                                                  style: ElevatedButton.styleFrom(
+                                                                    backgroundColor:
+                                                                        Theme.of(
+                                                                          context,
+                                                                        ).colorScheme.primary,
+                                                                  ),
+                                                                  child: Text(
+                                                                    AppLocalizations.of(
+                                                                      context,
+                                                                    )!.deepScan,
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ),
+                                                        );
+                                                        if (confirm == true) {
+                                                          await _fullScanAll(
+                                                            onlyUnscanned:
+                                                                onlyUnscanned,
+                                                          );
+                                                        }
+                                                      },
+                                                icon: switch (deepScanIconState(
+                                                  deepScanning: _deepScanning,
+                                                  justSucceeded:
+                                                      _deepScanJustSucceeded,
+                                                )) {
+                                                  ScanIconState.spinning =>
+                                                    const SizedBox(
+                                                      width: 16,
+                                                      height: 16,
+                                                      child:
+                                                          CircularProgressIndicator(
+                                                            strokeWidth: 2,
+                                                          ),
+                                                    ),
+                                                  ScanIconState.justSucceeded =>
+                                                    const Icon(
+                                                      Icons.check,
+                                                      color: Colors.green,
+                                                    ),
+                                                  ScanIconState.idle =>
+                                                    const Icon(Icons.search),
+                                                },
+                                                label: Text(
+                                                  _deepScanning
+                                                      ? AppLocalizations.of(
+                                                          context,
+                                                        )!.scanning
+                                                      : AppLocalizations.of(
+                                                          context,
+                                                        )!.deepScan,
+                                                ),
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: Theme.of(
+                                                    context,
+                                                  ).colorScheme.primary,
                                                 ),
                                               ),
                                             ],
                                           ],
                                         ),
-                                ),
-                              );
-                            return inkWell;
-                          }),
-                          // Quick profile switch (multiple profiles only)
-                          Consumer(builder: (ctx, ref, _) {
-                            final allProfiles =
-                                ref.watch(allProfilesProvider).value;
-                            if (allProfiles == null || allProfiles.length < 2) {
-                              return const SizedBox.shrink();
-                            }
-                            return IconButton(
-                              icon: const Icon(Icons.swap_horiz, size: 18),
-                              tooltip: AppLocalizations.of(context)!.switchProfile,
-                              onPressed: () => _quickSwitchProfile(context),
+                                        const SizedBox(width: 8),
+                                        // Google Drive sync (hidden when left rail — shown there instead)
+                                        if (!MobileUtils.isMobile() &&
+                                            !isLeftRail)
+                                          Tooltip(
+                                            message: AppLocalizations.of(
+                                              context,
+                                            )!.syncWithGoogleDrive,
+                                            child: IconButton(
+                                              icon: const Icon(
+                                                Icons.cloud_outlined,
+                                              ),
+                                              onPressed: () =>
+                                                  Navigator.of(context).push(
+                                                    MaterialPageRoute(
+                                                      builder: (_) =>
+                                                          const GoogleDriveSyncPage(),
+                                                    ),
+                                                  ),
+                                            ),
+                                          ),
+                                        if (!MobileUtils.isMobile() &&
+                                            !isLeftRail)
+                                          Tooltip(
+                                            message: AppLocalizations.of(
+                                              context,
+                                            )!.createProjectTooltip,
+                                            child: IconButton(
+                                              icon: const Icon(
+                                                Icons
+                                                    .create_new_folder_outlined,
+                                              ),
+                                              onPressed: () => showDialog<String>(
+                                                context: context,
+                                                barrierDismissible: false,
+                                                builder: (_) =>
+                                                    const CreateProjectDialog(),
+                                              ),
+                                            ),
+                                          ),
+                                        if (!MobileUtils.isMobile() &&
+                                            !isLeftRail)
+                                          Tooltip(
+                                            message: AppLocalizations.of(
+                                              context,
+                                            )!.projectTemplates,
+                                            child: IconButton(
+                                              icon: const Icon(
+                                                Icons.folder_copy_outlined,
+                                              ),
+                                              onPressed: () =>
+                                                  Navigator.of(context).push(
+                                                    MaterialPageRoute(
+                                                      builder: (_) =>
+                                                          const ProjectTemplatesPage(),
+                                                    ),
+                                                  ),
+                                            ),
+                                          ),
+                                        const SizedBox(width: 16),
+                                        // Active DAW session chip / idle suggestions.
+                                        // Fixed height prevents the bar from resizing when the chip appears.
+                                        SizedBox(
+                                          height: 56,
+                                          child: Align(
+                                            alignment: Alignment.center,
+                                            child: Consumer(
+                                              builder: (ctx, cRef, _) {
+                                                final active = cRef.watch(
+                                                  activeProjectProvider,
+                                                );
+                                                final suggestionsOn = cRef.watch(
+                                                  suggestionsEnabledProvider,
+                                                );
+                                                if (active != null)
+                                                  return const _ActiveProjectChip();
+                                                if (suggestionsOn) {
+                                                  return const _SessionIdleSuggestions();
+                                                }
+                                                return const SizedBox.shrink();
+                                              },
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        // Search bar (desktop only — hidden on Playlists tab)
+                                        if (!MobileUtils.isMobile())
+                                          Expanded(
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.end,
+                                              children: [
+                                                ClipRect(
+                                                  child: AnimatedContainer(
+                                                    duration: const Duration(
+                                                      milliseconds: 200,
+                                                    ),
+                                                    curve: Curves.easeInOut,
+                                                    width:
+                                                        (isLeftRail ||
+                                                            _isSearchingDesktop)
+                                                        ? 400
+                                                        : 0,
+                                                    child: Focus(
+                                                      onKeyEvent: (node, event) {
+                                                        if (event
+                                                                is KeyDownEvent &&
+                                                            event.logicalKey ==
+                                                                LogicalKeyboardKey
+                                                                    .escape) {
+                                                          _collapseDesktopSearch();
+                                                          return KeyEventResult
+                                                              .handled;
+                                                        }
+                                                        return KeyEventResult
+                                                            .ignored;
+                                                      },
+                                                      child: TextField(
+                                                        focusNode:
+                                                            _searchFocusNode,
+                                                        controller:
+                                                            _searchController,
+                                                        decoration: InputDecoration(
+                                                          hintText: () {
+                                                            final base = switch (_currentTab) {
+                                                              AppTab.projects =>
+                                                                AppLocalizations.of(
+                                                                  context,
+                                                                )!.searchProjects,
+                                                              AppTab.releases =>
+                                                                AppLocalizations.of(
+                                                                  context,
+                                                                )!.searchReleases,
+                                                              AppTab.queue =>
+                                                                AppLocalizations.of(
+                                                                  context,
+                                                                )!.queueSearchHint,
+                                                              _ =>
+                                                                AppLocalizations.of(
+                                                                  context,
+                                                                )!.statsSearchProjects,
+                                                            };
+                                                            if (!isLeftRail)
+                                                              return base;
+                                                            final shortcut =
+                                                                Platform.isMacOS
+                                                                ? '⌘F'
+                                                                : 'Ctrl+F';
+                                                            return '$base ($shortcut)';
+                                                          }(),
+                                                          isDense: true,
+                                                          border:
+                                                              const OutlineInputBorder(),
+                                                          prefixIcon:
+                                                              const Icon(
+                                                                Icons.search,
+                                                              ),
+                                                          suffixIcon: isLeftRail
+                                                              ? (ref.watch(
+                                                                          sessionModeProvider,
+                                                                        ) &&
+                                                                        _searchController
+                                                                            .text
+                                                                            .isNotEmpty
+                                                                    ? IconButton(
+                                                                        icon: const Icon(
+                                                                          Icons
+                                                                              .close,
+                                                                          size:
+                                                                              18,
+                                                                        ),
+                                                                        tooltip: AppLocalizations.of(
+                                                                          context,
+                                                                        )!.clear,
+                                                                        onPressed: () {
+                                                                          _searchController
+                                                                              .clear();
+                                                                          _updateCurrentTabSearch(
+                                                                            '',
+                                                                          );
+                                                                        },
+                                                                      )
+                                                                    : null)
+                                                              : IconButton(
+                                                                  icon: const Icon(
+                                                                    Icons.close,
+                                                                    size: 18,
+                                                                  ),
+                                                                  onPressed:
+                                                                      _collapseDesktopSearch,
+                                                                ),
+                                                        ),
+                                                        onChanged:
+                                                            _updateCurrentTabSearch,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                if (!isLeftRail)
+                                                  Tooltip(
+                                                    message:
+                                                        '${AppLocalizations.of(context)!.searchProjects} (${Platform.isMacOS ? 'Cmd+F' : 'Ctrl+F'})',
+                                                    child: IconButton(
+                                                      icon: const Icon(
+                                                        Icons.search,
+                                                      ),
+                                                      onPressed:
+                                                          _focusSearchAndSelectAll,
+                                                    ),
+                                                  ),
+                                                const SizedBox(width: 4),
+                                              ],
+                                            ),
+                                          ),
+                                      ],
+                                    ),
                             );
-                          }),
-                          const SizedBox(height: 8),
-                        ],
-                      ),
-                      destinations: [
-                        for (final tab in _currentVisibleTabs)
-                          switch (tab) {
-                            AppTab.projects   => NavigationRailDestination(icon: const Icon(Icons.library_music), label: Text(AppLocalizations.of(context)!.projectsTab)),
-                            AppTab.releases   => NavigationRailDestination(icon: const Icon(Icons.album), label: Text(AppLocalizations.of(context)!.releasesTab)),
-                            AppTab.playlists  => NavigationRailDestination(icon: const Icon(Icons.playlist_play), label: Text(AppLocalizations.of(context)!.playlists)),
-                            AppTab.queue      => NavigationRailDestination(icon: const Icon(Icons.checklist), label: Text(AppLocalizations.of(context)!.queueTab)),
-                            AppTab.statistics => NavigationRailDestination(icon: const Icon(Icons.bar_chart_rounded), label: Text(AppLocalizations.of(context)!.statisticsTab)),
-                            AppTab.player     => NavigationRailDestination(icon: const Icon(Icons.headphones), label: Text(AppLocalizations.of(context)!.musicPlayerTab)),
                           },
-                      ],
-                      trailing: Expanded(
-                        child: Align(
-                          alignment: Alignment.bottomCenter,
+                        );
+
+                        // Title bar (Windows/Linux) or traffic-light spacer (macOS).
+                        final titleBar = DesktopTitleBar(
+                          title: AppLocalizations.of(
+                            context,
+                          )!.appTitleWithVersion(appVersion),
+                          actions: [
+                            // Donate button
+                            Consumer(
+                              builder: (context, ref, child) {
+                                final l10n = AppLocalizations.of(context)!;
+                                return Tooltip(
+                                  message: l10n.supportTheProject,
+                                  child: TextButton.icon(
+                                    icon: Icon(
+                                      Icons.card_giftcard,
+                                      size: 18,
+                                      color: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall?.color,
+                                    ),
+                                    label: Text(
+                                      l10n.support,
+                                      style: TextStyle(
+                                        color: Theme.of(
+                                          context,
+                                        ).textTheme.bodySmall?.color,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    onPressed: () async {
+                                      final uri = Uri.parse(
+                                        'https://www.paypal.com/donate/?hosted_button_id=QHVVZ3LAF39BL',
+                                      );
+                                      if (await canLaunchUrl(uri)) {
+                                        await launchUrl(
+                                          uri,
+                                          mode: LaunchMode.externalApplication,
+                                        );
+                                      }
+                                    },
+                                  ),
+                                );
+                              },
+                            ),
+                            const SizedBox(width: 8),
+                            const ThemeSwitcher(),
+                            const SizedBox(width: 8),
+                            const LanguageSwitcher(),
+                            const SizedBox(width: 8),
+                            Tooltip(
+                              message: AppLocalizations.of(
+                                context,
+                              )!.menuDocumentation,
+                              child: IconButton(
+                                icon: Icon(
+                                  Icons.menu_book_outlined,
+                                  size: 18,
+                                  color: Theme.of(
+                                    context,
+                                  ).textTheme.bodySmall?.color,
+                                ),
+                                onPressed: () => launchUrl(
+                                  Uri.parse(
+                                    'https://dpm.bandpassrecords.com/docs.html',
+                                  ),
+                                  mode: LaunchMode.externalApplication,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Tooltip(
+                              message: AppLocalizations.of(
+                                context,
+                              )!.keyboardShortcuts,
+                              child: IconButton(
+                                icon: Icon(
+                                  Icons.keyboard_outlined,
+                                  size: 18,
+                                  color: Theme.of(
+                                    context,
+                                  ).textTheme.bodySmall?.color,
+                                ),
+                                onPressed: () =>
+                                    showShortcutsHelpDialog(context),
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Tooltip(
+                              message: AppLocalizations.of(
+                                context,
+                              )!.customizeTabs,
+                              child: IconButton(
+                                icon: Icon(
+                                  Icons.tab_outlined,
+                                  size: 18,
+                                  color: Theme.of(
+                                    context,
+                                  ).textTheme.bodySmall?.color,
+                                ),
+                                onPressed: () =>
+                                    showTabCustomizationDialog(context),
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                          ],
+                        );
+
+                        final col = Column(
+                          children: [
+                            // Kept here when not using the left rail. When the left rail is
+                            // active, the title bar is either hoisted (Windows/Linux) or omitted
+                            // from the content column entirely (macOS — traffic-light clearance is
+                            // in the rail's leading instead).
+                            if (!isLeftRail) titleBar,
+
+                            actionBar,
+
+                            // Zero-height anchor used to position the suggestions overlay.
+                            if (!MobileUtils.isMobile())
+                              SizedBox(
+                                key: _suggestionsPanelAnchorKey,
+                                height: 0,
+                              ),
+
+                            // Project folders are managed in the dedicated desktop-only settings page.
+                            // Tab Bar (desktop only - mobile uses AppBar bottom)
+                            if (!MobileUtils.isMobile() &&
+                                ref.watch(tabPositionProvider) ==
+                                    TabPosition.top)
+                              Builder(
+                                builder: (context) => TabBar(
+                                  controller: _tabController,
+                                  tabs: [
+                                    for (final tab in _currentVisibleTabs)
+                                      switch (tab) {
+                                        AppTab.projects => Tab(
+                                          icon: const Icon(Icons.library_music),
+                                          text: AppLocalizations.of(
+                                            context,
+                                          )!.projectsTab,
+                                        ),
+                                        AppTab.releases => Tab(
+                                          icon: const Icon(Icons.album),
+                                          text: AppLocalizations.of(
+                                            context,
+                                          )!.releasesTab,
+                                        ),
+                                        AppTab.playlists => Tab(
+                                          icon: const Icon(Icons.playlist_play),
+                                          text: AppLocalizations.of(
+                                            context,
+                                          )!.playlists,
+                                        ),
+                                        AppTab.queue => Tab(
+                                          icon: const Icon(Icons.checklist),
+                                          text: AppLocalizations.of(
+                                            context,
+                                          )!.queueTab,
+                                        ),
+                                        AppTab.statistics => Tab(
+                                          icon: const Icon(
+                                            Icons.bar_chart_rounded,
+                                          ),
+                                          text: AppLocalizations.of(
+                                            context,
+                                          )!.statisticsTab,
+                                        ),
+                                        AppTab.player => const Tab(
+                                          icon: Icon(Icons.headphones),
+                                          text: 'Music Player',
+                                        ),
+                                      },
+                                  ],
+                                  labelColor: Theme.of(
+                                    context,
+                                  ).textTheme.titleMedium?.color,
+                                  unselectedLabelColor: Theme.of(
+                                    context,
+                                  ).textTheme.bodySmall?.color,
+                                  indicatorColor: Theme.of(
+                                    context,
+                                  ).colorScheme.primary,
+                                ),
+                              ),
+                            // Tab Bar View (with optional left NavigationRail)
+                            Expanded(
+                              child: Builder(
+                                builder: (context) {
+                                  final tabView = TabBarView(
+                                    controller: _tabController,
+                                    // On mobile, tabs are switched via the bottom NavigationBar;
+                                    // swiping between them is easy to trigger by accident while
+                                    // scrolling a list, so disable the swipe gesture there.
+                                    physics: MobileUtils.isMobile()
+                                        ? const NeverScrollableScrollPhysics()
+                                        : null,
+                                    children: [
+                                      for (final tab in _currentVisibleTabs)
+                                        switch (tab) {
+                                          AppTab.projects => Column(
+                                            children: [
+                                              const _PendingFoldersSection(),
+                                              Expanded(
+                                                child: MobileUtils.isMobile()
+                                                    ? _MobileProjectsList(
+                                                        projects: projects,
+                                                        dateFormat: dateFormat,
+                                                        onCreateRelease:
+                                                            (selectedProjects) {
+                                                              _createReleaseFromSelectedProjects(
+                                                                context,
+                                                                ref,
+                                                                selectedProjects,
+                                                              );
+                                                            },
+                                                        onHideProjects:
+                                                            (
+                                                              selectedProjectIds,
+                                                            ) async {
+                                                              await _hideProjects(
+                                                                context,
+                                                                ref,
+                                                                selectedProjectIds,
+                                                              );
+                                                            },
+                                                        onUnhideProjects:
+                                                            (
+                                                              selectedProjectIds,
+                                                            ) async {
+                                                              await _unhideProjects(
+                                                                context,
+                                                                ref,
+                                                                selectedProjectIds,
+                                                              );
+                                                            },
+                                                        // No onDeleteMissingProjects here: mobile projects are
+                                                        // metadata-only entries synced via Drive, not local files
+                                                        // (see FolderWatcher/_scanAll comments) — every one of them
+                                                        // would spuriously read as "missing" by a File.existsSync()
+                                                        // check against a desktop path, so the concept (and the
+                                                        // "cloud_off" indicator it's paired with) is desktop-only.
+                                                        showHidden:
+                                                            hiddenMode == 1 ||
+                                                            hiddenMode == 2,
+                                                        onRefresh: () =>
+                                                            _refreshMobileProjects(),
+                                                      )
+                                                    : _PlutoProjectsTableWithSelection(
+                                                        key: _tableKey,
+                                                        projects: projects,
+                                                        dateFormat: dateFormat,
+                                                        onCreateRelease:
+                                                            (selectedProjects) {
+                                                              _createReleaseFromSelectedProjects(
+                                                                context,
+                                                                ref,
+                                                                selectedProjects,
+                                                              );
+                                                            },
+                                                        onHideProjects:
+                                                            (
+                                                              selectedProjectIds,
+                                                            ) async {
+                                                              await _hideProjects(
+                                                                context,
+                                                                ref,
+                                                                selectedProjectIds,
+                                                              );
+                                                            },
+                                                        onUnhideProjects:
+                                                            (
+                                                              selectedProjectIds,
+                                                            ) async {
+                                                              await _unhideProjects(
+                                                                context,
+                                                                ref,
+                                                                selectedProjectIds,
+                                                              );
+                                                            },
+                                                        onDeleteMissingProjects:
+                                                            (
+                                                              selectedProjectIds,
+                                                            ) async {
+                                                              await _deleteMissingProjects(
+                                                                context,
+                                                                ref,
+                                                                selectedProjectIds,
+                                                              );
+                                                            },
+                                                        showHidden:
+                                                            hiddenMode == 1 ||
+                                                            hiddenMode == 2,
+                                                        onExtractingMetadataChanged:
+                                                            (extracting) {
+                                                              setState(
+                                                                () => _extractingMetadata =
+                                                                    extracting,
+                                                              );
+                                                            },
+                                                        isAnyOperation:
+                                                            isAnyOperation,
+                                                        visibleCount:
+                                                            visibleCount,
+                                                        hiddenCount:
+                                                            hiddenCount,
+                                                      ),
+                                              ),
+                                            ],
+                                          ),
+                                          AppTab.releases =>
+                                            const ReleasesTabPage(),
+                                          AppTab.playlists =>
+                                            const PlaylistsPage(),
+                                          AppTab.queue => const QueuePage(),
+                                          AppTab.statistics =>
+                                            const StatisticsPage(),
+                                          AppTab.player =>
+                                            const MusicPlayerPage(),
+                                        },
+                                    ],
+                                  );
+                                  return tabView;
+                                },
+                              ),
+                            ),
+                          ],
+                        );
+                        if (!isLeftRail) return col;
+                        final row = Row(
+                          children: [
+                            NavigationRail(
+                              selectedIndex: _tabController.index,
+                              onDestinationSelected: (i) =>
+                                  _tabController.animateTo(i),
+                              minWidth: railCollapsed
+                                  ? (Platform.isMacOS ? 80.0 : 64.0)
+                                  : _railWidth,
+                              labelType: railCollapsed
+                                  ? NavigationRailLabelType.none
+                                  : NavigationRailLabelType.all,
+                              leading: Column(
+                                children: [
+                                  // Clear macOS traffic-light buttons (float over top-left).
+                                  if (Platform.isMacOS)
+                                    const SizedBox(height: 28),
+                                  // Collapse/expand toggle
+                                  Tooltip(
+                                    message: railCollapsed
+                                        ? AppLocalizations.of(context)!.expand
+                                        : AppLocalizations.of(
+                                            context,
+                                          )!.collapse,
+                                    child: IconButton(
+                                      icon: Icon(
+                                        railCollapsed
+                                            ? Icons.chevron_right
+                                            : Icons.chevron_left,
+                                      ),
+                                      onPressed: () {
+                                        if (railCollapsed)
+                                          setState(() => _railWidth = 130.0);
+                                        ref
+                                            .read(
+                                              railCollapsedProvider.notifier,
+                                            )
+                                            .set(!railCollapsed);
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  // Profile avatar + name
+                                  Consumer(
+                                    builder: (ctx, ref, _) {
+                                      final profile = ref
+                                          .watch(currentProfileProvider)
+                                          .value;
+                                      final hasPhoto =
+                                          profile?.photoPath != null &&
+                                          File(
+                                            profile!.photoPath!,
+                                          ).existsSync();
+                                      const avatarSize = 44.0;
+                                      final Widget avatar = hasPhoto
+                                          ? ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                    avatarSize,
+                                                  ),
+                                              child: Image.file(
+                                                File(profile.photoPath!),
+                                                width: avatarSize,
+                                                height: avatarSize,
+                                                fit: BoxFit.cover,
+                                              ),
+                                            )
+                                          : Container(
+                                              width: avatarSize,
+                                              height: avatarSize,
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .surfaceContainerHighest,
+                                              ),
+                                              child: const Icon(
+                                                Icons.person,
+                                                size: 26,
+                                              ),
+                                            );
+                                      final inkWell = InkWell(
+                                        borderRadius: BorderRadius.circular(8),
+                                        onTap: () => Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (_) =>
+                                                const ProfileManagerPage(),
+                                          ),
+                                        ),
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 4,
+                                            horizontal: 4,
+                                          ),
+                                          child: railCollapsed
+                                              ? avatar
+                                              : Column(
+                                                  children: [
+                                                    avatar,
+                                                    if (profile?.name !=
+                                                        null) ...[
+                                                      const SizedBox(height: 4),
+                                                      SizedBox(
+                                                        width: _railWidth - 24,
+                                                        child: Text(
+                                                          profile!.name,
+                                                          style:
+                                                              Theme.of(context)
+                                                                  .textTheme
+                                                                  .labelSmall,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                          textAlign:
+                                                              TextAlign.center,
+                                                          maxLines: 2,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ],
+                                                ),
+                                        ),
+                                      );
+                                      return inkWell;
+                                    },
+                                  ),
+                                  // Quick profile switch (multiple profiles only)
+                                  Consumer(
+                                    builder: (ctx, ref, _) {
+                                      final allProfiles = ref
+                                          .watch(allProfilesProvider)
+                                          .value;
+                                      if (allProfiles == null ||
+                                          allProfiles.length < 2) {
+                                        return const SizedBox.shrink();
+                                      }
+                                      return IconButton(
+                                        icon: const Icon(
+                                          Icons.swap_horiz,
+                                          size: 18,
+                                        ),
+                                        tooltip: AppLocalizations.of(
+                                          context,
+                                        )!.switchProfile,
+                                        onPressed: () =>
+                                            _quickSwitchProfile(context),
+                                      );
+                                    },
+                                  ),
+                                  const SizedBox(height: 8),
+                                ],
+                              ),
+                              destinations: [
+                                for (final tab in _currentVisibleTabs)
+                                  switch (tab) {
+                                    AppTab.projects =>
+                                      NavigationRailDestination(
+                                        icon: const Icon(Icons.library_music),
+                                        label: Text(
+                                          AppLocalizations.of(
+                                            context,
+                                          )!.projectsTab,
+                                        ),
+                                      ),
+                                    AppTab.releases =>
+                                      NavigationRailDestination(
+                                        icon: const Icon(Icons.album),
+                                        label: Text(
+                                          AppLocalizations.of(
+                                            context,
+                                          )!.releasesTab,
+                                        ),
+                                      ),
+                                    AppTab.playlists =>
+                                      NavigationRailDestination(
+                                        icon: const Icon(Icons.playlist_play),
+                                        label: Text(
+                                          AppLocalizations.of(
+                                            context,
+                                          )!.playlists,
+                                        ),
+                                      ),
+                                    AppTab.queue => NavigationRailDestination(
+                                      icon: const Icon(Icons.checklist),
+                                      label: Text(
+                                        AppLocalizations.of(context)!.queueTab,
+                                      ),
+                                    ),
+                                    AppTab.statistics =>
+                                      NavigationRailDestination(
+                                        icon: const Icon(
+                                          Icons.bar_chart_rounded,
+                                        ),
+                                        label: Text(
+                                          AppLocalizations.of(
+                                            context,
+                                          )!.statisticsTab,
+                                        ),
+                                      ),
+                                    AppTab.player => NavigationRailDestination(
+                                      icon: const Icon(Icons.headphones),
+                                      label: Text(
+                                        AppLocalizations.of(
+                                          context,
+                                        )!.musicPlayerTab,
+                                      ),
+                                    ),
+                                  },
+                              ],
+                              trailing: Expanded(
+                                child: Align(
+                                  alignment: Alignment.bottomCenter,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(bottom: 12),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        // Create new project
+                                        RailAction(
+                                          icon: const Icon(
+                                            Icons.create_new_folder_outlined,
+                                          ),
+                                          label: AppLocalizations.of(
+                                            context,
+                                          )!.createProject,
+                                          showLabel: !railCollapsed,
+                                          onPressed: () {
+                                            showDialog<String>(
+                                              context: context,
+                                              barrierDismissible: false,
+                                              builder: (_) =>
+                                                  const CreateProjectDialog(),
+                                            );
+                                          },
+                                        ),
+                                        const SizedBox(height: 8),
+                                        // Manage project templates
+                                        RailAction(
+                                          icon: const Icon(
+                                            Icons.folder_copy_outlined,
+                                          ),
+                                          label: AppLocalizations.of(
+                                            context,
+                                          )!.projectTemplates,
+                                          showLabel: !railCollapsed,
+                                          onPressed: () =>
+                                              Navigator.of(context).push(
+                                                MaterialPageRoute(
+                                                  builder: (_) =>
+                                                      const ProjectTemplatesPage(),
+                                                ),
+                                              ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        // Google Drive sync
+                                        RailAction(
+                                          icon: const Icon(
+                                            Icons.cloud_outlined,
+                                          ),
+                                          label: AppLocalizations.of(
+                                            context,
+                                          )!.googleDrive,
+                                          showLabel: !railCollapsed,
+                                          onPressed: () =>
+                                              Navigator.of(context).push(
+                                                MaterialPageRoute(
+                                                  builder: (_) =>
+                                                      const GoogleDriveSyncPage(),
+                                                ),
+                                              ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        // Rescan
+                                        RailAction(
+                                          icon: switch (rescanIconState(
+                                            isScanning: isScanning,
+                                            deepScanning: _deepScanning,
+                                            justSucceeded: _rescanJustSucceeded,
+                                          )) {
+                                            ScanIconState.spinning =>
+                                              const SizedBox(
+                                                width: 18,
+                                                height: 18,
+                                                child:
+                                                    CircularProgressIndicator(
+                                                      strokeWidth: 2,
+                                                    ),
+                                              ),
+                                            ScanIconState.justSucceeded =>
+                                              const Icon(
+                                                Icons.check,
+                                                color: Colors.green,
+                                              ),
+                                            ScanIconState.idle => const Icon(
+                                              Icons.refresh,
+                                            ),
+                                          },
+                                          label: (isScanning && !_deepScanning)
+                                              ? AppLocalizations.of(
+                                                  context,
+                                                )!.scanning
+                                              : AppLocalizations.of(
+                                                  context,
+                                                )!.rescan,
+                                          showLabel: !railCollapsed,
+                                          onPressed: isAnyOperation
+                                              ? null
+                                              : () => _scanAll(),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        // Deep scan
+                                        RailAction(
+                                          icon: switch (deepScanIconState(
+                                            deepScanning: _deepScanning,
+                                            justSucceeded:
+                                                _deepScanJustSucceeded,
+                                          )) {
+                                            ScanIconState.spinning =>
+                                              const SizedBox(
+                                                width: 18,
+                                                height: 18,
+                                                child:
+                                                    CircularProgressIndicator(
+                                                      strokeWidth: 2,
+                                                    ),
+                                              ),
+                                            ScanIconState.justSucceeded =>
+                                              const Icon(
+                                                Icons.check,
+                                                color: Colors.green,
+                                              ),
+                                            ScanIconState.idle => const Icon(
+                                              Icons.search,
+                                            ),
+                                          },
+                                          label: AppLocalizations.of(
+                                            context,
+                                          )!.deepScan,
+                                          showLabel: !railCollapsed,
+                                          onPressed: isAnyOperation
+                                              ? null
+                                              : () async {
+                                                  bool onlyUnscanned = true;
+                                                  final confirm = await showDialog<bool>(
+                                                    context: context,
+                                                    builder: (ctx) => StatefulBuilder(
+                                                      builder: (ctx, setDialogState) => AlertDialog(
+                                                        backgroundColor:
+                                                            Theme.of(
+                                                              context,
+                                                            ).cardColor,
+                                                        title: Text(
+                                                          AppLocalizations.of(
+                                                            context,
+                                                          )!.deepScan,
+                                                        ),
+                                                        content: Column(
+                                                          mainAxisSize:
+                                                              MainAxisSize.min,
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .start,
+                                                          children: [
+                                                            Text(
+                                                              AppLocalizations.of(
+                                                                context,
+                                                              )!.deepScanConfirm,
+                                                            ),
+                                                            const SizedBox(
+                                                              height: 12,
+                                                            ),
+                                                            CheckboxListTile(
+                                                              value:
+                                                                  onlyUnscanned,
+                                                              onChanged: (v) =>
+                                                                  setDialogState(
+                                                                    () =>
+                                                                        onlyUnscanned =
+                                                                            v ??
+                                                                            true,
+                                                                  ),
+                                                              title: Text(
+                                                                AppLocalizations.of(
+                                                                  context,
+                                                                )!.deepScanOnlyUnscanned,
+                                                              ),
+                                                              controlAffinity:
+                                                                  ListTileControlAffinity
+                                                                      .leading,
+                                                              contentPadding:
+                                                                  EdgeInsets
+                                                                      .zero,
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        actions: [
+                                                          TextButton(
+                                                            onPressed: () =>
+                                                                Navigator.pop(
+                                                                  ctx,
+                                                                  false,
+                                                                ),
+                                                            child: Text(
+                                                              AppLocalizations.of(
+                                                                context,
+                                                              )!.cancel,
+                                                            ),
+                                                          ),
+                                                          ElevatedButton(
+                                                            onPressed: () =>
+                                                                Navigator.pop(
+                                                                  ctx,
+                                                                  true,
+                                                                ),
+                                                            style: ElevatedButton.styleFrom(
+                                                              backgroundColor:
+                                                                  Theme.of(
+                                                                        context,
+                                                                      )
+                                                                      .colorScheme
+                                                                      .primary,
+                                                            ),
+                                                            child: Text(
+                                                              AppLocalizations.of(
+                                                                context,
+                                                              )!.deepScan,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  );
+                                                  if (confirm == true)
+                                                    await _fullScanAll(
+                                                      onlyUnscanned:
+                                                          onlyUnscanned,
+                                                    );
+                                                },
+                                        ),
+                                        const SizedBox(height: 8),
+                                        // Settings
+                                        RailAction(
+                                          icon: const Icon(
+                                            Icons.settings_outlined,
+                                          ),
+                                          label: AppLocalizations.of(
+                                            context,
+                                          )!.settings,
+                                          showLabel: !railCollapsed,
+                                          onPressed: () =>
+                                              Navigator.of(context).push(
+                                                MaterialPageRoute(
+                                                  builder: (_) =>
+                                                      const ProjectFoldersSettingsPage(),
+                                                ),
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            // Drag handle to resize the rail
+                            MouseRegion(
+                              cursor: SystemMouseCursors.resizeColumn,
+                              child: GestureDetector(
+                                onHorizontalDragUpdate: railCollapsed
+                                    ? null
+                                    : (details) => setState(() {
+                                        _railWidth =
+                                            (_railWidth + details.delta.dx)
+                                                .clamp(120.0, 400.0);
+                                      }),
+                                child: Container(
+                                  width: 6,
+                                  color: Colors.transparent,
+                                  child: Center(
+                                    child: Container(
+                                      width: 1,
+                                      color: Theme.of(context).dividerColor,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Expanded(child: col),
+                          ],
+                        );
+                        // On Windows/Linux hoist the title bar above the Row so the
+                        // NavigationRail background starts below the window chrome.
+                        // On macOS the rail extends to the top — the traffic-light
+                        // clearance SizedBox is in the rail's leading instead.
+                        return Column(
+                          children: [
+                            if (!Platform.isMacOS) titleBar,
+                            Expanded(child: row),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                  // Loading overlay
+                  if (blockingOperation)
+                    Container(
+                      color: Colors.black54,
+                      child: Center(
+                        child: Card(
+                          color: Theme.of(context).cardColor,
                           child: Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.all(24.0),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                // Create new project
-                                RailAction(
-                                  icon: const Icon(Icons.create_new_folder_outlined),
-                                  label: AppLocalizations.of(context)!.createProject,
-                                  showLabel: !railCollapsed,
-                                  onPressed: () {
-                                    showDialog<String>(
-                                      context: context,
-                                      barrierDismissible: false,
-                                      builder: (_) => const CreateProjectDialog(),
-                                    );
-                                  },
-                                ),
-                                const SizedBox(height: 8),
-                                // Manage project templates
-                                RailAction(
-                                  icon: const Icon(Icons.folder_copy_outlined),
-                                  label: AppLocalizations.of(context)!.projectTemplates,
-                                  showLabel: !railCollapsed,
-                                  onPressed: () => Navigator.of(context).push(
-                                    MaterialPageRoute(builder: (_) => const ProjectTemplatesPage()),
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                // Google Drive sync
-                                RailAction(
-                                  icon: const Icon(Icons.cloud_outlined),
-                                  label: AppLocalizations.of(context)!.googleDrive,
-                                  showLabel: !railCollapsed,
-                                  onPressed: () => Navigator.of(context).push(
-                                    MaterialPageRoute(builder: (_) => const GoogleDriveSyncPage()),
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                // Rescan
-                                RailAction(
-                                  icon: switch (rescanIconState(
-                                    isScanning: isScanning,
-                                    deepScanning: _deepScanning,
-                                    justSucceeded: _rescanJustSucceeded,
-                                  )) {
-                                    ScanIconState.spinning => const SizedBox(
-                                        width: 18, height: 18,
-                                        child: CircularProgressIndicator(strokeWidth: 2),
-                                      ),
-                                    ScanIconState.justSucceeded => const Icon(Icons.check, color: Colors.green),
-                                    ScanIconState.idle => const Icon(Icons.refresh),
-                                  },
-                                  label: (isScanning && !_deepScanning)
-                                      ? AppLocalizations.of(context)!.scanning
-                                      : AppLocalizations.of(context)!.rescan,
-                                  showLabel: !railCollapsed,
-                                  onPressed: isAnyOperation ? null : () => _scanAll(),
-                                ),
-                                const SizedBox(height: 8),
-                                // Deep scan
-                                RailAction(
-                                  icon: switch (deepScanIconState(
-                                    deepScanning: _deepScanning,
-                                    justSucceeded: _deepScanJustSucceeded,
-                                  )) {
-                                    ScanIconState.spinning =>
-                                      const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
-                                    ScanIconState.justSucceeded => const Icon(Icons.check, color: Colors.green),
-                                    ScanIconState.idle => const Icon(Icons.search),
-                                  },
-                                  label: AppLocalizations.of(context)!.deepScan,
-                                  showLabel: !railCollapsed,
-                                  onPressed: isAnyOperation
-                                      ? null
-                                      : () async {
-                                          bool onlyUnscanned = true;
-                                          final confirm = await showDialog<bool>(
-                                            context: context,
-                                            builder: (ctx) => StatefulBuilder(
-                                              builder: (ctx, setDialogState) => AlertDialog(
-                                                backgroundColor: Theme.of(context).cardColor,
-                                                title: Text(AppLocalizations.of(context)!.deepScan),
-                                                content: Column(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(AppLocalizations.of(context)!.deepScanConfirm),
-                                                    const SizedBox(height: 12),
-                                                    CheckboxListTile(
-                                                      value: onlyUnscanned,
-                                                      onChanged: (v) => setDialogState(() => onlyUnscanned = v ?? true),
-                                                      title: Text(AppLocalizations.of(context)!.deepScanOnlyUnscanned),
-                                                      controlAffinity: ListTileControlAffinity.leading,
-                                                      contentPadding: EdgeInsets.zero,
-                                                    ),
-                                                  ],
-                                                ),
-                                                actions: [
-                                                  TextButton(
-                                                    onPressed: () => Navigator.pop(ctx, false),
-                                                    child: Text(AppLocalizations.of(context)!.cancel),
-                                                  ),
-                                                  ElevatedButton(
-                                                    onPressed: () => Navigator.pop(ctx, true),
-                                                    style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary),
-                                                    child: Text(AppLocalizations.of(context)!.deepScan),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          );
-                                          if (confirm == true) await _fullScanAll(onlyUnscanned: onlyUnscanned);
-                                        },
-                                ),
-                                const SizedBox(height: 8),
-                                // Settings
-                                RailAction(
-                                  icon: const Icon(Icons.settings_outlined),
-                                  label: AppLocalizations.of(context)!.settings,
-                                  showLabel: !railCollapsed,
-                                  onPressed: () => Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => const ProjectFoldersSettingsPage(),
-                                    ),
+                                const CircularProgressIndicator(),
+                                const SizedBox(height: 16),
+                                Text(
+                                  isProfileSwitching
+                                      ? AppLocalizations.of(
+                                          context,
+                                        )!.switchingProfiles
+                                      : AppLocalizations.of(
+                                          context,
+                                        )!.scanningProjects,
+                                  style: TextStyle(
+                                    color: Theme.of(
+                                      context,
+                                    ).textTheme.bodyMedium?.color,
                                   ),
                                 ),
                               ],
@@ -2507,76 +3759,15 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                         ),
                       ),
                     ),
-                    // Drag handle to resize the rail
-                    MouseRegion(
-                      cursor: SystemMouseCursors.resizeColumn,
-                      child: GestureDetector(
-                        onHorizontalDragUpdate: railCollapsed
-                            ? null
-                            : (details) => setState(() {
-                                  _railWidth = (_railWidth + details.delta.dx)
-                                      .clamp(120.0, 400.0);
-                                }),
-                        child: Container(
-                          width: 6,
-                          color: Colors.transparent,
-                          child: Center(
-                            child: Container(
-                              width: 1,
-                              color: Theme.of(context).dividerColor,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(child: col),
-                  ],
-                );
-                // On Windows/Linux hoist the title bar above the Row so the
-                // NavigationRail background starts below the window chrome.
-                // On macOS the rail extends to the top — the traffic-light
-                // clearance SizedBox is in the rail's leading instead.
-                return Column(
-                  children: [
-                    if (!Platform.isMacOS) titleBar,
-                    Expanded(child: row),
-                  ],
-                );
-                }),
+                ],
               ),
-              // Loading overlay
-              if (blockingOperation)
-                Container(
-                  color: Colors.black54,
-                  child: Center(
-                    child: Card(
-                      color: Theme.of(context).cardColor,
-                      child: Padding(
-                        padding: const EdgeInsets.all(24.0),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const CircularProgressIndicator(),
-                            const SizedBox(height: 16),
-                            Text(
-                              isProfileSwitching ? AppLocalizations.of(context)!.switchingProfiles : AppLocalizations.of(context)!.scanningProjects,
-                              style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-            ],
+            ),
           ),
         ),
       ),
-      ),
-      ),
     );
   }
-} 
+}
 
 class _PlutoProjectsTableWithSelection extends ConsumerStatefulWidget {
   final List<MusicProject> projects;
@@ -2607,10 +3798,12 @@ class _PlutoProjectsTableWithSelection extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<_PlutoProjectsTableWithSelection> createState() => _PlutoProjectsTableWithSelectionState();
+  ConsumerState<_PlutoProjectsTableWithSelection> createState() =>
+      _PlutoProjectsTableWithSelectionState();
 }
 
-class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjectsTableWithSelection> {
+class _PlutoProjectsTableWithSelectionState
+    extends ConsumerState<_PlutoProjectsTableWithSelection> {
   final _innerTableKey = GlobalKey<_PlutoProjectsTableState>();
   final _groupExpandState = ValueNotifier<({bool hasGroups, bool anyExpanded})>(
     (hasGroups: false, anyExpanded: false),
@@ -2647,7 +3840,9 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
       _toggleProjectSelection(targetId);
       return;
     }
-    ref.read(selectedProjectsProvider.notifier).selectRange(
+    ref
+        .read(selectedProjectsProvider.notifier)
+        .selectRange(
           widget.projects.map((p) => p.id).toList(),
           anchor,
           targetId,
@@ -2655,7 +3850,9 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
   }
 
   void _selectAll() {
-    ref.read(selectedProjectsProvider.notifier).selectAll(widget.projects.map((p) => p.id).toList());
+    ref
+        .read(selectedProjectsProvider.notifier)
+        .selectAll(widget.projects.map((p) => p.id).toList());
   }
 
   bool get _areAllSelected {
@@ -2682,7 +3879,7 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
 
   Future<void> _showChangeStatusDialog(BuildContext context) async {
     String? selectedStatus;
-    
+
     final result = await showDialog<String>(
       context: context,
       builder: (ctx) => StatefulBuilder(
@@ -2693,16 +3890,20 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
             children: [
               Text(AppLocalizations.of(context)!.selectNewStatus),
               const SizedBox(height: 16),
-              ...ref.read(customPhasesProvider).map((phase) => RadioListTile<String>(
-                title: Text(phase),
-                value: phase,
-                groupValue: selectedStatus,
-                onChanged: (value) {
-                  setState(() {
-                    selectedStatus = value;
-                  });
-                },
-              )),
+              ...ref
+                  .read(customPhasesProvider)
+                  .map(
+                    (phase) => RadioListTile<String>(
+                      title: Text(phase),
+                      value: phase,
+                      groupValue: selectedStatus,
+                      onChanged: (value) {
+                        setState(() {
+                          selectedStatus = value;
+                        });
+                      },
+                    ),
+                  ),
             ],
           ),
           actions: [
@@ -2726,15 +3927,18 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
     }
   }
 
-  Future<void> _changeProjectsStatus(BuildContext context, String newStatus) async {
+  Future<void> _changeProjectsStatus(
+    BuildContext context,
+    String newStatus,
+  ) async {
     try {
       final repo = await ref.read(repositoryProvider.future);
       final allProjectsAsync = ref.read(allProjectsStreamProvider);
       final allProjects = allProjectsAsync.value ?? [];
-      
+
       int successCount = 0;
       int failCount = 0;
-      
+
       for (final projectId in _selectedProjectIds) {
         try {
           final project = allProjects.firstWhere((p) => p.id == projectId);
@@ -2753,42 +3957,52 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
           }
         }
       }
-      
+
       // Refresh the projects list
       ref.invalidate(allProjectsStreamProvider);
-      
+
       if (mounted) {
         final statusText = _translateStatus(context, newStatus);
         if (failCount == 0) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(AppLocalizations.of(context)!.statusChangedForProjects(
-                successCount,
-                successCount == 1 ? '' : 's',
-                statusText,
-              )),
+              content: Text(
+                AppLocalizations.of(context)!.statusChangedForProjects(
+                  successCount,
+                  successCount == 1 ? '' : 's',
+                  statusText,
+                ),
+              ),
             ),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(AppLocalizations.of(context)!.statusChangedForProjectsWithErrors(
-                successCount,
-                successCount == 1 ? '' : 's',
-                failCount,
-                failCount == 1 ? '' : 's',
-                statusText,
-              )),
+              content: Text(
+                AppLocalizations.of(
+                  context,
+                )!.statusChangedForProjectsWithErrors(
+                  successCount,
+                  successCount == 1 ? '' : 's',
+                  failCount,
+                  failCount == 1 ? '' : 's',
+                  statusText,
+                ),
+              ),
             ),
           );
         }
       }
-      
+
       _clearSelection();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.failedToChangeStatus(e.toString()))),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.failedToChangeStatus(e.toString()),
+            ),
+          ),
         );
       }
     }
@@ -2834,129 +4048,60 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
           child: Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-                // Project count — all three mode variants are stacked and
-                // rendered simultaneously; only the active one is opaque.
-                // The Stack always sizes to the widest variant so the bar
-                // never shifts regardless of which mode is active.
-                Stack(
-                  children: [
-                    // Mode 0: "X projects (N hidden)"
-                    Opacity(
-                      opacity: hiddenMode == 0 ? 1.0 : 0.0,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(l10n.projectsCount(widget.visibleCount),
-                              style: const TextStyle(fontSize: 12)),
-                          if (widget.hiddenCount > 0)
-                            Text(' ${l10n.hiddenCount(widget.hiddenCount)}',
-                                style: const TextStyle(fontSize: 12)),
-                        ],
-                      ),
-                    ),
-                    // Mode 1: "X projects" (show-all — visible count only)
-                    Opacity(
-                      opacity: hiddenMode == 1 ? 1.0 : 0.0,
-                      child: Text(l10n.projectsCount(widget.visibleCount),
-                          style: const TextStyle(fontSize: 12)),
-                    ),
-                    // Mode 2: "N projects hidden only"
-                    if (widget.hiddenCount > 0)
-                      Opacity(
-                        opacity: hiddenMode == 2 ? 1.0 : 0.0,
-                        child: Text(
-                          '${l10n.projectsCount(widget.hiddenCount)} ${l10n.hiddenOnly}',
-                          style: TextStyle(
-                              fontSize: 12, color: Colors.orange.shade300),
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(width: 8),
-                if (widget.hiddenCount > 0) ...[
-                  InkWell(
-                    onTap: () {
-                      if (hiddenMode == 1) {
-                        hiddenNotifier.setShowAll(false);
-                      } else {
-                        hiddenNotifier.setShowAll(true);
-                      }
-                    },
-                    borderRadius: BorderRadius.circular(4),
+              // Project count — all three mode variants are stacked and
+              // rendered simultaneously; only the active one is opaque.
+              // The Stack always sizes to the widest variant so the bar
+              // never shifts regardless of which mode is active.
+              Stack(
+                children: [
+                  // Mode 0: "X projects (N hidden)"
+                  Opacity(
+                    opacity: hiddenMode == 0 ? 1.0 : 0.0,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Checkbox(
-                          value: hiddenMode == 1,
-                          onChanged: (value) {
-                            if (value == true) {
-                              hiddenNotifier.setShowAll(true);
-                            } else {
-                              hiddenNotifier.setShowAll(false);
-                            }
-                          },
+                        Text(
+                          l10n.projectsCount(widget.visibleCount),
+                          style: const TextStyle(fontSize: 12),
                         ),
-                        Text(l10n.showHidden, style: const TextStyle(fontSize: 12)),
+                        if (widget.hiddenCount > 0)
+                          Text(
+                            ' ${l10n.hiddenCount(widget.hiddenCount)}',
+                            style: const TextStyle(fontSize: 12),
+                          ),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  // Stack keeps the button at the width of whichever label
-                  // is wider — the ghost (opposite label, opacity 0) pins the
-                  // layout; the Stack always takes the max of both children.
-                  Stack(
-                    children: [
-                      Opacity(
-                        opacity: 0,
-                        child: IgnorePointer(
-                          child: TextButton.icon(
-                            icon: Icon(
-                              hiddenMode == 2 ? Icons.visibility_off_outlined : Icons.visibility,
-                              size: 16,
-                            ),
-                            label: Text(
-                              hiddenMode == 2 ? l10n.showOnlyHidden : l10n.showAll,
-                              style: const TextStyle(fontSize: 12),
-                            ),
-                            onPressed: () {},
-                            style: TextButton.styleFrom(
-                              backgroundColor: hiddenMode != 2 ? Colors.orange.shade700 : null,
-                              foregroundColor: hiddenMode != 2 ? Colors.white : Theme.of(context).textTheme.bodyMedium?.color,
-                            ),
-                          ),
-                        ),
-                      ),
-                      TextButton.icon(
-                        icon: Icon(
-                          hiddenMode == 2 ? Icons.visibility : Icons.visibility_off_outlined,
-                          size: 16,
-                        ),
-                        label: Text(
-                          hiddenMode == 2 ? l10n.showAll : l10n.showOnlyHidden,
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                        style: TextButton.styleFrom(
-                          backgroundColor: hiddenMode == 2 ? Colors.orange.shade700 : null,
-                          foregroundColor: hiddenMode == 2 ? Colors.white : Theme.of(context).textTheme.bodyMedium?.color,
-                        ),
-                        onPressed: () {
-                          if (hiddenMode == 2) {
-                            hiddenNotifier.setShowOnlyHidden(false);
-                          } else {
-                            hiddenNotifier.setShowOnlyHidden(true);
-                          }
-                        },
-                      ),
-                    ],
+                  // Mode 1: "X projects" (show-all — visible count only)
+                  Opacity(
+                    opacity: hiddenMode == 1 ? 1.0 : 0.0,
+                    child: Text(
+                      l10n.projectsCount(widget.visibleCount),
+                      style: const TextStyle(fontSize: 12),
+                    ),
                   ),
-                  const SizedBox(width: 8),
+                  // Mode 2: "N projects hidden only"
+                  if (widget.hiddenCount > 0)
+                    Opacity(
+                      opacity: hiddenMode == 2 ? 1.0 : 0.0,
+                      child: Text(
+                        '${l10n.projectsCount(widget.hiddenCount)} ${l10n.hiddenOnly}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.orange.shade300,
+                        ),
+                      ),
+                    ),
                 ],
+              ),
+              const SizedBox(width: 8),
+              if (widget.hiddenCount > 0) ...[
                 InkWell(
                   onTap: () {
-                    if (finishedMode == 1) {
-                      finishedNotifier.setHideFinished(false);
+                    if (hiddenMode == 1) {
+                      hiddenNotifier.setShowAll(false);
                     } else {
-                      finishedNotifier.setHideFinished(true);
+                      hiddenNotifier.setShowAll(true);
                     }
                   },
                   borderRadius: BorderRadius.circular(4),
@@ -2964,114 +4109,248 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Checkbox(
-                        value: finishedMode == 1,
+                        value: hiddenMode == 1,
                         onChanged: (value) {
                           if (value == true) {
-                            finishedNotifier.setHideFinished(true);
+                            hiddenNotifier.setShowAll(true);
                           } else {
-                            finishedNotifier.setHideFinished(false);
+                            hiddenNotifier.setShowAll(false);
                           }
                         },
                       ),
-                      Text(l10n.hideFinished, style: const TextStyle(fontSize: 12)),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                InkWell(
-                  onTap: () {
-                    final currentValue = ref.read(showOnlyWithDeadlineProvider);
-                    ref.read(showOnlyWithDeadlineProvider.notifier).setShowOnlyWithDeadline(!currentValue);
-                  },
-                  borderRadius: BorderRadius.circular(4),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Checkbox(
-                        value: ref.watch(showOnlyWithDeadlineProvider),
-                        onChanged: (value) {
-                          ref.read(showOnlyWithDeadlineProvider.notifier).setShowOnlyWithDeadline(value == true);
-                        },
+                      Text(
+                        l10n.showHidden,
+                        style: const TextStyle(fontSize: 12),
                       ),
-                      Text(l10n.showOnlyDeadlines, style: const TextStyle(fontSize: 12)),
                     ],
                   ),
                 ),
                 const SizedBox(width: 8),
-                Icon(Icons.filter_list, size: 16, color: Theme.of(context).textTheme.bodyMedium?.color),
-                const SizedBox(width: 4),
-                DropdownButton<String>(
-                  value: phaseFilter,
-                  hint: Text(
-                    l10n.filterByPhase,
-                    style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
-                  ),
-                  underline: const SizedBox.shrink(),
-                  style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color),
-                  icon: const SizedBox.shrink(),
-                  items: [
-                    DropdownMenuItem<String>(value: null, child: Text(l10n.allPhases)),
-                    ...customPhases.map((phase) => DropdownMenuItem<String>(
-                      value: phase,
-                      child: Text(_translateStatus(context, phase)),
-                    )),
-                  ],
-                  onChanged: (String? value) {
-                    ref.read(phaseFilterProvider.notifier).setPhase(value);
-                  },
-                ),
-                if (availableDaws.isNotEmpty) ...[
-                  const SizedBox(width: 8),
-                  Icon(Icons.piano, size: 16, color: Theme.of(context).textTheme.bodyMedium?.color),
-                  const SizedBox(width: 4),
-                  DropdownButton<String>(
-                    value: dawFilter,
-                    hint: Text(
-                      l10n.filterByDaw,
-                      style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
+                // Stack keeps the button at the width of whichever label
+                // is wider — the ghost (opposite label, opacity 0) pins the
+                // layout; the Stack always takes the max of both children.
+                Stack(
+                  children: [
+                    Opacity(
+                      opacity: 0,
+                      child: IgnorePointer(
+                        child: TextButton.icon(
+                          icon: Icon(
+                            hiddenMode == 2
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility,
+                            size: 16,
+                          ),
+                          label: Text(
+                            hiddenMode == 2
+                                ? l10n.showOnlyHidden
+                                : l10n.showAll,
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                          onPressed: () {},
+                          style: TextButton.styleFrom(
+                            backgroundColor: hiddenMode != 2
+                                ? Colors.orange.shade700
+                                : null,
+                            foregroundColor: hiddenMode != 2
+                                ? Colors.white
+                                : Theme.of(context).textTheme.bodyMedium?.color,
+                          ),
+                        ),
+                      ),
                     ),
-                    underline: const SizedBox.shrink(),
-                    style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color),
-                    icon: const SizedBox.shrink(),
-                    items: [
-                      DropdownMenuItem<String>(value: null, child: Text(l10n.allDaws)),
-                      ...availableDaws.map((daw) => DropdownMenuItem<String>(
-                        value: daw,
-                        child: Text(daw),
-                      )),
-                    ],
-                    onChanged: (String? value) {
-                      ref.read(dawFilterProvider.notifier).setDaw(value);
-                    },
-                  ),
-                ],
-                const Spacer(),
-                ValueListenableBuilder<({bool hasGroups, bool anyExpanded})>(
-                  valueListenable: _groupExpandState,
-                  builder: (context, state, _) {
-                    if (!state.hasGroups) return const SizedBox.shrink();
-                    return TextButton.icon(
+                    TextButton.icon(
                       icon: Icon(
-                        state.anyExpanded ? Icons.unfold_less : Icons.unfold_more,
+                        hiddenMode == 2
+                            ? Icons.visibility
+                            : Icons.visibility_off_outlined,
                         size: 16,
                       ),
                       label: Text(
-                        state.anyExpanded
-                            ? '${l10n.collapse} All'
-                            : '${l10n.expand} All',
+                        hiddenMode == 2 ? l10n.showAll : l10n.showOnlyHidden,
                         style: const TextStyle(fontSize: 12),
                       ),
+                      style: TextButton.styleFrom(
+                        backgroundColor: hiddenMode == 2
+                            ? Colors.orange.shade700
+                            : null,
+                        foregroundColor: hiddenMode == 2
+                            ? Colors.white
+                            : Theme.of(context).textTheme.bodyMedium?.color,
+                      ),
                       onPressed: () {
-                        if (state.anyExpanded) {
-                          _innerTableKey.currentState?._collapseAll();
+                        if (hiddenMode == 2) {
+                          hiddenNotifier.setShowOnlyHidden(false);
                         } else {
-                          _innerTableKey.currentState?._expandAll();
+                          hiddenNotifier.setShowOnlyHidden(true);
                         }
                       },
-                    );
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 8),
+              ],
+              InkWell(
+                onTap: () {
+                  if (finishedMode == 1) {
+                    finishedNotifier.setHideFinished(false);
+                  } else {
+                    finishedNotifier.setHideFinished(true);
+                  }
+                },
+                borderRadius: BorderRadius.circular(4),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Checkbox(
+                      value: finishedMode == 1,
+                      onChanged: (value) {
+                        if (value == true) {
+                          finishedNotifier.setHideFinished(true);
+                        } else {
+                          finishedNotifier.setHideFinished(false);
+                        }
+                      },
+                    ),
+                    Text(
+                      l10n.hideFinished,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              InkWell(
+                onTap: () {
+                  final currentValue = ref.read(showOnlyWithDeadlineProvider);
+                  ref
+                      .read(showOnlyWithDeadlineProvider.notifier)
+                      .setShowOnlyWithDeadline(!currentValue);
+                },
+                borderRadius: BorderRadius.circular(4),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Checkbox(
+                      value: ref.watch(showOnlyWithDeadlineProvider),
+                      onChanged: (value) {
+                        ref
+                            .read(showOnlyWithDeadlineProvider.notifier)
+                            .setShowOnlyWithDeadline(value == true);
+                      },
+                    ),
+                    Text(
+                      l10n.showOnlyDeadlines,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(
+                Icons.filter_list,
+                size: 16,
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+              ),
+              const SizedBox(width: 4),
+              DropdownButton<String>(
+                value: phaseFilter,
+                hint: Text(
+                  l10n.filterByPhase,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).textTheme.bodySmall?.color,
+                  ),
+                ),
+                underline: const SizedBox.shrink(),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                ),
+                icon: const SizedBox.shrink(),
+                items: [
+                  DropdownMenuItem<String>(
+                    value: null,
+                    child: Text(l10n.allPhases),
+                  ),
+                  ...customPhases.map(
+                    (phase) => DropdownMenuItem<String>(
+                      value: phase,
+                      child: Text(_translateStatus(context, phase)),
+                    ),
+                  ),
+                ],
+                onChanged: (String? value) {
+                  ref.read(phaseFilterProvider.notifier).setPhase(value);
+                },
+              ),
+              if (availableDaws.isNotEmpty) ...[
+                const SizedBox(width: 8),
+                Icon(
+                  Icons.piano,
+                  size: 16,
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                ),
+                const SizedBox(width: 4),
+                DropdownButton<String>(
+                  value: dawFilter,
+                  hint: Text(
+                    l10n.filterByDaw,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).textTheme.bodySmall?.color,
+                    ),
+                  ),
+                  underline: const SizedBox.shrink(),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                  ),
+                  icon: const SizedBox.shrink(),
+                  items: [
+                    DropdownMenuItem<String>(
+                      value: null,
+                      child: Text(l10n.allDaws),
+                    ),
+                    ...availableDaws.map(
+                      (daw) => DropdownMenuItem<String>(
+                        value: daw,
+                        child: Text(daw),
+                      ),
+                    ),
+                  ],
+                  onChanged: (String? value) {
+                    ref.read(dawFilterProvider.notifier).setDaw(value);
                   },
                 ),
               ],
+              const Spacer(),
+              ValueListenableBuilder<({bool hasGroups, bool anyExpanded})>(
+                valueListenable: _groupExpandState,
+                builder: (context, state, _) {
+                  if (!state.hasGroups) return const SizedBox.shrink();
+                  return TextButton.icon(
+                    icon: Icon(
+                      state.anyExpanded ? Icons.unfold_less : Icons.unfold_more,
+                      size: 16,
+                    ),
+                    label: Text(
+                      state.anyExpanded
+                          ? '${l10n.collapse} All'
+                          : '${l10n.expand} All',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    onPressed: () {
+                      if (state.anyExpanded) {
+                        _innerTableKey.currentState?._collapseAll();
+                      } else {
+                        _innerTableKey.currentState?._expandAll();
+                      }
+                    },
+                  );
+                },
+              ),
+            ],
           ),
         ),
         Expanded(
@@ -3101,197 +4380,268 @@ class _PlutoProjectsTableWithSelectionState extends ConsumerState<_PlutoProjects
         ),
         // Selection action bar
         if (_selectedProjectIds.isNotEmpty)
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          color: Theme.of(context).cardColor,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                AppLocalizations.of(context)!.projectsSelected(_selectedProjectIds.length, _selectedProjectIds.length == 1 ? '' : 's'),
-                style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
-              ),
-              if (_selectedProjectIds.isNotEmpty)
-                Row(
-                  children: [
-                    TextButton(
-                      onPressed: _clearSelection,
-                      child: Text(AppLocalizations.of(context)!.clearSelection),
-                    ),
-                    const SizedBox(width: 8),
-                    // Check if selected projects are hidden or visible
-                    Consumer(
-                      builder: (context, ref, child) {
-                        // Get current selection from provider
-                        final selectedIds = ref.watch(selectedProjectsProvider);
-                        // Check the state of selected projects
-                        final selectedProjects = widget.projects.where((p) => selectedIds.contains(p.id)).toList();
-                        final allHidden = selectedProjects.isNotEmpty && selectedProjects.every((p) => p.hidden);
-                        final allVisible = selectedProjects.isNotEmpty && selectedProjects.every((p) => !p.hidden);
-                        
-                        // Show Unhide button if all selected are hidden, Hide button if all are visible
-                        // If mixed, show both or the appropriate one
-                        if (allHidden) {
-                          return ElevatedButton.icon(
-                            icon: const Icon(Icons.visibility),
-                            label: Text(AppLocalizations.of(context)!.unhide),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green.shade700,
-                            ),
-                            onPressed: () {
-                              widget.onUnhideProjects(selectedIds.toList());
-                              _clearSelection();
-                            },
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: Theme.of(context).cardColor,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  AppLocalizations.of(context)!.projectsSelected(
+                    _selectedProjectIds.length,
+                    _selectedProjectIds.length == 1 ? '' : 's',
+                  ),
+                  style: TextStyle(
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                  ),
+                ),
+                if (_selectedProjectIds.isNotEmpty)
+                  Row(
+                    children: [
+                      TextButton(
+                        onPressed: _clearSelection,
+                        child: Text(
+                          AppLocalizations.of(context)!.clearSelection,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Check if selected projects are hidden or visible
+                      Consumer(
+                        builder: (context, ref, child) {
+                          // Get current selection from provider
+                          final selectedIds = ref.watch(
+                            selectedProjectsProvider,
                           );
-                        } else if (allVisible) {
-                          return ElevatedButton.icon(
-                            icon: const Icon(Icons.visibility_off),
-                            label: Text(AppLocalizations.of(context)!.hide),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.orange.shade700,
+                          // Check the state of selected projects
+                          final selectedProjects = widget.projects
+                              .where((p) => selectedIds.contains(p.id))
+                              .toList();
+                          final allHidden =
+                              selectedProjects.isNotEmpty &&
+                              selectedProjects.every((p) => p.hidden);
+                          final allVisible =
+                              selectedProjects.isNotEmpty &&
+                              selectedProjects.every((p) => !p.hidden);
+
+                          // Show Unhide button if all selected are hidden, Hide button if all are visible
+                          // If mixed, show both or the appropriate one
+                          if (allHidden) {
+                            return ElevatedButton.icon(
+                              icon: const Icon(Icons.visibility),
+                              label: Text(AppLocalizations.of(context)!.unhide),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green.shade700,
+                              ),
+                              onPressed: () {
+                                widget.onUnhideProjects(selectedIds.toList());
+                                _clearSelection();
+                              },
+                            );
+                          } else if (allVisible) {
+                            return ElevatedButton.icon(
+                              icon: const Icon(Icons.visibility_off),
+                              label: Text(AppLocalizations.of(context)!.hide),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.orange.shade700,
+                              ),
+                              onPressed: () {
+                                widget.onHideProjects(selectedIds.toList());
+                                _clearSelection();
+                              },
+                            );
+                          } else {
+                            // Mixed selection - show both buttons
+                            return Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ElevatedButton.icon(
+                                  icon: const Icon(Icons.visibility),
+                                  label: Text(
+                                    AppLocalizations.of(context)!.unhide,
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.green.shade700,
+                                  ),
+                                  onPressed: () {
+                                    widget.onUnhideProjects(
+                                      selectedIds.toList(),
+                                    );
+                                    _clearSelection();
+                                  },
+                                ),
+                                const SizedBox(width: 8),
+                                ElevatedButton.icon(
+                                  icon: const Icon(Icons.visibility_off),
+                                  label: Text(
+                                    AppLocalizations.of(context)!.hide,
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.orange.shade700,
+                                  ),
+                                  onPressed: () {
+                                    widget.onHideProjects(selectedIds.toList());
+                                    _clearSelection();
+                                  },
+                                ),
+                              ],
+                            );
+                          }
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      Builder(
+                        builder: (context) {
+                          final anyFileFound = widget.projects
+                              .where((p) => _selectedProjectIds.contains(p.id))
+                              .any(
+                                (p) =>
+                                    File(p.filePath).existsSync() ||
+                                    Directory(p.filePath).existsSync(),
+                              );
+                          return Tooltip(
+                            message: anyFileFound
+                                ? ''
+                                : AppLocalizations.of(
+                                    context,
+                                  )!.sourceFileNotFoundOnThisMachine,
+                            child: ElevatedButton.icon(
+                              icon: const Icon(Icons.search),
+                              label: Text(
+                                AppLocalizations.of(context)!.extractMetadata,
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.primary,
+                              ),
+                              onPressed: widget.isAnyOperation || !anyFileFound
+                                  ? null
+                                  : () async {
+                                      widget.onExtractingMetadataChanged(true);
+                                      final repo = await ref.read(
+                                        repositoryProvider.future,
+                                      );
+                                      int successCount = 0;
+                                      int failCount = 0;
+
+                                      for (final projectId
+                                          in _selectedProjectIds) {
+                                        try {
+                                          await repo
+                                              .extractFullMetadataForProject(
+                                                projectId,
+                                              );
+                                          successCount++;
+                                        } catch (_) {
+                                          failCount++;
+                                        }
+                                      }
+
+                                      // Refresh the projects list
+                                      ref.invalidate(allProjectsStreamProvider);
+
+                                      if (mounted) {
+                                        final plural = successCount == 1
+                                            ? ''
+                                            : 's';
+                                        final failures = failCount > 0
+                                            ? AppLocalizations.of(
+                                                context,
+                                              )!.extractionFailures(
+                                                failCount,
+                                                failCount == 1 ? '' : 's',
+                                              )
+                                            : '';
+                                        final message =
+                                            AppLocalizations.of(
+                                              context,
+                                            )!.metadataExtractedForProjects(
+                                              successCount,
+                                              plural,
+                                              failures,
+                                            );
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(content: Text(message)),
+                                        );
+                                      }
+
+                                      widget.onExtractingMetadataChanged(false);
+                                      _clearSelection();
+                                    },
                             ),
-                            onPressed: () {
-                              widget.onHideProjects(selectedIds.toList());
-                              _clearSelection();
-                            },
                           );
-                        } else {
-                          // Mixed selection - show both buttons
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.edit),
+                        label: Text(AppLocalizations.of(context)!.changeStatus),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primary,
+                        ),
+                        onPressed: () => _showChangeStatusDialog(context),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.album),
+                        label: Text(
+                          AppLocalizations.of(context)!.createRelease,
+                        ),
+                        onPressed: () {
+                          final selectedProjects = widget.projects
+                              .where((p) => _selectedProjectIds.contains(p.id))
+                              .toList();
+                          widget.onCreateRelease(selectedProjects);
+                          _clearSelection();
+                        },
+                      ),
+                      Builder(
+                        builder: (context) {
+                          final missingIds = missingProjectIds(
+                            widget.projects,
+                            _selectedProjectIds,
+                          );
+                          if (missingIds.isEmpty)
+                            return const SizedBox.shrink();
+                          // Shown whenever anything selected is missing, even if it later
+                          // turns out to be entirely release-protected — _deleteMissingProjects
+                          // explains that rather than hiding the button with no feedback.
                           return Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              ElevatedButton.icon(
-                                icon: const Icon(Icons.visibility),
-                                label: Text(AppLocalizations.of(context)!.unhide),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.green.shade700,
-                                ),
-                                onPressed: () {
-                                  widget.onUnhideProjects(selectedIds.toList());
-                                  _clearSelection();
-                                },
-                              ),
                               const SizedBox(width: 8),
                               ElevatedButton.icon(
-                                icon: const Icon(Icons.visibility_off),
-                                label: Text(AppLocalizations.of(context)!.hide),
+                                icon: const Icon(Icons.delete_forever),
+                                label: Text(
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.deleteMissingProjects,
+                                ),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.orange.shade700,
+                                  backgroundColor: Colors.red.shade700,
                                 ),
                                 onPressed: () {
-                                  widget.onHideProjects(selectedIds.toList());
+                                  widget.onDeleteMissingProjects(
+                                    _selectedProjectIds.toList(),
+                                  );
                                   _clearSelection();
                                 },
                               ),
                             ],
                           );
-                        }
-                      },
-                    ),
-                    const SizedBox(width: 8),
-                    Builder(builder: (context) {
-                      final anyFileFound = widget.projects
-                          .where((p) => _selectedProjectIds.contains(p.id))
-                          .any((p) =>
-                              File(p.filePath).existsSync() ||
-                              Directory(p.filePath).existsSync());
-                      return Tooltip(
-                        message: anyFileFound
-                            ? ''
-                            : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
-                        child: ElevatedButton.icon(
-                      icon: const Icon(Icons.search),
-                      label: Text(AppLocalizations.of(context)!.extractMetadata),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        },
                       ),
-                      onPressed: widget.isAnyOperation || !anyFileFound
-                          ? null
-                          : () async {
-                                widget.onExtractingMetadataChanged(true);
-                                final repo = await ref.read(repositoryProvider.future);
-                                int successCount = 0;
-                                int failCount = 0;
-                                
-                                for (final projectId in _selectedProjectIds) {
-                                  try {
-                                    await repo.extractFullMetadataForProject(projectId);
-                                    successCount++;
-                                  } catch (_) {
-                                    failCount++;
-                                  }
-                                }
-                                
-                                // Refresh the projects list
-                                ref.invalidate(allProjectsStreamProvider);
-                                
-                                if (mounted) {
-                                  final plural = successCount == 1 ? '' : 's';
-                                  final failures = failCount > 0 ? AppLocalizations.of(context)!.extractionFailures(failCount, failCount == 1 ? '' : 's') : '';
-                                  final message = AppLocalizations.of(context)!.metadataExtractedForProjects(successCount, plural, failures);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(message)),
-                                  );
-                                }
-                                
-                                widget.onExtractingMetadataChanged(false);
-                                _clearSelection();
-                              },
-                        ),
-                      );
-                    }),
-                    const SizedBox(width: 8),
-                    ElevatedButton.icon(
-                      icon: const Icon(Icons.edit),
-                      label: Text(AppLocalizations.of(context)!.changeStatus),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.primary,
-                      ),
-                      onPressed: () => _showChangeStatusDialog(context),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton.icon(
-                      icon: const Icon(Icons.album),
-                      label: Text(AppLocalizations.of(context)!.createRelease),
-                      onPressed: () {
-                        final selectedProjects = widget.projects
-                            .where((p) => _selectedProjectIds.contains(p.id))
-                            .toList();
-                        widget.onCreateRelease(selectedProjects);
-                        _clearSelection();
-                      },
-                    ),
-                    Builder(builder: (context) {
-                      final missingIds = missingProjectIds(widget.projects, _selectedProjectIds);
-                      if (missingIds.isEmpty) return const SizedBox.shrink();
-                      // Shown whenever anything selected is missing, even if it later
-                      // turns out to be entirely release-protected — _deleteMissingProjects
-                      // explains that rather than hiding the button with no feedback.
-                      return Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const SizedBox(width: 8),
-                          ElevatedButton.icon(
-                            icon: const Icon(Icons.delete_forever),
-                            label: Text(AppLocalizations.of(context)!.deleteMissingProjects),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red.shade700,
-                            ),
-                            onPressed: () {
-                              widget.onDeleteMissingProjects(_selectedProjectIds.toList());
-                              _clearSelection();
-                            },
-                          ),
-                        ],
-                      );
-                    }),
-                  ],
-                )
-              else
-                const SizedBox.shrink(),
-            ],
+                    ],
+                  )
+                else
+                  const SizedBox.shrink(),
+              ],
+            ),
           ),
-        ),
       ],
     );
   }
@@ -3312,7 +4662,8 @@ class _PlutoProjectsTable extends ConsumerStatefulWidget {
   final bool areAllSelected;
   final VoidCallback onToggleSelectAll;
   final Function(bool) onExtractingMetadataChanged;
-  final ValueNotifier<({bool hasGroups, bool anyExpanded})>? groupExpandNotifier;
+  final ValueNotifier<({bool hasGroups, bool anyExpanded})>?
+  groupExpandNotifier;
   final bool isScanning;
   const _PlutoProjectsTable({
     super.key,
@@ -3333,7 +4684,8 @@ class _PlutoProjectsTable extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<_PlutoProjectsTable> createState() => _PlutoProjectsTableState();
+  ConsumerState<_PlutoProjectsTable> createState() =>
+      _PlutoProjectsTableState();
 }
 
 /// Whether the full-screen loading overlay (which prevents all interaction)
@@ -3402,7 +4754,9 @@ class RailAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final color = onPressed == null ? Theme.of(context).disabledColor : cs.onSurfaceVariant;
+    final color = onPressed == null
+        ? Theme.of(context).disabledColor
+        : cs.onSurfaceVariant;
     return InkWell(
       borderRadius: BorderRadius.circular(8),
       onTap: onPressed,
@@ -3411,12 +4765,17 @@ class RailAction extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            IconTheme.merge(data: IconThemeData(color: color), child: icon),
+            IconTheme.merge(
+              data: IconThemeData(color: color),
+              child: icon,
+            ),
             if (showLabel) ...[
               const SizedBox(height: 2),
               Text(
                 label,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(color: color),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelSmall?.copyWith(color: color),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -3544,8 +4903,12 @@ Set<String> groupChildProjectIds(TrinaRow groupRow) {
 /// a plain per-item toggle, since the group checkbox represents many
 /// projects at once.
 @visibleForTesting
-bool groupCheckboxShouldSelect(Set<String> groupProjectIds, Set<String> currentlySelected) {
-  return !(groupProjectIds.isNotEmpty && groupProjectIds.every(currentlySelected.contains));
+bool groupCheckboxShouldSelect(
+  Set<String> groupProjectIds,
+  Set<String> currentlySelected,
+) {
+  return !(groupProjectIds.isNotEmpty &&
+      groupProjectIds.every(currentlySelected.contains));
 }
 
 /// The key used to bucket a project into its smart-folder group during
@@ -3633,8 +4996,9 @@ void applySortSnapshot(
     return av.toString().compareTo(bv.toString());
   }
 
-  final effectiveCompare =
-      direction.isDescending ? (TrinaRow a, TrinaRow b) => compare(b, a) : compare;
+  final effectiveCompare = direction.isDescending
+      ? (TrinaRow a, TrinaRow b) => compare(b, a)
+      : compare;
   if (excludeGroupsFromSort) {
     rows.setAll(0, sortFlatRowsKeepingGroupsInPlace(rows, effectiveCompare));
   } else {
@@ -3658,7 +5022,8 @@ List<TrinaRow> sortFlatRowsKeepingGroupsInPlace(
   List<TrinaRow> currentOrder,
   int Function(TrinaRow, TrinaRow) compare,
 ) {
-  final sortedFlat = currentOrder.where((r) => !r.type.isGroup).toList()..sort(compare);
+  final sortedFlat = currentOrder.where((r) => !r.type.isGroup).toList()
+    ..sort(compare);
   var flatIndex = 0;
   return [
     for (final row in currentOrder)
@@ -3694,8 +5059,13 @@ class _GroupOrderStableRowGroupDelegate extends TrinaRowGroupTreeDelegate {
     // so express the desired order as one: every row gets a unique target
     // index, which sidesteps needing List.sort to be stable (it isn't
     // guaranteed to be) since no two rows ever compare equal.
-    final desiredOrder = sortFlatRowsKeepingGroupsInPlace(rows.originalList, compare);
-    final targetIndex = {for (var i = 0; i < desiredOrder.length; i++) desiredOrder[i]: i};
+    final desiredOrder = sortFlatRowsKeepingGroupsInPlace(
+      rows.originalList,
+      compare,
+    );
+    final targetIndex = {
+      for (var i = 0; i < desiredOrder.length; i++) desiredOrder[i]: i,
+    };
     rows.sort((a, b) => targetIndex[a]!.compareTo(targetIndex[b]!));
 
     final children = TrinaRowGroupHelper.iterateWithFilter(
@@ -3733,7 +5103,10 @@ Set<String> expandedGroupNames(List<TrinaRow> rows) {
 /// group that happens to share a name with a still-expanded one is expanded
 /// to match.
 @visibleForTesting
-List<TrinaRow> groupRowsToExpand(List<TrinaRow> rows, Set<String> namesToExpand) {
+List<TrinaRow> groupRowsToExpand(
+  List<TrinaRow> rows,
+  Set<String> namesToExpand,
+) {
   return [
     for (final row in rows)
       if (row.type.isGroup &&
@@ -3779,7 +5152,9 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     try {
       final box = Hive.box<String>('settings');
       final field = box.get(_sortFieldPrefsKey);
-      final direction = sortDirectionFromPrefsValue(box.get(_sortDirectionPrefsKey));
+      final direction = sortDirectionFromPrefsValue(
+        box.get(_sortDirectionPrefsKey),
+      );
       if (field != null && direction != null) {
         _lastKnownSortField = field;
         _lastKnownSortDirection = direction;
@@ -3811,7 +5186,8 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     final sortedColumn = sm.getSortedColumn;
     final newField = sortedColumn?.field;
     final newDirection = sortedColumn?.sort;
-    if (newField != _lastKnownSortField || newDirection != _lastKnownSortDirection) {
+    if (newField != _lastKnownSortField ||
+        newDirection != _lastKnownSortDirection) {
       final hadSort = _lastKnownSortField != null;
       _lastKnownSortField = newField;
       _lastKnownSortDirection = newDirection;
@@ -3868,7 +5244,10 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     // _lastKnownSortField/_lastKnownSortDirection back to null right before
     // they're read a few lines down. That silently no-opped sort restoration
     // on every single remount, not just subsequent ones.
-    for (final row in groupRowsToExpand(sm.rows, _lastKnownExpandedGroupNames)) {
+    for (final row in groupRowsToExpand(
+      sm.rows,
+      _lastKnownExpandedGroupNames,
+    )) {
       sm.toggleExpandedRowGroup(rowGroup: row, notify: false);
     }
     _applyKnownSort(sm);
@@ -3910,7 +5289,8 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
 
     String dawDisplay(MusicProject p) {
       if (p.dawType == null) return '';
-      if (p.dawVersion?.isNotEmpty == true) return '${p.dawType} ${p.dawVersion}';
+      if (p.dawVersion?.isNotEmpty == true)
+        return '${p.dawType} ${p.dawVersion}';
       return p.dawType!;
     }
 
@@ -3929,7 +5309,8 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       row.cells['deadline']?.value = updated.deadlineStatus ?? '';
       // Update the launch cell's own value so TrinaGrid re-renders the action
       // column (play button) when preview song data changes.
-      row.cells['launch']?.value = updated.previewSongPath ?? updated.previewSongAutoPath ?? '';
+      row.cells['launch']?.value =
+          updated.previewSongPath ?? updated.previewSongAutoPath ?? '';
     }
 
     // Walk top-level rows; for group rows also update their children (including
@@ -3940,8 +5321,11 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         DateTime? latestModified;
         for (final child in row.type.group.children.originalList) {
           updateProjectRow(child);
-          final p = projectById[(child.cells['data']?.value as MusicProject?)?.id];
-          if (p != null && (latestModified == null || p.lastModifiedAt.isAfter(latestModified))) {
+          final p =
+              projectById[(child.cells['data']?.value as MusicProject?)?.id];
+          if (p != null &&
+              (latestModified == null ||
+                  p.lastModifiedAt.isAfter(latestModified))) {
             latestModified = p.lastModifiedAt;
           }
         }
@@ -3974,7 +5358,8 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     if (notifier == null) return;
     notifier.value = (
       hasGroups: sm?.rows.any((r) => r.type.isGroup) ?? false,
-      anyExpanded: sm?.rows.any((r) => r.type.isGroup && r.type.group.expanded) ?? false,
+      anyExpanded:
+          sm?.rows.any((r) => r.type.isGroup && r.type.group.expanded) ?? false,
     );
   }
 
@@ -4060,7 +5445,14 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   static const double _gridRowHeight = 48.0;
 
   static const Set<String> _audioExtensions = {
-    '.mp3', '.wav', '.m4a', '.aac', '.ogg', '.flac', '.aif', '.aiff',
+    '.mp3',
+    '.wav',
+    '.m4a',
+    '.aac',
+    '.ogg',
+    '.flac',
+    '.aif',
+    '.aiff',
   };
 
   void _updateDragTarget(Offset localPos) {
@@ -4104,7 +5496,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       );
     }
   }
-  
+
   Future<void> _playPreviewSong(MusicProject project) async {
     final customFolders = ref.read(customMixdownFoldersProvider).value;
     var effectivePath = project.previewSongPath?.isNotEmpty == true
@@ -4112,11 +5504,16 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         : project.previewSongAutoPath;
 
     if (effectivePath == null) {
-      final detected = MixdownDetectorService.findLatestMixdown(project, customFolders: customFolders);
+      final detected = MixdownDetectorService.findLatestMixdown(
+        project,
+        customFolders: customFolders,
+      );
       if (detected != null) {
         effectivePath = detected.path;
         final repo = await ref.read(repositoryProvider.future);
-        await repo.updateProject(project.copyWith(previewSongAutoPath: detected.path));
+        await repo.updateProject(
+          project.copyWith(previewSongAutoPath: detected.path),
+        );
         ref.invalidate(allProjectsStreamProvider);
       }
     }
@@ -4144,8 +5541,11 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.drag_indicator, size: 16,
-                        color: Theme.of(ctx).colorScheme.primary),
+                    Icon(
+                      Icons.drag_indicator,
+                      size: 16,
+                      color: Theme.of(ctx).colorScheme.primary,
+                    ),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
@@ -4176,13 +5576,16 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         allowedExtensions: const ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'],
         dialogTitle: l10n.selectPreviewSong,
       );
-      if (!mounted || picked == null || picked.files.single.path == null) return;
+      if (!mounted || picked == null || picked.files.single.path == null)
+        return;
       final newPath = picked.files.single.path!;
       final repo = await ref.read(repositoryProvider.future);
-      await repo.updateProject(project.copyWith(
-        previewSongPath: newPath,
-        previewSongFileName: path.basename(newPath),
-      ));
+      await repo.updateProject(
+        project.copyWith(
+          previewSongPath: newPath,
+          previewSongFileName: path.basename(newPath),
+        ),
+      );
       if (!mounted) return;
       if (MobileUtils.isMobile()) {
         final pickedProject = project.copyWith(
@@ -4191,12 +5594,14 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         );
         final queue = ref.read(mobilePlayerQueueProvider);
         final idx = queue.indexWhere((p) => p.id == pickedProject.id);
-        await ref.read(mobilePlayerProvider.notifier).playProject(
-          pickedProject,
-          newPath,
-          queue: queue,
-          queueIndex: idx >= 0 ? idx : null,
-        );
+        await ref
+            .read(mobilePlayerProvider.notifier)
+            .playProject(
+              pickedProject,
+              newPath,
+              queue: queue,
+              queueIndex: idx >= 0 ? idx : null,
+            );
       } else {
         await showDialog(
           context: context,
@@ -4222,13 +5627,17 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           title: Text(l10n.previewSongFileNotFound),
           content: Text(l10n.previewSongFileNotFoundMessage),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l10n.cancel),
+            ),
             OutlinedButton(
               onPressed: () => Navigator.pop(ctx, _FileNotFoundAction.remove),
               child: Text(l10n.removePreviewSong),
             ),
             FilledButton(
-              onPressed: () => Navigator.pop(ctx, _FileNotFoundAction.selectNew),
+              onPressed: () =>
+                  Navigator.pop(ctx, _FileNotFoundAction.selectNew),
               child: Text(l10n.selectNewFile),
             ),
           ],
@@ -4240,7 +5649,10 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         final isAuto = project.previewSongPath?.isNotEmpty != true;
         final updated = isAuto
             ? project.copyWith(clearPreviewSongAutoPath: true)
-            : project.copyWith(clearPreviewSongPath: true, clearPreviewSongFileName: true);
+            : project.copyWith(
+                clearPreviewSongPath: true,
+                clearPreviewSongFileName: true,
+              );
         await repo.updateProject(updated);
         return;
       } else if (action == _FileNotFoundAction.selectNew) {
@@ -4256,7 +5668,10 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           final isAuto = project.previewSongPath?.isNotEmpty != true;
           final updated = isAuto
               ? project.copyWith(previewSongAutoPath: newPath)
-              : project.copyWith(previewSongPath: newPath, previewSongFileName: path.basename(newPath));
+              : project.copyWith(
+                  previewSongPath: newPath,
+                  previewSongFileName: path.basename(newPath),
+                );
           await repo.updateProject(updated);
           effectivePath = newPath;
         } else {
@@ -4280,11 +5695,22 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         context: context,
         builder: (ctx) => AlertDialog(
           title: Text(l10n.newerExportFound),
-          content: Text(l10n.newerExportFoundMessage(path.basename(newer.path))),
+          content: Text(
+            l10n.newerExportFoundMessage(path.basename(newer.path)),
+          ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
-            OutlinedButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.keepCurrent)),
-            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.replaceAndPlay)),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l10n.cancel),
+            ),
+            OutlinedButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l10n.keepCurrent),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(l10n.replaceAndPlay),
+            ),
           ],
         ),
       );
@@ -4321,12 +5747,14 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     if (MobileUtils.isMobile()) {
       final queue = ref.read(mobilePlayerQueueProvider);
       final idx = queue.indexWhere((p) => p.id == playProject.id);
-      await ref.read(mobilePlayerProvider.notifier).playProject(
-        playProject,
-        effectivePath,
-        queue: queue,
-        queueIndex: idx >= 0 ? idx : null,
-      );
+      await ref
+          .read(mobilePlayerProvider.notifier)
+          .playProject(
+            playProject,
+            effectivePath,
+            queue: queue,
+            queueIndex: idx >= 0 ? idx : null,
+          );
     } else {
       ref.read(desktopPlayerProvider.notifier).play(playProject, effectivePath);
     }
@@ -4336,7 +5764,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     try {
       final projectDir = File(project.filePath).parent;
       final bpmFile = File(path.join(projectDir.path, 'bpm.txt'));
-      
+
       if (bpm != null) {
         await bpmFile.writeAsString(bpm.toStringAsFixed(2));
       } else {
@@ -4348,17 +5776,21 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.failedToWriteBpmFile(e.toString()))),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.failedToWriteBpmFile(e.toString()),
+            ),
+          ),
         );
       }
     }
   }
-  
+
   Future<void> _writeKeyToFile(MusicProject project, String? key) async {
     try {
       final projectDir = File(project.filePath).parent;
       final keyFile = File(path.join(projectDir.path, 'key.txt'));
-      
+
       if (key != null && key.isNotEmpty) {
         await keyFile.writeAsString(key);
       } else {
@@ -4370,11 +5802,15 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.failedToWriteKeyFile(e.toString()))),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.failedToWriteKeyFile(e.toString()),
+            ),
+          ),
         );
       }
     }
-  } 
+  }
 
   String _translateStatus(BuildContext context, String status) {
     final l10n = AppLocalizations.of(context)!;
@@ -4395,17 +5831,21 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   }
 
   Color _getStatusColor(String status) => resolvePhaseColor(
-        status,
-        ref.read(phaseColorsProvider),
-        ref.read(customPhasesProvider),
-      );
+    status,
+    ref.read(phaseColorsProvider),
+    ref.read(customPhasesProvider),
+  );
 
   Future<void> _launchProject(MusicProject project) async {
     if (ref.read(sessionModeProvider)) return;
-    final exists = File(project.filePath).existsSync() || Directory(project.filePath).existsSync();
+    final exists =
+        File(project.filePath).existsSync() ||
+        Directory(project.filePath).existsSync();
     if (!exists) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.fileMissing)));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.fileMissing)),
+        );
       }
       return;
     }
@@ -4413,12 +5853,26 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
 
     if (success) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.launchingProject(project.displayName))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(
+                context,
+              )!.launchingProject(project.displayName),
+            ),
+          ),
+        );
       }
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.failedToLaunchProject(project.displayName))),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(
+                context,
+              )!.failedToLaunchProject(project.displayName),
+            ),
+          ),
         );
       }
     }
@@ -4426,7 +5880,9 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
 
   Future<void> _viewProjectDetails(MusicProject project) async {
     await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => ProjectDetailPage(projectId: project.id)),
+      MaterialPageRoute(
+        builder: (_) => ProjectDetailPage(projectId: project.id),
+      ),
     );
   }
 
@@ -4435,24 +5891,40 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     final String folderPath = FileSystemEntity.isDirectorySync(projectPath)
         ? projectPath // Se for um diretório, usa o próprio caminho
         : path.dirname(projectPath); // Se for um arquivo, usa o diretório pai
-    
+
     final exists = Directory(folderPath).existsSync();
     if (!exists) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.fileMissing)));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.fileMissing)),
+        );
       }
       return;
     }
-    
+
     final success = await FileLauncher.openFolder(folderPath);
-    
+
     if (success) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.openingFolder(project.displayName))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.openingFolder(project.displayName),
+            ),
+          ),
+        );
       }
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.couldNotOpenFolder('Unable to open folder'))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(
+                context,
+              )!.couldNotOpenFolder('Unable to open folder'),
+            ),
+          ),
+        );
       }
     }
   }
@@ -4480,7 +5952,12 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     final phases = ref.read(customPhasesProvider);
     final selected = await showMenu<String>(
       context: context,
-      position: RelativeRect.fromLTRB(position.dx, position.dy, position.dx, position.dy),
+      position: RelativeRect.fromLTRB(
+        position.dx,
+        position.dy,
+        position.dx,
+        position.dy,
+      ),
       color: Theme.of(context).cardColor,
       items: phases.map((phase) {
         final isCurrent = project.status == phase;
@@ -4489,7 +5966,9 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           child: Row(
             children: [
               Icon(
-                isCurrent ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                isCurrent
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_unchecked,
                 size: 16,
                 color: _getStatusColor(phase),
               ),
@@ -4518,11 +5997,16 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     }
   }
 
-  Future<void> _showContextMenu(BuildContext context, MusicProject project, Offset position) async {
+  Future<void> _showContextMenu(
+    BuildContext context,
+    MusicProject project,
+    Offset position,
+  ) async {
     final l10n = AppLocalizations.of(context)!;
     final driveService = ref.read(googleDriveSyncServiceProvider);
     final sessionMode = ref.read(sessionModeProvider);
-    final isSubscribed = sessionMode && ref.read(activeProjectProvider)?.id == project.id;
+    final isSubscribed =
+        sessionMode && ref.read(activeProjectProvider)?.id == project.id;
 
     final result = await showMenu<String>(
       context: context,
@@ -4534,19 +6018,25 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       ),
       items: [
         PopupMenuItem<String>(
-          value: sessionMode ? (isSubscribed ? 'endSession' : 'startSession') : 'launch',
+          value: sessionMode
+              ? (isSubscribed ? 'endSession' : 'startSession')
+              : 'launch',
           child: Row(
             children: [
               Icon(
                 sessionMode
-                    ? (isSubscribed ? Icons.bookmark : Icons.bookmark_add_outlined)
+                    ? (isSubscribed
+                          ? Icons.bookmark
+                          : Icons.bookmark_add_outlined)
                     : Icons.open_in_new,
                 size: 20,
               ),
               const SizedBox(width: 8),
-              Text(sessionMode
-                  ? (isSubscribed ? l10n.endSession : l10n.startSession)
-                  : l10n.tooltipLaunchInDaw),
+              Text(
+                sessionMode
+                    ? (isSubscribed ? l10n.endSession : l10n.startSession)
+                    : l10n.tooltipLaunchInDaw,
+              ),
             ],
           ),
         ),
@@ -4577,14 +6067,17 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               Icon(
                 project.hidden ? Icons.visibility : Icons.visibility_off,
                 size: 20,
-                color: project.hidden ? Colors.green.shade300 : Colors.red.shade300,
+                color: project.hidden
+                    ? Colors.green.shade300
+                    : Colors.red.shade300,
               ),
               const SizedBox(width: 8),
               Text(project.hidden ? l10n.unhide : l10n.hide),
             ],
           ),
         ),
-        if (File(project.filePath).existsSync() || Directory(project.filePath).existsSync())
+        if (File(project.filePath).existsSync() ||
+            Directory(project.filePath).existsSync())
           PopupMenuItem<String>(
             value: 'refresh',
             child: Row(
@@ -4595,7 +6088,8 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               ],
             ),
           ),
-        if (File(project.filePath).existsSync() || Directory(project.filePath).existsSync())
+        if (File(project.filePath).existsSync() ||
+            Directory(project.filePath).existsSync())
           PopupMenuItem<String>(
             value: 'extractMetadata',
             child: Row(
@@ -4685,20 +6179,28 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                 ? Directory(project.filePath) as FileSystemEntity
                 : File(project.filePath);
             await repo.upsertFromFileSystemEntity(entity, fullMetadata: true);
-            if (project.previewSongPath?.isNotEmpty != true && project.previewSongAutoPath == null) {
-              final customFolders = ref.read(customMixdownFoldersProvider).value;
-              final detected = MixdownDetectorService.findLatestMixdown(project, customFolders: customFolders);
+            if (project.previewSongPath?.isNotEmpty != true &&
+                project.previewSongAutoPath == null) {
+              final customFolders = ref
+                  .read(customMixdownFoldersProvider)
+                  .value;
+              final detected = MixdownDetectorService.findLatestMixdown(
+                project,
+                customFolders: customFolders,
+              );
               if (detected != null) {
                 final fresh = repo.getById(project.id) ?? project;
-                await repo.updateProject(fresh.copyWith(previewSongAutoPath: detected.path));
+                await repo.updateProject(
+                  fresh.copyWith(previewSongAutoPath: detected.path),
+                );
               }
             }
             ref.invalidate(allProjectsStreamProvider);
           } catch (e) {
             if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('${l10n.error}: $e')),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text('${l10n.error}: $e')));
             }
           }
           break;
@@ -4710,12 +6212,16 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             ref.invalidate(allProjectsStreamProvider);
             if (mounted) {
               final msg = l10n.metadataExtractedForProjects(1, '', '');
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(msg)));
             }
           } catch (e) {
             if (mounted) {
               final msg = '${l10n.error}: $e';
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(msg)));
             }
           } finally {
             widget.onExtractingMetadataChanged(false);
@@ -4745,7 +6251,9 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             if (!driveService.isSignedIn) {
               throw Exception('not_signed_in');
             }
-            final profileRepo = await ref.read(profileRepositoryProvider.future);
+            final profileRepo = await ref.read(
+              profileRepositoryProvider.future,
+            );
             await driveService.restoreSingleProject(
               projectId: project.id,
               profileRepo: profileRepo,
@@ -4762,16 +6270,17 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               Navigator.of(this.context, rootNavigator: true).pop();
               final errStr = e.toString();
               final String msg;
-              if (errStr.contains('not_signed_in') || errStr.contains('Not signed in')) {
+              if (errStr.contains('not_signed_in') ||
+                  errStr.contains('Not signed in')) {
                 msg = l10n.signInToGoogleDriveFirst;
               } else if (errStr.contains('not found in backup')) {
                 msg = l10n.projectNotFoundInBackup;
               } else {
                 msg = '${l10n.error}: $e';
               }
-              ScaffoldMessenger.of(this.context).showSnackBar(
-                SnackBar(content: Text(msg)),
-              );
+              ScaffoldMessenger.of(
+                this.context,
+              ).showSnackBar(SnackBar(content: Text(msg)));
             }
           }
           break;
@@ -4784,8 +6293,8 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
 
   String? _effectivePreviewPathFor(MusicProject project) =>
       project.previewSongPath?.isNotEmpty == true
-          ? project.previewSongPath
-          : project.previewSongAutoPath;
+      ? project.previewSongPath
+      : project.previewSongAutoPath;
 
   Future<void> _shareProjectPreview(MusicProject project) async {
     final l10n = AppLocalizations.of(context)!;
@@ -4804,14 +6313,15 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       final sourceFile = File(effectivePath);
       if (!await sourceFile.exists()) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.previewSongFileNotFound)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.previewSongFileNotFound)));
         }
         return;
       }
 
-      String originalFileName = project.previewShareFileName ?? path.basename(effectivePath);
+      String originalFileName =
+          project.previewShareFileName ?? path.basename(effectivePath);
       if (!originalFileName.contains('.')) {
         originalFileName = '$originalFileName${path.extension(effectivePath)}';
       }
@@ -4821,15 +6331,19 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       // compatible format first so the shared file is actually accepted.
       var fileToShare = sourceFile;
       var shareFileName = originalFileName;
-      if (AudioAnalysisService.needsConversionForSharing(effectivePath) && mounted) {
-        final converted = await convertForSharingWithProgress(context, effectivePath);
+      if (AudioAnalysisService.needsConversionForSharing(effectivePath) &&
+          mounted) {
+        final converted = await convertForSharingWithProgress(
+          context,
+          effectivePath,
+        );
         if (converted != null) {
           fileToShare = converted;
           shareFileName = path.basename(converted.path);
         } else if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.mp3ConversionFailed)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.mp3ConversionFailed)));
         }
       }
 
@@ -4837,22 +6351,20 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         final cacheDir = await getTemporaryDirectory();
         final shareFile = File(path.join(cacheDir.path, shareFileName));
         await fileToShare.copy(shareFile.path);
-        await Share.shareXFiles(
-          [XFile(shareFile.path, name: shareFileName)],
-          text: 'Preview song: ${project.displayName}',
-        );
+        await Share.shareXFiles([
+          XFile(shareFile.path, name: shareFileName),
+        ], text: 'Preview song: ${project.displayName}');
       } else {
-        final result = await Share.shareXFiles(
-          [XFile(fileToShare.path)],
-          text: 'Preview song: ${project.displayName}',
-        );
+        final result = await Share.shareXFiles([
+          XFile(fileToShare.path),
+        ], text: 'Preview song: ${project.displayName}');
         // Unpackaged Windows builds have no working share sheet
         // (DataTransferManager needs MSIX) — without this the click does
         // nothing visible at all.
         if (result.status == ShareResultStatus.unavailable && mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.shareSheetUnavailable)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.shareSheetUnavailable)));
         }
       }
     } catch (e) {
@@ -4867,8 +6379,8 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   TrinaRow _projectToRow(MusicProject p) {
     final dawDisplay = p.dawType != null
         ? (p.dawVersion != null && p.dawVersion!.isNotEmpty
-            ? '${p.dawType} ${p.dawVersion}'
-            : p.dawType!)
+              ? '${p.dawType} ${p.dawVersion}'
+              : p.dawType!)
         : '';
     return TrinaRow(
       cells: {
@@ -4913,7 +6425,9 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
 
     for (final proj in projects) {
       final rootPath = findRoot(proj.filePath);
-      final mode = rootPath != null ? (rootModes[rootPath] ?? ScanMode.flat) : ScanMode.flat;
+      final mode = rootPath != null
+          ? (rootModes[rootPath] ?? ScanMode.flat)
+          : ScanMode.flat;
 
       if (mode == ScanMode.smartFolder && rootPath != null) {
         // Normalise separators before computing relative path so Windows paths
@@ -4926,7 +6440,11 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           // Project sits directly in the root — no subfolder to group by.
           flatProjects.add(proj);
         } else {
-          final key = smartFolderGroupKey(rootPath, parts, mergeSameName: mergeFoldersByName);
+          final key = smartFolderGroupKey(
+            rootPath,
+            parts,
+            mergeSameName: mergeFoldersByName,
+          );
           folderGroups.putIfAbsent(key, () => []).add(proj);
         }
       } else {
@@ -4967,7 +6485,9 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       final dir = entry.key;
       final group = List<MusicProject>.from(entry.value)
         ..sort((a, b) => a.lastModifiedAt.compareTo(b.lastModifiedAt));
-      final latestModified = group.map((p) => p.lastModifiedAt).reduce((x, y) => x.isAfter(y) ? x : y);
+      final latestModified = group
+          .map((p) => p.lastModifiedAt)
+          .reduce((x, y) => x.isAfter(y) ? x : y);
 
       items.add((
         latestModified,
@@ -4985,7 +6505,9 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             'data': TrinaCell(value: null),
           },
           type: TrinaRowType.group(
-            children: FilteredList(initialList: group.map(_projectToRow).toList()),
+            children: FilteredList(
+              initialList: group.map(_projectToRow).toList(),
+            ),
             expanded: _lastKnownExpandedGroupNames.contains(path.basename(dir)),
           ),
         ),
@@ -5055,22 +6577,27 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         stateManager!.notifyListeners();
       }
     }
-    
+
     // Also check if any project's lastModifiedAt changed (for color updates during scanning)
     if (oldWidget.projects.length == widget.projects.length) {
       bool hasModifiedDates = false;
       for (int i = 0; i < widget.projects.length; i++) {
         if (i < oldWidget.projects.length) {
-          if (widget.projects[i].lastModifiedAt != oldWidget.projects[i].lastModifiedAt) {
+          if (widget.projects[i].lastModifiedAt !=
+              oldWidget.projects[i].lastModifiedAt) {
             hasModifiedDates = true;
             break;
           }
         }
       }
-      
+
       if (hasModifiedDates && stateManager != null) {
         // Update the lastModified cell values to trigger renderer refresh
-        for (int i = 0; i < stateManager!.rows.length && i < widget.projects.length; i++) {
+        for (
+          int i = 0;
+          i < stateManager!.rows.length && i < widget.projects.length;
+          i++
+        ) {
           final project = widget.projects[i];
           final row = stateManager!.rows[i];
           if (row.cells['lastModified'] != null) {
@@ -5093,6 +6620,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         if (mounted) _rebuildRows();
       });
     }
+
     ref.listen(phaseColorsProvider, (_, _) => rebuildForPhaseConfig());
     ref.listen(customPhasesProvider, (_, _) => rebuildForPhaseConfig());
     ref.listen(finishedPhaseProvider, (_, _) => rebuildForPhaseConfig());
@@ -5173,7 +6701,8 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                 scale: 0.78,
                 child: Checkbox(
                   value: widget.areAllSelected,
-                  tristate: widget.selectedIds.isNotEmpty && !widget.areAllSelected,
+                  tristate:
+                      widget.selectedIds.isNotEmpty && !widget.areAllSelected,
                   onChanged: (_) => widget.onToggleSelectAll(),
                 ),
               ),
@@ -5191,7 +6720,8 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               // off the group's own children rather than any cached count.
               final childIds = groupChildProjectIds(row);
               final allSelected =
-                  childIds.isNotEmpty && childIds.every(widget.selectedIds.contains);
+                  childIds.isNotEmpty &&
+                  childIds.every(widget.selectedIds.contains);
               final anySelected = childIds.any(widget.selectedIds.contains);
               return Transform.scale(
                 scale: 0.78,
@@ -5236,7 +6766,8 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         minWidth: 200,
         frozen: TrinaColumnFrozen.start,
         renderer: (rendererContext) {
-          final project = rendererContext.row.cells['data']?.value as MusicProject?;
+          final project =
+              rendererContext.row.cells['data']?.value as MusicProject?;
           if (project == null) {
             return _FolderNameCell(
               row: rendererContext.row,
@@ -5245,22 +6776,26 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             );
           }
 
-          final fileExists = File(project.filePath).existsSync() ||
+          final fileExists =
+              File(project.filePath).existsSync() ||
               Directory(project.filePath).existsSync();
 
           final currentQuery = ref.read(projectsSearchProvider);
-          final isNotesMatch = currentQuery.trim().isNotEmpty &&
+          final isNotesMatch =
+              currentQuery.trim().isNotEmpty &&
               !fuzzyMatchAll(project.displayName, currentQuery) &&
               project.notes != null &&
               fuzzyMatchAll(project.notes!, currentQuery);
 
-          final isNewlyDiscovered =
-              ref.watch(recentlyDiscoveredProjectsProvider).contains(project.id);
+          final isNewlyDiscovered = ref
+              .watch(recentlyDiscoveredProjectsProvider)
+              .contains(project.id);
 
           // Tree connector for child rows inside a folder group
           final depth = rendererContext.row.depth;
           final parent = rendererContext.row.parent;
-          final isLastChild = parent == null ||
+          final isLastChild =
+              parent == null ||
               !parent.type.isGroup ||
               parent.type.group.children.isEmpty ||
               parent.type.group.children.last == rendererContext.row;
@@ -5274,7 +6809,9 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                   child: CustomPaint(
                     painter: _TreeConnectorPainter(
                       isLast: isLastChild,
-                      color: Theme.of(context).dividerColor.withValues(alpha: 0.7),
+                      color: Theme.of(
+                        context,
+                      ).dividerColor.withValues(alpha: 0.7),
                     ),
                   ),
                 ),
@@ -5292,13 +6829,23 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                   message: AppLocalizations.of(context)!.matchedInDescription,
                   child: Padding(
                     padding: const EdgeInsets.only(left: 6),
-                    child: Icon(Icons.notes, size: 14, color: Colors.amber.shade600),
+                    child: Icon(
+                      Icons.notes,
+                      size: 14,
+                      color: Colors.amber.shade600,
+                    ),
                   ),
                 ),
               if (!fileExists && !MobileUtils.isMobile())
                 Tooltip(
-                  message: AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
-                  child: Icon(Icons.cloud_off, size: 14, color: Colors.orange.shade400),
+                  message: AppLocalizations.of(
+                    context,
+                  )!.sourceFileNotFoundOnThisMachine,
+                  child: Icon(
+                    Icons.cloud_off,
+                    size: 14,
+                    color: Colors.orange.shade400,
+                  ),
                 ),
             ],
           );
@@ -5312,7 +6859,8 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         width: 140,
         minWidth: 120,
         renderer: (rendererContext) {
-          final project = rendererContext.row.cells['data']?.value as MusicProject?;
+          final project =
+              rendererContext.row.cells['data']?.value as MusicProject?;
           final status = rendererContext.cell.value as String? ?? '';
           final translatedStatus = _translateStatus(context, status);
           final textWidget = Row(
@@ -5325,7 +6873,11 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                 ),
               ),
               const SizedBox(width: 4),
-              Icon(Icons.arrow_drop_down, size: 16, color: _getStatusColor(status).withValues(alpha: 0.7)),
+              Icon(
+                Icons.arrow_drop_down,
+                size: 16,
+                color: _getStatusColor(status).withValues(alpha: 0.7),
+              ),
             ],
           );
 
@@ -5333,7 +6885,12 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
 
           return GestureDetector(
             onTapDown: (TapDownDetails details) {
-              _showPhaseMenu(context, project, details.globalPosition, rendererContext);
+              _showPhaseMenu(
+                context,
+                project,
+                details.globalPosition,
+                rendererContext,
+              );
             },
             child: textWidget,
           );
@@ -5347,11 +6904,12 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         width: 140,
         minWidth: 100,
         renderer: (rendererContext) {
-          final project = rendererContext.row.cells['data']?.value as MusicProject?;
+          final project =
+              rendererContext.row.cells['data']?.value as MusicProject?;
           if (project == null) return const SizedBox.shrink();
           final dawType = rendererContext.cell.value as String? ?? '';
           final logoPath = getDawLogoPath(dawType);
-          
+
           final content = Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -5362,18 +6920,14 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                     logoPath,
                     width: 16,
                     height: 16,
-                    errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                    errorBuilder: (context, error, stackTrace) =>
+                        const SizedBox.shrink(),
                   ),
                 ),
-              Flexible(
-                child: Text(
-                  dawType,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
+              Flexible(child: Text(dawType, overflow: TextOverflow.ellipsis)),
             ],
           );
-          
+
           return content;
         },
       ),
@@ -5385,34 +6939,38 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         minWidth: 70,
         enableEditingMode: true,
         renderer: (rendererContext) {
-          final project = rendererContext.row.cells['data']?.value as MusicProject?;
+          final project =
+              rendererContext.row.cells['data']?.value as MusicProject?;
           final textWidget = Text(rendererContext.cell.value.toString());
-          
+
           if (project == null) return textWidget;
 
           return textWidget;
         },
       ),
       TrinaColumn(
-        title: AppLocalizations.of(context)!.key.split(' ').first, // Get just "Key" from "Key (e.g., C#m, F major)"
+        title: AppLocalizations.of(context)!.key
+            .split(' ')
+            .first, // Get just "Key" from "Key (e.g., C#m, F major)"
         field: 'key',
         type: TrinaColumnType.text(),
         width: 160,
         minWidth: 140,
         enableEditingMode: true,
         renderer: (rendererContext) {
-          final project = rendererContext.row.cells['data']?.value as MusicProject?;
+          final project =
+              rendererContext.row.cells['data']?.value as MusicProject?;
           if (project == null) {
             return Text(rendererContext.cell.value.toString());
           }
-          
+
           final key = project.musicalKey;
           final camelot = project.camelotCode;
-          
+
           if (key == null || key.isEmpty) {
             return const SizedBox.shrink();
           }
-          
+
           return Row(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -5437,7 +6995,10 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 1,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.blue.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(3),
@@ -5472,14 +7033,16 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         width: 200,
         minWidth: 160,
         renderer: (rendererContext) {
-          final project = rendererContext.row.cells['data']?.value as MusicProject?;
+          final project =
+              rendererContext.row.cells['data']?.value as MusicProject?;
           if (project == null) return const SizedBox.shrink();
 
           return Consumer(
             builder: (context, ref, _) {
               final colorEnabled = ref.watch(lastModifiedColorProvider);
               final finishedPhases = ref.watch(finishedPhaseProvider);
-              final defaultColor = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
+              final defaultColor =
+                  Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
 
               Color textColor;
               if (!colorEnabled) {
@@ -5490,16 +7053,29 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                   textColor = Colors.green;
                 } else {
                   final now = DateTime.now();
-                  final daysSinceModified = now.difference(project.lastModifiedAt).inDays;
+                  final daysSinceModified = now
+                      .difference(project.lastModifiedAt)
+                      .inDays;
 
                   if (daysSinceModified < 21) {
                     textColor = defaultColor;
                   } else if (daysSinceModified < 60) {
                     final ratio = (daysSinceModified - 21) / 39.0;
-                    textColor = Color.lerp(Colors.yellow.shade300, Colors.orange.shade400, ratio)!;
+                    textColor = Color.lerp(
+                      Colors.yellow.shade300,
+                      Colors.orange.shade400,
+                      ratio,
+                    )!;
                   } else {
-                    final ratio = ((daysSinceModified - 60) / 60.0).clamp(0.0, 1.0);
-                    textColor = Color.lerp(Colors.orange.shade400, Colors.red.shade400, ratio)!;
+                    final ratio = ((daysSinceModified - 60) / 60.0).clamp(
+                      0.0,
+                      1.0,
+                    );
+                    textColor = Color.lerp(
+                      Colors.orange.shade400,
+                      Colors.red.shade400,
+                      ratio,
+                    )!;
                   }
                 }
               }
@@ -5520,14 +7096,16 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         width: 120,
         minWidth: 100,
         renderer: (rendererContext) {
-          final project = rendererContext.row.cells['data']?.value as MusicProject?;
+          final project =
+              rendererContext.row.cells['data']?.value as MusicProject?;
           if (project == null || project.deadline == null) {
             return const SizedBox.shrink();
           }
           return Consumer(
             builder: (context, ref, _) {
               final finishedPhases = ref.watch(finishedPhaseProvider);
-              if (finishedPhases.contains(project.status)) return const SizedBox.shrink();
+              if (finishedPhases.contains(project.status))
+                return const SizedBox.shrink();
 
               final daysUntil = project.daysUntilDeadline ?? 0;
 
@@ -5595,14 +7173,19 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         renderer: (ctx) {
           final project = ctx.row.cells['data']?.value as MusicProject?;
           if (project == null) return const SizedBox.shrink();
-          
+
           // Lógica para determinar o diretório pai
           final String projectPath = project.filePath;
-          final bool sourceFileExists = File(projectPath).existsSync() || Directory(projectPath).existsSync();
-          final String folderPath = FileSystemEntity.isDirectorySync(projectPath)
+          final bool sourceFileExists =
+              File(projectPath).existsSync() ||
+              Directory(projectPath).existsSync();
+          final String folderPath =
+              FileSystemEntity.isDirectorySync(projectPath)
               ? projectPath // Se for um diretório, usa o próprio caminho
-              : path.dirname(projectPath); // Se for um arquivo, usa o diretório pai
-          
+              : path.dirname(
+                  projectPath,
+                ); // Se for um arquivo, usa o diretório pai
+
           return Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -5613,33 +7196,43 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                   final isPlaying = ref.watch(desktopIsPlayingProvider);
                   final isCurrent = playerRequest?.project.id == project.id;
                   final isActive = isPlaying && isCurrent;
-                  final hasPreview = project.previewSongPath?.isNotEmpty == true ||
+                  final hasPreview =
+                      project.previewSongPath?.isNotEmpty == true ||
                       project.previewSongAutoPath != null;
                   final iconColor = project.previewSongPath?.isNotEmpty == true
                       ? Colors.green
                       : project.previewSongAutoPath != null
-                          ? Colors.amber
-                          : Colors.grey;
+                      ? Colors.amber
+                      : Colors.grey;
                   return _PlayButtonWithGlow(
                     isActive: isActive,
                     glowColor: iconColor,
                     child: IconButton(
                       icon: Icon(
                         isCurrent
-                            ? (isPlaying ? Icons.pause_circle : Icons.play_circle)
-                            : (hasPreview ? Icons.play_circle : Icons.play_circle_outline),
+                            ? (isPlaying
+                                  ? Icons.pause_circle
+                                  : Icons.play_circle)
+                            : (hasPreview
+                                  ? Icons.play_circle
+                                  : Icons.play_circle_outline),
                       ),
                       iconSize: 24,
                       padding: const EdgeInsets.all(4),
                       constraints: const BoxConstraints(),
                       tooltip: isCurrent
-                          ? (isPlaying ? AppLocalizations.of(context)!.pause : AppLocalizations.of(context)!.playPreview)
-                          : project.previewSongAutoPath != null && project.previewSongPath?.isNotEmpty != true
-                              ? '${AppLocalizations.of(context)!.playPreview} (P)\n⚡ ${AppLocalizations.of(context)!.autoDetected}: ${path.basename(project.previewSongAutoPath!)}'
-                              : '${AppLocalizations.of(context)!.playPreview} (P)',
+                          ? (isPlaying
+                                ? AppLocalizations.of(context)!.pause
+                                : AppLocalizations.of(context)!.playPreview)
+                          : project.previewSongAutoPath != null &&
+                                project.previewSongPath?.isNotEmpty != true
+                          ? '${AppLocalizations.of(context)!.playPreview} (P)\n⚡ ${AppLocalizations.of(context)!.autoDetected}: ${path.basename(project.previewSongAutoPath!)}'
+                          : '${AppLocalizations.of(context)!.playPreview} (P)',
                       onPressed: () {
                         if (isCurrent) {
-                          ref.read(desktopPlayerToggleRequestProvider.notifier).bump();
+                          ref
+                              .read(desktopPlayerToggleRequestProvider.notifier)
+                              .bump();
                         } else {
                           _playPreviewSong(project);
                         }
@@ -5654,7 +7247,12 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                 padding: const EdgeInsets.symmetric(horizontal: 3.0),
                 child: Text(
                   '|',
-                  style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5), fontSize: 16),
+                  style: TextStyle(
+                    color: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.color?.withOpacity(0.5),
+                    fontSize: 16,
+                  ),
                 ),
               ),
               // Launch / Start Session button — Consumer makes it self-reactive to
@@ -5676,7 +7274,11 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                   }
                   final isSubscribed = subProject?.id == project.id;
                   return IconButton(
-                    icon: Icon(isSubscribed ? Icons.bookmark : Icons.bookmark_add_outlined),
+                    icon: Icon(
+                      isSubscribed
+                          ? Icons.bookmark
+                          : Icons.bookmark_add_outlined,
+                    ),
                     iconSize: 24,
                     padding: const EdgeInsets.all(4),
                     constraints: const BoxConstraints(),
@@ -5699,7 +7301,12 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                 padding: const EdgeInsets.symmetric(horizontal: 3.0),
                 child: Text(
                   '|',
-                  style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5), fontSize: 16),
+                  style: TextStyle(
+                    color: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.color?.withOpacity(0.5),
+                    fontSize: 16,
+                  ),
                 ),
               ),
               // View button
@@ -5708,20 +7315,29 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                 iconSize: 24,
                 padding: const EdgeInsets.all(4),
                 constraints: const BoxConstraints(),
-                tooltip: '${AppLocalizations.of(context)!.tooltipViewDetails} (D)',
+                tooltip:
+                    '${AppLocalizations.of(context)!.tooltipViewDetails} (D)',
                 onPressed: () => _viewProjectDetails(project),
               ),
               // Open Folder button (desktop only — no file manager on mobile)
               if (!MobileUtils.isMobile())
                 Tooltip(
-                  message: sourceFileExists ? '' : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
+                  message: sourceFileExists
+                      ? ''
+                      : AppLocalizations.of(
+                          context,
+                        )!.sourceFileNotFoundOnThisMachine,
                   child: IconButton(
                     icon: const Icon(Icons.folder_open),
                     iconSize: 24,
                     padding: const EdgeInsets.all(4),
                     constraints: const BoxConstraints(),
-                    tooltip: sourceFileExists ? '${AppLocalizations.of(context)!.openFolder} (F)' : null,
-                    onPressed: sourceFileExists ? () => _openProjectFolder(project) : null,
+                    tooltip: sourceFileExists
+                        ? '${AppLocalizations.of(context)!.openFolder} (F)'
+                        : null,
+                    onPressed: sourceFileExists
+                        ? () => _openProjectFolder(project)
+                        : null,
                   ),
                 ),
               // Separator
@@ -5729,16 +7345,25 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                 padding: const EdgeInsets.symmetric(horizontal: 3.0),
                 child: Text(
                   '|',
-                  style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5), fontSize: 16),
+                  style: TextStyle(
+                    color: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.color?.withOpacity(0.5),
+                    fontSize: 16,
+                  ),
                 ),
               ),
               // Hidden button
               IconButton(
-                icon: Icon(project.hidden ? Icons.visibility : Icons.visibility_off),
+                icon: Icon(
+                  project.hidden ? Icons.visibility : Icons.visibility_off,
+                ),
                 iconSize: 24,
                 padding: const EdgeInsets.all(4),
                 constraints: const BoxConstraints(),
-                color: project.hidden ? Colors.green.shade300 : Colors.red.shade300,
+                color: project.hidden
+                    ? Colors.green.shade300
+                    : Colors.red.shade300,
                 tooltip: project.hidden
                     ? AppLocalizations.of(context)!.unhide
                     : AppLocalizations.of(context)!.hide,
@@ -5753,7 +7378,11 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                       builder: (ctx) => AlertDialog(
                         backgroundColor: Theme.of(context).cardColor,
                         title: Text(AppLocalizations.of(context)!.hide),
-                        content: Text(AppLocalizations.of(context)!.hideProjectMessage(project.displayName)),
+                        content: Text(
+                          AppLocalizations.of(
+                            context,
+                          )!.hideProjectMessage(project.displayName),
+                        ),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(ctx, false),
@@ -5794,7 +7423,9 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     // grid's key below — remounts the grid, reusing the same restore path
     // that already survives a theme/locale remount to reapply expand/sort
     // state, now also correctly under the new group-sort behavior.
-    final excludeFoldersFromSort = ref.watch(excludeSmartFoldersFromSortProvider);
+    final excludeFoldersFromSort = ref.watch(
+      excludeSmartFoldersFromSortProvider,
+    );
     // Same remount rationale: toggling this changes which projects land in
     // which group (see smartFolderGroupKey), so the grid needs a fresh key
     // to rebuild its row-group tree rather than diffing stale groups.
@@ -5814,14 +7445,16 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             Icon(
               hasProjects ? Icons.search_off : Icons.library_music_outlined,
               size: 64,
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.4),
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.4),
             ),
             const SizedBox(height: 16),
             Text(
-              hasProjects
-                  ? l10n.noResultsForFilter
-                  : l10n.noProjectsFound,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              hasProjects ? l10n.noResultsForFilter : l10n.noProjectsFound,
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
@@ -5844,8 +7477,12 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     final isNeon = ref.watch(themeTypeProvider) == AppThemeType.neonDark;
     final isDark = activeTheme.brightness == Brightness.dark;
 
-    final playingHighlightColor = activeTheme.colorScheme.primary.withValues(alpha: 0.32);
-    final rowSelectColor = activeTheme.colorScheme.primary.withValues(alpha: 0.18);
+    final playingHighlightColor = activeTheme.colorScheme.primary.withValues(
+      alpha: 0.32,
+    );
+    final rowSelectColor = activeTheme.colorScheme.primary.withValues(
+      alpha: 0.18,
+    );
 
     // Neon Dark: use scaffold background (very dark navy) for odd rows so alternating rows are clearly visible.
     // Classic Dark: use card colour for odd rows (current behaviour).
@@ -5855,77 +7492,83 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     final evenColor = isNeon
         ? activeTheme.cardColor
         : isDark
-            ? Color.alphaBlend(Colors.white.withValues(alpha: 0.05), activeTheme.cardColor)
-            : Color.alphaBlend(Colors.black.withValues(alpha: 0.04), activeTheme.cardColor);
+        ? Color.alphaBlend(
+            Colors.white.withValues(alpha: 0.05),
+            activeTheme.cardColor,
+          )
+        : Color.alphaBlend(
+            Colors.black.withValues(alpha: 0.04),
+            activeTheme.cardColor,
+          );
 
     final grid = TrinaGrid(
-          key: ValueKey(
-            'trina_grid_${l10n.localeName}_${ref.watch(themeTypeProvider).name}_${excludeFoldersFromSort}_${mergeFoldersByName}_$alwaysShowSmartFolders',
-          ),
-          columnMenuDelegate: _FitAllColumnsMenuDelegate(),
-          columns: columns,
-          rows: initialRows,
-          rowColorCallback: (TrinaRowColorContext ctx) {
-            final project = ctx.row.cells['data']?.value as MusicProject?;
-            if (project != null) {
-              final playing = ref.read(desktopPlayerProvider);
-              if (playing?.project.id == project.id) return playingHighlightColor;
-              final isSession = ref.read(activeProjectProvider)?.id == project.id;
-              final isActivated = stateManager?.currentRow == ctx.row;
-              if (isSession) {
-                // Read current paused state directly so notifyListeners refreshes pick it up.
-                final isPaused = ref.read(workTimerPausedProvider);
-                return isPaused
-                    ? const Color(0x70FBBF24) // amber when paused
-                    : const Color(0x7022C55E); // green when active
-              }
-              if (isActivated) return rowSelectColor;
-            }
-            return ctx.rowIdx.isOdd ? oddColor : evenColor;
-          },
-          onLoaded: (TrinaGridOnLoadedEvent event) {
-            stateManager = event.stateManager;
-            stateManager!.setRowGroup(
-              excludeFoldersFromSort
-                  ? _GroupOrderStableRowGroupDelegate(
-                      // Returning null for all columns disables TrinaGrid's auto
-                      // expand icon; we render our own in the checkbox column.
-                      resolveColumnDepth: (column) => null,
-                      showText: (cell) => true,
-                      showFirstExpandableIcon: false,
-                      showCount: false,
-                    )
-                  : TrinaRowGroupTreeDelegate(
-                      resolveColumnDepth: (column) => null,
-                      showText: (cell) => true,
-                      showFirstExpandableIcon: false,
-                      showCount: false,
-                    ),
-            );
-            stateManager!.addListener(_onStateManagerChanged);
-            if (_needsThemeRefresh) {
-              // The deferred _rebuildRows() below busts the renderer cache
-              // AND restores expand/sort state itself, so don't also call
-              // _restoreTableStateSnapshot() here — _mapProjectsToRows()
-              // already pre-applied the same snapshot when building
-              // initialRows above, so both calls would just be settling an
-              // already-correct grid a second time. Two separate repaints
-              // (one now, one a frame later) of visually-identical content is
-              // exactly what reads as the smart folder flickering on a quick
-              // theme switch, since each one replaces the group row's object
-              // identity. One settle instead of two.
-              _needsThemeRefresh = false;
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) _rebuildRows();
-              });
-            } else {
-              // Locale switches (or any other remount) have no renderer-cache
-              // issue to fix, so a synchronous restore is enough — no need to
-              // wait a frame like the theme-refresh path above.
-              _restoreTableStateSnapshot();
-            }
-            _updateGroupExpandNotifier();
-          },
+      key: ValueKey(
+        'trina_grid_${l10n.localeName}_${ref.watch(themeTypeProvider).name}_${excludeFoldersFromSort}_${mergeFoldersByName}_$alwaysShowSmartFolders',
+      ),
+      columnMenuDelegate: _FitAllColumnsMenuDelegate(),
+      columns: columns,
+      rows: initialRows,
+      rowColorCallback: (TrinaRowColorContext ctx) {
+        final project = ctx.row.cells['data']?.value as MusicProject?;
+        if (project != null) {
+          final playing = ref.read(desktopPlayerProvider);
+          if (playing?.project.id == project.id) return playingHighlightColor;
+          final isSession = ref.read(activeProjectProvider)?.id == project.id;
+          final isActivated = stateManager?.currentRow == ctx.row;
+          if (isSession) {
+            // Read current paused state directly so notifyListeners refreshes pick it up.
+            final isPaused = ref.read(workTimerPausedProvider);
+            return isPaused
+                ? const Color(0x70FBBF24) // amber when paused
+                : const Color(0x7022C55E); // green when active
+          }
+          if (isActivated) return rowSelectColor;
+        }
+        return ctx.rowIdx.isOdd ? oddColor : evenColor;
+      },
+      onLoaded: (TrinaGridOnLoadedEvent event) {
+        stateManager = event.stateManager;
+        stateManager!.setRowGroup(
+          excludeFoldersFromSort
+              ? _GroupOrderStableRowGroupDelegate(
+                  // Returning null for all columns disables TrinaGrid's auto
+                  // expand icon; we render our own in the checkbox column.
+                  resolveColumnDepth: (column) => null,
+                  showText: (cell) => true,
+                  showFirstExpandableIcon: false,
+                  showCount: false,
+                )
+              : TrinaRowGroupTreeDelegate(
+                  resolveColumnDepth: (column) => null,
+                  showText: (cell) => true,
+                  showFirstExpandableIcon: false,
+                  showCount: false,
+                ),
+        );
+        stateManager!.addListener(_onStateManagerChanged);
+        if (_needsThemeRefresh) {
+          // The deferred _rebuildRows() below busts the renderer cache
+          // AND restores expand/sort state itself, so don't also call
+          // _restoreTableStateSnapshot() here — _mapProjectsToRows()
+          // already pre-applied the same snapshot when building
+          // initialRows above, so both calls would just be settling an
+          // already-correct grid a second time. Two separate repaints
+          // (one now, one a frame later) of visually-identical content is
+          // exactly what reads as the smart folder flickering on a quick
+          // theme switch, since each one replaces the group row's object
+          // identity. One settle instead of two.
+          _needsThemeRefresh = false;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) _rebuildRows();
+          });
+        } else {
+          // Locale switches (or any other remount) have no renderer-cache
+          // issue to fix, so a synchronous restore is enough — no need to
+          // wait a frame like the theme-refresh path above.
+          _restoreTableStateSnapshot();
+        }
+        _updateGroupExpandNotifier();
+      },
       onRowSecondaryTap: (TrinaGridOnRowSecondaryTapEvent event) {
         final project = event.row.cells['data']?.value as MusicProject?;
         if (project != null && mounted) {
@@ -5935,16 +7578,16 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       onChanged: (TrinaGridOnChangedEvent event) async {
         final project = event.row.cells['data']?.value as MusicProject?;
         if (project == null) return;
-        
+
         final field = event.column.field;
         final newValue = event.value?.toString().trim() ?? '';
-        
+
         if (field == 'bpm') {
           final bpm = newValue.isEmpty ? null : double.tryParse(newValue);
-          
+
           // Write to bpm.txt file
           await _writeBpmToFile(project, bpm);
-          
+
           // Update project in repository
           final repo = await ref.read(repositoryProvider.future);
           final updated = project.copyWith(bpm: bpm);
@@ -5998,9 +7641,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           oddRowColor: oddColor,
           evenRowColor: evenColor,
         ),
-        scrollbar: const TrinaGridScrollbarConfig(
-          showHorizontal: false,
-        ),
+        scrollbar: const TrinaGridScrollbarConfig(showHorizontal: false),
         columnSize: const TrinaGridColumnSizeConfig(
           autoSizeMode: TrinaAutoSizeMode.scale,
           resizeMode: TrinaResizeMode.pushAndPull,
@@ -6008,14 +7649,29 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         shortcut: TrinaGridShortcut(
           actions: {
             ...TrinaGridShortcut.defaultActions,
-            LogicalKeySet(LogicalKeyboardKey.enter): _TrinaProjectAction(_viewProjectDetails),
-            LogicalKeySet(LogicalKeyboardKey.numpadEnter): _TrinaProjectAction(_viewProjectDetails),
-            LogicalKeySet(LogicalKeyboardKey.shift, LogicalKeyboardKey.enter): _TrinaProjectAction(_viewProjectDetails),
-            LogicalKeySet(LogicalKeyboardKey.keyP): _TrinaProjectAction(_playPreviewSong),
-            LogicalKeySet(LogicalKeyboardKey.keyO): _TrinaProjectAction(_launchProject),
-            LogicalKeySet(LogicalKeyboardKey.keyD): _TrinaProjectAction(_viewProjectDetails),
-            LogicalKeySet(LogicalKeyboardKey.keyF): _TrinaProjectAction(_openProjectFolder),
-            LogicalKeySet(LogicalKeyboardKey.keyS): _TrinaProjectAction(_toggleSession),
+            LogicalKeySet(LogicalKeyboardKey.enter): _TrinaProjectAction(
+              _viewProjectDetails,
+            ),
+            LogicalKeySet(LogicalKeyboardKey.numpadEnter): _TrinaProjectAction(
+              _viewProjectDetails,
+            ),
+            LogicalKeySet(LogicalKeyboardKey.shift, LogicalKeyboardKey.enter):
+                _TrinaProjectAction(_viewProjectDetails),
+            LogicalKeySet(LogicalKeyboardKey.keyP): _TrinaProjectAction(
+              _playPreviewSong,
+            ),
+            LogicalKeySet(LogicalKeyboardKey.keyO): _TrinaProjectAction(
+              _launchProject,
+            ),
+            LogicalKeySet(LogicalKeyboardKey.keyD): _TrinaProjectAction(
+              _viewProjectDetails,
+            ),
+            LogicalKeySet(LogicalKeyboardKey.keyF): _TrinaProjectAction(
+              _openProjectFolder,
+            ),
+            LogicalKeySet(LogicalKeyboardKey.keyS): _TrinaProjectAction(
+              _toggleSession,
+            ),
           },
         ),
       ),
@@ -6024,9 +7680,11 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       onRowDoubleTap: (TrinaGridOnRowDoubleTapEvent event) async {
         final project = event.row.cells['data']?.value as MusicProject?;
         if (project == null) return;
-        
+
         await Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => ProjectDetailPage(projectId: project.id)),
+          MaterialPageRoute(
+            builder: (_) => ProjectDetailPage(projectId: project.id),
+          ),
         );
       },
       createFooter: (stateManager) => const SizedBox.shrink(),
@@ -6042,9 +7700,13 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         MusicProject? targetProject;
         if (sm != null) {
           final scrollOffset = sm.scroll.bodyRowsVertical?.offset ?? 0;
-          final rowIndex = ((detail.localPosition.dy - _gridHeaderHeight + scrollOffset) / sm.rowTotalHeight).floor();
+          final rowIndex =
+              ((detail.localPosition.dy - _gridHeaderHeight + scrollOffset) /
+                      sm.rowTotalHeight)
+                  .floor();
           if (rowIndex >= 0 && rowIndex < sm.rows.length) {
-            targetProject = sm.rows[rowIndex].cells['data']?.value as MusicProject?;
+            targetProject =
+                sm.rows[rowIndex].cells['data']?.value as MusicProject?;
           }
         }
         setState(() {
@@ -6076,18 +7738,19 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                       color: Theme.of(context).colorScheme.primary,
                       width: 2,
                     ),
-                    color: Theme.of(context)
-                        .colorScheme
-                        .primaryContainer
-                        .withValues(alpha: 0.35),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primaryContainer.withValues(alpha: 0.35),
                   ),
                   alignment: Alignment.center,
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.audio_file,
-                          size: 16,
-                          color: Theme.of(context).colorScheme.primary),
+                      Icon(
+                        Icons.audio_file,
+                        size: 16,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                       const SizedBox(width: 6),
                       Text(
                         'Drop to set as preview',
@@ -6198,15 +7861,11 @@ class _SeekIntent extends Intent {
   const _SeekIntent(this.seconds);
 }
 
-
 class _PreviewSongDialog extends ConsumerStatefulWidget {
   final MusicProject project;
   final VoidCallback onClose;
 
-  const _PreviewSongDialog({
-    required this.project,
-    required this.onClose,
-  });
+  const _PreviewSongDialog({required this.project, required this.onClose});
 
   @override
   ConsumerState<_PreviewSongDialog> createState() => _PreviewSongDialogState();
@@ -6228,8 +7887,8 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
 
   String? get _effectivePreviewPath =>
       widget.project.previewSongPath?.isNotEmpty == true
-          ? widget.project.previewSongPath
-          : (_autoDetectedPath ?? widget.project.previewSongAutoPath);
+      ? widget.project.previewSongPath
+      : (_autoDetectedPath ?? widget.project.previewSongAutoPath);
 
   void _attachListeners(AudioPlayer player, int gen) {
     player.onPlayerStateChanged.listen((state) {
@@ -6246,7 +7905,10 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
     });
     player.onPlayerComplete.listen((_) {
       if (gen != _playerGen || !mounted) return;
-      setState(() { _isPlaying = false; _position = Duration.zero; });
+      setState(() {
+        _isPlaying = false;
+        _position = Duration.zero;
+      });
     });
   }
 
@@ -6264,11 +7926,16 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
     } else {
       Future.microtask(() async {
         final customFolders = ref.read(customMixdownFoldersProvider).value;
-        final file = MixdownDetectorService.findLatestMixdown(widget.project, customFolders: customFolders);
+        final file = MixdownDetectorService.findLatestMixdown(
+          widget.project,
+          customFolders: customFolders,
+        );
         if (mounted && file != null) {
           setState(() => _autoDetectedPath = file.path);
           final repo = await ref.read(repositoryProvider.future);
-          await repo.updateProject(widget.project.copyWith(previewSongAutoPath: file.path));
+          await repo.updateProject(
+            widget.project.copyWith(previewSongAutoPath: file.path),
+          );
           ref.invalidate(allProjectsStreamProvider);
           _startPlayback();
           _startBackgroundPrep();
@@ -6290,11 +7957,20 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
     if (Platform.isMacOS || Platform.isIOS) {
       return const {'mp3', 'flac', 'aif', 'aiff', 'aac', 'm4a'}.contains(ext);
     }
-    return const {'mp3', 'flac', 'aif', 'aiff', 'ogg', 'aac', 'm4a'}.contains(ext);
+    return const {
+      'mp3',
+      'flac',
+      'aif',
+      'aiff',
+      'ogg',
+      'aac',
+      'm4a',
+    }.contains(ext);
   }
 
   Source _currentSource() {
-    if (_isMono && _monoFilePath != null) return DeviceFileSource(_monoFilePath!);
+    if (_isMono && _monoFilePath != null)
+      return DeviceFileSource(_monoFilePath!);
     return DeviceFileSource(_effectivePreviewPath!);
   }
 
@@ -6361,22 +8037,37 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
       setState(() => _isGeneratingMono = true);
       final tmpDir = await getTemporaryDirectory();
       final outPath = '${tmpDir.path}/mono_${widget.project.id}.wav';
-      final ok = await AudioAnalysisService.writeMonoWavFile(_effectivePreviewPath!, outPath);
+      final ok = await AudioAnalysisService.writeMonoWavFile(
+        _effectivePreviewPath!,
+        outPath,
+      );
       if (!mounted) return;
       if (!ok) {
-        final channels = await AudioAnalysisService.getChannelCount(_effectivePreviewPath!);
+        final channels = await AudioAnalysisService.getChannelCount(
+          _effectivePreviewPath!,
+        );
         if (!mounted) return;
         if (channels == 1) {
-          setState(() { _monoFilePath = _effectivePreviewPath!; _isGeneratingMono = false; });
+          setState(() {
+            _monoFilePath = _effectivePreviewPath!;
+            _isGeneratingMono = false;
+          });
         } else {
           setState(() => _isGeneratingMono = false);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.monoUnsupportedFormat)),
+            SnackBar(
+              content: Text(
+                AppLocalizations.of(context)!.monoUnsupportedFormat,
+              ),
+            ),
           );
           return;
         }
       } else {
-        setState(() { _monoFilePath = outPath; _isGeneratingMono = false; });
+        setState(() {
+          _monoFilePath = outPath;
+          _isGeneratingMono = false;
+        });
       }
     }
 
@@ -6404,7 +8095,11 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.monoSwitchFailed(e.toString()))),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.monoSwitchFailed(e.toString()),
+            ),
+          ),
         );
       }
     }
@@ -6429,7 +8124,11 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
     if (!await file.exists()) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.previewSongFileNotFound,
+            ),
+          ),
         );
         Navigator.pop(context);
       }
@@ -6441,7 +8140,11 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.failedToPlayPreview(e.toString()))),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.failedToPlayPreview(e.toString()),
+            ),
+          ),
         );
       }
     }
@@ -6470,7 +8173,11 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.failedToPlayPreview(e.toString()))),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.failedToPlayPreview(e.toString()),
+            ),
+          ),
         );
       }
     }
@@ -6478,7 +8185,11 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
 
   Future<void> _seek(int seconds) async {
     final target = _position + Duration(seconds: seconds);
-    final clamped = target.isNegative ? Duration.zero : (_duration > Duration.zero && target > _duration ? _duration : target);
+    final clamped = target.isNegative
+        ? Duration.zero
+        : (_duration > Duration.zero && target > _duration
+              ? _duration
+              : target);
     await _audioPlayer.seek(clamped);
   }
 
@@ -6487,7 +8198,9 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
     final hours = duration.inHours;
     final minutes = twoDigits(duration.inMinutes.remainder(60));
     final seconds = twoDigits(duration.inSeconds.remainder(60));
-    return hours > 0 ? '${twoDigits(hours)}:$minutes:$seconds' : '$minutes:$seconds';
+    return hours > 0
+        ? '${twoDigits(hours)}:$minutes:$seconds'
+        : '$minutes:$seconds';
   }
 
   static final _uuidPreviewRe = RegExp(
@@ -6498,7 +8211,9 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
   String? _displayFileName() {
     // Prefer the stored display name, unless it's itself a UUID backup name
     final storedName = widget.project.previewSongFileName;
-    if (storedName != null && storedName.isNotEmpty && !_uuidPreviewRe.hasMatch(storedName)) {
+    if (storedName != null &&
+        storedName.isNotEmpty &&
+        !_uuidPreviewRe.hasMatch(storedName)) {
       return storedName;
     }
     // Fall back to the path basename, suppressing UUID-named backup downloads
@@ -6506,7 +8221,6 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
     if (fallback.isEmpty || _uuidPreviewRe.hasMatch(fallback)) return null;
     return fallback;
   }
-
 
   Widget _buildAndroidPlayerLayout(BuildContext context) {
     return Column(
@@ -6553,7 +8267,8 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
               icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
               onPressed: _togglePlayPause,
               iconSize: 48,
-              color: _autoDetectedPath != null &&
+              color:
+                  _autoDetectedPath != null &&
                       widget.project.previewSongPath?.isNotEmpty != true
                   ? Colors.amber
                   : Theme.of(context).colorScheme.primary,
@@ -6573,8 +8288,12 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
               data: SliderTheme.of(context).copyWith(
                 activeTrackColor: Theme.of(context).colorScheme.primary,
                 thumbColor: Theme.of(context).colorScheme.primary,
-                inactiveTrackColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.25),
-                overlayColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+                inactiveTrackColor: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.25),
+                overlayColor: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.12),
                 trackHeight: 4.0,
               ),
               child: Slider(
@@ -6621,7 +8340,9 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
         Row(
           children: [
             Icon(
-              _volume == 0 ? Icons.volume_off : (_volume < 0.5 ? Icons.volume_down : Icons.volume_up),
+              _volume == 0
+                  ? Icons.volume_off
+                  : (_volume < 0.5 ? Icons.volume_down : Icons.volume_up),
               size: 24,
               color: Theme.of(context).textTheme.bodySmall?.color,
             ),
@@ -6631,7 +8352,9 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
                 min: 0.0,
                 max: 1.0,
                 onChanged: (value) async {
-                  setState(() { _volume = value; });
+                  setState(() {
+                    _volume = value;
+                  });
                   await _audioPlayer.setVolume(value);
                 },
               ),
@@ -6643,13 +8366,15 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   SizedBox(
-                    width: 18, height: 18,
+                    width: 18,
+                    height: 18,
                     child: _isGeneratingMono
                         ? const CircularProgressIndicator(strokeWidth: 2)
                         : Checkbox(
                             value: _isMono,
                             onChanged: (_) => _toggleMono(),
-                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
                             visualDensity: VisualDensity.compact,
                             activeColor: Colors.red,
                           ),
@@ -6657,7 +8382,10 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
                   const SizedBox(width: 6),
                   GestureDetector(
                     onTap: _isGeneratingMono ? null : _toggleMono,
-                    child: Text(AppLocalizations.of(context)!.monoLabel, style: TextStyle(color: _isMono ? Colors.red : null)),
+                    child: Text(
+                      AppLocalizations.of(context)!.monoLabel,
+                      style: TextStyle(color: _isMono ? Colors.red : null),
+                    ),
                   ),
                 ],
               ),
@@ -6698,7 +8426,8 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
               icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
               onPressed: _togglePlayPause,
               iconSize: 32,
-              color: _autoDetectedPath != null &&
+              color:
+                  _autoDetectedPath != null &&
                       widget.project.previewSongPath?.isNotEmpty != true
                   ? Colors.amber
                   : null,
@@ -6718,8 +8447,12 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
                     data: SliderTheme.of(context).copyWith(
                       activeTrackColor: Theme.of(context).colorScheme.primary,
                       thumbColor: Theme.of(context).colorScheme.primary,
-                      inactiveTrackColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.25),
-                      overlayColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+                      inactiveTrackColor: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.25),
+                      overlayColor: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.12),
                       trackHeight: 3.0,
                     ),
                     child: Slider(
@@ -6740,11 +8473,17 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
                     children: [
                       Text(
                         _formatDuration(_position),
-                        style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color, fontSize: 12),
+                        style: TextStyle(
+                          color: Theme.of(context).textTheme.bodySmall?.color,
+                          fontSize: 12,
+                        ),
                       ),
                       Text(
                         _formatDuration(_duration),
-                        style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color, fontSize: 12),
+                        style: TextStyle(
+                          color: Theme.of(context).textTheme.bodySmall?.color,
+                          fontSize: 12,
+                        ),
                       ),
                     ],
                   ),
@@ -6754,7 +8493,9 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
             // Volume control
             const SizedBox(width: 8),
             Icon(
-              _volume == 0 ? Icons.volume_off : (_volume < 0.5 ? Icons.volume_down : Icons.volume_up),
+              _volume == 0
+                  ? Icons.volume_off
+                  : (_volume < 0.5 ? Icons.volume_down : Icons.volume_up),
               size: 20,
               color: Theme.of(context).textTheme.bodySmall?.color,
             ),
@@ -6783,13 +8524,15 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   SizedBox(
-                    width: 18, height: 18,
+                    width: 18,
+                    height: 18,
                     child: _isGeneratingMono
                         ? const CircularProgressIndicator(strokeWidth: 2)
                         : Checkbox(
                             value: _isMono,
                             onChanged: (_) => _toggleMono(),
-                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
                             visualDensity: VisualDensity.compact,
                             activeColor: Colors.red,
                           ),
@@ -6797,39 +8540,60 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
                   const SizedBox(width: 6),
                   GestureDetector(
                     onTap: _isGeneratingMono ? null : _toggleMono,
-                    child: Text(AppLocalizations.of(context)!.monoLabel, style: TextStyle(color: _isMono ? Colors.red : null)),
+                    child: Text(
+                      AppLocalizations.of(context)!.monoLabel,
+                      style: TextStyle(color: _isMono ? Colors.red : null),
+                    ),
                   ),
                 ],
               ),
             ),
             const SizedBox(width: 12),
-            Builder(builder: (ctx) {
-              final dim = Theme.of(ctx).textTheme.bodySmall?.color;
-              final ext = (widget.project.previewSongPath ?? '').toLowerCase().split('.').last;
-              final formatLabel = switch (ext) {
-                'wav'  => 'WAV',
-                'mp3'  => 'MP3',
-                'flac' => 'FLAC',
-                'aif' || 'aiff' => 'AIFF',
-                'ogg'  => 'OGG',
-                'aac'  => 'AAC',
-                'm4a'  => 'M4A',
-                _      => ext.toUpperCase(),
-              };
-              final parts = <String>[];
-              if (_fileInfo != null) {
-                final sr = _fileInfo!.sampleRate;
-                parts.add(sr % 1000 == 0 ? '${sr ~/ 1000} kHz' : '${(sr / 1000).toStringAsFixed(1)} kHz');
-                if (_fileInfo!.bitDepth != null) {
-                  parts.add('${_fileInfo!.bitDepth}-bit');
-                } else if (_fileInfo!.bitrateKbps != null) {
-                  parts.add('${_fileInfo!.bitrateKbps} kbps');
+            Builder(
+              builder: (ctx) {
+                final dim = Theme.of(ctx).textTheme.bodySmall?.color;
+                final ext = (widget.project.previewSongPath ?? '')
+                    .toLowerCase()
+                    .split('.')
+                    .last;
+                final formatLabel = switch (ext) {
+                  'wav' => 'WAV',
+                  'mp3' => 'MP3',
+                  'flac' => 'FLAC',
+                  'aif' || 'aiff' => 'AIFF',
+                  'ogg' => 'OGG',
+                  'aac' => 'AAC',
+                  'm4a' => 'M4A',
+                  _ => ext.toUpperCase(),
+                };
+                final parts = <String>[];
+                if (_fileInfo != null) {
+                  final sr = _fileInfo!.sampleRate;
+                  parts.add(
+                    sr % 1000 == 0
+                        ? '${sr ~/ 1000} kHz'
+                        : '${(sr / 1000).toStringAsFixed(1)} kHz',
+                  );
+                  if (_fileInfo!.bitDepth != null) {
+                    parts.add('${_fileInfo!.bitDepth}-bit');
+                  } else if (_fileInfo!.bitrateKbps != null) {
+                    parts.add('${_fileInfo!.bitrateKbps} kbps');
+                  }
+                  parts.add(
+                    _fileInfo!.channels == 1
+                        ? 'Mono'
+                        : _fileInfo!.channels == 2
+                        ? 'Stereo'
+                        : '${_fileInfo!.channels}ch',
+                  );
                 }
-                parts.add(_fileInfo!.channels == 1 ? 'Mono' : _fileInfo!.channels == 2 ? 'Stereo' : '${_fileInfo!.channels}ch');
-              }
-              parts.add(formatLabel);
-              return Text(parts.join(' · '), style: TextStyle(fontSize: 11, color: dim));
-            }),
+                parts.add(formatLabel);
+                return Text(
+                  parts.join(' · '),
+                  style: TextStyle(fontSize: 11, color: dim),
+                );
+              },
+            ),
           ],
         ),
       ],
@@ -6842,11 +8606,17 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
     final effectivePath = _effectivePreviewPath;
     if (effectivePath == null || effectivePath.isEmpty) {
       if (kDebugMode) {
-        debugPrint('[preview_share] No effective preview path for project=${widget.project.id}');
+        debugPrint(
+          '[preview_share] No effective preview path for project=${widget.project.id}',
+        );
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.previewSongFileNotFound,
+            ),
+          ),
         );
       }
       return;
@@ -6855,11 +8625,19 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
     // Skip if it's a Drive file reference (not downloaded)
     if (effectivePath.startsWith('drive://')) {
       if (kDebugMode) {
-        debugPrint('[preview_share] Path is Drive reference (not downloaded): $effectivePath');
+        debugPrint(
+          '[preview_share] Path is Drive reference (not downloaded): $effectivePath',
+        );
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.previewSongNotAvailableDownloadFirst)),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(
+                context,
+              )!.previewSongNotAvailableDownloadFirst,
+            ),
+          ),
         );
       }
       return;
@@ -6876,7 +8654,11 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
         }
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
+            SnackBar(
+              content: Text(
+                AppLocalizations.of(context)!.previewSongFileNotFound,
+              ),
+            ),
           );
         }
         return;
@@ -6890,8 +8672,8 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
       }
 
       // Get the original filename — prefer stored name, fall back to project name
-      String originalFileName = widget.project.previewShareFileName ??
-          path.basename(effectivePath);
+      String originalFileName =
+          widget.project.previewShareFileName ?? path.basename(effectivePath);
 
       // Ensure the filename has an extension
       if (!originalFileName.contains('.')) {
@@ -6905,17 +8687,25 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
       // compatible format first so the shared file is actually accepted.
       var fileToShare = sourceFile;
       var shareFileName = originalFileName;
-      if (AudioAnalysisService.needsConversionForSharing(effectivePath) && mounted) {
+      if (AudioAnalysisService.needsConversionForSharing(effectivePath) &&
+          mounted) {
         if (kDebugMode) {
-          debugPrint('[preview_share] converting for messaging-app compatibility...');
+          debugPrint(
+            '[preview_share] converting for messaging-app compatibility...',
+          );
         }
-        final converted = await convertForSharingWithProgress(context, effectivePath);
+        final converted = await convertForSharingWithProgress(
+          context,
+          effectivePath,
+        );
         if (converted != null) {
           fileToShare = converted;
           shareFileName = path.basename(converted.path);
         } else if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.mp3ConversionFailed)),
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.mp3ConversionFailed),
+            ),
           );
         }
       }
@@ -6925,42 +8715,56 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
         final cacheDir = await getTemporaryDirectory();
         final shareFile = File(path.join(cacheDir.path, shareFileName));
         if (kDebugMode) {
-          debugPrint('[preview_share] cacheDir=${cacheDir.path} shareFile=${shareFile.path}');
+          debugPrint(
+            '[preview_share] cacheDir=${cacheDir.path} shareFile=${shareFile.path}',
+          );
         }
 
         // Copy file to cache with original name
         await fileToShare.copy(shareFile.path);
         if (kDebugMode) {
-          debugPrint('[preview_share] copied to cache OK, invoking share sheet...');
+          debugPrint(
+            '[preview_share] copied to cache OK, invoking share sheet...',
+          );
         }
 
         // Share the file (default behavior)
-        final result = await Share.shareXFiles(
-          [XFile(shareFile.path, name: shareFileName)],
-          text: 'Preview song: ${widget.project.displayName}',
-        );
+        final result = await Share.shareXFiles([
+          XFile(shareFile.path, name: shareFileName),
+        ], text: 'Preview song: ${widget.project.displayName}');
         if (kDebugMode) {
-          debugPrint('[preview_share] Share.shareXFiles returned (user completed/dismissed share sheet)');
-          debugPrint('[preview_share] ShareResult: status=${result.status} raw=${result.raw}');
+          debugPrint(
+            '[preview_share] Share.shareXFiles returned (user completed/dismissed share sheet)',
+          );
+          debugPrint(
+            '[preview_share] ShareResult: status=${result.status} raw=${result.raw}',
+          );
         }
       } else {
         // On other platforms, share the file directly
         if (kDebugMode) {
-          debugPrint('[preview_share] non-Android direct share, invoking share sheet...');
+          debugPrint(
+            '[preview_share] non-Android direct share, invoking share sheet...',
+          );
         }
-        final result = await Share.shareXFiles(
-          [XFile(fileToShare.path)],
-          text: 'Preview song: ${widget.project.displayName}',
-        );
+        final result = await Share.shareXFiles([
+          XFile(fileToShare.path),
+        ], text: 'Preview song: ${widget.project.displayName}');
         if (kDebugMode) {
-          debugPrint('[preview_share] ShareResult: status=${result.status} raw=${result.raw}');
+          debugPrint(
+            '[preview_share] ShareResult: status=${result.status} raw=${result.raw}',
+          );
         }
         // Unpackaged Windows builds have no working share sheet
         // (DataTransferManager needs MSIX) — without this the click does
         // nothing visible at all.
         if (result.status == ShareResultStatus.unavailable && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.shareSheetUnavailable)),
+            SnackBar(
+              content: Text(
+                AppLocalizations.of(context)!.shareSheetUnavailable,
+              ),
+            ),
           );
         }
       }
@@ -6971,7 +8775,13 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.failedToSharePreviewSong(e.toString()))),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(
+                context,
+              )!.failedToSharePreviewSong(e.toString()),
+            ),
+          ),
         );
       }
     }
@@ -6984,7 +8794,11 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
     if (effectivePath == null || effectivePath.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.previewSongFileNotFound,
+            ),
+          ),
         );
       }
       return;
@@ -6994,7 +8808,13 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
     if (effectivePath.startsWith('drive://')) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.previewSongNotAvailableDownloadFirst)),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(
+                context,
+              )!.previewSongNotAvailableDownloadFirst,
+            ),
+          ),
         );
       }
       return;
@@ -7005,15 +8825,19 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
       if (!await sourceFile.exists()) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.previewSongFileNotFound)),
+            SnackBar(
+              content: Text(
+                AppLocalizations.of(context)!.previewSongFileNotFound,
+              ),
+            ),
           );
         }
         return;
       }
 
       // Get the original filename — prefer stored name, fall back to project name
-      String originalFileName = widget.project.previewShareFileName ??
-          path.basename(effectivePath);
+      String originalFileName =
+          widget.project.previewShareFileName ?? path.basename(effectivePath);
       if (!originalFileName.contains('.')) {
         final ext = path.extension(effectivePath);
         originalFileName = '$originalFileName$ext';
@@ -7028,7 +8852,10 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
       var zipPath = path.join(cacheDir.path, '$zipBase.zip');
       var zipFile = File(zipPath);
       if (await zipFile.exists()) {
-        zipPath = path.join(cacheDir.path, '${zipBase}_${DateTime.now().millisecondsSinceEpoch}.zip');
+        zipPath = path.join(
+          cacheDir.path,
+          '${zipBase}_${DateTime.now().millisecondsSinceEpoch}.zip',
+        );
         zipFile = File(zipPath);
       }
 
@@ -7049,13 +8876,20 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
         debugPrint('[preview_share_zip] invoking share sheet...');
       }
 
-      final result = await Share.shareXFiles(
-        [XFile(zipFile.path, name: path.basename(zipFile.path), mimeType: 'application/zip')],
-        text: 'Preview song (ZIP): ${widget.project.displayName}',
-      );
+      final result = await Share.shareXFiles([
+        XFile(
+          zipFile.path,
+          name: path.basename(zipFile.path),
+          mimeType: 'application/zip',
+        ),
+      ], text: 'Preview song (ZIP): ${widget.project.displayName}');
       if (kDebugMode) {
-        debugPrint('[preview_share_zip] Share.shareXFiles returned (user completed/dismissed share sheet)');
-        debugPrint('[preview_share_zip] ShareResult: status=${result.status} raw=${result.raw}');
+        debugPrint(
+          '[preview_share_zip] Share.shareXFiles returned (user completed/dismissed share sheet)',
+        );
+        debugPrint(
+          '[preview_share_zip] ShareResult: status=${result.status} raw=${result.raw}',
+        );
       }
     } catch (e, st) {
       if (kDebugMode) {
@@ -7064,7 +8898,13 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.failedToSharePreviewSongAsZip(e.toString()))),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(
+                context,
+              )!.failedToSharePreviewSongAsZip(e.toString()),
+            ),
+          ),
         );
       }
     }
@@ -7075,9 +8915,11 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
     return Focus(
       autofocus: true,
       onKeyEvent: (node, event) {
-        if (event is! KeyDownEvent && event is! KeyRepeatEvent) return KeyEventResult.ignored;
+        if (event is! KeyDownEvent && event is! KeyRepeatEvent)
+          return KeyEventResult.ignored;
         if (_isTextInputFocused()) return KeyEventResult.ignored;
-        final isModified = HardwareKeyboard.instance.isControlPressed ||
+        final isModified =
+            HardwareKeyboard.instance.isControlPressed ||
             HardwareKeyboard.instance.isMetaPressed;
         if (event.logicalKey == LogicalKeyboardKey.space) {
           _togglePlayPause();
@@ -7094,55 +8936,55 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
         return KeyEventResult.ignored;
       },
       child: AlertDialog(
-            backgroundColor: Theme.of(context).cardColor,
-            constraints: BoxConstraints(
-              minWidth: MobileUtils.isMobile() ? 320 : 780,
-              maxWidth: MobileUtils.isMobile() ? double.infinity : 840,
-            ),
-            title: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    widget.project.displayName,
-                    style: TextStyle(
-                      color: Theme.of(context).textTheme.titleLarge?.color,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
+        backgroundColor: Theme.of(context).cardColor,
+        constraints: BoxConstraints(
+          minWidth: MobileUtils.isMobile() ? 320 : 780,
+          maxWidth: MobileUtils.isMobile() ? double.infinity : 840,
+        ),
+        title: Row(
+          children: [
+            Expanded(
+              child: Text(
+                widget.project.displayName,
+                style: TextStyle(
+                  color: Theme.of(context).textTheme.titleLarge?.color,
                 ),
-                if (_effectivePreviewPath != null &&
-                    _effectivePreviewPath!.isNotEmpty &&
-                    !_effectivePreviewPath!.startsWith('drive://')) ...[
-                  IconButton(
-                    icon: const Icon(Icons.share),
-                    tooltip: AppLocalizations.of(context)!.sharePreviewSong,
-                    onPressed: _sharePreviewSong,
-                  ),
-                  if (MobileUtils.isMobile())
-                    IconButton(
-                      icon: const Icon(Icons.archive),
-                      tooltip: AppLocalizations.of(context)!.shareAsZip,
-                      onPressed: _sharePreviewSongAsZip,
-                    )
-                  else
-                    Padding(
-                      padding: const EdgeInsets.only(left: 4),
-                      child: DragToShareButton(sourcePath: _effectivePreviewPath!),
-                    ),
-                ],
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (_effectivePreviewPath != null &&
+                _effectivePreviewPath!.isNotEmpty &&
+                !_effectivePreviewPath!.startsWith('drive://')) ...[
+              IconButton(
+                icon: const Icon(Icons.share),
+                tooltip: AppLocalizations.of(context)!.sharePreviewSong,
+                onPressed: _sharePreviewSong,
+              ),
+              if (MobileUtils.isMobile())
                 IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.archive),
+                  tooltip: AppLocalizations.of(context)!.shareAsZip,
+                  onPressed: _sharePreviewSongAsZip,
+                )
+              else
+                Padding(
+                  padding: const EdgeInsets.only(left: 4),
+                  child: DragToShareButton(sourcePath: _effectivePreviewPath!),
                 ),
-              ],
+            ],
+            IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () => Navigator.pop(context),
             ),
-            content: SizedBox(
-              width: MobileUtils.isMobile() ? double.infinity : 600,
-              child: MobileUtils.isMobile()
-                  ? _buildAndroidPlayerLayout(context)
-                  : _buildDesktopPlayerLayout(context),
-            ),
-          ),
+          ],
+        ),
+        content: SizedBox(
+          width: MobileUtils.isMobile() ? double.infinity : 600,
+          child: MobileUtils.isMobile()
+              ? _buildAndroidPlayerLayout(context)
+              : _buildDesktopPlayerLayout(context),
+        ),
+      ),
     );
   }
 }
@@ -7176,8 +9018,9 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
 
   static const _kBarHeightKey = 'player_bar_height';
 
-  String get _activePath =>
-      _isMono && _monoFilePath != null ? _monoFilePath! : widget.request.resolvedPath;
+  String get _activePath => _isMono && _monoFilePath != null
+      ? _monoFilePath!
+      : widget.request.resolvedPath;
 
   bool _supportsMonoMix() {
     final ext = widget.request.resolvedPath.toLowerCase().split('.').last;
@@ -7185,7 +9028,15 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
     if (Platform.isMacOS || Platform.isIOS) {
       return const {'mp3', 'flac', 'aif', 'aiff', 'aac', 'm4a'}.contains(ext);
     }
-    return const {'mp3', 'flac', 'aif', 'aiff', 'ogg', 'aac', 'm4a'}.contains(ext);
+    return const {
+      'mp3',
+      'flac',
+      'aif',
+      'aiff',
+      'ogg',
+      'aac',
+      'm4a',
+    }.contains(ext);
   }
 
   Future<void> _loadBarHeight() async {
@@ -7206,7 +9057,8 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
     // Never steal keys from text inputs.
     if (_isTextInputFocused()) return false;
 
-    final modified = HardwareKeyboard.instance.isControlPressed ||
+    final modified =
+        HardwareKeyboard.instance.isControlPressed ||
         HardwareKeyboard.instance.isMetaPressed;
 
     if (event.logicalKey == LogicalKeyboardKey.space) {
@@ -7250,7 +9102,11 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
     });
     _player.onPlayerComplete.listen((_) {
       if (!mounted) return;
-      setState(() { _isPlaying = false; _position = Duration.zero; _playbackEnded = true; });
+      setState(() {
+        _isPlaying = false;
+        _position = Duration.zero;
+        _playbackEnded = true;
+      });
       _isPlayingNotifier.set(false);
       if (widget.request.isQueuedPlayback) {
         ref.read(desktopPlayerCompletedProvider.notifier).increment();
@@ -7301,20 +9157,27 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
     final filePath = widget.request.resolvedPath;
 
     // Waveform peaks — memory → disk → extraction
-    ref.read(waveformCacheProvider.notifier).getOrExtract(
-      filePath,
-      onStale: () {
-        if (!mounted) return;
-        setState(() => _peaks = null);
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
-          content: Text(AppLocalizations.of(context)!.previewAudioChangedRefreshing),
-          duration: const Duration(seconds: 3),
-        ));
-      },
-    ).then((peaks) {
-      if (!mounted || peaks == null) return;
-      setState(() => _peaks = peaks);
-    });
+    ref
+        .read(waveformCacheProvider.notifier)
+        .getOrExtract(
+          filePath,
+          onStale: () {
+            if (!mounted) return;
+            setState(() => _peaks = null);
+            ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+              SnackBar(
+                content: Text(
+                  AppLocalizations.of(context)!.previewAudioChangedRefreshing,
+                ),
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          },
+        )
+        .then((peaks) {
+          if (!mounted || peaks == null) return;
+          setState(() => _peaks = peaks);
+        });
 
     // File info
     AudioAnalysisService.getFileInfo(filePath).then((info) {
@@ -7344,20 +9207,32 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
     if (newMono && _monoFilePath == null) {
       setState(() => _isGeneratingMono = true);
       final tmpDir = await getTemporaryDirectory();
-      final outPath = '${tmpDir.path}/mono_bar_${widget.request.project.id}.wav';
-      final ok = await AudioAnalysisService.writeMonoWavFile(widget.request.resolvedPath, outPath);
+      final outPath =
+          '${tmpDir.path}/mono_bar_${widget.request.project.id}.wav';
+      final ok = await AudioAnalysisService.writeMonoWavFile(
+        widget.request.resolvedPath,
+        outPath,
+      );
       if (!mounted) return;
       if (!ok) {
-        final ch = await AudioAnalysisService.getChannelCount(widget.request.resolvedPath);
+        final ch = await AudioAnalysisService.getChannelCount(
+          widget.request.resolvedPath,
+        );
         if (!mounted) return;
         if (ch == 1) {
-          setState(() { _monoFilePath = widget.request.resolvedPath; _isGeneratingMono = false; });
+          setState(() {
+            _monoFilePath = widget.request.resolvedPath;
+            _isGeneratingMono = false;
+          });
         } else {
           setState(() => _isGeneratingMono = false);
           return;
         }
       } else {
-        setState(() { _monoFilePath = outPath; _isGeneratingMono = false; });
+        setState(() {
+          _monoFilePath = outPath;
+          _isGeneratingMono = false;
+        });
       }
     }
     final wasPlaying = _isPlaying;
@@ -7380,8 +9255,10 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
       if (_playbackEnded) {
         setState(() => _playbackEnded = false);
         await _player.stop();
-        await _player.play(DeviceFileSource(_activePath),
-            position: _position > Duration.zero ? _position : null);
+        await _player.play(
+          DeviceFileSource(_activePath),
+          position: _position > Duration.zero ? _position : null,
+        );
       } else if (_position == Duration.zero || _position >= _duration) {
         await _player.play(DeviceFileSource(_activePath));
       } else {
@@ -7394,7 +9271,9 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
     final target = _position + Duration(seconds: seconds);
     final clamped = target.isNegative
         ? Duration.zero
-        : (_duration > Duration.zero && target > _duration ? _duration : target);
+        : (_duration > Duration.zero && target > _duration
+              ? _duration
+              : target);
     await _player.seek(clamped);
   }
 
@@ -7457,7 +9336,9 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
       (p) => p.id == widget.request.project.id,
       orElse: () => widget.request.project,
     );
-    await repo.updateProject(project.copyWith(todos: [...project.todos, newTodo]));
+    await repo.updateProject(
+      project.copyWith(todos: [...project.todos, newTodo]),
+    );
 
     if (!mounted) return;
     ref.invalidate(allProjectsStreamProvider);
@@ -7485,26 +9366,41 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
         ? (_position.inMilliseconds / _duration.inMilliseconds).clamp(0.0, 1.0)
         : 0.0;
     final project = widget.request.project;
-    final isAutoDetected = (project.previewSongPath?.isEmpty ?? true) &&
+    final isAutoDetected =
+        (project.previewSongPath?.isEmpty ?? true) &&
         project.previewSongAutoPath == widget.request.resolvedPath;
 
     final ext = widget.request.resolvedPath.toLowerCase().split('.').last;
     final formatLabel = switch (ext) {
-      'wav' => 'WAV', 'mp3' => 'MP3', 'flac' => 'FLAC',
-      'aif' || 'aiff' => 'AIFF', 'ogg' => 'OGG',
-      'aac' => 'AAC', 'm4a' => 'M4A',
+      'wav' => 'WAV',
+      'mp3' => 'MP3',
+      'flac' => 'FLAC',
+      'aif' || 'aiff' => 'AIFF',
+      'ogg' => 'OGG',
+      'aac' => 'AAC',
+      'm4a' => 'M4A',
       _ => ext.toUpperCase(),
     };
     final infoParts = <String>[];
     if (_fileInfo != null) {
       final sr = _fileInfo!.sampleRate;
-      infoParts.add(sr % 1000 == 0 ? '${sr ~/ 1000}kHz' : '${(sr / 1000).toStringAsFixed(1)}kHz');
+      infoParts.add(
+        sr % 1000 == 0
+            ? '${sr ~/ 1000}kHz'
+            : '${(sr / 1000).toStringAsFixed(1)}kHz',
+      );
       if (_fileInfo!.bitDepth != null) {
         infoParts.add('${_fileInfo!.bitDepth}-bit');
       } else if (_fileInfo!.bitrateKbps != null) {
         infoParts.add('${_fileInfo!.bitrateKbps}kbps');
       }
-      infoParts.add(_fileInfo!.channels == 1 ? 'Mono' : _fileInfo!.channels == 2 ? 'Stereo' : '${_fileInfo!.channels}ch');
+      infoParts.add(
+        _fileInfo!.channels == 1
+            ? 'Mono'
+            : _fileInfo!.channels == 2
+            ? 'Stereo'
+            : '${_fileInfo!.channels}ch',
+      );
     }
     infoParts.add(formatLabel);
 
@@ -7516,270 +9412,362 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
     return Focus(
       focusNode: _focusNode,
       child: GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onTapDown: (_) => _focusNode.requestFocus(),
-      child: Material(
-      elevation: 8,
-      color: theme.cardColor,
-      child: SizedBox(
-        height: _barHeight,
-        child: Column(
-          children: [
-            // Resize grip — drag upward to make the player taller (max 300px)
-            MouseRegion(
-              cursor: SystemMouseCursors.resizeUpDown,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onVerticalDragUpdate: (details) {
-                  setState(() {
-                    _barHeight = (_barHeight - details.delta.dy).clamp(100.0, 300.0);
-                  });
-                },
-                onVerticalDragEnd: (_) => _saveBarHeight(),
-                child: SizedBox(
-                  height: 8,
-                  child: Center(
-                    child: Container(
-                      width: 36,
-                      height: 3,
-                      decoration: BoxDecoration(
-                        color: cs.onSurface.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(2),
+        behavior: HitTestBehavior.translucent,
+        onTapDown: (_) => _focusNode.requestFocus(),
+        child: Material(
+          elevation: 8,
+          color: theme.cardColor,
+          child: SizedBox(
+            height: _barHeight,
+            child: Column(
+              children: [
+                // Resize grip — drag upward to make the player taller (max 300px)
+                MouseRegion(
+                  cursor: SystemMouseCursors.resizeUpDown,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onVerticalDragUpdate: (details) {
+                      setState(() {
+                        _barHeight = (_barHeight - details.delta.dy).clamp(
+                          100.0,
+                          300.0,
+                        );
+                      });
+                    },
+                    onVerticalDragEnd: (_) => _saveBarHeight(),
+                    child: SizedBox(
+                      height: 8,
+                      child: Center(
+                        child: Container(
+                          width: 36,
+                          height: 3,
+                          decoration: BoxDecoration(
+                            color: cs.onSurface.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ),
-            Divider(height: 1, thickness: 1, color: cs.outline.withValues(alpha: 0.18)),
-            // ── Row 1: transport · volume · [centered name] · time · mono · info · close ─
-            Padding(
-              padding: const EdgeInsets.fromLTRB(10, 6, 10, 2),
-              child: Row(
-                children: [
-                  // Transport controls
-                  if (isQueued)
-                    IconButton(
-                      icon: const Icon(Icons.skip_previous),
-                      iconSize: 20, padding: iconPad, constraints: iconConstraints,
-                      tooltip: l10n.playerPreviousTrack,
-                      onPressed: queueNav.playPrev,
-                    ),
-                  Tooltip(
-                    message: '−5s  (←)  •  $modKey+← −30s',
-                    child: IconButton(icon: const Icon(Icons.replay_5), iconSize: 20, padding: iconPad, constraints: iconConstraints, onPressed: () => _seek(-5)),
-                  ),
-                  IconButton(
-                    icon: Icon(_isPlaying ? Icons.pause_circle : Icons.play_circle),
-                    iconSize: 34, color: cs.primary, padding: iconPad,
-                    constraints: const BoxConstraints(minWidth: 38, minHeight: 38),
-                    tooltip: '${l10n.playPauseTooltip}  (Space)',
-                    onPressed: _togglePlayPause,
-                  ),
-                  Tooltip(
-                    message: '+5s  (→)  •  $modKey+→ +30s',
-                    child: IconButton(icon: const Icon(Icons.forward_5), iconSize: 20, padding: iconPad, constraints: iconConstraints, onPressed: () => _seek(5)),
-                  ),
-                  if (isQueued)
-                    IconButton(
-                      icon: const Icon(Icons.skip_next),
-                      iconSize: 20, padding: iconPad, constraints: iconConstraints,
-                      tooltip: l10n.playerNextTrack,
-                      onPressed: queueNav.playNext,
-                    ),
-                  // Volume (immediately after transport)
-                  IconButton(
-                    icon: Icon(_volume == 0 ? Icons.volume_off : (_volume < 0.5 ? Icons.volume_down : Icons.volume_up)),
-                    iconSize: 18,
-                    color: cs.onSurface.withValues(alpha: 0.6),
-                    padding: iconPad,
-                    constraints: iconConstraints,
-                    tooltip: _volume == 0 ? 'Unmute' : 'Mute',
-                    onPressed: () {
-                      if (_volume > 0) {
-                        _preMuteVolume = _volume;
-                        setState(() => _volume = 0);
-                      } else {
-                        setState(() => _volume = _preMuteVolume > 0 ? _preMuteVolume : 1.0);
-                      }
-                      _player.setVolume(_volume);
-                    },
-                  ),
-                  SizedBox(
-                    width: 135,
-                    child: Slider(
-                      value: _volume, min: 0, max: 1,
-                      onChanged: (v) {
-                        setState(() => _volume = v);
-                        if (v > 0) _preMuteVolume = v;
-                        _player.setVolume(v);
-                      },
-                    ),
-                  ),
-                  // Centered track name + filename
-                  Expanded(
-                    child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Row(
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: cs.outline.withValues(alpha: 0.18),
+                ),
+                // ── Row 1: transport · volume · [centered name] · time · mono · info · close ─
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 6, 10, 2),
+                  child: Row(
+                    children: [
+                      // Transport controls
+                      if (isQueued)
+                        IconButton(
+                          icon: const Icon(Icons.skip_previous),
+                          iconSize: 20,
+                          padding: iconPad,
+                          constraints: iconConstraints,
+                          tooltip: l10n.playerPreviousTrack,
+                          onPressed: queueNav.playPrev,
+                        ),
+                      Tooltip(
+                        message: '−5s  (←)  •  $modKey+← −30s',
+                        child: IconButton(
+                          icon: const Icon(Icons.replay_5),
+                          iconSize: 20,
+                          padding: iconPad,
+                          constraints: iconConstraints,
+                          onPressed: () => _seek(-5),
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          _isPlaying ? Icons.pause_circle : Icons.play_circle,
+                        ),
+                        iconSize: 34,
+                        color: cs.primary,
+                        padding: iconPad,
+                        constraints: const BoxConstraints(
+                          minWidth: 38,
+                          minHeight: 38,
+                        ),
+                        tooltip: '${l10n.playPauseTooltip}  (Space)',
+                        onPressed: _togglePlayPause,
+                      ),
+                      Tooltip(
+                        message: '+5s  (→)  •  $modKey+→ +30s',
+                        child: IconButton(
+                          icon: const Icon(Icons.forward_5),
+                          iconSize: 20,
+                          padding: iconPad,
+                          constraints: iconConstraints,
+                          onPressed: () => _seek(5),
+                        ),
+                      ),
+                      if (isQueued)
+                        IconButton(
+                          icon: const Icon(Icons.skip_next),
+                          iconSize: 20,
+                          padding: iconPad,
+                          constraints: iconConstraints,
+                          tooltip: l10n.playerNextTrack,
+                          onPressed: queueNav.playNext,
+                        ),
+                      // Volume (immediately after transport)
+                      IconButton(
+                        icon: Icon(
+                          _volume == 0
+                              ? Icons.volume_off
+                              : (_volume < 0.5
+                                    ? Icons.volume_down
+                                    : Icons.volume_up),
+                        ),
+                        iconSize: 18,
+                        color: cs.onSurface.withValues(alpha: 0.6),
+                        padding: iconPad,
+                        constraints: iconConstraints,
+                        tooltip: _volume == 0 ? 'Unmute' : 'Mute',
+                        onPressed: () {
+                          if (_volume > 0) {
+                            _preMuteVolume = _volume;
+                            setState(() => _volume = 0);
+                          } else {
+                            setState(
+                              () => _volume = _preMuteVolume > 0
+                                  ? _preMuteVolume
+                                  : 1.0,
+                            );
+                          }
+                          _player.setVolume(_volume);
+                        },
+                      ),
+                      SizedBox(
+                        width: 135,
+                        child: Slider(
+                          value: _volume,
+                          min: 0,
+                          max: 1,
+                          onChanged: (v) {
+                            setState(() => _volume = v);
+                            if (v > 0) _preMuteVolume = v;
+                            _player.setVolume(v);
+                          },
+                        ),
+                      ),
+                      // Centered track name + filename
+                      Expanded(
+                        child: Center(
+                          child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              if (isAutoDetected) ...[
-                                const Icon(Icons.folder_open, size: 11, color: Colors.amber),
-                                const SizedBox(width: 3),
-                              ],
-                              Flexible(
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (isAutoDetected) ...[
+                                    const Icon(
+                                      Icons.folder_open,
+                                      size: 11,
+                                      color: Colors.amber,
+                                    ),
+                                    const SizedBox(width: 3),
+                                  ],
+                                  Flexible(
+                                    child: Text(
+                                      project.displayName,
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Text(
+                                path.basename(widget.request.resolvedPath),
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: cs.onSurface.withValues(alpha: 0.55),
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      // Time display (fixed-width to prevent jitter)
+                      SizedBox(
+                        width: 92,
+                        child: Text(
+                          '${_fmt(_position)} / ${_fmt(_duration)}',
+                          style: theme.textTheme.bodySmall,
+                          textAlign: TextAlign.right,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Mono toggle
+                      if (_supportsMonoMix())
+                        Tooltip(
+                          message: 'Toggle mono playback',
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: _isGeneratingMono
+                                    ? const CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      )
+                                    : Checkbox(
+                                        value: _isMono,
+                                        onChanged: (_) => _toggleMono(),
+                                        materialTapTargetSize:
+                                            MaterialTapTargetSize.shrinkWrap,
+                                        visualDensity: VisualDensity.compact,
+                                        activeColor: Colors.red,
+                                      ),
+                              ),
+                              const SizedBox(width: 6),
+                              GestureDetector(
+                                onTap: _isGeneratingMono ? null : _toggleMono,
                                 child: Text(
-                                  project.displayName,
-                                  style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-                                  overflow: TextOverflow.ellipsis, maxLines: 1,
+                                  AppLocalizations.of(context)!.monoLabel,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: _isMono ? Colors.red : null,
+                                  ),
                                 ),
                               ),
                             ],
                           ),
-                          Text(
-                            path.basename(widget.request.resolvedPath),
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: cs.onSurface.withValues(alpha: 0.55),
+                        ),
+                      const SizedBox(width: 8),
+                      // File info
+                      Text(
+                        infoParts.join(' · '),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: cs.onSurface.withValues(alpha: 0.5),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      // Session bookmark (only when session mode is on)
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final sessionMode = ref.watch(sessionModeProvider);
+                          if (!sessionMode) return const SizedBox.shrink();
+                          final activeProject = ref.watch(
+                            activeProjectProvider,
+                          );
+                          final isSubscribed = activeProject?.id == project.id;
+                          return IconButton(
+                            icon: Icon(
+                              isSubscribed
+                                  ? Icons.bookmark
+                                  : Icons.bookmark_add_outlined,
                             ),
-                            overflow: TextOverflow.ellipsis, maxLines: 1,
-                          ),
-                        ],
+                            iconSize: 18,
+                            padding: iconPad,
+                            constraints: iconConstraints,
+                            tooltip: isSubscribed
+                                ? l10n.endSession
+                                : l10n.startSession,
+                            color: isSubscribed ? Colors.green.shade400 : null,
+                            onPressed: () {
+                              if (isSubscribed) {
+                                confirmEndSession(context, ref);
+                              } else {
+                                confirmStartSession(context, ref, project);
+                              }
+                            },
+                          );
+                        },
                       ),
-                    ),
-                  ),
-                  // Time display (fixed-width to prevent jitter)
-                  SizedBox(
-                    width: 92,
-                    child: Text(
-                      '${_fmt(_position)} / ${_fmt(_duration)}',
-                      style: theme.textTheme.bodySmall,
-                      textAlign: TextAlign.right,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  // Mono toggle
-                  if (_supportsMonoMix())
-                    Tooltip(
-                      message: 'Toggle mono playback',
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SizedBox(
-                            width: 18, height: 18,
-                            child: _isGeneratingMono
-                                ? const CircularProgressIndicator(strokeWidth: 2)
-                                : Checkbox(
-                                    value: _isMono,
-                                    onChanged: (_) => _toggleMono(),
-                                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                    visualDensity: VisualDensity.compact,
-                                    activeColor: Colors.red,
-                                  ),
+                      // View Details
+                      IconButton(
+                        icon: const Icon(Icons.assignment),
+                        iconSize: 18,
+                        padding: iconPad,
+                        constraints: iconConstraints,
+                        tooltip: l10n.projectDetails,
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                ProjectDetailPage(projectId: project.id),
                           ),
-                          const SizedBox(width: 6),
-                          GestureDetector(
-                            onTap: _isGeneratingMono ? null : _toggleMono,
-                            child: Text(AppLocalizations.of(context)!.monoLabel, style: TextStyle(fontSize: 11, color: _isMono ? Colors.red : null)),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
-                  const SizedBox(width: 8),
-                  // File info
-                  Text(
-                    infoParts.join(' · '),
-                    style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.5)),
-                  ),
-                  const SizedBox(width: 10),
-                  // Session bookmark (only when session mode is on)
-                  Consumer(
-                    builder: (context, ref, _) {
-                      final sessionMode = ref.watch(sessionModeProvider);
-                      if (!sessionMode) return const SizedBox.shrink();
-                      final activeProject = ref.watch(activeProjectProvider);
-                      final isSubscribed = activeProject?.id == project.id;
-                      return IconButton(
-                        icon: Icon(isSubscribed ? Icons.bookmark : Icons.bookmark_add_outlined),
-                        iconSize: 18, padding: iconPad, constraints: iconConstraints,
-                        tooltip: isSubscribed ? l10n.endSession : l10n.startSession,
-                        color: isSubscribed ? Colors.green.shade400 : null,
-                        onPressed: () {
-                          if (isSubscribed) {
-                            confirmEndSession(context, ref);
-                          } else {
-                            confirmStartSession(context, ref, project);
+                      // Add todo at current timestamp
+                      IconButton(
+                        icon: const Icon(Icons.add_task),
+                        iconSize: 18,
+                        padding: iconPad,
+                        constraints: iconConstraints,
+                        tooltip: l10n.addTodoAtTimestamp(_fmt(_position)),
+                        onPressed: _addTodoAtTimestamp,
+                      ),
+                      // Open Folder
+                      IconButton(
+                        icon: const Icon(Icons.folder_open),
+                        iconSize: 18,
+                        padding: iconPad,
+                        constraints: iconConstraints,
+                        tooltip: l10n.openFolder,
+                        onPressed: () async {
+                          final projectPath = project.filePath;
+                          final folderPath =
+                              FileSystemEntity.isDirectorySync(projectPath)
+                              ? projectPath
+                              : path.dirname(projectPath);
+                          if (Directory(folderPath).existsSync()) {
+                            await FileLauncher.openFolder(folderPath);
                           }
                         },
-                      );
-                    },
+                      ),
+                      // Close
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        iconSize: 18,
+                        padding: iconPad,
+                        constraints: iconConstraints,
+                        tooltip: l10n.close,
+                        onPressed: () =>
+                            ref.read(desktopPlayerProvider.notifier).close(),
+                      ),
+                    ],
                   ),
-                  // View Details
-                  IconButton(
-                    icon: const Icon(Icons.assignment),
-                    iconSize: 18, padding: iconPad, constraints: iconConstraints,
-                    tooltip: l10n.projectDetails,
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => ProjectDetailPage(projectId: project.id)),
+                ),
+                // ── Row 2: waveform (full width) ──────────────────────────────
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(10, 2, 10, 8),
+                    child: WaveformWidget(
+                      peaks: _peaks,
+                      progress: progress,
+                      height: null,
+                      onSeek: (p) {
+                        _focusNode.requestFocus();
+                        if (_duration > Duration.zero) {
+                          final target = Duration(
+                            milliseconds: (p * _duration.inMilliseconds)
+                                .round(),
+                          );
+                          setState(() => _position = target);
+                          _player.seek(target);
+                        }
+                      },
                     ),
                   ),
-                  // Add todo at current timestamp
-                  IconButton(
-                    icon: const Icon(Icons.add_task),
-                    iconSize: 18, padding: iconPad, constraints: iconConstraints,
-                    tooltip: l10n.addTodoAtTimestamp(_fmt(_position)),
-                    onPressed: _addTodoAtTimestamp,
-                  ),
-                  // Open Folder
-                  IconButton(
-                    icon: const Icon(Icons.folder_open),
-                    iconSize: 18, padding: iconPad, constraints: iconConstraints,
-                    tooltip: l10n.openFolder,
-                    onPressed: () async {
-                      final projectPath = project.filePath;
-                      final folderPath = FileSystemEntity.isDirectorySync(projectPath)
-                          ? projectPath
-                          : path.dirname(projectPath);
-                      if (Directory(folderPath).existsSync()) {
-                        await FileLauncher.openFolder(folderPath);
-                      }
-                    },
-                  ),
-                  // Close
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    iconSize: 18, padding: iconPad, constraints: iconConstraints,
-                    tooltip: l10n.close,
-                    onPressed: () => ref.read(desktopPlayerProvider.notifier).close(),
-                  ),
-                ],
-              ),
-            ),
-            // ── Row 2: waveform (full width) ──────────────────────────────
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(10, 2, 10, 8),
-                child: WaveformWidget(
-                  peaks: _peaks,
-                  progress: progress,
-                  height: null,
-                  onSeek: (p) {
-                    _focusNode.requestFocus();
-                    if (_duration > Duration.zero) {
-                      final target = Duration(milliseconds: (p * _duration.inMilliseconds).round());
-                      setState(() => _position = target);
-                      _player.seek(target);
-                    }
-                  },
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
-      )));
+    );
   }
 }
 
@@ -7804,7 +9792,8 @@ class _MobileProjectsList extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<_MobileProjectsList> createState() => _MobileProjectsListState();
+  ConsumerState<_MobileProjectsList> createState() =>
+      _MobileProjectsListState();
 }
 
 enum _MobileSortField { lastModified, name, phase, createdAt, bpm }
@@ -7820,7 +9809,11 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
       case _MobileSortField.lastModified:
         list.sort((a, b) => b.lastModifiedAt.compareTo(a.lastModifiedAt));
       case _MobileSortField.name:
-        list.sort((a, b) => a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase()));
+        list.sort(
+          (a, b) => a.displayName.toLowerCase().compareTo(
+            b.displayName.toLowerCase(),
+          ),
+        );
       case _MobileSortField.phase:
         list.sort((a, b) => a.status.compareTo(b.status));
       case _MobileSortField.createdAt:
@@ -7870,11 +9863,16 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
         : project.previewSongAutoPath;
 
     if (effectivePath == null) {
-      final detected = MixdownDetectorService.findLatestMixdown(project, customFolders: customFolders);
+      final detected = MixdownDetectorService.findLatestMixdown(
+        project,
+        customFolders: customFolders,
+      );
       if (detected != null) {
         effectivePath = detected.path;
         final repo = await ref.read(repositoryProvider.future);
-        await repo.updateProject(project.copyWith(previewSongAutoPath: detected.path));
+        await repo.updateProject(
+          project.copyWith(previewSongAutoPath: detected.path),
+        );
         ref.invalidate(allProjectsStreamProvider);
       }
     }
@@ -7902,8 +9900,11 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.drag_indicator, size: 16,
-                        color: Theme.of(ctx).colorScheme.primary),
+                    Icon(
+                      Icons.drag_indicator,
+                      size: 16,
+                      color: Theme.of(ctx).colorScheme.primary,
+                    ),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
@@ -7934,13 +9935,16 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
         allowedExtensions: const ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'],
         dialogTitle: l10n.selectPreviewSong,
       );
-      if (!mounted || picked == null || picked.files.single.path == null) return;
+      if (!mounted || picked == null || picked.files.single.path == null)
+        return;
       final newPath = picked.files.single.path!;
       final repo = await ref.read(repositoryProvider.future);
-      await repo.updateProject(project.copyWith(
-        previewSongPath: newPath,
-        previewSongFileName: path.basename(newPath),
-      ));
+      await repo.updateProject(
+        project.copyWith(
+          previewSongPath: newPath,
+          previewSongFileName: path.basename(newPath),
+        ),
+      );
       if (!mounted) return;
       if (MobileUtils.isMobile()) {
         final pickedProject = project.copyWith(
@@ -7949,12 +9953,14 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
         );
         final queue = ref.read(mobilePlayerQueueProvider);
         final idx = queue.indexWhere((p) => p.id == pickedProject.id);
-        await ref.read(mobilePlayerProvider.notifier).playProject(
-          pickedProject,
-          newPath,
-          queue: queue,
-          queueIndex: idx >= 0 ? idx : null,
-        );
+        await ref
+            .read(mobilePlayerProvider.notifier)
+            .playProject(
+              pickedProject,
+              newPath,
+              queue: queue,
+              queueIndex: idx >= 0 ? idx : null,
+            );
       } else {
         await showDialog(
           context: context,
@@ -7980,13 +9986,17 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
           title: Text(l10n.previewSongFileNotFound),
           content: Text(l10n.previewSongFileNotFoundMessage),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l10n.cancel),
+            ),
             OutlinedButton(
               onPressed: () => Navigator.pop(ctx, _FileNotFoundAction.remove),
               child: Text(l10n.removePreviewSong),
             ),
             FilledButton(
-              onPressed: () => Navigator.pop(ctx, _FileNotFoundAction.selectNew),
+              onPressed: () =>
+                  Navigator.pop(ctx, _FileNotFoundAction.selectNew),
               child: Text(l10n.selectNewFile),
             ),
           ],
@@ -7998,7 +10008,10 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
         final isAuto = project.previewSongPath?.isNotEmpty != true;
         final updated = isAuto
             ? project.copyWith(clearPreviewSongAutoPath: true)
-            : project.copyWith(clearPreviewSongPath: true, clearPreviewSongFileName: true);
+            : project.copyWith(
+                clearPreviewSongPath: true,
+                clearPreviewSongFileName: true,
+              );
         await repo.updateProject(updated);
         return;
       } else if (action == _FileNotFoundAction.selectNew) {
@@ -8014,7 +10027,10 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
           final isAuto = project.previewSongPath?.isNotEmpty != true;
           final updated = isAuto
               ? project.copyWith(previewSongAutoPath: newPath)
-              : project.copyWith(previewSongPath: newPath, previewSongFileName: path.basename(newPath));
+              : project.copyWith(
+                  previewSongPath: newPath,
+                  previewSongFileName: path.basename(newPath),
+                );
           await repo.updateProject(updated);
           effectivePath = newPath;
         } else {
@@ -8038,11 +10054,22 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
         context: context,
         builder: (ctx) => AlertDialog(
           title: Text(l10n.newerExportFound),
-          content: Text(l10n.newerExportFoundMessage(path.basename(newer.path))),
+          content: Text(
+            l10n.newerExportFoundMessage(path.basename(newer.path)),
+          ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
-            OutlinedButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.keepCurrent)),
-            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.replaceAndPlay)),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l10n.cancel),
+            ),
+            OutlinedButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l10n.keepCurrent),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(l10n.replaceAndPlay),
+            ),
           ],
         ),
       );
@@ -8077,12 +10104,14 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
     if (MobileUtils.isMobile()) {
       final queue = ref.read(mobilePlayerQueueProvider);
       final idx = queue.indexWhere((p) => p.id == playProject.id);
-      await ref.read(mobilePlayerProvider.notifier).playProject(
-        playProject,
-        effectivePath,
-        queue: queue,
-        queueIndex: idx >= 0 ? idx : null,
-      );
+      await ref
+          .read(mobilePlayerProvider.notifier)
+          .playProject(
+            playProject,
+            effectivePath,
+            queue: queue,
+            queueIndex: idx >= 0 ? idx : null,
+          );
     } else {
       ref.read(desktopPlayerProvider.notifier).play(playProject, effectivePath);
     }
@@ -8107,10 +10136,10 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
   }
 
   Color _getStatusColor(String status) => resolvePhaseColor(
-        status,
-        ref.read(phaseColorsProvider),
-        ref.read(customPhasesProvider),
-      );
+    status,
+    ref.read(phaseColorsProvider),
+    ref.read(customPhasesProvider),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -8132,7 +10161,9 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                     Icon(
                       Icons.search_off,
                       size: 64,
-                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.5),
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -8145,9 +10176,9 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                     const SizedBox(height: 8),
                     Text(
                       l10n.noResultsForFilterHint,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.grey[600],
-                      ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -8158,22 +10189,23 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                     Icon(
                       Icons.cloud_sync,
                       size: 80,
-                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.6),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.6),
                     ),
                     const SizedBox(height: 24),
                     Text(
                       l10n.firstTimeSyncTitle,
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 12),
                     Text(
                       l10n.firstTimeSyncMessage,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Colors.grey[600],
-                      ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 32),
@@ -8188,7 +10220,10 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                       icon: const Icon(Icons.cloud_upload),
                       label: Text(l10n.syncWithGoogleDrive),
                       style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 16,
+                        ),
                         textStyle: const TextStyle(fontSize: 16),
                       ),
                     ),
@@ -8207,7 +10242,11 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           child: Row(
             children: [
-              Icon(Icons.sort, size: 16, color: Theme.of(context).textTheme.bodySmall?.color),
+              Icon(
+                Icons.sort,
+                size: 16,
+                color: Theme.of(context).textTheme.bodySmall?.color,
+              ),
               const SizedBox(width: 4),
               DropdownButton<_MobileSortField>(
                 value: _sortField,
@@ -8215,13 +10254,30 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                 isDense: true,
                 style: Theme.of(context).textTheme.bodySmall,
                 items: [
-                  DropdownMenuItem(value: _MobileSortField.lastModified, child: Text(l10n.sortByLastModified)),
-                  DropdownMenuItem(value: _MobileSortField.name, child: Text(l10n.sortByName)),
-                  DropdownMenuItem(value: _MobileSortField.phase, child: Text(l10n.sortByPhase)),
-                  DropdownMenuItem(value: _MobileSortField.createdAt, child: Text(l10n.sortByCreatedAt)),
-                  DropdownMenuItem(value: _MobileSortField.bpm, child: Text(l10n.sortByBpm)),
+                  DropdownMenuItem(
+                    value: _MobileSortField.lastModified,
+                    child: Text(l10n.sortByLastModified),
+                  ),
+                  DropdownMenuItem(
+                    value: _MobileSortField.name,
+                    child: Text(l10n.sortByName),
+                  ),
+                  DropdownMenuItem(
+                    value: _MobileSortField.phase,
+                    child: Text(l10n.sortByPhase),
+                  ),
+                  DropdownMenuItem(
+                    value: _MobileSortField.createdAt,
+                    child: Text(l10n.sortByCreatedAt),
+                  ),
+                  DropdownMenuItem(
+                    value: _MobileSortField.bpm,
+                    child: Text(l10n.sortByBpm),
+                  ),
                 ],
-                onChanged: (v) { if (v != null) setState(() => _sortField = v); },
+                onChanged: (v) {
+                  if (v != null) setState(() => _sortField = v);
+                },
               ),
             ],
           ),
@@ -8230,209 +10286,258 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
           child: RefreshIndicator(
             onRefresh: widget.onRefresh ?? () async {},
             child: ListView.builder(
-            itemCount: sortedProjects.length,
-            itemBuilder: (context, index) {
-              final project = sortedProjects[index];
-              final isSelected = _selectedProjectIds.contains(project.id);
-              final searchQuery = ref.read(projectsSearchProvider);
-              final isNotesMatch = searchQuery.trim().isNotEmpty &&
-                  !fuzzyMatchAll(project.displayName, searchQuery) &&
-                  project.notes != null &&
-                  fuzzyMatchAll(project.notes!, searchQuery);
+              itemCount: sortedProjects.length,
+              itemBuilder: (context, index) {
+                final project = sortedProjects[index];
+                final isSelected = _selectedProjectIds.contains(project.id);
+                final searchQuery = ref.read(projectsSearchProvider);
+                final isNotesMatch =
+                    searchQuery.trim().isNotEmpty &&
+                    !fuzzyMatchAll(project.displayName, searchQuery) &&
+                    project.notes != null &&
+                    fuzzyMatchAll(project.notes!, searchQuery);
 
-              return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                child: ListTile(
-                  leading: _isSelectionMode
-                      ? Checkbox(
-                          value: isSelected,
-                          onChanged: (_) => _toggleProjectSelection(project.id),
-                        )
-                      : null,
-                  title: Row(
-                    children: [
-                      Expanded(child: Text(
-                        project.displayName,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      )),
-                      if (ref.watch(recentlyDiscoveredProjectsProvider).contains(project.id)) ...[
-                        const SizedBox(width: 6),
-                        _NewProjectBadge(
-                          onDismiss: () => ref
-                              .read(recentlyDiscoveredProjectsProvider.notifier)
-                              .dismiss(project.id),
-                        ),
-                      ],
-                      if (isNotesMatch)
-                        Tooltip(
-                          message: AppLocalizations.of(context)!.matchedInDescription,
-                          child: Padding(
-                            padding: const EdgeInsets.only(left: 4),
-                            child: Icon(Icons.notes, size: 14, color: Colors.amber.shade600),
+                return Card(
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  child: ListTile(
+                    leading: _isSelectionMode
+                        ? Checkbox(
+                            value: isSelected,
+                            onChanged: (_) =>
+                                _toggleProjectSelection(project.id),
+                          )
+                        : null,
+                    title: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            project.displayName,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ),
-                    ],
-                  ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 4),
-                      // Phase and DAW on the same line
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              '${l10n.phase}: ${_getStatusDisplayName(project.status, context)}',
-                              style: TextStyle(
-                                color: _getStatusColor(project.status),
-                                fontWeight: FontWeight.w500,
+                        if (ref
+                            .watch(recentlyDiscoveredProjectsProvider)
+                            .contains(project.id)) ...[
+                          const SizedBox(width: 6),
+                          _NewProjectBadge(
+                            onDismiss: () => ref
+                                .read(
+                                  recentlyDiscoveredProjectsProvider.notifier,
+                                )
+                                .dismiss(project.id),
+                          ),
+                        ],
+                        if (isNotesMatch)
+                          Tooltip(
+                            message: AppLocalizations.of(
+                              context,
+                            )!.matchedInDescription,
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 4),
+                              child: Icon(
+                                Icons.notes,
+                                size: 14,
+                                color: Colors.amber.shade600,
                               ),
                             ),
                           ),
-                          if (project.dawType != null) ...[
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Text(AppLocalizations.of(context)!.dawInfoLabel('${project.dawType}${project.dawVersion != null ? ' ${project.dawVersion}' : ''}')),
-                            ),
-                          ],
-                        ],
-                      ),
-                      // BPM and Key on the same line
-                      if (project.bpm != null || project.musicalKey != null)
+                      ],
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 4),
+                        // Phase and DAW on the same line
                         Row(
                           children: [
-                            if (project.bpm != null)
-                              Expanded(
-                                child: Text(AppLocalizations.of(context)!.bpmInfoLabel('${project.bpm}')),
-                              ),
-                            if (project.bpm != null && project.musicalKey != null)
-                              const SizedBox(width: 16),
-                            if (project.musicalKey != null)
-                              Expanded(
-                                child: Text(AppLocalizations.of(context)!.keyInfoLabel(project.musicalKey!)),
-                              ),
-                          ],
-                        ),
-                      // Deadline display on mobile
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              'Modified: ${widget.dateFormat.format(project.lastModifiedAt)}',
-                              style: TextStyle(
-                                color: Theme.of(context).textTheme.bodySmall?.color,
-                                fontSize: 11,
-                              ),
-                            ),
-                          ),
-                          if (project.deadline != null && !ref.watch(finishedPhaseProvider).contains(project.status))
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: project.daysUntilDeadline! < 0
-                                    ? Colors.red.withOpacity(0.1)
-                                    : project.daysUntilDeadline! == 0
-                                        ? Colors.red.withOpacity(0.1)
-                                        : project.daysUntilDeadline! <= 7
-                                            ? Colors.orange.withOpacity(0.1)
-                                            : Colors.blue.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(4),
-                                border: Border.all(
-                                  color: project.daysUntilDeadline! < 0
-                                      ? Colors.red.withOpacity(0.3)
-                                      : project.daysUntilDeadline! == 0
-                                          ? Colors.red.withOpacity(0.3)
-                                          : project.daysUntilDeadline! <= 7
-                                              ? Colors.orange.withOpacity(0.3)
-                                              : Colors.blue.withOpacity(0.3),
-                                  width: 1,
+                            Expanded(
+                              child: Text(
+                                '${l10n.phase}: ${_getStatusDisplayName(project.status, context)}',
+                                style: TextStyle(
+                                  color: _getStatusColor(project.status),
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    project.daysUntilDeadline! < 0
-                                        ? Icons.warning
-                                        : project.daysUntilDeadline! == 0
-                                            ? Icons.today
-                                            : Icons.schedule,
-                                    size: 12,
-                                    color: project.daysUntilDeadline! < 0
-                                        ? Colors.red
-                                        : project.daysUntilDeadline! == 0
-                                            ? Colors.red
-                                            : project.daysUntilDeadline! <= 7
-                                                ? Colors.orange
-                                                : Colors.blue,
+                            ),
+                            if (project.dawType != null) ...[
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Text(
+                                  AppLocalizations.of(context)!.dawInfoLabel(
+                                    '${project.dawType}${project.dawVersion != null ? ' ${project.dawVersion}' : ''}',
                                   ),
-                                  const SizedBox(width: 3),
-                                  Text(
-                                    project.daysUntilDeadline! < 0
-                                        ? AppLocalizations.of(context)!.daysLate(project.daysUntilDeadline!.abs())
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        // BPM and Key on the same line
+                        if (project.bpm != null || project.musicalKey != null)
+                          Row(
+                            children: [
+                              if (project.bpm != null)
+                                Expanded(
+                                  child: Text(
+                                    AppLocalizations.of(
+                                      context,
+                                    )!.bpmInfoLabel('${project.bpm}'),
+                                  ),
+                                ),
+                              if (project.bpm != null &&
+                                  project.musicalKey != null)
+                                const SizedBox(width: 16),
+                              if (project.musicalKey != null)
+                                Expanded(
+                                  child: Text(
+                                    AppLocalizations.of(
+                                      context,
+                                    )!.keyInfoLabel(project.musicalKey!),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        // Deadline display on mobile
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'Modified: ${widget.dateFormat.format(project.lastModifiedAt)}',
+                                style: TextStyle(
+                                  color: Theme.of(
+                                    context,
+                                  ).textTheme.bodySmall?.color,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ),
+                            if (project.deadline != null &&
+                                !ref
+                                    .watch(finishedPhaseProvider)
+                                    .contains(project.status))
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: project.daysUntilDeadline! < 0
+                                      ? Colors.red.withOpacity(0.1)
+                                      : project.daysUntilDeadline! == 0
+                                      ? Colors.red.withOpacity(0.1)
+                                      : project.daysUntilDeadline! <= 7
+                                      ? Colors.orange.withOpacity(0.1)
+                                      : Colors.blue.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(
+                                    color: project.daysUntilDeadline! < 0
+                                        ? Colors.red.withOpacity(0.3)
                                         : project.daysUntilDeadline! == 0
-                                            ? AppLocalizations.of(context)!.today
-                                            : AppLocalizations.of(context)!.daysLeft(project.daysUntilDeadline!),
-                                    style: TextStyle(
+                                        ? Colors.red.withOpacity(0.3)
+                                        : project.daysUntilDeadline! <= 7
+                                        ? Colors.orange.withOpacity(0.3)
+                                        : Colors.blue.withOpacity(0.3),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      project.daysUntilDeadline! < 0
+                                          ? Icons.warning
+                                          : project.daysUntilDeadline! == 0
+                                          ? Icons.today
+                                          : Icons.schedule,
+                                      size: 12,
                                       color: project.daysUntilDeadline! < 0
                                           ? Colors.red
                                           : project.daysUntilDeadline! == 0
-                                              ? Colors.red
-                                              : project.daysUntilDeadline! <= 7
-                                                  ? Colors.orange
-                                                  : Colors.blue,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 10,
+                                          ? Colors.red
+                                          : project.daysUntilDeadline! <= 7
+                                          ? Colors.orange
+                                          : Colors.blue,
                                     ),
-                                  ),
-                                ],
+                                    const SizedBox(width: 3),
+                                    Text(
+                                      project.daysUntilDeadline! < 0
+                                          ? AppLocalizations.of(
+                                              context,
+                                            )!.daysLate(
+                                              project.daysUntilDeadline!.abs(),
+                                            )
+                                          : project.daysUntilDeadline! == 0
+                                          ? AppLocalizations.of(context)!.today
+                                          : AppLocalizations.of(
+                                              context,
+                                            )!.daysLeft(
+                                              project.daysUntilDeadline!,
+                                            ),
+                                      style: TextStyle(
+                                        color: project.daysUntilDeadline! < 0
+                                            ? Colors.red
+                                            : project.daysUntilDeadline! == 0
+                                            ? Colors.red
+                                            : project.daysUntilDeadline! <= 7
+                                            ? Colors.orange
+                                            : Colors.blue,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 10,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                        ],
-                      ),
-                    ],
+                          ],
+                        ),
+                      ],
+                    ),
+                    trailing: _isSelectionMode
+                        ? null
+                        : IconButton(
+                            icon: const Icon(Icons.play_arrow),
+                            tooltip:
+                                project.previewSongAutoPath != null &&
+                                    project.previewSongPath?.isNotEmpty != true
+                                ? '${AppLocalizations.of(context)!.playPreview}\n⚡ ${AppLocalizations.of(context)!.autoDetected}: ${path.basename(project.previewSongAutoPath!)}'
+                                : AppLocalizations.of(context)!.playPreview,
+                            onPressed: () => _playPreviewSong(project),
+                            color: project.previewSongPath?.isNotEmpty == true
+                                ? Colors.green
+                                : project.previewSongAutoPath != null
+                                ? Colors.amber
+                                : Colors.grey,
+                          ),
+                    onTap: () {
+                      if (_isSelectionMode) {
+                        // In selection mode, tap toggles selection
+                        _toggleProjectSelection(project.id);
+                      } else {
+                        // Normal mode, navigate to project detail
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                ProjectDetailPage(projectId: project.id),
+                          ),
+                        );
+                      }
+                    },
+                    onLongPress: () {
+                      // Long press enters selection mode and selects the item
+                      if (!_isSelectionMode) {
+                        _enterSelectionMode(project.id);
+                      } else {
+                        _toggleProjectSelection(project.id);
+                      }
+                    },
                   ),
-                  trailing: _isSelectionMode
-                      ? null
-                      : IconButton(
-                          icon: const Icon(Icons.play_arrow),
-                          tooltip: project.previewSongAutoPath != null && project.previewSongPath?.isNotEmpty != true
-                              ? '${AppLocalizations.of(context)!.playPreview}\n⚡ ${AppLocalizations.of(context)!.autoDetected}: ${path.basename(project.previewSongAutoPath!)}'
-                              : AppLocalizations.of(context)!.playPreview,
-                          onPressed: () => _playPreviewSong(project),
-                          color: project.previewSongPath?.isNotEmpty == true
-                              ? Colors.green
-                              : project.previewSongAutoPath != null
-                                  ? Colors.amber
-                                  : Colors.grey,
-                        ),
-                  onTap: () {
-                    if (_isSelectionMode) {
-                      // In selection mode, tap toggles selection
-                      _toggleProjectSelection(project.id);
-                    } else {
-                      // Normal mode, navigate to project detail
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ProjectDetailPage(projectId: project.id),
-                        ),
-                      );
-                    }
-                  },
-                  onLongPress: () {
-                    // Long press enters selection mode and selects the item
-                    if (!_isSelectionMode) {
-                      _enterSelectionMode(project.id);
-                    } else {
-                      _toggleProjectSelection(project.id);
-                    }
-                  },
-                ),
-              );
-            },
-          ),
+                );
+              },
+            ),
           ),
         ),
         // Selection action bar
@@ -8452,7 +10557,12 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                Text(l10n.projectsSelected(_selectedProjectIds.length, _selectedProjectIds.length == 1 ? '' : 's')),
+                Text(
+                  l10n.projectsSelected(
+                    _selectedProjectIds.length,
+                    _selectedProjectIds.length == 1 ? '' : 's',
+                  ),
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: ElevatedButton.icon(
@@ -8470,13 +10580,21 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                 const SizedBox(width: 8),
                 // Check if selected projects are hidden or visible
                 Builder(
-                  key: ValueKey('${_selectedProjectIds.length}_${widget.projects.where((p) => _selectedProjectIds.contains(p.id)).map((p) => '${p.id}_${p.hidden}').join(',')}'),
+                  key: ValueKey(
+                    '${_selectedProjectIds.length}_${widget.projects.where((p) => _selectedProjectIds.contains(p.id)).map((p) => '${p.id}_${p.hidden}').join(',')}',
+                  ),
                   builder: (context) {
                     // Check the state of selected projects
-                    final selectedProjects = widget.projects.where((p) => _selectedProjectIds.contains(p.id)).toList();
-                    final allHidden = selectedProjects.isNotEmpty && selectedProjects.every((p) => p.hidden);
-                    final allVisible = selectedProjects.isNotEmpty && selectedProjects.every((p) => !p.hidden);
-                    
+                    final selectedProjects = widget.projects
+                        .where((p) => _selectedProjectIds.contains(p.id))
+                        .toList();
+                    final allHidden =
+                        selectedProjects.isNotEmpty &&
+                        selectedProjects.every((p) => p.hidden);
+                    final allVisible =
+                        selectedProjects.isNotEmpty &&
+                        selectedProjects.every((p) => !p.hidden);
+
                     // Show Unhide button if all selected are hidden, Hide button if all are visible
                     // If mixed, show both
                     if (allHidden) {
@@ -8506,7 +10624,9 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                             icon: const Icon(Icons.visibility),
                             tooltip: l10n.unhide,
                             onPressed: () {
-                              widget.onUnhideProjects(_selectedProjectIds.toList());
+                              widget.onUnhideProjects(
+                                _selectedProjectIds.toList(),
+                              );
                               _clearSelection();
                             },
                           ),
@@ -8514,7 +10634,9 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                             icon: const Icon(Icons.visibility_off),
                             tooltip: l10n.hide,
                             onPressed: () {
-                              widget.onHideProjects(_selectedProjectIds.toList());
+                              widget.onHideProjects(
+                                _selectedProjectIds.toList(),
+                              );
                               _clearSelection();
                             },
                           ),
@@ -8538,8 +10660,7 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
 
 /// Column menu delegate that extends the default TrinaGrid header context menu with
 /// an "Auto fit all columns" option that calls autoFitColumn on every column at once.
-class _FitAllColumnsMenuDelegate
-    implements TrinaColumnMenuDelegate<dynamic> {
+class _FitAllColumnsMenuDelegate implements TrinaColumnMenuDelegate<dynamic> {
   static const String _menuFitAll = 'fitAll';
 
   @override
@@ -8547,13 +10668,14 @@ class _FitAllColumnsMenuDelegate
     required TrinaGridStateManager stateManager,
     required TrinaColumn column,
   }) {
-    final defaults =
-        const TrinaColumnMenuDelegateDefault().buildMenuItems(
+    final defaults = const TrinaColumnMenuDelegateDefault().buildMenuItems(
       stateManager: stateManager,
       column: column,
     );
     final context = navigatorKey.currentContext;
-    final label = context != null ? AppLocalizations.of(context)!.autoFitAllColumns : 'Auto fit all columns';
+    final label = context != null
+        ? AppLocalizations.of(context)!.autoFitAllColumns
+        : 'Auto fit all columns';
     return [
       ...defaults,
       const PopupMenuDivider(),
@@ -8599,75 +10721,110 @@ class _FitAllColumnsMenuDelegate
 /// Shows a confirmation dialog before starting a session on a project.
 /// If another session is already active, offers to switch instead.
 Future<void> _launchSuggestionProject(
-    BuildContext context, MusicProject project) async {
-  final exists = File(project.filePath).existsSync() ||
+  BuildContext context,
+  MusicProject project,
+) async {
+  final exists =
+      File(project.filePath).existsSync() ||
       Directory(project.filePath).existsSync();
   if (!exists) {
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(AppLocalizations.of(context)!.fileMissing)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.fileMissing)),
+      );
     }
     return;
   }
   final success = await FileLauncher.launchProject(project.filePath);
   if (context.mounted) {
     final l10n = AppLocalizations.of(context)!;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(success
-          ? l10n.launchingProject(project.displayName)
-          : l10n.failedToLaunchProject(project.displayName)),
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          success
+              ? l10n.launchingProject(project.displayName)
+              : l10n.failedToLaunchProject(project.displayName),
+        ),
+      ),
+    );
   }
 }
 
 // ── Session idle suggestions ────────────────────────────────────────────────
 
-enum _SuggestionType { deadlineOverdue, deadlineSoon, lastWorked, recentlyModified }
+enum SuggestionType {
+  newlyCreated,
+  deadlineOverdue,
+  deadlineSoon,
+  lastWorked,
+  recentlyModified,
+}
 
-class _Suggestion {
-  final _SuggestionType type;
+class Suggestion {
+  final SuggestionType type;
   final MusicProject project;
-  const _Suggestion({required this.type, required this.project});
+  const Suggestion({required this.type, required this.project});
 }
 
 // Anchor key: zero-height SizedBox in the column at the exact toolbar bottom.
 // _SessionIdleSuggestionsState reads this to position the overlay correctly.
 final _suggestionsPanelAnchorKey = GlobalKey();
 
-List<_Suggestion> _buildIdleSuggestions(
-    List<MusicProject> all, Set<String> dismissed, Set<String> finishedPhases) {
+List<Suggestion> buildIdleSuggestions(
+  List<MusicProject> all,
+  Set<String> dismissed,
+  Set<String> finishedPhases, [
+  Set<String> recentlyCreated = const {},
+]) {
   final visible = all.where((p) => !p.hidden).toList();
-  final result = <_Suggestion>[];
+  final result = <Suggestion>[];
   final seen = <String>{};
 
-  void add(_SuggestionType type, MusicProject p) {
+  void add(SuggestionType type, MusicProject p) {
     if (dismissed.contains(p.id)) return;
-    if (seen.add(p.id)) result.add(_Suggestion(type: type, project: p));
+    if (seen.add(p.id)) result.add(Suggestion(type: type, project: p));
+  }
+
+  // Freshly created (e.g. from a template) — the newest, most relevant
+  // signal, so it's checked first and wins the dedup over any other
+  // category (deadline/last-worked/recently-modified) the same project
+  // might also match.
+  final freshlyCreated =
+      visible.where((p) => recentlyCreated.contains(p.id)).toList()
+        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  for (final p in freshlyCreated.take(2)) {
+    add(SuggestionType.newlyCreated, p);
   }
 
   // Overdue & due-today, non-finished (most overdue first)
-  final urgentDeadlines = visible
-      .where((p) =>
-          !finishedPhases.contains(p.status) &&
-          p.daysUntilDeadline != null &&
-          p.daysUntilDeadline! <= 0)
-      .toList()
-    ..sort((a, b) => a.daysUntilDeadline!.compareTo(b.daysUntilDeadline!));
+  final urgentDeadlines =
+      visible
+          .where(
+            (p) =>
+                !finishedPhases.contains(p.status) &&
+                p.daysUntilDeadline != null &&
+                p.daysUntilDeadline! <= 0,
+          )
+          .toList()
+        ..sort((a, b) => a.daysUntilDeadline!.compareTo(b.daysUntilDeadline!));
   for (final p in urgentDeadlines.take(3)) {
-    add(_SuggestionType.deadlineOverdue, p);
+    add(SuggestionType.deadlineOverdue, p);
   }
 
   // Due soon (1–7 days), non-finished
-  final dueSoon = visible
-      .where((p) =>
-          !finishedPhases.contains(p.status) &&
-          p.daysUntilDeadline != null &&
-          p.daysUntilDeadline! > 0 &&
-          p.daysUntilDeadline! <= 7)
-      .toList()
-    ..sort((a, b) => a.daysUntilDeadline!.compareTo(b.daysUntilDeadline!));
+  final dueSoon =
+      visible
+          .where(
+            (p) =>
+                !finishedPhases.contains(p.status) &&
+                p.daysUntilDeadline != null &&
+                p.daysUntilDeadline! > 0 &&
+                p.daysUntilDeadline! <= 7,
+          )
+          .toList()
+        ..sort((a, b) => a.daysUntilDeadline!.compareTo(b.daysUntilDeadline!));
   for (final p in dueSoon.take(2)) {
-    add(_SuggestionType.deadlineSoon, p);
+    add(SuggestionType.deadlineSoon, p);
   }
 
   // Last worked (project with the most recently ended session)
@@ -8681,44 +10838,50 @@ List<_Suggestion> _buildIdleSuggestions(
       lastWorked = p;
     }
   }
-  if (lastWorked != null) add(_SuggestionType.lastWorked, lastWorked);
+  if (lastWorked != null) add(SuggestionType.lastWorked, lastWorked);
 
   // Most recently modified non-finished (if not already listed)
-  final recent = visible
-      .where((p) => !finishedPhases.contains(p.status))
-      .toList()
-    ..sort((a, b) => b.lastModifiedAt.compareTo(a.lastModifiedAt));
-  if (recent.isNotEmpty) add(_SuggestionType.recentlyModified, recent.first);
+  final recent =
+      visible.where((p) => !finishedPhases.contains(p.status)).toList()
+        ..sort((a, b) => b.lastModifiedAt.compareTo(a.lastModifiedAt));
+  if (recent.isNotEmpty) add(SuggestionType.recentlyModified, recent.first);
 
   return result;
 }
 
-(Color, IconData, String) _suggestionVisuals(
-    _Suggestion s, ThemeData theme, AppLocalizations l10n) =>
-    switch (s.type) {
-      _SuggestionType.deadlineOverdue => (
-        const Color(0xFFFF6B6B),
-        Icons.alarm,
-        s.project.daysUntilDeadline! == 0
-            ? '${l10n.dueToday}: ${s.project.displayName}'
-            : '${l10n.daysLate(-s.project.daysUntilDeadline!)}: ${s.project.displayName}',
-      ),
-      _SuggestionType.deadlineSoon => (
-        const Color(0xFFFBBF24),
-        Icons.alarm_outlined,
-        '${l10n.daysLeft(s.project.daysUntilDeadline!)}: ${s.project.displayName}',
-      ),
-      _SuggestionType.lastWorked => (
-        theme.colorScheme.primary,
-        Icons.history,
-        '${l10n.resume}: ${s.project.displayName}',
-      ),
-      _SuggestionType.recentlyModified => (
-        theme.colorScheme.secondary,
-        Icons.edit_outlined,
-        '${l10n.continueButton}: ${s.project.displayName}',
-      ),
-    };
+(Color, IconData, String) suggestionVisuals(
+  Suggestion s,
+  ThemeData theme,
+  AppLocalizations l10n,
+) => switch (s.type) {
+  SuggestionType.newlyCreated => (
+    Colors.green.shade400,
+    Icons.auto_awesome,
+    '${l10n.suggestionNewProject}: ${s.project.displayName}',
+  ),
+  SuggestionType.deadlineOverdue => (
+    const Color(0xFFFF6B6B),
+    Icons.alarm,
+    s.project.daysUntilDeadline! == 0
+        ? '${l10n.dueToday}: ${s.project.displayName}'
+        : '${l10n.daysLate(-s.project.daysUntilDeadline!)}: ${s.project.displayName}',
+  ),
+  SuggestionType.deadlineSoon => (
+    const Color(0xFFFBBF24),
+    Icons.alarm_outlined,
+    '${l10n.daysLeft(s.project.daysUntilDeadline!)}: ${s.project.displayName}',
+  ),
+  SuggestionType.lastWorked => (
+    theme.colorScheme.primary,
+    Icons.history,
+    '${l10n.resume}: ${s.project.displayName}',
+  ),
+  SuggestionType.recentlyModified => (
+    theme.colorScheme.secondary,
+    Icons.edit_outlined,
+    '${l10n.continueButton}: ${s.project.displayName}',
+  ),
+};
 
 /// Carousel chip row shown in the toolbar when session mode is on and idle.
 /// The expand/collapse button toggles [_SuggestionsPanelBar] via provider.
@@ -8749,8 +10912,9 @@ class _SessionIdleSuggestionsState
 
   void _showOverlay() {
     _hideOverlay();
-    final anchorBox = _suggestionsPanelAnchorKey.currentContext
-        ?.findRenderObject() as RenderBox?;
+    final anchorBox =
+        _suggestionsPanelAnchorKey.currentContext?.findRenderObject()
+            as RenderBox?;
     final toggleBox =
         _toggleKey.currentContext?.findRenderObject() as RenderBox?;
     if (anchorBox == null || toggleBox == null || !mounted) return;
@@ -8761,8 +10925,10 @@ class _SessionIdleSuggestionsState
     const popupWidth = 360.0;
 
     // Right-align popup to the toggle button; clamp within screen bounds.
-    double left =
-        (togglePos.dx + toggleBox.size.width - popupWidth).clamp(8.0, screenWidth - popupWidth - 8.0);
+    double left = (togglePos.dx + toggleBox.size.width - popupWidth).clamp(
+      8.0,
+      screenWidth - popupWidth - 8.0,
+    );
 
     _overlayEntry = OverlayEntry(
       builder: (_) => Stack(
@@ -8807,7 +10973,13 @@ class _SessionIdleSuggestionsState
     final dismissed = ref.watch(dismissedSuggestionsProvider);
     final panelExpanded = ref.watch(suggestionsPanelExpandedProvider);
     final finishedPhases = ref.watch(finishedPhaseProvider);
-    final suggestions = _buildIdleSuggestions(all, dismissed, finishedPhases);
+    final recentlyCreated = ref.watch(recentlyDiscoveredProjectsProvider);
+    final suggestions = buildIdleSuggestions(
+      all,
+      dismissed,
+      finishedPhases,
+      recentlyCreated,
+    );
     final total = suggestions.length;
     final idx = total > 0 ? _index.clamp(0, total - 1) : 0;
     final theme = Theme.of(context);
@@ -8834,8 +11006,10 @@ class _SessionIdleSuggestionsState
             child: IconButton(
               padding: EdgeInsets.zero,
               iconSize: 16,
-              icon: Icon(Icons.chevron_left,
-                  color: theme.textTheme.bodySmall?.color),
+              icon: Icon(
+                Icons.chevron_left,
+                color: theme.textTheme.bodySmall?.color,
+              ),
               onPressed: () =>
                   setState(() => _index = (idx - 1 + total) % total),
             ),
@@ -8843,8 +11017,12 @@ class _SessionIdleSuggestionsState
 
         // Chip
         if (total > 0)
-          _buildChip(suggestions[idx], theme, l10n,
-              ref.watch(sessionModeProvider)),
+          _buildChip(
+            suggestions[idx],
+            theme,
+            l10n,
+            ref.watch(sessionModeProvider),
+          ),
 
         // → next + counter
         if (total > 1) ...[
@@ -8854,8 +11032,10 @@ class _SessionIdleSuggestionsState
             child: IconButton(
               padding: EdgeInsets.zero,
               iconSize: 16,
-              icon: Icon(Icons.chevron_right,
-                  color: theme.textTheme.bodySmall?.color),
+              icon: Icon(
+                Icons.chevron_right,
+                color: theme.textTheme.bodySmall?.color,
+              ),
               onPressed: () => setState(() => _index = (idx + 1) % total),
             ),
           ),
@@ -8882,15 +11062,18 @@ class _SessionIdleSuggestionsState
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (total == 0) ...[
-                  Icon(Icons.lightbulb_outline,
-                      size: 13,
-                      color: theme.textTheme.bodySmall?.color),
+                  Icon(
+                    Icons.lightbulb_outline,
+                    size: 13,
+                    color: theme.textTheme.bodySmall?.color,
+                  ),
                   const SizedBox(width: 3),
                   Text(
                     l10n.suggestionsLabel,
                     style: TextStyle(
-                        fontSize: 11,
-                        color: theme.textTheme.bodySmall?.color),
+                      fontSize: 11,
+                      color: theme.textTheme.bodySmall?.color,
+                    ),
                   ),
                   const SizedBox(width: 2),
                 ],
@@ -8909,9 +11092,13 @@ class _SessionIdleSuggestionsState
     );
   }
 
-  Widget _buildChip(_Suggestion s, ThemeData theme, AppLocalizations l10n,
-      bool sessionMode) {
-    final (accent, icon, label) = _suggestionVisuals(s, theme, l10n);
+  Widget _buildChip(
+    Suggestion s,
+    ThemeData theme,
+    AppLocalizations l10n,
+    bool sessionMode,
+  ) {
+    final (accent, icon, label) = suggestionVisuals(s, theme, l10n);
     return Container(
       constraints: const BoxConstraints(maxWidth: 340),
       padding: const EdgeInsets.only(left: 8, right: 4, top: 3, bottom: 3),
@@ -8931,13 +11118,15 @@ class _SessionIdleSuggestionsState
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                  fontSize: 12, color: accent, fontWeight: FontWeight.w500),
+                fontSize: 12,
+                color: accent,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
           const SizedBox(width: 4),
           Tooltip(
-            message:
-                sessionMode ? l10n.startSession : l10n.openInDaw,
+            message: sessionMode ? l10n.startSession : l10n.openInDaw,
             child: InkWell(
               borderRadius: BorderRadius.circular(10),
               onTap: () => sessionMode
@@ -8946,9 +11135,7 @@ class _SessionIdleSuggestionsState
               child: Padding(
                 padding: const EdgeInsets.all(3),
                 child: Icon(
-                  sessionMode
-                      ? Icons.bookmark_add_outlined
-                      : Icons.open_in_new,
+                  sessionMode ? Icons.bookmark_add_outlined : Icons.open_in_new,
                   size: 14,
                   color: accent,
                 ),
@@ -8962,10 +11149,13 @@ class _SessionIdleSuggestionsState
               onTap: () => _openDetails(s.project),
               child: Padding(
                 padding: const EdgeInsets.all(3),
-                child: Icon(Icons.assignment,
-                    size: 12,
-                    color: theme.textTheme.bodySmall?.color
-                        ?.withValues(alpha: 0.7)),
+                child: Icon(
+                  Icons.assignment,
+                  size: 12,
+                  color: theme.textTheme.bodySmall?.color?.withValues(
+                    alpha: 0.7,
+                  ),
+                ),
               ),
             ),
           ),
@@ -8986,7 +11176,13 @@ class _SuggestionsPanelBar extends ConsumerWidget {
     final dismissed = ref.watch(dismissedSuggestionsProvider);
     final sessionMode = ref.watch(sessionModeProvider);
     final finishedPhases = ref.watch(finishedPhaseProvider);
-    final suggestions = _buildIdleSuggestions(all, dismissed, finishedPhases);
+    final recentlyCreated = ref.watch(recentlyDiscoveredProjectsProvider);
+    final suggestions = buildIdleSuggestions(
+      all,
+      dismissed,
+      finishedPhases,
+      recentlyCreated,
+    );
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
 
@@ -9002,32 +11198,42 @@ class _SuggestionsPanelBar extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(14, 6, 8, 4),
             child: Row(
               children: [
-                Icon(Icons.lightbulb_outline,
-                    size: 15, color: theme.textTheme.bodySmall?.color),
+                Icon(
+                  Icons.lightbulb_outline,
+                  size: 15,
+                  color: theme.textTheme.bodySmall?.color,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   l10n.suggestionsLabel,
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const Spacer(),
                 TextButton.icon(
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 2),
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                   icon: const Icon(Icons.refresh, size: 13),
-                  label:
-                      Text(l10n.suggestionsRefresh, style: const TextStyle(fontSize: 12)),
+                  label: Text(
+                    l10n.suggestionsRefresh,
+                    style: const TextStyle(fontSize: 12),
+                  ),
                   onPressed: () =>
                       ref.read(dismissedSuggestionsProvider.notifier).clear(),
                 ),
                 IconButton(
                   padding: EdgeInsets.zero,
-                  constraints:
-                      const BoxConstraints(minWidth: 28, minHeight: 28),
+                  constraints: const BoxConstraints(
+                    minWidth: 28,
+                    minHeight: 28,
+                  ),
                   icon: const Icon(Icons.expand_less, size: 15),
                   onPressed: () => ref
                       .read(suggestionsPanelExpandedProvider.notifier)
@@ -9040,8 +11246,7 @@ class _SuggestionsPanelBar extends ConsumerWidget {
           // ── Items / empty state ────────────────────────────────────
           if (suggestions.isEmpty)
             Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 14, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               child: Text(
                 l10n.suggestionsEmptyState,
                 style: theme.textTheme.bodySmall,
@@ -9057,11 +11262,12 @@ class _SuggestionsPanelBar extends ConsumerWidget {
                   const Divider(height: 1, indent: 14, endIndent: 14),
               itemBuilder: (ctx, i) {
                 final s = suggestions[i];
-                final (accent, icon, label) =
-                    _suggestionVisuals(s, theme, l10n);
+                final (accent, icon, label) = suggestionVisuals(s, theme, l10n);
                 return Padding(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 8),
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   child: Row(
                     children: [
                       Icon(icon, size: 16, color: accent),
@@ -9087,8 +11293,7 @@ class _SuggestionsPanelBar extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(6),
                           onTap: () {
                             ref
-                                .read(suggestionsPanelExpandedProvider
-                                    .notifier)
+                                .read(suggestionsPanelExpandedProvider.notifier)
                                 .set(false);
                             if (sessionMode) {
                               confirmStartSession(context, ref, s.project);
@@ -9114,15 +11319,17 @@ class _SuggestionsPanelBar extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(6),
                           onTap: () => Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (_) => ProjectDetailPage(
-                                  projectId: s.project.id),
+                              builder: (_) =>
+                                  ProjectDetailPage(projectId: s.project.id),
                             ),
                           ),
                           child: Padding(
                             padding: const EdgeInsets.all(4),
-                            child: Icon(Icons.assignment,
-                                size: 16,
-                                color: theme.textTheme.bodySmall?.color),
+                            child: Icon(
+                              Icons.assignment,
+                              size: 16,
+                              color: theme.textTheme.bodySmall?.color,
+                            ),
                           ),
                         ),
                       ),
@@ -9208,7 +11415,9 @@ class _ActiveProjectChipState extends ConsumerState<_ActiveProjectChip>
     if (project == null) return const SizedBox.shrink();
 
     final l10n = AppLocalizations.of(context)!;
-    final dawLabel = project.dawType ?? project.fileExtension.replaceFirst('.', '').toUpperCase();
+    final dawLabel =
+        project.dawType ??
+        project.fileExtension.replaceFirst('.', '').toUpperCase();
     const green = Color(0xFF22C55E);
     const yellow = Color(0xFFFBBF24);
     final chipColor = isPaused ? yellow : green;
@@ -9283,33 +11492,54 @@ class _ActiveProjectChipState extends ConsumerState<_ActiveProjectChip>
                     project.dawVersion != null
                         ? '$dawLabel ${project.dawVersion}'
                         : dawLabel,
-                    style: TextStyle(color: Colors.white.withValues(alpha: 0.55), fontSize: 11),
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.55),
+                      fontSize: 11,
+                    ),
                   ),
                   // BPM
                   if (project.bpm != null) ...[
                     _dot,
-                    Icon(Icons.speed, size: 11, color: Colors.white.withValues(alpha: 0.4)),
+                    Icon(
+                      Icons.speed,
+                      size: 11,
+                      color: Colors.white.withValues(alpha: 0.4),
+                    ),
                     const SizedBox(width: 2),
                     Text(
                       '${project.bpm! % 1 == 0 ? project.bpm!.toInt() : project.bpm!.toStringAsFixed(1)} BPM',
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.55), fontSize: 11),
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.55),
+                        fontSize: 11,
+                      ),
                     ),
                   ],
                   // Musical key
-                  if (project.musicalKey != null && project.musicalKey!.isNotEmpty) ...[
+                  if (project.musicalKey != null &&
+                      project.musicalKey!.isNotEmpty) ...[
                     _dot,
-                    Icon(Icons.music_note, size: 11, color: Colors.white.withValues(alpha: 0.4)),
+                    Icon(
+                      Icons.music_note,
+                      size: 11,
+                      color: Colors.white.withValues(alpha: 0.4),
+                    ),
                     const SizedBox(width: 2),
                     Text(
                       project.musicalKey!,
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.55), fontSize: 11),
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.55),
+                        fontSize: 11,
+                      ),
                     ),
                   ],
                   // Camelot code badge
                   if (project.camelotCode != null) ...[
                     const SizedBox(width: 5),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 1,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.blue.withValues(alpha: 0.25),
                         borderRadius: BorderRadius.circular(4),
@@ -9327,20 +11557,31 @@ class _ActiveProjectChipState extends ConsumerState<_ActiveProjectChip>
                   // Total accumulated work time
                   if (project.totalWorkSeconds > 0) ...[
                     _dot,
-                    Icon(Icons.history, size: 11, color: Colors.white.withValues(alpha: 0.4)),
+                    Icon(
+                      Icons.history,
+                      size: 11,
+                      color: Colors.white.withValues(alpha: 0.4),
+                    ),
                     const SizedBox(width: 2),
                     SizedBox(
                       width: 56,
                       child: Text(
                         _formatWorkTime(project.totalWorkSeconds),
-                        style: TextStyle(color: Colors.white.withValues(alpha: 0.45), fontSize: 11),
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.45),
+                          fontSize: 11,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
                   // Session elapsed timer
                   const SizedBox(width: 6),
-                  Icon(Icons.timer_outlined, size: 11, color: chipColor.withValues(alpha: 0.85)),
+                  Icon(
+                    Icons.timer_outlined,
+                    size: 11,
+                    color: chipColor.withValues(alpha: 0.85),
+                  ),
                   const SizedBox(width: 2),
                   SizedBox(
                     width: 52,
@@ -9372,12 +11613,17 @@ class _ActiveProjectChipState extends ConsumerState<_ActiveProjectChip>
                   constraints: const BoxConstraints(),
                   color: Colors.white70,
                   onPressed: () async {
-                    final exists = File(project.filePath).existsSync() ||
+                    final exists =
+                        File(project.filePath).existsSync() ||
                         Directory(project.filePath).existsSync();
                     if (!exists) {
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(AppLocalizations.of(context)!.fileMissing)),
+                          SnackBar(
+                            content: Text(
+                              AppLocalizations.of(context)!.fileMissing,
+                            ),
+                          ),
                         );
                       }
                       return;
@@ -9396,7 +11642,9 @@ class _ActiveProjectChipState extends ConsumerState<_ActiveProjectChip>
                   constraints: const BoxConstraints(),
                   color: Colors.white70,
                   onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => ProjectDetailPage(projectId: project.id)),
+                    MaterialPageRoute(
+                      builder: (_) => ProjectDetailPage(projectId: project.id),
+                    ),
                   ),
                 ),
               ),
@@ -9442,7 +11690,11 @@ class _TreeConnectorPainter extends CustomPainter {
     final midY = size.height / 2;
 
     // Vertical segment: top → midY for last child (└), top → bottom for others (├)
-    canvas.drawLine(Offset(x, 0), Offset(x, isLast ? midY : size.height), paint);
+    canvas.drawLine(
+      Offset(x, 0),
+      Offset(x, isLast ? midY : size.height),
+      paint,
+    );
 
     // Horizontal branch: trunk → right edge at mid-height
     canvas.drawLine(Offset(x, midY), Offset(size.width, midY), paint);
@@ -9475,7 +11727,9 @@ class _PauseSessionButtonState extends State<_PauseSessionButton> {
     final hoverColor = widget.isPaused ? green : yellow;
     final color = _hovered ? hoverColor : baseColor;
     final glowColor = _hovered ? hoverColor : yellow;
-    final icon = widget.isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded;
+    final icon = widget.isPaused
+        ? Icons.play_arrow_rounded
+        : Icons.pause_rounded;
 
     return Tooltip(
       message: widget.isPaused ? l10n.resume : l10n.pause,
@@ -9492,9 +11746,18 @@ class _PauseSessionButtonState extends State<_PauseSessionButton> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: color.withValues(alpha: 0.5), width: 1),
-              color: color.withValues(alpha: _hovered ? 0.10 : (widget.isPaused ? 0.08 : 0.0)),
+              color: color.withValues(
+                alpha: _hovered ? 0.10 : (widget.isPaused ? 0.08 : 0.0),
+              ),
               boxShadow: (_hovered || widget.isPaused)
-                  ? [BoxShadow(color: glowColor.withValues(alpha: _hovered ? 0.35 : 0.2), blurRadius: _hovered ? 8 : 5)]
+                  ? [
+                      BoxShadow(
+                        color: glowColor.withValues(
+                          alpha: _hovered ? 0.35 : 0.2,
+                        ),
+                        blurRadius: _hovered ? 8 : 5,
+                      ),
+                    ]
                   : const [],
             ),
             child: Center(child: Icon(icon, size: 16, color: color)),
@@ -9539,10 +11802,17 @@ class _StopSessionButtonState extends State<_StopSessionButton> {
               border: Border.all(color: color.withValues(alpha: 0.5), width: 1),
               color: color.withValues(alpha: _hovered ? 0.10 : 0.0),
               boxShadow: _hovered
-                  ? [BoxShadow(color: red.withValues(alpha: 0.35), blurRadius: 8)]
+                  ? [
+                      BoxShadow(
+                        color: red.withValues(alpha: 0.35),
+                        blurRadius: 8,
+                      ),
+                    ]
                   : const [],
             ),
-            child: Center(child: Icon(Icons.stop_rounded, size: 16, color: color)),
+            child: Center(
+              child: Icon(Icons.stop_rounded, size: 16, color: color),
+            ),
           ),
         ),
       ),
@@ -9619,7 +11889,10 @@ class _NewProjectBadge extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.green.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(4),
-          border: Border.all(color: Colors.green.withValues(alpha: 0.4), width: 1),
+          border: Border.all(
+            color: Colors.green.withValues(alpha: 0.4),
+            width: 1,
+          ),
         ),
         child: Text(
           AppLocalizations.of(context)!.newProjectBadge,
@@ -9759,56 +12032,66 @@ class _PendingFolderRow extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         child: Row(
           children: [
-            Icon(Icons.folder_special_outlined,
-                size: 18, color: Theme.of(context).colorScheme.primary),
+            Icon(
+              Icons.folder_special_outlined,
+              size: 18,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(pf.folderName,
-                      style: Theme.of(context).textTheme.bodyMedium),
+                  Text(
+                    pf.folderName,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                   Row(
                     children: [
                       Text(
                         l10n.pendingProjectWaiting,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              fontStyle: FontStyle.italic,
-                              color: Theme.of(context).colorScheme.secondary,
-                            ),
+                          fontStyle: FontStyle.italic,
+                          color: Theme.of(context).colorScheme.secondary,
+                        ),
                       ),
                       if (pf.intendedDawName != null) ...[
-                        Text(' · ',
-                            style: Theme.of(context).textTheme.bodySmall),
-                        Text(pf.intendedDawName!,
-                            style: Theme.of(context).textTheme.bodySmall),
+                        Text(
+                          ' · ',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        Text(
+                          pf.intendedDawName!,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
                       ],
                     ],
                   ),
                   if (pf.sessionStartedAt != null)
                     StreamBuilder<int>(
                       stream: Stream.periodic(
-                          const Duration(seconds: 1), (i) => i),
+                        const Duration(seconds: 1),
+                        (i) => i,
+                      ),
                       builder: (context, _) {
-                        final elapsed =
-                            DateTime.now().difference(pf.sessionStartedAt!);
+                        final elapsed = DateTime.now().difference(
+                          pf.sessionStartedAt!,
+                        );
                         final h = elapsed.inHours;
                         final m = elapsed.inMinutes.remainder(60);
                         final s = elapsed.inSeconds.remainder(60);
                         final label = h > 0
                             ? '⏱ ${h}h ${m}m'
                             : m > 0
-                                ? '⏱ ${m}m ${s}s'
-                                : '⏱ ${s}s';
+                            ? '⏱ ${m}m ${s}s'
+                            : '⏱ ${s}s';
                         return Text(
                           label,
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .primary,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
                         );
                       },
                     ),
@@ -9848,33 +12131,47 @@ class _PendingFolderRow extends ConsumerWidget {
                 final repo = await ref.read(repositoryProvider.future);
                 // Re-read the pending folder from the repository so we get the
                 // latest sessionStartedAt even if the widget hasn't rebuilt yet.
-                final livePf = repo
+                final livePf =
+                    repo
                         .getPendingFolders()
                         .where((f) => f.id == pf.id)
                         .firstOrNull ??
                     pf;
                 final sessionStart = livePf.sessionStartedAt;
                 if (kDebugMode) {
-                  print('[PendingRefresh] id=${pf.id} sessionStart=$sessionStart');
+                  print(
+                    '[PendingRefresh] id=${pf.id} sessionStart=$sessionStart',
+                  );
                 }
 
                 final scanner = ScannerService();
-                final ignoredPaths =
-                    repo.getIgnoredPaths().map((p) => p.path).toList(growable: false);
+                final ignoredPaths = repo
+                    .getIgnoredPaths()
+                    .map((p) => p.path)
+                    .toList(growable: false);
                 int scanned = 0;
-                await for (final entity
-                    in scanner.scanDirectory(pf.path, ignoredPaths: ignoredPaths)) {
-                  await repo.upsertFromFileSystemEntity(entity, fullMetadata: true);
+                await for (final entity in scanner.scanDirectory(
+                  pf.path,
+                  ignoredPaths: ignoredPaths,
+                )) {
+                  await repo.upsertFromFileSystemEntity(
+                    entity,
+                    fullMetadata: true,
+                  );
                   scanned++;
                 }
                 ref.invalidate(allProjectsStreamProvider);
                 if (kDebugMode) {
-                  print('[PendingRefresh] scanned $scanned entities in ${pf.path}');
+                  print(
+                    '[PendingRefresh] scanned $scanned entities in ${pf.path}',
+                  );
                 }
 
                 final resolved = await repo.resolveCompletedPendingFolders();
                 if (kDebugMode) {
-                  print('[PendingRefresh] resolved=${resolved.toList()} contains(${pf.id})=${resolved.contains(pf.id)}');
+                  print(
+                    '[PendingRefresh] resolved=${resolved.toList()} contains(${pf.id})=${resolved.contains(pf.id)}',
+                  );
                 }
                 if (!resolved.contains(pf.id)) {
                   if (context.mounted) {
@@ -9899,7 +12196,9 @@ class _PendingFolderRow extends ConsumerWidget {
                       .where((p) => p.filePath.startsWith(pf.path))
                       .firstOrNull;
                   if (kDebugMode) {
-                    print('[PendingRefresh] project=${sessionProject?.displayName} (searching in ${pf.path})');
+                    print(
+                      '[PendingRefresh] project=${sessionProject?.displayName} (searching in ${pf.path})',
+                    );
                   }
 
                   if (sessionProject != null) {
@@ -9913,11 +12212,14 @@ class _PendingFolderRow extends ConsumerWidget {
                       barrierDismissible: false,
                       builder: (ctx) => AlertDialog(
                         title: Text(l10n.pendingFolderSessionTitle),
-                        content: Text(l10n.pendingFolderSessionBody(
+                        content: Text(
+                          l10n.pendingFolderSessionBody(
                             sessionProject!.displayName.isNotEmpty
                                 ? sessionProject.displayName
                                 : pf.folderName,
-                            durationLabel)),
+                            durationLabel,
+                          ),
+                        ),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(ctx),
@@ -9929,8 +12231,10 @@ class _PendingFolderRow extends ConsumerWidget {
                             child: Text(l10n.pendingFolderSessionEndRecord),
                           ),
                           FilledButton(
-                            onPressed: () =>
-                                Navigator.pop(ctx, _SessionChoice.continueSession),
+                            onPressed: () => Navigator.pop(
+                              ctx,
+                              _SessionChoice.continueSession,
+                            ),
                             child: Text(l10n.pendingFolderSessionContinue),
                           ),
                         ],
@@ -9949,14 +12253,16 @@ class _PendingFolderRow extends ConsumerWidget {
                           context: context,
                           builder: (ctx) => AlertDialog(
                             title: Text(l10n.activeSessionSwitchTitle),
-                            content: Text(l10n.activeSessionSwitchBody(
-                              currentActive.displayName.isNotEmpty
-                                  ? currentActive.displayName
-                                  : currentActive.fileName,
-                              sessionProject!.displayName.isNotEmpty
-                                  ? sessionProject.displayName
-                                  : sessionProject.fileName,
-                            )),
+                            content: Text(
+                              l10n.activeSessionSwitchBody(
+                                currentActive.displayName.isNotEmpty
+                                    ? currentActive.displayName
+                                    : currentActive.fileName,
+                                sessionProject!.displayName.isNotEmpty
+                                    ? sessionProject.displayName
+                                    : sessionProject.fileName,
+                              ),
+                            ),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.pop(ctx, false),
@@ -9980,12 +12286,11 @@ class _PendingFolderRow extends ConsumerWidget {
                 // Capture ref-dependent notifiers BEFORE bump() disposes
                 // this widget. After bump() the widget is unmounted and ref
                 // reads would throw "Using ref when widget is unmounted".
-                final dirtyNotifier =
-                    ref.read(pendingFoldersDirtyProvider.notifier);
-                final activeNotifier =
-                    ref.read(activeProjectProvider.notifier);
-                final workTimerNotifier =
-                    ref.read(workTimerProvider.notifier);
+                final dirtyNotifier = ref.read(
+                  pendingFoldersDirtyProvider.notifier,
+                );
+                final activeNotifier = ref.read(activeProjectProvider.notifier);
+                final workTimerNotifier = ref.read(workTimerProvider.notifier);
 
                 // NOW bump — removes this widget from the tree.
                 // No context or ref access after this point.
@@ -9998,7 +12303,9 @@ class _PendingFolderRow extends ConsumerWidget {
                     final now = DateTime.now();
                     final elapsedSecs = now.difference(sessionStart!).inSeconds;
                     if (kDebugMode) {
-                      print('[PendingRefresh] endAndRecord elapsedSecs=$elapsedSecs for project ${sessionProject.id}');
+                      print(
+                        '[PendingRefresh] endAndRecord elapsedSecs=$elapsedSecs for project ${sessionProject.id}',
+                      );
                     }
                     if (elapsedSecs > 0) {
                       final latest =
@@ -10011,13 +12318,20 @@ class _PendingFolderRow extends ConsumerWidget {
                         phase: latest.status,
                       );
                       final newSessions = [...latest.sessions, record];
-                      await repo.updateProject(latest.copyWith(
-                        totalWorkSeconds: newSessions.fold<int>(0, (s, r) => s + r.durationSeconds),
-                        sessions: newSessions,
-                        updatedAt: now,
-                      ));
+                      await repo.updateProject(
+                        latest.copyWith(
+                          totalWorkSeconds: newSessions.fold<int>(
+                            0,
+                            (s, r) => s + r.durationSeconds,
+                          ),
+                          sessions: newSessions,
+                          updatedAt: now,
+                        ),
+                      );
                       if (kDebugMode) {
-                        print('[PendingRefresh] session saved to project ${sessionProject.id}');
+                        print(
+                          '[PendingRefresh] session saved to project ${sessionProject.id}',
+                        );
                       }
                     }
                   } else if (shouldSetActive) {
@@ -10046,23 +12360,32 @@ class _PendingFolderRow extends ConsumerWidget {
                 final ok = await showDialog<bool>(
                   context: context,
                   builder: (ctx) => AlertDialog(
-                    title: Text(hasUserFiles
-                        ? l10n.pendingProjectDeleteNotEmptyTitle
-                        : l10n.pendingProjectDeleteTitle),
-                    content: Text(hasUserFiles
-                        ? l10n.pendingProjectDeleteNotEmptyBody(pf.folderName)
-                        : l10n.pendingProjectDeleteBody(pf.folderName)),
+                    title: Text(
+                      hasUserFiles
+                          ? l10n.pendingProjectDeleteNotEmptyTitle
+                          : l10n.pendingProjectDeleteTitle,
+                    ),
+                    content: Text(
+                      hasUserFiles
+                          ? l10n.pendingProjectDeleteNotEmptyBody(pf.folderName)
+                          : l10n.pendingProjectDeleteBody(pf.folderName),
+                    ),
                     actions: [
                       TextButton(
-                          onPressed: () => Navigator.pop(ctx, false),
-                          child: Text(l10n.cancel)),
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: Text(l10n.cancel),
+                      ),
                       FilledButton(
-                          style: hasUserFiles
-                              ? FilledButton.styleFrom(
-                                  backgroundColor: Theme.of(ctx).colorScheme.error)
-                              : null,
-                          onPressed: () => Navigator.pop(ctx, true),
-                          child: Text(l10n.delete)),
+                        style: hasUserFiles
+                            ? FilledButton.styleFrom(
+                                backgroundColor: Theme.of(
+                                  ctx,
+                                ).colorScheme.error,
+                              )
+                            : null,
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: Text(l10n.delete),
+                      ),
                     ],
                   ),
                 );
@@ -10097,12 +12420,16 @@ class _PendingFolderRow extends ConsumerWidget {
                         label: Text(l10n.pendingProjectDismissDelete),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Theme.of(ctx).colorScheme.error,
-                          side: BorderSide(color: Theme.of(ctx).colorScheme.error),
+                          side: BorderSide(
+                            color: Theme.of(ctx).colorScheme.error,
+                          ),
                         ),
-                        onPressed: () => Navigator.pop(ctx, _DismissChoice.deleteAndDismiss),
+                        onPressed: () =>
+                            Navigator.pop(ctx, _DismissChoice.deleteAndDismiss),
                       ),
                       FilledButton(
-                        onPressed: () => Navigator.pop(ctx, _DismissChoice.keepAndDismiss),
+                        onPressed: () =>
+                            Navigator.pop(ctx, _DismissChoice.keepAndDismiss),
                         child: Text(l10n.pendingProjectDismissKeep),
                       ),
                     ],
@@ -10153,9 +12480,10 @@ class _PlayButtonWithGlowState extends State<_PlayButtonWithGlow>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     );
-    _anim = Tween<double>(begin: 0.15, end: 1.0).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
-    );
+    _anim = Tween<double>(
+      begin: 0.15,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
     if (widget.isActive) _ctrl.repeat(reverse: true);
   }
 

@@ -971,9 +971,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get templateSourceFolder => 'Dossier Source';
 
   @override
-  String get templateFile => 'Fichier';
-
-  @override
   String get dateCreatedColumn => 'Créé';
 
   @override
@@ -3439,6 +3436,9 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get suggestionsEmptyState =>
       'Aucune suggestion pour le moment. Appuyez sur Actualiser pour réinitialiser les éléments ignorés.';
+
+  @override
+  String get suggestionNewProject => 'Nouveau';
 
   @override
   String get showSuggestions => 'Afficher les suggestions';

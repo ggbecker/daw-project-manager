@@ -968,9 +968,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get templateSourceFolder => 'Quellordner';
 
   @override
-  String get templateFile => 'Datei';
-
-  @override
   String get dateCreatedColumn => 'Erstellt';
 
   @override
@@ -3423,6 +3420,9 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get suggestionsEmptyState =>
       'Momentan keine Vorschläge. Tippe auf Aktualisieren, um ausgeblendete Elemente zurückzusetzen.';
+
+  @override
+  String get suggestionNewProject => 'Neu';
 
   @override
   String get showSuggestions => 'Vorschläge anzeigen';

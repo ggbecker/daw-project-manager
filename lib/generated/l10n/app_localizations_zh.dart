@@ -946,9 +946,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get templateSourceFolder => '源文件夹';
 
   @override
-  String get templateFile => '文件';
-
-  @override
   String get dateCreatedColumn => '创建时间';
 
   @override
@@ -3296,6 +3293,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get suggestionsEmptyState => '暂无建议。点击刷新以重置已忽略的项目。';
+
+  @override
+  String get suggestionNewProject => '新建';
 
   @override
   String get showSuggestions => '显示建议';

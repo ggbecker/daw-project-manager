@@ -3,7 +3,8 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show HardwareKeyboard;
+import 'package:flutter/services.dart'
+    show HardwareKeyboard, LogicalKeyboardKey;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:intl/intl.dart';
@@ -44,12 +45,29 @@ class ProjectTemplatesPage extends ConsumerStatefulWidget {
   const ProjectTemplatesPage({super.key});
 
   @override
-  ConsumerState<ProjectTemplatesPage> createState() => _ProjectTemplatesPageState();
+  ConsumerState<ProjectTemplatesPage> createState() =>
+      _ProjectTemplatesPageState();
+}
+
+class _SearchIntent extends Intent {
+  const _SearchIntent();
+}
+
+class _SearchAction extends Action<_SearchIntent> {
+  final VoidCallback onSearch;
+  _SearchAction(this.onSearch);
+
+  @override
+  Object? invoke(_SearchIntent intent) {
+    onSearch();
+    return null;
+  }
 }
 
 class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
   final _uuid = const Uuid();
   final _searchController = TextEditingController();
+  final _searchFocusNode = FocusNode();
   String _query = '';
 
   // The last individually-clicked (non-shift) template checkbox — the
@@ -69,7 +87,41 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
+  }
+
+  /// Focuses the search box and selects its current text, same as the main
+  /// dashboard's Ctrl+F/Cmd+F handling — a couple of post-frame retries so a
+  /// focus request that lands in the same frame TrinaGrid tries to grab
+  /// focus for itself doesn't silently lose out.
+  void _focusSearchAndSelectAll() {
+    final primaryFocus = FocusManager.instance.primaryFocus;
+    if (primaryFocus != null && primaryFocus != _searchFocusNode) {
+      primaryFocus.unfocus();
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_searchFocusNode.canRequestFocus) {
+        _searchFocusNode.requestFocus();
+      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!_searchFocusNode.hasFocus) {
+          final thief = FocusManager.instance.primaryFocus;
+          if (thief != null && thief != _searchFocusNode) {
+            thief.unfocus();
+          }
+          if (_searchFocusNode.canRequestFocus) {
+            _searchFocusNode.requestFocus();
+          }
+        }
+        if (_searchController.text.isNotEmpty) {
+          _searchController.selection = TextSelection(
+            baseOffset: 0,
+            extentOffset: _searchController.text.length,
+          );
+        }
+      });
+    });
   }
 
   Set<String> get _selectedTemplateIds => ref.watch(selectedTemplatesProvider);
@@ -85,7 +137,9 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
       _toggleTemplateSelection(targetId);
       return;
     }
-    ref.read(selectedTemplatesProvider.notifier).selectRange(orderedIds, anchor, targetId);
+    ref
+        .read(selectedTemplatesProvider.notifier)
+        .selectRange(orderedIds, anchor, targetId);
     _selectionAnchorId = targetId;
   }
 
@@ -101,7 +155,9 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(l10n.deleteSelectedTemplates),
-        content: Text(l10n.deleteSelectedTemplatesConfirm(selected.length, plural)),
+        content: Text(
+          l10n.deleteSelectedTemplatesConfirm(selected.length, plural),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
@@ -133,13 +189,17 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
     final l10n = AppLocalizations.of(context)!;
     final result = await FilePicker.pickFiles(
       type: FileType.custom,
-      allowedExtensions: ScannerService.supportedExtensions.map((e) => e.substring(1)).toList(),
+      allowedExtensions: ScannerService.supportedExtensions
+          .map((e) => e.substring(1))
+          .toList(),
       dialogTitle: l10n.selectTemplateMainFile,
     );
     if (!mounted || result == null || result.files.single.path == null) return;
 
     final mainFilePath = result.files.single.path!;
-    final nameController = TextEditingController(text: p.basenameWithoutExtension(mainFilePath));
+    final nameController = TextEditingController(
+      text: p.basenameWithoutExtension(mainFilePath),
+    );
 
     ProjectMetadata? metadata;
     try {
@@ -190,11 +250,13 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
                 createdAt: DateTime.now(),
                 updatedAt: DateTime.now(),
               );
-              ref.read(projectTemplatesNotifierProvider.notifier).addTemplate(template);
+              ref
+                  .read(projectTemplatesNotifierProvider.notifier)
+                  .addTemplate(template);
               Navigator.pop(dialogContext);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.templateCreated)),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(l10n.templateCreated)));
             },
             child: Text(l10n.create),
           ),
@@ -213,11 +275,11 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
     );
     if (!mounted || path == null) return;
 
-    await ref.read(templateRootsNotifierProvider.notifier).addRoot(TemplateRoot(
-          id: _uuid.v4(),
-          path: path,
-          addedAt: DateTime.now(),
-        ));
+    await ref
+        .read(templateRootsNotifierProvider.notifier)
+        .addRoot(
+          TemplateRoot(id: _uuid.v4(), path: path, addedAt: DateTime.now()),
+        );
     await _refreshTemplateRoots();
   }
 
@@ -247,16 +309,21 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
       return;
     }
 
-    final templatesBox = await Hive.openBox<ProjectTemplate>('projectTemplates');
+    final templatesBox = await Hive.openBox<ProjectTemplate>(
+      'projectTemplates',
+    );
     // Keyed by full main-file path, not just the folder — a single folder
     // can now yield multiple templates (see discoverTemplateCandidates), so
     // registering one must not shadow its siblings on the next refresh.
-    final existingPaths =
-        templatesBox.values.map((t) => p.join(t.sourceFolderPath, t.mainFileRelativePath)).toSet();
+    final existingPaths = templatesBox.values
+        .map((t) => p.join(t.sourceFolderPath, t.mainFileRelativePath))
+        .toSet();
 
     if (kDebugMode) {
-      print('[ProjectTemplatesPage] Refreshing ${roots.length} root(s): '
-          '${roots.map((r) => r.path).join(' | ')}');
+      print(
+        '[ProjectTemplatesPage] Refreshing ${roots.length} root(s): '
+        '${roots.map((r) => r.path).join(' | ')}',
+      );
     }
 
     final allCandidates = <TemplateFolderCandidate>[];
@@ -264,18 +331,28 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
       // Each root is scanned independently and failures are swallowed inside
       // discoverTemplateCandidates itself, so one missing/inaccessible root
       // never prevents the remaining roots from being scanned.
-      allCandidates.addAll(ProjectTemplateService.discoverTemplateCandidates(root.path));
+      allCandidates.addAll(
+        ProjectTemplateService.discoverTemplateCandidates(root.path),
+      );
     }
-    final newCandidates = ProjectTemplateService.filterNewCandidates(allCandidates, existingPaths);
+    final newCandidates = ProjectTemplateService.filterNewCandidates(
+      allCandidates,
+      existingPaths,
+    );
 
     if (kDebugMode) {
       final alreadyRegistered = allCandidates.length - newCandidates.length;
-      print('[ProjectTemplatesPage] ${allCandidates.length} candidate(s) found across all roots, '
-          '$alreadyRegistered already registered, ${newCandidates.length} new');
+      print(
+        '[ProjectTemplatesPage] ${allCandidates.length} candidate(s) found across all roots, '
+        '$alreadyRegistered already registered, ${newCandidates.length} new',
+      );
     }
 
     for (final candidate in newCandidates) {
-      final mainFilePath = p.join(candidate.sourceFolderPath, candidate.mainFileRelativePath);
+      final mainFilePath = p.join(
+        candidate.sourceFolderPath,
+        candidate.mainFileRelativePath,
+      );
       ProjectMetadata? metadata;
       try {
         metadata = await MetadataExtractor.extractMetadata(mainFilePath);
@@ -298,12 +375,17 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
     }
 
     for (final root in roots) {
-      await rootsBox.put(root.id, root.copyWith(lastRefreshedAt: DateTime.now()));
+      await rootsBox.put(
+        root.id,
+        root.copyWith(lastRefreshedAt: DateTime.now()),
+      );
     }
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.templatesRefreshedSummary(newCandidates.length))),
+        SnackBar(
+          content: Text(l10n.templatesRefreshedSummary(newCandidates.length)),
+        ),
       );
     }
   }
@@ -329,7 +411,9 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
       ),
     );
     if (confirmed == true) {
-      await ref.read(templateRootsNotifierProvider.notifier).removeRoot(root.id);
+      await ref
+          .read(templateRootsNotifierProvider.notifier)
+          .removeRoot(root.id);
     }
   }
 
@@ -358,9 +442,18 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
                         final root = roots[index];
                         return ListTile(
                           leading: const Icon(Icons.folder_outlined),
-                          title: Text(root.path, overflow: TextOverflow.ellipsis),
+                          title: Text(
+                            root.path,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                           subtitle: root.lastRefreshedAt != null
-                              ? Text(l10n.lastRefreshed(DateFormat('yyyy-MM-dd HH:mm').format(root.lastRefreshedAt!)))
+                              ? Text(
+                                  l10n.lastRefreshed(
+                                    DateFormat(
+                                      'yyyy-MM-dd HH:mm',
+                                    ).format(root.lastRefreshedAt!),
+                                  ),
+                                )
                               : null,
                           trailing: IconButton(
                             icon: const Icon(Icons.delete, color: Colors.red),
@@ -398,8 +491,12 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
   Future<void> _renameTemplate(ProjectTemplate template) async {
     final l10n = AppLocalizations.of(context)!;
     final nameController = TextEditingController(text: template.name);
-    final bpmController = TextEditingController(text: template.bpm?.toString() ?? '');
-    final keyController = TextEditingController(text: template.musicalKey ?? '');
+    final bpmController = TextEditingController(
+      text: template.bpm?.toString() ?? '',
+    );
+    final keyController = TextEditingController(
+      text: template.musicalKey ?? '',
+    );
 
     await showDialog(
       context: context,
@@ -423,7 +520,9 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
                   child: TextField(
                     controller: bpmController,
                     decoration: InputDecoration(labelText: l10n.bpm),
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -448,7 +547,9 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
               if (name.isEmpty) return;
               final bpmText = bpmController.text.trim();
               final keyText = keyController.text.trim();
-              ref.read(projectTemplatesNotifierProvider.notifier).updateTemplate(
+              ref
+                  .read(projectTemplatesNotifierProvider.notifier)
+                  .updateTemplate(
                     template.copyWith(
                       name: name,
                       bpm: bpmText.isEmpty ? null : double.tryParse(bpmText),
@@ -459,9 +560,9 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
                     ),
                   );
               Navigator.pop(dialogContext);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.templateUpdated)),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(l10n.templateUpdated)));
             },
             child: Text(l10n.save),
           ),
@@ -492,14 +593,16 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
     );
 
     if (confirmed == true) {
-      ref.read(projectTemplatesNotifierProvider.notifier).deleteTemplate(template.id);
+      ref
+          .read(projectTemplatesNotifierProvider.notifier)
+          .deleteTemplate(template.id);
       if (ref.read(selectedTemplatesProvider).contains(template.id)) {
         ref.read(selectedTemplatesProvider.notifier).toggle(template.id);
       }
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.templateDeleted)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.templateDeleted)));
       }
     }
   }
@@ -514,7 +617,10 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
   /// [orderedIds] is the current filtered/visible row order — needed by the
   /// header "select all" checkbox and by shift-click range selection, the
   /// same way the main dashboard table's checkbox column works.
-  List<TrinaColumn> _buildColumns(AppLocalizations l10n, List<String> orderedIds) {
+  List<TrinaColumn> _buildColumns(
+    AppLocalizations l10n,
+    List<String> orderedIds,
+  ) {
     return [
       TrinaColumn(
         title: '',
@@ -530,13 +636,16 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
         enableEditingMode: false,
         titleRenderer: (rendererContext) {
           final selected = _selectedTemplateIds;
-          final allSelected = orderedIds.isNotEmpty && orderedIds.every(selected.contains);
+          final allSelected =
+              orderedIds.isNotEmpty && orderedIds.every(selected.contains);
           final style = rendererContext.stateManager.configuration.style;
           return DecoratedBox(
             decoration: BoxDecoration(
               color: rendererContext.column.backgroundColor,
               border: BorderDirectional(
-                end: style.enableColumnBorderVertical ? BorderSide(color: style.borderColor) : BorderSide.none,
+                end: style.enableColumnBorderVertical
+                    ? BorderSide(color: style.borderColor)
+                    : BorderSide.none,
               ),
             ),
             child: Center(
@@ -545,7 +654,11 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
                 child: Checkbox(
                   value: allSelected,
                   tristate: selected.isNotEmpty && !allSelected,
-                  onChanged: (_) => allSelected ? _clearTemplateSelection() : ref.read(selectedTemplatesProvider.notifier).selectAll(orderedIds),
+                  onChanged: (_) => allSelected
+                      ? _clearTemplateSelection()
+                      : ref
+                            .read(selectedTemplatesProvider.notifier)
+                            .selectAll(orderedIds),
                 ),
               ),
             ),
@@ -575,41 +688,33 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
         type: TrinaColumnType.text(),
         enableEditingMode: false,
         enableContextMenu: false,
-        width: 240,
+        width: 260,
         minWidth: 160,
         frozen: TrinaColumnFrozen.start,
         renderer: (ctx) {
           final template = ctx.row.cells['data']!.value as ProjectTemplate;
-          return Text(template.name, overflow: TextOverflow.ellipsis);
-        },
-      ),
-      TrinaColumn(
-        title: l10n.templateFile,
-        field: 'file',
-        type: TrinaColumnType.text(),
-        enableEditingMode: false,
-        enableContextMenu: false,
-        width: 260,
-        minWidth: 160,
-        renderer: (ctx) {
-          final template = ctx.row.cells['data']!.value as ProjectTemplate;
-          final fullPath = p.join(template.sourceFolderPath, template.mainFileRelativePath);
+          final fullPath = p.join(
+            template.sourceFolderPath,
+            template.mainFileRelativePath,
+          );
           final sourceExists = File(fullPath).existsSync();
           return Row(
             children: [
-              if (!sourceExists) ...[
-                Icon(Icons.warning_amber_rounded, size: 14, color: Colors.orange.shade400),
-                const SizedBox(width: 4),
-              ],
               Expanded(
-                child: Tooltip(
-                  message: fullPath,
-                  child: Text(
-                    sourceExists ? template.mainFileRelativePath : AppLocalizations.of(context)!.templateSourceMissing,
-                    overflow: TextOverflow.ellipsis,
+                child: Text(template.name, overflow: TextOverflow.ellipsis),
+              ),
+              if (!sourceExists)
+                Tooltip(
+                  message: AppLocalizations.of(context)!.templateSourceMissing,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 4),
+                    child: Icon(
+                      Icons.warning_amber_rounded,
+                      size: 14,
+                      color: Colors.orange.shade400,
+                    ),
                   ),
                 ),
-              ),
             ],
           );
         },
@@ -635,7 +740,8 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
                     logoPath,
                     width: 16,
                     height: 16,
-                    errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                    errorBuilder: (context, error, stackTrace) =>
+                        const SizedBox.shrink(),
                   ),
                 ),
               Flexible(child: Text(dawType, overflow: TextOverflow.ellipsis)),
@@ -672,25 +778,42 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
               Flexible(
                 child: Text(
                   key,
-                  style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color, fontSize: 12),
+                  style: TextStyle(
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                    fontSize: 12,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
               if (camelot != null) ...[
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 6),
-                  child: Container(width: 1, height: 14, color: Colors.grey.withValues(alpha: 0.3)),
+                  child: Container(
+                    width: 1,
+                    height: 14,
+                    color: Colors.grey.withValues(alpha: 0.3),
+                  ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 1,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.blue.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(3),
-                    border: Border.all(color: Colors.blue.withValues(alpha: 0.4), width: 1),
+                    border: Border.all(
+                      color: Colors.blue.withValues(alpha: 0.4),
+                      width: 1,
+                    ),
                   ),
                   child: Text(
                     camelot,
-                    style: const TextStyle(color: Colors.blue, fontSize: 10, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      color: Colors.blue,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -704,7 +827,9 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
         // Cell values are raw DateTimes (not the formatted display string),
         // same as the main dashboard table's lastModified column, so sorting
         // compares chronologically instead of alphabetically.
-        type: TrinaColumnType.custom(compare: compareTemplateModifiedCellValues),
+        type: TrinaColumnType.custom(
+          compare: compareTemplateModifiedCellValues,
+        ),
         enableEditingMode: false,
         enableContextMenu: false,
         width: 200,
@@ -736,7 +861,10 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
         minWidth: 150,
         renderer: (ctx) {
           final template = ctx.row.cells['data']!.value as ProjectTemplate;
-          final fullPath = p.join(template.sourceFolderPath, template.mainFileRelativePath);
+          final fullPath = p.join(
+            template.sourceFolderPath,
+            template.mainFileRelativePath,
+          );
           final sourceExists = File(fullPath).existsSync();
           final l10n = AppLocalizations.of(context)!;
           return Row(
@@ -772,26 +900,41 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
   /// template record itself was registered/edited in the app. Null if the
   /// source file is missing.
   DateTime? _lastModifiedDate(ProjectTemplate template) {
-    final file = File(p.join(template.sourceFolderPath, template.mainFileRelativePath));
+    final file = File(
+      p.join(template.sourceFolderPath, template.mainFileRelativePath),
+    );
     if (!file.existsSync()) return null;
     return file.lastModifiedSync();
   }
 
   List<TrinaRow> _buildRows(List<ProjectTemplate> templates) {
     return templates
-        .map((template) => TrinaRow(cells: {
+        .map(
+          (template) => TrinaRow(
+            cells: {
               'checkbox': TrinaCell(value: ''),
               'name': TrinaCell(value: template.name),
-              'file': TrinaCell(value: template.mainFileRelativePath),
               'dawType': TrinaCell(
-                value: MetadataExtractor.getDawTypeFromExtension(p.extension(template.mainFileRelativePath)) ?? '',
+                value:
+                    MetadataExtractor.getDawTypeFromExtension(
+                      p.extension(template.mainFileRelativePath),
+                    ) ??
+                    '',
               ),
-              'bpm': TrinaCell(value: template.bpm != null ? template.bpm!.toStringAsFixed(template.bpm! % 1 == 0 ? 0 : 2) : ''),
+              'bpm': TrinaCell(
+                value: template.bpm != null
+                    ? template.bpm!.toStringAsFixed(
+                        template.bpm! % 1 == 0 ? 0 : 2,
+                      )
+                    : '',
+              ),
               'key': TrinaCell(value: template.musicalKey ?? ''),
               'modifiedAt': TrinaCell(value: _lastModifiedDate(template)),
               'actions': TrinaCell(value: ''),
               'data': TrinaCell(value: template),
-            }))
+            },
+          ),
+        )
         .toList();
   }
 
@@ -803,162 +946,269 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
     final activeTheme = ref.watch(themeDataProvider);
     final isNeon = ref.watch(themeTypeProvider) == AppThemeType.neonDark;
     final isDark = activeTheme.brightness == Brightness.dark;
-    final oddColor = isNeon ? activeTheme.scaffoldBackgroundColor : activeTheme.cardColor;
+    final oddColor = isNeon
+        ? activeTheme.scaffoldBackgroundColor
+        : activeTheme.cardColor;
     final evenColor = isNeon
         ? activeTheme.cardColor
         : isDark
-            ? Color.alphaBlend(Colors.white.withValues(alpha: 0.05), activeTheme.cardColor)
-            : Color.alphaBlend(Colors.black.withValues(alpha: 0.04), activeTheme.cardColor);
+        ? Color.alphaBlend(
+            Colors.white.withValues(alpha: 0.05),
+            activeTheme.cardColor,
+          )
+        : Color.alphaBlend(
+            Colors.black.withValues(alpha: 0.04),
+            activeTheme.cardColor,
+          );
 
-    return Scaffold(
-      appBar: isMobile
-          ? AppBar(
-              title: Text(l10n.projectTemplates),
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-            )
-          : null,
-      body: Column(
-        children: [
-          DesktopTitleBar(title: l10n.projectTemplates, showBack: true),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      hintText: l10n.searchTemplates,
-                      prefixIcon: const Icon(Icons.search),
-                      border: const OutlineInputBorder(),
-                      isDense: true,
+    return Shortcuts(
+      shortcuts: <LogicalKeySet, Intent>{
+        LogicalKeySet(
+          Platform.isMacOS
+              ? LogicalKeyboardKey.meta
+              : LogicalKeyboardKey.control,
+          LogicalKeyboardKey.keyF,
+        ): const _SearchIntent(),
+      },
+      child: Actions(
+        actions: <Type, Action<Intent>>{
+          _SearchIntent: _SearchAction(_focusSearchAndSelectAll),
+        },
+        child: Focus(
+          autofocus: true,
+          canRequestFocus: true,
+          child: Scaffold(
+            appBar: isMobile
+                ? AppBar(
+                    title: Text(l10n.projectTemplates),
+                    leading: IconButton(
+                      icon: const Icon(Icons.arrow_back),
+                      onPressed: () => Navigator.of(context).pop(),
                     ),
+                  )
+                : null,
+            body: Column(
+              children: [
+                DesktopTitleBar(title: l10n.projectTemplates, showBack: true),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      OutlinedButton.icon(
+                        icon: const Icon(Icons.note_add_outlined, size: 18),
+                        label: Text(l10n.registerTemplate),
+                        onPressed: _pickMainFile,
+                      ),
+                      const SizedBox(width: 8),
+                      OutlinedButton.icon(
+                        icon: const Icon(
+                          Icons.folder_special_outlined,
+                          size: 18,
+                        ),
+                        label: Text(l10n.manageTemplateFolders),
+                        onPressed: _manageTemplateFolders,
+                      ),
+                      const SizedBox(width: 8),
+                      Tooltip(
+                        message: l10n.refreshTemplateFolders,
+                        child: IconButton(
+                          icon: const Icon(Icons.refresh),
+                          onPressed: _refreshTemplateRoots,
+                        ),
+                      ),
+                      const Spacer(),
+                      SizedBox(
+                        width: 320,
+                        child: TextField(
+                          controller: _searchController,
+                          focusNode: _searchFocusNode,
+                          decoration: InputDecoration(
+                            hintText:
+                                '${l10n.searchTemplates} (${Platform.isMacOS ? '⌘F' : 'Ctrl+F'})',
+                            prefixIcon: const Icon(Icons.search),
+                            border: const OutlineInputBorder(),
+                            isDense: true,
+                            suffixIcon: _query.isNotEmpty
+                                ? IconButton(
+                                    icon: const Icon(Icons.close, size: 18),
+                                    onPressed: () => _searchController.clear(),
+                                  )
+                                : null,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 8),
-                OutlinedButton.icon(
-                  icon: const Icon(Icons.note_add_outlined, size: 18),
-                  label: Text(l10n.registerTemplate),
-                  onPressed: _pickMainFile,
-                ),
-                const SizedBox(width: 8),
-                OutlinedButton.icon(
-                  icon: const Icon(Icons.folder_special_outlined, size: 18),
-                  label: Text(l10n.manageTemplateFolders),
-                  onPressed: _manageTemplateFolders,
-                ),
-                const SizedBox(width: 8),
-                Tooltip(
-                  message: l10n.refreshTemplateFolders,
-                  child: IconButton(
-                    icon: const Icon(Icons.refresh),
-                    onPressed: _refreshTemplateRoots,
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: isNeon
+                              ? activeTheme.colorScheme.primary.withValues(
+                                  alpha: 0.25,
+                                )
+                              : activeTheme.dividerColor.withValues(alpha: 0.4),
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: templatesAsync.when(
+                        data: (templates) {
+                          final filtered = _query.isEmpty
+                              ? templates
+                              : templates
+                                    .where(
+                                      (t) =>
+                                          t.name.toLowerCase().contains(_query),
+                                    )
+                                    .toList();
+
+                          if (templates.isEmpty) {
+                            return Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.folder_copy_outlined,
+                                    size: 64,
+                                    color: Theme.of(context).colorScheme.primary
+                                        .withValues(alpha: 0.5),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    l10n.noTemplatesYet,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.titleMedium,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    l10n.createFirstProjectTemplate,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall,
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+
+                          if (filtered.isEmpty) {
+                            return Center(
+                              child: Text(l10n.noMatchingTemplates),
+                            );
+                          }
+
+                          final orderedIds = filtered.map((t) => t.id).toList();
+                          final selectedIds = _selectedTemplateIds;
+                          final selectedTemplates = templates
+                              .where((t) => selectedIds.contains(t.id))
+                              .toList();
+
+                          return Column(
+                            children: [
+                              Expanded(
+                                child: TrinaGrid(
+                                  key: ValueKey(
+                                    'project_templates_grid_${l10n.localeName}_${ref.watch(themeTypeProvider).name}_'
+                                    '${filtered.map((t) => '${t.id}_${t.updatedAt}').join(',')}_${selectedIds.join(',')}',
+                                  ),
+                                  columns: _buildColumns(l10n, orderedIds),
+                                  rows: _buildRows(filtered),
+                                  rowColorCallback:
+                                      (TrinaRowColorContext ctx) =>
+                                          ctx.rowIdx.isOdd
+                                          ? oddColor
+                                          : evenColor,
+                                  configuration: TrinaGridConfiguration(
+                                    style: TrinaGridStyleConfig(
+                                      gridBackgroundColor:
+                                          activeTheme.cardColor,
+                                      gridBorderColor: isNeon
+                                          ? activeTheme.colorScheme.primary
+                                                .withValues(alpha: 0.25)
+                                          : activeTheme.dividerColor.withValues(
+                                              alpha: 0.4,
+                                            ),
+                                      borderColor: isNeon
+                                          ? activeTheme.colorScheme.primary
+                                                .withValues(alpha: 0.15)
+                                          : activeTheme.dividerColor.withValues(
+                                              alpha: 0.25,
+                                            ),
+                                      gridBorderRadius: BorderRadius.zero,
+                                      rowColor: activeTheme.cardColor,
+                                      cellColorInEditState: Colors.transparent,
+                                      cellColorInReadOnlyState:
+                                          Colors.transparent,
+                                      columnTextStyle: TextStyle(
+                                        color: isNeon
+                                            ? activeTheme.colorScheme.primary
+                                            : activeTheme
+                                                  .textTheme
+                                                  .titleMedium
+                                                  ?.color,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      cellTextStyle: TextStyle(
+                                        color: activeTheme
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.color,
+                                      ),
+                                      columnHeight: 44,
+                                      rowHeight: 48,
+                                      activatedBorderColor:
+                                          activeTheme.colorScheme.primary,
+                                      activatedColor: Colors.transparent,
+                                      iconColor: isNeon
+                                          ? activeTheme.colorScheme.primary
+                                                .withValues(alpha: 0.7)
+                                          : activeTheme
+                                                    .textTheme
+                                                    .bodyMedium
+                                                    ?.color ??
+                                                Colors.grey,
+                                      menuBackgroundColor:
+                                          activeTheme.cardColor,
+                                      oddRowColor: oddColor,
+                                      evenRowColor: evenColor,
+                                    ),
+                                    columnSize: const TrinaGridColumnSizeConfig(
+                                      autoSizeMode: TrinaAutoSizeMode.scale,
+                                      resizeMode: TrinaResizeMode.pushAndPull,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              if (selectedIds.isNotEmpty)
+                                _buildSelectionBar(l10n, selectedTemplates),
+                            ],
+                          );
+                        },
+                        loading: () =>
+                            const Center(child: CircularProgressIndicator()),
+                        error: (error, stack) =>
+                            Center(child: Text(l10n.errorLoadingTemplates)),
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-          Expanded(
-            child: templatesAsync.when(
-              data: (templates) {
-                final filtered = _query.isEmpty
-                    ? templates
-                    : templates.where((t) => t.name.toLowerCase().contains(_query)).toList();
-
-                if (templates.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.folder_copy_outlined,
-                          size: 64,
-                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          l10n.noTemplatesYet,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(l10n.createFirstProjectTemplate, style: Theme.of(context).textTheme.bodySmall),
-                      ],
-                    ),
-                  );
-                }
-
-                if (filtered.isEmpty) {
-                  return Center(child: Text(l10n.noMatchingTemplates));
-                }
-
-                final orderedIds = filtered.map((t) => t.id).toList();
-                final selectedIds = _selectedTemplateIds;
-                final selectedTemplates = templates.where((t) => selectedIds.contains(t.id)).toList();
-
-                return Column(
-                  children: [
-                    Expanded(
-                      child: TrinaGrid(
-                        key: ValueKey(
-                          'project_templates_grid_${l10n.localeName}_${ref.watch(themeTypeProvider).name}_'
-                          '${filtered.map((t) => '${t.id}_${t.updatedAt}').join(',')}_${selectedIds.join(',')}',
-                        ),
-                        columns: _buildColumns(l10n, orderedIds),
-                        rows: _buildRows(filtered),
-                        rowColorCallback: (TrinaRowColorContext ctx) => ctx.rowIdx.isOdd ? oddColor : evenColor,
-                        configuration: TrinaGridConfiguration(
-                          style: TrinaGridStyleConfig(
-                            gridBackgroundColor: activeTheme.cardColor,
-                            gridBorderColor: isNeon
-                                ? activeTheme.colorScheme.primary.withValues(alpha: 0.25)
-                                : activeTheme.dividerColor.withValues(alpha: 0.4),
-                            borderColor: isNeon
-                                ? activeTheme.colorScheme.primary.withValues(alpha: 0.15)
-                                : activeTheme.dividerColor.withValues(alpha: 0.25),
-                            gridBorderRadius: BorderRadius.zero,
-                            rowColor: activeTheme.cardColor,
-                            cellColorInEditState: Colors.transparent,
-                            cellColorInReadOnlyState: Colors.transparent,
-                            columnTextStyle: TextStyle(
-                              color: isNeon ? activeTheme.colorScheme.primary : activeTheme.textTheme.titleMedium?.color,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            cellTextStyle: TextStyle(color: activeTheme.textTheme.bodyMedium?.color),
-                            columnHeight: 44,
-                            rowHeight: 48,
-                            activatedBorderColor: activeTheme.colorScheme.primary,
-                            activatedColor: Colors.transparent,
-                            iconColor: isNeon
-                                ? activeTheme.colorScheme.primary.withValues(alpha: 0.7)
-                                : activeTheme.textTheme.bodyMedium?.color ?? Colors.grey,
-                            menuBackgroundColor: activeTheme.cardColor,
-                            oddRowColor: oddColor,
-                            evenRowColor: evenColor,
-                          ),
-                          columnSize: const TrinaGridColumnSizeConfig(
-                            autoSizeMode: TrinaAutoSizeMode.scale,
-                            resizeMode: TrinaResizeMode.pushAndPull,
-                          ),
-                        ),
-                      ),
-                    ),
-                    if (selectedIds.isNotEmpty) _buildSelectionBar(l10n, selectedTemplates),
-                  ],
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => Center(child: Text(l10n.errorLoadingTemplates)),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildSelectionBar(AppLocalizations l10n, List<ProjectTemplate> selected) {
+  Widget _buildSelectionBar(
+    AppLocalizations l10n,
+    List<ProjectTemplate> selected,
+  ) {
     final plural = selected.length == 1 ? '' : 's';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -968,7 +1218,9 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
         children: [
           Text(
             l10n.templatesSelected(selected.length, plural),
-            style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
+            style: TextStyle(
+              color: Theme.of(context).textTheme.bodyMedium?.color,
+            ),
           ),
           Row(
             children: [
@@ -980,7 +1232,9 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
               ElevatedButton.icon(
                 icon: const Icon(Icons.delete),
                 label: Text(l10n.deleteSelectedTemplates),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade700),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red.shade700,
+                ),
                 onPressed: () => _deleteSelectedTemplates(selected),
               ),
             ],

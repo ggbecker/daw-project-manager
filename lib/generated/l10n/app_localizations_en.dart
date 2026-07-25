@@ -965,9 +965,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get templateSourceFolder => 'Source Folder';
 
   @override
-  String get templateFile => 'File';
-
-  @override
   String get dateCreatedColumn => 'Created';
 
   @override
@@ -3404,6 +3401,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get suggestionsEmptyState =>
       'No suggestions right now. Tap Refresh to reset dismissed items.';
+
+  @override
+  String get suggestionNewProject => 'New';
 
   @override
   String get showSuggestions => 'Show suggestions';

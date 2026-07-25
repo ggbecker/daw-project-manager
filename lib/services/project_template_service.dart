@@ -40,7 +40,9 @@ class ProjectTemplateService {
   /// being skipped as ambiguous; [instantiate] knows to leave sibling
   /// project files behind when copying that kind of candidate (see its doc
   /// comment). Subfolders with zero matches are omitted entirely.
-  static List<TemplateFolderCandidate> discoverTemplateCandidates(String parentFolderPath) {
+  static List<TemplateFolderCandidate> discoverTemplateCandidates(
+    String parentFolderPath,
+  ) {
     final candidates = <TemplateFolderCandidate>[];
     List<FileSystemEntity> topLevel;
     try {
@@ -49,20 +51,26 @@ class ProjectTemplateService {
       // Root folder missing/inaccessible — return no candidates rather than
       // throwing, so one bad root doesn't abort scanning of the others.
       if (kDebugMode) {
-        print('[ProjectTemplateService] Could not list "$parentFolderPath": $e');
+        print(
+          '[ProjectTemplateService] Could not list "$parentFolderPath": $e',
+        );
       }
       return candidates;
     }
 
     if (kDebugMode) {
-      print('[ProjectTemplateService] Scanning "$parentFolderPath": '
-          '${topLevel.length} top-level entries');
+      print(
+        '[ProjectTemplateService] Scanning "$parentFolderPath": '
+        '${topLevel.length} top-level entries',
+      );
     }
 
     for (final entity in topLevel) {
       if (entity is! Directory) {
         if (kDebugMode) {
-          print('[ProjectTemplateService]   skip "${p.basename(entity.path)}": not a folder');
+          print(
+            '[ProjectTemplateService]   skip "${p.basename(entity.path)}": not a folder',
+          );
         }
         continue;
       }
@@ -70,20 +78,27 @@ class ProjectTemplateService {
       final matches = <File>[];
       try {
         for (final e in entity.listSync(recursive: true)) {
-          if (e is File && ScannerService.supportedExtensions.contains(p.extension(e.path).toLowerCase())) {
+          if (e is File &&
+              ScannerService.supportedExtensions.contains(
+                p.extension(e.path).toLowerCase(),
+              )) {
             matches.add(e);
           }
         }
       } catch (e) {
         if (kDebugMode) {
-          print('[ProjectTemplateService]   skip "${entity.path}": could not list contents ($e)');
+          print(
+            '[ProjectTemplateService]   skip "${entity.path}": could not list contents ($e)',
+          );
         }
         continue;
       }
 
       if (matches.isEmpty) {
         if (kDebugMode) {
-          print('[ProjectTemplateService]   skip "${entity.path}": no recognized DAW project file found');
+          print(
+            '[ProjectTemplateService]   skip "${entity.path}": no recognized DAW project file found',
+          );
         }
         continue;
       }
@@ -91,13 +106,20 @@ class ProjectTemplateService {
       final folderName = p.basename(entity.path);
       if (matches.length == 1) {
         if (kDebugMode) {
-          print('[ProjectTemplateService]   found candidate "${entity.path}" -> ${matches.single.path}');
+          print(
+            '[ProjectTemplateService]   found candidate "${entity.path}" -> ${matches.single.path}',
+          );
         }
-        candidates.add(TemplateFolderCandidate(
-          name: folderName,
-          sourceFolderPath: entity.path,
-          mainFileRelativePath: p.relative(matches.single.path, from: entity.path),
-        ));
+        candidates.add(
+          TemplateFolderCandidate(
+            name: folderName,
+            sourceFolderPath: entity.path,
+            mainFileRelativePath: p.relative(
+              matches.single.path,
+              from: entity.path,
+            ),
+          ),
+        );
         continue;
       }
 
@@ -106,20 +128,26 @@ class ProjectTemplateService {
       // folder. `instantiate` leaves the *other* project files behind when
       // copying one of these, so they don't bleed into an unrelated project.
       if (kDebugMode) {
-        print('[ProjectTemplateService]   "${entity.path}": ${matches.length} DAW project files found '
-            '(${matches.map((f) => p.basename(f.path)).join(', ')}) — registering each as its own template');
+        print(
+          '[ProjectTemplateService]   "${entity.path}": ${matches.length} DAW project files found '
+          '(${matches.map((f) => p.basename(f.path)).join(', ')}) — registering each as its own template',
+        );
       }
       for (final match in matches) {
-        candidates.add(TemplateFolderCandidate(
-          name: '$folderName — ${p.basenameWithoutExtension(match.path)}',
-          sourceFolderPath: entity.path,
-          mainFileRelativePath: p.relative(match.path, from: entity.path),
-        ));
+        candidates.add(
+          TemplateFolderCandidate(
+            name: '$folderName — ${p.basenameWithoutExtension(match.path)}',
+            sourceFolderPath: entity.path,
+            mainFileRelativePath: p.relative(match.path, from: entity.path),
+          ),
+        );
       }
     }
 
     if (kDebugMode) {
-      print('[ProjectTemplateService] "$parentFolderPath": ${candidates.length} candidate(s) found');
+      print(
+        '[ProjectTemplateService] "$parentFolderPath": ${candidates.length} candidate(s) found',
+      );
     }
 
     return candidates;
@@ -138,7 +166,11 @@ class ProjectTemplateService {
     Set<String> existingMainFilePaths,
   ) {
     return candidates
-        .where((c) => !existingMainFilePaths.contains(p.join(c.sourceFolderPath, c.mainFileRelativePath)))
+        .where(
+          (c) => !existingMainFilePaths.contains(
+            p.join(c.sourceFolderPath, c.mainFileRelativePath),
+          ),
+        )
         .toList();
   }
 
@@ -149,16 +181,28 @@ class ProjectTemplateService {
   /// whatever subfolder it originally lived in relative to the template
   /// root. Returns the new absolute path of the renamed main file.
   ///
-  /// Other recognized DAW project files that sit in the *same* directory as
-  /// the main file are left out of the copy — a template can be a single
-  /// project file living alongside unrelated sibling projects that happen to
-  /// share the same sample/resource folder, and instantiating one shouldn't
-  /// drag the others along. Everything else (subfolders, non-project files,
-  /// project files in *other* subfolders) is copied as-is.
+  /// [siblingTemplates] should be every *other* registered [ProjectTemplate]
+  /// that shares [template]'s `sourceFolderPath` — i.e. the rest of a
+  /// "shared" folder's templates (see [discoverTemplateCandidates]). Each
+  /// sibling's top-level path segment relative to that shared folder (its
+  /// own file if it sits directly in the folder, or its containing
+  /// subfolder if it lives nested in one) is left out of the copy, so
+  /// instantiating one song out of a shared folder doesn't drag the other
+  /// registered songs along with it. Everything else — resource subfolders
+  /// (samples, renders, ...) and any project file that *isn't* itself a
+  /// registered sibling template — is copied as-is, even if it happens to
+  /// share a folder with the one being instantiated.
+  ///
+  /// The renamed main file's on-disk modified time is stamped to "now" —
+  /// file copies (at least on Windows) preserve the original mtime, so
+  /// without this a freshly-created project would inherit the template's
+  /// (often much older) timestamp and sort as if it hadn't been touched in
+  /// a long time on the main dashboard's Last Modified column.
   static Future<String> instantiate({
     required ProjectTemplate template,
     required String destinationFolderPath,
     required String newProjectName,
+    List<ProjectTemplate> siblingTemplates = const [],
   }) async {
     final sourceDir = Directory(template.sourceFolderPath);
     if (!await sourceDir.exists()) {
@@ -175,21 +219,26 @@ class ProjectTemplateService {
       );
     }
 
+    final ownFirstSegment = p.split(template.mainFileRelativePath).first;
     final excludedPaths = <String>{};
-    try {
-      for (final e in Directory(p.dirname(sourceMainFile.path)).listSync(recursive: false)) {
-        if (e is File &&
-            e.path != sourceMainFile.path &&
-            ScannerService.supportedExtensions.contains(p.extension(e.path).toLowerCase())) {
-          excludedPaths.add(e.path);
-        }
+    for (final sibling in siblingTemplates) {
+      if (sibling.sourceFolderPath != template.sourceFolderPath) continue;
+      if (sibling.mainFileRelativePath == template.mainFileRelativePath) {
+        continue;
       }
-    } catch (_) {
-      // Best-effort — if the sibling scan fails, fall back to copying
-      // everything rather than blocking instantiation entirely.
+      final siblingFirstSegment = p.split(sibling.mainFileRelativePath).first;
+      // If the sibling shares the exact same top-level subfolder as the
+      // template being instantiated, excluding it would also exclude the
+      // main file itself — leave it in rather than corrupt the copy.
+      if (siblingFirstSegment == ownFirstSegment) continue;
+      excludedPaths.add(p.join(template.sourceFolderPath, siblingFirstSegment));
     }
 
-    await _copyDirectory(sourceDir, Directory(destinationFolderPath), excludedPaths: excludedPaths);
+    await _copyDirectory(
+      sourceDir,
+      Directory(destinationFolderPath),
+      excludedPaths: excludedPaths,
+    );
 
     final copiedMainFile = File(
       p.join(destinationFolderPath, template.mainFileRelativePath),
@@ -197,7 +246,8 @@ class ProjectTemplateService {
     final newFileName =
         '$newProjectName${p.extension(template.mainFileRelativePath)}';
     final newMainFilePath = p.join(p.dirname(copiedMainFile.path), newFileName);
-    await copiedMainFile.rename(newMainFilePath);
+    final renamedMainFile = await copiedMainFile.rename(newMainFilePath);
+    await renamedMainFile.setLastModified(DateTime.now());
 
     return newMainFilePath;
   }
@@ -212,7 +262,11 @@ class ProjectTemplateService {
       if (excludedPaths.contains(entity.path)) continue;
       final newPath = p.join(destination.path, p.basename(entity.path));
       if (entity is Directory) {
-        await _copyDirectory(entity, Directory(newPath), excludedPaths: excludedPaths);
+        await _copyDirectory(
+          entity,
+          Directory(newPath),
+          excludedPaths: excludedPaths,
+        );
       } else if (entity is File) {
         await entity.copy(newPath);
       }
