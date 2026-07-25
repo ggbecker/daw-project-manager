@@ -6958,7 +6958,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                   child: Container(
                     width: 1,
                     height: 14,
-                    color: Colors.grey.withOpacity(0.3),
+                    color: Colors.grey.withValues(alpha: 0.3),
                   ),
                 ),
                 Container(
@@ -6967,10 +6967,10 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                     vertical: 1,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.15),
+                    color: Colors.blue.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(3),
                     border: Border.all(
-                      color: Colors.blue.withOpacity(0.4),
+                      color: Colors.blue.withValues(alpha: 0.4),
                       width: 1,
                     ),
                   ),
@@ -7101,10 +7101,10 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               return Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: iconColor.withOpacity(0.1),
+                  color: iconColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
                   border: Border.all(
-                    color: iconColor.withOpacity(0.3),
+                    color: iconColor.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -7217,7 +7217,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                   style: TextStyle(
                     color: Theme.of(
                       context,
-                    ).textTheme.bodySmall?.color?.withOpacity(0.5),
+                    ).textTheme.bodySmall?.color?.withValues(alpha: 0.5),
                     fontSize: 16,
                   ),
                 ),
@@ -7271,7 +7271,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                   style: TextStyle(
                     color: Theme.of(
                       context,
-                    ).textTheme.bodySmall?.color?.withOpacity(0.5),
+                    ).textTheme.bodySmall?.color?.withValues(alpha: 0.5),
                     fontSize: 16,
                   ),
                 ),
@@ -7315,7 +7315,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                   style: TextStyle(
                     color: Theme.of(
                       context,
-                    ).textTheme.bodySmall?.color?.withOpacity(0.5),
+                    ).textTheme.bodySmall?.color?.withValues(alpha: 0.5),
                     fontSize: 16,
                   ),
                 ),
@@ -10392,21 +10392,21 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                                 ),
                                 decoration: BoxDecoration(
                                   color: project.daysUntilDeadline! < 0
-                                      ? Colors.red.withOpacity(0.1)
+                                      ? Colors.red.withValues(alpha: 0.1)
                                       : project.daysUntilDeadline! == 0
-                                      ? Colors.red.withOpacity(0.1)
+                                      ? Colors.red.withValues(alpha: 0.1)
                                       : project.daysUntilDeadline! <= 7
-                                      ? Colors.orange.withOpacity(0.1)
-                                      : Colors.blue.withOpacity(0.1),
+                                      ? Colors.orange.withValues(alpha: 0.1)
+                                      : Colors.blue.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(4),
                                   border: Border.all(
                                     color: project.daysUntilDeadline! < 0
-                                        ? Colors.red.withOpacity(0.3)
+                                        ? Colors.red.withValues(alpha: 0.3)
                                         : project.daysUntilDeadline! == 0
-                                        ? Colors.red.withOpacity(0.3)
+                                        ? Colors.red.withValues(alpha: 0.3)
                                         : project.daysUntilDeadline! <= 7
-                                        ? Colors.orange.withOpacity(0.3)
-                                        : Colors.blue.withOpacity(0.3),
+                                        ? Colors.orange.withValues(alpha: 0.3)
+                                        : Colors.blue.withValues(alpha: 0.3),
                                     width: 1,
                                   ),
                                 ),
@@ -10515,7 +10515,7 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
               color: Theme.of(context).colorScheme.surface,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 4,
                   offset: const Offset(0, -2),
                 ),

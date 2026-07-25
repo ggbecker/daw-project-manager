@@ -1444,7 +1444,7 @@ class _BackupProgressDialogState extends State<_BackupProgressDialog> {
                   _isCancelling ? AppLocalizations.of(context)!.pleaseWaitCancellingUpload : progress.currentItem,
                   style: TextStyle(
                     fontSize: 14,
-                    color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.8),
+                    color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.8),
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,

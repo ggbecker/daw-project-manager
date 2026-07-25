@@ -1036,7 +1036,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
                 child: Text(
                   '|',
-                  style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5), fontSize: 18),
+                  style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.5), fontSize: 18),
                 ),
               ),
               IconButton(
@@ -1059,7 +1059,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
                 child: Text(
                   '|',
-                  style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5), fontSize: 18),
+                  style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.5), fontSize: 18),
                 ),
               ),
               IconButton(
@@ -1333,7 +1333,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.broken_image, size: 50, color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5)),
+                              Icon(Icons.broken_image, size: 50, color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.5)),
                               const SizedBox(height: 8),
                               Text(
                                 AppLocalizations.of(context)!.imageNotFound,
@@ -1688,7 +1688,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
                                             padding: const EdgeInsets.symmetric(horizontal: 8.0),
                                             child: Text(
                                               '|',
-                                              style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5), fontSize: 18),
+                                              style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.5), fontSize: 18),
                                             ),
                                           ),
                                         IconButton(
@@ -1722,7 +1722,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
                                             padding: const EdgeInsets.symmetric(horizontal: 8.0),
                                             child: Text(
                                               '|',
-                                              style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5), fontSize: 18),
+                                              style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.5), fontSize: 18),
                                             ),
                                           ),
                                         IconButton(
@@ -2122,7 +2122,7 @@ class _FilesSectionState extends ConsumerState<_FilesSection> {
                     ),
                   Text(
                     DateFormat.yMMMd(Localizations.localeOf(context).toString()).add_jm().format(file.addedAt),
-                    style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5), fontSize: 11),
+                    style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.5), fontSize: 11),
                   ),
                 ],
               ),

@@ -647,11 +647,11 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                           decoration: InputDecoration(
                                             labelText: AppLocalizations.of(context)!.camelotCode,
                                             filled: true,
-                                            fillColor: Colors.blue.withOpacity(0.05),
+                                            fillColor: Colors.blue.withValues(alpha: 0.05),
                                             border: const OutlineInputBorder(),
                                             disabledBorder: OutlineInputBorder(
                                               borderSide: BorderSide(
-                                                color: Colors.blue.withOpacity(0.3),
+                                                color: Colors.blue.withValues(alpha: 0.3),
                                               ),
                                             ),
                                             prefixIcon: const Icon(
@@ -679,11 +679,11 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                             decoration: InputDecoration(
                                               labelText: AppLocalizations.of(context)!.daw,
                                               filled: true,
-                                              fillColor: dawColor.withOpacity(0.05),
+                                              fillColor: dawColor.withValues(alpha: 0.05),
                                               border: const OutlineInputBorder(),
                                               disabledBorder: OutlineInputBorder(
                                                 borderSide: BorderSide(
-                                                  color: dawColor.withOpacity(0.3),
+                                                  color: dawColor.withValues(alpha: 0.3),
                                                 ),
                                               ),
                                               prefixIcon: _buildDawPrefixIcon(updatedProject.dawType, dawColor),
@@ -744,11 +744,11 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                             decoration: InputDecoration(
                                               labelText: AppLocalizations.of(context)!.camelotCode,
                                               filled: true,
-                                              fillColor: Colors.blue.withOpacity(0.05),
+                                              fillColor: Colors.blue.withValues(alpha: 0.05),
                                               border: const OutlineInputBorder(),
                                               disabledBorder: OutlineInputBorder(
                                                 borderSide: BorderSide(
-                                                  color: Colors.blue.withOpacity(0.3),
+                                                  color: Colors.blue.withValues(alpha: 0.3),
                                                 ),
                                               ),
                                               prefixIcon: const Icon(
@@ -778,11 +778,11 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                               decoration: InputDecoration(
                                                 labelText: AppLocalizations.of(context)!.daw,
                                                 filled: true,
-                                                fillColor: dawColor.withOpacity(0.05),
+                                                fillColor: dawColor.withValues(alpha: 0.05),
                                                 border: const OutlineInputBorder(),
                                                 disabledBorder: OutlineInputBorder(
                                                   borderSide: BorderSide(
-                                                    color: dawColor.withOpacity(0.3),
+                                                    color: dawColor.withValues(alpha: 0.3),
                                                   ),
                                                 ),
                                                 prefixIcon: _buildDawPrefixIcon(updatedProject.dawType, dawColor),
@@ -2367,7 +2367,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
       },
       child: Card(
         color: _isDraggingOver
-            ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3)
+            ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3)
             : null,
         child: Container(
           decoration: _isDraggingOver

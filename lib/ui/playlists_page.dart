@@ -80,7 +80,7 @@ class _PlaylistsPageState extends ConsumerState<PlaylistsPage> {
             Icon(
               searchQuery.trim().isNotEmpty ? Icons.search_off : Icons.playlist_add,
               size: 64,
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 16),
             Text(
@@ -1076,7 +1076,7 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
               Icon(
                 Icons.music_off,
                 size: 64,
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
               ),
               const SizedBox(height: 16),
               Text(
