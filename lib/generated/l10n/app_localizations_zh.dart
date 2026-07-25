@@ -372,6 +372,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get clearDaw => '清除DAW';
 
   @override
+  String get filterByKey => '按调性筛选';
+
+  @override
+  String get allKeys => '所有调性';
+
+  @override
   String get lastModifiedColumn => '最后修改';
 
   @override

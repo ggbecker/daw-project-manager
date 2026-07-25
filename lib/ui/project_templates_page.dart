@@ -26,6 +26,7 @@ import '../utils/daw_logo.dart';
 import '../utils/mobile_utils.dart';
 import 'dialogs/create_project_dialog.dart';
 import 'widgets/desktop_title_bar.dart';
+import 'widgets/filter_dropdown.dart';
 
 /// Same comparator shape as the main dashboard table's
 /// `compareLastModifiedCellValues` — cell values are raw `DateTime?`s (not
@@ -68,7 +69,6 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
   final _uuid = const Uuid();
   final _searchController = TextEditingController();
   final _searchFocusNode = FocusNode();
-  String _query = '';
 
   // The last individually-clicked (non-shift) template checkbox — the
   // anchor a shift-click range-selects from. Mirrors the dashboard's
@@ -79,8 +79,14 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
   @override
   void initState() {
     super.initState();
+    // templateSearchProvider (rather than local widget state) is the source
+    // of truth, so the search text survives navigating away from and back
+    // to this page — prime the controller from it, then keep it in sync.
+    _searchController.text = ref.read(templateSearchProvider);
     _searchController.addListener(() {
-      setState(() => _query = _searchController.text.trim().toLowerCase());
+      ref
+          .read(templateSearchProvider.notifier)
+          .setSearchText(_searchController.text);
     });
   }
 
@@ -942,6 +948,14 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final templatesAsync = ref.watch(projectTemplatesProvider);
+    final filtered = ref.watch(filteredProjectTemplatesProvider);
+    final query = ref.watch(templateSearchProvider);
+    final dawFilter = ref.watch(templateDawFilterProvider);
+    final availableDaws = ref.watch(availableTemplateDawsProvider);
+    final keyFilter = ref.watch(templateKeyFilterProvider);
+    final availableKeys = ref.watch(availableTemplateKeysProvider);
+    final hasAnyFilterOptions =
+        availableDaws.isNotEmpty || availableKeys.isNotEmpty;
     final isMobile = MobileUtils.isMobile();
     final activeTheme = ref.watch(themeDataProvider);
     final isNeon = ref.watch(themeTypeProvider) == AppThemeType.neonDark;
@@ -1028,7 +1042,7 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
                             prefixIcon: const Icon(Icons.search),
                             border: const OutlineInputBorder(),
                             isDense: true,
-                            suffixIcon: _query.isNotEmpty
+                            suffixIcon: query.isNotEmpty
                                 ? IconButton(
                                     icon: const Icon(Icons.close, size: 18),
                                     onPressed: () => _searchController.clear(),
@@ -1040,6 +1054,62 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
                     ],
                   ),
                 ),
+                if (hasAnyFilterOptions)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    child: Row(
+                      children: [
+                        if (availableDaws.isNotEmpty) ...[
+                          FilterDropdown<String>(
+                            icon: Icons.piano,
+                            value: dawFilter,
+                            hintText: l10n.filterByDaw,
+                            items: [
+                              DropdownMenuItem<String>(
+                                value: null,
+                                child: Text(l10n.allDaws),
+                              ),
+                              ...availableDaws.map(
+                                (daw) => DropdownMenuItem<String>(
+                                  value: daw,
+                                  child: Text(daw),
+                                ),
+                              ),
+                            ],
+                            onChanged: (value) {
+                              ref
+                                  .read(templateDawFilterProvider.notifier)
+                                  .setDaw(value);
+                            },
+                          ),
+                          const SizedBox(width: 8),
+                        ],
+                        if (availableKeys.isNotEmpty)
+                          FilterDropdown<String>(
+                            icon: Icons.music_note,
+                            value: keyFilter,
+                            hintText: l10n.filterByKey,
+                            items: [
+                              DropdownMenuItem<String>(
+                                value: null,
+                                child: Text(l10n.allKeys),
+                              ),
+                              ...availableKeys.map(
+                                (key) => DropdownMenuItem<String>(
+                                  value: key,
+                                  child: Text(key),
+                                ),
+                              ),
+                            ],
+                            onChanged: (value) {
+                              ref
+                                  .read(templateKeyFilterProvider.notifier)
+                                  .setKey(value);
+                            },
+                          ),
+                      ],
+                    ),
+                  ),
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -1057,15 +1127,6 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
                       clipBehavior: Clip.antiAlias,
                       child: templatesAsync.when(
                         data: (templates) {
-                          final filtered = _query.isEmpty
-                              ? templates
-                              : templates
-                                    .where(
-                                      (t) =>
-                                          t.name.toLowerCase().contains(_query),
-                                    )
-                                    .toList();
-
                           if (templates.isEmpty) {
                             return Center(
                               child: Column(

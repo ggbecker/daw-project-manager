@@ -383,6 +383,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get clearDaw => 'DAW löschen';
 
   @override
+  String get filterByKey => 'Nach Tonart filtern';
+
+  @override
+  String get allKeys => 'Alle Tonarten';
+
+  @override
   String get lastModifiedColumn => 'Zuletzt Geändert';
 
   @override

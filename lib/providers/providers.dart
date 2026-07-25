@@ -40,9 +40,12 @@ import '../services/google_drive_sync_service.dart';
 import '../services/deadline_notification_service.dart';
 import '../models/auto_backup_interval.dart';
 import '../models/pending_folder.dart';
+import '../services/metadata_extractor.dart';
 
 // Profile Repository Provider
-final profileRepositoryProvider = FutureProvider<ProfileRepository>((ref) async {
+final profileRepositoryProvider = FutureProvider<ProfileRepository>((
+  ref,
+) async {
   return ProfileRepository.init();
 });
 
@@ -55,7 +58,7 @@ final currentProfileProvider = StreamProvider<Profile?>((ref) async* {
   } else {
     yield null;
   }
-  
+
   // Watch for profile changes
   yield* profileRepo.watchProfiles().asyncMap((_) async {
     final currentId = profileRepo.getCurrentProfileId();
@@ -121,12 +124,9 @@ class QueryParams {
   final String searchText;
   final bool sortDesc;
   const QueryParams({this.searchText = '', this.sortDesc = true});
-  
+
   // Adiciona o método copyWith para facilitar a atualização
-  QueryParams copyWith({
-    String? searchText,
-    bool? sortDesc,
-  }) {
+  QueryParams copyWith({String? searchText, bool? sortDesc}) {
     return QueryParams(
       searchText: searchText ?? this.searchText,
       sortDesc: sortDesc ?? this.sortDesc,
@@ -136,7 +136,6 @@ class QueryParams {
 
 // CORREÇÃO ESSENCIAL PARA RIVERPOD V3: Usa Notifier<T> (em vez de StateNotifier<T>)
 class QueryParamsNotifier extends Notifier<QueryParams> {
-  
   // CORREÇÃO ESSENCIAL PARA RIVERPOD V3: O construtor v3 é o método build()
   @override
   QueryParams build() {
@@ -153,9 +152,10 @@ class QueryParamsNotifier extends Notifier<QueryParams> {
 }
 
 // CORREÇÃO ESSENCIAL PARA RIVERPOD V3: Usa NotifierProvider (em vez de StateNotifierProvider)
-final queryParamsNotifierProvider = NotifierProvider<QueryParamsNotifier, QueryParams>(() {
-  return QueryParamsNotifier();
-});
+final queryParamsNotifierProvider =
+    NotifierProvider<QueryParamsNotifier, QueryParams>(() {
+      return QueryParamsNotifier();
+    });
 
 // Separate search providers for Projects and Releases tabs
 class ProjectsSearchNotifier extends Notifier<String> {
@@ -173,9 +173,11 @@ class ProjectsSearchNotifier extends Notifier<String> {
   }
 }
 
-final projectsSearchProvider = NotifierProvider<ProjectsSearchNotifier, String>(() {
-  return ProjectsSearchNotifier();
-});
+final projectsSearchProvider = NotifierProvider<ProjectsSearchNotifier, String>(
+  () {
+    return ProjectsSearchNotifier();
+  },
+);
 
 class ReleasesSearchNotifier extends Notifier<String> {
   @override
@@ -192,9 +194,36 @@ class ReleasesSearchNotifier extends Notifier<String> {
   }
 }
 
-final releasesSearchProvider = NotifierProvider<ReleasesSearchNotifier, String>(() {
-  return ReleasesSearchNotifier();
-});
+final releasesSearchProvider = NotifierProvider<ReleasesSearchNotifier, String>(
+  () {
+    return ReleasesSearchNotifier();
+  },
+);
+
+// Template Search Provider — same session-only shape as projectsSearchProvider.
+// Kept in a global provider (rather than local widget state) so the search
+// text survives navigating away from and back to the Project Templates page,
+// not just widget rebuilds.
+class TemplateSearchNotifier extends Notifier<String> {
+  @override
+  String build() {
+    return '';
+  }
+
+  void setSearchText(String text) {
+    state = text;
+  }
+
+  void clear() {
+    state = '';
+  }
+}
+
+final templateSearchProvider = NotifierProvider<TemplateSearchNotifier, String>(
+  () {
+    return TemplateSearchNotifier();
+  },
+);
 
 enum ReleasesSort { dateDesc, dateAsc, titleAsc, titleDesc }
 
@@ -205,9 +234,10 @@ class ReleasesSortNotifier extends Notifier<ReleasesSort> {
   void setSort(ReleasesSort sort) => state = sort;
 }
 
-final releasesSortProvider = NotifierProvider<ReleasesSortNotifier, ReleasesSort>(() {
-  return ReleasesSortNotifier();
-});
+final releasesSortProvider =
+    NotifierProvider<ReleasesSortNotifier, ReleasesSort>(() {
+      return ReleasesSortNotifier();
+    });
 
 class PlaylistsSearchNotifier extends Notifier<String> {
   @override
@@ -224,9 +254,10 @@ class PlaylistsSearchNotifier extends Notifier<String> {
   }
 }
 
-final playlistsSearchProvider = NotifierProvider<PlaylistsSearchNotifier, String>(() {
-  return PlaylistsSearchNotifier();
-});
+final playlistsSearchProvider =
+    NotifierProvider<PlaylistsSearchNotifier, String>(() {
+      return PlaylistsSearchNotifier();
+    });
 
 // Show hidden projects state provider
 // 0 = show only visible (default)
@@ -255,210 +286,228 @@ class ShowHiddenProjectsNotifier extends Notifier<int> {
   bool get isShowingVisible => state == 0;
 }
 
-final showHiddenProjectsProvider = NotifierProvider<ShowHiddenProjectsNotifier, int>(() {
-  return ShowHiddenProjectsNotifier();
-});
+final showHiddenProjectsProvider =
+    NotifierProvider<ShowHiddenProjectsNotifier, int>(() {
+      return ShowHiddenProjectsNotifier();
+    });
 
 // REMOVEMOS: projectsWatchProvider (substituído pela reatividade do stream abaixo)
 
 // NOVO PROVIDER CORRIGIDO: Stream que emite a lista bruta de projetos
 // Ele usa o novo método watchAllProjects() do repositório (que você precisa garantir que existe)
 // This provider automatically invalidates when repositoryProvider changes (profile switch)
-final allProjectsStreamProvider = StreamProvider<List<MusicProject>>((ref) async* {
+final allProjectsStreamProvider = StreamProvider<List<MusicProject>>((
+  ref,
+) async* {
   // Watch repositoryProvider to automatically restart stream when profile changes
   final repo = await ref.watch(repositoryProvider.future);
-  
+
   if (kDebugMode) {
-    print('allProjectsStreamProvider: Starting stream for profile ${repo.profileId}');
+    print(
+      'allProjectsStreamProvider: Starting stream for profile ${repo.profileId}',
+    );
   }
-  
+
   // OBSERVAÇÃO: Este método (repo.watchAllProjects()) deve existir e retornar Stream<List<MusicProject>>
   yield* repo.watchAllProjects();
 });
-
 
 // PROVIDER CORRIGIDO: Agora observa o allProjectsStreamProvider e o Notifier
 final projectsProvider = Provider<List<MusicProject>>((ref) {
   // 1. Observa o stream de todos os projetos (retorna um AsyncValue)
   final allProjectsAsync = ref.watch(allProjectsStreamProvider);
-  
+
   // 2. Observa o estado ATUAL (QueryParams) do nosso novo Notifier
   final params = ref.watch(queryParamsNotifierProvider);
-  
+
   // 3. Observa releases e scan roots para filter preserved projects
   final releasesAsync = ref.watch(releasesProvider);
   final scanRoots = ref.watch(scanRootsProvider);
 
   // 4. Usa .whenData para acessar a lista quando estiver pronta e aplicar o filtro/ordenação
-  return allProjectsAsync.whenData((allProjects) {
-    var projects = allProjects;
+  return allProjectsAsync
+      .whenData((allProjects) {
+        var projects = allProjects;
 
-    // --- Filter out stale preserved projects ---
-    // A "preserved" project is one attached to a release. We hide it only when its
-    // source file DOES exist locally but falls outside every active scan root (the
-    // user removed the root). Projects whose files are NOT present locally are always
-    // shown — they are metadata-only entries restored from a backup on another machine.
-    if (!MobileUtils.isMobile()) {
-      final releases = releasesAsync.value ?? [];
-      final protectedProjectIds = <String>{};
-      for (final release in releases) {
-        protectedProjectIds.addAll(release.trackIds);
-      }
+        // --- Filter out stale preserved projects ---
+        // A "preserved" project is one attached to a release. We hide it only when its
+        // source file DOES exist locally but falls outside every active scan root (the
+        // user removed the root). Projects whose files are NOT present locally are always
+        // shown — they are metadata-only entries restored from a backup on another machine.
+        if (!MobileUtils.isMobile()) {
+          final releases = releasesAsync.value ?? [];
+          final protectedProjectIds = <String>{};
+          for (final release in releases) {
+            protectedProjectIds.addAll(release.trackIds);
+          }
 
-      final activeRootPaths = scanRoots.map((root) {
-        final normalized = p.normalize(root.path);
-        return normalized.endsWith(p.separator) ? normalized : normalized + p.separator;
-      }).toList();
+          final activeRootPaths = scanRoots.map((root) {
+            final normalized = p.normalize(root.path);
+            return normalized.endsWith(p.separator)
+                ? normalized
+                : normalized + p.separator;
+          }).toList();
 
-      projects = projects.where((project) {
-        // Projects not attached to any release are always shown.
-        if (!protectedProjectIds.contains(project.id)) return true;
+          projects = projects.where((project) {
+            // Projects not attached to any release are always shown.
+            if (!protectedProjectIds.contains(project.id)) return true;
 
-        // File not present locally → metadata-only from backup / different machine.
-        // Always show so the user can inspect / edit metadata.
-        final fileExistsLocally = File(project.filePath).existsSync() ||
-            Directory(project.filePath).existsSync();
-        if (!fileExistsLocally) return true;
+            // File not present locally → metadata-only from backup / different machine.
+            // Always show so the user can inspect / edit metadata.
+            final fileExistsLocally =
+                File(project.filePath).existsSync() ||
+                Directory(project.filePath).existsSync();
+            if (!fileExistsLocally) return true;
 
-        // File exists locally: only show if it's under an active scan root.
-        final projectPath = p.normalize(project.filePath);
-        return activeRootPaths.any((rootPath) => projectPath.startsWith(rootPath));
-      }).toList();
-    } else {
-      // Android: show all projects (metadata-only mode, no file system checks).
-      if (kDebugMode) {
-        print('projectsProvider (Android): Showing all ${projects.length} projects (metadata-only mode)');
-      }
-    }
+            // File exists locally: only show if it's under an active scan root.
+            final projectPath = p.normalize(project.filePath);
+            return activeRootPaths.any(
+              (rootPath) => projectPath.startsWith(rootPath),
+            );
+          }).toList();
+        } else {
+          // Android: show all projects (metadata-only mode, no file system checks).
+          if (kDebugMode) {
+            print(
+              'projectsProvider (Android): Showing all ${projects.length} projects (metadata-only mode)',
+            );
+          }
+        }
 
-    // --- Filter hidden projects ---
-    final hiddenMode = ref.watch(showHiddenProjectsProvider);
-    if (hiddenMode == 0) {
-      // Show only visible projects
-      projects = projects.where((p) => !p.hidden).toList();
-    } else if (hiddenMode == 2) {
-      // Show only hidden projects
-      projects = projects.where((p) => p.hidden).toList();
-    }
-    // If hiddenMode == 1, show all (both visible and hidden)
-    
-    // --- Filter by phase ---
-    final phaseFilter = ref.watch(phaseFilterProvider);
-    if (phaseFilter != null) {
-      projects = projects.where((p) => p.status == phaseFilter).toList();
-    }
+        // --- Filter hidden projects ---
+        final hiddenMode = ref.watch(showHiddenProjectsProvider);
+        if (hiddenMode == 0) {
+          // Show only visible projects
+          projects = projects.where((p) => !p.hidden).toList();
+        } else if (hiddenMode == 2) {
+          // Show only hidden projects
+          projects = projects.where((p) => p.hidden).toList();
+        }
+        // If hiddenMode == 1, show all (both visible and hidden)
 
-    // --- Filter by DAW ---
-    final dawFilter = ref.watch(dawFilterProvider);
-    if (dawFilter != null) {
-      projects = projects.where((p) => p.dawType == dawFilter).toList();
-    }
+        // --- Filter by phase ---
+        final phaseFilter = ref.watch(phaseFilterProvider);
+        if (phaseFilter != null) {
+          projects = projects.where((p) => p.status == phaseFilter).toList();
+        }
 
-    // --- Filter by deadline ---
-    final deadlineFilter = ref.watch(deadlineFilterProvider);
-    if (deadlineFilter != DeadlineFilter.all) {
-      switch (deadlineFilter) {
-        case DeadlineFilter.hasDeadline:
+        // --- Filter by DAW ---
+        final dawFilter = ref.watch(dawFilterProvider);
+        if (dawFilter != null) {
+          projects = projects.where((p) => p.dawType == dawFilter).toList();
+        }
+
+        // --- Filter by deadline ---
+        final deadlineFilter = ref.watch(deadlineFilterProvider);
+        if (deadlineFilter != DeadlineFilter.all) {
+          switch (deadlineFilter) {
+            case DeadlineFilter.hasDeadline:
+              projects = projects.where((p) => p.deadline != null).toList();
+              break;
+            case DeadlineFilter.overdue:
+              projects = projects.where((p) {
+                if (p.deadline == null) return false;
+                final daysUntil = p.daysUntilDeadline ?? 0;
+                return daysUntil < 0;
+              }).toList();
+              break;
+            case DeadlineFilter.dueSoon:
+              projects = projects.where((p) {
+                if (p.deadline == null) return false;
+                final daysUntil = p.daysUntilDeadline ?? 0;
+                return daysUntil >= 0 && daysUntil <= 7;
+              }).toList();
+              break;
+            case DeadlineFilter.dueToday:
+              projects = projects.where((p) {
+                if (p.deadline == null) return false;
+                final daysUntil = p.daysUntilDeadline ?? 0;
+                return daysUntil == 0;
+              }).toList();
+              break;
+            case DeadlineFilter.all:
+              break;
+          }
+        }
+
+        // --- Filter finished projects ---
+        final finishedMode = ref.watch(showFinishedProjectsProvider);
+        final finishedPhases = ref.watch(finishedPhaseProvider);
+        if (finishedMode == 1) {
+          // Hide finished projects
+          projects = projects
+              .where((p) => !finishedPhases.contains(p.status))
+              .toList();
+        }
+
+        // --- Show only projects with deadline ---
+        final showOnlyWithDeadline = ref.watch(showOnlyWithDeadlineProvider);
+        if (showOnlyWithDeadline) {
+          // Filter to show only projects with deadline
           projects = projects.where((p) => p.deadline != null).toList();
-          break;
-        case DeadlineFilter.overdue:
-          projects = projects.where((p) {
-            if (p.deadline == null) return false;
-            final daysUntil = p.daysUntilDeadline ?? 0;
-            return daysUntil < 0;
-          }).toList();
-          break;
-        case DeadlineFilter.dueSoon:
-          projects = projects.where((p) {
-            if (p.deadline == null) return false;
-            final daysUntil = p.daysUntilDeadline ?? 0;
-            return daysUntil >= 0 && daysUntil <= 7;
-          }).toList();
-          break;
-        case DeadlineFilter.dueToday:
-          projects = projects.where((p) {
-            if (p.deadline == null) return false;
-            final daysUntil = p.daysUntilDeadline ?? 0;
-            return daysUntil == 0;
-          }).toList();
-          break;
-        case DeadlineFilter.all:
-          break;
-      }
-    }
-    
-    // --- Filter finished projects ---
-    final finishedMode = ref.watch(showFinishedProjectsProvider);
-    final finishedPhases = ref.watch(finishedPhaseProvider);
-    if (finishedMode == 1) {
-      // Hide finished projects
-      projects = projects.where((p) => !finishedPhases.contains(p.status)).toList();
-    }
-    
-    // --- Show only projects with deadline ---
-    final showOnlyWithDeadline = ref.watch(showOnlyWithDeadlineProvider);
-    if (showOnlyWithDeadline) {
-      // Filter to show only projects with deadline
-      projects = projects.where((p) => p.deadline != null).toList();
-    }
-    
-    // --- Aplicação dos Filtros ---
-    // Use projects search provider instead of queryParams
-    final projectsSearch = ref.watch(projectsSearchProvider);
-    if (projectsSearch.trim().isNotEmpty) {
-      projects = projects
-          .where((p) =>
-              fuzzyMatchAll(p.displayName, projectsSearch) ||
-              (p.notes != null && fuzzyMatchAll(p.notes!, projectsSearch)))
-          .toList();
-    }
-    
-    // --- Ordenação ---
-    // When "show only with deadline" is active, sort by deadline (nearest first)
-    if (showOnlyWithDeadline) {
-      projects.sort((a, b) {
-        final aDaysUntil = a.daysUntilDeadline;
-        final bDaysUntil = b.daysUntilDeadline;
-        
-        // Both should have deadline at this point, but safety check
-        if (aDaysUntil == null && bDaysUntil == null) return 0;
-        if (aDaysUntil == null) return 1;
-        if (bDaysUntil == null) return -1;
-        
-        // Sort by urgency: overdue first, then due soon, then further out
-        // Negative values (overdue) come before positive values (upcoming)
-        return aDaysUntil.compareTo(bDaysUntil);
-      });
-    } else if (deadlineFilter != DeadlineFilter.all) {
-      // When deadline filter is active (not 'all'), sort by deadline urgency
-      projects.sort((a, b) {
-        final aDaysUntil = a.daysUntilDeadline;
-        final bDaysUntil = b.daysUntilDeadline;
-        
-        // Projects without deadline go to the end
-        if (aDaysUntil == null && bDaysUntil == null) return 0;
-        if (aDaysUntil == null) return 1;
-        if (bDaysUntil == null) return -1;
-        
-        // Sort by urgency: overdue first, then due soon, then further out
-        // Negative values (overdue) come before positive values (upcoming)
-        return aDaysUntil.compareTo(bDaysUntil);
-      });
-    } else {
-      // Default sorting by last modified
-      projects.sort((a, b) => a.lastModifiedAt.compareTo(b.lastModifiedAt));
-      if (params.sortDesc) {
-        projects = projects.reversed.toList();
-      }
-    }
-    
-    return projects;
-  }).when(
-    data: (projects) => projects,
-    // Garante que a lista não é nula, mesmo carregando ou com erro
-    loading: () => const <MusicProject>[], 
-    error: (_, _) => const <MusicProject>[],
-  );
+        }
+
+        // --- Aplicação dos Filtros ---
+        // Use projects search provider instead of queryParams
+        final projectsSearch = ref.watch(projectsSearchProvider);
+        if (projectsSearch.trim().isNotEmpty) {
+          projects = projects
+              .where(
+                (p) =>
+                    fuzzyMatchAll(p.displayName, projectsSearch) ||
+                    (p.notes != null &&
+                        fuzzyMatchAll(p.notes!, projectsSearch)),
+              )
+              .toList();
+        }
+
+        // --- Ordenação ---
+        // When "show only with deadline" is active, sort by deadline (nearest first)
+        if (showOnlyWithDeadline) {
+          projects.sort((a, b) {
+            final aDaysUntil = a.daysUntilDeadline;
+            final bDaysUntil = b.daysUntilDeadline;
+
+            // Both should have deadline at this point, but safety check
+            if (aDaysUntil == null && bDaysUntil == null) return 0;
+            if (aDaysUntil == null) return 1;
+            if (bDaysUntil == null) return -1;
+
+            // Sort by urgency: overdue first, then due soon, then further out
+            // Negative values (overdue) come before positive values (upcoming)
+            return aDaysUntil.compareTo(bDaysUntil);
+          });
+        } else if (deadlineFilter != DeadlineFilter.all) {
+          // When deadline filter is active (not 'all'), sort by deadline urgency
+          projects.sort((a, b) {
+            final aDaysUntil = a.daysUntilDeadline;
+            final bDaysUntil = b.daysUntilDeadline;
+
+            // Projects without deadline go to the end
+            if (aDaysUntil == null && bDaysUntil == null) return 0;
+            if (aDaysUntil == null) return 1;
+            if (bDaysUntil == null) return -1;
+
+            // Sort by urgency: overdue first, then due soon, then further out
+            // Negative values (overdue) come before positive values (upcoming)
+            return aDaysUntil.compareTo(bDaysUntil);
+          });
+        } else {
+          // Default sorting by last modified
+          projects.sort((a, b) => a.lastModifiedAt.compareTo(b.lastModifiedAt));
+          if (params.sortDesc) {
+            projects = projects.reversed.toList();
+          }
+        }
+
+        return projects;
+      })
+      .when(
+        data: (projects) => projects,
+        // Garante que a lista não é nula, mesmo carregando ou com erro
+        loading: () => const <MusicProject>[],
+        error: (_, _) => const <MusicProject>[],
+      );
 });
 
 final dateFormatProvider = Provider<DateFormat>((ref) {
@@ -473,40 +522,43 @@ final releasesProvider = StreamProvider<List<Release>>((ref) async* {
 });
 
 // Initial scan state provider
-final initialScanStateProvider = NotifierProvider<InitialScanNotifier, bool>(() {
-  return InitialScanNotifier();
-});
+final initialScanStateProvider = NotifierProvider<InitialScanNotifier, bool>(
+  () {
+    return InitialScanNotifier();
+  },
+);
 
 class InitialScanNotifier extends Notifier<bool> {
   @override
   bool build() {
     return true; // Start as true (scanning)
   }
-  
+
   void setScanning(bool scanning) {
     state = scanning;
   }
-  
+
   void complete() {
     state = false;
   }
 }
 
 // Profile switching state provider
-final profileSwitchingProvider = NotifierProvider<ProfileSwitchingNotifier, bool>(() {
-  return ProfileSwitchingNotifier();
-});
+final profileSwitchingProvider =
+    NotifierProvider<ProfileSwitchingNotifier, bool>(() {
+      return ProfileSwitchingNotifier();
+    });
 
 class ProfileSwitchingNotifier extends Notifier<bool> {
   @override
   bool build() {
     return false;
   }
-  
+
   void setSwitching(bool switching) {
     state = switching;
   }
-  
+
   void complete() {
     state = false;
   }
@@ -518,15 +570,17 @@ class ProfileSwitchNotifier extends Notifier<String?> {
   String? build() {
     return null;
   }
-  
+
   void setProfileId(String? profileId) {
     state = profileId;
   }
 }
 
-final profileSwitchProvider = NotifierProvider<ProfileSwitchNotifier, String?>(() {
-  return ProfileSwitchNotifier();
-});
+final profileSwitchProvider = NotifierProvider<ProfileSwitchNotifier, String?>(
+  () {
+    return ProfileSwitchNotifier();
+  },
+);
 
 // Locale Provider - manages app language preference
 class LocaleNotifier extends Notifier<Locale> {
@@ -547,7 +601,10 @@ class LocaleNotifier extends Notifier<Locale> {
       if (savedLocale != null && savedLocale.isNotEmpty) {
         final parts = savedLocale.split('_');
         if (parts.isNotEmpty) {
-          state = Locale(parts[0], parts.length > 1 && parts[1].isNotEmpty ? parts[1] : '');
+          state = Locale(
+            parts[0],
+            parts.length > 1 && parts[1].isNotEmpty ? parts[1] : '',
+          );
         }
       }
     } catch (_) {
@@ -564,7 +621,10 @@ class LocaleNotifier extends Notifier<Locale> {
     try {
       await ensureHiveInitialized();
       final settingsBox = await Hive.openBox<String>('settings');
-      await settingsBox.put('locale', '${locale.languageCode}_${locale.countryCode ?? ''}');
+      await settingsBox.put(
+        'locale',
+        '${locale.languageCode}_${locale.countryCode ?? ''}',
+      );
     } catch (e) {
       if (kDebugMode) {
         print('Failed to save locale: $e');
@@ -578,16 +638,17 @@ final localeProvider = NotifierProvider<LocaleNotifier, Locale>(() {
 });
 
 // Selected Projects Provider - persists selection across language changes
-final selectedProjectsProvider = NotifierProvider<SelectedProjectsNotifier, Set<String>>(() {
-  return SelectedProjectsNotifier();
-});
+final selectedProjectsProvider =
+    NotifierProvider<SelectedProjectsNotifier, Set<String>>(() {
+      return SelectedProjectsNotifier();
+    });
 
 class SelectedProjectsNotifier extends Notifier<Set<String>> {
   @override
   Set<String> build() {
     return <String>{};
   }
-  
+
   void toggle(String projectId) {
     final current = Set<String>.from(state);
     if (current.contains(projectId)) {
@@ -597,15 +658,15 @@ class SelectedProjectsNotifier extends Notifier<Set<String>> {
     }
     state = current;
   }
-  
+
   void selectAll(List<String> projectIds) {
     state = Set<String>.from(projectIds);
   }
-  
+
   void clear() {
     state = <String>{};
   }
-  
+
   void addAll(List<String> projectIds) {
     final current = Set<String>.from(state);
     current.addAll(projectIds);
@@ -643,9 +704,10 @@ class SelectedProjectsNotifier extends Notifier<Set<String>> {
 // Selected Templates Provider — same shape as SelectedProjectsNotifier but
 // kept separate since it tracks a different screen's selection (the
 // Project Templates table), not project ids.
-final selectedTemplatesProvider = NotifierProvider<SelectedTemplatesNotifier, Set<String>>(() {
-  return SelectedTemplatesNotifier();
-});
+final selectedTemplatesProvider =
+    NotifierProvider<SelectedTemplatesNotifier, Set<String>>(() {
+      return SelectedTemplatesNotifier();
+    });
 
 class SelectedTemplatesNotifier extends Notifier<Set<String>> {
   @override
@@ -689,8 +751,8 @@ class SelectedTemplatesNotifier extends Notifier<Set<String>> {
 // and this naturally resets on restart just like ShowHiddenProjectsProvider.
 final recentlyDiscoveredProjectsProvider =
     NotifierProvider<RecentlyDiscoveredProjectsNotifier, Set<String>>(() {
-  return RecentlyDiscoveredProjectsNotifier();
-});
+      return RecentlyDiscoveredProjectsNotifier();
+    });
 
 class RecentlyDiscoveredProjectsNotifier extends Notifier<Set<String>> {
   @override
@@ -728,11 +790,12 @@ class PhaseFilterNotifier extends Notifier<String?> {
   String? build() {
     return null; // null means show all phases
   }
-  
+
   void setPhase(String? phase) {
-    state = phase; // null to show all, or a specific phase like 'Idea', 'Arranging', etc.
+    state =
+        phase; // null to show all, or a specific phase like 'Idea', 'Arranging', etc.
   }
-  
+
   void clear() {
     state = null;
   }
@@ -750,7 +813,8 @@ class DawFilterNotifier extends Notifier<String?> {
   }
 
   void setDaw(String? daw) {
-    state = daw; // null to show all, or a specific DAW like 'Ableton Live', 'FL Studio', etc.
+    state =
+        daw; // null to show all, or a specific DAW like 'Ableton Live', 'FL Studio', etc.
   }
 
   void clear() {
@@ -773,6 +837,47 @@ final availableDawsProvider = Provider<List<String>>((ref) {
   daws.sort();
   return daws;
 });
+
+// Template DAW/Key Filter Providers — same null-means-all shape as
+// dawFilterProvider, but scoped to the Project Templates table's own
+// filter bar rather than the main dashboard's. No BPM equivalent — BPM is
+// a continuous value, so an exact-match dropdown of "available BPMs" isn't
+// a meaningful filter the way a DAW/Key dropdown is.
+final templateDawFilterProvider =
+    NotifierProvider<TemplateDawFilterNotifier, String?>(() {
+      return TemplateDawFilterNotifier();
+    });
+
+class TemplateDawFilterNotifier extends Notifier<String?> {
+  @override
+  String? build() => null; // null means show all DAWs
+
+  void setDaw(String? daw) {
+    state = daw;
+  }
+
+  void clear() {
+    state = null;
+  }
+}
+
+final templateKeyFilterProvider =
+    NotifierProvider<TemplateKeyFilterNotifier, String?>(() {
+      return TemplateKeyFilterNotifier();
+    });
+
+class TemplateKeyFilterNotifier extends Notifier<String?> {
+  @override
+  String? build() => null; // null means show all keys
+
+  void setKey(String? key) {
+    state = key;
+  }
+
+  void clear() {
+    state = null;
+  }
+}
 
 // Custom phases provider — reads per-profile phases from repository
 final customPhasesProvider = Provider<List<String>>((ref) {
@@ -798,28 +903,29 @@ final finishedPhaseProvider = Provider<Set<String>>((ref) {
 
 // Deadline Filter Enum
 enum DeadlineFilter {
-  all,           // Show all projects
-  hasDeadline,   // Only projects with deadlines (sorted by urgency)
-  overdue,       // Only overdue projects
-  dueSoon,       // Due within 7 days
-  dueToday,      // Due today
+  all, // Show all projects
+  hasDeadline, // Only projects with deadlines (sorted by urgency)
+  overdue, // Only overdue projects
+  dueSoon, // Due within 7 days
+  dueToday, // Due today
 }
 
 // Deadline Filter Provider - filters projects by deadline status
-final deadlineFilterProvider = NotifierProvider<DeadlineFilterNotifier, DeadlineFilter>(() {
-  return DeadlineFilterNotifier();
-});
+final deadlineFilterProvider =
+    NotifierProvider<DeadlineFilterNotifier, DeadlineFilter>(() {
+      return DeadlineFilterNotifier();
+    });
 
 class DeadlineFilterNotifier extends Notifier<DeadlineFilter> {
   @override
   DeadlineFilter build() {
     return DeadlineFilter.all; // Default: show all
   }
-  
+
   void setFilter(DeadlineFilter filter) {
     state = filter;
   }
-  
+
   void clear() {
     state = DeadlineFilter.all;
   }
@@ -828,9 +934,10 @@ class DeadlineFilterNotifier extends Notifier<DeadlineFilter> {
 // Show Finished Projects Provider - hide/show finished projects
 // 0 = show finished (default)
 // 1 = hide finished
-final showFinishedProjectsProvider = NotifierProvider<ShowFinishedProjectsNotifier, int>(() {
-  return ShowFinishedProjectsNotifier();
-});
+final showFinishedProjectsProvider =
+    NotifierProvider<ShowFinishedProjectsNotifier, int>(() {
+      return ShowFinishedProjectsNotifier();
+    });
 
 class ShowFinishedProjectsNotifier extends Notifier<int> {
   @override
@@ -841,7 +948,7 @@ class ShowFinishedProjectsNotifier extends Notifier<int> {
     });
     return 0; // Default: show finished projects
   }
-  
+
   Future<void> _loadHideFinishedState() async {
     try {
       await ensureHiveInitialized();
@@ -856,11 +963,11 @@ class ShowFinishedProjectsNotifier extends Notifier<int> {
       }
     }
   }
-  
+
   Future<void> setHideFinished(bool hide) async {
     final newState = hide ? 1 : 0;
     state = newState;
-    
+
     // Save to Hive
     try {
       await ensureHiveInitialized();
@@ -875,16 +982,17 @@ class ShowFinishedProjectsNotifier extends Notifier<int> {
       }
     }
   }
-  
+
   bool get isHidingFinished => state == 1;
 }
 
 // Show Only Projects with Deadline Provider
 // false = show all projects (default)
 // true = show only projects with deadline, sorted by deadline
-final showOnlyWithDeadlineProvider = NotifierProvider<ShowOnlyWithDeadlineNotifier, bool>(() {
-  return ShowOnlyWithDeadlineNotifier();
-});
+final showOnlyWithDeadlineProvider =
+    NotifierProvider<ShowOnlyWithDeadlineNotifier, bool>(() {
+      return ShowOnlyWithDeadlineNotifier();
+    });
 
 class ShowOnlyWithDeadlineNotifier extends Notifier<bool> {
   @override
@@ -895,7 +1003,7 @@ class ShowOnlyWithDeadlineNotifier extends Notifier<bool> {
     });
     return false; // Default: show all projects
   }
-  
+
   Future<void> _loadShowOnlyWithDeadlineState() async {
     try {
       await ensureHiveInitialized();
@@ -910,10 +1018,10 @@ class ShowOnlyWithDeadlineNotifier extends Notifier<bool> {
       }
     }
   }
-  
+
   Future<void> setShowOnlyWithDeadline(bool show) async {
     state = show;
-    
+
     // Save to Hive
     try {
       await ensureHiveInitialized();
@@ -968,7 +1076,8 @@ class AutoBackupIntervalNotifier extends Notifier<AutoBackupInterval> {
 
 final autoBackupIntervalProvider =
     NotifierProvider<AutoBackupIntervalNotifier, AutoBackupInterval>(
-        AutoBackupIntervalNotifier.new);
+      AutoBackupIntervalNotifier.new,
+    );
 
 // ---------------------------------------------------------------------------
 // Upload Auto-Detected Preview Songs
@@ -1004,7 +1113,8 @@ class UploadAutoPreviewSongsNotifier extends Notifier<bool> {
 
 final uploadAutoPreviewSongsProvider =
     NotifierProvider<UploadAutoPreviewSongsNotifier, bool>(
-        UploadAutoPreviewSongsNotifier.new);
+      UploadAutoPreviewSongsNotifier.new,
+    );
 
 // ---------------------------------------------------------------------------
 // Update Check Setting
@@ -1038,8 +1148,9 @@ class CheckForUpdatesNotifier extends Notifier<bool> {
   }
 }
 
-final checkForUpdatesProvider =
-    NotifierProvider<CheckForUpdatesNotifier, bool>(CheckForUpdatesNotifier.new);
+final checkForUpdatesProvider = NotifierProvider<CheckForUpdatesNotifier, bool>(
+  CheckForUpdatesNotifier.new,
+);
 
 /// Holds the latest available version string when a newer release is found; null otherwise.
 class AvailableUpdateNotifier extends Notifier<String?> {
@@ -1049,7 +1160,9 @@ class AvailableUpdateNotifier extends Notifier<String?> {
 }
 
 final availableUpdateProvider =
-    NotifierProvider<AvailableUpdateNotifier, String?>(AvailableUpdateNotifier.new);
+    NotifierProvider<AvailableUpdateNotifier, String?>(
+      AvailableUpdateNotifier.new,
+    );
 
 /// Tracks whether the first-run onboarding wizard has been completed.
 class OnboardingCompleteNotifier extends Notifier<bool> {
@@ -1087,7 +1200,9 @@ class OnboardingCompleteNotifier extends Notifier<bool> {
 }
 
 final onboardingCompleteProvider =
-    NotifierProvider<OnboardingCompleteNotifier, bool>(OnboardingCompleteNotifier.new);
+    NotifierProvider<OnboardingCompleteNotifier, bool>(
+      OnboardingCompleteNotifier.new,
+    );
 
 /// Tracks the project most recently launched in a DAW, shown as a quick-access
 /// chip in the title bar.
@@ -1105,12 +1220,15 @@ class ActiveProjectNotifier extends Notifier<MusicProject?> {
     });
     return null;
   }
+
   void set(MusicProject project) => state = project;
   void clear() => state = null;
 }
 
 final activeProjectProvider =
-    NotifierProvider<ActiveProjectNotifier, MusicProject?>(ActiveProjectNotifier.new);
+    NotifierProvider<ActiveProjectNotifier, MusicProject?>(
+      ActiveProjectNotifier.new,
+    );
 
 // Playlists Provider
 final playlistsProvider = StreamProvider<List<Playlist>>((ref) async* {
@@ -1122,13 +1240,14 @@ final playlistsProvider = StreamProvider<List<Playlist>>((ref) async* {
 final todoTemplatesProvider = StreamProvider<List<TodoTemplate>>((ref) async* {
   await ensureHiveInitialized();
   final box = await Hive.openBox<TodoTemplate>('todoTemplates');
-  
+
   // Emit initial value
   yield box.values.toList()..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-  
+
   // Watch for changes
   await for (final _ in box.watch()) {
-    yield box.values.toList()..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+    yield box.values.toList()
+      ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
   }
 });
 
@@ -1136,19 +1255,19 @@ final todoTemplatesProvider = StreamProvider<List<TodoTemplate>>((ref) async* {
 class TodoTemplatesNotifier extends Notifier<void> {
   @override
   void build() {}
-  
+
   Future<void> addTemplate(TodoTemplate template) async {
     await ensureHiveInitialized();
     final box = await Hive.openBox<TodoTemplate>('todoTemplates');
     await box.put(template.id, template);
   }
-  
+
   Future<void> updateTemplate(TodoTemplate template) async {
     await ensureHiveInitialized();
     final box = await Hive.openBox<TodoTemplate>('todoTemplates');
     await box.put(template.id, template);
   }
-  
+
   Future<void> deleteTemplate(String id) async {
     await ensureHiveInitialized();
     final box = await Hive.openBox<TodoTemplate>('todoTemplates');
@@ -1156,21 +1275,95 @@ class TodoTemplatesNotifier extends Notifier<void> {
   }
 }
 
-final todoTemplatesNotifierProvider = NotifierProvider<TodoTemplatesNotifier, void>(() {
-  return TodoTemplatesNotifier();
-});
+final todoTemplatesNotifierProvider =
+    NotifierProvider<TodoTemplatesNotifier, void>(() {
+      return TodoTemplatesNotifier();
+    });
 
 // Project Templates Provider — "starter kit" folders a new project can be
 // created from. Global (not per-profile), mirrors TodoTemplate's box pattern.
-final projectTemplatesProvider = StreamProvider<List<ProjectTemplate>>((ref) async* {
+final projectTemplatesProvider = StreamProvider<List<ProjectTemplate>>((
+  ref,
+) async* {
   await ensureHiveInitialized();
   final box = await Hive.openBox<ProjectTemplate>('projectTemplates');
 
   yield box.values.toList()..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
 
   await for (final _ in box.watch()) {
-    yield box.values.toList()..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+    yield box.values.toList()
+      ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
   }
+});
+
+// Filtered Project Templates Provider — applies the templates page's own
+// search text + DAW/Key filters on top of projectTemplatesProvider,
+// mirroring how projectsProvider layers its filters over allProjectsStreamProvider.
+final filteredProjectTemplatesProvider = Provider<List<ProjectTemplate>>((ref) {
+  final templatesAsync = ref.watch(projectTemplatesProvider);
+  var templates = templatesAsync.value ?? const <ProjectTemplate>[];
+
+  final query = ref.watch(templateSearchProvider).trim().toLowerCase();
+  if (query.isNotEmpty) {
+    templates = templates
+        .where((t) => t.name.toLowerCase().contains(query))
+        .toList();
+  }
+
+  final dawFilter = ref.watch(templateDawFilterProvider);
+  if (dawFilter != null) {
+    templates = templates
+        .where(
+          (t) =>
+              MetadataExtractor.getDawTypeFromExtension(
+                p.extension(t.mainFileRelativePath),
+              ) ==
+              dawFilter,
+        )
+        .toList();
+  }
+
+  final keyFilter = ref.watch(templateKeyFilterProvider);
+  if (keyFilter != null) {
+    templates = templates.where((t) => t.musicalKey == keyFilter).toList();
+  }
+
+  return templates;
+});
+
+// Available DAWs/Keys across registered templates — feed the respective
+// filter dropdowns, mirroring availableDawsProvider. Derived from every
+// registered template regardless of active filters, so a dropdown never
+// hides an option just because another filter is currently narrowing the
+// visible list.
+final availableTemplateDawsProvider = Provider<List<String>>((ref) {
+  final templatesAsync = ref.watch(projectTemplatesProvider);
+  final templates = templatesAsync.value ?? const <ProjectTemplate>[];
+  final daws = templates
+      .map(
+        (t) => MetadataExtractor.getDawTypeFromExtension(
+          p.extension(t.mainFileRelativePath),
+        ),
+      )
+      .whereType<String>()
+      .where((d) => d.isNotEmpty)
+      .toSet()
+      .toList();
+  daws.sort();
+  return daws;
+});
+
+final availableTemplateKeysProvider = Provider<List<String>>((ref) {
+  final templatesAsync = ref.watch(projectTemplatesProvider);
+  final templates = templatesAsync.value ?? const <ProjectTemplate>[];
+  final keys = templates
+      .map((t) => t.musicalKey)
+      .whereType<String>()
+      .where((k) => k.isNotEmpty)
+      .toSet()
+      .toList();
+  keys.sort();
+  return keys;
 });
 
 class ProjectTemplatesNotifier extends Notifier<void> {
@@ -1196,9 +1389,10 @@ class ProjectTemplatesNotifier extends Notifier<void> {
   }
 }
 
-final projectTemplatesNotifierProvider = NotifierProvider<ProjectTemplatesNotifier, void>(() {
-  return ProjectTemplatesNotifier();
-});
+final projectTemplatesNotifierProvider =
+    NotifierProvider<ProjectTemplatesNotifier, void>(() {
+      return ProjectTemplatesNotifier();
+    });
 
 // Template Roots Provider — registered parent folders scanned for template
 // subfolders. Global (not per-profile), refreshed manually (see
@@ -1237,9 +1431,10 @@ class TemplateRootsNotifier extends Notifier<void> {
   }
 }
 
-final templateRootsNotifierProvider = NotifierProvider<TemplateRootsNotifier, void>(() {
-  return TemplateRootsNotifier();
-});
+final templateRootsNotifierProvider =
+    NotifierProvider<TemplateRootsNotifier, void>(() {
+      return TemplateRootsNotifier();
+    });
 
 // Warn Before Quit Setting
 class WarnBeforeQuitNotifier extends Notifier<bool> {
@@ -1274,9 +1469,11 @@ class WarnBeforeQuitNotifier extends Notifier<bool> {
   }
 }
 
-final warnBeforeQuitProvider = NotifierProvider<WarnBeforeQuitNotifier, bool>(() {
-  return WarnBeforeQuitNotifier();
-});
+final warnBeforeQuitProvider = NotifierProvider<WarnBeforeQuitNotifier, bool>(
+  () {
+    return WarnBeforeQuitNotifier();
+  },
+);
 
 // ---------------------------------------------------------------------------
 // Close to Tray (desktop-only device-local preference)
@@ -1342,7 +1539,14 @@ class VisibleTabsNotifier extends Notifier<Set<AppTab>> {
   @override
   Set<AppTab> build() {
     SchedulerBinding.instance.addPostFrameCallback((_) => _load());
-    final defaults = {AppTab.projects, AppTab.releases, AppTab.playlists, AppTab.queue, AppTab.statistics, AppTab.player};
+    final defaults = {
+      AppTab.projects,
+      AppTab.releases,
+      AppTab.playlists,
+      AppTab.queue,
+      AppTab.statistics,
+      AppTab.player,
+    };
     if (MobileUtils.isMobile()) defaults.remove(AppTab.player);
     return defaults;
   }
@@ -1377,7 +1581,8 @@ class VisibleTabsNotifier extends Notifier<Set<AppTab>> {
         // at all (newly added tabs inherit default = visible).
         final result = Set<AppTab>.from(explicitlyVisible);
         for (final tab in canonicalOrder) {
-          if (!explicitlyHidden.contains(tab) && !explicitlyVisible.contains(tab)) {
+          if (!explicitlyHidden.contains(tab) &&
+              !explicitlyVisible.contains(tab)) {
             result.add(tab); // new tab not yet seen → show by default
           }
         }
@@ -1406,9 +1611,11 @@ class VisibleTabsNotifier extends Notifier<Set<AppTab>> {
       final box = await Hive.openBox<String>('settings');
       // Save all canonical tabs with visibility marker so new future tabs can be
       // distinguished from explicitly-hidden ones.
-      final entries = canonicalOrder.map((t) {
-        return updated.contains(t) ? t.name : '!${t.name}';
-      }).join(',');
+      final entries = canonicalOrder
+          .map((t) {
+            return updated.contains(t) ? t.name : '!${t.name}';
+          })
+          .join(',');
       await box.put(_key, entries);
     } catch (e) {
       if (kDebugMode) print('Failed to save visibleTabs: $e');
@@ -1416,9 +1623,11 @@ class VisibleTabsNotifier extends Notifier<Set<AppTab>> {
   }
 }
 
-final visibleTabsProvider = NotifierProvider<VisibleTabsNotifier, Set<AppTab>>(() {
-  return VisibleTabsNotifier();
-});
+final visibleTabsProvider = NotifierProvider<VisibleTabsNotifier, Set<AppTab>>(
+  () {
+    return VisibleTabsNotifier();
+  },
+);
 
 // ---------------------------------------------------------------------------
 // Tab Position (top vs left rail)
@@ -1449,9 +1658,11 @@ class TabPositionNotifier extends Notifier<TabPosition> {
   }
 }
 
-final tabPositionProvider = NotifierProvider<TabPositionNotifier, TabPosition>(() {
-  return TabPositionNotifier();
-});
+final tabPositionProvider = NotifierProvider<TabPositionNotifier, TabPosition>(
+  () {
+    return TabPositionNotifier();
+  },
+);
 
 class RailCollapsedNotifier extends Notifier<bool> {
   static const _key = 'railCollapsed';
@@ -1489,14 +1700,19 @@ class GlobalStats {
   final int inProgressCount;
   final int finishedCount;
   final Duration? avgCompletionTime;
+
   /// phase name → project count
   final Map<String, int> countPerPhase;
+
   /// phase name → average days spent in that phase (completed intervals only)
   final Map<String, double> avgDaysPerPhase;
+
   /// month key "yyyy-MM" → count of projects created that month (last 12 months)
   final Map<String, int> createdPerMonth;
+
   /// month key "yyyy-MM" → count of projects finished that month (last 12 months)
   final Map<String, int> finishedPerMonth;
+
   /// projectId → most recent event occurredAt (for sorting by activity)
   final Map<String, DateTime> lastEventPerProject;
 
@@ -1526,27 +1742,35 @@ class GlobalStats {
 }
 
 /// Stream of all events — restarts automatically on profile switch.
-final allEventsStreamProvider = StreamProvider<List<ProjectEvent>>((ref) async* {
+final allEventsStreamProvider = StreamProvider<List<ProjectEvent>>((
+  ref,
+) async* {
   final repo = await ref.watch(repositoryProvider.future);
   yield repo.getAllEvents();
   yield* repo.watchEvents().map((_) => repo.getAllEvents());
 });
 
 /// Events for a specific project (family, parametrized by projectId).
-final eventsForProjectProvider =
-    Provider.family<List<ProjectEvent>, String>((ref, projectId) {
+final eventsForProjectProvider = Provider.family<List<ProjectEvent>, String>((
+  ref,
+  projectId,
+) {
   final eventsAsync = ref.watch(allEventsStreamProvider);
-  return eventsAsync.whenData((events) {
-    final filtered = events.where((e) => e.projectId == projectId).toList()
-      ..sort((a, b) => b.occurredAt.compareTo(a.occurredAt));
-    return filtered;
-  }).asData?.value ?? [];
+  return eventsAsync
+          .whenData((events) {
+            final filtered =
+                events.where((e) => e.projectId == projectId).toList()
+                  ..sort((a, b) => b.occurredAt.compareTo(a.occurredAt));
+            return filtered;
+          })
+          .asData
+          ?.value ??
+      [];
 });
 
 /// Projects sorted by most recent event activity (most active first).
 /// Projects with no events are sorted by updatedAt at the end.
-final projectsWithRecentActivityProvider =
-    Provider<List<MusicProject>>((ref) {
+final projectsWithRecentActivityProvider = Provider<List<MusicProject>>((ref) {
   final projectsAsync = ref.watch(allProjectsStreamProvider);
   final eventsAsync = ref.watch(allEventsStreamProvider);
   final hideFinished = ref.watch(statsHideFinishedProvider);
@@ -1584,7 +1808,8 @@ final projectsWithRecentActivityProvider =
 /// Whether the statistics page should exclude finished projects from all computations.
 final statsHideFinishedProvider =
     NotifierProvider<StatsHideFinishedNotifier, bool>(
-        StatsHideFinishedNotifier.new);
+      StatsHideFinishedNotifier.new,
+    );
 
 class StatsHideFinishedNotifier extends Notifier<bool> {
   static const _key = 'statsHideFinished';
@@ -1629,8 +1854,12 @@ final globalStatsProvider = Provider<GlobalStats>((ref) {
 
   // Basic counts
   final total = projects.length;
-  final finished = projects.where((p) => finishedPhases.contains(p.status)).toList();
-  final inProgress = projects.where((p) => !finishedPhases.contains(p.status)).toList();
+  final finished = projects
+      .where((p) => finishedPhases.contains(p.status))
+      .toList();
+  final inProgress = projects
+      .where((p) => !finishedPhases.contains(p.status))
+      .toList();
 
   // Average completion time (from model field, only for finished projects)
   Duration? avgCompletion;
@@ -1639,8 +1868,10 @@ final globalStatsProvider = Provider<GlobalStats>((ref) {
       .whereType<Duration>()
       .toList();
   if (completionTimes.isNotEmpty) {
-    final totalMs =
-        completionTimes.fold<int>(0, (sum, d) => sum + d.inMilliseconds);
+    final totalMs = completionTimes.fold<int>(
+      0,
+      (sum, d) => sum + d.inMilliseconds,
+    );
     avgCompletion = Duration(milliseconds: totalMs ~/ completionTimes.length);
   }
 
@@ -1666,11 +1897,13 @@ final globalStatsProvider = Provider<GlobalStats>((ref) {
     evList.sort((a, b) => a.occurredAt.compareTo(b.occurredAt));
     for (int i = 0; i < evList.length - 1; i++) {
       try {
-        final payload = jsonDecode(evList[i].payload ?? '{}') as Map<String, dynamic>;
+        final payload =
+            jsonDecode(evList[i].payload ?? '{}') as Map<String, dynamic>;
         final phaseEntered = payload['to'] as String?;
         if (phaseEntered == null) continue;
-        final days =
-            evList[i + 1].occurredAt.difference(evList[i].occurredAt).inDays;
+        final days = evList[i + 1].occurredAt
+            .difference(evList[i].occurredAt)
+            .inDays;
         daysPerPhase.putIfAbsent(phaseEntered, () => []).add(days);
       } catch (_) {
         // Malformed payload — skip
@@ -1740,7 +1973,8 @@ class StatisticsSearchNotifier extends Notifier<String> {
 
 final statisticsSearchProvider =
     NotifierProvider<StatisticsSearchNotifier, String>(
-        StatisticsSearchNotifier.new);
+      StatisticsSearchNotifier.new,
+    );
 
 class QueueSearchNotifier extends Notifier<String> {
   @override
@@ -1749,8 +1983,9 @@ class QueueSearchNotifier extends Notifier<String> {
   void clear() => state = '';
 }
 
-final queueSearchProvider =
-    NotifierProvider<QueueSearchNotifier, String>(QueueSearchNotifier.new);
+final queueSearchProvider = NotifierProvider<QueueSearchNotifier, String>(
+  QueueSearchNotifier.new,
+);
 
 // ─── Desktop embedded player ──────────────────────────────────────────────────
 
@@ -1761,6 +1996,7 @@ class DesktopPlayerRequest {
   final MusicProject project;
   final String resolvedPath;
   final int generation;
+
   /// True when the track is playing as part of the music-player queue.
   /// False for single-track previews (projects list, player bar quick-play).
   final bool isQueuedPlayback;
@@ -1777,7 +2013,11 @@ class DesktopPlayerNotifier extends Notifier<DesktopPlayerRequest?> {
   @override
   DesktopPlayerRequest? build() => null;
 
-  void play(MusicProject project, String resolvedPath, {bool isQueuedPlayback = false}) {
+  void play(
+    MusicProject project,
+    String resolvedPath, {
+    bool isQueuedPlayback = false,
+  }) {
     final gen = (state?.generation ?? 0) + 1;
     state = DesktopPlayerRequest(
       project: project,
@@ -1792,7 +2032,8 @@ class DesktopPlayerNotifier extends Notifier<DesktopPlayerRequest?> {
 
 final desktopPlayerProvider =
     NotifierProvider<DesktopPlayerNotifier, DesktopPlayerRequest?>(
-        DesktopPlayerNotifier.new);
+      DesktopPlayerNotifier.new,
+    );
 
 /// True while the desktop player is actively playing (false when paused/stopped).
 class DesktopIsPlayingNotifier extends Notifier<bool> {
@@ -1802,7 +2043,9 @@ class DesktopIsPlayingNotifier extends Notifier<bool> {
 }
 
 final desktopIsPlayingProvider =
-    NotifierProvider<DesktopIsPlayingNotifier, bool>(DesktopIsPlayingNotifier.new);
+    NotifierProvider<DesktopIsPlayingNotifier, bool>(
+      DesktopIsPlayingNotifier.new,
+    );
 
 /// Bumped to ask whoever owns the desktop player's AudioPlayer (currently
 /// _DesktopPlayerBarState) to toggle play/pause on the current track, from
@@ -1815,7 +2058,9 @@ class DesktopPlayerToggleNotifier extends Notifier<int> {
 }
 
 final desktopPlayerToggleRequestProvider =
-    NotifierProvider<DesktopPlayerToggleNotifier, int>(DesktopPlayerToggleNotifier.new);
+    NotifierProvider<DesktopPlayerToggleNotifier, int>(
+      DesktopPlayerToggleNotifier.new,
+    );
 
 /// Incremented each time the desktop player finishes a track naturally.
 /// Music player listens to this to trigger queue auto-advance.
@@ -1827,28 +2072,34 @@ class DesktopPlayerCompletedNotifier extends Notifier<int> {
 
 final desktopPlayerCompletedProvider =
     NotifierProvider<DesktopPlayerCompletedNotifier, int>(
-        DesktopPlayerCompletedNotifier.new);
+      DesktopPlayerCompletedNotifier.new,
+    );
 
 // ─── Queue navigation (prev / next from bottom player bar) ────────────────────
 
 /// Callbacks registered by [MusicPlayerPage] so [_DesktopPlayerBar] can
 /// trigger previous/next track navigation without coupling the two widgets.
-class QueueNavigationNotifier extends Notifier<({void Function()? playNext, void Function()? playPrev})> {
+class QueueNavigationNotifier
+    extends Notifier<({void Function()? playNext, void Function()? playPrev})> {
   @override
   ({void Function()? playNext, void Function()? playPrev}) build() =>
       (playNext: null, playPrev: null);
 
-  void register({required void Function() playNext, required void Function() playPrev}) {
+  void register({
+    required void Function() playNext,
+    required void Function() playPrev,
+  }) {
     state = (playNext: playNext, playPrev: playPrev);
   }
 
   void unregister() => state = (playNext: null, playPrev: null);
 }
 
-final queueNavigationProvider = NotifierProvider<
-    QueueNavigationNotifier,
-    ({void Function()? playNext, void Function()? playPrev})>(
-    QueueNavigationNotifier.new);
+final queueNavigationProvider =
+    NotifierProvider<
+      QueueNavigationNotifier,
+      ({void Function()? playNext, void Function()? playPrev})
+    >(QueueNavigationNotifier.new);
 
 // ─── Waveform peaks cache ─────────────────────────────────────────────────────
 
@@ -1879,13 +2130,18 @@ class WaveformCacheNotifier extends Notifier<Map<String, WaveformPeaks>> {
   /// [onStale] is called synchronously if the memory-cached entry is found to
   /// be stale (source file modified since caching). Use it to clear local
   /// peak state and show a "refreshing" notification before re-extraction begins.
-  Future<WaveformPeaks?> getOrExtract(String path, {VoidCallback? onStale}) async {
+  Future<WaveformPeaks?> getOrExtract(
+    String path, {
+    VoidCallback? onStale,
+  }) async {
     final mem = state[path];
     if (mem != null) {
       // Cheap stat to detect files overwritten with new content at the same path.
       bool stale = false;
       try {
-        final currentMtime = File(path).statSync().modified.microsecondsSinceEpoch;
+        final currentMtime = File(
+          path,
+        ).statSync().modified.microsecondsSinceEpoch;
         stale = currentMtime != _mtimes[path];
       } catch (_) {
         return mem; // File inaccessible — return cached data as-is.
@@ -1914,7 +2170,8 @@ class WaveformCacheNotifier extends Notifier<Map<String, WaveformPeaks>> {
 
 final waveformCacheProvider =
     NotifierProvider<WaveformCacheNotifier, Map<String, WaveformPeaks>>(
-        WaveformCacheNotifier.new);
+      WaveformCacheNotifier.new,
+    );
 
 // ---------------------------------------------------------------------------
 // Mobile Preview Player (global singleton — persists across navigation)
@@ -1945,8 +2202,8 @@ class MobilePlayerState {
 
   String? get effectivePath =>
       currentProject?.previewSongPath?.isNotEmpty == true
-          ? currentProject!.previewSongPath
-          : currentProject?.previewSongAutoPath;
+      ? currentProject!.previewSongPath
+      : currentProject?.previewSongAutoPath;
 
   MobilePlayerState copyWith({
     MusicProject? currentProject,
@@ -1956,16 +2213,15 @@ class MobilePlayerState {
     List<MusicProject>? queue,
     int? queueIndex,
     PlaybackMode? playbackMode,
-  }) =>
-      MobilePlayerState(
-        currentProject: currentProject ?? this.currentProject,
-        isPlaying: isPlaying ?? this.isPlaying,
-        position: position ?? this.position,
-        duration: duration ?? this.duration,
-        queue: queue ?? this.queue,
-        queueIndex: queueIndex ?? this.queueIndex,
-        playbackMode: playbackMode ?? this.playbackMode,
-      );
+  }) => MobilePlayerState(
+    currentProject: currentProject ?? this.currentProject,
+    isPlaying: isPlaying ?? this.isPlaying,
+    position: position ?? this.position,
+    duration: duration ?? this.duration,
+    queue: queue ?? this.queue,
+    queueIndex: queueIndex ?? this.queueIndex,
+    playbackMode: playbackMode ?? this.playbackMode,
+  );
 }
 
 // ── helpers ───────────────────────────────────────────────────────────────────
@@ -2107,8 +2363,8 @@ class MobilePlayerNotifier extends Notifier<MobilePlayerState> {
     _jaCompleteSub = p.playerStateStream
         .where((s) => s.processingState == ja.ProcessingState.completed)
         .listen((_) {
-      state = state.copyWith(isPlaying: false, position: Duration.zero);
-    });
+          state = state.copyWith(isPlaying: false, position: Duration.zero);
+        });
     // Erros do pipeline (fonte inválida, decode) chegam aqui; sem tratá-los, o
     // BehaviorSubject fecha, playingStream para de emitir e isPlaying trava.
     _jaEventSub = p.playbackEventStream.listen(
@@ -2177,7 +2433,9 @@ class MobilePlayerNotifier extends Notifier<MobilePlayerState> {
     final ordered = orderedQueueFor(natural, project, state.playbackMode);
     var idx = ordered.indexWhere((p) => p.id == project.id);
     if (idx < 0) {
-      idx = ordered.isEmpty ? 0 : (queueIndex ?? 0).clamp(0, ordered.length - 1);
+      idx = ordered.isEmpty
+          ? 0
+          : (queueIndex ?? 0).clamp(0, ordered.length - 1);
     }
     await _play(project, path, ordered, idx);
   }
@@ -2285,14 +2543,20 @@ class MobilePlayerNotifier extends Notifier<MobilePlayerState> {
   }
 
   Future<void> playNext() async {
-    final target =
-        nextIndexIn(state.queue.length, state.queueIndex, state.playbackMode);
+    final target = nextIndexIn(
+      state.queue.length,
+      state.queueIndex,
+      state.playbackMode,
+    );
     if (target != null) await playAtIndex(target);
   }
 
   Future<void> playPrev() async {
-    final target =
-        prevIndexIn(state.queue.length, state.queueIndex, state.playbackMode);
+    final target = prevIndexIn(
+      state.queue.length,
+      state.queueIndex,
+      state.playbackMode,
+    );
     if (target != null) await playAtIndex(target);
   }
 
@@ -2389,10 +2653,10 @@ class MobilePlayerNotifier extends Notifier<MobilePlayerState> {
 
   Future<void> cyclePlaybackMode() async {
     final next = switch (state.playbackMode) {
-      PlaybackMode.normal    => PlaybackMode.repeatOne,
+      PlaybackMode.normal => PlaybackMode.repeatOne,
       PlaybackMode.repeatOne => PlaybackMode.repeatAll,
       PlaybackMode.repeatAll => PlaybackMode.normal,
-      PlaybackMode.shuffle   => PlaybackMode.normal,
+      PlaybackMode.shuffle => PlaybackMode.normal,
     };
     await setPlaybackMode(next);
   }
@@ -2439,13 +2703,14 @@ class MobilePlayerNotifier extends Notifier<MobilePlayerState> {
 
 final mobilePlayerProvider =
     NotifierProvider<MobilePlayerNotifier, MobilePlayerState>(
-        MobilePlayerNotifier.new);
+      MobilePlayerNotifier.new,
+    );
 
 /// The local file path the mobile player would use for [p], or '' if none.
 String resolvedPreviewPath(MusicProject p) =>
     p.previewSongPath?.isNotEmpty == true
-        ? p.previewSongPath!
-        : (p.previewSongAutoPath ?? '');
+    ? p.previewSongPath!
+    : (p.previewSongAutoPath ?? '');
 
 /// Whether [p] has a preview that the mobile player can actually load. Excludes
 /// empty paths and `drive://` placeholders (not yet downloaded) — feeding those
@@ -2490,8 +2755,9 @@ class SessionModeNotifier extends Notifier<bool> {
   Future<void> toggle() async => set(!state);
 }
 
-final sessionModeProvider =
-    NotifierProvider<SessionModeNotifier, bool>(SessionModeNotifier.new);
+final sessionModeProvider = NotifierProvider<SessionModeNotifier, bool>(
+  SessionModeNotifier.new,
+);
 
 // ---------------------------------------------------------------------------
 // Session Suggestions Enabled
@@ -2521,7 +2787,8 @@ class SuggestionsEnabledNotifier extends Notifier<bool> {
 
 final suggestionsEnabledProvider =
     NotifierProvider<SuggestionsEnabledNotifier, bool>(
-        SuggestionsEnabledNotifier.new);
+      SuggestionsEnabledNotifier.new,
+    );
 
 // ---------------------------------------------------------------------------
 // Smart Folder Sort Exclusion
@@ -2562,7 +2829,8 @@ class ExcludeSmartFoldersFromSortNotifier extends Notifier<bool> {
 
 final excludeSmartFoldersFromSortProvider =
     NotifierProvider<ExcludeSmartFoldersFromSortNotifier, bool>(
-        ExcludeSmartFoldersFromSortNotifier.new);
+      ExcludeSmartFoldersFromSortNotifier.new,
+    );
 
 // ---------------------------------------------------------------------------
 // Smart Folder Merge-by-Name
@@ -2600,7 +2868,8 @@ class MergeSmartFoldersByNameNotifier extends Notifier<bool> {
 
 final mergeSmartFoldersByNameProvider =
     NotifierProvider<MergeSmartFoldersByNameNotifier, bool>(
-        MergeSmartFoldersByNameNotifier.new);
+      MergeSmartFoldersByNameNotifier.new,
+    );
 
 // ---------------------------------------------------------------------------
 // Always Show Smart Folders
@@ -2639,7 +2908,8 @@ class AlwaysShowSmartFoldersNotifier extends Notifier<bool> {
 
 final alwaysShowSmartFoldersProvider =
     NotifierProvider<AlwaysShowSmartFoldersNotifier, bool>(
-        AlwaysShowSmartFoldersNotifier.new);
+      AlwaysShowSmartFoldersNotifier.new,
+    );
 
 // ---------------------------------------------------------------------------
 // Work Timer Notification Settings
@@ -2669,7 +2939,8 @@ class WorkTimerNotifEnabledNotifier extends Notifier<bool> {
 
 final workTimerNotifEnabledProvider =
     NotifierProvider<WorkTimerNotifEnabledNotifier, bool>(
-        WorkTimerNotifEnabledNotifier.new);
+      WorkTimerNotifEnabledNotifier.new,
+    );
 
 class WorkTimerNotifIntervalNotifier extends Notifier<int> {
   // Stored and exposed in SECONDS. Default: 3600 (60 minutes).
@@ -2706,7 +2977,8 @@ class WorkTimerNotifIntervalNotifier extends Notifier<int> {
 
 final workTimerNotifIntervalProvider =
     NotifierProvider<WorkTimerNotifIntervalNotifier, int>(
-        WorkTimerNotifIntervalNotifier.new);
+      WorkTimerNotifIntervalNotifier.new,
+    );
 
 // ---------------------------------------------------------------------------
 // Work Timer — tracks time on the subscribed project, fires notifications
@@ -2716,7 +2988,7 @@ class WorkTimerNotifier extends Notifier<int> {
   // State = elapsed seconds of active work (0 when idle; frozen while paused).
   Timer? _ticker;
   DateTime? _startTime; // adjusted on resume to exclude paused durations
-  DateTime? _pausedAt;  // set when paused, null otherwise
+  DateTime? _pausedAt; // set when paused, null otherwise
 
   @override
   int build() {
@@ -2811,7 +3083,10 @@ class WorkTimerNotifier extends Notifier<int> {
     );
     final newSessions = [...latest.sessions, record];
     final updated = latest.copyWith(
-      totalWorkSeconds: newSessions.fold<int>(0, (s, r) => s + r.durationSeconds),
+      totalWorkSeconds: newSessions.fold<int>(
+        0,
+        (s, r) => s + r.durationSeconds,
+      ),
       sessions: newSessions,
       updatedAt: DateTime.now(),
     );
@@ -2840,8 +3115,8 @@ class WorkTimerNotifier extends Notifier<int> {
         final timeStr = h > 0
             ? (m > 0 ? '${h}h ${m}m' : '${h}h')
             : m > 0
-                ? (s > 0 ? '${m}m ${s}s' : '${m}m')
-                : '${s}s';
+            ? (s > 0 ? '${m}m ${s}s' : '${m}m')
+            : '${s}s';
         final allProfiles = ref.read(allProfilesProvider).value ?? [];
         final profile = ref.read(currentProfileProvider).value;
         final title = (allProfiles.length > 1 && profile != null)
@@ -2856,8 +3131,9 @@ class WorkTimerNotifier extends Notifier<int> {
   }
 }
 
-final workTimerProvider =
-    NotifierProvider<WorkTimerNotifier, int>(WorkTimerNotifier.new);
+final workTimerProvider = NotifierProvider<WorkTimerNotifier, int>(
+  WorkTimerNotifier.new,
+);
 
 /// True while the work-timer is paused (ticker stopped, elapsed frozen).
 class WorkTimerPausedNotifier extends Notifier<bool> {
@@ -2866,8 +3142,9 @@ class WorkTimerPausedNotifier extends Notifier<bool> {
   void set(bool value) => state = value;
 }
 
-final workTimerPausedProvider =
-    NotifierProvider<WorkTimerPausedNotifier, bool>(WorkTimerPausedNotifier.new);
+final workTimerPausedProvider = NotifierProvider<WorkTimerPausedNotifier, bool>(
+  WorkTimerPausedNotifier.new,
+);
 
 // ---------------------------------------------------------------------------
 // Last-Modified Color Coding Setting
@@ -2907,7 +3184,9 @@ class LastModifiedColorNotifier extends Notifier<bool> {
 }
 
 final lastModifiedColorProvider =
-    NotifierProvider<LastModifiedColorNotifier, bool>(LastModifiedColorNotifier.new);
+    NotifierProvider<LastModifiedColorNotifier, bool>(
+      LastModifiedColorNotifier.new,
+    );
 
 // ── Session idle suggestions panel ──────────────────────────────────────────
 
@@ -2919,7 +3198,8 @@ class SuggestionsPanelExpandedNotifier extends Notifier<bool> {
 
 final suggestionsPanelExpandedProvider =
     NotifierProvider<SuggestionsPanelExpandedNotifier, bool>(
-        SuggestionsPanelExpandedNotifier.new);
+      SuggestionsPanelExpandedNotifier.new,
+    );
 
 class DismissedSuggestionsNotifier extends Notifier<Set<String>> {
   @override
@@ -2930,7 +3210,8 @@ class DismissedSuggestionsNotifier extends Notifier<Set<String>> {
 
 final dismissedSuggestionsProvider =
     NotifierProvider<DismissedSuggestionsNotifier, Set<String>>(
-        DismissedSuggestionsNotifier.new);
+      DismissedSuggestionsNotifier.new,
+    );
 
 // Bumped whenever pending folders are added/removed so the UI rebuilds.
 class _PendingFoldersDirtyNotifier extends Notifier<int> {
@@ -2940,7 +3221,9 @@ class _PendingFoldersDirtyNotifier extends Notifier<int> {
 }
 
 final pendingFoldersDirtyProvider =
-    NotifierProvider<_PendingFoldersDirtyNotifier, int>(_PendingFoldersDirtyNotifier.new);
+    NotifierProvider<_PendingFoldersDirtyNotifier, int>(
+      _PendingFoldersDirtyNotifier.new,
+    );
 
 final pendingFoldersProvider = Provider<List<PendingFolder>>((ref) {
   ref.watch(pendingFoldersDirtyProvider);

@@ -207,6 +207,8 @@
   "allDaws": "Все DAW",
   "daw": "DAW",
   "clearDaw": "Очистить DAW",
+  "filterByKey": "Фильтр по Тональности",
+  "allKeys": "Все Тональности",
   "lastModifiedColumn": "Последнее Изменение",
   "actions": "Действия",
   "hide": "Скрыть",

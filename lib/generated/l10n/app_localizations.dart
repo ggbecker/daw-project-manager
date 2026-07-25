@@ -784,6 +784,18 @@ abstract class AppLocalizations {
   /// **'Clear DAW'**
   String get clearDaw;
 
+  /// No description provided for @filterByKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by Key'**
+  String get filterByKey;
+
+  /// No description provided for @allKeys.
+  ///
+  /// In en, this message translates to:
+  /// **'All Keys'**
+  String get allKeys;
+
   /// No description provided for @lastModifiedColumn.
   ///
   /// In en, this message translates to:

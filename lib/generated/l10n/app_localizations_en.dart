@@ -381,6 +381,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clearDaw => 'Clear DAW';
 
   @override
+  String get filterByKey => 'Filter by Key';
+
+  @override
+  String get allKeys => 'All Keys';
+
+  @override
   String get lastModifiedColumn => 'Last Modified';
 
   @override

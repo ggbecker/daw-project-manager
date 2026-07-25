@@ -382,6 +382,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get clearDaw => 'Очистить DAW';
 
   @override
+  String get filterByKey => 'Фильтр по Тональности';
+
+  @override
+  String get allKeys => 'Все Тональности';
+
+  @override
   String get lastModifiedColumn => 'Последнее Изменение';
 
   @override

@@ -233,6 +233,8 @@
   "allDaws": "All DAWs",
   "daw": "DAW",
   "clearDaw": "Clear DAW",
+  "filterByKey": "Filter by Key",
+  "allKeys": "All Keys",
   "lastModifiedColumn": "Last Modified",
   "actions": "Actions",
   "hide": "Hide",

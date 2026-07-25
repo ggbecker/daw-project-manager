@@ -207,6 +207,8 @@
   "allDaws": "すべてのDAW",
   "daw": "DAW",
   "clearDaw": "DAWをクリア",
+  "filterByKey": "キーでフィルター",
+  "allKeys": "すべてのキー",
   "lastModifiedColumn": "最終更新",
   "actions": "アクション",
   "hide": "非表示にする",

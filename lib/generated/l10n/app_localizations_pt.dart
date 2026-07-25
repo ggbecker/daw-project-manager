@@ -381,6 +381,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get clearDaw => 'Limpar DAW';
 
   @override
+  String get filterByKey => 'Filtrar por Tom';
+
+  @override
+  String get allKeys => 'Todos os Tons';
+
+  @override
   String get lastModifiedColumn => 'Última Modificação';
 
   @override

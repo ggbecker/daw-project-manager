@@ -376,6 +376,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get clearDaw => 'DAWをクリア';
 
   @override
+  String get filterByKey => 'キーでフィルター';
+
+  @override
+  String get allKeys => 'すべてのキー';
+
+  @override
   String get lastModifiedColumn => '最終更新';
 
   @override

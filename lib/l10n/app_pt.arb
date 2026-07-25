@@ -207,6 +207,8 @@
   "allDaws": "Todas as DAWs",
   "daw": "DAW",
   "clearDaw": "Limpar DAW",
+  "filterByKey": "Filtrar por Tom",
+  "allKeys": "Todos os Tons",
   "lastModifiedColumn": "Última Modificação",
   "actions": "Ações",
   "hide": "Ocultar",

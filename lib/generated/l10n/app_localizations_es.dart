@@ -383,6 +383,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get clearDaw => 'Borrar DAW';
 
   @override
+  String get filterByKey => 'Filtrar por Tonalidad';
+
+  @override
+  String get allKeys => 'Todas las Tonalidades';
+
+  @override
   String get lastModifiedColumn => 'Última Modificación';
 
   @override

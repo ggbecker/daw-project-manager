@@ -207,6 +207,8 @@
   "allDaws": "Todos los DAW",
   "daw": "DAW",
   "clearDaw": "Borrar DAW",
+  "filterByKey": "Filtrar por Tonalidad",
+  "allKeys": "Todas las Tonalidades",
   "lastModifiedColumn": "Última Modificación",
   "actions": "Acciones",
   "hide": "Ocultar",

@@ -47,6 +47,7 @@ import 'notification_settings_page.dart';
 import 'widgets/conversion_progress_dialog.dart';
 import 'widgets/desktop_title_bar.dart';
 import 'widgets/drag_to_share_button.dart';
+import 'widgets/filter_dropdown.dart';
 import 'widgets/language_switcher.dart';
 import 'widgets/theme_switcher.dart';
 import 'widgets/mobile_mini_player.dart';
@@ -4247,27 +4248,10 @@ class _PlutoProjectsTableWithSelectionState
                 ),
               ),
               const SizedBox(width: 8),
-              Icon(
-                Icons.filter_list,
-                size: 16,
-                color: Theme.of(context).textTheme.bodyMedium?.color,
-              ),
-              const SizedBox(width: 4),
-              DropdownButton<String>(
+              FilterDropdown<String>(
+                icon: Icons.filter_list,
                 value: phaseFilter,
-                hint: Text(
-                  l10n.filterByPhase,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Theme.of(context).textTheme.bodySmall?.color,
-                  ),
-                ),
-                underline: const SizedBox.shrink(),
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Theme.of(context).textTheme.bodyMedium?.color,
-                ),
-                icon: const SizedBox.shrink(),
+                hintText: l10n.filterByPhase,
                 items: [
                   DropdownMenuItem<String>(
                     value: null,
@@ -4285,28 +4269,11 @@ class _PlutoProjectsTableWithSelectionState
                 },
               ),
               if (availableDaws.isNotEmpty) ...[
-                const SizedBox(width: 8),
-                Icon(
-                  Icons.piano,
-                  size: 16,
-                  color: Theme.of(context).textTheme.bodyMedium?.color,
-                ),
                 const SizedBox(width: 4),
-                DropdownButton<String>(
+                FilterDropdown<String>(
+                  icon: Icons.piano,
                   value: dawFilter,
-                  hint: Text(
-                    l10n.filterByDaw,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).textTheme.bodySmall?.color,
-                    ),
-                  ),
-                  underline: const SizedBox.shrink(),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Theme.of(context).textTheme.bodyMedium?.color,
-                  ),
-                  icon: const SizedBox.shrink(),
+                  hintText: l10n.filterByDaw,
                   items: [
                     DropdownMenuItem<String>(
                       value: null,
