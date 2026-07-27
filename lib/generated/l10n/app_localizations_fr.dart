@@ -2381,6 +2381,34 @@ class AppLocalizationsFr extends AppLocalizations {
       'Continuer à s\'exécuter en arrière-plan (icône dans la barre système) à la fermeture de la fenêtre, afin que la sauvegarde automatique et les notifications continuent de fonctionner';
 
   @override
+  String get autoStart => 'Lancer au démarrage';
+
+  @override
+  String get autoStartDescription =>
+      'Ouvrir DAW Project Manager automatiquement à l\'ouverture de votre session';
+
+  @override
+  String get startMinimized => 'Démarrer réduit dans la barre d\'état';
+
+  @override
+  String get startMinimizedDescription =>
+      'Quand l\'app démarre avec votre ordinateur, l\'ouvrir masquée dans la barre d\'état au lieu d\'afficher la fenêtre';
+
+  @override
+  String get onboardingStartMinimized => 'Démarrer réduit';
+
+  @override
+  String get autoStartFailed =>
+      'Impossible de modifier le réglage de démarrage. Votre système ne l\'autorise peut-être pas.';
+
+  @override
+  String get onboardingStartupTitle => 'Lancer au Démarrage';
+
+  @override
+  String get onboardingStartupBody =>
+      'Ouvrez DAW Project Manager automatiquement à l\'ouverture de session, pour que les sauvegardes en arrière-plan et les rappels d\'échéance continuent de fonctionner.';
+
+  @override
   String get menuWindow => 'Fenêtre';
 
   @override

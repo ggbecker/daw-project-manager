@@ -2365,6 +2365,34 @@ class AppLocalizationsIt extends AppLocalizations {
       'Continua a funzionare in background (icona nella barra) quando chiudi la finestra, così il backup automatico e le notifiche continuano a funzionare';
 
   @override
+  String get autoStart => 'Avvia all\'accensione';
+
+  @override
+  String get autoStartDescription =>
+      'Apri DAW Project Manager automaticamente all\'accesso al computer';
+
+  @override
+  String get startMinimized => 'Avvia ridotto nella barra';
+
+  @override
+  String get startMinimizedDescription =>
+      'Quando l\'app si avvia con il computer, aprirla nascosta nella barra invece di mostrare la finestra';
+
+  @override
+  String get onboardingStartMinimized => 'Avvia ridotto';
+
+  @override
+  String get autoStartFailed =>
+      'Impossibile modificare l\'impostazione di avvio. Il tuo sistema potrebbe non consentirlo.';
+
+  @override
+  String get onboardingStartupTitle => 'Avvia all\'Accensione';
+
+  @override
+  String get onboardingStartupBody =>
+      'Fai aprire DAW Project Manager automaticamente all\'accesso, così i backup in background e i promemoria delle scadenze continuano a funzionare.';
+
+  @override
   String get menuWindow => 'Finestra';
 
   @override

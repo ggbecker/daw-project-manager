@@ -1560,6 +1560,14 @@
   "trayResumeSession": "Sitzung fortsetzen",
   "closeToTray": "In die Ablage schließen",
   "closeToTrayDescription": "Beim Schließen des Fensters im Hintergrund weiterlaufen (Symbol in der Ablage), damit automatisches Backup und Benachrichtigungen weiter funktionieren",
+  "autoStart": "Beim Systemstart starten",
+  "autoStartDescription": "DAW Project Manager automatisch öffnen, wenn Sie sich am Computer anmelden",
+  "startMinimized": "Minimiert im Infobereich starten",
+  "startMinimizedDescription": "Wenn die App mit dem Computer startet, sie ausgeblendet im Infobereich öffnen statt das Fenster anzuzeigen",
+  "onboardingStartMinimized": "Minimiert starten",
+  "autoStartFailed": "Die Autostart-Einstellung konnte nicht geändert werden. Ihr System erlaubt dies möglicherweise nicht.",
+  "onboardingStartupTitle": "Beim Systemstart Starten",
+  "onboardingStartupBody": "DAW Project Manager automatisch beim Anmelden öffnen, damit Backups im Hintergrund und Fristerinnerungen weiterlaufen.",
   "@menuQuit": {
     "description": "macOS menu item to quit the app"
   },

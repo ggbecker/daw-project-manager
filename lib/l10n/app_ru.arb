@@ -1560,6 +1560,14 @@
   "trayResumeSession": "Возобновить сеанс",
   "closeToTray": "Закрывать в трей",
   "closeToTrayDescription": "Продолжать работать в фоне (значок в трее) при закрытии окна, чтобы автоматическое резервное копирование и уведомления продолжали работать",
+  "autoStart": "Запускать при входе в систему",
+  "autoStartDescription": "Автоматически открывать DAW Project Manager при входе в систему",
+  "startMinimized": "Запускать свёрнутым в трей",
+  "startMinimizedDescription": "При запуске вместе с компьютером открывать приложение скрытым в трее, а не показывать окно",
+  "onboardingStartMinimized": "Запускать свёрнутым",
+  "autoStartFailed": "Не удалось изменить параметр автозапуска. Возможно, ваша система этого не разрешает.",
+  "onboardingStartupTitle": "Запуск при входе в систему",
+  "onboardingStartupBody": "Открывайте DAW Project Manager автоматически при входе в систему, чтобы фоновые резервные копии и напоминания о сроках продолжали работать.",
   "@menuQuit": {
     "description": "macOS menu item to quit the app"
   },

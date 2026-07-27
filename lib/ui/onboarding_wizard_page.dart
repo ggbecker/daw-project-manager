@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../generated/l10n/app_localizations.dart';
 import '../providers/providers.dart';
 import '../providers/theme_provider.dart';
+import '../services/auto_start_service.dart';
 import '../utils/mobile_utils.dart';
 import 'dashboard_page.dart' show DashboardPage;
 import 'widgets/language_switcher.dart';
@@ -18,7 +19,22 @@ class OnboardingWizardPage extends ConsumerStatefulWidget {
 class _OnboardingWizardPageState extends ConsumerState<OnboardingWizardPage> {
   final _controller = PageController();
   int _page = 0;
-  static const _totalPages = 6;
+
+  /// The startup step is skipped entirely on platforms that have no
+  /// launch-at-login concept (mobile), so the page count is derived from the
+  /// built list rather than hardcoded.
+  List<Widget> _pages(AppLocalizations l10n) => [
+        _WelcomePage(l10n: l10n),
+        _LanguagePage(l10n: l10n),
+        _ThemePage(l10n: l10n),
+        _TabsPage(l10n: l10n),
+        _PhasesPage(l10n: l10n),
+        if (AutoStartService.isSupported) _StartupPage(l10n: l10n),
+        _DonePage(l10n: l10n),
+      ];
+
+  // Welcome, Language, Theme, Tabs, Phases, [Startup], Done.
+  int get _totalPages => AutoStartService.isSupported ? 7 : 6;
 
   @override
   void dispose() {
@@ -55,6 +71,8 @@ class _OnboardingWizardPageState extends ConsumerState<OnboardingWizardPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final pages = _pages(l10n);
+    assert(pages.length == _totalPages);
     final isLast = _page == _totalPages - 1;
 
     return Scaffold(
@@ -66,14 +84,7 @@ class _OnboardingWizardPageState extends ConsumerState<OnboardingWizardPage> {
               controller: _controller,
               physics: const NeverScrollableScrollPhysics(),
               onPageChanged: (i) => setState(() => _page = i),
-              children: [
-                _WelcomePage(l10n: l10n),
-                _LanguagePage(l10n: l10n),
-                _ThemePage(l10n: l10n),
-                _TabsPage(l10n: l10n),
-                _PhasesPage(l10n: l10n),
-                _DonePage(l10n: l10n),
-              ],
+              children: pages,
             ),
           ),
           _WizardNav(
@@ -507,6 +518,95 @@ class _PhasesPageState extends ConsumerState<_PhasesPage> {
                 label: Text(l10n.addPhase),
               ),
             ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.canBeChangedInSettings,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Page 5: Launch at startup (desktop only) ─────────────────────────────────
+
+class _StartupPage extends ConsumerStatefulWidget {
+  final AppLocalizations l10n;
+  const _StartupPage({required this.l10n});
+
+  @override
+  ConsumerState<_StartupPage> createState() => _StartupPageState();
+}
+
+class _StartupPageState extends ConsumerState<_StartupPage> {
+  bool _busy = false;
+
+  /// [apply] performs the toggle and reports whether the OS accepted it.
+  Future<void> _run(Future<bool> Function() apply) async {
+    setState(() => _busy = true);
+    final ok = await apply();
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (!ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(widget.l10n.autoStartFailed)),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = widget.l10n;
+    final theme = Theme.of(context);
+    final enabled = ref.watch(autoStartProvider);
+    final minimized = ref.watch(startMinimizedProvider);
+
+    return _WizardStep(
+      icon: Icons.rocket_launch_outlined,
+      title: l10n.onboardingStartupTitle,
+      subtitle: l10n.onboardingStartupBody,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Card(
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                SwitchListTile(
+                  value: enabled,
+                  onChanged: _busy
+                      ? null
+                      : (v) => _run(
+                          () => ref.read(autoStartProvider.notifier).set(v)),
+                  title: Text(l10n.autoStart),
+                  subtitle: Text(
+                    l10n.autoStartDescription,
+                    style: theme.textTheme.bodySmall,
+                  ),
+                  secondary: const Icon(Icons.power_settings_new),
+                ),
+                const Divider(height: 1),
+                // Only does anything alongside the switch above, so it stays
+                // disabled until auto-start is on.
+                SwitchListTile(
+                  value: minimized,
+                  onChanged: (_busy || !enabled)
+                      ? null
+                      : (v) => _run(() =>
+                          ref.read(startMinimizedProvider.notifier).set(v)),
+                  title: Text(l10n.onboardingStartMinimized),
+                  subtitle: Text(
+                    l10n.startMinimizedDescription,
+                    style: theme.textTheme.bodySmall,
+                  ),
+                  secondary: const Icon(Icons.move_to_inbox_outlined),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 8),
           Text(

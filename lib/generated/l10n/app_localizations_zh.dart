@@ -2285,6 +2285,31 @@ class AppLocalizationsZh extends AppLocalizations {
   String get closeToTrayDescription => '关闭窗口后继续在后台运行（系统托盘图标），以便自动备份和通知继续工作';
 
   @override
+  String get autoStart => '开机自动启动';
+
+  @override
+  String get autoStartDescription => '登录电脑时自动打开 DAW Project Manager';
+
+  @override
+  String get startMinimized => '启动时最小化到托盘';
+
+  @override
+  String get startMinimizedDescription => '随电脑启动时，将应用隐藏在托盘中，而不显示窗口';
+
+  @override
+  String get onboardingStartMinimized => '最小化启动';
+
+  @override
+  String get autoStartFailed => '无法更改开机启动设置。您的系统可能不允许此操作。';
+
+  @override
+  String get onboardingStartupTitle => '开机自动启动';
+
+  @override
+  String get onboardingStartupBody =>
+      '登录时自动打开 DAW Project Manager，让后台备份和截止日期提醒持续运行。';
+
+  @override
   String get menuWindow => '窗口';
 
   @override

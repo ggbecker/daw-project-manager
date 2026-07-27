@@ -16,6 +16,7 @@ import '../models/scan_mode.dart';
 import 'onboarding_wizard_page.dart';
 import '../providers/providers.dart';
 import '../repository/project_repository.dart';
+import '../services/auto_start_service.dart';
 import '../services/mixdown_detector_service.dart';
 import '../services/project_text_export_service.dart';
 import '../services/scanner_service.dart';
@@ -422,6 +423,8 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
     final checkUpdates = ref.watch(checkForUpdatesProvider);
     final lastModifiedColors = ref.watch(lastModifiedColorProvider);
     final closeToTray = ref.watch(closeToTrayProvider);
+    final autoStart = ref.watch(autoStartProvider);
+    final startMinimized = ref.watch(startMinimizedProvider);
 
     final listBody = ListView(
       padding: MobileUtils.getResponsivePadding(context),
@@ -520,6 +523,54 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
                   contentPadding: EdgeInsets.zero,
                   dense: true,
                 ),
+                if (AutoStartService.isSupported)
+                  SwitchListTile(
+                    value: autoStart,
+                    onChanged: (v) async {
+                      final messenger = ScaffoldMessenger.of(context);
+                      final ok =
+                          await ref.read(autoStartProvider.notifier).set(v);
+                      if (!ok && mounted) {
+                        // The switch has already snapped back to the OS's
+                        // actual state — say why, so it doesn't look inert.
+                        messenger.showSnackBar(
+                          SnackBar(content: Text(l10n.autoStartFailed)),
+                        );
+                      }
+                    },
+                    title: Text(l10n.autoStart),
+                    subtitle: Text(l10n.autoStartDescription,
+                        style: Theme.of(context).textTheme.bodySmall),
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                  ),
+                if (AutoStartService.isSupported)
+                  Padding(
+                    // Indented to read as a sub-option of the switch above,
+                    // which is the only thing that makes it do anything.
+                    padding: const EdgeInsets.only(left: 24),
+                    child: SwitchListTile(
+                      value: startMinimized,
+                      onChanged: autoStart
+                          ? (v) async {
+                              final messenger = ScaffoldMessenger.of(context);
+                              final ok = await ref
+                                  .read(startMinimizedProvider.notifier)
+                                  .set(v);
+                              if (!ok && mounted) {
+                                messenger.showSnackBar(
+                                  SnackBar(content: Text(l10n.autoStartFailed)),
+                                );
+                              }
+                            }
+                          : null,
+                      title: Text(l10n.startMinimized),
+                      subtitle: Text(l10n.startMinimizedDescription,
+                          style: Theme.of(context).textTheme.bodySmall),
+                      contentPadding: EdgeInsets.zero,
+                      dense: true,
+                    ),
+                  ),
                 const Divider(height: 20),
                 ListTile(
                   leading: const Icon(Icons.tune),

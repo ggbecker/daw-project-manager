@@ -1584,6 +1584,14 @@
   "trayResumeSession": "Retomar Sessão",
   "closeToTray": "Fechar para a bandeja",
   "closeToTrayDescription": "Continuar rodando em segundo plano (ícone na bandeja) ao fechar a janela, para o backup automático e as notificações continuarem funcionando",
+  "autoStart": "Iniciar com o sistema",
+  "autoStartDescription": "Abrir o DAW Project Manager automaticamente ao entrar no computador",
+  "startMinimized": "Iniciar minimizado na bandeja",
+  "startMinimizedDescription": "Quando o app iniciar com o computador, abri-lo oculto na bandeja em vez de mostrar a janela",
+  "onboardingStartMinimized": "Iniciar minimizado",
+  "autoStartFailed": "Não foi possível alterar a configuração de inicialização. Seu sistema pode não permitir.",
+  "onboardingStartupTitle": "Iniciar com o Sistema",
+  "onboardingStartupBody": "Deixe o DAW Project Manager abrir automaticamente ao entrar no computador, para que os backups e os lembretes de prazo continuem funcionando.",
   "@menuQuit": {
     "description": "macOS menu item to quit the app"
   },

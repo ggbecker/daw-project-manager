@@ -26,6 +26,7 @@ import 'services/quick_action.dart';
 import 'services/tray_notice.dart';
 import 'services/tray_service.dart';
 import 'services/folder_watcher_service.dart';
+import 'services/auto_start_service.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'models/auto_backup_interval.dart';
 import 'utils/app_paths.dart';
@@ -556,6 +557,10 @@ Future<void> _main(List<String> args) async {
     }
   }
   
+  // Set by the OS auto-start registration (see AutoStartService), never by a
+  // manual launch — so "start minimized" only ever applies at login.
+  final startHidden = AutoStartService.launchedMinimized(args);
+
   // 3. Window Manager only for desktop platforms
   if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
     await windowManager.ensureInitialized();
@@ -577,8 +582,14 @@ Future<void> _main(List<String> args) async {
           : TitleBarStyle.hidden,
     );
     
-    // Criação e exibição da janela
+    // Criação e exibição da janela.
+    // On an auto-start launch with "start minimized" the window is simply
+    // never shown — window_manager creates it hidden, so skipping show()
+    // leaves it out of the taskbar too, exactly like the close-to-tray path.
+    // The tray icon (set up in 4e-2) is then the only way back in, which is
+    // why the failure paths below force the window open if it never appears.
     await windowManager.waitUntilReadyToShow(windowOptions, () async {
+      if (startHidden) return;
       await windowManager.show();
       await windowManager.focus();
     });
@@ -655,7 +666,18 @@ Future<void> _main(List<String> args) async {
     // 4e-2. System tray icon (Windows/macOS/Linux) — lets the app keep
     // auto-backup and notifications running while the window is hidden.
     if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
-      unawaited(TrayService(container, autoBackupService).init());
+      final trayInit = TrayService(container, autoBackupService).init();
+      if (startHidden) {
+        // Started hidden: the tray icon is the only way to reach the app, so
+        // if it fails to appear the process would be invisible and
+        // unkillable short of Task Manager. Show the window instead.
+        unawaited(trayInit.catchError((Object e) {
+          if (kDebugMode) print('[main] Tray init failed on hidden start: $e');
+          unawaited(_bringWindowToFront());
+        }));
+      } else {
+        unawaited(trayInit);
+      }
     }
 
     // 4f. Bootstrap work timer (starts listening to activeProjectProvider).
@@ -666,10 +688,24 @@ Future<void> _main(List<String> args) async {
       _runStartupUpdateCheck(container);
     }
 
+    // 4h. Reconcile the launch-at-startup preference with the OS. The user
+    // can revoke it outside the app (Task Manager → Startup apps, macOS
+    // System Settings → Login Items), so the cached Hive value can be stale;
+    // this corrects it. Not awaited — it touches the registry / a native
+    // channel and nothing at startup depends on the answer.
+    if (AutoStartService.isSupported) {
+      unawaited(container.read(autoStartProvider.notifier).syncWithOs());
+    }
+
   } catch (e) {
     // Mark as complete even on error
     container.read(initialScanStateProvider.notifier).complete();
     if (kDebugMode) print("Failed to initialize repository or run initial scan: $e");
+    // Tray setup lives inside this try, so a failure above means it never
+    // ran — on a hidden start that leaves nothing to reveal the window.
+    if (startHidden) {
+      unawaited(_bringWindowToFront());
+    }
   }
 
 

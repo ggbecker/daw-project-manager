@@ -2309,6 +2309,33 @@ class AppLocalizationsJa extends AppLocalizations {
       'ウィンドウを閉じてもバックグラウンドで実行を継続し(トレイアイコン)、自動バックアップと通知が引き続き機能するようにします';
 
   @override
+  String get autoStart => '起動時に自動で開く';
+
+  @override
+  String get autoStartDescription =>
+      'コンピューターにサインインしたときに DAW Project Manager を自動的に開きます';
+
+  @override
+  String get startMinimized => 'トレイに最小化した状態で起動';
+
+  @override
+  String get startMinimizedDescription =>
+      'コンピューターと一緒に起動するとき、ウィンドウを表示せずトレイに隠した状態で開きます';
+
+  @override
+  String get onboardingStartMinimized => '最小化して起動';
+
+  @override
+  String get autoStartFailed => '起動設定を変更できませんでした。お使いのシステムで許可されていない可能性があります。';
+
+  @override
+  String get onboardingStartupTitle => '起動時に自動で開く';
+
+  @override
+  String get onboardingStartupBody =>
+      'サインイン時に DAW Project Manager を自動的に開き、バックグラウンドのバックアップと期限のリマインダーを継続します。';
+
+  @override
   String get menuWindow => 'ウィンドウ';
 
   @override

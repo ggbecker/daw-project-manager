@@ -2357,6 +2357,34 @@ class AppLocalizationsRu extends AppLocalizations {
       'Продолжать работать в фоне (значок в трее) при закрытии окна, чтобы автоматическое резервное копирование и уведомления продолжали работать';
 
   @override
+  String get autoStart => 'Запускать при входе в систему';
+
+  @override
+  String get autoStartDescription =>
+      'Автоматически открывать DAW Project Manager при входе в систему';
+
+  @override
+  String get startMinimized => 'Запускать свёрнутым в трей';
+
+  @override
+  String get startMinimizedDescription =>
+      'При запуске вместе с компьютером открывать приложение скрытым в трее, а не показывать окно';
+
+  @override
+  String get onboardingStartMinimized => 'Запускать свёрнутым';
+
+  @override
+  String get autoStartFailed =>
+      'Не удалось изменить параметр автозапуска. Возможно, ваша система этого не разрешает.';
+
+  @override
+  String get onboardingStartupTitle => 'Запуск при входе в систему';
+
+  @override
+  String get onboardingStartupBody =>
+      'Открывайте DAW Project Manager автоматически при входе в систему, чтобы фоновые резервные копии и напоминания о сроках продолжали работать.';
+
+  @override
   String get menuWindow => 'Окно';
 
   @override

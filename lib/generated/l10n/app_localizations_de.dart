@@ -2370,6 +2370,34 @@ class AppLocalizationsDe extends AppLocalizations {
       'Beim Schließen des Fensters im Hintergrund weiterlaufen (Symbol in der Ablage), damit automatisches Backup und Benachrichtigungen weiter funktionieren';
 
   @override
+  String get autoStart => 'Beim Systemstart starten';
+
+  @override
+  String get autoStartDescription =>
+      'DAW Project Manager automatisch öffnen, wenn Sie sich am Computer anmelden';
+
+  @override
+  String get startMinimized => 'Minimiert im Infobereich starten';
+
+  @override
+  String get startMinimizedDescription =>
+      'Wenn die App mit dem Computer startet, sie ausgeblendet im Infobereich öffnen statt das Fenster anzuzeigen';
+
+  @override
+  String get onboardingStartMinimized => 'Minimiert starten';
+
+  @override
+  String get autoStartFailed =>
+      'Die Autostart-Einstellung konnte nicht geändert werden. Ihr System erlaubt dies möglicherweise nicht.';
+
+  @override
+  String get onboardingStartupTitle => 'Beim Systemstart Starten';
+
+  @override
+  String get onboardingStartupBody =>
+      'DAW Project Manager automatisch beim Anmelden öffnen, damit Backups im Hintergrund und Fristerinnerungen weiterlaufen.';
+
+  @override
   String get menuWindow => 'Fenster';
 
   @override

@@ -1560,6 +1560,14 @@
   "trayResumeSession": "Riprendi Sessione",
   "closeToTray": "Chiudi nella barra delle applicazioni",
   "closeToTrayDescription": "Continua a funzionare in background (icona nella barra) quando chiudi la finestra, così il backup automatico e le notifiche continuano a funzionare",
+  "autoStart": "Avvia all'accensione",
+  "autoStartDescription": "Apri DAW Project Manager automaticamente all'accesso al computer",
+  "startMinimized": "Avvia ridotto nella barra",
+  "startMinimizedDescription": "Quando l'app si avvia con il computer, aprirla nascosta nella barra invece di mostrare la finestra",
+  "onboardingStartMinimized": "Avvia ridotto",
+  "autoStartFailed": "Impossibile modificare l'impostazione di avvio. Il tuo sistema potrebbe non consentirlo.",
+  "onboardingStartupTitle": "Avvia all'Accensione",
+  "onboardingStartupBody": "Fai aprire DAW Project Manager automaticamente all'accesso, così i backup in background e i promemoria delle scadenze continuano a funzionare.",
   "@menuQuit": {
     "description": "macOS menu item to quit the app"
   },

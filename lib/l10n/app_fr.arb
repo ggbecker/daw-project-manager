@@ -1560,6 +1560,14 @@
   "trayResumeSession": "Reprendre la session",
   "closeToTray": "Fermer dans la barre système",
   "closeToTrayDescription": "Continuer à s'exécuter en arrière-plan (icône dans la barre système) à la fermeture de la fenêtre, afin que la sauvegarde automatique et les notifications continuent de fonctionner",
+  "autoStart": "Lancer au démarrage",
+  "autoStartDescription": "Ouvrir DAW Project Manager automatiquement à l'ouverture de votre session",
+  "startMinimized": "Démarrer réduit dans la barre d'état",
+  "startMinimizedDescription": "Quand l'app démarre avec votre ordinateur, l'ouvrir masquée dans la barre d'état au lieu d'afficher la fenêtre",
+  "onboardingStartMinimized": "Démarrer réduit",
+  "autoStartFailed": "Impossible de modifier le réglage de démarrage. Votre système ne l'autorise peut-être pas.",
+  "onboardingStartupTitle": "Lancer au Démarrage",
+  "onboardingStartupBody": "Ouvrez DAW Project Manager automatiquement à l'ouverture de session, pour que les sauvegardes en arrière-plan et les rappels d'échéance continuent de fonctionner.",
   "@menuQuit": {
     "description": "macOS menu item to quit the app"
   },

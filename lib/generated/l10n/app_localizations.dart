@@ -3977,6 +3977,54 @@ abstract class AppLocalizations {
   /// **'Keep running in the background (tray icon) when you close the window, so auto-backup and notifications keep working'**
   String get closeToTrayDescription;
 
+  /// Settings switch: start the app automatically when the user signs in to their computer
+  ///
+  /// In en, this message translates to:
+  /// **'Launch at startup'**
+  String get autoStart;
+
+  /// No description provided for @autoStartDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Open DAW Project Manager automatically when you sign in to your computer'**
+  String get autoStartDescription;
+
+  /// Settings switch: on an auto-start launch, open hidden in the tray
+  ///
+  /// In en, this message translates to:
+  /// **'Start minimized to tray'**
+  String get startMinimized;
+
+  /// Explanation under the start-minimized switch
+  ///
+  /// In en, this message translates to:
+  /// **'When the app starts with your computer, open it hidden in the tray instead of showing the window'**
+  String get startMinimizedDescription;
+
+  /// Compact label for the start-minimized option in the onboarding wizard
+  ///
+  /// In en, this message translates to:
+  /// **'Start minimized'**
+  String get onboardingStartMinimized;
+
+  /// Snackbar shown when registering the app to launch at startup fails
+  ///
+  /// In en, this message translates to:
+  /// **'Could not change the startup setting. Your system may not allow it.'**
+  String get autoStartFailed;
+
+  /// Onboarding wizard step title for the launch-at-startup option
+  ///
+  /// In en, this message translates to:
+  /// **'Launch at Startup'**
+  String get onboardingStartupTitle;
+
+  /// Onboarding wizard step subtitle for the launch-at-startup option
+  ///
+  /// In en, this message translates to:
+  /// **'Have DAW Project Manager open automatically when you sign in, so background backups and deadline reminders keep running.'**
+  String get onboardingStartupBody;
+
   /// macOS menu bar Window menu label
   ///
   /// In en, this message translates to:

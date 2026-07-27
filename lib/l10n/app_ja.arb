@@ -1560,6 +1560,14 @@
   "trayResumeSession": "セッションを再開",
   "closeToTray": "トレイに閉じる",
   "closeToTrayDescription": "ウィンドウを閉じてもバックグラウンドで実行を継続し(トレイアイコン)、自動バックアップと通知が引き続き機能するようにします",
+  "autoStart": "起動時に自動で開く",
+  "autoStartDescription": "コンピューターにサインインしたときに DAW Project Manager を自動的に開きます",
+  "startMinimized": "トレイに最小化した状態で起動",
+  "startMinimizedDescription": "コンピューターと一緒に起動するとき、ウィンドウを表示せずトレイに隠した状態で開きます",
+  "onboardingStartMinimized": "最小化して起動",
+  "autoStartFailed": "起動設定を変更できませんでした。お使いのシステムで許可されていない可能性があります。",
+  "onboardingStartupTitle": "起動時に自動で開く",
+  "onboardingStartupBody": "サインイン時に DAW Project Manager を自動的に開き、バックグラウンドのバックアップと期限のリマインダーを継続します。",
   "@menuQuit": {
     "description": "macOS menu item to quit the app"
   },

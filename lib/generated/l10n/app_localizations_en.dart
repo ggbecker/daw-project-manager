@@ -2353,6 +2353,34 @@ class AppLocalizationsEn extends AppLocalizations {
       'Keep running in the background (tray icon) when you close the window, so auto-backup and notifications keep working';
 
   @override
+  String get autoStart => 'Launch at startup';
+
+  @override
+  String get autoStartDescription =>
+      'Open DAW Project Manager automatically when you sign in to your computer';
+
+  @override
+  String get startMinimized => 'Start minimized to tray';
+
+  @override
+  String get startMinimizedDescription =>
+      'When the app starts with your computer, open it hidden in the tray instead of showing the window';
+
+  @override
+  String get onboardingStartMinimized => 'Start minimized';
+
+  @override
+  String get autoStartFailed =>
+      'Could not change the startup setting. Your system may not allow it.';
+
+  @override
+  String get onboardingStartupTitle => 'Launch at Startup';
+
+  @override
+  String get onboardingStartupBody =>
+      'Have DAW Project Manager open automatically when you sign in, so background backups and deadline reminders keep running.';
+
+  @override
   String get menuWindow => 'Window';
 
   @override

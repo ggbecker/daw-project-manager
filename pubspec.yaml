@@ -73,6 +73,7 @@ dependencies:
   super_drag_and_drop: ^0.9.1
   win32: ^5.15.0
   ffi: ^2.1.4
+  launch_at_startup: ^0.5.1
 
 dev_dependencies:
   flutter_test:

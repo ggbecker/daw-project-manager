@@ -2359,6 +2359,34 @@ class AppLocalizationsPt extends AppLocalizations {
       'Continuar rodando em segundo plano (ícone na bandeja) ao fechar a janela, para o backup automático e as notificações continuarem funcionando';
 
   @override
+  String get autoStart => 'Iniciar com o sistema';
+
+  @override
+  String get autoStartDescription =>
+      'Abrir o DAW Project Manager automaticamente ao entrar no computador';
+
+  @override
+  String get startMinimized => 'Iniciar minimizado na bandeja';
+
+  @override
+  String get startMinimizedDescription =>
+      'Quando o app iniciar com o computador, abri-lo oculto na bandeja em vez de mostrar a janela';
+
+  @override
+  String get onboardingStartMinimized => 'Iniciar minimizado';
+
+  @override
+  String get autoStartFailed =>
+      'Não foi possível alterar a configuração de inicialização. Seu sistema pode não permitir.';
+
+  @override
+  String get onboardingStartupTitle => 'Iniciar com o Sistema';
+
+  @override
+  String get onboardingStartupBody =>
+      'Deixe o DAW Project Manager abrir automaticamente ao entrar no computador, para que os backups e os lembretes de prazo continuem funcionando.';
+
+  @override
   String get menuWindow => 'Janela';
 
   @override

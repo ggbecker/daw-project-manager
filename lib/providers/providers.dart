@@ -41,6 +41,7 @@ import '../services/deadline_notification_service.dart';
 import '../models/auto_backup_interval.dart';
 import '../models/pending_folder.dart';
 import '../services/metadata_extractor.dart';
+import '../services/auto_start_service.dart';
 
 // Profile Repository Provider
 final profileRepositoryProvider = FutureProvider<ProfileRepository>((
@@ -1515,6 +1516,161 @@ class CloseToTrayNotifier extends Notifier<bool> {
 
 final closeToTrayProvider = NotifierProvider<CloseToTrayNotifier, bool>(() {
   return CloseToTrayNotifier();
+});
+
+// ---------------------------------------------------------------------------
+// Launch at startup (desktop-only device-local preference)
+// ---------------------------------------------------------------------------
+
+/// Whether the OS launches the app automatically when the user signs in.
+///
+/// Unlike every other setting here, the real source of truth lives outside
+/// the app — the Windows registry / a macOS login item / a Linux .desktop
+/// file — and the user can revoke it from Task Manager or System Settings
+/// without the app ever knowing. The Hive value is therefore a *cache*: it
+/// exists so the settings switch can paint synchronously on first build
+/// (same rationale as [CloseToTrayNotifier]), and [syncWithOs] reconciles it
+/// against the OS on every launch.
+///
+/// Defaults to false — opting a user into a background-launching app without
+/// being asked is not a reasonable default.
+class AutoStartNotifier extends Notifier<bool> {
+  static const _key = 'autoStart';
+
+  @override
+  bool build() {
+    if (!AutoStartService.isSupported) return false;
+    try {
+      final saved = Hive.box<String>('settings').get(_key);
+      if (saved != null) return saved == 'true';
+    } catch (e) {
+      if (kDebugMode) print('Failed to load autoStart: $e');
+    }
+    return false;
+  }
+
+  Future<void> _persist(bool value) async {
+    try {
+      final box = Hive.isBoxOpen('settings')
+          ? Hive.box<String>('settings')
+          : await Hive.openBox<String>('settings');
+      await box.put(_key, value.toString());
+    } catch (e) {
+      if (kDebugMode) print('Failed to save autoStart: $e');
+    }
+  }
+
+  /// Registers/unregisters the app with the OS and, only if that succeeded,
+  /// caches the new value. Returns false when the OS refused — the caller is
+  /// expected to surface that, since a silently-reverted switch looks broken.
+  Future<bool> set(bool value) async {
+    if (!AutoStartService.isSupported) return false;
+
+    await AutoStartService.setup(minimized: ref.read(startMinimizedProvider));
+    final ok = await AutoStartService.setEnabled(value);
+    if (!ok) {
+      // Leave both the state and the cache untouched so the switch snaps
+      // back to what the OS actually has.
+      return false;
+    }
+    state = value;
+    await _persist(value);
+    return true;
+  }
+
+  /// Rewrites the existing registration so it carries a changed
+  /// "start minimized" flag. No-op when auto-start is off — there is no
+  /// registration to update, and the new flag will be picked up by the next
+  /// [set] anyway.
+  Future<bool> reapply() async {
+    if (!AutoStartService.isSupported || !state) return true;
+    final ok =
+        await AutoStartService.reapply(minimized: ref.read(startMinimizedProvider));
+    if (!ok) {
+      // reapply() unregisters before re-registering, so a failure partway
+      // through leaves the app genuinely not registered. Reflect that rather
+      // than keep claiming auto-start is on until the next launch's
+      // syncWithOs() notices.
+      state = false;
+      await _persist(false);
+    }
+    return ok;
+  }
+
+  /// Reconciles the cached value with what the OS actually reports. Call once
+  /// at startup: if the user removed the app from their startup items outside
+  /// the app, the settings switch must reflect that rather than keep claiming
+  /// the feature is on.
+  Future<void> syncWithOs() async {
+    if (!AutoStartService.isSupported) return;
+
+    await AutoStartService.setup(minimized: ref.read(startMinimizedProvider));
+    final actual = await AutoStartService.isEnabled();
+    if (actual == state) return;
+    state = actual;
+    await _persist(actual);
+  }
+}
+
+final autoStartProvider = NotifierProvider<AutoStartNotifier, bool>(() {
+  return AutoStartNotifier();
+});
+
+/// Whether an auto-start launch should come up hidden in the tray / menu bar
+/// instead of opening the window.
+///
+/// Only meaningful alongside [autoStartProvider] — it is delivered as a
+/// command-line flag baked into the registration, so a manual launch never
+/// carries it and always opens normally. Toggling this while auto-start is
+/// already on has to rewrite that registration, hence the [reapply] call.
+class StartMinimizedNotifier extends Notifier<bool> {
+  static const _key = 'startMinimized';
+
+  @override
+  bool build() {
+    if (!AutoStartService.isSupported) return false;
+    try {
+      final saved = Hive.box<String>('settings').get(_key);
+      if (saved != null) return saved == 'true';
+    } catch (e) {
+      if (kDebugMode) print('Failed to load startMinimized: $e');
+    }
+    return false;
+  }
+
+  /// Returns false if auto-start was on but the registration couldn't be
+  /// rewritten — the preference is left untouched in that case, since a
+  /// stored "start minimized" that the OS won't honour is just a lie.
+  Future<bool> set(bool value) async {
+    if (!AutoStartService.isSupported) return false;
+    if (value == state) return true;
+
+    final previous = state;
+    state = value;
+
+    // reapply() reads this provider, so the new value must already be in
+    // place before it runs.
+    final ok = await ref.read(autoStartProvider.notifier).reapply();
+    if (!ok) {
+      state = previous;
+      return false;
+    }
+
+    try {
+      final box = Hive.isBoxOpen('settings')
+          ? Hive.box<String>('settings')
+          : await Hive.openBox<String>('settings');
+      await box.put(_key, value.toString());
+    } catch (e) {
+      if (kDebugMode) print('Failed to save startMinimized: $e');
+    }
+    return true;
+  }
+}
+
+final startMinimizedProvider =
+    NotifierProvider<StartMinimizedNotifier, bool>(() {
+  return StartMinimizedNotifier();
 });
 
 // ---------------------------------------------------------------------------
