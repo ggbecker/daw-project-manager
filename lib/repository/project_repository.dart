@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
@@ -14,6 +15,8 @@ import '../models/release.dart';
 import '../models/release_file.dart';
 import '../models/todo_item.dart';
 import '../models/todo_template.dart';
+import '../models/project_template.dart';
+import '../models/template_root.dart';
 import '../models/playlist.dart';
 import '../models/project_event.dart';
 import '../services/metadata_extractor.dart';
@@ -47,6 +50,20 @@ class ProjectRepository {
     required this.eventsBox,
     required this.appSettingsBox,
   });
+
+  // Closes every per-profile box this repository opened, so switching to a
+  // different profile doesn't leave the outgoing profile's projects (and
+  // everything else) resident in memory for the rest of the app session.
+  // appSettingsBox is intentionally NOT closed — it's global, shared across
+  // profiles, and other repositories/providers may still be reading it.
+  Future<void> closeBoxes() async {
+    await projectsBox.close();
+    await rootsBox.close();
+    await ignoredPathsBox.close();
+    await releasesBox.close();
+    await playlistsBox.close();
+    await eventsBox.close();
+  }
 
   // Subfolder names (relative to each project's own folder) checked, in
   // order, before falling back to DAW-specific and generic defaults.
@@ -205,6 +222,12 @@ class ProjectRepository {
     }
     if (!Hive.isAdapterRegistered(11)) {
       Hive.registerAdapter(ProjectEventAdapter());
+    }
+    if (!Hive.isAdapterRegistered(12)) {
+      Hive.registerAdapter(ProjectTemplateAdapter());
+    }
+    if (!Hive.isAdapterRegistered(13)) {
+      Hive.registerAdapter(TemplateRootAdapter());
     }
 
     // Get current profile
@@ -460,6 +483,73 @@ class ProjectRepository {
   /// [fullMetadata] if true, extracts full metadata (BPM, key, DAW version) - slower
   /// if false, only extracts DAW type from extension - faster
   Future<void> upsertFromFileSystemEntity(FileSystemEntity entity, {bool fullMetadata = false, String? parentProjectId}) async {
+    final built = await _buildProjectAndEvent(
+      entity,
+      fullMetadata: fullMetadata,
+      parentProjectId: parentProjectId,
+    );
+    await projectsBox.put(built.project.id, built.project);
+    if (built.event != null) {
+      await eventsBox.put(built.event!.id, built.event!);
+    }
+  }
+
+  /// Batched counterpart of [upsertFromFileSystemEntity] for scan loops,
+  /// which otherwise call it once per discovered file — each call does its
+  /// own `Box.put()`, and Hive fires a change event per put. On a library
+  /// with thousands of projects that turns one rescan into thousands of
+  /// events, each of which re-materializes and re-filters the whole project
+  /// list downstream (see `watchAllProjects`'s debounce, which only softens
+  /// the effect — this removes the write-side cause). Metadata extraction
+  /// still happens per file (it's genuinely per-file I/O), but persistence
+  /// is batched into `putAll` calls, flushed every [flushEvery] entities so
+  /// memory stays bounded on very large scans.
+  Future<void> upsertManyFromFileSystemEntities(
+    List<FileSystemEntity> entities, {
+    bool fullMetadata = false,
+    // Overrides [fullMetadata] per entity, for callers like the dashboard's
+    // "unscanned only" rescan mode where the decision depends on each
+    // project's current metadataScanned state.
+    bool Function(FileSystemEntity entity)? fullMetadataFor,
+    String? parentProjectId,
+    int flushEvery = 200,
+  }) async {
+    var pendingProjects = <String, MusicProject>{};
+    var pendingEvents = <String, ProjectEvent>{};
+
+    Future<void> flush() async {
+      if (pendingProjects.isNotEmpty) {
+        await projectsBox.putAll(pendingProjects);
+        pendingProjects = {};
+      }
+      if (pendingEvents.isNotEmpty) {
+        await eventsBox.putAll(pendingEvents);
+        pendingEvents = {};
+      }
+    }
+
+    for (final entity in entities) {
+      final built = await _buildProjectAndEvent(
+        entity,
+        fullMetadata: fullMetadataFor?.call(entity) ?? fullMetadata,
+        parentProjectId: parentProjectId,
+      );
+      pendingProjects[built.project.id] = built.project;
+      if (built.event != null) {
+        pendingEvents[built.event!.id] = built.event!;
+      }
+      if (pendingProjects.length >= flushEvery) {
+        await flush();
+      }
+    }
+    await flush();
+  }
+
+  Future<({MusicProject project, ProjectEvent? event})> _buildProjectAndEvent(
+    FileSystemEntity entity, {
+    bool fullMetadata = false,
+    String? parentProjectId,
+  }) async {
     final isLogicBundle = entity is Directory && entity.path.toLowerCase().endsWith('.logicx');
     final filePath = entity.path;
     final stat = await entity.stat();
@@ -491,7 +581,10 @@ class ProjectRepository {
     final dawType = extractedMetadata?.dawType;
     // Preserve existing DAW version if extraction didn't find anything (e.g., during lightweight scan)
     final dawVersion = extractedMetadata?.dawVersion ?? existing?.dawVersion;
-    
+    // Same fallback as dawVersion: only a full-metadata scan of a supported
+    // DAW (currently Reaper) populates this, so preserve it otherwise.
+    final projectNotes = extractedMetadata?.projectNotes ?? existing?.projectNotes;
+
     // Detect file creation date from filesystem
     // On Windows, stat.changed is the creation time
     // On other platforms, we fall back to lastModified as an approximation
@@ -529,6 +622,7 @@ class ProjectRepository {
       bpm: bpm,                                        // <--- USA EXISTENTE OU EXTRAÍDO
       musicalKey: key,                                 // <--- USA EXISTENTE OU EXTRAÍDO
       notes: existing?.notes,                         // <--- NOVO: PRESERVA NOTAS
+      projectNotes: projectNotes,                     // <--- USA EXISTENTE OU EXTRAÍDO DO ARQUIVO (ex: Reaper)
       todos: existing?.todos ?? const [],             // <--- CRITICAL: PRESERVA TODOS
       hidden: existing?.hidden ?? false,               // <--- CRITICAL: PRESERVA HIDDEN STATUS
       dawType: dawType,                                // <--- SEMPRE ATUALIZA DO ARQUIVO
@@ -546,13 +640,12 @@ class ProjectRepository {
       metadataScanned: fullMetadata ? true : (existing?.metadataScanned ?? false),
     );
 
-    await projectsBox.put(projectToSave.id, projectToSave);
-
     // Record a file_changed event if an existing project had its file mutated
+    ProjectEvent? event;
     if (existing != null &&
         (existing.fileSizeBytes != size ||
             existing.lastModifiedAt != lastModified)) {
-      final event = ProjectEvent(
+      event = ProjectEvent(
         id: _uuid.v4(),
         projectId: projectToSave.id,
         eventType: ProjectEvent.fileChanged,
@@ -563,8 +656,9 @@ class ProjectRepository {
           'newSizeBytes': size,
         }),
       );
-      await eventsBox.put(event.id, event);
     }
+
+    return (project: projectToSave, event: event);
   }
 
   List<MusicProject> getAllProjects() => projectsBox.values.toList(growable: false);
@@ -603,6 +697,7 @@ class ProjectRepository {
         musicalKey: extractedMetadata.key ?? project.musicalKey,
         dawType: extractedMetadata.dawType ?? project.dawType,
         dawVersion: extractedMetadata.dawVersion ?? project.dawVersion,
+        projectNotes: extractedMetadata.projectNotes ?? project.projectNotes,
         updatedAt: DateTime.now(),
       );
       
@@ -644,23 +739,40 @@ class ProjectRepository {
   // Stream watch for Riverpod StreamProvider usage
   Stream<BoxEvent> watchProjects() => projectsBox.watch();
   
-  // MÉTODO NOVO/CORRIGIDO: Retorna a lista completa a cada mudança do Hive
-  Stream<List<MusicProject>> watchAllProjects() async* {
-    // Emit initial value immediately
-    final initialProjects = projectsBox.values.toList();
-    if (kDebugMode) {
-      print('watchAllProjects: Emitting initial ${initialProjects.length} projects for profile $profileId');
-    }
-    yield initialProjects;
-    
-    // Then watch for changes - this will emit whenever ANY project is added/updated/deleted
-    yield* projectsBox.watch().map((event) {
+  // Emits the full project list on every Hive box change. Scans can fire
+  // hundreds/thousands of individual put()s in quick succession (one per
+  // discovered file), each of which would otherwise re-materialize and
+  // re-filter the whole list — an O(N^2) cost that dominates scan time on
+  // large libraries. Debouncing collapses a burst of box events into a
+  // single emission after they go quiet.
+  Stream<List<MusicProject>> watchAllProjects() {
+    late StreamController<List<MusicProject>> controller;
+    StreamSubscription<BoxEvent>? boxSub;
+    Timer? debounceTimer;
+
+    void emitCurrent() {
       final projects = projectsBox.values.toList();
-    if (kDebugMode) {
-      print('watchAllProjects: Box changed, emitting ${projects.length} projects for profile $profileId');
+      if (kDebugMode) {
+        print('watchAllProjects: emitting ${projects.length} projects for profile $profileId');
+      }
+      if (!controller.isClosed) controller.add(projects);
     }
-      return projects;
-    });
+
+    controller = StreamController<List<MusicProject>>(
+      onListen: () {
+        emitCurrent();
+        boxSub = projectsBox.watch().listen((_) {
+          debounceTimer?.cancel();
+          debounceTimer = Timer(const Duration(milliseconds: 200), emitCurrent);
+        });
+      },
+      onCancel: () {
+        debounceTimer?.cancel();
+        boxSub?.cancel();
+      },
+    );
+
+    return controller.stream;
   }
   
   Stream<BoxEvent> watchRoots() => rootsBox.watch();
@@ -729,7 +841,7 @@ class ProjectRepository {
     // Clear global boxes.
     const globalBoxNames = [
       'settings', 'app_settings', 'notification_preferences',
-      'todoTemplates', 'profiles', 'backup_timestamps',
+      'todoTemplates', 'projectTemplates', 'templateRoots', 'profiles', 'backup_timestamps',
       // Legacy / misc boxes.
       'music_projects', 'projects', 'releases', 'roots',
     ];

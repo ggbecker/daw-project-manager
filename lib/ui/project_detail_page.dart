@@ -54,6 +54,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
   late TextEditingController _bpmCtrl;
   late TextEditingController _keyCtrl;
   late TextEditingController _notesCtrl; // NOVO CONTROLLER
+  late TextEditingController _projectNotesCtrl;
   late FocusNode _nameFocusNode;
   late FocusNode _bpmFocusNode;
   late FocusNode _keyFocusNode;
@@ -113,6 +114,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
     _bpmCtrl = TextEditingController();
     _keyCtrl = TextEditingController();
     _notesCtrl = TextEditingController(); // INICIALIZA
+    _projectNotesCtrl = TextEditingController();
     _nameFocusNode = FocusNode();
     _bpmFocusNode = FocusNode();
     _keyFocusNode = FocusNode();
@@ -133,6 +135,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
     _bpmCtrl.dispose();
     _keyCtrl.dispose();
     _notesCtrl.dispose();
+    _projectNotesCtrl.dispose();
     _nameFocusNode.dispose();
     _bpmFocusNode.dispose();
     _keyFocusNode.dispose();
@@ -184,6 +187,19 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
     _lastSavedBpm = _bpmCtrl.text.trim();
     _lastSavedKey = _keyCtrl.text.trim();
     _lastSavedNotes = newNotes ?? '';
+  }
+
+  Future<void> _clearDawInfo() async {
+    final allProjects = ref.read(allProjectsStreamProvider).value;
+    if (allProjects == null) return;
+    final MusicProject project;
+    try {
+      project = allProjects.firstWhere((p) => p.id == widget.projectId);
+    } catch (_) {
+      return;
+    }
+    final repo = await ref.read(repositoryProvider.future);
+    await repo.updateProject(project.copyWith(clearDawType: true, clearDawVersion: true));
   }
 
   // NOVO: Função para abrir o diretório pai
@@ -291,7 +307,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
   Future<void> _exportProjectInfo(MusicProject project) async {
     final l10n = AppLocalizations.of(context)!;
     try {
-      final text = ProjectTextExportService.formatProject(project);
+      final text = ProjectTextExportService.formatProject(project, l10n);
       final destPath = await FilePicker.saveFile(
         dialogTitle: l10n.exportProjectInfo,
         fileName: ProjectTextExportService.suggestedFileNameFor(project),
@@ -334,6 +350,21 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
         fit: BoxFit.contain,
         errorBuilder: (context, error, stackTrace) => Icon(Icons.piano, color: color),
       ),
+    );
+  }
+
+  /// Read-only display of notes extracted straight from the DAW project
+  /// file itself (e.g. Reaper's Title/Author/Notes tab) — distinct from the
+  /// user-editable [MusicProject.notes] description field it sits beside.
+  /// Shares the same expand/collapse and drag-resize affordances as that
+  /// field via [ResizableTextField]'s readOnly mode.
+  Widget _buildProjectNotesField() {
+    return ResizableTextField(
+      controller: _projectNotesCtrl,
+      readOnly: true,
+      labelText: AppLocalizations.of(context)!.projectNotesFromDaw,
+      expandTooltip: AppLocalizations.of(context)!.expandNotes,
+      collapseTooltip: AppLocalizations.of(context)!.collapseNotes,
     );
   }
 
@@ -483,6 +514,12 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
               _lastSavedNotes ??= currentNotes;
             }
           }
+          // Read-only field extracted from the DAW file — no user edits to
+          // preserve, so it can just always mirror the current value.
+          final currentProjectNotes = updatedProject.projectNotes ?? '';
+          if (_projectNotesCtrl.text != currentProjectNotes) {
+            _projectNotesCtrl.text = currentProjectNotes;
+          }
           // Sincroniza fase do projeto (only on first load)
           if (!_hasInitializedPhase) {
             if (mounted) {
@@ -610,11 +647,11 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                           decoration: InputDecoration(
                                             labelText: AppLocalizations.of(context)!.camelotCode,
                                             filled: true,
-                                            fillColor: Colors.blue.withOpacity(0.05),
+                                            fillColor: Colors.blue.withValues(alpha: 0.05),
                                             border: const OutlineInputBorder(),
                                             disabledBorder: OutlineInputBorder(
                                               borderSide: BorderSide(
-                                                color: Colors.blue.withOpacity(0.3),
+                                                color: Colors.blue.withValues(alpha: 0.3),
                                               ),
                                             ),
                                             prefixIcon: const Icon(
@@ -642,14 +679,19 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                             decoration: InputDecoration(
                                               labelText: AppLocalizations.of(context)!.daw,
                                               filled: true,
-                                              fillColor: dawColor.withOpacity(0.05),
+                                              fillColor: dawColor.withValues(alpha: 0.05),
                                               border: const OutlineInputBorder(),
                                               disabledBorder: OutlineInputBorder(
                                                 borderSide: BorderSide(
-                                                  color: dawColor.withOpacity(0.3),
+                                                  color: dawColor.withValues(alpha: 0.3),
                                                 ),
                                               ),
                                               prefixIcon: _buildDawPrefixIcon(updatedProject.dawType, dawColor),
+                                              suffixIcon: IconButton(
+                                                icon: const Icon(Icons.close, size: 18),
+                                                tooltip: AppLocalizations.of(context)!.clearDaw,
+                                                onPressed: _clearDawInfo,
+                                              ),
                                             ),
                                             style: TextStyle(
                                               color: dawColor,
@@ -672,6 +714,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                             )!.bpm,
                                           ),
                                           keyboardType: TextInputType.number,
+                                          onChanged: (_) => _scheduleAutoSave(),
                                         ),
                                       ),
                                       const SizedBox(width: 8),
@@ -687,6 +730,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                           onChanged: (value) {
                                             // Force rebuild to update Camelot code display
                                             setState(() {});
+                                            _scheduleAutoSave();
                                           },
                                         ),
                                       ),
@@ -700,11 +744,11 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                             decoration: InputDecoration(
                                               labelText: AppLocalizations.of(context)!.camelotCode,
                                               filled: true,
-                                              fillColor: Colors.blue.withOpacity(0.05),
+                                              fillColor: Colors.blue.withValues(alpha: 0.05),
                                               border: const OutlineInputBorder(),
                                               disabledBorder: OutlineInputBorder(
                                                 borderSide: BorderSide(
-                                                  color: Colors.blue.withOpacity(0.3),
+                                                  color: Colors.blue.withValues(alpha: 0.3),
                                                 ),
                                               ),
                                               prefixIcon: const Icon(
@@ -734,14 +778,19 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                               decoration: InputDecoration(
                                                 labelText: AppLocalizations.of(context)!.daw,
                                                 filled: true,
-                                                fillColor: dawColor.withOpacity(0.05),
+                                                fillColor: dawColor.withValues(alpha: 0.05),
                                                 border: const OutlineInputBorder(),
                                                 disabledBorder: OutlineInputBorder(
                                                   borderSide: BorderSide(
-                                                    color: dawColor.withOpacity(0.3),
+                                                    color: dawColor.withValues(alpha: 0.3),
                                                   ),
                                                 ),
                                                 prefixIcon: _buildDawPrefixIcon(updatedProject.dawType, dawColor),
+                                                suffixIcon: IconButton(
+                                                  icon: const Icon(Icons.close, size: 18),
+                                                  tooltip: AppLocalizations.of(context)!.clearDaw,
+                                                  onPressed: _clearDawInfo,
+                                                ),
                                               ),
                                               style: TextStyle(
                                                 color: dawColor,
@@ -863,14 +912,46 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                             const SizedBox(height: 12),
 
                             // NOVO: CAMPO DE NOTAS
-                            ResizableTextField(
-                              controller: _notesCtrl,
-                              focusNode: _notesFocusNode,
-                              labelText: AppLocalizations.of(context)!.notes,
-                              expandTooltip: AppLocalizations.of(context)!.expandNotes,
-                              collapseTooltip: AppLocalizations.of(context)!.collapseNotes,
-                              onChanged: (_) => _scheduleAutoSave(),
-                            ),
+                            Builder(builder: (context) {
+                              final projectNotes = updatedProject.projectNotes;
+                              if (projectNotes == null || projectNotes.trim().isEmpty) {
+                                return ResizableTextField(
+                                  controller: _notesCtrl,
+                                  focusNode: _notesFocusNode,
+                                  labelText: AppLocalizations.of(context)!.notes,
+                                  expandTooltip: AppLocalizations.of(context)!.expandNotes,
+                                  collapseTooltip: AppLocalizations.of(context)!.collapseNotes,
+                                  onChanged: (_) => _scheduleAutoSave(),
+                                );
+                              }
+                              if (isMobile) {
+                                return Column(
+                                  children: [
+                                    ResizableTextField(
+                                      controller: _notesCtrl,
+                                      focusNode: _notesFocusNode,
+                                      labelText: AppLocalizations.of(context)!.notes,
+                                      expandTooltip: AppLocalizations.of(context)!.expandNotes,
+                                      collapseTooltip: AppLocalizations.of(context)!.collapseNotes,
+                                      onChanged: (_) => _scheduleAutoSave(),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    _buildProjectNotesField(),
+                                  ],
+                                );
+                              }
+                              return SyncedResizableTextFieldPair(
+                                leftController: _notesCtrl,
+                                leftFocusNode: _notesFocusNode,
+                                leftLabelText: AppLocalizations.of(context)!.notes,
+                                leftOnChanged: (_) => _scheduleAutoSave(),
+                                rightController: _projectNotesCtrl,
+                                rightLabelText: AppLocalizations.of(context)!.projectNotesFromDaw,
+                                rightReadOnly: true,
+                                expandTooltip: AppLocalizations.of(context)!.expandNotes,
+                                collapseTooltip: AppLocalizations.of(context)!.collapseNotes,
+                              );
+                            }),
 
                             const SizedBox(height: 12),
 
@@ -1025,6 +1106,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                   ref.invalidate(allProjectsStreamProvider);
                                   // Wait a bit for the stream to update
                                   await Future.delayed(const Duration(milliseconds: 100));
+                                  if (!mounted) return;
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       content: Text(
@@ -2286,7 +2368,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
       },
       child: Card(
         color: _isDraggingOver
-            ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3)
+            ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3)
             : null,
         child: Container(
           decoration: _isDraggingOver

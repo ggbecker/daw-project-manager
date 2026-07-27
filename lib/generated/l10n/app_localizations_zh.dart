@@ -90,6 +90,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get collapseNotes => '收起';
 
   @override
+  String get projectNotesFromDaw => '项目备注（来自DAW文件）';
+
+  @override
   String get projectPhase => '项目阶段';
 
   @override
@@ -364,6 +367,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get daw => 'DAW';
+
+  @override
+  String get clearDaw => '清除DAW';
+
+  @override
+  String get filterByKey => '按调性筛选';
+
+  @override
+  String get allKeys => '所有调性';
 
   @override
   String get lastModifiedColumn => '最后修改';
@@ -898,6 +910,102 @@ class AppLocalizationsZh extends AppLocalizations {
   String get errorLoadingTemplates => '加载模板错误';
 
   @override
+  String get createProjectStartFrom => '您想如何开始？';
+
+  @override
+  String get createProjectStartFromHint => '从空文件夹开始，或复制已注册的模板。';
+
+  @override
+  String get createProjectEmptyFolder => '空文件夹';
+
+  @override
+  String get createProjectFromTemplate => '从模板';
+
+  @override
+  String get selectTemplateMainFile => '选择模板的主项目文件';
+
+  @override
+  String get registerTemplate => '注册模板';
+
+  @override
+  String get projectTemplates => '项目模板';
+
+  @override
+  String get searchTemplates => '搜索模板...';
+
+  @override
+  String get createFirstProjectTemplate => '注册一个模板文件夹以供新项目重复使用';
+
+  @override
+  String get noMatchingTemplates => '没有匹配的模板';
+
+  @override
+  String get templateSourceMissing => '未找到模板源文件夹';
+
+  @override
+  String get useTemplate => '使用';
+
+  @override
+  String get selectTemplatesParentFolder => '选择模板的父文件夹';
+
+  @override
+  String get templateSourceFolder => '源文件夹';
+
+  @override
+  String get dateCreatedColumn => '创建时间';
+
+  @override
+  String get dateModifiedColumn => '修改时间';
+
+  @override
+  String get manageTemplateFolders => '管理文件夹';
+
+  @override
+  String get addTemplateFolder => '添加文件夹';
+
+  @override
+  String get removeTemplateFolder => '移除模板文件夹';
+
+  @override
+  String removeTemplateFolderConfirm(String path) {
+    return '从已注册的模板文件夹中移除“$path”？已导入的模板不会被删除。';
+  }
+
+  @override
+  String get noTemplateFoldersRegistered => '没有已注册的模板文件夹';
+
+  @override
+  String get refreshTemplateFolders => '从已注册的文件夹刷新模板';
+
+  @override
+  String lastRefreshed(String date) {
+    return '最后刷新时间 $date';
+  }
+
+  @override
+  String templatesRefreshedSummary(int count) {
+    return '已添加$count个新模板';
+  }
+
+  @override
+  String templatesSelected(int count, String plural) {
+    return '已选择$count个模板$plural';
+  }
+
+  @override
+  String get deleteSelectedTemplates => '删除所选';
+
+  @override
+  String deleteSelectedTemplatesConfirm(int count, String plural) {
+    return '确定要删除$count个模板$plural吗?';
+  }
+
+  @override
+  String templatesDeleted(int count, String plural) {
+    return '已删除$count个模板$plural';
+  }
+
+  @override
   String get importTodos => '从文件导入待办事项';
 
   @override
@@ -1085,6 +1193,105 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String failedToExportProjectInfo(String error) {
     return '导出项目信息失败：$error';
+  }
+
+  @override
+  String get projectExportHeaderTitle => 'DAW PROJECT MANAGER — PROJECT EXPORT';
+
+  @override
+  String projectExportExportedLabel(String dateTime) {
+    return 'Exported: $dateTime';
+  }
+
+  @override
+  String projectExportTotalProjectsLabel(int count) {
+    return 'Total projects: $count';
+  }
+
+  @override
+  String projectExportProjectLabel(String name) {
+    return 'Project: $name';
+  }
+
+  @override
+  String projectExportDawLabel(String dawType) {
+    return 'DAW: $dawType';
+  }
+
+  @override
+  String projectExportDawWithVersionLabel(String dawType, String version) {
+    return 'DAW: $dawType $version';
+  }
+
+  @override
+  String projectExportStatusLabel(String status) {
+    return 'Status: $status';
+  }
+
+  @override
+  String projectExportBpmLabel(String bpm) {
+    return 'BPM: $bpm';
+  }
+
+  @override
+  String projectExportKeyLabel(String key) {
+    return 'Key: $key';
+  }
+
+  @override
+  String projectExportKeyWithCamelotLabel(String key, String code) {
+    return 'Key: $key (Camelot $code)';
+  }
+
+  @override
+  String projectExportFilePathLabel(String path) {
+    return 'File path: $path';
+  }
+
+  @override
+  String projectExportFileSizeLabel(String size) {
+    return 'File size: $size';
+  }
+
+  @override
+  String projectExportFileCreatedLabel(String date) {
+    return 'File created: $date';
+  }
+
+  @override
+  String projectExportAddedToLibraryLabel(String date) {
+    return 'Added to library: $date';
+  }
+
+  @override
+  String projectExportLastModifiedLabel(String date) {
+    return 'Last modified: $date';
+  }
+
+  @override
+  String projectExportDeadlineLabel(String date) {
+    return 'Deadline: $date';
+  }
+
+  @override
+  String projectExportDeadlineWithStatusLabel(String date, String status) {
+    return 'Deadline: $date ($status)';
+  }
+
+  @override
+  String projectExportTotalTimeWorkedLabel(String duration) {
+    return 'Total time worked: $duration';
+  }
+
+  @override
+  String get projectExportNotesLabel => 'Notes:';
+
+  @override
+  String get projectExportTodosLabel => 'To-dos:';
+
+  @override
+  String projectExportWorkSessionsLabel(int count) {
+    return 'Work sessions ($count):';
   }
 
   @override
@@ -2177,6 +2384,31 @@ class AppLocalizationsZh extends AppLocalizations {
   String get closeToTrayDescription => '关闭窗口后继续在后台运行（系统托盘图标），以便自动备份和通知继续工作';
 
   @override
+  String get autoStart => '开机自动启动';
+
+  @override
+  String get autoStartDescription => '登录电脑时自动打开 DAW Project Manager';
+
+  @override
+  String get startMinimized => '启动时最小化到托盘';
+
+  @override
+  String get startMinimizedDescription => '随电脑启动时，将应用隐藏在托盘中，而不显示窗口';
+
+  @override
+  String get onboardingStartMinimized => '最小化启动';
+
+  @override
+  String get autoStartFailed => '无法更改开机启动设置。您的系统可能不允许此操作。';
+
+  @override
+  String get onboardingStartupTitle => '开机自动启动';
+
+  @override
+  String get onboardingStartupBody =>
+      '登录时自动打开 DAW Project Manager，让后台备份和截止日期提醒持续运行。';
+
+  @override
   String get menuWindow => '窗口';
 
   @override
@@ -3191,6 +3423,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get suggestionsEmptyState => '暂无建议。点击刷新以重置已忽略的项目。';
+
+  @override
+  String get suggestionNewProject => '新建';
 
   @override
   String get showSuggestions => '显示建议';

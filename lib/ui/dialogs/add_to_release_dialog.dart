@@ -64,6 +64,7 @@ class _AddToReleaseDialogState extends ConsumerState<AddToReleaseDialog> {
                           releaseDate: DateTime.now(),
                         );
                         await repo.addRelease(newRelease);
+                        if (!mounted) return;
                         Navigator.of(context).pop();
                       }
                     },
@@ -107,6 +108,7 @@ class _AddToReleaseDialogState extends ConsumerState<AddToReleaseDialog> {
                             final updatedTrackIds = {...existingRelease.trackIds, ...widget.projectIds}.toList();
                             final updatedRelease = existingRelease.copyWith(trackIds: updatedTrackIds);
                             await repo.updateRelease(updatedRelease);
+                            if (!mounted) return;
                             Navigator.of(context).pop();
                           },
                     child: Text(AppLocalizations.of(context)!.addToSelectedRelease),

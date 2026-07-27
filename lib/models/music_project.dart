@@ -2,6 +2,82 @@ import 'package:hive_ce/hive.dart';
 import 'package:path/path.dart' as p;
 import 'todo_item.dart';
 
+/// Converts a musical key (e.g. `'C#m'`, `'G#/Ab Major'`) to Camelot Wheel
+/// notation. Returns null if [musicalKey] is null, empty, or not recognized.
+/// Shared by [MusicProject.camelotCode] and anywhere else (e.g. project
+/// templates) that wants the same badge without a `MusicProject` instance.
+String? camelotCodeForKey(String? musicalKey) {
+  if (musicalKey == null || musicalKey.isEmpty) return null;
+
+  final key = musicalKey.toLowerCase().trim();
+
+  // Map of musical keys to Camelot codes
+  final Map<String, String> camelotMap = {
+    // Major keys (B side)
+    'c major': '8B', 'c': '8B', 'cmaj': '8B',
+    'g major': '9B', 'g': '9B', 'gmaj': '9B',
+    'd major': '10B', 'd': '10B', 'dmaj': '10B',
+    'a major': '11B', 'a': '11B', 'amaj': '11B',
+    'e major': '12B', 'e': '12B', 'emaj': '12B',
+    'b major': '1B', 'b': '1B', 'bmaj': '1B',
+    'f# major': '2B', 'f#': '2B', 'f#maj': '2B', 'gb major': '2B', 'gb': '2B',
+    'c# major': '3B', 'c#': '3B', 'c#maj': '3B', 'db major': '3B', 'db': '3B',
+    'ab major': '4B', 'ab': '4B', 'abmaj': '4B', 'g# major': '4B', 'g#': '4B',
+    'eb major': '5B', 'eb': '5B', 'ebmaj': '5B', 'd# major': '5B', 'd#': '5B',
+    'bb major': '6B', 'bb': '6B', 'bbmaj': '6B', 'a# major': '6B', 'a#': '6B',
+    'f major': '7B', 'f': '7B', 'fmaj': '7B',
+
+    // Minor keys (A side)
+    'a minor': '8A', 'am': '8A', 'amin': '8A',
+    'e minor': '9A', 'em': '9A', 'emin': '9A',
+    'b minor': '10A', 'bm': '10A', 'bmin': '10A',
+    'f# minor': '11A', 'f#m': '11A', 'f#min': '11A', 'gb minor': '11A', 'gbm': '11A',
+    'c# minor': '12A', 'c#m': '12A', 'c#min': '12A', 'db minor': '12A', 'dbm': '12A',
+    'g# minor': '1A', 'g#m': '1A', 'g#min': '1A', 'ab minor': '1A', 'abm': '1A',
+    'd# minor': '2A', 'd#m': '2A', 'd#min': '2A', 'eb minor': '2A', 'ebm': '2A',
+    'a# minor': '3A', 'a#m': '3A', 'a#min': '3A', 'bb minor': '3A', 'bbm': '3A',
+    'f minor': '4A', 'fm': '4A', 'fmin': '4A',
+    'c minor': '5A', 'cm': '5A', 'cmin': '5A',
+    'g minor': '6A', 'gm': '6A', 'gmin': '6A',
+    'd minor': '7A', 'dm': '7A', 'dmin': '7A',
+  };
+
+  // Try direct mapping first
+  String? result = camelotMap[key];
+  if (result != null) return result;
+
+  // Handle enharmonic notation (e.g., "G#/Ab Major" or "C#/Db Minor")
+  if (key.contains('/')) {
+    // Split by space to separate note from scale
+    // "g#/ab major" -> ["g#/ab", "major"]
+    final parts = key.split(' ');
+    if (parts.isEmpty) return null;
+
+    // Get the enharmonic notes part (before the space)
+    final notePart = parts[0]; // "g#/ab"
+    // Get the scale/mode part (after the space, if it exists)
+    final scalePart = parts.length > 1 ? ' ${parts.sublist(1).join(' ')}' : '';
+
+    // Split enharmonic notes
+    // "g#/ab" -> ["g#", "ab"]
+    final enharmonicNotes = notePart.split('/');
+
+    // Try first enharmonic variant (e.g., "g# major")
+    if (enharmonicNotes.isNotEmpty) {
+      result = camelotMap[enharmonicNotes[0] + scalePart];
+      if (result != null) return result;
+    }
+
+    // Try second enharmonic variant (e.g., "ab major")
+    if (enharmonicNotes.length > 1) {
+      result = camelotMap[enharmonicNotes[1] + scalePart];
+      if (result != null) return result;
+    }
+  }
+
+  return null;
+}
+
 /// A single work session on a project.
 class SessionRecord {
   /// Unique ID for this session — ISO8601 string of startedAt (millisecond precision).
@@ -135,6 +211,9 @@ class MusicProject {
   @HiveField(29)
   final String? ignoredNewerSongPath; // Path offered as "newer" that the user explicitly rejected
 
+  @HiveField(30)
+  final String? projectNotes; // Read-only notes extracted from the DAW project file itself (e.g. Reaper's Title/Author/Notes tab)
+
   const MusicProject({
     required this.id,
     required this.filePath,
@@ -166,6 +245,7 @@ class MusicProject {
     this.sessions = const [],
     this.metadataScanned = false,
     this.ignoredNewerSongPath,
+    this.projectNotes,
   });
 
   String get displayName => (customDisplayName != null && customDisplayName!.trim().isNotEmpty)
@@ -242,77 +322,7 @@ class MusicProject {
   /// Converts musical key to Camelot Wheel notation
   /// Returns null if musicalKey is null or not recognized
   /// Handles enharmonic notations like "G#/Ab Major"
-  String? get camelotCode {
-    if (musicalKey == null || musicalKey!.isEmpty) return null;
-    
-    final key = musicalKey!.toLowerCase().trim();
-    
-    // Map of musical keys to Camelot codes
-    final Map<String, String> camelotMap = {
-      // Major keys (B side)
-      'c major': '8B', 'c': '8B', 'cmaj': '8B',
-      'g major': '9B', 'g': '9B', 'gmaj': '9B',
-      'd major': '10B', 'd': '10B', 'dmaj': '10B',
-      'a major': '11B', 'a': '11B', 'amaj': '11B',
-      'e major': '12B', 'e': '12B', 'emaj': '12B',
-      'b major': '1B', 'b': '1B', 'bmaj': '1B',
-      'f# major': '2B', 'f#': '2B', 'f#maj': '2B', 'gb major': '2B', 'gb': '2B',
-      'c# major': '3B', 'c#': '3B', 'c#maj': '3B', 'db major': '3B', 'db': '3B',
-      'ab major': '4B', 'ab': '4B', 'abmaj': '4B', 'g# major': '4B', 'g#': '4B',
-      'eb major': '5B', 'eb': '5B', 'ebmaj': '5B', 'd# major': '5B', 'd#': '5B',
-      'bb major': '6B', 'bb': '6B', 'bbmaj': '6B', 'a# major': '6B', 'a#': '6B',
-      'f major': '7B', 'f': '7B', 'fmaj': '7B',
-      
-      // Minor keys (A side)
-      'a minor': '8A', 'am': '8A', 'amin': '8A',
-      'e minor': '9A', 'em': '9A', 'emin': '9A',
-      'b minor': '10A', 'bm': '10A', 'bmin': '10A',
-      'f# minor': '11A', 'f#m': '11A', 'f#min': '11A', 'gb minor': '11A', 'gbm': '11A',
-      'c# minor': '12A', 'c#m': '12A', 'c#min': '12A', 'db minor': '12A', 'dbm': '12A',
-      'g# minor': '1A', 'g#m': '1A', 'g#min': '1A', 'ab minor': '1A', 'abm': '1A',
-      'd# minor': '2A', 'd#m': '2A', 'd#min': '2A', 'eb minor': '2A', 'ebm': '2A',
-      'a# minor': '3A', 'a#m': '3A', 'a#min': '3A', 'bb minor': '3A', 'bbm': '3A',
-      'f minor': '4A', 'fm': '4A', 'fmin': '4A',
-      'c minor': '5A', 'cm': '5A', 'cmin': '5A',
-      'g minor': '6A', 'gm': '6A', 'gmin': '6A',
-      'd minor': '7A', 'dm': '7A', 'dmin': '7A',
-    };
-    
-    // Try direct mapping first
-    String? result = camelotMap[key];
-    if (result != null) return result;
-    
-    // Handle enharmonic notation (e.g., "G#/Ab Major" or "C#/Db Minor")
-    if (key.contains('/')) {
-      // Split by space to separate note from scale
-      // "g#/ab major" -> ["g#/ab", "major"]
-      final parts = key.split(' ');
-      if (parts.isEmpty) return null;
-      
-      // Get the enharmonic notes part (before the space)
-      final notePart = parts[0]; // "g#/ab"
-      // Get the scale/mode part (after the space, if it exists)
-      final scalePart = parts.length > 1 ? ' ${parts.sublist(1).join(' ')}' : '';
-      
-      // Split enharmonic notes
-      // "g#/ab" -> ["g#", "ab"]
-      final enharmonicNotes = notePart.split('/');
-      
-      // Try first enharmonic variant (e.g., "g# major")
-      if (enharmonicNotes.isNotEmpty) {
-        result = camelotMap[enharmonicNotes[0] + scalePart];
-        if (result != null) return result;
-      }
-      
-      // Try second enharmonic variant (e.g., "ab major")
-      if (enharmonicNotes.length > 1) {
-        result = camelotMap[enharmonicNotes[1] + scalePart];
-        if (result != null) return result;
-      }
-    }
-    
-    return null;
-  }
+  String? get camelotCode => camelotCodeForKey(musicalKey);
 
   /// Returns compatible Camelot codes for harmonic mixing
   /// Returns null if musicalKey is null or not recognized
@@ -434,7 +444,9 @@ class MusicProject {
     String? notes,
     bool clearNotes = false,
     String? dawType,
+    bool clearDawType = false,
     String? dawVersion,
+    bool clearDawVersion = false,
     List<TodoItem>? todos,
     bool? hidden,
     String? previewSongPath,
@@ -456,6 +468,7 @@ class MusicProject {
     bool? metadataScanned,
     String? ignoredNewerSongPath,
     bool clearIgnoredNewerSongPath = false,
+    String? projectNotes,
   }) {
     return MusicProject(
       id: id ?? this.id,
@@ -472,8 +485,8 @@ class MusicProject {
       bpm: clearBpm ? null : (bpm ?? this.bpm),
       musicalKey: clearMusicalKey ? null : (musicalKey ?? this.musicalKey),
       notes: clearNotes ? null : (notes ?? this.notes),
-      dawType: dawType ?? this.dawType,
-      dawVersion: dawVersion ?? this.dawVersion,
+      dawType: clearDawType ? null : (dawType ?? this.dawType),
+      dawVersion: clearDawVersion ? null : (dawVersion ?? this.dawVersion),
       todos: todos ?? this.todos,
       hidden: hidden ?? this.hidden,
       previewSongPath: clearPreviewSongPath ? null : (previewSongPath ?? this.previewSongPath),
@@ -488,6 +501,7 @@ class MusicProject {
       sessions: sessions ?? this.sessions,
       metadataScanned: metadataScanned ?? this.metadataScanned,
       ignoredNewerSongPath: clearIgnoredNewerSongPath ? null : (ignoredNewerSongPath ?? this.ignoredNewerSongPath),
+      projectNotes: projectNotes ?? this.projectNotes,
     );
   }
 }
@@ -541,13 +555,14 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
           : const [],
       metadataScanned: fields.containsKey(28) ? (fields[28] as bool? ?? false) : false,
       ignoredNewerSongPath: fields.containsKey(29) ? fields[29] as String? : null,
+      projectNotes: fields.containsKey(30) ? fields[30] as String? : null,
     );
   }
 
   @override
   void write(BinaryWriter writer, MusicProject obj) {
     writer
-      ..writeByte(30) // 30 fields (0-29)
+      ..writeByte(31) // 31 fields (0-30)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -607,6 +622,8 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
       ..writeByte(28)
       ..write(obj.metadataScanned)
       ..writeByte(29)
-      ..write(obj.ignoredNewerSongPath);
+      ..write(obj.ignoredNewerSongPath)
+      ..writeByte(30)
+      ..write(obj.projectNotes);
   }
 }

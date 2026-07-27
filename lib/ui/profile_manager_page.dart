@@ -110,6 +110,7 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
   Future<void> _switchProfile(String profileId) async {
     // Save provider references and container before any navigation that might unmount the widget
     final profileRepo = await ref.read(profileRepositoryProvider.future);
+    if (!mounted) return;
     final profileSwitchingNotifier = ref.read(profileSwitchingProvider.notifier);
     final container = ProviderScope.containerOf(context);
     
@@ -168,9 +169,13 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
     // Use lightweight scan (fast, no full metadata extraction)
     final scanTime = DateTime.now();
     for (final root in repo.getRoots()) {
+      final entities = <FileSystemEntity>[];
       await for (final entity in scanner.scanDirectory(root.path, ignoredPaths: ignoredPaths)) {
-        await repo.upsertFromFileSystemEntity(entity, fullMetadata: false);
-        foundCount++;
+        entities.add(entity);
+      }
+      if (entities.isNotEmpty) {
+        await repo.upsertManyFromFileSystemEntities(entities, fullMetadata: false);
+        foundCount += entities.length;
       }
       // Update lastScanAt timestamp for this root
       await repo.updateRootLastScanAt(root.id, scanTime);
@@ -520,7 +525,8 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
       }
 
       final projectRepo = await ref.read(repositoryProvider.future);
-      
+      if (!mounted) return;
+
       final file = await BackupService.exportBackup(
         projectRepo: projectRepo,
         profileRepo: profileRepo,
@@ -676,8 +682,9 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
   }) async {
     try {
       final profileRepo = await ref.read(profileRepositoryProvider.future);
+      if (!mounted) return;
       final currentProfileId = profileRepo.getCurrentProfileId();
-      
+
       // For createNewProfile mode, we don't need currentProfileId or projectRepo yet
       ProjectRepository? projectRepo;
       if (importMode != ImportMode.createNewProfile) {
@@ -690,8 +697,9 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
           return;
         }
         projectRepo = await ref.read(repositoryProvider.future);
+        if (!mounted) return;
       }
-      
+
       final importResult = await BackupService.importBackup(
         projectRepo: projectRepo,
         profileRepo: profileRepo,

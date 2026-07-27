@@ -200,7 +200,7 @@ class _SummaryCards extends StatelessWidget {
           label: l10n.statsTotalProjects,
           value: '${stats.totalProjects}',
           color: cardColor,
-          borderColor: primary.withOpacity(0.4),
+          borderColor: primary.withValues(alpha: 0.4),
         ),
         _StatCard(
           label: l10n.statsInProgress,
@@ -222,7 +222,7 @@ class _SummaryCards extends StatelessWidget {
               ? _formatDuration(stats.avgCompletionTime!)
               : '—',
           color: cardColor,
-          borderColor: primary.withOpacity(0.4),
+          borderColor: primary.withValues(alpha: 0.4),
         ),
       ],
     );
@@ -323,7 +323,7 @@ class _PhaseDistributionChart extends ConsumerWidget {
             show: true,
             drawVerticalLine: false,
             getDrawingHorizontalLine: (_) => FlLine(
-              color: Theme.of(context).dividerColor.withOpacity(0.3),
+              color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
               strokeWidth: 1,
             ),
           ),
@@ -360,7 +360,7 @@ class _PhaseDistributionChart extends ConsumerWidget {
           barTouchData: BarTouchData(
             touchTooltipData: BarTouchTooltipData(
               getTooltipColor: (_) =>
-                  Theme.of(context).cardColor.withOpacity(0.95),
+                  Theme.of(context).cardColor.withValues(alpha: 0.95),
               getTooltipItem: (group, _, rod, __) {
                 final idx = group.x;
                 final phase = idx < phases.length ? phases[idx] : '';
@@ -420,7 +420,7 @@ class _AvgTimePerPhaseChart extends ConsumerWidget {
             show: true,
             drawVerticalLine: false,
             getDrawingHorizontalLine: (_) => FlLine(
-              color: Theme.of(context).dividerColor.withOpacity(0.3),
+              color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
               strokeWidth: 1,
             ),
           ),
@@ -457,7 +457,7 @@ class _AvgTimePerPhaseChart extends ConsumerWidget {
           barTouchData: BarTouchData(
             touchTooltipData: BarTouchTooltipData(
               getTooltipColor: (_) =>
-                  Theme.of(context).cardColor.withOpacity(0.95),
+                  Theme.of(context).cardColor.withValues(alpha: 0.95),
               getTooltipItem: (group, _, rod, __) {
                 final idx = group.x;
                 final phase = idx < phases.length ? phases[idx] : '';
@@ -539,7 +539,7 @@ class _ProductivityChart extends StatelessWidget {
                 show: true,
                 drawVerticalLine: false,
                 getDrawingHorizontalLine: (_) => FlLine(
-                  color: Theme.of(context).dividerColor.withOpacity(0.3),
+                  color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
                   strokeWidth: 1,
                 ),
               ),
@@ -588,7 +588,7 @@ class _ProductivityChart extends StatelessWidget {
                   dotData: const FlDotData(show: false),
                   belowBarData: BarAreaData(
                     show: true,
-                    color: primary.withOpacity(0.08),
+                    color: primary.withValues(alpha: 0.08),
                   ),
                 ),
                 LineChartBarData(
@@ -599,7 +599,7 @@ class _ProductivityChart extends StatelessWidget {
                   dotData: const FlDotData(show: false),
                   belowBarData: BarAreaData(
                     show: true,
-                    color: Colors.green.withOpacity(0.08),
+                    color: Colors.green.withValues(alpha: 0.08),
                   ),
                 ),
               ],
@@ -899,7 +899,7 @@ class _SmallBarChart extends StatelessWidget {
                 barTouchData: BarTouchData(
                   touchTooltipData: BarTouchTooltipData(
                     getTooltipColor: (_) =>
-                        Theme.of(context).cardColor.withOpacity(0.95),
+                        Theme.of(context).cardColor.withValues(alpha: 0.95),
                     getTooltipItem: (group, _, rod, __) => BarTooltipItem(
                       '${labels[group.x]}: ${rod.toY.toInt()}',
                       Theme.of(context).textTheme.bodySmall!,
@@ -1062,7 +1062,7 @@ class _HistoryPanelState extends ConsumerState<_HistoryPanel> {
                       selectedTileColor: Theme.of(context)
                           .colorScheme
                           .primary
-                          .withOpacity(0.1),
+                          .withValues(alpha: 0.1),
                       onTap: () => onProjectSelected(
                           isSelected ? null : project),
                       title: Text(
@@ -1488,8 +1488,8 @@ class _PhaseBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
-        border: Border.all(color: color.withOpacity(0.5)),
+        color: color.withValues(alpha: 0.15),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(

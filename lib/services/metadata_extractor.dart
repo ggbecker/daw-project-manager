@@ -28,12 +28,14 @@ class ProjectMetadata {
   final String? key;
   final String? dawType;
   final String? dawVersion;
+  final String? projectNotes;
 
   ProjectMetadata({
     this.bpm,
     this.key,
     this.dawType,
     this.dawVersion,
+    this.projectNotes,
   });
 }
 
@@ -62,6 +64,7 @@ class MetadataExtractor {
     double? bpm;
     String? key;
     String? dawVersion;
+    String? projectNotes;
 
     // Try to extract from project file first
     if (ext == '.als' || ext == '.alp') {
@@ -85,8 +88,14 @@ class MetadataExtractor {
       bpm = metadata.bpm ?? bpm;
       key = metadata.key ?? key;
       dawVersion = metadata.dawVersion ?? dawVersion;
+      projectNotes = metadata.projectNotes;
     } else if (ext == '.mgd') {
       final metadata = await _extractFromMagdaFile(filePath);
+      bpm = metadata.bpm ?? bpm;
+      key = metadata.key ?? key;
+      dawVersion = metadata.dawVersion ?? dawVersion;
+    } else if (ext == '.flp') {
+      final metadata = await _extractFromFlpFile(filePath);
       bpm = metadata.bpm ?? bpm;
       key = metadata.key ?? key;
       dawVersion = metadata.dawVersion ?? dawVersion;
@@ -113,10 +122,15 @@ class MetadataExtractor {
       key: key,
       dawType: dawType,
       dawVersion: dawVersion,
+      projectNotes: projectNotes,
     );
   }
 
-  /// Determines DAW type from file extension
+  /// Determines DAW type from a file extension (e.g. `.rpp` -> `'Reaper'`),
+  /// without touching the filesystem — useful anywhere a DAW icon/name is
+  /// needed for a path that may not exist yet or isn't worth a full extract.
+  static String? getDawTypeFromExtension(String ext) => _getDawTypeFromExtension(ext);
+
   static String? _getDawTypeFromExtension(String ext) {
     switch (ext) {
       case '.als':
@@ -188,13 +202,28 @@ class MetadataExtractor {
       String? key;
       String? dawVersion;
 
-      // Extract version from MinorVersion attribute
-      final minorVersion = root.getAttribute('MinorVersion');
-      if (minorVersion != null && minorVersion.isNotEmpty) {
-        // Extract major version (e.g., "12.0_12300" -> "12")
-        final parts = minorVersion.split('.');
-        if (parts.isNotEmpty) {
-          dawVersion = parts[0];
+      // Extract version from the Creator attribute (e.g., "Ableton Live 12.3")
+      // which carries the real major.minor version. MinorVersion (e.g.
+      // "12.0_12300") does not reflect the minor release shown in the UI.
+      final creator = root.getAttribute('Creator');
+      if (creator != null && creator.isNotEmpty) {
+        final match = RegExp(r'Live\s+(\d+(?:\.\d+)*)').firstMatch(creator);
+        if (match != null) {
+          final versionParts = match.group(1)!.split('.');
+          dawVersion = versionParts.length >= 2
+              ? '${versionParts[0]}.${versionParts[1]}'
+              : versionParts[0];
+        }
+      }
+
+      // Fallback: major version only, from MinorVersion attribute
+      if (dawVersion == null) {
+        final minorVersion = root.getAttribute('MinorVersion');
+        if (minorVersion != null && minorVersion.isNotEmpty) {
+          final parts = minorVersion.split('.');
+          if (parts.isNotEmpty) {
+            dawVersion = parts[0];
+          }
         }
       }
 
@@ -346,6 +375,97 @@ class MetadataExtractor {
     }
   }
 
+  /// Extracts BPM and version from an FL Studio .flp project file.
+  /// .flp files use FL's native "FLhd"/"FLdt" chunk format: a fixed header
+  /// chunk followed by a stream of TLV events, keyed by ID range:
+  ///   0-63    1-byte value
+  ///   64-127  2-byte (word) value
+  ///   128-191 4-byte (dword) value
+  ///   192-255 variable-length value, prefixed by a base-128 varint length
+  /// Verified against real project files spanning FL 7 through FL 20:
+  /// event 199 (Version) is the plain-ASCII version string; event 66
+  /// (Tempo, word) is the whole-BPM value used before fine tempo existed;
+  /// event 156 (FineTempo, dword) is BPM*1000 and is used by newer files
+  /// instead. See github.com/jdstmporter/FLPFiles for the wider event ID
+  /// catalogue this was cross-checked against.
+  static Future<ProjectMetadata> _extractFromFlpFile(String filePath) async {
+    try {
+      final file = File(filePath);
+      if (!await file.exists()) {
+        return ProjectMetadata();
+      }
+
+      final bytes = await file.readAsBytes();
+      if (bytes.length < 8 || utf8.decode(bytes.sublist(0, 4)) != 'FLhd') {
+        return ProjectMetadata();
+      }
+      final data = ByteData.sublistView(bytes);
+      final headerLength = data.getUint32(4, Endian.little);
+      var pos = 8 + headerLength;
+
+      if (pos + 8 > bytes.length || utf8.decode(bytes.sublist(pos, pos + 4)) != 'FLdt') {
+        return ProjectMetadata();
+      }
+      final dataLength = data.getUint32(pos + 4, Endian.little);
+      pos += 8;
+      final end = (pos + dataLength) > bytes.length ? bytes.length : pos + dataLength;
+
+      String? dawVersion;
+      int? tempoWord;
+      int? fineTempo;
+
+      while (pos < end) {
+        final eventId = bytes[pos];
+        pos++;
+        if (eventId < 64) {
+          if (pos >= end) break;
+          pos += 1;
+        } else if (eventId < 128) {
+          if (pos + 2 > end) break;
+          final value = data.getUint16(pos, Endian.little);
+          if (eventId == 66) tempoWord = value;
+          pos += 2;
+        } else if (eventId < 192) {
+          if (pos + 4 > end) break;
+          final value = data.getUint32(pos, Endian.little);
+          if (eventId == 156) fineTempo = value;
+          pos += 4;
+        } else {
+          var length = 0;
+          var shift = 0;
+          while (true) {
+            if (pos >= end) {
+              length = -1;
+              break;
+            }
+            final b = bytes[pos];
+            pos++;
+            length |= (b & 0x7F) << shift;
+            if (b & 0x80 == 0) break;
+            shift += 7;
+          }
+          if (length < 0 || pos + length > end) break;
+          if (eventId == 199) {
+            final raw = bytes.sublist(pos, pos + length);
+            final nullIdx = raw.indexOf(0);
+            final versionStr = utf8.decode(nullIdx >= 0 ? raw.sublist(0, nullIdx) : raw);
+            if (versionStr.isNotEmpty) {
+              final parts = versionStr.split('.');
+              dawVersion = parts.length >= 2 ? '${parts[0]}.${parts[1]}' : parts[0];
+            }
+          }
+          pos += length;
+        }
+      }
+
+      final bpm = fineTempo != null ? fineTempo / 1000.0 : tempoWord?.toDouble();
+
+      return ProjectMetadata(bpm: bpm, dawVersion: dawVersion);
+    } catch (e) {
+      return ProjectMetadata();
+    }
+  }
+
   /// Extracts version, BPM, and key signature from a Reaper .rpp project file.
   /// Reaper stores these values in plain-text XML-like tags:
   /// - header: <REAPER_PROJECT 0.1 "7.78/win64" ...>
@@ -405,7 +525,7 @@ class MetadataExtractor {
             final rootIndex = int.tryParse(keyTokens[2]);
             final accidental = int.tryParse(keyTokens[3]);
             final scaleValue = int.tryParse(keyTokens[4].replaceFirst('0x', ''), radix: 16);
-            final scaleName = scaleValue != null ? _bitwigScaleMasks[scaleValue] : null;
+            final scaleName = scaleValue != null ? _scaleMasks[scaleValue] : null;
             if (rootIndex != null && accidental != null && scaleName != null) {
               final rootNote = _getReaperRootNote(rootIndex, accidental: accidental);
               if (rootNote != null) {
@@ -416,10 +536,76 @@ class MetadataExtractor {
         }
       }
 
-      return ProjectMetadata(bpm: bpm, key: key, dawVersion: dawVersion);
+      final projectNotes = _extractReaperNotes(content);
+
+      return ProjectMetadata(bpm: bpm, key: key, dawVersion: dawVersion, projectNotes: projectNotes);
     } catch (_) {
       return ProjectMetadata();
     }
+  }
+
+  /// Extracts Reaper's project notes tab (Title/Author/Notes) into a single
+  /// display string. Reaper stores these as:
+  ///   TITLE "Notes 1"
+  ///   AUTHOR "Audio Crawler"
+  ///   NOTES 0 2
+  ///     |This is notes of the project
+  ///     |
+  ///     |Multiple lines
+  ///   (closing tag)
+  /// Each notes line is prefixed with '|' (possibly after leading
+  /// whitespace) — everything after that first '|' is the literal line
+  /// content, including blank lines (a bare '|' with nothing after it).
+  static String? _extractReaperNotes(String content) {
+    String? tagValue(String tag) {
+      final match = RegExp('^\\s*$tag\\s+"([^"]*)"', multiLine: true).firstMatch(content);
+      final value = match?.group(1)?.trim();
+      return (value == null || value.isEmpty) ? null : value;
+    }
+
+    final title = tagValue('TITLE');
+    final author = tagValue('AUTHOR');
+
+    String? notesBody;
+    final notesStart = content.indexOf('<NOTES');
+    if (notesStart >= 0) {
+      final lines = const LineSplitter().convert(content.substring(notesStart));
+      final noteLines = <String>[];
+      for (final line in lines.skip(1)) {
+        final pipeIndex = line.indexOf('|');
+        if (pipeIndex == -1 || line.substring(0, pipeIndex).trim().isNotEmpty) {
+          break;
+        }
+        noteLines.add(line.substring(pipeIndex + 1));
+      }
+      if (noteLines.isNotEmpty) {
+        final joined = noteLines.join('\n');
+        notesBody = joined.trim().isEmpty ? null : joined;
+      }
+    }
+
+    if (title == null && author == null && notesBody == null) return null;
+
+    // No "by "-style connector word here: this string is written straight
+    // into projectNotes, which is persisted to Hive and synced to Drive —
+    // baking in an English joining word would leak into every locale's
+    // stored data. Extraction runs headlessly during scans (no BuildContext
+    // available), so localizing the word isn't an option. An em dash is
+    // punctuation, not a word, so it joins title and author on one line
+    // without needing translation.
+    final buffer = StringBuffer();
+    if (title != null && author != null) {
+      buffer.writeln('$title — $author');
+    } else if (title != null) {
+      buffer.writeln(title);
+    } else if (author != null) {
+      buffer.writeln(author);
+    }
+    if ((title != null || author != null) && notesBody != null) buffer.writeln();
+    if (notesBody != null) buffer.write(notesBody);
+
+    final result = buffer.toString();
+    return result.trim().isEmpty ? null : result;
   }
 
   /// Extracts version, BPM, and key signature from Bitwig Studio .bwproject file.
@@ -429,7 +615,7 @@ class MetadataExtractor {
   /// Key signature: available in Bitwig 6+ via node 0x0001c9:
   ///   - sub-type 0x01 = root note (0=C, 1=Db, ..., 11=B)
   ///   - sub-type 0x02 = scale type as uint16 BE bitmask (bit N = semitone N included),
-  ///     looked up in _bitwigScaleMasks to identify the 23 possible scale types.
+  ///     looked up in _scaleMasks to identify one of Bitwig's 23 scale types.
   static Future<ProjectMetadata> _extractFromBitwigFile(String filePath) async {
     try {
       final file = File(filePath);
@@ -497,10 +683,10 @@ class MetadataExtractor {
       final rootNodePattern  = <int>[0x00, 0x01, 0xc9, 0x01];
       final scaleNodePos = _findPattern(bytes, scaleNodePattern);
       if (scaleNodePos != null && scaleNodePos + 6 <= bytes.length) {
-        // Decode scale type: uint16 BE bitmask, looked up in _bitwigScaleMasks
+        // Decode scale type: uint16 BE bitmask, looked up in _scaleMasks
         final rawScale = ByteData.sublistView(bytes, scaleNodePos + 4, scaleNodePos + 6)
             .getUint16(0, Endian.big);
-        final scaleName = _bitwigScaleMasks[rawScale];
+        final scaleName = _scaleMasks[rawScale];
 
         // Search backward (up to 150 bytes) for the root note node
         int? rootNote;
@@ -618,32 +804,268 @@ class MetadataExtractor {
   // by Bitwig and by Reaper's `KEYSIG` block. In other words, the `.reascale` file gives
   // us the same semantic source of truth as Bitwig's scale mask table.
   //
-  // 23 scale types in Bitwig 6. Each key is a 12-bit semitone bitmask (bit N = semitone N
-  // above C is present), stored as uint16 BE in the .bwproject binary format.
-  static const _bitwigScaleMasks = <int, String>{
-    0x0ab5: 'Major',
-    0x05ad: 'Minor',
-    0x06ad: 'Dorian',
-    0x05ab: 'Phrygian',
-    0x0ad5: 'Lydian',
-    0x06b5: 'Mixolydian',
-    0x056b: 'Locrian',
-    0x09b5: 'Harmonic Major',
-    0x09ad: 'Harmonic Minor',
-    0x06d5: 'Overtone Scale',
-    0x0aad: 'Jazz Minor',
-    0x029d: 'Blues Major',
-    0x04e9: 'Blues Minor',
-    0x09b3: 'Double Harmonic Major',
-    0x09cd: 'Double Harmonic Minor',
-    0x0555: 'Whole Tone',
-    0x056d: 'Half-diminished',
-    0x06db: 'Diminished HW',
-    0x0b6d: 'Diminished WH',
-    0x0295: 'Major Pentatonic',
-    0x04a9: 'Minor Pentatonic',
-    0x0091: 'Major Triad',
+  // Each key is a 12-bit semitone bitmask (bit N = semitone N above C is present). Bitwig
+  // only ever sends one of its own 23 scale types (stored as uint16 BE in the .bwproject
+  // binary format), but Reaper's `KEYSIG` block can carry any of its ~450 scale/chord
+  // patterns, so this table is generated from every "type 0" (scale) entry in
+  // ZD-complete.reascale to resolve as many of those as possible.
+  //
+  // Regenerate by re-running the parser described in that file's header against an updated
+  // .reascale, then re-apply the pre-existing curated names below as overrides — several
+  // scale/mode names collide on the exact same bitmask (they're the same pitch set under a
+  // different name), so first-occurrence-in-file order picks arbitrarily among them; these
+  // 23 have been validated against real Bitwig/Reaper project files and take priority.
+  static const _scaleMasks = <int, String>{
+    0x0007: 'Chromatic TriMirror',
+    0x000b: 'Phrygian TriChord',
+    0x000d: 'Minor TriChord',
+    0x000f: 'Chromatic TetraMirror 1',
+    0x0015: 'Do Re Mi',
+    0x001b: 'Alternating TetraMirror 1',
+    0x001f: 'Chromatic PentaMirror',
+    0x002b: 'Phrygian TetraChord',
+    0x002d: 'Dorian TetraChord',
+    0x002f: 'Blues PentaCluster 3',
+    0x0035: 'Major TetraChord 11',
+    0x003b: 'Spanish Pentacluster 1',
+    0x003f: 'Chromatic HexaMirror all #',
+    0x004d: 'Har Minor TetraChord 1',
+    0x004f: 'Blues Pentacluster 1',
+    0x0055: 'Whole-Tone Tetramirror',
+    0x0067: 'Oriental Pentacluster 1',
+    0x006b: 'Locrian PentaMirror',
+    0x007f: 'Chromatic HeptaMirror',
     0x0089: 'Minor Triad',
+    0x0091: 'Major Triad',
+    0x0095: 'Eskimo Tetratonic',
+    0x00a5: 'Major TetraChord 10',
+    0x00ad: 'Minor Pentachord Chad G',
+    0x00b5: 'Major Pentachord',
+    0x00cb: 'Japanese Pentachord 1',
+    0x00d3: 'Balinese Pentachord 1',
+    0x00d5: 'Lydian Pentachord',
+    0x00ff: 'Chromatic OctaMirror',
+    0x0109: 'Major Triad 1',
+    0x0111: 'Major Flat 6',
+    0x0121: 'Minor Triad 3',
+    0x0139: 'Center-Cluster PentaMirror',
+    0x0149: 'Major TetraChord 9',
+    0x018b: 'Pelog',
+    0x018d: 'Hirajoshi',
+    0x01a3: 'In',
+    0x01a5: 'Han - kumoi',
+    0x01c3: 'Indonesian 2 Pentatonic',
+    0x01ff: 'Chromatic NonaMirror',
+    0x0211: 'Minor Triad 1',
+    0x0221: 'Major Triad 3',
+    0x0225: 'Sixth TetraChord 2',
+    0x0229: 'Major TetraChord 7',
+    0x0245: 'Major TetraChord 6',
+    0x0249: 'Diminished 7th Chord',
+    0x0255: 'Kung',
+    0x026b: 'Double-Phrygian Hexatonic',
+    0x026d: 'Pyramid Hexatonic',
+    0x028d: 'Kumoi Scale',
+    0x0291: 'Sixth TetraChord 1',
+    0x0293: 'No Name',
+    0x0295: 'Major Pentatonic',
+    0x029b: 'Blues Dorian Hexatonic 2',
+    0x029d: 'Blues Major',
+    0x02a1: 'Major TetraChord 4',
+    0x02a3: 'Altered Pentatonic',
+    0x02a5: 'Yo',
+    0x02a9: 'Minor 6th Added',
+    0x02b5: 'Scottish Hexatonic Arezzo',
+    0x02bd: 'Houseini 1',
+    0x02e7: 'Chromatic Hypophrygian',
+    0x0333: 'Sixtone Mode 2',
+    0x033b: 'Alt Dominant bb7',
+    0x0355: 'Eskimo Hexatonic 1',
+    0x0357: 'Neapolitan Minor Mode',
+    0x035b: 'Ultra Locrian 1',
+    0x036b: 'Locrian bb7',
+    0x0395: 'Major Bebop Hexatonic',
+    0x0397: 'Chromatic Phrygian Inverse',
+    0x039d: 'Chromatic Hypodorian 1',
+    0x03a7: 'Chromatic Dorian',
+    0x03b3: 'Gypsy Hexatonic 5',
+    0x03b5: 'Major Bebop Heptatonic',
+    0x03ef: 'untitled Nonatonic 1',
+    0x03ff: 'Chromatic DecaMirror 1',
+    0x0409: 'Ute Tritone 1',
+    0x040d: 'Warao Minor TriChord',
+    0x0421: 'Sanagari 1',
+    0x0425: 'Major  TetraChord 3',
+    0x0463: 'Iwato',
+    0x046b: 'Honchoshi Plagal Form',
+    0x0489: 'Bi Yu',
+    0x0491: 'Major TetraChord 1',
+    0x0495: 'Dominant Pentatonic',
+    0x04a1: 'Genus Primum Inverse',
+    0x04a3: 'Kokin-Joshi',
+    0x04a5: 'Sus 4 Pentatonic',
+    0x04a9: 'Minor Pentatonic',
+    0x04ad: 'Minor Hexatonic',
+    0x04b1: 'Mixolydian Pentatonic 1',
+    0x04d7: 'Chromatic Mixolydian 1',
+    0x04e7: 'Chromatic Mixolydian 2',
+    0x04e9: 'Blues Minor',
+    0x04eb: 'Blues Phrygian 1',
+    0x04ed: 'Blues Modified',
+    0x04f9: 'Composite Blues',
+    0x0509: 'Major  TetraChord 2',
+    0x0525: 'Chaio 1',
+    0x0529: 'M3 Mj Pentatonic',
+    0x052b: 'Ritsu',
+    0x054d: 'Takemitsu Tree Line Mod 1',
+    0x0553: 'Prometheus Neopolitan',
+    0x0555: 'Whole Tone',
+    0x055b: 'Alt Dominant',
+    0x056b: 'Locrian',
+    0x056d: 'Half-diminished',
+    0x0573: 'Oriental No1',
+    0x0575: 'Major Locrian',
+    0x0579: 'Spanish Heptatonic 1',
+    0x057b: 'Spanish 8 Tones 1',
+    0x059b: 'Phrygian dim 4th',
+    0x059d: 'Saba',
+    0x05a9: 'Phrygian Hexatonic',
+    0x05ab: 'Phrygian',
+    0x05ad: 'Minor',
+    0x05af: 'Phrygian Aeolian 1',
+    0x05b3: 'Mixolydian b9b13',
+    0x05b5: 'Mixolydian b13',
+    0x05bb: 'Phrygian Major 1',
+    0x05cb: 'Spanish Dominant',
+    0x05cd: 'Hungarian Gypsy 1',
+    0x05d5: 'Lydian Minor',
+    0x05eb: 'Phrygian Locrian 1',
+    0x0625: 'Oriental Raga Guhamano',
+    0x0653: 'Prometheus Neapolitan 2',
+    0x0655: 'Prometheus 2',
+    0x066b: 'Locrian Nat 6',
+    0x066d: 'Dorian b5',
+    0x0673: 'Oriental No2',
+    0x0675: 'Mixolydian b5',
+    0x067b: 'Maqam Shadd\'araban 1',
+    0x069d: 'Minor Bebop 1',
+    0x06a5: 'Sus 4',
+    0x06ab: 'Dorian b2',
+    0x06ad: 'Dorian',
+    0x06af: 'Adonai Malakh 1',
+    0x06b3: 'Mixolydian b9',
+    0x06b5: 'Mixolydian',
+    0x06b9: 'Rock \'n Roll 1',
+    0x06bb: 'JG Octatonic',
+    0x06bd: 'Minor Bebop 1',
+    0x06cb: 'Todi b7 1',
+    0x06cd: 'Dorian #4',
+    0x06d3: 'Romanian Major',
+    0x06d5: 'Overtone Scale',
+    0x06d9: 'Hungarian Major',
+    0x06db: 'Diminished HW',
+    0x06dd: 'Lydian Dim b7',
+    0x06e9: 'Blues Heptatonic',
+    0x06ed: 'Blues Octatonic',
+    0x06f5: 'Mixolydian Bebop 2',
+    0x06f7: 'Youlan 1',
+    0x06fb: 'untitled Nonatonic 2',
+    0x06fd: 'Blues Enneatonic',
+    0x0735: 'Mixolydian Augmented',
+    0x0739: 'Chromatic Hypodorian Inv',
+    0x0763: 'Gipsy Hexatonic 1',
+    0x07ad: 'Dorian Aeolian 1',
+    0x07af: 'Chromatic Diatonic Dorian 1',
+    0x07bd: 'Houseini 2',
+    0x07bf: 'Untitled Decatonic 9',
+    0x07ed: 'Kiourdi',
+    0x07ef: 'Untitled Decatonic 5',
+    0x0869: 'Blues #V',
+    0x0891: 'Major TetraChord 2',
+    0x08b1: 'Indonesian 3 Pentatonic',
+    0x08d1: 'Chinese 6 Pentatonic',
+    0x08e9: 'Blues Minor Maj7',
+    0x0931: 'Romanian Bacovia 1',
+    0x094d: 'Takemitsu Tree Line Mod 2',
+    0x0955: 'Eskimo Hexatonic 2',
+    0x096d: 'Locrian 2',
+    0x0973: 'Persian',
+    0x0999: 'Augmented, Messiaen',
+    0x09ab: 'Neopolitan Minor',
+    0x09ad: 'Harmonic Minor',
+    0x09af: 'Harmonic Neapolitan Minor 1',
+    0x09b3: 'Double Harmonic Major',
+    0x09b5: 'Harmonic Major',
+    0x09cb: 'Todi',
+    0x09cd: 'Double Harmonic Minor',
+    0x09cf: 'Hungarian Minor b2',
+    0x09d1: 'Pelog alternate',
+    0x09d3: 'Purvi',
+    0x09eb: 'Half-Dimiished Bebop',
+    0x09ed: 'Algerian',
+    0x0a73: 'Chromatic Lydian',
+    0x0a8d: 'Hawaiian',
+    0x0a95: 'Lydian Hexatonic',
+    0x0a99: 'Lydian #2 Hexatonic',
+    0x0aab: 'Neopolitan Major',
+    0x0aad: 'Jazz Minor',
+    0x0ab1: 'Genus Secundum',
+    0x0ab3: 'Bhairubahar Thaat',
+    0x0ab5: 'Major',
+    0x0ab9: 'Houzam',
+    0x0abd: 'Dorian Bebop',
+    0x0acd: 'Smyrneiko',
+    0x0ad3: 'Marva or Marvi',
+    0x0ad5: 'Lydian',
+    0x0ad9: 'Lydian #9',
+    0x0adb: 'Shostakovich 1',
+    0x0add: 'Lydian b3',
+    0x0af5: 'Japanese',
+    0x0b35: 'Ionian Augmented',
+    0x0b55: 'Lydian Aug',
+    0x0b59: 'Aeolian 2# 4# #5',
+    0x0b5b: 'Magen Abot',
+    0x0b65: 'Nohkan 1',
+    0x0b6d: 'Diminished WH',
+    0x0bad: 'Zirafkend',
+    0x0bb5: 'Major Bebop',
+    0x0bb7: 'Chromatic Permuted Diatonic',
+    0x0bbb: 'Genus Chromaticum 1',
+    0x0bdf: 'Untitled Decatonic 8',
+    0x0bf7: 'Untitled Decatonic 7',
+    0x0bfd: 'Pan Lydian',
+    0x0c01: 'Flat 6 and 7',
+    0x0c49: 'Half Diminished plus b8',
+    0x0cb9: 'Chromatic Dorian Inverse',
+    0x0ce5: 'Chromatic Mixolydian Inv',
+    0x0ce9: 'Blues with Leading Tone',
+    0x0d33: 'Enigmatic Descending 1',
+    0x0d39: 'Chromatic Phrygian',
+    0x0d4b: 'Enigmatic Minor',
+    0x0d53: 'Enigmatic Ascending 1',
+    0x0d55: 'Leading Wholetone',
+    0x0d6b: 'Prokofiev 1',
+    0x0d73: 'Enigmatic alternate 1',
+    0x0dad: 'Utility Minor 1',
+    0x0db3: 'Maqam Hijaz',
+    0x0dbb: 'Moorish Phrygian 2',
+    0x0dcb: 'Neveseri 1',
+    0x0dcd: 'Minor Gypsy',
+    0x0dd7: 'Symmetrical Nonatonic 1',
+    0x0def: 'Untitled Decatonic 4',
+    0x0df7: 'Symmetrical Decatonic',
+    0x0dfb: 'Untitled Decatonic 3',
+    0x0e73: 'Oriental 2',
+    0x0eb5: 'Mixolydian Bebop 1',
+    0x0eb7: 'Chromatic Bebop 1',
+    0x0ed5: 'Lydian Dominant alternate',
+    0x0edf: 'Pan Diminished Blues',
+    0x0ef5: 'Lydian Mixolydian 1',
+    0x0ef7: 'Untitled Decatonic 6',
+    0x0efd: 'Untitled Decatonic 2',
+    0x0f7b: 'Untitled Decatonic 3',
+    0x0fad: 'Full Minor',
+    0x0fbd: 'Untitled Decatonic 1',
   };
 
   /// Extracts version and BPM from Cubase .cpr file

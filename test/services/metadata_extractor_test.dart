@@ -203,6 +203,24 @@ TEMPO 120 4 4 0
       expect(metadata.key, 'C Major Pentatonic');
     });
 
+    test('resolves a scale mask beyond Bitwig\'s original 23, sourced from the expanded '
+        '.reascale-derived table', () async {
+      // 0x0d39 ("Chromatic Phrygian") is not one of Bitwig's 23 scale types —
+      // before the scale table was expanded from ZD-complete.reascale, this
+      // mask fell through to a null key entirely.
+      final file = File('${tempDir.path}/project_expanded_scale_mask.rpp');
+      await file.writeAsString('''
+<REAPER_PROJECT 0.1 "7.78/win64" 1784823281 0
+TEMPO 120 4 4 0
+<KEYSIG
+  0 0 0 0x0d39
+>
+''');
+
+      final metadata = await MetadataExtractor.extractMetadata(file.path);
+      expect(metadata.key, 'C Chromatic Phrygian');
+    });
+
     test('matches only the whole TEMPO token, not TEMPOENVLOCKMODE', () async {
       final file = File('${tempDir.path}/project_tempoenvlock.rpp');
       await file.writeAsString('''
@@ -213,6 +231,104 @@ TEMPO 120 4 4 0
 
       final metadata = await MetadataExtractor.extractMetadata(file.path);
       expect(metadata.bpm, 120.0);
+    });
+
+    test('extracts Title, Author and Notes into a single combined projectNotes string', () async {
+      final file = File('${tempDir.path}/project_notes.rpp');
+      await file.writeAsString('''
+<REAPER_PROJECT 0.1 "7.78/win64" 1784823281 0
+  TITLE "Notes 1"
+  AUTHOR "Audio Crawler"
+  <NOTES 0 2
+    |This is notes of the project to be displayed in DAW Project Manager
+    |
+    |Multiple lines
+    |
+    |1
+    |
+    |2
+    |
+    |Test
+  >
+''');
+
+      final metadata = await MetadataExtractor.extractMetadata(file.path);
+      // No "by "-style connector: this string is persisted to Hive and
+      // synced to Drive, so it must not bake in an English word — see the
+      // comment in _extractReaperNotes. Title and author are joined by an
+      // em dash instead, since that's punctuation rather than a word.
+      expect(
+        metadata.projectNotes,
+        'Notes 1 — Audio Crawler\n'
+        '\n'
+        'This is notes of the project to be displayed in DAW Project Manager\n'
+        '\n'
+        'Multiple lines\n'
+        '\n'
+        '1\n'
+        '\n'
+        '2\n'
+        '\n'
+        'Test',
+      );
+    });
+
+    test('joins Title and Author with an em dash on one line when both are present', () async {
+      final file = File('${tempDir.path}/project_title_author.rpp');
+      await file.writeAsString('''
+<REAPER_PROJECT 0.1 "7.78/win64" 1784823281 0
+  TITLE "My Song"
+  AUTHOR "Jane Doe"
+''');
+
+      final metadata = await MetadataExtractor.extractMetadata(file.path);
+      expect(metadata.projectNotes, 'My Song — Jane Doe\n');
+    });
+
+    test('projectNotes shows just the title when Author is absent', () async {
+      final file = File('${tempDir.path}/project_title_only.rpp');
+      await file.writeAsString('''
+<REAPER_PROJECT 0.1 "7.78/win64" 1784823281 0
+  TITLE "My Song"
+''');
+
+      final metadata = await MetadataExtractor.extractMetadata(file.path);
+      expect(metadata.projectNotes, 'My Song\n');
+    });
+
+    test('projectNotes shows just the author when Title is absent', () async {
+      final file = File('${tempDir.path}/project_author_only.rpp');
+      await file.writeAsString('''
+<REAPER_PROJECT 0.1 "7.78/win64" 1784823281 0
+  AUTHOR "Jane Doe"
+''');
+
+      final metadata = await MetadataExtractor.extractMetadata(file.path);
+      expect(metadata.projectNotes, 'Jane Doe\n');
+    });
+
+    test('projectNotes is null when there is no NOTES/TITLE/AUTHOR block', () async {
+      final file = File('${tempDir.path}/project_no_notes.rpp');
+      await file.writeAsString('''
+<REAPER_PROJECT 0.1 "7.78/win64" 1784823281 0
+TEMPO 120 4 4 0
+''');
+
+      final metadata = await MetadataExtractor.extractMetadata(file.path);
+      expect(metadata.projectNotes, isNull);
+    });
+
+    test('projectNotes falls back to just the notes body when TITLE/AUTHOR are absent', () async {
+      final file = File('${tempDir.path}/project_notes_only.rpp');
+      await file.writeAsString('''
+<REAPER_PROJECT 0.1 "7.78/win64" 1784823281 0
+  <NOTES 0 2
+    |Just a quick note
+  >
+''');
+
+      final metadata = await MetadataExtractor.extractMetadata(file.path);
+      expect(metadata.projectNotes, 'Just a quick note');
     });
   });
 
@@ -290,6 +406,244 @@ TEMPO 120 4 4 0
     test('missing file returns empty metadata', () async {
       final metadata =
           await MetadataExtractor.extractMetadata('${tempDir.path}/missing.mgd');
+      expect(metadata.bpm, isNull);
+      expect(metadata.key, isNull);
+      expect(metadata.dawVersion, isNull);
+    });
+  });
+
+  group('MetadataExtractor — Ableton Live (.als) full extraction', () {
+    // .als files are gzipped XML. The root <Ableton> element's Creator
+    // attribute (e.g. "Ableton Live 12.3") carries the real major.minor
+    // version — MinorVersion (e.g. "12.0_12300") does not reflect it.
+    late Directory tempDir;
+
+    setUp(() async {
+      tempDir = await Directory.systemTemp.createTemp('als_test_');
+    });
+
+    tearDown(() async {
+      await tempDir.delete(recursive: true);
+    });
+
+    Future<String> writeAlsFixture(String xml) async {
+      final file = File('${tempDir.path}/project.als');
+      final compressed = gzip.encode(utf8.encode(xml));
+      await file.writeAsBytes(compressed);
+      return file.path;
+    }
+
+    test('extracts major.minor DAW version from the Creator attribute', () async {
+      final path = await writeAlsFixture('''
+<?xml version="1.0" encoding="UTF-8"?>
+<Ableton MajorVersion="5" MinorVersion="12.0_12300" SchemaChangeCount="1" Creator="Ableton Live 12.3" Revision="49ca8995cfdbe384bd4648a2e0d5a14dba7b993d">
+	<LiveSet>
+		<Tracks>
+		</Tracks>
+	</LiveSet>
+</Ableton>
+''');
+
+      final metadata = await MetadataExtractor.extractMetadata(path);
+      expect(metadata.dawType, 'Ableton Live');
+      expect(metadata.dawVersion, '12.3');
+    });
+
+    test('ignores a misleading MinorVersion suffix when Creator disagrees', () async {
+      // Real sample from an older project: MinorVersion's "9.0_305" suffix
+      // does not encode "9.1.7" in any way (unlike the 12.3 fixture above,
+      // where "12300" coincidentally lines up with "12.3") — Creator must
+      // always win, never a parse of the MinorVersion suffix.
+      final path = await writeAlsFixture('''
+<?xml version="1.0" encoding="UTF-8"?>
+<Ableton MajorVersion="4" MinorVersion="9.0_305" SchemaChangeCount="10" Creator="Ableton Live 9.1.7" Revision="411c6f82371175a563be02dd24e0409fdb4c3d87">
+	<LiveSet>
+		<Tracks>
+		</Tracks>
+	</LiveSet>
+</Ableton>
+''');
+
+      final metadata = await MetadataExtractor.extractMetadata(path);
+      expect(metadata.dawVersion, '9.1');
+    });
+
+    test('falls back to MinorVersion major when Creator is missing', () async {
+      final path = await writeAlsFixture('''
+<?xml version="1.0" encoding="UTF-8"?>
+<Ableton MajorVersion="5" MinorVersion="12.0_12300" SchemaChangeCount="1">
+	<LiveSet>
+		<Tracks>
+		</Tracks>
+	</LiveSet>
+</Ableton>
+''');
+
+      final metadata = await MetadataExtractor.extractMetadata(path);
+      expect(metadata.dawVersion, '12');
+    });
+
+    test('extracts BPM from the Tempo/Manual element', () async {
+      final path = await writeAlsFixture('''
+<?xml version="1.0" encoding="UTF-8"?>
+<Ableton MajorVersion="5" MinorVersion="12.0_12300" Creator="Ableton Live 12.3">
+	<LiveSet>
+		<MasterTrack>
+			<DeviceChain>
+				<Mixer>
+					<Tempo>
+						<Manual Value="126.5" />
+					</Tempo>
+				</Mixer>
+			</DeviceChain>
+		</MasterTrack>
+	</LiveSet>
+</Ableton>
+''');
+
+      final metadata = await MetadataExtractor.extractMetadata(path);
+      expect(metadata.bpm, 126.5);
+    });
+
+    test('malformed file returns empty metadata instead of throwing', () async {
+      final file = File('${tempDir.path}/broken.als');
+      await file.writeAsBytes([0x00, 0x01, 0x02]);
+
+      final metadata = await MetadataExtractor.extractMetadata(file.path);
+      expect(metadata.bpm, isNull);
+      expect(metadata.key, isNull);
+      expect(metadata.dawVersion, isNull);
+      expect(metadata.dawType, 'Ableton Live');
+    });
+
+    test('missing file returns empty metadata', () async {
+      final metadata =
+          await MetadataExtractor.extractMetadata('${tempDir.path}/missing.als');
+      expect(metadata.bpm, isNull);
+      expect(metadata.key, isNull);
+      expect(metadata.dawVersion, isNull);
+    });
+  });
+
+  group('MetadataExtractor — FL Studio (.flp) full extraction', () {
+    // .flp files use FL's native "FLhd"/"FLdt" chunk format: a fixed header
+    // followed by a stream of TLV events, keyed by ID range (0-63 byte,
+    // 64-127 word, 128-191 dword, 192-255 variable-length w/ varint length
+    // prefix). Verified against 19 real project files spanning FL 7 to FL
+    // 20: event 199 (Version) is the plain version string; event 66
+    // (Tempo, word) is the whole-BPM value used before fine tempo existed;
+    // event 156 (FineTempo, dword) is BPM*1000 and supersedes it in newer
+    // files. Cross-checked against github.com/jdstmporter/FLPFiles.
+    late Directory tempDir;
+
+    setUp(() async {
+      tempDir = await Directory.systemTemp.createTemp('flp_test_');
+    });
+
+    tearDown(() async {
+      await tempDir.delete(recursive: true);
+    });
+
+    List<int> varintLength(int length) {
+      final bytes = <int>[];
+      var value = length;
+      while (true) {
+        final byte = value & 0x7F;
+        value >>= 7;
+        if (value == 0) {
+          bytes.add(byte);
+          break;
+        }
+        bytes.add(byte | 0x80);
+      }
+      return bytes;
+    }
+
+    List<int> buildFlpBytes({
+      required String version,
+      int? tempoWord,
+      int? fineTempo,
+    }) {
+      final events = <int>[];
+
+      final versionBytes = [...utf8.encode(version), 0];
+      events.add(199);
+      events.addAll(varintLength(versionBytes.length));
+      events.addAll(versionBytes);
+
+      if (tempoWord != null) {
+        events.add(66);
+        events.add(tempoWord & 0xFF);
+        events.add((tempoWord >> 8) & 0xFF);
+      }
+
+      if (fineTempo != null) {
+        events.add(156);
+        events.add(fineTempo & 0xFF);
+        events.add((fineTempo >> 8) & 0xFF);
+        events.add((fineTempo >> 16) & 0xFF);
+        events.add((fineTempo >> 24) & 0xFF);
+      }
+
+      final bytes = <int>[];
+      bytes.addAll(utf8.encode('FLhd'));
+      bytes.addAll([6, 0, 0, 0]); // header length
+      bytes.addAll([0, 0]); // format
+      bytes.addAll([4, 0]); // nChannels
+      bytes.addAll([96, 0]); // ppq
+      bytes.addAll(utf8.encode('FLdt'));
+      final len = events.length;
+      bytes.addAll([len & 0xFF, (len >> 8) & 0xFF, (len >> 16) & 0xFF, (len >> 24) & 0xFF]);
+      bytes.addAll(events);
+      return bytes;
+    }
+
+    Future<String> writeFlpFixture(List<int> bytes) async {
+      final file = File('${tempDir.path}/project.flp');
+      await file.writeAsBytes(bytes);
+      return file.path;
+    }
+
+    test('extracts major.minor version and whole-BPM from a legacy Tempo word event', () async {
+      final path = await writeFlpFixture(buildFlpBytes(version: '7.0.0', tempoWord: 142));
+
+      final metadata = await MetadataExtractor.extractMetadata(path);
+      expect(metadata.dawType, 'FL Studio');
+      expect(metadata.dawVersion, '7.0');
+      expect(metadata.bpm, 142.0);
+    });
+
+    test('extracts precise BPM from a FineTempo dword event', () async {
+      final path = await writeFlpFixture(buildFlpBytes(version: '20.6.2.1549', fineTempo: 145000));
+
+      final metadata = await MetadataExtractor.extractMetadata(path);
+      expect(metadata.dawVersion, '20.6');
+      expect(metadata.bpm, 145.0);
+    });
+
+    test('FineTempo takes precedence over the legacy Tempo word when both are present', () async {
+      final path = await writeFlpFixture(
+        buildFlpBytes(version: '21.0.0', tempoWord: 140, fineTempo: 138500),
+      );
+
+      final metadata = await MetadataExtractor.extractMetadata(path);
+      expect(metadata.bpm, 138.5);
+    });
+
+    test('malformed file returns empty metadata instead of throwing', () async {
+      final file = File('${tempDir.path}/broken.flp');
+      await file.writeAsBytes([0x00, 0x01, 0x02]);
+
+      final metadata = await MetadataExtractor.extractMetadata(file.path);
+      expect(metadata.bpm, isNull);
+      expect(metadata.key, isNull);
+      expect(metadata.dawVersion, isNull);
+      expect(metadata.dawType, 'FL Studio');
+    });
+
+    test('missing file returns empty metadata', () async {
+      final metadata =
+          await MetadataExtractor.extractMetadata('${tempDir.path}/missing.flp');
       expect(metadata.bpm, isNull);
       expect(metadata.key, isNull);
       expect(metadata.dawVersion, isNull);

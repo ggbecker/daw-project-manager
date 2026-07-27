@@ -9,18 +9,32 @@ import 'package:path/path.dart' as p;
 
 import '../../generated/l10n/app_localizations.dart';
 import '../../models/pending_folder.dart';
+import '../../models/project_template.dart';
 import '../../models/scan_root.dart';
 import '../../providers/providers.dart';
 import '../../services/daw_detector.dart';
+import '../../services/metadata_extractor.dart';
+import '../../services/project_template_service.dart';
+import '../../utils/daw_logo.dart';
 import '../../utils/file_launcher.dart';
+import '../project_templates_page.dart';
+import '../session_actions.dart';
 
 enum _NamingScheme { artistTrack, collab, dateTrack, custom }
 
+enum _StartMode { emptyFolder, template }
+
 class CreateProjectDialog extends ConsumerStatefulWidget {
-  const CreateProjectDialog({super.key});
+  /// Pre-selects a template and jumps straight to the template flow — used
+  /// by "Use as new project" on [ProjectTemplatesPage] so the user doesn't
+  /// have to find the same template again inside this wizard.
+  final ProjectTemplate? initialTemplate;
+
+  const CreateProjectDialog({super.key, this.initialTemplate});
 
   @override
-  ConsumerState<CreateProjectDialog> createState() => _CreateProjectDialogState();
+  ConsumerState<CreateProjectDialog> createState() =>
+      _CreateProjectDialogState();
 }
 
 class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
@@ -39,7 +53,13 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
   bool _isFolderValid = true;
   String? _folderError;
 
-  // Step 3: DAW
+  // Step 3: Start (empty folder vs. template)
+  _StartMode _startMode = _StartMode.emptyFolder;
+  ProjectTemplate? _selectedTemplate;
+  final _templateSearchController = TextEditingController();
+  String _templateQuery = '';
+
+  // Step 4: DAW (only reachable when _startMode is emptyFolder)
   List<DetectedDaw>? _detectedDaws;
   bool _detectingDaws = false;
   DetectedDaw? _selectedDaw;
@@ -62,8 +82,19 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
     _trackNameController.addListener(_onNameChanged);
     _primaryArtistController.addListener(_onNameChanged);
     _customNameController.addListener(_onNameChanged);
+    _templateSearchController.addListener(() {
+      setState(
+        () => _templateQuery = _templateSearchController.text
+            .trim()
+            .toLowerCase(),
+      );
+    });
     _includeTimestamp =
         Hive.box<String>('settings').get('createProjectIncludeDate') == 'true';
+    if (widget.initialTemplate != null) {
+      _startMode = _StartMode.template;
+      _selectedTemplate = widget.initialTemplate;
+    }
   }
 
   @override
@@ -72,6 +103,7 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
     _primaryArtistController.dispose();
     _trackNameController.dispose();
     _customNameController.dispose();
+    _templateSearchController.dispose();
     for (final c in _collabControllers) {
       c.dispose();
     }
@@ -79,12 +111,14 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
   }
 
   void _onNameChanged() => setState(() {
-        _validateFolderName();
-      });
+    _validateFolderName();
+  });
 
   void _toggleIncludeTimestamp(bool value) {
     setState(() => _includeTimestamp = value);
-    Hive.box<String>('settings').put('createProjectIncludeDate', value.toString());
+    Hive.box<String>(
+      'settings',
+    ).put('createProjectIncludeDate', value.toString());
     _validateFolderName();
   }
 
@@ -184,7 +218,11 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${AppLocalizations.of(context)!.createProjectError}: $e')),
+          SnackBar(
+            content: Text(
+              '${AppLocalizations.of(context)!.createProjectError}: $e',
+            ),
+          ),
         );
       }
       return;
@@ -204,7 +242,9 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
       final exePath = _selectedDaw!.executablePath;
       try {
         if (Platform.isMacOS && exePath.endsWith('.app')) {
-          await Process.start('open', [exePath], mode: ProcessStartMode.detached);
+          await Process.start('open', [
+            exePath,
+          ], mode: ProcessStartMode.detached);
         } else {
           await Process.start(
             exePath,
@@ -217,7 +257,11 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(AppLocalizations.of(context)!.couldNotLaunchDaw(_selectedDaw!.name, e.toString())),
+              content: Text(
+                AppLocalizations.of(
+                  context,
+                )!.couldNotLaunchDaw(_selectedDaw!.name, e.toString()),
+              ),
               duration: const Duration(seconds: 6),
             ),
           );
@@ -233,6 +277,118 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
         _openedInDaw = openInDaw;
         _trackSessionFromNow = openInDaw;
         _createdPendingFolder = pf;
+      });
+    }
+  }
+
+  /// Copies the selected template into a new project folder, renames its
+  /// main file to match, and registers the result as a real project (there's
+  /// no PendingFolder placeholder step here — the DAW file already exists
+  /// the moment the copy finishes). The DAW is never launched automatically
+  /// here — the success view's Open Folder / Copy Name options are enough
+  /// for the "just get the folder ready" case a template is usually for. In
+  /// session mode we additionally ask whether to start the session now,
+  /// rather than assuming that from "session mode is on" alone.
+  Future<void> _finishFromTemplate() async {
+    if (_selectedRoot == null ||
+        _folderName.isEmpty ||
+        !_isFolderValid ||
+        _selectedTemplate == null) {
+      return;
+    }
+
+    final targetPath = p.join(_selectedRoot!.path, _folderName);
+    final folderName = _folderName;
+    final template = _selectedTemplate!;
+
+    // Other templates registered from the same "shared" folder (see
+    // ProjectTemplateService.discoverTemplateCandidates) — instantiate()
+    // needs these to know which parts of the folder belong to a *different*
+    // song and should be left out of the copy.
+    final templatesBox = await Hive.openBox<ProjectTemplate>(
+      'projectTemplates',
+    );
+    final siblingTemplates = templatesBox.values
+        .where(
+          (t) =>
+              t.id != template.id &&
+              t.sourceFolderPath == template.sourceFolderPath,
+        )
+        .toList();
+
+    final String newMainFilePath;
+    try {
+      newMainFilePath = await ProjectTemplateService.instantiate(
+        template: template,
+        destinationFolderPath: targetPath,
+        newProjectName: folderName,
+        siblingTemplates: siblingTemplates,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${AppLocalizations.of(context)!.createProjectError}: $e',
+            ),
+          ),
+        );
+      }
+      return;
+    }
+
+    final repo = await ref.read(repositoryProvider.future);
+    await repo.upsertFromFileSystemEntity(
+      File(newMainFilePath),
+      fullMetadata: true,
+    );
+
+    // The template's main file format may not support auto-extraction (e.g.
+    // FL Studio, Logic) — fall back to whatever bpm/key the user filled in
+    // manually on the template itself, same as a project's own manual fields.
+    var createdProject = repo.getByPath(newMainFilePath);
+    if (createdProject != null &&
+        (template.bpm != null || template.musicalKey != null)) {
+      final needsBpm = createdProject.bpm == null && template.bpm != null;
+      final needsKey =
+          createdProject.musicalKey == null && template.musicalKey != null;
+      if (needsBpm || needsKey) {
+        createdProject = createdProject.copyWith(
+          bpm: needsBpm ? template.bpm : null,
+          musicalKey: needsKey ? template.musicalKey : null,
+        );
+        await repo.updateProject(createdProject);
+      }
+    }
+
+    // Flags the row with the same "New" badge a background-discovered
+    // project gets on the main dashboard, and feeds the idle-suggestions
+    // panel — otherwise a project created from the templates page (which
+    // isn't the dashboard) has no visible sign it just appeared.
+    if (createdProject != null) {
+      ref.read(recentlyDiscoveredProjectsProvider.notifier).addAll([
+        createdProject.id,
+      ]);
+    }
+
+    // Unlike the empty-folder flow, a template-created project never opens
+    // the DAW automatically — the whole point of a template is the folder
+    // being ready, not necessarily wanting to jump into it immediately. In
+    // session mode we still ask, since starting a session is a deliberate
+    // choice (and may need to prompt about switching an active one) rather
+    // than something to assume from "session mode is on".
+    if (ref.read(sessionModeProvider) && createdProject != null && mounted) {
+      await confirmStartSession(context, ref, createdProject);
+    }
+
+    if (mounted) {
+      setState(() {
+        _folderCreated = true;
+        _createdPath = targetPath;
+        _createdFolderName = folderName;
+        _openedInDaw = false;
+        _trackSessionFromNow = false;
+        _createdPendingFolder = null;
       });
     }
   }
@@ -271,14 +427,22 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
               visualDensity: VisualDensity.compact,
             ),
           ),
-          const Icon(Icons.check_circle_outline, size: 64, color: Color(0xFF4CAF50)),
+          const Icon(
+            Icons.check_circle_outline,
+            size: 64,
+            color: Color(0xFF4CAF50),
+          ),
           const SizedBox(height: 16),
-          Text(l10n.createProjectCreatedTitle,
-              style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            l10n.createProjectCreatedTitle,
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           const SizedBox(height: 8),
-          Text(l10n.createProjectCreatedMessage,
-              style: Theme.of(context).textTheme.bodyMedium,
-              textAlign: TextAlign.center),
+          Text(
+            l10n.createProjectCreatedMessage,
+            style: Theme.of(context).textTheme.bodyMedium,
+            textAlign: TextAlign.center,
+          ),
           const SizedBox(height: 12),
           Container(
             width: double.infinity,
@@ -289,10 +453,9 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
             ),
             child: SelectableText(
               _createdPath,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(fontFamily: 'monospace'),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
             ),
           ),
           // Session tracking opt-in — only shown when the DAW was launched
@@ -302,7 +465,8 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
             CheckboxListTile.adaptive(
               title: Text(l10n.createProjectTrackSession),
               value: _trackSessionFromNow,
-              onChanged: (v) => setState(() => _trackSessionFromNow = v ?? false),
+              onChanged: (v) =>
+                  setState(() => _trackSessionFromNow = v ?? false),
               dense: true,
               contentPadding: EdgeInsets.zero,
               controlAffinity: ListTileControlAffinity.leading,
@@ -318,7 +482,9 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
                 icon: const Icon(Icons.copy, size: 18),
                 label: Text(l10n.createProjectCopyName),
                 onPressed: () async {
-                  await Clipboard.setData(ClipboardData(text: _createdFolderName));
+                  await Clipboard.setData(
+                    ClipboardData(text: _createdFolderName),
+                  );
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -334,10 +500,7 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
                 label: Text(l10n.openFolder),
                 onPressed: () => _closeSuccess(openFolder: true),
               ),
-              FilledButton(
-                onPressed: _closeSuccess,
-                child: Text(l10n.close),
-              ),
+              FilledButton(onPressed: _closeSuccess, child: Text(l10n.close)),
             ],
           ),
         ],
@@ -382,10 +545,13 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
       );
     }
 
-    final totalSteps = _hasMultipleRoots ? 3 : 2;
-    final steps = _hasMultipleRoots
-        ? [_buildLocationStep(roots, l10n), _buildNamingStep(l10n), _buildDawStep(l10n)]
-        : [_buildNamingStep(l10n), _buildDawStep(l10n)];
+    final steps = [
+      if (_hasMultipleRoots) _buildLocationStep(roots, l10n),
+      _buildNamingStep(l10n),
+      _buildStartStep(l10n),
+      if (_startMode == _StartMode.emptyFolder) _buildDawStep(l10n),
+    ];
+    final totalSteps = steps.length;
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -401,7 +567,10 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
                 children: [
                   const Icon(Icons.create_new_folder_outlined),
                   const SizedBox(width: 12),
-                  Text(l10n.createProject, style: Theme.of(context).textTheme.titleLarge),
+                  Text(
+                    l10n.createProject,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
                   const Spacer(),
                   IconButton(
                     icon: const Icon(Icons.close),
@@ -441,9 +610,15 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l10n.createProjectSelectFolder, style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            l10n.createProjectSelectFolder,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           const SizedBox(height: 8),
-          Text(l10n.createProjectSelectFolderHint, style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            l10n.createProjectSelectFolderHint,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
           const SizedBox(height: 16),
           Expanded(
             child: ListView.separated(
@@ -471,36 +646,49 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
                         width: isSelected ? 2 : 1,
                       ),
                       color: isSelected
-                          ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08)
+                          ? Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.08)
                           : null,
                     ),
                     child: Row(
                       children: [
                         Icon(
                           Icons.folder_outlined,
-                          color: isSelected ? Theme.of(context).colorScheme.primary : null,
+                          color: isSelected
+                              ? Theme.of(context).colorScheme.primary
+                              : null,
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(dirName,
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                        fontWeight: isSelected ? FontWeight.bold : null,
-                                      )),
+                              Text(
+                                dirName,
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : null,
+                                    ),
+                              ),
                               Tooltip(
                                 message: root.path,
-                                child: Text(root.path,
-                                    style: Theme.of(context).textTheme.bodySmall,
-                                    overflow: TextOverflow.ellipsis),
+                                child: Text(
+                                  root.path,
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
                             ],
                           ),
                         ),
                         if (isSelected)
-                          Icon(Icons.check_circle,
-                              color: Theme.of(context).colorScheme.primary),
+                          Icon(
+                            Icons.check_circle,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
                       ],
                     ),
                   ),
@@ -519,9 +707,15 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l10n.createProjectNameTitle, style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            l10n.createProjectNameTitle,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           const SizedBox(height: 8),
-          Text(l10n.createProjectNameHint, style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            l10n.createProjectNameHint,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
           const SizedBox(height: 16),
           // Scheme selector
           Wrap(
@@ -639,9 +833,12 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
               label: Text(l10n.createProjectAddArtist),
               onPressed: _collabControllers.length < 5
                   ? () => setState(() {
-                        _collabControllers.add(TextEditingController()
-                          ..addListener(() => setState(() => _validateFolderName())));
-                      })
+                      _collabControllers.add(
+                        TextEditingController()..addListener(
+                          () => setState(() => _validateFolderName()),
+                        ),
+                      );
+                    })
                   : null,
             ),
             const SizedBox(height: 12),
@@ -658,7 +855,10 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     border: Border.all(color: Theme.of(context).dividerColor),
                     borderRadius: BorderRadius.circular(4),
@@ -711,20 +911,237 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
     );
   }
 
+  Widget _buildStartStep(AppLocalizations l10n) {
+    final templatesAsync = ref.watch(projectTemplatesProvider);
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.createProjectStartFrom,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.createProjectStartFromHint,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _SchemeChip(
+                  label: l10n.createProjectEmptyFolder,
+                  selected: _startMode == _StartMode.emptyFolder,
+                  onTap: () =>
+                      setState(() => _startMode = _StartMode.emptyFolder),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _SchemeChip(
+                  label: l10n.createProjectFromTemplate,
+                  selected: _startMode == _StartMode.template,
+                  onTap: () => setState(() => _startMode = _StartMode.template),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (_startMode == _StartMode.template)
+            Expanded(
+              child: templatesAsync.when(
+                data: (templates) {
+                  if (templates.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            l10n.noTemplatesYet,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                          const SizedBox(height: 8),
+                          TextButton(
+                            onPressed: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const ProjectTemplatesPage(),
+                              ),
+                            ),
+                            child: Text(l10n.manageTemplates),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  final filteredTemplates = _templateQuery.isEmpty
+                      ? templates
+                      : templates
+                            .where(
+                              (t) =>
+                                  t.name.toLowerCase().contains(_templateQuery),
+                            )
+                            .toList();
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextField(
+                        controller: _templateSearchController,
+                        decoration: InputDecoration(
+                          hintText: l10n.searchTemplates,
+                          prefixIcon: const Icon(Icons.search),
+                          border: const OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Expanded(
+                        child: filteredTemplates.isEmpty
+                            ? Center(child: Text(l10n.noMatchingTemplates))
+                            : ListView.separated(
+                                itemCount: filteredTemplates.length,
+                                separatorBuilder: (_, _) =>
+                                    const SizedBox(height: 8),
+                                itemBuilder: (ctx, i) {
+                                  final template = filteredTemplates[i];
+                                  final isSelected =
+                                      _selectedTemplate?.id == template.id;
+                                  final ext = p.extension(
+                                    template.mainFileRelativePath,
+                                  );
+                                  final dawType =
+                                      MetadataExtractor.getDawTypeFromExtension(
+                                        ext,
+                                      );
+                                  final logoPath = getDawLogoPath(dawType);
+                                  final details = [
+                                    if (template.bpm != null)
+                                      '${template.bpm!.toStringAsFixed(template.bpm! % 1 == 0 ? 0 : 2)} BPM',
+                                    if (template.musicalKey != null)
+                                      template.musicalKey!,
+                                    if (template.dawVersion != null)
+                                      '${dawType ?? ''} ${template.dawVersion}'
+                                          .trim(),
+                                  ].join(' • ');
+                                  return InkWell(
+                                    borderRadius: BorderRadius.circular(12),
+                                    onTap: () => setState(
+                                      () => _selectedTemplate = template,
+                                    ),
+                                    child: AnimatedContainer(
+                                      duration: const Duration(
+                                        milliseconds: 150,
+                                      ),
+                                      padding: const EdgeInsets.all(14),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: isSelected
+                                              ? Theme.of(
+                                                  context,
+                                                ).colorScheme.primary
+                                              : Theme.of(context).dividerColor,
+                                          width: isSelected ? 2 : 1,
+                                        ),
+                                        color: isSelected
+                                            ? Theme.of(context)
+                                                  .colorScheme
+                                                  .primary
+                                                  .withValues(alpha: 0.08)
+                                            : null,
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          logoPath != null
+                                              ? Image.asset(
+                                                  logoPath,
+                                                  width: 24,
+                                                  height: 24,
+                                                )
+                                              : const Icon(
+                                                  Icons.piano_outlined,
+                                                ),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  template.name,
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodyMedium
+                                                      ?.copyWith(
+                                                        fontWeight: isSelected
+                                                            ? FontWeight.bold
+                                                            : null,
+                                                      ),
+                                                ),
+                                                if (details.isNotEmpty)
+                                                  Text(
+                                                    details,
+                                                    style: Theme.of(
+                                                      context,
+                                                    ).textTheme.bodySmall,
+                                                  ),
+                                              ],
+                                            ),
+                                          ),
+                                          if (isSelected)
+                                            Icon(
+                                              Icons.check_circle,
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.primary,
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const ProjectTemplatesPage(),
+                          ),
+                        ),
+                        child: Text(l10n.manageTemplates),
+                      ),
+                    ],
+                  );
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, stack) =>
+                    Center(child: Text(l10n.errorLoadingTemplates)),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildDawStep(AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l10n.createProjectSelectDaw, style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            l10n.createProjectSelectDaw,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           const SizedBox(height: 8),
-          Text(l10n.createProjectSelectDawHint, style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            l10n.createProjectSelectDawHint,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
           const SizedBox(height: 16),
           if (_detectingDaws)
-            const Expanded(
-              child: Center(child: CircularProgressIndicator()),
-            )
+            const Expanded(child: Center(child: CircularProgressIndicator()))
           else if (_detectedDaws == null)
             Expanded(
               child: Center(
@@ -755,9 +1172,11 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
                   children: [
                     const Icon(Icons.music_off, size: 48),
                     const SizedBox(height: 12),
-                    Text(l10n.createProjectNoDawsFound,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium),
+                    Text(
+                      l10n.createProjectNoDawsFound,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
                     const SizedBox(height: 8),
                     TextButton(
                       onPressed: () => _finish(openInDaw: false),
@@ -790,7 +1209,9 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
                           width: isSelected ? 2 : 1,
                         ),
                         color: isSelected
-                            ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08)
+                            ? Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.08)
                             : null,
                       ),
                       child: Row(
@@ -801,22 +1222,33 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(daw.name,
-                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                          fontWeight: isSelected ? FontWeight.bold : null,
-                                        )),
+                                Text(
+                                  daw.name,
+                                  style: Theme.of(context).textTheme.bodyMedium
+                                      ?.copyWith(
+                                        fontWeight: isSelected
+                                            ? FontWeight.bold
+                                            : null,
+                                      ),
+                                ),
                                 Tooltip(
                                   message: daw.executablePath,
-                                  child: Text(daw.executablePath,
-                                      style: Theme.of(context).textTheme.bodySmall,
-                                      overflow: TextOverflow.ellipsis),
+                                  child: Text(
+                                    daw.executablePath,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                               ],
                             ),
                           ),
                           if (isSelected)
-                            Icon(Icons.check_circle,
-                                color: Theme.of(context).colorScheme.primary),
+                            Icon(
+                              Icons.check_circle,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
                         ],
                       ),
                     ),
@@ -831,14 +1263,19 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
 
   Widget _buildFooter(AppLocalizations l10n, int totalSteps) {
     final namingStepIndex = _hasMultipleRoots ? 1 : 0;
-    final dawStepIndex = _hasMultipleRoots ? 2 : 1;
+    final startStepIndex = namingStepIndex + 1;
+    final dawStepIndex = startStepIndex + 1;
 
     final isNamingStep = _currentStep == namingStepIndex;
-    final isDawStep = _currentStep == dawStepIndex;
+    final isStartStep = _currentStep == startStepIndex;
+    final isDawStep =
+        _startMode == _StartMode.emptyFolder && _currentStep == dawStepIndex;
     final isLocationStep = _hasMultipleRoots && _currentStep == 0;
 
     final canAdvanceFromLocation = _selectedRoot != null;
     final canAdvanceFromNaming = _isFolderValid && _folderName.isNotEmpty;
+    final canFinishFromTemplate =
+        _startMode == _StartMode.template && _selectedTemplate != null;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
@@ -858,14 +1295,25 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
           else if (isNamingStep)
             FilledButton(
               onPressed: canAdvanceFromNaming
-                  ? () {
-                      _goToStep(dawStepIndex);
-                      if (_detectedDaws == null) _startDawDetection();
-                    }
+                  ? () => _goToStep(startStepIndex)
                   : null,
               child: Text(l10n.next),
             )
-          else if (isDawStep) ...[
+          else if (isStartStep) ...[
+            if (_startMode == _StartMode.template)
+              FilledButton(
+                onPressed: canFinishFromTemplate ? _finishFromTemplate : null,
+                child: Text(l10n.createProjectCreateOnly),
+              )
+            else
+              FilledButton(
+                onPressed: () {
+                  _goToStep(dawStepIndex);
+                  if (_detectedDaws == null) _startDawDetection();
+                },
+                child: Text(l10n.next),
+              ),
+          ] else if (isDawStep) ...[
             if (_detectedDaws != null && _detectedDaws!.isNotEmpty) ...[
               OutlinedButton(
                 onPressed: () => _finish(openInDaw: false),
@@ -875,11 +1323,15 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
               FilledButton.icon(
                 icon: const Icon(Icons.open_in_new, size: 18),
                 label: Text(l10n.createProjectCreateAndOpen),
-                onPressed: _selectedDaw != null ? () => _finish(openInDaw: true) : null,
+                onPressed: _selectedDaw != null
+                    ? () => _finish(openInDaw: true)
+                    : null,
               ),
             ] else ...[
               FilledButton(
-                onPressed: _detectedDaws != null ? () => _finish(openInDaw: false) : null,
+                onPressed: _detectedDaws != null
+                    ? () => _finish(openInDaw: false)
+                    : null,
                 child: Text(l10n.createProjectCreateOnly),
               ),
             ],
@@ -944,7 +1396,9 @@ class _SchemeChip extends StatelessWidget {
       selected: selected,
       onSelected: (_) => onTap(),
       showCheckmark: false,
-      selectedColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+      selectedColor: Theme.of(
+        context,
+      ).colorScheme.primary.withValues(alpha: 0.2),
       side: BorderSide(
         color: selected
             ? Theme.of(context).colorScheme.primary
@@ -972,8 +1426,8 @@ class _FolderPreview extends StatelessWidget {
     final displayPath = rootPath != null && folderName.isNotEmpty
         ? p.join(rootPath!, folderName)
         : folderName.isEmpty
-            ? '…'
-            : folderName;
+        ? '…'
+        : folderName;
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -1005,11 +1459,11 @@ class _FolderPreview extends StatelessWidget {
                   child: Text(
                     displayPath,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontFamily: 'monospace',
-                          color: error != null
-                              ? Theme.of(context).colorScheme.error
-                              : null,
-                        ),
+                      fontFamily: 'monospace',
+                      color: error != null
+                          ? Theme.of(context).colorScheme.error
+                          : null,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -1020,10 +1474,9 @@ class _FolderPreview extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               error!,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: Theme.of(context).colorScheme.error),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.error,
+              ),
             ),
           ],
         ],

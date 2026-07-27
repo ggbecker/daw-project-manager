@@ -274,6 +274,12 @@ abstract class AppLocalizations {
   /// **'Collapse'**
   String get collapseNotes;
 
+  /// No description provided for @projectNotesFromDaw.
+  ///
+  /// In en, this message translates to:
+  /// **'Project Notes (from DAW file)'**
+  String get projectNotesFromDaw;
+
   /// No description provided for @projectPhase.
   ///
   /// In en, this message translates to:
@@ -771,6 +777,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'DAW'**
   String get daw;
+
+  /// No description provided for @clearDaw.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear DAW'**
+  String get clearDaw;
+
+  /// No description provided for @filterByKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by Key'**
+  String get filterByKey;
+
+  /// No description provided for @allKeys.
+  ///
+  /// In en, this message translates to:
+  /// **'All Keys'**
+  String get allKeys;
 
   /// No description provided for @lastModifiedColumn.
   ///
@@ -1625,6 +1649,174 @@ abstract class AppLocalizations {
   /// **'Error loading templates'**
   String get errorLoadingTemplates;
 
+  /// No description provided for @createProjectStartFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'How do you want to start?'**
+  String get createProjectStartFrom;
+
+  /// No description provided for @createProjectStartFromHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Start from an empty folder or copy a registered template.'**
+  String get createProjectStartFromHint;
+
+  /// No description provided for @createProjectEmptyFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty Folder'**
+  String get createProjectEmptyFolder;
+
+  /// No description provided for @createProjectFromTemplate.
+  ///
+  /// In en, this message translates to:
+  /// **'From Template'**
+  String get createProjectFromTemplate;
+
+  /// No description provided for @selectTemplateMainFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Select the Template\'s Main Project File'**
+  String get selectTemplateMainFile;
+
+  /// No description provided for @registerTemplate.
+  ///
+  /// In en, this message translates to:
+  /// **'Register Template'**
+  String get registerTemplate;
+
+  /// No description provided for @projectTemplates.
+  ///
+  /// In en, this message translates to:
+  /// **'Project Templates'**
+  String get projectTemplates;
+
+  /// No description provided for @searchTemplates.
+  ///
+  /// In en, this message translates to:
+  /// **'Search templates...'**
+  String get searchTemplates;
+
+  /// No description provided for @createFirstProjectTemplate.
+  ///
+  /// In en, this message translates to:
+  /// **'Register a template folder to reuse for new projects'**
+  String get createFirstProjectTemplate;
+
+  /// No description provided for @noMatchingTemplates.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching templates'**
+  String get noMatchingTemplates;
+
+  /// No description provided for @templateSourceMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Template source folder not found'**
+  String get templateSourceMissing;
+
+  /// No description provided for @useTemplate.
+  ///
+  /// In en, this message translates to:
+  /// **'Use'**
+  String get useTemplate;
+
+  /// No description provided for @selectTemplatesParentFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Parent Folder of Templates'**
+  String get selectTemplatesParentFolder;
+
+  /// No description provided for @templateSourceFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Source Folder'**
+  String get templateSourceFolder;
+
+  /// No description provided for @dateCreatedColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'Created'**
+  String get dateCreatedColumn;
+
+  /// No description provided for @dateModifiedColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'Modified'**
+  String get dateModifiedColumn;
+
+  /// No description provided for @manageTemplateFolders.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Folders'**
+  String get manageTemplateFolders;
+
+  /// No description provided for @addTemplateFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Folder'**
+  String get addTemplateFolder;
+
+  /// No description provided for @removeTemplateFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Template Folder'**
+  String get removeTemplateFolder;
+
+  /// No description provided for @removeTemplateFolderConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove \"{path}\" from your registered template folders? Templates already imported from it will not be deleted.'**
+  String removeTemplateFolderConfirm(String path);
+
+  /// No description provided for @noTemplateFoldersRegistered.
+  ///
+  /// In en, this message translates to:
+  /// **'No template folders registered'**
+  String get noTemplateFoldersRegistered;
+
+  /// No description provided for @refreshTemplateFolders.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh templates from registered folders'**
+  String get refreshTemplateFolders;
+
+  /// No description provided for @lastRefreshed.
+  ///
+  /// In en, this message translates to:
+  /// **'Last refreshed {date}'**
+  String lastRefreshed(String date);
+
+  /// No description provided for @templatesRefreshedSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} new template(s) added'**
+  String templatesRefreshedSummary(int count);
+
+  /// No description provided for @templatesSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} template{plural} selected'**
+  String templatesSelected(int count, String plural);
+
+  /// No description provided for @deleteSelectedTemplates.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Selected'**
+  String get deleteSelectedTemplates;
+
+  /// No description provided for @deleteSelectedTemplatesConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete {count} template{plural}?'**
+  String deleteSelectedTemplatesConfirm(int count, String plural);
+
+  /// No description provided for @templatesDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} template{plural} deleted'**
+  String templatesDeleted(int count, String plural);
+
   /// No description provided for @importTodos.
   ///
   /// In en, this message translates to:
@@ -1948,6 +2140,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to export project info: {error}'**
   String failedToExportProjectInfo(String error);
+
+  /// No description provided for @projectExportHeaderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'DAW PROJECT MANAGER — PROJECT EXPORT'**
+  String get projectExportHeaderTitle;
+
+  /// Timestamp line in a plain-text project export
+  ///
+  /// In en, this message translates to:
+  /// **'Exported: {dateTime}'**
+  String projectExportExportedLabel(String dateTime);
+
+  /// Project count line in a plain-text bulk export
+  ///
+  /// In en, this message translates to:
+  /// **'Total projects: {count}'**
+  String projectExportTotalProjectsLabel(int count);
+
+  /// Project name line in a plain-text project export
+  ///
+  /// In en, this message translates to:
+  /// **'Project: {name}'**
+  String projectExportProjectLabel(String name);
+
+  /// DAW type line in a plain-text project export, no version known
+  ///
+  /// In en, this message translates to:
+  /// **'DAW: {dawType}'**
+  String projectExportDawLabel(String dawType);
+
+  /// DAW type + version line in a plain-text project export
+  ///
+  /// In en, this message translates to:
+  /// **'DAW: {dawType} {version}'**
+  String projectExportDawWithVersionLabel(String dawType, String version);
+
+  /// Status line in a plain-text project export
+  ///
+  /// In en, this message translates to:
+  /// **'Status: {status}'**
+  String projectExportStatusLabel(String status);
+
+  /// BPM line in a plain-text project export
+  ///
+  /// In en, this message translates to:
+  /// **'BPM: {bpm}'**
+  String projectExportBpmLabel(String bpm);
+
+  /// Musical key line in a plain-text project export, no Camelot code known
+  ///
+  /// In en, this message translates to:
+  /// **'Key: {key}'**
+  String projectExportKeyLabel(String key);
+
+  /// Musical key + Camelot code line in a plain-text project export
+  ///
+  /// In en, this message translates to:
+  /// **'Key: {key} (Camelot {code})'**
+  String projectExportKeyWithCamelotLabel(String key, String code);
+
+  /// File path line in a plain-text project export
+  ///
+  /// In en, this message translates to:
+  /// **'File path: {path}'**
+  String projectExportFilePathLabel(String path);
+
+  /// File size line in a plain-text project export
+  ///
+  /// In en, this message translates to:
+  /// **'File size: {size}'**
+  String projectExportFileSizeLabel(String size);
+
+  /// File creation date line in a plain-text project export
+  ///
+  /// In en, this message translates to:
+  /// **'File created: {date}'**
+  String projectExportFileCreatedLabel(String date);
+
+  /// Date added to library line in a plain-text project export
+  ///
+  /// In en, this message translates to:
+  /// **'Added to library: {date}'**
+  String projectExportAddedToLibraryLabel(String date);
+
+  /// Last modified date line in a plain-text project export
+  ///
+  /// In en, this message translates to:
+  /// **'Last modified: {date}'**
+  String projectExportLastModifiedLabel(String date);
+
+  /// Deadline line in a plain-text project export, no status known
+  ///
+  /// In en, this message translates to:
+  /// **'Deadline: {date}'**
+  String projectExportDeadlineLabel(String date);
+
+  /// Deadline + status line in a plain-text project export
+  ///
+  /// In en, this message translates to:
+  /// **'Deadline: {date} ({status})'**
+  String projectExportDeadlineWithStatusLabel(String date, String status);
+
+  /// Total time worked line in a plain-text project export
+  ///
+  /// In en, this message translates to:
+  /// **'Total time worked: {duration}'**
+  String projectExportTotalTimeWorkedLabel(String duration);
+
+  /// No description provided for @projectExportNotesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes:'**
+  String get projectExportNotesLabel;
+
+  /// No description provided for @projectExportTodosLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'To-dos:'**
+  String get projectExportTodosLabel;
+
+  /// Work sessions section header in a plain-text project export
+  ///
+  /// In en, this message translates to:
+  /// **'Work sessions ({count}):'**
+  String projectExportWorkSessionsLabel(int count);
 
   /// No description provided for @noProjectsToExport.
   ///
@@ -3785,6 +4103,54 @@ abstract class AppLocalizations {
   /// **'Keep running in the background (tray icon) when you close the window, so auto-backup and notifications keep working'**
   String get closeToTrayDescription;
 
+  /// Settings switch: start the app automatically when the user signs in to their computer
+  ///
+  /// In en, this message translates to:
+  /// **'Launch at startup'**
+  String get autoStart;
+
+  /// No description provided for @autoStartDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Open DAW Project Manager automatically when you sign in to your computer'**
+  String get autoStartDescription;
+
+  /// Settings switch: on an auto-start launch, open hidden in the tray
+  ///
+  /// In en, this message translates to:
+  /// **'Start minimized to tray'**
+  String get startMinimized;
+
+  /// Explanation under the start-minimized switch
+  ///
+  /// In en, this message translates to:
+  /// **'When the app starts with your computer, open it hidden in the tray instead of showing the window'**
+  String get startMinimizedDescription;
+
+  /// Compact label for the start-minimized option in the onboarding wizard
+  ///
+  /// In en, this message translates to:
+  /// **'Start minimized'**
+  String get onboardingStartMinimized;
+
+  /// Snackbar shown when registering the app to launch at startup fails
+  ///
+  /// In en, this message translates to:
+  /// **'Could not change the startup setting. Your system may not allow it.'**
+  String get autoStartFailed;
+
+  /// Onboarding wizard step title for the launch-at-startup option
+  ///
+  /// In en, this message translates to:
+  /// **'Launch at Startup'**
+  String get onboardingStartupTitle;
+
+  /// Onboarding wizard step subtitle for the launch-at-startup option
+  ///
+  /// In en, this message translates to:
+  /// **'Have DAW Project Manager open automatically when you sign in, so background backups and deadline reminders keep running.'**
+  String get onboardingStartupBody;
+
   /// macOS menu bar Window menu label
   ///
   /// In en, this message translates to:
@@ -5608,6 +5974,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No suggestions right now. Tap Refresh to reset dismissed items.'**
   String get suggestionsEmptyState;
+
+  /// No description provided for @suggestionNewProject.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get suggestionNewProject;
 
   /// No description provided for @showSuggestions.
   ///

@@ -1,9 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:daw_project_manager/generated/l10n/app_localizations_en.dart';
 import 'package:daw_project_manager/models/music_project.dart';
 import 'package:daw_project_manager/services/project_text_export_service.dart';
 import '../helpers/test_factories.dart';
 
 void main() {
+  final l10n = AppLocalizationsEn();
+
   group('ProjectTextExportService.formatProject', () {
     test('includes core metadata fields', () {
       final project = TestFactories.makeProject(
@@ -17,7 +20,7 @@ void main() {
         musicalKey: 'C#m',
       );
 
-      final text = ProjectTextExportService.formatProject(project);
+      final text = ProjectTextExportService.formatProject(project, l10n);
 
       expect(text, contains('Project: Banger'));
       expect(text, contains('DAW: Ableton Live 11'));
@@ -29,7 +32,7 @@ void main() {
 
     test('formats a non-integer BPM with decimals', () {
       final project = TestFactories.makeProject(bpm: 127.5);
-      final text = ProjectTextExportService.formatProject(project);
+      final text = ProjectTextExportService.formatProject(project, l10n);
       expect(text, contains('BPM: 127.50'));
     });
 
@@ -52,7 +55,7 @@ void main() {
         ],
       );
 
-      final text = ProjectTextExportService.formatProject(project);
+      final text = ProjectTextExportService.formatProject(project, l10n);
 
       expect(text, contains('Notes:'));
       expect(text, contains('Needs a bigger drop'));
@@ -66,7 +69,7 @@ void main() {
     test('omits optional sections for a minimal project without throwing', () {
       final project = TestFactories.makeMinimalProject();
 
-      final text = ProjectTextExportService.formatProject(project);
+      final text = ProjectTextExportService.formatProject(project, l10n);
 
       expect(text, contains('Project:'));
       expect(text, isNot(contains('Notes:')));
@@ -84,7 +87,7 @@ void main() {
         TestFactories.makeProject(id: 'p2', customDisplayName: 'Second'),
       ];
 
-      final text = ProjectTextExportService.formatProjects(projects);
+      final text = ProjectTextExportService.formatProjects(projects, l10n);
 
       expect(text, contains('Total projects: 2'));
       expect(text, contains('Project: First'));
@@ -92,7 +95,7 @@ void main() {
     });
 
     test('handles an empty project list', () {
-      final text = ProjectTextExportService.formatProjects(const []);
+      final text = ProjectTextExportService.formatProjects(const [], l10n);
       expect(text, contains('Total projects: 0'));
     });
   });

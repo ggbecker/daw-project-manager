@@ -30,6 +30,7 @@
   "notes": "メモ",
   "expandNotes": "展開",
   "collapseNotes": "折りたたむ",
+  "projectNotesFromDaw": "プロジェクトノート（DAWファイルより）",
   "projectPhase": "プロジェクトフェーズ",
   "failedToLoad": "読み込みに失敗しました",
   "fileMissing": "ファイルが見つかりません。",
@@ -205,6 +206,9 @@
   "filterByDaw": "DAWでフィルター",
   "allDaws": "すべてのDAW",
   "daw": "DAW",
+  "clearDaw": "DAWをクリア",
+  "filterByKey": "キーでフィルター",
+  "allKeys": "すべてのキー",
   "lastModifiedColumn": "最終更新",
   "actions": "アクション",
   "hide": "非表示にする",
@@ -715,6 +719,67 @@
   "noTemplatesAvailable": "テンプレートがありません。最初に作成してください。",
   "templateImported": "テンプレート「{name}」をインポート（{count}項目）",
   "errorLoadingTemplates": "テンプレート読み込みエラー",
+  "createProjectStartFrom": "どのように開始しますか？",
+  "createProjectStartFromHint": "空のフォルダから開始するか、登録済みテンプレートをコピーします。",
+  "createProjectEmptyFolder": "空のフォルダ",
+  "createProjectFromTemplate": "テンプレートから",
+  "selectTemplateMainFile": "テンプレートのメインプロジェクトファイルを選択",
+  "registerTemplate": "テンプレートを登録",
+  "projectTemplates": "プロジェクトテンプレート",
+  "searchTemplates": "テンプレートを検索...",
+  "createFirstProjectTemplate": "新しいプロジェクトで再利用するテンプレートフォルダを登録します",
+  "noMatchingTemplates": "一致するテンプレートがありません",
+  "templateSourceMissing": "テンプレートの元フォルダが見つかりません",
+  "useTemplate": "使用",
+  "selectTemplatesParentFolder": "テンプレートの親フォルダを選択",
+  "templateSourceFolder": "元フォルダ",
+  "dateCreatedColumn": "作成日",
+  "dateModifiedColumn": "更新日",
+  "manageTemplateFolders": "フォルダを管理",
+  "addTemplateFolder": "フォルダを追加",
+  "removeTemplateFolder": "テンプレートフォルダを削除",
+  "removeTemplateFolderConfirm": "登録済みのテンプレートフォルダから「{path}」を削除しますか？すでにインポート済みのテンプレートは削除されません。",
+  "@removeTemplateFolderConfirm": {
+    "placeholders": {
+      "path": { "type": "String" }
+    }
+  },
+  "noTemplateFoldersRegistered": "登録されたテンプレートフォルダがありません",
+  "refreshTemplateFolders": "登録フォルダからテンプレートを更新",
+  "lastRefreshed": "最終更新: {date}",
+  "@lastRefreshed": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "templatesRefreshedSummary": "{count}件の新しいテンプレートを追加しました",
+  "@templatesRefreshedSummary": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "templatesSelected": "{count}件のテンプレート{plural}を選択しました",
+  "@templatesSelected": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
+  "deleteSelectedTemplates": "選択項目を削除",
+  "deleteSelectedTemplatesConfirm": "{count}件のテンプレート{plural}を削除してもよろしいですか?",
+  "@deleteSelectedTemplatesConfirm": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
+  "templatesDeleted": "{count}件のテンプレート{plural}を削除しました",
+  "@templatesDeleted": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
   "importTodos": "ファイルからタスクをインポート",
   "noTodosInFile": "ファイルにタスクが見つかりません",
   "todosImported": "{count}個のタスクをインポートしました",
@@ -858,6 +923,180 @@
     "placeholders": {
       "error": {
         "type": "String"
+      }
+    }
+  },
+  "projectExportHeaderTitle": "DAW PROJECT MANAGER — PROJECT EXPORT",
+  "projectExportExportedLabel": "Exported: {dateTime}",
+  "@projectExportExportedLabel": {
+    "description": "Timestamp line in a plain-text project export",
+    "placeholders": {
+      "dateTime": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportTotalProjectsLabel": "Total projects: {count}",
+  "@projectExportTotalProjectsLabel": {
+    "description": "Project count line in a plain-text bulk export",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "projectExportProjectLabel": "Project: {name}",
+  "@projectExportProjectLabel": {
+    "description": "Project name line in a plain-text project export",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportDawLabel": "DAW: {dawType}",
+  "@projectExportDawLabel": {
+    "description": "DAW type line in a plain-text project export, no version known",
+    "placeholders": {
+      "dawType": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportDawWithVersionLabel": "DAW: {dawType} {version}",
+  "@projectExportDawWithVersionLabel": {
+    "description": "DAW type + version line in a plain-text project export",
+    "placeholders": {
+      "dawType": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportStatusLabel": "Status: {status}",
+  "@projectExportStatusLabel": {
+    "description": "Status line in a plain-text project export",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportBpmLabel": "BPM: {bpm}",
+  "@projectExportBpmLabel": {
+    "description": "BPM line in a plain-text project export",
+    "placeholders": {
+      "bpm": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportKeyLabel": "Key: {key}",
+  "@projectExportKeyLabel": {
+    "description": "Musical key line in a plain-text project export, no Camelot code known",
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportKeyWithCamelotLabel": "Key: {key} (Camelot {code})",
+  "@projectExportKeyWithCamelotLabel": {
+    "description": "Musical key + Camelot code line in a plain-text project export",
+    "placeholders": {
+      "key": {
+        "type": "String"
+      },
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportFilePathLabel": "File path: {path}",
+  "@projectExportFilePathLabel": {
+    "description": "File path line in a plain-text project export",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportFileSizeLabel": "File size: {size}",
+  "@projectExportFileSizeLabel": {
+    "description": "File size line in a plain-text project export",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportFileCreatedLabel": "File created: {date}",
+  "@projectExportFileCreatedLabel": {
+    "description": "File creation date line in a plain-text project export",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportAddedToLibraryLabel": "Added to library: {date}",
+  "@projectExportAddedToLibraryLabel": {
+    "description": "Date added to library line in a plain-text project export",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportLastModifiedLabel": "Last modified: {date}",
+  "@projectExportLastModifiedLabel": {
+    "description": "Last modified date line in a plain-text project export",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportDeadlineLabel": "Deadline: {date}",
+  "@projectExportDeadlineLabel": {
+    "description": "Deadline line in a plain-text project export, no status known",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportDeadlineWithStatusLabel": "Deadline: {date} ({status})",
+  "@projectExportDeadlineWithStatusLabel": {
+    "description": "Deadline + status line in a plain-text project export",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportTotalTimeWorkedLabel": "Total time worked: {duration}",
+  "@projectExportTotalTimeWorkedLabel": {
+    "description": "Total time worked line in a plain-text project export",
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportNotesLabel": "Notes:",
+  "projectExportTodosLabel": "To-dos:",
+  "projectExportWorkSessionsLabel": "Work sessions ({count}):",
+  "@projectExportWorkSessionsLabel": {
+    "description": "Work sessions section header in a plain-text project export",
+    "placeholders": {
+      "count": {
+        "type": "int"
       }
     }
   },
@@ -1495,6 +1734,14 @@
   "trayResumeSession": "セッションを再開",
   "closeToTray": "トレイに閉じる",
   "closeToTrayDescription": "ウィンドウを閉じてもバックグラウンドで実行を継続し(トレイアイコン)、自動バックアップと通知が引き続き機能するようにします",
+  "autoStart": "起動時に自動で開く",
+  "autoStartDescription": "コンピューターにサインインしたときに DAW Project Manager を自動的に開きます",
+  "startMinimized": "トレイに最小化した状態で起動",
+  "startMinimizedDescription": "コンピューターと一緒に起動するとき、ウィンドウを表示せずトレイに隠した状態で開きます",
+  "onboardingStartMinimized": "最小化して起動",
+  "autoStartFailed": "起動設定を変更できませんでした。お使いのシステムで許可されていない可能性があります。",
+  "onboardingStartupTitle": "起動時に自動で開く",
+  "onboardingStartupBody": "サインイン時に DAW Project Manager を自動的に開き、バックグラウンドのバックアップと期限のリマインダーを継続します。",
   "@menuQuit": {
     "description": "macOS menu item to quit the app"
   },
@@ -2099,6 +2346,8 @@
   "@suggestionsRefresh": {},
   "suggestionsEmptyState": "現在おすすめはありません。更新をタップして非表示アイテムをリセットしてください。",
   "@suggestionsEmptyState": {},
+  "suggestionNewProject": "新規",
+  "@suggestionNewProject": {},
   "showSuggestions": "おすすめを表示",
   "@showSuggestions": {},
   "showSuggestionsDescription": "セッションが実行されていないときにツールバーにスマートな提案を表示",

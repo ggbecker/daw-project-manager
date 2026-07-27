@@ -90,6 +90,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get collapseNotes => 'Contraer';
 
   @override
+  String get projectNotesFromDaw => 'Notas del Proyecto (del archivo DAW)';
+
+  @override
   String get projectPhase => 'Fase del Proyecto';
 
   @override
@@ -375,6 +378,15 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get daw => 'DAW';
+
+  @override
+  String get clearDaw => 'Borrar DAW';
+
+  @override
+  String get filterByKey => 'Filtrar por Tonalidad';
+
+  @override
+  String get allKeys => 'Todas las Tonalidades';
 
   @override
   String get lastModifiedColumn => 'Última Modificación';
@@ -916,6 +928,109 @@ class AppLocalizationsEs extends AppLocalizations {
   String get errorLoadingTemplates => 'Error al cargar plantillas';
 
   @override
+  String get createProjectStartFrom => '¿Cómo quieres empezar?';
+
+  @override
+  String get createProjectStartFromHint =>
+      'Empieza desde una carpeta vacía o copia una plantilla registrada.';
+
+  @override
+  String get createProjectEmptyFolder => 'Carpeta Vacía';
+
+  @override
+  String get createProjectFromTemplate => 'Desde Plantilla';
+
+  @override
+  String get selectTemplateMainFile =>
+      'Selecciona el Archivo Principal de la Plantilla';
+
+  @override
+  String get registerTemplate => 'Registrar Plantilla';
+
+  @override
+  String get projectTemplates => 'Plantillas de Proyecto';
+
+  @override
+  String get searchTemplates => 'Buscar plantillas...';
+
+  @override
+  String get createFirstProjectTemplate =>
+      'Registra una carpeta de plantilla para reutilizar en nuevos proyectos';
+
+  @override
+  String get noMatchingTemplates => 'No hay plantillas coincidentes';
+
+  @override
+  String get templateSourceMissing =>
+      'Carpeta de origen de la plantilla no encontrada';
+
+  @override
+  String get useTemplate => 'Usar';
+
+  @override
+  String get selectTemplatesParentFolder =>
+      'Selecciona la Carpeta Principal de Plantillas';
+
+  @override
+  String get templateSourceFolder => 'Carpeta de Origen';
+
+  @override
+  String get dateCreatedColumn => 'Creado';
+
+  @override
+  String get dateModifiedColumn => 'Modificado';
+
+  @override
+  String get manageTemplateFolders => 'Gestionar Carpetas';
+
+  @override
+  String get addTemplateFolder => 'Añadir Carpeta';
+
+  @override
+  String get removeTemplateFolder => 'Eliminar Carpeta de Plantillas';
+
+  @override
+  String removeTemplateFolderConfirm(String path) {
+    return '¿Eliminar \"$path\" de tus carpetas de plantillas registradas? Las plantillas ya importadas no se eliminarán.';
+  }
+
+  @override
+  String get noTemplateFoldersRegistered =>
+      'No hay carpetas de plantillas registradas';
+
+  @override
+  String get refreshTemplateFolders =>
+      'Actualizar plantillas desde las carpetas registradas';
+
+  @override
+  String lastRefreshed(String date) {
+    return 'Última actualización $date';
+  }
+
+  @override
+  String templatesRefreshedSummary(int count) {
+    return '$count plantilla(s) nueva(s) añadida(s)';
+  }
+
+  @override
+  String templatesSelected(int count, String plural) {
+    return '$count plantilla$plural seleccionada$plural';
+  }
+
+  @override
+  String get deleteSelectedTemplates => 'Eliminar selección';
+
+  @override
+  String deleteSelectedTemplatesConfirm(int count, String plural) {
+    return '¿Seguro que quieres eliminar $count plantilla$plural?';
+  }
+
+  @override
+  String templatesDeleted(int count, String plural) {
+    return '$count plantilla$plural eliminada$plural';
+  }
+
+  @override
   String get importTodos => 'Importar Tareas desde Archivo';
 
   @override
@@ -1107,6 +1222,105 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String failedToExportProjectInfo(String error) {
     return 'Error al exportar la información del proyecto: $error';
+  }
+
+  @override
+  String get projectExportHeaderTitle => 'DAW PROJECT MANAGER — PROJECT EXPORT';
+
+  @override
+  String projectExportExportedLabel(String dateTime) {
+    return 'Exported: $dateTime';
+  }
+
+  @override
+  String projectExportTotalProjectsLabel(int count) {
+    return 'Total projects: $count';
+  }
+
+  @override
+  String projectExportProjectLabel(String name) {
+    return 'Project: $name';
+  }
+
+  @override
+  String projectExportDawLabel(String dawType) {
+    return 'DAW: $dawType';
+  }
+
+  @override
+  String projectExportDawWithVersionLabel(String dawType, String version) {
+    return 'DAW: $dawType $version';
+  }
+
+  @override
+  String projectExportStatusLabel(String status) {
+    return 'Status: $status';
+  }
+
+  @override
+  String projectExportBpmLabel(String bpm) {
+    return 'BPM: $bpm';
+  }
+
+  @override
+  String projectExportKeyLabel(String key) {
+    return 'Key: $key';
+  }
+
+  @override
+  String projectExportKeyWithCamelotLabel(String key, String code) {
+    return 'Key: $key (Camelot $code)';
+  }
+
+  @override
+  String projectExportFilePathLabel(String path) {
+    return 'File path: $path';
+  }
+
+  @override
+  String projectExportFileSizeLabel(String size) {
+    return 'File size: $size';
+  }
+
+  @override
+  String projectExportFileCreatedLabel(String date) {
+    return 'File created: $date';
+  }
+
+  @override
+  String projectExportAddedToLibraryLabel(String date) {
+    return 'Added to library: $date';
+  }
+
+  @override
+  String projectExportLastModifiedLabel(String date) {
+    return 'Last modified: $date';
+  }
+
+  @override
+  String projectExportDeadlineLabel(String date) {
+    return 'Deadline: $date';
+  }
+
+  @override
+  String projectExportDeadlineWithStatusLabel(String date, String status) {
+    return 'Deadline: $date ($status)';
+  }
+
+  @override
+  String projectExportTotalTimeWorkedLabel(String duration) {
+    return 'Total time worked: $duration';
+  }
+
+  @override
+  String get projectExportNotesLabel => 'Notes:';
+
+  @override
+  String get projectExportTodosLabel => 'To-dos:';
+
+  @override
+  String projectExportWorkSessionsLabel(int count) {
+    return 'Work sessions ($count):';
   }
 
   @override
@@ -2258,6 +2472,34 @@ class AppLocalizationsEs extends AppLocalizations {
       'Seguir ejecutándose en segundo plano (icono en la bandeja) al cerrar la ventana, para que la copia de seguridad automática y las notificaciones sigan funcionando';
 
   @override
+  String get autoStart => 'Iniciar con el sistema';
+
+  @override
+  String get autoStartDescription =>
+      'Abrir DAW Project Manager automáticamente al iniciar sesión en el equipo';
+
+  @override
+  String get startMinimized => 'Iniciar minimizado en la bandeja';
+
+  @override
+  String get startMinimizedDescription =>
+      'Cuando la app se inicie con el equipo, abrirla oculta en la bandeja en lugar de mostrar la ventana';
+
+  @override
+  String get onboardingStartMinimized => 'Iniciar minimizado';
+
+  @override
+  String get autoStartFailed =>
+      'No se pudo cambiar la configuración de inicio. Puede que tu sistema no lo permita.';
+
+  @override
+  String get onboardingStartupTitle => 'Iniciar con el Sistema';
+
+  @override
+  String get onboardingStartupBody =>
+      'Haz que DAW Project Manager se abra automáticamente al iniciar sesión, para que las copias de seguridad y los recordatorios de fechas límite sigan funcionando.';
+
+  @override
   String get menuWindow => 'Ventana';
 
   @override
@@ -3317,6 +3559,9 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get suggestionsEmptyState =>
       'No hay sugerencias por ahora. Toca Actualizar para restablecer los elementos descartados.';
+
+  @override
+  String get suggestionNewProject => 'Nuevo';
 
   @override
   String get showSuggestions => 'Mostrar sugerencias';

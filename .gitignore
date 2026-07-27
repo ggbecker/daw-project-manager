@@ -63,3 +63,8 @@ test-signing.keychain*
 
 # Secrets (DO NOT COMMIT)
 lib/config/secrets.dart
+
+# Reference data used to derive lookup tables during development, not a
+# runtime asset — see the doc comment above _getReaperRootNote in
+# lib/services/metadata_extractor.dart
+ZD-complete.reascale

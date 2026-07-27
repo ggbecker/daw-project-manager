@@ -90,6 +90,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get collapseNotes => '折りたたむ';
 
   @override
+  String get projectNotesFromDaw => 'プロジェクトノート（DAWファイルより）';
+
+  @override
   String get projectPhase => 'プロジェクトフェーズ';
 
   @override
@@ -368,6 +371,15 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get daw => 'DAW';
+
+  @override
+  String get clearDaw => 'DAWをクリア';
+
+  @override
+  String get filterByKey => 'キーでフィルター';
+
+  @override
+  String get allKeys => 'すべてのキー';
 
   @override
   String get lastModifiedColumn => '最終更新';
@@ -902,6 +914,102 @@ class AppLocalizationsJa extends AppLocalizations {
   String get errorLoadingTemplates => 'テンプレート読み込みエラー';
 
   @override
+  String get createProjectStartFrom => 'どのように開始しますか？';
+
+  @override
+  String get createProjectStartFromHint => '空のフォルダから開始するか、登録済みテンプレートをコピーします。';
+
+  @override
+  String get createProjectEmptyFolder => '空のフォルダ';
+
+  @override
+  String get createProjectFromTemplate => 'テンプレートから';
+
+  @override
+  String get selectTemplateMainFile => 'テンプレートのメインプロジェクトファイルを選択';
+
+  @override
+  String get registerTemplate => 'テンプレートを登録';
+
+  @override
+  String get projectTemplates => 'プロジェクトテンプレート';
+
+  @override
+  String get searchTemplates => 'テンプレートを検索...';
+
+  @override
+  String get createFirstProjectTemplate => '新しいプロジェクトで再利用するテンプレートフォルダを登録します';
+
+  @override
+  String get noMatchingTemplates => '一致するテンプレートがありません';
+
+  @override
+  String get templateSourceMissing => 'テンプレートの元フォルダが見つかりません';
+
+  @override
+  String get useTemplate => '使用';
+
+  @override
+  String get selectTemplatesParentFolder => 'テンプレートの親フォルダを選択';
+
+  @override
+  String get templateSourceFolder => '元フォルダ';
+
+  @override
+  String get dateCreatedColumn => '作成日';
+
+  @override
+  String get dateModifiedColumn => '更新日';
+
+  @override
+  String get manageTemplateFolders => 'フォルダを管理';
+
+  @override
+  String get addTemplateFolder => 'フォルダを追加';
+
+  @override
+  String get removeTemplateFolder => 'テンプレートフォルダを削除';
+
+  @override
+  String removeTemplateFolderConfirm(String path) {
+    return '登録済みのテンプレートフォルダから「$path」を削除しますか？すでにインポート済みのテンプレートは削除されません。';
+  }
+
+  @override
+  String get noTemplateFoldersRegistered => '登録されたテンプレートフォルダがありません';
+
+  @override
+  String get refreshTemplateFolders => '登録フォルダからテンプレートを更新';
+
+  @override
+  String lastRefreshed(String date) {
+    return '最終更新: $date';
+  }
+
+  @override
+  String templatesRefreshedSummary(int count) {
+    return '$count件の新しいテンプレートを追加しました';
+  }
+
+  @override
+  String templatesSelected(int count, String plural) {
+    return '$count件のテンプレート$pluralを選択しました';
+  }
+
+  @override
+  String get deleteSelectedTemplates => '選択項目を削除';
+
+  @override
+  String deleteSelectedTemplatesConfirm(int count, String plural) {
+    return '$count件のテンプレート$pluralを削除してもよろしいですか?';
+  }
+
+  @override
+  String templatesDeleted(int count, String plural) {
+    return '$count件のテンプレート$pluralを削除しました';
+  }
+
+  @override
   String get importTodos => 'ファイルからタスクをインポート';
 
   @override
@@ -1091,6 +1199,105 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String failedToExportProjectInfo(String error) {
     return 'プロジェクト情報のエクスポートに失敗しました: $error';
+  }
+
+  @override
+  String get projectExportHeaderTitle => 'DAW PROJECT MANAGER — PROJECT EXPORT';
+
+  @override
+  String projectExportExportedLabel(String dateTime) {
+    return 'Exported: $dateTime';
+  }
+
+  @override
+  String projectExportTotalProjectsLabel(int count) {
+    return 'Total projects: $count';
+  }
+
+  @override
+  String projectExportProjectLabel(String name) {
+    return 'Project: $name';
+  }
+
+  @override
+  String projectExportDawLabel(String dawType) {
+    return 'DAW: $dawType';
+  }
+
+  @override
+  String projectExportDawWithVersionLabel(String dawType, String version) {
+    return 'DAW: $dawType $version';
+  }
+
+  @override
+  String projectExportStatusLabel(String status) {
+    return 'Status: $status';
+  }
+
+  @override
+  String projectExportBpmLabel(String bpm) {
+    return 'BPM: $bpm';
+  }
+
+  @override
+  String projectExportKeyLabel(String key) {
+    return 'Key: $key';
+  }
+
+  @override
+  String projectExportKeyWithCamelotLabel(String key, String code) {
+    return 'Key: $key (Camelot $code)';
+  }
+
+  @override
+  String projectExportFilePathLabel(String path) {
+    return 'File path: $path';
+  }
+
+  @override
+  String projectExportFileSizeLabel(String size) {
+    return 'File size: $size';
+  }
+
+  @override
+  String projectExportFileCreatedLabel(String date) {
+    return 'File created: $date';
+  }
+
+  @override
+  String projectExportAddedToLibraryLabel(String date) {
+    return 'Added to library: $date';
+  }
+
+  @override
+  String projectExportLastModifiedLabel(String date) {
+    return 'Last modified: $date';
+  }
+
+  @override
+  String projectExportDeadlineLabel(String date) {
+    return 'Deadline: $date';
+  }
+
+  @override
+  String projectExportDeadlineWithStatusLabel(String date, String status) {
+    return 'Deadline: $date ($status)';
+  }
+
+  @override
+  String projectExportTotalTimeWorkedLabel(String duration) {
+    return 'Total time worked: $duration';
+  }
+
+  @override
+  String get projectExportNotesLabel => 'Notes:';
+
+  @override
+  String get projectExportTodosLabel => 'To-dos:';
+
+  @override
+  String projectExportWorkSessionsLabel(int count) {
+    return 'Work sessions ($count):';
   }
 
   @override
@@ -2201,6 +2408,33 @@ class AppLocalizationsJa extends AppLocalizations {
       'ウィンドウを閉じてもバックグラウンドで実行を継続し(トレイアイコン)、自動バックアップと通知が引き続き機能するようにします';
 
   @override
+  String get autoStart => '起動時に自動で開く';
+
+  @override
+  String get autoStartDescription =>
+      'コンピューターにサインインしたときに DAW Project Manager を自動的に開きます';
+
+  @override
+  String get startMinimized => 'トレイに最小化した状態で起動';
+
+  @override
+  String get startMinimizedDescription =>
+      'コンピューターと一緒に起動するとき、ウィンドウを表示せずトレイに隠した状態で開きます';
+
+  @override
+  String get onboardingStartMinimized => '最小化して起動';
+
+  @override
+  String get autoStartFailed => '起動設定を変更できませんでした。お使いのシステムで許可されていない可能性があります。';
+
+  @override
+  String get onboardingStartupTitle => '起動時に自動で開く';
+
+  @override
+  String get onboardingStartupBody =>
+      'サインイン時に DAW Project Manager を自動的に開き、バックグラウンドのバックアップと期限のリマインダーを継続します。';
+
+  @override
   String get menuWindow => 'ウィンドウ';
 
   @override
@@ -3223,6 +3457,9 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get suggestionsEmptyState =>
       '現在おすすめはありません。更新をタップして非表示アイテムをリセットしてください。';
+
+  @override
+  String get suggestionNewProject => '新規';
 
   @override
   String get showSuggestions => 'おすすめを表示';

@@ -20,6 +20,8 @@ import '../models/release_file.dart';
 import '../models/scan_root.dart';
 import '../models/todo_item.dart';
 import '../models/todo_template.dart';
+import '../models/project_template.dart';
+import '../models/template_root.dart';
 import '../models/backup_progress.dart';
 import '../repository/profile_repository.dart';
 import '../repository/project_repository.dart';
@@ -2862,6 +2864,34 @@ class GoogleDriveSyncService {
         }
       }
 
+      // Collect project templates (global, not per-profile)
+      final List<ProjectTemplate> allProjectTemplates = [];
+      try {
+        final projectTemplatesBox = await Hive.openBox<ProjectTemplate>('projectTemplates');
+        allProjectTemplates.addAll(projectTemplatesBox.values);
+        if (kDebugMode) {
+          print('Collected ${allProjectTemplates.length} project templates');
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error collecting project templates: $e');
+        }
+      }
+
+      // Collect template roots (global, not per-profile)
+      final List<TemplateRoot> allTemplateRoots = [];
+      try {
+        final templateRootsBox = await Hive.openBox<TemplateRoot>('templateRoots');
+        allTemplateRoots.addAll(templateRootsBox.values);
+        if (kDebugMode) {
+          print('Collected ${allTemplateRoots.length} template roots');
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error collecting template roots: $e');
+        }
+      }
+
       // Collect custom mixdown folders (global preference, not per-profile)
       List<String> customMixdownFolders = [];
       try {
@@ -2886,6 +2916,8 @@ class GoogleDriveSyncService {
         'releases': allReleases.map((r) => _serializeRelease(r)).toList(),
         'roots': allRoots.map((r) => _serializeRoot(r)).toList(),
         'templates': allTemplates.map((t) => _serializeTemplate(t)).toList(),
+        'projectTemplates': allProjectTemplates.map((t) => _serializeProjectTemplate(t)).toList(),
+        'templateRoots': allTemplateRoots.map((r) => _serializeTemplateRoot(r)).toList(),
         // NEW: Custom mixdown folder names (global preference, not per-profile)
         'customMixdownFolders': customMixdownFolders,
         // NEW: Per-profile phase customization (custom phase names, colors, finished set)
@@ -2941,6 +2973,8 @@ class GoogleDriveSyncService {
         print('Projects included: ${(data['projects'] as List).length}');
         print('Releases included: ${(data['releases'] as List).length}');
         print('Templates included: ${(data['templates'] as List).length}');
+        print('Project templates included: ${(data['projectTemplates'] as List).length}');
+        print('Template roots included: ${(data['templateRoots'] as List).length}');
       }
       final response = await _driveApi!.files.list(
         q: "name='$fileName' and parents in '$_appDataFolderId' and trashed=false",
@@ -4483,6 +4517,50 @@ class GoogleDriveSyncService {
       }
     }
 
+    // Merge project templates (global, not per-profile) - remote wins per id only
+    // when it's newer, so a local template created/edited since the last backup
+    // isn't clobbered by an older remote copy.
+    if (remoteData['projectTemplates'] != null) {
+      try {
+        final remoteProjectTemplates = (remoteData['projectTemplates'] as List)
+            .map((t) => _deserializeProjectTemplate(t as Map<String, dynamic>))
+            .toList();
+        final projectTemplatesBox = await Hive.openBox<ProjectTemplate>('projectTemplates');
+        for (final remoteTemplate in remoteProjectTemplates) {
+          final localTemplate = projectTemplatesBox.get(remoteTemplate.id);
+          if (localTemplate == null || remoteTemplate.updatedAt.isAfter(localTemplate.updatedAt)) {
+            await projectTemplatesBox.put(remoteTemplate.id, remoteTemplate);
+          }
+        }
+        if (kDebugMode) {
+          print('  Project templates: ${projectTemplatesBox.length} after merge');
+        }
+      } catch (e) {
+        if (kDebugMode) print('Error merging project templates: $e');
+      }
+    }
+
+    // Merge template roots (global, not per-profile) - add any remote root not
+    // already present locally by id; never overwrites an existing local root.
+    if (remoteData['templateRoots'] != null) {
+      try {
+        final remoteTemplateRoots = (remoteData['templateRoots'] as List)
+            .map((r) => _deserializeTemplateRoot(r as Map<String, dynamic>))
+            .toList();
+        final templateRootsBox = await Hive.openBox<TemplateRoot>('templateRoots');
+        for (final remoteRoot in remoteTemplateRoots) {
+          if (templateRootsBox.get(remoteRoot.id) == null) {
+            await templateRootsBox.put(remoteRoot.id, remoteRoot);
+          }
+        }
+        if (kDebugMode) {
+          print('  Template roots: ${templateRootsBox.length} after merge');
+        }
+      } catch (e) {
+        if (kDebugMode) print('Error merging template roots: $e');
+      }
+    }
+
     // Merge per-profile phase customization (custom phase names, colors, finished set)
     // Only fills in slots that are still unset locally - never overwrites local customization.
     if (remoteData['phaseSettingsByProfile'] != null) {
@@ -4670,6 +4748,7 @@ class GoogleDriveSyncService {
       'previewSongAutoPath': project.previewSongAutoPath,
       'parentProjectId': project.parentProjectId,
       'ignoredNewerSongPath': project.ignoredNewerSongPath,
+      'projectNotes': project.projectNotes,
     };
   }
 
@@ -4719,6 +4798,7 @@ class GoogleDriveSyncService {
       previewSongAutoPath: data['previewSongAutoPath'] as String?,
       parentProjectId: data['parentProjectId'] as String?,
       ignoredNewerSongPath: data['ignoredNewerSongPath'] as String?,
+      projectNotes: data['projectNotes'] as String?,
     );
   }
 
@@ -4837,6 +4917,54 @@ class GoogleDriveSyncService {
       items: (data['items'] as List<dynamic>).cast<String>(),
       createdAt: DateTime.parse(data['createdAt'] as String),
       updatedAt: DateTime.parse(data['updatedAt'] as String),
+    );
+  }
+
+  Map<String, dynamic> _serializeProjectTemplate(ProjectTemplate template) {
+    return {
+      'id': template.id,
+      'name': template.name,
+      'sourceFolderPath': template.sourceFolderPath,
+      'mainFileRelativePath': template.mainFileRelativePath,
+      'createdAt': template.createdAt.toIso8601String(),
+      'updatedAt': template.updatedAt.toIso8601String(),
+      'bpm': template.bpm,
+      'musicalKey': template.musicalKey,
+      'dawVersion': template.dawVersion,
+    };
+  }
+
+  ProjectTemplate _deserializeProjectTemplate(Map<String, dynamic> data) {
+    return ProjectTemplate(
+      id: data['id'] as String,
+      name: data['name'] as String,
+      sourceFolderPath: data['sourceFolderPath'] as String,
+      mainFileRelativePath: data['mainFileRelativePath'] as String,
+      createdAt: DateTime.parse(data['createdAt'] as String),
+      updatedAt: DateTime.parse(data['updatedAt'] as String),
+      bpm: (data['bpm'] as num?)?.toDouble(),
+      musicalKey: data['musicalKey'] as String?,
+      dawVersion: data['dawVersion'] as String?,
+    );
+  }
+
+  Map<String, dynamic> _serializeTemplateRoot(TemplateRoot root) {
+    return {
+      'id': root.id,
+      'path': root.path,
+      'addedAt': root.addedAt.toIso8601String(),
+      'lastRefreshedAt': root.lastRefreshedAt?.toIso8601String(),
+    };
+  }
+
+  TemplateRoot _deserializeTemplateRoot(Map<String, dynamic> data) {
+    return TemplateRoot(
+      id: data['id'] as String,
+      path: data['path'] as String,
+      addedAt: DateTime.parse(data['addedAt'] as String),
+      lastRefreshedAt: data['lastRefreshedAt'] != null
+          ? DateTime.parse(data['lastRefreshedAt'] as String)
+          : null,
     );
   }
 

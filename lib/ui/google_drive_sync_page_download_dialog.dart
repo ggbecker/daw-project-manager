@@ -204,7 +204,7 @@ class _DownloadProgressDialogState extends State<DownloadProgressDialog> {
                     '${progress.currentIndex} / ${progress.totalItems}',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.8),
+                      color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.8),
                     ),
                   ),
                 if (progress.totalItems > 0) const SizedBox(height: 8),

@@ -232,6 +232,19 @@ void main() {
       expect(restored.parentProjectId, 'parent-project-id');
       expect(restored.ignoredNewerSongPath, '/Users/artist/Live Sets/Bounces/rejected.wav');
     });
+
+    test('preserves projectNotes', () {
+      final service = GoogleDriveSyncService();
+      final original = TestFactories.makeProject(
+        projectNotes: 'Notes 1\nby Audio Crawler\n\nSome project notes',
+      );
+
+      final restored = service.deserializeProjectForTest(
+        service.serializeProjectForTest(original),
+      );
+
+      expect(restored.projectNotes, 'Notes 1\nby Audio Crawler\n\nSome project notes');
+    });
   });
 
   group('GoogleDriveSyncService.mergeData - project conflict resolution', () {

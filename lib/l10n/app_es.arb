@@ -30,6 +30,7 @@
   "notes": "Notas",
   "expandNotes": "Expandir",
   "collapseNotes": "Contraer",
+  "projectNotesFromDaw": "Notas del Proyecto (del archivo DAW)",
   "projectPhase": "Fase del Proyecto",
   "failedToLoad": "Error al cargar",
   "fileMissing": "Archivo faltante.",
@@ -205,6 +206,9 @@
   "filterByDaw": "Filtrar por DAW",
   "allDaws": "Todos los DAW",
   "daw": "DAW",
+  "clearDaw": "Borrar DAW",
+  "filterByKey": "Filtrar por Tonalidad",
+  "allKeys": "Todas las Tonalidades",
   "lastModifiedColumn": "Última Modificación",
   "actions": "Acciones",
   "hide": "Ocultar",
@@ -715,6 +719,67 @@
   "noTemplatesAvailable": "No hay plantillas disponibles. Crea una primero.",
   "templateImported": "Plantilla \"{name}\" importada ({count} elementos)",
   "errorLoadingTemplates": "Error al cargar plantillas",
+  "createProjectStartFrom": "¿Cómo quieres empezar?",
+  "createProjectStartFromHint": "Empieza desde una carpeta vacía o copia una plantilla registrada.",
+  "createProjectEmptyFolder": "Carpeta Vacía",
+  "createProjectFromTemplate": "Desde Plantilla",
+  "selectTemplateMainFile": "Selecciona el Archivo Principal de la Plantilla",
+  "registerTemplate": "Registrar Plantilla",
+  "projectTemplates": "Plantillas de Proyecto",
+  "searchTemplates": "Buscar plantillas...",
+  "createFirstProjectTemplate": "Registra una carpeta de plantilla para reutilizar en nuevos proyectos",
+  "noMatchingTemplates": "No hay plantillas coincidentes",
+  "templateSourceMissing": "Carpeta de origen de la plantilla no encontrada",
+  "useTemplate": "Usar",
+  "selectTemplatesParentFolder": "Selecciona la Carpeta Principal de Plantillas",
+  "templateSourceFolder": "Carpeta de Origen",
+  "dateCreatedColumn": "Creado",
+  "dateModifiedColumn": "Modificado",
+  "manageTemplateFolders": "Gestionar Carpetas",
+  "addTemplateFolder": "Añadir Carpeta",
+  "removeTemplateFolder": "Eliminar Carpeta de Plantillas",
+  "removeTemplateFolderConfirm": "¿Eliminar \"{path}\" de tus carpetas de plantillas registradas? Las plantillas ya importadas no se eliminarán.",
+  "@removeTemplateFolderConfirm": {
+    "placeholders": {
+      "path": { "type": "String" }
+    }
+  },
+  "noTemplateFoldersRegistered": "No hay carpetas de plantillas registradas",
+  "refreshTemplateFolders": "Actualizar plantillas desde las carpetas registradas",
+  "lastRefreshed": "Última actualización {date}",
+  "@lastRefreshed": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "templatesRefreshedSummary": "{count} plantilla(s) nueva(s) añadida(s)",
+  "@templatesRefreshedSummary": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "templatesSelected": "{count} plantilla{plural} seleccionada{plural}",
+  "@templatesSelected": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
+  "deleteSelectedTemplates": "Eliminar selección",
+  "deleteSelectedTemplatesConfirm": "¿Seguro que quieres eliminar {count} plantilla{plural}?",
+  "@deleteSelectedTemplatesConfirm": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
+  "templatesDeleted": "{count} plantilla{plural} eliminada{plural}",
+  "@templatesDeleted": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
   "importTodos": "Importar Tareas desde Archivo",
   "noTodosInFile": "No se encontraron tareas en el archivo",
   "todosImported": "{count} tarea(s) importada(s) exitosamente",
@@ -858,6 +923,180 @@
     "placeholders": {
       "error": {
         "type": "String"
+      }
+    }
+  },
+  "projectExportHeaderTitle": "DAW PROJECT MANAGER — PROJECT EXPORT",
+  "projectExportExportedLabel": "Exported: {dateTime}",
+  "@projectExportExportedLabel": {
+    "description": "Timestamp line in a plain-text project export",
+    "placeholders": {
+      "dateTime": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportTotalProjectsLabel": "Total projects: {count}",
+  "@projectExportTotalProjectsLabel": {
+    "description": "Project count line in a plain-text bulk export",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "projectExportProjectLabel": "Project: {name}",
+  "@projectExportProjectLabel": {
+    "description": "Project name line in a plain-text project export",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportDawLabel": "DAW: {dawType}",
+  "@projectExportDawLabel": {
+    "description": "DAW type line in a plain-text project export, no version known",
+    "placeholders": {
+      "dawType": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportDawWithVersionLabel": "DAW: {dawType} {version}",
+  "@projectExportDawWithVersionLabel": {
+    "description": "DAW type + version line in a plain-text project export",
+    "placeholders": {
+      "dawType": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportStatusLabel": "Status: {status}",
+  "@projectExportStatusLabel": {
+    "description": "Status line in a plain-text project export",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportBpmLabel": "BPM: {bpm}",
+  "@projectExportBpmLabel": {
+    "description": "BPM line in a plain-text project export",
+    "placeholders": {
+      "bpm": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportKeyLabel": "Key: {key}",
+  "@projectExportKeyLabel": {
+    "description": "Musical key line in a plain-text project export, no Camelot code known",
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportKeyWithCamelotLabel": "Key: {key} (Camelot {code})",
+  "@projectExportKeyWithCamelotLabel": {
+    "description": "Musical key + Camelot code line in a plain-text project export",
+    "placeholders": {
+      "key": {
+        "type": "String"
+      },
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportFilePathLabel": "File path: {path}",
+  "@projectExportFilePathLabel": {
+    "description": "File path line in a plain-text project export",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportFileSizeLabel": "File size: {size}",
+  "@projectExportFileSizeLabel": {
+    "description": "File size line in a plain-text project export",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportFileCreatedLabel": "File created: {date}",
+  "@projectExportFileCreatedLabel": {
+    "description": "File creation date line in a plain-text project export",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportAddedToLibraryLabel": "Added to library: {date}",
+  "@projectExportAddedToLibraryLabel": {
+    "description": "Date added to library line in a plain-text project export",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportLastModifiedLabel": "Last modified: {date}",
+  "@projectExportLastModifiedLabel": {
+    "description": "Last modified date line in a plain-text project export",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportDeadlineLabel": "Deadline: {date}",
+  "@projectExportDeadlineLabel": {
+    "description": "Deadline line in a plain-text project export, no status known",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportDeadlineWithStatusLabel": "Deadline: {date} ({status})",
+  "@projectExportDeadlineWithStatusLabel": {
+    "description": "Deadline + status line in a plain-text project export",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportTotalTimeWorkedLabel": "Total time worked: {duration}",
+  "@projectExportTotalTimeWorkedLabel": {
+    "description": "Total time worked line in a plain-text project export",
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportNotesLabel": "Notes:",
+  "projectExportTodosLabel": "To-dos:",
+  "projectExportWorkSessionsLabel": "Work sessions ({count}):",
+  "@projectExportWorkSessionsLabel": {
+    "description": "Work sessions section header in a plain-text project export",
+    "placeholders": {
+      "count": {
+        "type": "int"
       }
     }
   },
@@ -1495,6 +1734,14 @@
   "trayResumeSession": "Reanudar Sesión",
   "closeToTray": "Cerrar a la bandeja",
   "closeToTrayDescription": "Seguir ejecutándose en segundo plano (icono en la bandeja) al cerrar la ventana, para que la copia de seguridad automática y las notificaciones sigan funcionando",
+  "autoStart": "Iniciar con el sistema",
+  "autoStartDescription": "Abrir DAW Project Manager automáticamente al iniciar sesión en el equipo",
+  "startMinimized": "Iniciar minimizado en la bandeja",
+  "startMinimizedDescription": "Cuando la app se inicie con el equipo, abrirla oculta en la bandeja en lugar de mostrar la ventana",
+  "onboardingStartMinimized": "Iniciar minimizado",
+  "autoStartFailed": "No se pudo cambiar la configuración de inicio. Puede que tu sistema no lo permita.",
+  "onboardingStartupTitle": "Iniciar con el Sistema",
+  "onboardingStartupBody": "Haz que DAW Project Manager se abra automáticamente al iniciar sesión, para que las copias de seguridad y los recordatorios de fechas límite sigan funcionando.",
   "@menuQuit": {
     "description": "macOS menu item to quit the app"
   },
@@ -2099,6 +2346,8 @@
   "@suggestionsRefresh": {},
   "suggestionsEmptyState": "No hay sugerencias por ahora. Toca Actualizar para restablecer los elementos descartados.",
   "@suggestionsEmptyState": {},
+  "suggestionNewProject": "Nuevo",
+  "@suggestionNewProject": {},
   "showSuggestions": "Mostrar sugerencias",
   "@showSuggestions": {},
   "showSuggestionsDescription": "Muestra sugerencias inteligentes en la barra de herramientas cuando no hay sesión activa",

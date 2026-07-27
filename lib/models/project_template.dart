@@ -1,0 +1,88 @@
+import 'package:hive_ce/hive.dart';
+
+part 'project_template.g.dart';
+
+/// A registered "starter kit" folder a new project can be created from —
+/// the whole folder containing [mainFileRelativePath] gets copied to a new
+/// location and the main file (plus the destination folder itself) renamed
+/// to the new project's name; every other file is copied unchanged.
+@HiveType(typeId: 12)
+class ProjectTemplate extends HiveObject {
+  @HiveField(0)
+  final String id;
+
+  @HiveField(1)
+  final String name;
+
+  /// The folder that gets copied wholesale when instantiating this template
+  /// — the parent folder of the file the user pointed to when registering it.
+  @HiveField(2)
+  final String sourceFolderPath;
+
+  /// Path of the main DAW project file, relative to [sourceFolderPath] (e.g.
+  /// `'Song Template.als'` or `'Renders/Song Template.als'` for a nested main
+  /// file). Used to locate the same file post-copy so it can be renamed and
+  /// opened.
+  @HiveField(3)
+  final String mainFileRelativePath;
+
+  @HiveField(4)
+  final DateTime createdAt;
+
+  @HiveField(5)
+  final DateTime updatedAt;
+
+  /// Beats per minute — auto-extracted from the main file when supported,
+  /// otherwise left null for the user to fill in manually (same as
+  /// `MusicProject.bpm`).
+  @HiveField(6)
+  final double? bpm;
+
+  /// e.g. `C#m`, `F major` — auto-extracted when supported, otherwise
+  /// user-editable (same as `MusicProject.musicalKey`).
+  @HiveField(7)
+  final String? musicalKey;
+
+  /// DAW version string (e.g. `'12.0.4'`) — auto-extracted only, no manual
+  /// entry UI, mirroring how `MusicProject.dawVersion` is read-only.
+  @HiveField(8)
+  final String? dawVersion;
+
+  ProjectTemplate({
+    required this.id,
+    required this.name,
+    required this.sourceFolderPath,
+    required this.mainFileRelativePath,
+    required this.createdAt,
+    required this.updatedAt,
+    this.bpm,
+    this.musicalKey,
+    this.dawVersion,
+  });
+
+  ProjectTemplate copyWith({
+    String? id,
+    String? name,
+    String? sourceFolderPath,
+    String? mainFileRelativePath,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    double? bpm,
+    bool clearBpm = false,
+    String? musicalKey,
+    bool clearMusicalKey = false,
+    String? dawVersion,
+  }) {
+    return ProjectTemplate(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      sourceFolderPath: sourceFolderPath ?? this.sourceFolderPath,
+      mainFileRelativePath: mainFileRelativePath ?? this.mainFileRelativePath,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      bpm: clearBpm ? null : (bpm ?? this.bpm),
+      musicalKey: clearMusicalKey ? null : (musicalKey ?? this.musicalKey),
+      dawVersion: dawVersion ?? this.dawVersion,
+    );
+  }
+}

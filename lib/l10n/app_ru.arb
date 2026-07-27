@@ -30,6 +30,7 @@
   "notes": "Заметки",
   "expandNotes": "Развернуть",
   "collapseNotes": "Свернуть",
+  "projectNotesFromDaw": "Заметки проекта (из файла DAW)",
   "projectPhase": "Фаза проекта",
   "failedToLoad": "Ошибка загрузки",
   "fileMissing": "Файл отсутствует.",
@@ -205,6 +206,9 @@
   "filterByDaw": "Фильтр по DAW",
   "allDaws": "Все DAW",
   "daw": "DAW",
+  "clearDaw": "Очистить DAW",
+  "filterByKey": "Фильтр по Тональности",
+  "allKeys": "Все Тональности",
   "lastModifiedColumn": "Последнее Изменение",
   "actions": "Действия",
   "hide": "Скрыть",
@@ -715,6 +719,67 @@
   "noTemplatesAvailable": "Нет доступных шаблонов. Создайте сначала.",
   "templateImported": "Шаблон \"{name}\" импортирован ({count} элементов)",
   "errorLoadingTemplates": "Ошибка загрузки шаблонов",
+  "createProjectStartFrom": "Как вы хотите начать?",
+  "createProjectStartFromHint": "Начните с пустой папки или скопируйте зарегистрированный шаблон.",
+  "createProjectEmptyFolder": "Пустая Папка",
+  "createProjectFromTemplate": "Из Шаблона",
+  "selectTemplateMainFile": "Выберите Главный Файл Проекта Шаблона",
+  "registerTemplate": "Зарегистрировать Шаблон",
+  "projectTemplates": "Шаблоны Проектов",
+  "searchTemplates": "Поиск шаблонов...",
+  "createFirstProjectTemplate": "Зарегистрируйте папку шаблона для повторного использования в новых проектах",
+  "noMatchingTemplates": "Нет подходящих шаблонов",
+  "templateSourceMissing": "Исходная папка шаблона не найдена",
+  "useTemplate": "Использовать",
+  "selectTemplatesParentFolder": "Выберите Родительскую Папку Шаблонов",
+  "templateSourceFolder": "Исходная Папка",
+  "dateCreatedColumn": "Создано",
+  "dateModifiedColumn": "Изменено",
+  "manageTemplateFolders": "Управление Папками",
+  "addTemplateFolder": "Добавить Папку",
+  "removeTemplateFolder": "Удалить Папку Шаблонов",
+  "removeTemplateFolderConfirm": "Удалить \"{path}\" из зарегистрированных папок шаблонов? Уже импортированные шаблоны не будут удалены.",
+  "@removeTemplateFolderConfirm": {
+    "placeholders": {
+      "path": { "type": "String" }
+    }
+  },
+  "noTemplateFoldersRegistered": "Нет зарегистрированных папок шаблонов",
+  "refreshTemplateFolders": "Обновить шаблоны из зарегистрированных папок",
+  "lastRefreshed": "Последнее обновление {date}",
+  "@lastRefreshed": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "templatesRefreshedSummary": "Добавлено новых шаблонов: {count}",
+  "@templatesRefreshedSummary": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "templatesSelected": "Выбрано шаблонов: {count}{plural}",
+  "@templatesSelected": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
+  "deleteSelectedTemplates": "Удалить выбранное",
+  "deleteSelectedTemplatesConfirm": "Удалить выбранные шаблоны ({count}{plural})?",
+  "@deleteSelectedTemplatesConfirm": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
+  "templatesDeleted": "Удалено шаблонов: {count}{plural}",
+  "@templatesDeleted": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
   "importTodos": "Импортировать Задачи из Файла",
   "noTodosInFile": "Задачи не найдены в файле",
   "todosImported": "{count} задач(и) импортировано успешно",
@@ -858,6 +923,180 @@
     "placeholders": {
       "error": {
         "type": "String"
+      }
+    }
+  },
+  "projectExportHeaderTitle": "DAW PROJECT MANAGER — PROJECT EXPORT",
+  "projectExportExportedLabel": "Exported: {dateTime}",
+  "@projectExportExportedLabel": {
+    "description": "Timestamp line in a plain-text project export",
+    "placeholders": {
+      "dateTime": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportTotalProjectsLabel": "Total projects: {count}",
+  "@projectExportTotalProjectsLabel": {
+    "description": "Project count line in a plain-text bulk export",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "projectExportProjectLabel": "Project: {name}",
+  "@projectExportProjectLabel": {
+    "description": "Project name line in a plain-text project export",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportDawLabel": "DAW: {dawType}",
+  "@projectExportDawLabel": {
+    "description": "DAW type line in a plain-text project export, no version known",
+    "placeholders": {
+      "dawType": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportDawWithVersionLabel": "DAW: {dawType} {version}",
+  "@projectExportDawWithVersionLabel": {
+    "description": "DAW type + version line in a plain-text project export",
+    "placeholders": {
+      "dawType": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportStatusLabel": "Status: {status}",
+  "@projectExportStatusLabel": {
+    "description": "Status line in a plain-text project export",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportBpmLabel": "BPM: {bpm}",
+  "@projectExportBpmLabel": {
+    "description": "BPM line in a plain-text project export",
+    "placeholders": {
+      "bpm": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportKeyLabel": "Key: {key}",
+  "@projectExportKeyLabel": {
+    "description": "Musical key line in a plain-text project export, no Camelot code known",
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportKeyWithCamelotLabel": "Key: {key} (Camelot {code})",
+  "@projectExportKeyWithCamelotLabel": {
+    "description": "Musical key + Camelot code line in a plain-text project export",
+    "placeholders": {
+      "key": {
+        "type": "String"
+      },
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportFilePathLabel": "File path: {path}",
+  "@projectExportFilePathLabel": {
+    "description": "File path line in a plain-text project export",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportFileSizeLabel": "File size: {size}",
+  "@projectExportFileSizeLabel": {
+    "description": "File size line in a plain-text project export",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportFileCreatedLabel": "File created: {date}",
+  "@projectExportFileCreatedLabel": {
+    "description": "File creation date line in a plain-text project export",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportAddedToLibraryLabel": "Added to library: {date}",
+  "@projectExportAddedToLibraryLabel": {
+    "description": "Date added to library line in a plain-text project export",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportLastModifiedLabel": "Last modified: {date}",
+  "@projectExportLastModifiedLabel": {
+    "description": "Last modified date line in a plain-text project export",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportDeadlineLabel": "Deadline: {date}",
+  "@projectExportDeadlineLabel": {
+    "description": "Deadline line in a plain-text project export, no status known",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportDeadlineWithStatusLabel": "Deadline: {date} ({status})",
+  "@projectExportDeadlineWithStatusLabel": {
+    "description": "Deadline + status line in a plain-text project export",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportTotalTimeWorkedLabel": "Total time worked: {duration}",
+  "@projectExportTotalTimeWorkedLabel": {
+    "description": "Total time worked line in a plain-text project export",
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportNotesLabel": "Notes:",
+  "projectExportTodosLabel": "To-dos:",
+  "projectExportWorkSessionsLabel": "Work sessions ({count}):",
+  "@projectExportWorkSessionsLabel": {
+    "description": "Work sessions section header in a plain-text project export",
+    "placeholders": {
+      "count": {
+        "type": "int"
       }
     }
   },
@@ -1495,6 +1734,14 @@
   "trayResumeSession": "Возобновить сеанс",
   "closeToTray": "Закрывать в трей",
   "closeToTrayDescription": "Продолжать работать в фоне (значок в трее) при закрытии окна, чтобы автоматическое резервное копирование и уведомления продолжали работать",
+  "autoStart": "Запускать при входе в систему",
+  "autoStartDescription": "Автоматически открывать DAW Project Manager при входе в систему",
+  "startMinimized": "Запускать свёрнутым в трей",
+  "startMinimizedDescription": "При запуске вместе с компьютером открывать приложение скрытым в трее, а не показывать окно",
+  "onboardingStartMinimized": "Запускать свёрнутым",
+  "autoStartFailed": "Не удалось изменить параметр автозапуска. Возможно, ваша система этого не разрешает.",
+  "onboardingStartupTitle": "Запуск при входе в систему",
+  "onboardingStartupBody": "Открывайте DAW Project Manager автоматически при входе в систему, чтобы фоновые резервные копии и напоминания о сроках продолжали работать.",
   "@menuQuit": {
     "description": "macOS menu item to quit the app"
   },
@@ -2099,6 +2346,8 @@
   "@suggestionsRefresh": {},
   "suggestionsEmptyState": "Нет предложений. Нажмите «Обновить», чтобы сбросить скрытые элементы.",
   "@suggestionsEmptyState": {},
+  "suggestionNewProject": "Новый",
+  "@suggestionNewProject": {},
   "showSuggestions": "Показывать предложения",
   "@showSuggestions": {},
   "showSuggestionsDescription": "Показывает умные предложения на панели инструментов, когда сессия не запущена",

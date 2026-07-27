@@ -12,6 +12,7 @@ Future<void> _pump(
   double maxHeight = 800,
   ValueChanged<String>? onChanged,
   bool? enableDragResize,
+  bool readOnly = false,
 }) {
   return tester.pumpWidget(
     MaterialApp(
@@ -27,6 +28,7 @@ Future<void> _pump(
           maxHeight: maxHeight,
           onChanged: onChanged,
           enableDragResize: enableDragResize,
+          readOnly: readOnly,
         ),
       ),
     ),
@@ -148,6 +150,116 @@ void main() {
 
       expect(changes, contains('hello world'));
       expect(controller.text, 'hello world');
+    });
+
+    testWidgets('readOnly rejects typed input but still allows expand/collapse',
+        (tester) async {
+      final controller = TextEditingController(text: 'extracted notes');
+      await _pump(tester, controller: controller, readOnly: true);
+
+      await tester.enterText(find.byType(TextFormField), 'should not stick');
+      await tester.pump();
+      expect(controller.text, 'extracted notes');
+
+      await tester.tap(find.byIcon(Icons.open_in_full));
+      await tester.pumpAndSettle();
+      expect(_heightOf(tester), 400);
+    });
+  });
+
+  group('SyncedResizableTextFieldPair', () {
+    Future<void> pumpPair(
+      WidgetTester tester, {
+      required TextEditingController leftController,
+      required TextEditingController rightController,
+      bool rightReadOnly = false,
+    }) {
+      return tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SyncedResizableTextFieldPair(
+              leftController: leftController,
+              leftLabelText: 'Notes',
+              rightController: rightController,
+              rightLabelText: 'Project Notes',
+              rightReadOnly: rightReadOnly,
+              expandTooltip: 'Expand',
+              collapseTooltip: 'Collapse',
+            ),
+          ),
+        ),
+      );
+    }
+
+    double heightOfPair(WidgetTester tester) => tester
+        .widget<SizedBox>(find.byKey(const Key('syncedResizableTextFieldHeightBox')))
+        .height!;
+
+    testWidgets('renders both labels at the shared initialHeight', (tester) async {
+      final left = TextEditingController();
+      final right = TextEditingController();
+      await pumpPair(tester, leftController: left, rightController: right);
+
+      expect(find.text('Notes'), findsOneWidget);
+      expect(find.text('Project Notes'), findsOneWidget);
+      expect(heightOfPair(tester), 130);
+      // Only one expand button for the whole pair, not one per field.
+      expect(find.byIcon(Icons.open_in_full), findsOneWidget);
+    });
+
+    testWidgets('expanding grows both fields together via the single shared height box',
+        (tester) async {
+      final left = TextEditingController();
+      final right = TextEditingController();
+      await pumpPair(tester, leftController: left, rightController: right);
+
+      await tester.tap(find.byIcon(Icons.open_in_full));
+      await tester.pumpAndSettle();
+
+      expect(heightOfPair(tester), 400);
+    });
+
+    testWidgets('dragging the single grip resizes the shared height', (tester) async {
+      final left = TextEditingController();
+      final right = TextEditingController();
+      await pumpPair(tester, leftController: left, rightController: right);
+
+      await tester.drag(
+        find.byKey(const Key('syncedResizableTextFieldGrip')),
+        const Offset(0, 100),
+      );
+      await tester.pumpAndSettle();
+
+      expect(heightOfPair(tester), greaterThan(130));
+    });
+
+    testWidgets('rightReadOnly blocks edits on the right field but not the left',
+        (tester) async {
+      final left = TextEditingController();
+      final right = TextEditingController(text: 'extracted notes');
+      await pumpPair(
+        tester,
+        leftController: left,
+        rightController: right,
+        rightReadOnly: true,
+      );
+
+      final leftField = find.ancestor(
+        of: find.text('Notes'),
+        matching: find.byType(TextFormField),
+      );
+      final rightField = find.ancestor(
+        of: find.text('Project Notes'),
+        matching: find.byType(TextFormField),
+      );
+
+      await tester.enterText(leftField, 'typed');
+      await tester.pump();
+      expect(left.text, 'typed');
+
+      await tester.enterText(rightField, 'should not stick');
+      await tester.pump();
+      expect(right.text, 'extracted notes');
     });
   });
 }

@@ -219,6 +219,26 @@ void main() {
       expect(restored.ignoredNewerSongPath, isNull);
     });
 
+    test('preserves projectNotes', () {
+      final original = TestFactories.makeProject(
+        projectNotes: 'Notes 1\nby Audio Crawler\n\nSome project notes',
+      );
+
+      final restored =
+          BackupService.projectFromJson(BackupService.projectToJson(original));
+
+      expect(restored.projectNotes, 'Notes 1\nby Audio Crawler\n\nSome project notes');
+    });
+
+    test('preserves null projectNotes', () {
+      final original = TestFactories.makeProject(projectNotes: null);
+
+      final restored =
+          BackupService.projectFromJson(BackupService.projectToJson(original));
+
+      expect(restored.projectNotes, isNull);
+    });
+
     test('lastModifiedAt is unchanged after round-trip (not bumped to now)',
         () {
       final past = DateTime(2020, 6, 15, 8, 0, 0);

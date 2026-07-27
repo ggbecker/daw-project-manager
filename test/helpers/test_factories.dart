@@ -34,6 +34,7 @@ class TestFactories {
     String? previewSongAutoPath,
     String? parentProjectId,
     String? ignoredNewerSongPath,
+    String? projectNotes,
   }) {
     return MusicProject(
       id: id,
@@ -66,6 +67,7 @@ class TestFactories {
       previewSongAutoPath: previewSongAutoPath,
       parentProjectId: parentProjectId,
       ignoredNewerSongPath: ignoredNewerSongPath,
+      projectNotes: projectNotes,
     );
   }
 

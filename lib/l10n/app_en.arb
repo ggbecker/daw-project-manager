@@ -30,6 +30,7 @@
   "notes": "Notes",
   "expandNotes": "Expand",
   "collapseNotes": "Collapse",
+  "projectNotesFromDaw": "Project Notes (from DAW file)",
   "projectPhase": "Project Phase",
   "failedToLoad": "Failed to load",
   "fileMissing": "File missing.",
@@ -231,6 +232,9 @@
   "filterByDaw": "Filter by DAW",
   "allDaws": "All DAWs",
   "daw": "DAW",
+  "clearDaw": "Clear DAW",
+  "filterByKey": "Filter by Key",
+  "allKeys": "All Keys",
   "lastModifiedColumn": "Last Modified",
   "actions": "Actions",
   "hide": "Hide",
@@ -877,6 +881,67 @@
 }
   },
   "errorLoadingTemplates": "Error loading templates",
+  "createProjectStartFrom": "How do you want to start?",
+  "createProjectStartFromHint": "Start from an empty folder or copy a registered template.",
+  "createProjectEmptyFolder": "Empty Folder",
+  "createProjectFromTemplate": "From Template",
+  "selectTemplateMainFile": "Select the Template's Main Project File",
+  "registerTemplate": "Register Template",
+  "projectTemplates": "Project Templates",
+  "searchTemplates": "Search templates...",
+  "createFirstProjectTemplate": "Register a template folder to reuse for new projects",
+  "noMatchingTemplates": "No matching templates",
+  "templateSourceMissing": "Template source folder not found",
+  "useTemplate": "Use",
+  "selectTemplatesParentFolder": "Select Parent Folder of Templates",
+  "templateSourceFolder": "Source Folder",
+  "dateCreatedColumn": "Created",
+  "dateModifiedColumn": "Modified",
+  "manageTemplateFolders": "Manage Folders",
+  "addTemplateFolder": "Add Folder",
+  "removeTemplateFolder": "Remove Template Folder",
+  "removeTemplateFolderConfirm": "Remove \"{path}\" from your registered template folders? Templates already imported from it will not be deleted.",
+  "@removeTemplateFolderConfirm": {
+    "placeholders": {
+      "path": { "type": "String" }
+    }
+  },
+  "noTemplateFoldersRegistered": "No template folders registered",
+  "refreshTemplateFolders": "Refresh templates from registered folders",
+  "lastRefreshed": "Last refreshed {date}",
+  "@lastRefreshed": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "templatesRefreshedSummary": "{count} new template(s) added",
+  "@templatesRefreshedSummary": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "templatesSelected": "{count} template{plural} selected",
+  "@templatesSelected": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
+  "deleteSelectedTemplates": "Delete Selected",
+  "deleteSelectedTemplatesConfirm": "Are you sure you want to delete {count} template{plural}?",
+  "@deleteSelectedTemplatesConfirm": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
+  "templatesDeleted": "{count} template{plural} deleted",
+  "@templatesDeleted": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
   "importTodos": "Import Todos from File",
   "noTodosInFile": "No todos found in file",
   "todosImported": "{count} todo(s) imported successfully",
@@ -1063,6 +1128,180 @@
     "placeholders": {
       "error": {
         "type": "String"
+      }
+    }
+  },
+  "projectExportHeaderTitle": "DAW PROJECT MANAGER — PROJECT EXPORT",
+  "projectExportExportedLabel": "Exported: {dateTime}",
+  "@projectExportExportedLabel": {
+    "description": "Timestamp line in a plain-text project export",
+    "placeholders": {
+      "dateTime": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportTotalProjectsLabel": "Total projects: {count}",
+  "@projectExportTotalProjectsLabel": {
+    "description": "Project count line in a plain-text bulk export",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "projectExportProjectLabel": "Project: {name}",
+  "@projectExportProjectLabel": {
+    "description": "Project name line in a plain-text project export",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportDawLabel": "DAW: {dawType}",
+  "@projectExportDawLabel": {
+    "description": "DAW type line in a plain-text project export, no version known",
+    "placeholders": {
+      "dawType": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportDawWithVersionLabel": "DAW: {dawType} {version}",
+  "@projectExportDawWithVersionLabel": {
+    "description": "DAW type + version line in a plain-text project export",
+    "placeholders": {
+      "dawType": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportStatusLabel": "Status: {status}",
+  "@projectExportStatusLabel": {
+    "description": "Status line in a plain-text project export",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportBpmLabel": "BPM: {bpm}",
+  "@projectExportBpmLabel": {
+    "description": "BPM line in a plain-text project export",
+    "placeholders": {
+      "bpm": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportKeyLabel": "Key: {key}",
+  "@projectExportKeyLabel": {
+    "description": "Musical key line in a plain-text project export, no Camelot code known",
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportKeyWithCamelotLabel": "Key: {key} (Camelot {code})",
+  "@projectExportKeyWithCamelotLabel": {
+    "description": "Musical key + Camelot code line in a plain-text project export",
+    "placeholders": {
+      "key": {
+        "type": "String"
+      },
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportFilePathLabel": "File path: {path}",
+  "@projectExportFilePathLabel": {
+    "description": "File path line in a plain-text project export",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportFileSizeLabel": "File size: {size}",
+  "@projectExportFileSizeLabel": {
+    "description": "File size line in a plain-text project export",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportFileCreatedLabel": "File created: {date}",
+  "@projectExportFileCreatedLabel": {
+    "description": "File creation date line in a plain-text project export",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportAddedToLibraryLabel": "Added to library: {date}",
+  "@projectExportAddedToLibraryLabel": {
+    "description": "Date added to library line in a plain-text project export",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportLastModifiedLabel": "Last modified: {date}",
+  "@projectExportLastModifiedLabel": {
+    "description": "Last modified date line in a plain-text project export",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportDeadlineLabel": "Deadline: {date}",
+  "@projectExportDeadlineLabel": {
+    "description": "Deadline line in a plain-text project export, no status known",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportDeadlineWithStatusLabel": "Deadline: {date} ({status})",
+  "@projectExportDeadlineWithStatusLabel": {
+    "description": "Deadline + status line in a plain-text project export",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportTotalTimeWorkedLabel": "Total time worked: {duration}",
+  "@projectExportTotalTimeWorkedLabel": {
+    "description": "Total time worked line in a plain-text project export",
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportNotesLabel": "Notes:",
+  "projectExportTodosLabel": "To-dos:",
+  "projectExportWorkSessionsLabel": "Work sessions ({count}):",
+  "@projectExportWorkSessionsLabel": {
+    "description": "Work sessions section header in a plain-text project export",
+    "placeholders": {
+      "count": {
+        "type": "int"
       }
     }
   },
@@ -2549,6 +2788,21 @@
   "trayResumeSession": "Resume Session",
   "closeToTray": "Close to tray",
   "closeToTrayDescription": "Keep running in the background (tray icon) when you close the window, so auto-backup and notifications keep working",
+  "autoStart": "Launch at startup",
+  "@autoStart": { "description": "Settings switch: start the app automatically when the user signs in to their computer" },
+  "autoStartDescription": "Open DAW Project Manager automatically when you sign in to your computer",
+  "startMinimized": "Start minimized to tray",
+  "@startMinimized": { "description": "Settings switch: on an auto-start launch, open hidden in the tray" },
+  "startMinimizedDescription": "When the app starts with your computer, open it hidden in the tray instead of showing the window",
+  "@startMinimizedDescription": { "description": "Explanation under the start-minimized switch" },
+  "onboardingStartMinimized": "Start minimized",
+  "@onboardingStartMinimized": { "description": "Compact label for the start-minimized option in the onboarding wizard" },
+  "autoStartFailed": "Could not change the startup setting. Your system may not allow it.",
+  "@autoStartFailed": { "description": "Snackbar shown when registering the app to launch at startup fails" },
+  "onboardingStartupTitle": "Launch at Startup",
+  "@onboardingStartupTitle": { "description": "Onboarding wizard step title for the launch-at-startup option" },
+  "onboardingStartupBody": "Have DAW Project Manager open automatically when you sign in, so background backups and deadline reminders keep running.",
+  "@onboardingStartupBody": { "description": "Onboarding wizard step subtitle for the launch-at-startup option" },
   "@menuQuit": {
     "description": "macOS menu item to quit the app"
   },
@@ -3254,6 +3508,8 @@
   "@suggestionsRefresh": {},
   "suggestionsEmptyState": "No suggestions right now. Tap Refresh to reset dismissed items.",
   "@suggestionsEmptyState": {},
+  "suggestionNewProject": "New",
+  "@suggestionNewProject": {},
   "showSuggestions": "Show suggestions",
   "@showSuggestions": {},
   "showSuggestionsDescription": "Show smart suggestions in the toolbar when no session is running",

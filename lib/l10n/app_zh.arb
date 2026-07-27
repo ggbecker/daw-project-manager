@@ -30,6 +30,7 @@
   "notes": "备注",
   "expandNotes": "展开",
   "collapseNotes": "收起",
+  "projectNotesFromDaw": "项目备注（来自DAW文件）",
   "projectPhase": "项目阶段",
   "failedToLoad": "加载失败",
   "fileMissing": "文件缺失。",
@@ -205,6 +206,9 @@
   "filterByDaw": "按DAW筛选",
   "allDaws": "所有DAW",
   "daw": "DAW",
+  "clearDaw": "清除DAW",
+  "filterByKey": "按调性筛选",
+  "allKeys": "所有调性",
   "lastModifiedColumn": "最后修改",
   "actions": "操作",
   "hide": "隐藏",
@@ -715,6 +719,67 @@
   "noTemplatesAvailable": "没有可用的模板。请先创建一个。",
   "templateImported": "模板「{name}」已导入（{count}个项目）",
   "errorLoadingTemplates": "加载模板错误",
+  "createProjectStartFrom": "您想如何开始？",
+  "createProjectStartFromHint": "从空文件夹开始，或复制已注册的模板。",
+  "createProjectEmptyFolder": "空文件夹",
+  "createProjectFromTemplate": "从模板",
+  "selectTemplateMainFile": "选择模板的主项目文件",
+  "registerTemplate": "注册模板",
+  "projectTemplates": "项目模板",
+  "searchTemplates": "搜索模板...",
+  "createFirstProjectTemplate": "注册一个模板文件夹以供新项目重复使用",
+  "noMatchingTemplates": "没有匹配的模板",
+  "templateSourceMissing": "未找到模板源文件夹",
+  "useTemplate": "使用",
+  "selectTemplatesParentFolder": "选择模板的父文件夹",
+  "templateSourceFolder": "源文件夹",
+  "dateCreatedColumn": "创建时间",
+  "dateModifiedColumn": "修改时间",
+  "manageTemplateFolders": "管理文件夹",
+  "addTemplateFolder": "添加文件夹",
+  "removeTemplateFolder": "移除模板文件夹",
+  "removeTemplateFolderConfirm": "从已注册的模板文件夹中移除“{path}”？已导入的模板不会被删除。",
+  "@removeTemplateFolderConfirm": {
+    "placeholders": {
+      "path": { "type": "String" }
+    }
+  },
+  "noTemplateFoldersRegistered": "没有已注册的模板文件夹",
+  "refreshTemplateFolders": "从已注册的文件夹刷新模板",
+  "lastRefreshed": "最后刷新时间 {date}",
+  "@lastRefreshed": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "templatesRefreshedSummary": "已添加{count}个新模板",
+  "@templatesRefreshedSummary": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "templatesSelected": "已选择{count}个模板{plural}",
+  "@templatesSelected": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
+  "deleteSelectedTemplates": "删除所选",
+  "deleteSelectedTemplatesConfirm": "确定要删除{count}个模板{plural}吗?",
+  "@deleteSelectedTemplatesConfirm": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
+  "templatesDeleted": "已删除{count}个模板{plural}",
+  "@templatesDeleted": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
   "importTodos": "从文件导入待办事项",
   "noTodosInFile": "文件中未找到待办事项",
   "todosImported": "成功导入了{count}个待办事项",
@@ -858,6 +923,180 @@
     "placeholders": {
       "error": {
         "type": "String"
+      }
+    }
+  },
+  "projectExportHeaderTitle": "DAW PROJECT MANAGER — PROJECT EXPORT",
+  "projectExportExportedLabel": "Exported: {dateTime}",
+  "@projectExportExportedLabel": {
+    "description": "Timestamp line in a plain-text project export",
+    "placeholders": {
+      "dateTime": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportTotalProjectsLabel": "Total projects: {count}",
+  "@projectExportTotalProjectsLabel": {
+    "description": "Project count line in a plain-text bulk export",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "projectExportProjectLabel": "Project: {name}",
+  "@projectExportProjectLabel": {
+    "description": "Project name line in a plain-text project export",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportDawLabel": "DAW: {dawType}",
+  "@projectExportDawLabel": {
+    "description": "DAW type line in a plain-text project export, no version known",
+    "placeholders": {
+      "dawType": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportDawWithVersionLabel": "DAW: {dawType} {version}",
+  "@projectExportDawWithVersionLabel": {
+    "description": "DAW type + version line in a plain-text project export",
+    "placeholders": {
+      "dawType": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportStatusLabel": "Status: {status}",
+  "@projectExportStatusLabel": {
+    "description": "Status line in a plain-text project export",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportBpmLabel": "BPM: {bpm}",
+  "@projectExportBpmLabel": {
+    "description": "BPM line in a plain-text project export",
+    "placeholders": {
+      "bpm": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportKeyLabel": "Key: {key}",
+  "@projectExportKeyLabel": {
+    "description": "Musical key line in a plain-text project export, no Camelot code known",
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportKeyWithCamelotLabel": "Key: {key} (Camelot {code})",
+  "@projectExportKeyWithCamelotLabel": {
+    "description": "Musical key + Camelot code line in a plain-text project export",
+    "placeholders": {
+      "key": {
+        "type": "String"
+      },
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportFilePathLabel": "File path: {path}",
+  "@projectExportFilePathLabel": {
+    "description": "File path line in a plain-text project export",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportFileSizeLabel": "File size: {size}",
+  "@projectExportFileSizeLabel": {
+    "description": "File size line in a plain-text project export",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportFileCreatedLabel": "File created: {date}",
+  "@projectExportFileCreatedLabel": {
+    "description": "File creation date line in a plain-text project export",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportAddedToLibraryLabel": "Added to library: {date}",
+  "@projectExportAddedToLibraryLabel": {
+    "description": "Date added to library line in a plain-text project export",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportLastModifiedLabel": "Last modified: {date}",
+  "@projectExportLastModifiedLabel": {
+    "description": "Last modified date line in a plain-text project export",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportDeadlineLabel": "Deadline: {date}",
+  "@projectExportDeadlineLabel": {
+    "description": "Deadline line in a plain-text project export, no status known",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportDeadlineWithStatusLabel": "Deadline: {date} ({status})",
+  "@projectExportDeadlineWithStatusLabel": {
+    "description": "Deadline + status line in a plain-text project export",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportTotalTimeWorkedLabel": "Total time worked: {duration}",
+  "@projectExportTotalTimeWorkedLabel": {
+    "description": "Total time worked line in a plain-text project export",
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportNotesLabel": "Notes:",
+  "projectExportTodosLabel": "To-dos:",
+  "projectExportWorkSessionsLabel": "Work sessions ({count}):",
+  "@projectExportWorkSessionsLabel": {
+    "description": "Work sessions section header in a plain-text project export",
+    "placeholders": {
+      "count": {
+        "type": "int"
       }
     }
   },
@@ -1495,6 +1734,14 @@
   "trayResumeSession": "恢复会话",
   "closeToTray": "关闭到系统托盘",
   "closeToTrayDescription": "关闭窗口后继续在后台运行（系统托盘图标），以便自动备份和通知继续工作",
+  "autoStart": "开机自动启动",
+  "autoStartDescription": "登录电脑时自动打开 DAW Project Manager",
+  "startMinimized": "启动时最小化到托盘",
+  "startMinimizedDescription": "随电脑启动时，将应用隐藏在托盘中，而不显示窗口",
+  "onboardingStartMinimized": "最小化启动",
+  "autoStartFailed": "无法更改开机启动设置。您的系统可能不允许此操作。",
+  "onboardingStartupTitle": "开机自动启动",
+  "onboardingStartupBody": "登录时自动打开 DAW Project Manager，让后台备份和截止日期提醒持续运行。",
   "@menuQuit": {
     "description": "macOS menu item to quit the app"
   },
@@ -2099,6 +2346,8 @@
   "@suggestionsRefresh": {},
   "suggestionsEmptyState": "暂无建议。点击刷新以重置已忽略的项目。",
   "@suggestionsEmptyState": {},
+  "suggestionNewProject": "新建",
+  "@suggestionNewProject": {},
   "showSuggestions": "显示建议",
   "@showSuggestions": {},
   "showSuggestionsDescription": "在没有会话运行时在工具栏中显示智能建议",

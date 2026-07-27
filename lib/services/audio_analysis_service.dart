@@ -552,53 +552,53 @@ AudioFileInfo? _readFileInfo(String filePath) {
     raf.closeSync();
 
     final ext = filePath.toLowerCase().split('.').last;
-    print('[AudioFileInfo] file=$filePath ext=$ext totalSize=$size bufSize=$bufSize');
+    if (kDebugMode) print('[AudioFileInfo] file=$filePath ext=$ext totalSize=$size bufSize=$bufSize');
 
     // WAV / AIFF — use existing parsers
     if (ext == 'wav') {
       final info = _parseWavInfo(buf);
       if (info != null) {
-        print('[AudioFileInfo] WAV ok sr=${info.sampleRate} ch=${info.numChannels} bd=${info.bitDepth}');
+        if (kDebugMode) print('[AudioFileInfo] WAV ok sr=${info.sampleRate} ch=${info.numChannels} bd=${info.bitDepth}');
         return AudioFileInfo(
           sampleRate: info.sampleRate,
           bitDepth: info.bitDepth,
           channels: info.numChannels,
         );
       }
-      print('[AudioFileInfo] WAV parse failed');
+      if (kDebugMode) print('[AudioFileInfo] WAV parse failed');
     }
 
     if (ext == 'aif' || ext == 'aiff') {
       final info = _parseAiffInfo(buf);
-      print('[AudioFileInfo] AIFF result=$info');
+      if (kDebugMode) print('[AudioFileInfo] AIFF result=$info');
       return info;
     }
 
     // FLAC — parse STREAMINFO metadata block
     if (ext == 'flac') {
       final info = _parseFlacInfo(buf);
-      print('[AudioFileInfo] FLAC result=$info');
+      if (kDebugMode) print('[AudioFileInfo] FLAC result=$info');
       return info;
     }
 
     // MP3 — scan for first valid MPEG frame header
     if (ext == 'mp3') {
       final info = _parseMp3Info(buf, totalFileSize: size, filePath: filePath);
-      print('[AudioFileInfo] MP3 result=$info');
+      if (kDebugMode) print('[AudioFileInfo] MP3 result=$info');
       return info;
     }
 
     // OGG Vorbis — parse identification header
     if (ext == 'ogg') {
       final info = _parseOggInfo(buf);
-      print('[AudioFileInfo] OGG result=$info');
+      if (kDebugMode) print('[AudioFileInfo] OGG result=$info');
       return info;
     }
 
-    print('[AudioFileInfo] unrecognized extension: $ext');
+    if (kDebugMode) print('[AudioFileInfo] unrecognized extension: $ext');
     return null;
   } catch (e, st) {
-    print('[AudioFileInfo] exception: $e\n$st');
+    if (kDebugMode) print('[AudioFileInfo] exception: $e\n$st');
     return null;
   }
 }
@@ -631,12 +631,12 @@ AudioFileInfo? _parseMp3Info(Uint8List buf, {int totalFileSize = 0, String fileP
     // Size is synchsafe integer at bytes 6-9
     final id3Size = (buf[6] << 21) | (buf[7] << 14) | (buf[8] << 7) | buf[9];
     offset = 10 + id3Size;
-    print('[MP3] ID3v2 tag detected, id3Size=$id3Size, scan starts at offset=$offset, bufLen=${buf.length}');
+    if (kDebugMode) print('[MP3] ID3v2 tag detected, id3Size=$id3Size, scan starts at offset=$offset, bufLen=${buf.length}');
     if (offset >= buf.length) {
-      print('[MP3] ID3v2 tag ($id3Size bytes) exceeds buffer (${buf.length} bytes) — no frame header in buffer');
+      if (kDebugMode) print('[MP3] ID3v2 tag ($id3Size bytes) exceeds buffer (${buf.length} bytes) — no frame header in buffer');
     }
   } else {
-    print('[MP3] No ID3v2 tag. First bytes: ${buf.take(4).map((b) => b.toRadixString(16).padLeft(2, '0')).join(' ')}');
+    if (kDebugMode) print('[MP3] No ID3v2 tag. First bytes: ${buf.take(4).map((b) => b.toRadixString(16).padLeft(2, '0')).join(' ')}');
   }
 
   int syncCandidates = 0;
@@ -646,16 +646,16 @@ AudioFileInfo? _parseMp3Info(Uint8List buf, {int totalFileSize = 0, String fileP
     if ((b1 & 0xE0) != 0xE0) continue; // not a sync
     syncCandidates++;
     final mpegVer = (b1 >> 3) & 0x03;
-    if (mpegVer == 1) { print('[MP3] @$i sync found but mpegVer=1 (reserved), skip'); continue; }
+    if (mpegVer == 1) { if (kDebugMode) print('[MP3] @$i sync found but mpegVer=1 (reserved), skip'); continue; }
     final layer = (b1 >> 1) & 0x03;
-    if (layer == 0) { print('[MP3] @$i sync found but layer=0 (reserved), skip'); continue; }
+    if (layer == 0) { if (kDebugMode) print('[MP3] @$i sync found but layer=0 (reserved), skip'); continue; }
 
     final b2 = buf[i + 2];
     final bitrateIdx = (b2 >> 4) & 0x0F;
-    if (bitrateIdx == 0x0F) { print('[MP3] @$i bitrateIdx=0xF (invalid), skip'); continue; }
-    if (bitrateIdx == 0x00) { print('[MP3] @$i bitrateIdx=0 (free bitrate), skip'); continue; }
+    if (bitrateIdx == 0x0F) { if (kDebugMode) print('[MP3] @$i bitrateIdx=0xF (invalid), skip'); continue; }
+    if (bitrateIdx == 0x00) { if (kDebugMode) print('[MP3] @$i bitrateIdx=0 (free bitrate), skip'); continue; }
     final srIdx = (b2 >> 2) & 0x03;
-    if (srIdx == 3) { print('[MP3] @$i srIdx=3 (reserved), skip'); continue; }
+    if (srIdx == 3) { if (kDebugMode) print('[MP3] @$i srIdx=3 (reserved), skip'); continue; }
 
     final b3 = buf[i + 3];
     final channelMode = (b3 >> 6) & 0x03;
@@ -687,10 +687,10 @@ AudioFileInfo? _parseMp3Info(Uint8List buf, {int totalFileSize = 0, String fileP
     final brIdx = verIdx == 0 ? 0 : 1;
     final kbps = bitrateTable[brIdx]?[layer]?[bitrateIdx];
 
-    print('[MP3] Frame found @$i mpegVer=$mpegVer layer=$layer bitrateIdx=$bitrateIdx srIdx=$srIdx channelMode=$channelMode → sr=$sr ch=$channels kbps=$kbps');
+    if (kDebugMode) print('[MP3] Frame found @$i mpegVer=$mpegVer layer=$layer bitrateIdx=$bitrateIdx srIdx=$srIdx channelMode=$channelMode → sr=$sr ch=$channels kbps=$kbps');
     return AudioFileInfo(sampleRate: sr, channels: channels, bitrateKbps: kbps); // bitDepth null (lossy)
   }
-  print('[MP3] No valid frame header found. syncCandidates=$syncCandidates scanned=${buf.length - offset} bytes (offset=$offset..${buf.length})');
+  if (kDebugMode) print('[MP3] No valid frame header found. syncCandidates=$syncCandidates scanned=${buf.length - offset} bytes (offset=$offset..${buf.length})');
   return null;
 }
 
