@@ -967,9 +967,13 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
     final activeTheme = ref.watch(themeDataProvider);
     final isNeon = ref.watch(themeTypeProvider) == AppThemeType.neonDark;
     final isDark = activeTheme.brightness == Brightness.dark;
-    final rowSelectColor = activeTheme.colorScheme.primary.withValues(
-      alpha: 0.18,
-    );
+    // Classic Dark's primary is a muted gray-blue, so tinting with it reads
+    // as barely-there against the dark card background — lean on white
+    // instead for a highlight that actually contrasts. Neon Dark's bright
+    // primary already pops, so keep that one colored.
+    final rowSelectColor = isNeon
+        ? activeTheme.colorScheme.primary.withValues(alpha: 0.18)
+        : Colors.white.withValues(alpha: 0.14);
     final oddColor = isNeon
         ? activeTheme.scaffoldBackgroundColor
         : activeTheme.cardColor;

@@ -7468,9 +7468,13 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     final playingHighlightColor = activeTheme.colorScheme.primary.withValues(
       alpha: 0.32,
     );
-    final rowSelectColor = activeTheme.colorScheme.primary.withValues(
-      alpha: 0.18,
-    );
+    // Classic Dark's primary is a muted gray-blue, so tinting with it reads
+    // as barely-there against the dark card background — lean on white
+    // instead for a highlight that actually contrasts. Neon Dark's bright
+    // primary already pops, so keep that one colored.
+    final rowSelectColor = isNeon
+        ? activeTheme.colorScheme.primary.withValues(alpha: 0.18)
+        : Colors.white.withValues(alpha: 0.14);
 
     // Neon Dark: use scaffold background (very dark navy) for odd rows so alternating rows are clearly visible.
     // Classic Dark: use card colour for odd rows (current behaviour).
