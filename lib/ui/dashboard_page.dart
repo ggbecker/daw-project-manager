@@ -145,6 +145,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
   bool _rescanJustSucceeded = false;
   bool _deepScanJustSucceeded = false;
   Timer? _scanSuccessFlashTimer;
+  Timer? _searchDebounceTimer;
   bool _isSearchingMobile = false;
   bool _isSearchingDesktop = false;
   double _railWidth = 130.0;
@@ -329,6 +330,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
   }
 
   void _clearCurrentTabSearch() {
+    _searchDebounceTimer?.cancel();
     _searchController.clear();
     switch (_currentTab) {
       case AppTab.projects:
@@ -344,7 +346,22 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     }
   }
 
+  // Debounces the provider write (which drives filtering across the whole
+  // visible list) so a fast typist doesn't re-filter on every keystroke.
+  // Clearing to empty is applied immediately — that's a deliberate,
+  // discrete action, not a keystroke, and shouldn't feel laggy.
   void _updateCurrentTabSearch(String text) {
+    _searchDebounceTimer?.cancel();
+    if (text.isEmpty) {
+      _applyCurrentTabSearch(text);
+      return;
+    }
+    _searchDebounceTimer = Timer(const Duration(milliseconds: 200), () {
+      _applyCurrentTabSearch(text);
+    });
+  }
+
+  void _applyCurrentTabSearch(String text) {
     switch (_currentTab) {
       case AppTab.projects:
         ref.read(projectsSearchProvider.notifier).setSearchText(text);
@@ -368,6 +385,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     _debugKeyboardFocusNode.dispose();
     _searchController.dispose();
     _scanSuccessFlashTimer?.cancel();
+    _searchDebounceTimer?.cancel();
     super.dispose();
   }
 
@@ -585,6 +603,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
 
   Future<void> _performProfileSwitch(String profileId) async {
     final profileRepo = await ref.read(profileRepositoryProvider.future);
+    if (!mounted) return;
     final profileSwitchingNotifier = ref.read(
       profileSwitchingProvider.notifier,
     );
@@ -631,22 +650,24 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
           .toList(growable: false);
       final scanTime = DateTime.now();
       for (final root in repo.getRoots()) {
-        final foundPaths = <String>{};
+        final entities = <FileSystemEntity>[];
         await for (final entity in scanner.scanDirectory(
           root.path,
           ignoredPaths: ignoredPaths,
         )) {
-          final useFullMetadata =
-              fullMetadata &&
-              (!onlyUnscanned ||
-                  repo.getByPath(entity.path)?.metadataScanned != true);
-          await repo.upsertFromFileSystemEntity(
-            entity,
-            fullMetadata: useFullMetadata,
-          );
-          foundPaths.add(entity.path);
-          foundCount++;
+          entities.add(entity);
         }
+        if (entities.isNotEmpty) {
+          await repo.upsertManyFromFileSystemEntities(
+            entities,
+            fullMetadataFor: (entity) =>
+                fullMetadata &&
+                (!onlyUnscanned ||
+                    repo.getByPath(entity.path)?.metadataScanned != true),
+          );
+          foundCount += entities.length;
+        }
+        final foundPaths = entities.map((e) => e.path).toSet();
         if (knownPaths.isNotEmpty) {
           for (final path in newlyFoundPaths(foundPaths, knownPaths)) {
             final saved = repo.getByPath(path);
@@ -6743,9 +6764,9 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             );
           }
 
-          final fileExists =
-              File(project.filePath).existsSync() ||
-              Directory(project.filePath).existsSync();
+          final fileExists = ref
+              .read(fileExistenceCacheProvider)
+              .exists(project.filePath);
 
           final currentQuery = ref.read(projectsSearchProvider);
           final isNotesMatch =

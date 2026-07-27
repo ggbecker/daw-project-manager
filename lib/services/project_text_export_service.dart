@@ -1,3 +1,4 @@
+import '../generated/l10n/app_localizations.dart';
 import '../models/music_project.dart';
 
 /// Formats [MusicProject] data as human-readable plain text, so a record of a
@@ -6,66 +7,78 @@ class ProjectTextExportService {
   const ProjectTextExportService._();
 
   /// A single project's info as plain text.
-  static String formatProject(MusicProject project) {
+  static String formatProject(MusicProject project, AppLocalizations l10n) {
     final buffer = StringBuffer();
-    _writeProject(buffer, project);
+    _writeProject(buffer, project, l10n);
     return buffer.toString();
   }
 
   /// Every project's info as one plain text document, in the given order.
-  static String formatProjects(List<MusicProject> projects) {
+  static String formatProjects(List<MusicProject> projects, AppLocalizations l10n) {
     final buffer = StringBuffer()
-      ..writeln('DAW PROJECT MANAGER — PROJECT EXPORT')
-      ..writeln('Exported: ${_formatDateTime(DateTime.now())}')
-      ..writeln('Total projects: ${projects.length}')
+      ..writeln(l10n.projectExportHeaderTitle)
+      ..writeln(l10n.projectExportExportedLabel(_formatDateTime(DateTime.now())))
+      ..writeln(l10n.projectExportTotalProjectsLabel(projects.length))
       ..writeln();
     for (final project in projects) {
       buffer.writeln('=' * 80);
-      _writeProject(buffer, project);
+      _writeProject(buffer, project, l10n);
       buffer.writeln();
     }
     return buffer.toString();
   }
 
-  static void _writeProject(StringBuffer buffer, MusicProject project) {
+  static void _writeProject(StringBuffer buffer, MusicProject project, AppLocalizations l10n) {
     buffer
-      ..writeln('Project: ${project.displayName}')
+      ..writeln(l10n.projectExportProjectLabel(project.displayName))
       ..writeln('-' * 80);
 
     if (project.dawType != null && project.dawType!.isNotEmpty) {
       final version = project.dawVersion;
-      buffer.writeln('DAW: ${project.dawType}${version != null && version.isNotEmpty ? ' $version' : ''}');
+      buffer.writeln(
+        version != null && version.isNotEmpty
+            ? l10n.projectExportDawWithVersionLabel(project.dawType!, version)
+            : l10n.projectExportDawLabel(project.dawType!),
+      );
     }
-    buffer.writeln('Status: ${project.status}');
+    buffer.writeln(l10n.projectExportStatusLabel(project.status));
     if (project.bpm != null) {
-      buffer.writeln('BPM: ${_formatBpm(project.bpm!)}');
+      buffer.writeln(l10n.projectExportBpmLabel(_formatBpm(project.bpm!)));
     }
     if (project.musicalKey != null && project.musicalKey!.isNotEmpty) {
       final camelot = project.camelotCode;
-      buffer.writeln('Key: ${project.musicalKey}${camelot != null ? ' (Camelot $camelot)' : ''}');
+      buffer.writeln(
+        camelot != null
+            ? l10n.projectExportKeyWithCamelotLabel(project.musicalKey!, camelot)
+            : l10n.projectExportKeyLabel(project.musicalKey!),
+      );
     }
     buffer
-      ..writeln('File path: ${project.filePath}')
-      ..writeln('File size: ${_formatFileSize(project.fileSizeBytes)}');
+      ..writeln(l10n.projectExportFilePathLabel(project.filePath))
+      ..writeln(l10n.projectExportFileSizeLabel(_formatFileSize(project.fileSizeBytes)));
     if (project.fileCreatedAt != null) {
-      buffer.writeln('File created: ${_formatDate(project.fileCreatedAt!)}');
+      buffer.writeln(l10n.projectExportFileCreatedLabel(_formatDate(project.fileCreatedAt!)));
     }
     buffer
-      ..writeln('Added to library: ${_formatDate(project.createdAt)}')
-      ..writeln('Last modified: ${_formatDate(project.lastModifiedAt)}');
+      ..writeln(l10n.projectExportAddedToLibraryLabel(_formatDate(project.createdAt)))
+      ..writeln(l10n.projectExportLastModifiedLabel(_formatDate(project.lastModifiedAt)));
     if (project.deadline != null) {
       final status = project.deadlineStatus;
-      buffer.writeln('Deadline: ${_formatDate(project.deadline!)}${status != null ? ' ($status)' : ''}');
+      buffer.writeln(
+        status != null
+            ? l10n.projectExportDeadlineWithStatusLabel(_formatDate(project.deadline!), status)
+            : l10n.projectExportDeadlineLabel(_formatDate(project.deadline!)),
+      );
     }
     if (project.totalWorkSeconds > 0) {
-      buffer.writeln('Total time worked: ${_formatDuration(project.totalWorkSeconds)}');
+      buffer.writeln(l10n.projectExportTotalTimeWorkedLabel(_formatDuration(project.totalWorkSeconds)));
     }
 
     final notes = project.notes?.trim();
     if (notes != null && notes.isNotEmpty) {
       buffer
         ..writeln()
-        ..writeln('Notes:');
+        ..writeln(l10n.projectExportNotesLabel);
       for (final line in notes.split('\n')) {
         buffer.writeln('  $line');
       }
@@ -74,7 +87,7 @@ class ProjectTextExportService {
     if (project.todos.isNotEmpty) {
       buffer
         ..writeln()
-        ..writeln('To-dos:');
+        ..writeln(l10n.projectExportTodosLabel);
       for (final todo in project.todos) {
         buffer.writeln('  [${todo.completed ? 'x' : ' '}] ${todo.text}');
       }
@@ -83,7 +96,7 @@ class ProjectTextExportService {
     if (project.sessions.isNotEmpty) {
       buffer
         ..writeln()
-        ..writeln('Work sessions (${project.sessions.length}):');
+        ..writeln(l10n.projectExportWorkSessionsLabel(project.sessions.length));
       for (final session in project.sessions) {
         final phase = session.phase != null && session.phase!.isNotEmpty ? ' [${session.phase}]' : '';
         buffer.writeln(

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
@@ -49,6 +50,20 @@ class ProjectRepository {
     required this.eventsBox,
     required this.appSettingsBox,
   });
+
+  // Closes every per-profile box this repository opened, so switching to a
+  // different profile doesn't leave the outgoing profile's projects (and
+  // everything else) resident in memory for the rest of the app session.
+  // appSettingsBox is intentionally NOT closed — it's global, shared across
+  // profiles, and other repositories/providers may still be reading it.
+  Future<void> closeBoxes() async {
+    await projectsBox.close();
+    await rootsBox.close();
+    await ignoredPathsBox.close();
+    await releasesBox.close();
+    await playlistsBox.close();
+    await eventsBox.close();
+  }
 
   // Subfolder names (relative to each project's own folder) checked, in
   // order, before falling back to DAW-specific and generic defaults.
@@ -468,6 +483,73 @@ class ProjectRepository {
   /// [fullMetadata] if true, extracts full metadata (BPM, key, DAW version) - slower
   /// if false, only extracts DAW type from extension - faster
   Future<void> upsertFromFileSystemEntity(FileSystemEntity entity, {bool fullMetadata = false, String? parentProjectId}) async {
+    final built = await _buildProjectAndEvent(
+      entity,
+      fullMetadata: fullMetadata,
+      parentProjectId: parentProjectId,
+    );
+    await projectsBox.put(built.project.id, built.project);
+    if (built.event != null) {
+      await eventsBox.put(built.event!.id, built.event!);
+    }
+  }
+
+  /// Batched counterpart of [upsertFromFileSystemEntity] for scan loops,
+  /// which otherwise call it once per discovered file — each call does its
+  /// own `Box.put()`, and Hive fires a change event per put. On a library
+  /// with thousands of projects that turns one rescan into thousands of
+  /// events, each of which re-materializes and re-filters the whole project
+  /// list downstream (see `watchAllProjects`'s debounce, which only softens
+  /// the effect — this removes the write-side cause). Metadata extraction
+  /// still happens per file (it's genuinely per-file I/O), but persistence
+  /// is batched into `putAll` calls, flushed every [flushEvery] entities so
+  /// memory stays bounded on very large scans.
+  Future<void> upsertManyFromFileSystemEntities(
+    List<FileSystemEntity> entities, {
+    bool fullMetadata = false,
+    // Overrides [fullMetadata] per entity, for callers like the dashboard's
+    // "unscanned only" rescan mode where the decision depends on each
+    // project's current metadataScanned state.
+    bool Function(FileSystemEntity entity)? fullMetadataFor,
+    String? parentProjectId,
+    int flushEvery = 200,
+  }) async {
+    var pendingProjects = <String, MusicProject>{};
+    var pendingEvents = <String, ProjectEvent>{};
+
+    Future<void> flush() async {
+      if (pendingProjects.isNotEmpty) {
+        await projectsBox.putAll(pendingProjects);
+        pendingProjects = {};
+      }
+      if (pendingEvents.isNotEmpty) {
+        await eventsBox.putAll(pendingEvents);
+        pendingEvents = {};
+      }
+    }
+
+    for (final entity in entities) {
+      final built = await _buildProjectAndEvent(
+        entity,
+        fullMetadata: fullMetadataFor?.call(entity) ?? fullMetadata,
+        parentProjectId: parentProjectId,
+      );
+      pendingProjects[built.project.id] = built.project;
+      if (built.event != null) {
+        pendingEvents[built.event!.id] = built.event!;
+      }
+      if (pendingProjects.length >= flushEvery) {
+        await flush();
+      }
+    }
+    await flush();
+  }
+
+  Future<({MusicProject project, ProjectEvent? event})> _buildProjectAndEvent(
+    FileSystemEntity entity, {
+    bool fullMetadata = false,
+    String? parentProjectId,
+  }) async {
     final isLogicBundle = entity is Directory && entity.path.toLowerCase().endsWith('.logicx');
     final filePath = entity.path;
     final stat = await entity.stat();
@@ -558,13 +640,12 @@ class ProjectRepository {
       metadataScanned: fullMetadata ? true : (existing?.metadataScanned ?? false),
     );
 
-    await projectsBox.put(projectToSave.id, projectToSave);
-
     // Record a file_changed event if an existing project had its file mutated
+    ProjectEvent? event;
     if (existing != null &&
         (existing.fileSizeBytes != size ||
             existing.lastModifiedAt != lastModified)) {
-      final event = ProjectEvent(
+      event = ProjectEvent(
         id: _uuid.v4(),
         projectId: projectToSave.id,
         eventType: ProjectEvent.fileChanged,
@@ -575,8 +656,9 @@ class ProjectRepository {
           'newSizeBytes': size,
         }),
       );
-      await eventsBox.put(event.id, event);
     }
+
+    return (project: projectToSave, event: event);
   }
 
   List<MusicProject> getAllProjects() => projectsBox.values.toList(growable: false);
@@ -657,23 +739,40 @@ class ProjectRepository {
   // Stream watch for Riverpod StreamProvider usage
   Stream<BoxEvent> watchProjects() => projectsBox.watch();
   
-  // MÉTODO NOVO/CORRIGIDO: Retorna a lista completa a cada mudança do Hive
-  Stream<List<MusicProject>> watchAllProjects() async* {
-    // Emit initial value immediately
-    final initialProjects = projectsBox.values.toList();
-    if (kDebugMode) {
-      print('watchAllProjects: Emitting initial ${initialProjects.length} projects for profile $profileId');
-    }
-    yield initialProjects;
-    
-    // Then watch for changes - this will emit whenever ANY project is added/updated/deleted
-    yield* projectsBox.watch().map((event) {
+  // Emits the full project list on every Hive box change. Scans can fire
+  // hundreds/thousands of individual put()s in quick succession (one per
+  // discovered file), each of which would otherwise re-materialize and
+  // re-filter the whole list — an O(N^2) cost that dominates scan time on
+  // large libraries. Debouncing collapses a burst of box events into a
+  // single emission after they go quiet.
+  Stream<List<MusicProject>> watchAllProjects() {
+    late StreamController<List<MusicProject>> controller;
+    StreamSubscription<BoxEvent>? boxSub;
+    Timer? debounceTimer;
+
+    void emitCurrent() {
       final projects = projectsBox.values.toList();
-    if (kDebugMode) {
-      print('watchAllProjects: Box changed, emitting ${projects.length} projects for profile $profileId');
+      if (kDebugMode) {
+        print('watchAllProjects: emitting ${projects.length} projects for profile $profileId');
+      }
+      if (!controller.isClosed) controller.add(projects);
     }
-      return projects;
-    });
+
+    controller = StreamController<List<MusicProject>>(
+      onListen: () {
+        emitCurrent();
+        boxSub = projectsBox.watch().listen((_) {
+          debounceTimer?.cancel();
+          debounceTimer = Timer(const Duration(milliseconds: 200), emitCurrent);
+        });
+      },
+      onCancel: () {
+        debounceTimer?.cancel();
+        boxSub?.cancel();
+      },
+    );
+
+    return controller.stream;
   }
   
   Stream<BoxEvent> watchRoots() => rootsBox.watch();

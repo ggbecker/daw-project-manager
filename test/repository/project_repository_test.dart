@@ -410,16 +410,16 @@ void main() {
       final repo = await HiveTestHelper.createRepository();
       await repo.updateProject(TestFactories.makeProject(id: 'existing'));
 
-      // Collect all emissions via listen so no events are missed. The
-      // Future.delayed(Duration.zero) drains the microtask queue after
-      // each step, ensuring the async* generator has subscribed to
-      // box.watch() before we write.
+      // Collect all emissions via listen so no events are missed. Writes are
+      // debounced (200ms) so the dashboard doesn't re-filter/re-sort on
+      // every single Box.put() during a scan — wait past that window before
+      // asserting on the post-write emission.
       final emissions = <List<MusicProject>>[];
       final sub = repo.watchAllProjects().listen(emissions.add);
       await Future.delayed(Duration.zero);
 
       await repo.updateProject(TestFactories.makeProject(id: 'newly-added'));
-      await Future.delayed(Duration.zero);
+      await Future.delayed(const Duration(milliseconds: 250));
       await sub.cancel();
 
       expect(emissions.length, greaterThanOrEqualTo(2));
@@ -445,7 +445,7 @@ void main() {
         lastModifiedAt: DateTime(2025, 6, 10),
       );
       await repo.restoreProject(rescanned);
-      await Future.delayed(Duration.zero);
+      await Future.delayed(const Duration(milliseconds: 250));
       await sub.cancel();
 
       expect(emissions.length, greaterThanOrEqualTo(2));
@@ -813,6 +813,137 @@ void main() {
 
       expect(repo.getAllProjects().length, 1);
       expect(repo.getByPath(file.path)!.id, firstId);
+    });
+  });
+
+  group('ProjectRepository.upsertManyFromFileSystemEntities', () {
+    test('creates one project per newly seen file', () async {
+      final repo = await HiveTestHelper.createRepository();
+      final fileDir = await Directory.systemTemp.createTemp('upsert_many_test_');
+      addTearDown(() => fileDir.delete(recursive: true));
+      final files = [
+        File(p.join(fileDir.path, 'a.als'))..writeAsStringSync('a'),
+        File(p.join(fileDir.path, 'b.als'))..writeAsStringSync('b'),
+        File(p.join(fileDir.path, 'c.als'))..writeAsStringSync('c'),
+      ];
+
+      await repo.upsertManyFromFileSystemEntities(files, fullMetadata: false);
+
+      expect(repo.getAllProjects().length, 3);
+      for (final f in files) {
+        expect(repo.getByPath(f.path), isNotNull);
+      }
+    });
+
+    test('re-upserting already-known paths updates in place instead of duplicating', () async {
+      final repo = await HiveTestHelper.createRepository();
+      final fileDir = await Directory.systemTemp.createTemp('upsert_many_test_');
+      addTearDown(() => fileDir.delete(recursive: true));
+      final file = File(p.join(fileDir.path, 'song.als'))..writeAsStringSync('data');
+
+      await repo.upsertManyFromFileSystemEntities([file], fullMetadata: false);
+      final firstId = repo.getByPath(file.path)!.id;
+
+      file.writeAsStringSync('more data than before');
+      await repo.upsertManyFromFileSystemEntities([file], fullMetadata: false);
+
+      expect(repo.getAllProjects().length, 1);
+      expect(repo.getByPath(file.path)!.id, firstId);
+    });
+
+    test('flushes in chunks so a large batch does not lose entries', () async {
+      final repo = await HiveTestHelper.createRepository();
+      final fileDir = await Directory.systemTemp.createTemp('upsert_many_flush_test_');
+      addTearDown(() => fileDir.delete(recursive: true));
+      final files = List.generate(
+        5,
+        (i) => File(p.join(fileDir.path, 'song$i.als'))..writeAsStringSync('$i'),
+      );
+
+      // flushEvery smaller than the batch forces multiple putAll flushes.
+      await repo.upsertManyFromFileSystemEntities(
+        files,
+        fullMetadata: false,
+        flushEvery: 2,
+      );
+
+      expect(repo.getAllProjects().length, 5);
+    });
+
+    test('resolves fullMetadataFor per entity instead of a single flag for the whole batch', () async {
+      final repo = await HiveTestHelper.createRepository();
+      final fileDir = await Directory.systemTemp.createTemp('upsert_many_perfile_test_');
+      addTearDown(() => fileDir.delete(recursive: true));
+      final full = File(p.join(fileDir.path, 'full.rpp'))..writeAsStringSync('BPM 120');
+      final light = File(p.join(fileDir.path, 'light.rpp'))..writeAsStringSync('BPM 120');
+
+      await repo.upsertManyFromFileSystemEntities(
+        [full, light],
+        fullMetadataFor: (e) => e.path == full.path,
+      );
+
+      expect(repo.getByPath(full.path)!.metadataScanned, isTrue);
+      expect(repo.getByPath(light.path)!.metadataScanned, isFalse);
+    });
+
+    test('is a no-op for an empty entity list', () async {
+      final repo = await HiveTestHelper.createRepository();
+
+      await repo.upsertManyFromFileSystemEntities([], fullMetadata: false);
+
+      expect(repo.getAllProjects(), isEmpty);
+    });
+  });
+
+  group('ProjectRepository.watchAllProjects', () {
+    test('emits the initial project list immediately on listen', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.updateProject(TestFactories.makeProject(id: 'p1'));
+
+      final first = await repo.watchAllProjects().first;
+
+      expect(first.map((p) => p.id), ['p1']);
+    });
+
+    test('collapses a burst of rapid box writes into a single emission', () async {
+      final repo = await HiveTestHelper.createRepository();
+      final emissions = <List<MusicProject>>[];
+      final sub = repo.watchAllProjects().listen(emissions.add);
+      addTearDown(sub.cancel);
+
+      // Let the initial emission land, then fire many writes back-to-back —
+      // this mirrors what a scan does (one put() per discovered file).
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      emissions.clear();
+      for (var i = 0; i < 20; i++) {
+        await repo.updateProject(TestFactories.makeProject(id: 'burst-$i'));
+      }
+
+      // Debounce window is 200ms — nothing should have emitted yet.
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(emissions, isEmpty);
+
+      // After the debounce window closes, exactly one emission with every write folded in.
+      await Future<void>.delayed(const Duration(milliseconds: 250));
+      expect(emissions.length, 1);
+      expect(emissions.single.length, 20);
+    });
+  });
+
+  group('ProjectRepository.closeBoxes', () {
+    test('closes the per-profile boxes so they can be reopened cleanly', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.updateProject(TestFactories.makeProject(id: 'p1'));
+      expect(repo.projectsBox.isOpen, isTrue);
+
+      await repo.closeBoxes();
+
+      expect(repo.projectsBox.isOpen, isFalse);
+
+      // Reopening should see the previously-written data, proving nothing
+      // was lost or corrupted by the close.
+      final reopened = await HiveTestHelper.createRepository();
+      expect(reopened.getById('p1'), isNotNull);
     });
   });
 }

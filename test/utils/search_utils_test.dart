@@ -88,5 +88,18 @@ void main() {
     test('extra whitespace between query words is handled', () {
       expect(fuzzyMatchAll('Bass Track', 'bass   track'), isTrue);
     });
+
+    test('alternating queries across repeated calls each get correct results (single-entry cache correctness)', () {
+      // fuzzyMatchAll caches the split of only the most recently seen query
+      // string as a performance optimization. Filtering a list interleaves
+      // many calls against the SAME query, but calling it with a different
+      // query must never reuse a stale split from a previous call.
+      for (var i = 0; i < 3; i++) {
+        expect(fuzzyMatchAll('Bass Track', 'bass'), isTrue);
+        expect(fuzzyMatchAll('Bass Track', 'drum'), isFalse);
+        expect(fuzzyMatchAll('Drum Loop', 'drum'), isTrue);
+        expect(fuzzyMatchAll('Drum Loop', 'bass'), isFalse);
+      }
+    });
   });
 }

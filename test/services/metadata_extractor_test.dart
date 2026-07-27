@@ -253,10 +253,13 @@ TEMPO 120 4 4 0
 ''');
 
       final metadata = await MetadataExtractor.extractMetadata(file.path);
+      // No "by "-style connector: this string is persisted to Hive and
+      // synced to Drive, so it must not bake in an English word — see the
+      // comment in _extractReaperNotes. Title and author are joined by an
+      // em dash instead, since that's punctuation rather than a word.
       expect(
         metadata.projectNotes,
-        'Notes 1\n'
-        'by Audio Crawler\n'
+        'Notes 1 — Audio Crawler\n'
         '\n'
         'This is notes of the project to be displayed in DAW Project Manager\n'
         '\n'
@@ -268,6 +271,40 @@ TEMPO 120 4 4 0
         '\n'
         'Test',
       );
+    });
+
+    test('joins Title and Author with an em dash on one line when both are present', () async {
+      final file = File('${tempDir.path}/project_title_author.rpp');
+      await file.writeAsString('''
+<REAPER_PROJECT 0.1 "7.78/win64" 1784823281 0
+  TITLE "My Song"
+  AUTHOR "Jane Doe"
+''');
+
+      final metadata = await MetadataExtractor.extractMetadata(file.path);
+      expect(metadata.projectNotes, 'My Song — Jane Doe\n');
+    });
+
+    test('projectNotes shows just the title when Author is absent', () async {
+      final file = File('${tempDir.path}/project_title_only.rpp');
+      await file.writeAsString('''
+<REAPER_PROJECT 0.1 "7.78/win64" 1784823281 0
+  TITLE "My Song"
+''');
+
+      final metadata = await MetadataExtractor.extractMetadata(file.path);
+      expect(metadata.projectNotes, 'My Song\n');
+    });
+
+    test('projectNotes shows just the author when Title is absent', () async {
+      final file = File('${tempDir.path}/project_author_only.rpp');
+      await file.writeAsString('''
+<REAPER_PROJECT 0.1 "7.78/win64" 1784823281 0
+  AUTHOR "Jane Doe"
+''');
+
+      final metadata = await MetadataExtractor.extractMetadata(file.path);
+      expect(metadata.projectNotes, 'Jane Doe\n');
     });
 
     test('projectNotes is null when there is no NOTES/TITLE/AUTHOR block', () async {

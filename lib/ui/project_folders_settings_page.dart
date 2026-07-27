@@ -85,7 +85,7 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
     }
 
     try {
-      final text = ProjectTextExportService.formatProjects(projects);
+      final text = ProjectTextExportService.formatProjects(projects, l10n);
       final destPath = await FilePicker.saveFile(
         dialogTitle: l10n.exportAllProjectsInfo,
         fileName: ProjectTextExportService.suggestedBulkFileName(),
@@ -183,9 +183,13 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
     final scanTime = DateTime.now();
     int found = 0;
 
+    final entities = <FileSystemEntity>[];
     await for (final entity in scanner.scanDirectory(folderPath, ignoredPaths: excluded)) {
-      await repo.upsertFromFileSystemEntity(entity, fullMetadata: false);
-      found++;
+      entities.add(entity);
+    }
+    if (entities.isNotEmpty) {
+      await repo.upsertManyFromFileSystemEntities(entities, fullMetadata: false);
+      found += entities.length;
     }
     await repo.updateRootLastScanAt(folderId, scanTime);
 

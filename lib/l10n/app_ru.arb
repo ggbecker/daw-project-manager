@@ -926,6 +926,180 @@
       }
     }
   },
+  "projectExportHeaderTitle": "DAW PROJECT MANAGER — PROJECT EXPORT",
+  "projectExportExportedLabel": "Exported: {dateTime}",
+  "@projectExportExportedLabel": {
+    "description": "Timestamp line in a plain-text project export",
+    "placeholders": {
+      "dateTime": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportTotalProjectsLabel": "Total projects: {count}",
+  "@projectExportTotalProjectsLabel": {
+    "description": "Project count line in a plain-text bulk export",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "projectExportProjectLabel": "Project: {name}",
+  "@projectExportProjectLabel": {
+    "description": "Project name line in a plain-text project export",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportDawLabel": "DAW: {dawType}",
+  "@projectExportDawLabel": {
+    "description": "DAW type line in a plain-text project export, no version known",
+    "placeholders": {
+      "dawType": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportDawWithVersionLabel": "DAW: {dawType} {version}",
+  "@projectExportDawWithVersionLabel": {
+    "description": "DAW type + version line in a plain-text project export",
+    "placeholders": {
+      "dawType": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportStatusLabel": "Status: {status}",
+  "@projectExportStatusLabel": {
+    "description": "Status line in a plain-text project export",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportBpmLabel": "BPM: {bpm}",
+  "@projectExportBpmLabel": {
+    "description": "BPM line in a plain-text project export",
+    "placeholders": {
+      "bpm": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportKeyLabel": "Key: {key}",
+  "@projectExportKeyLabel": {
+    "description": "Musical key line in a plain-text project export, no Camelot code known",
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportKeyWithCamelotLabel": "Key: {key} (Camelot {code})",
+  "@projectExportKeyWithCamelotLabel": {
+    "description": "Musical key + Camelot code line in a plain-text project export",
+    "placeholders": {
+      "key": {
+        "type": "String"
+      },
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportFilePathLabel": "File path: {path}",
+  "@projectExportFilePathLabel": {
+    "description": "File path line in a plain-text project export",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportFileSizeLabel": "File size: {size}",
+  "@projectExportFileSizeLabel": {
+    "description": "File size line in a plain-text project export",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportFileCreatedLabel": "File created: {date}",
+  "@projectExportFileCreatedLabel": {
+    "description": "File creation date line in a plain-text project export",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportAddedToLibraryLabel": "Added to library: {date}",
+  "@projectExportAddedToLibraryLabel": {
+    "description": "Date added to library line in a plain-text project export",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportLastModifiedLabel": "Last modified: {date}",
+  "@projectExportLastModifiedLabel": {
+    "description": "Last modified date line in a plain-text project export",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportDeadlineLabel": "Deadline: {date}",
+  "@projectExportDeadlineLabel": {
+    "description": "Deadline line in a plain-text project export, no status known",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportDeadlineWithStatusLabel": "Deadline: {date} ({status})",
+  "@projectExportDeadlineWithStatusLabel": {
+    "description": "Deadline + status line in a plain-text project export",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportTotalTimeWorkedLabel": "Total time worked: {duration}",
+  "@projectExportTotalTimeWorkedLabel": {
+    "description": "Total time worked line in a plain-text project export",
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "projectExportNotesLabel": "Notes:",
+  "projectExportTodosLabel": "To-dos:",
+  "projectExportWorkSessionsLabel": "Work sessions ({count}):",
+  "@projectExportWorkSessionsLabel": {
+    "description": "Work sessions section header in a plain-text project export",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "noProjectsToExport": "Нет проектов для экспорта",
   "backupExportedSuccessfully": "Резервная копия успешно экспортирована",
   "failedToExportBackup": "Ошибка при экспорте резервной копии: {error}",

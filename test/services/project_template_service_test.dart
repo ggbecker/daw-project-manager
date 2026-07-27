@@ -371,6 +371,43 @@ void main() {
         throwsStateError,
       );
     });
+
+    test(
+      'cleans up the partially-copied destination folder when the copy fails partway through',
+      () async {
+        File(
+          p.join(sourceDir.path, 'Song Template.als'),
+        ).writeAsStringSync('als data');
+        final samplesDir = Directory(p.join(sourceDir.path, 'Samples'))
+          ..createSync();
+        File(
+          p.join(samplesDir.path, 'kick.wav'),
+        ).writeAsStringSync('wav data');
+
+        final destination = p.join(destinationsDir.path, 'My New Track');
+        // Simulate a filesystem conflict partway through the copy: a plain
+        // file sitting exactly where the recursive copy needs to create a
+        // "Samples" subdirectory. This forces instantiate() to fail after
+        // it has already copied "Song Template.als" into the destination.
+        await Directory(destination).create(recursive: true);
+        File(p.join(destination, 'Samples')).writeAsStringSync('conflict');
+
+        await expectLater(
+          ProjectTemplateService.instantiate(
+            template: makeTemplate(),
+            destinationFolderPath: destination,
+            newProjectName: 'My New Track',
+          ),
+          throwsA(isA<FileSystemException>()),
+        );
+
+        // The whole destination folder — including the file already copied
+        // and the seeded conflict — must be gone. Left behind, it would
+        // collide with a same-named retry ("folder already exists") with no
+        // way for the user to tell it apart from a real project.
+        expect(await Directory(destination).exists(), isFalse);
+      },
+    );
   });
 
   group('ProjectTemplateService.discoverTemplateCandidates', () {

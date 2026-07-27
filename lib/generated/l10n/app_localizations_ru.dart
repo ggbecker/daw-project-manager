@@ -1219,6 +1219,105 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get projectExportHeaderTitle => 'DAW PROJECT MANAGER — PROJECT EXPORT';
+
+  @override
+  String projectExportExportedLabel(String dateTime) {
+    return 'Exported: $dateTime';
+  }
+
+  @override
+  String projectExportTotalProjectsLabel(int count) {
+    return 'Total projects: $count';
+  }
+
+  @override
+  String projectExportProjectLabel(String name) {
+    return 'Project: $name';
+  }
+
+  @override
+  String projectExportDawLabel(String dawType) {
+    return 'DAW: $dawType';
+  }
+
+  @override
+  String projectExportDawWithVersionLabel(String dawType, String version) {
+    return 'DAW: $dawType $version';
+  }
+
+  @override
+  String projectExportStatusLabel(String status) {
+    return 'Status: $status';
+  }
+
+  @override
+  String projectExportBpmLabel(String bpm) {
+    return 'BPM: $bpm';
+  }
+
+  @override
+  String projectExportKeyLabel(String key) {
+    return 'Key: $key';
+  }
+
+  @override
+  String projectExportKeyWithCamelotLabel(String key, String code) {
+    return 'Key: $key (Camelot $code)';
+  }
+
+  @override
+  String projectExportFilePathLabel(String path) {
+    return 'File path: $path';
+  }
+
+  @override
+  String projectExportFileSizeLabel(String size) {
+    return 'File size: $size';
+  }
+
+  @override
+  String projectExportFileCreatedLabel(String date) {
+    return 'File created: $date';
+  }
+
+  @override
+  String projectExportAddedToLibraryLabel(String date) {
+    return 'Added to library: $date';
+  }
+
+  @override
+  String projectExportLastModifiedLabel(String date) {
+    return 'Last modified: $date';
+  }
+
+  @override
+  String projectExportDeadlineLabel(String date) {
+    return 'Deadline: $date';
+  }
+
+  @override
+  String projectExportDeadlineWithStatusLabel(String date, String status) {
+    return 'Deadline: $date ($status)';
+  }
+
+  @override
+  String projectExportTotalTimeWorkedLabel(String duration) {
+    return 'Total time worked: $duration';
+  }
+
+  @override
+  String get projectExportNotesLabel => 'Notes:';
+
+  @override
+  String get projectExportTodosLabel => 'To-dos:';
+
+  @override
+  String projectExportWorkSessionsLabel(int count) {
+    return 'Work sessions ($count):';
+  }
+
+  @override
   String get noProjectsToExport => 'Нет проектов для экспорта';
 
   @override

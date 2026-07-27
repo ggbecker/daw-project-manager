@@ -1,6 +1,7 @@
 import 'dart:io';
 import '../utils/mobile_utils.dart';
 import '../utils/search_utils.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -716,21 +717,21 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
 
   Future<void> _reloadPlaylistAndItems() async {
     if (!mounted) return;
-    
-    print('🔄 Starting playlist reload...');
-    
+
+    if (kDebugMode) print('🔄 Starting playlist reload...');
+
     // Show loading state
     setState(() {
       _isLoading = true;
     });
-    
+
     try {
       final repo = await ref.read(repositoryProvider.future);
-      
+
       // Get fresh playlist data from repository
       final updatedPlaylist = repo.getPlaylistById(widget.playlist.id);
       if (updatedPlaylist == null) {
-        print('❌ Playlist not found!');
+        if (kDebugMode) print('❌ Playlist not found!');
         if (mounted) {
           setState(() {
             _isLoading = false;
@@ -738,13 +739,13 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
         }
         return;
       }
-      
-      print('✅ Loaded playlist: ${updatedPlaylist.name} with ${updatedPlaylist.projectIds.length} project IDs');
-      
+
+      if (kDebugMode) print('✅ Loaded playlist: ${updatedPlaylist.name} with ${updatedPlaylist.projectIds.length} project IDs');
+
       // Get all projects
       final allProjects = repo.getAllProjects();
-      print('📂 Found ${allProjects.length} projects in repository');
-      
+      if (kDebugMode) print('📂 Found ${allProjects.length} projects in repository');
+
       // Build items list from fresh data
       final items = <_PlaylistItem>[];
       for (final projectId in updatedPlaylist.projectIds) {
@@ -754,14 +755,14 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
               project.previewSongPath!.isNotEmpty &&
               !project.previewSongPath!.startsWith('drive://')) {
             items.add(_PlaylistItem(project));
-            print('  ➕ Added: ${project.displayName}');
+            if (kDebugMode) print('  ➕ Added: ${project.displayName}');
           }
         } catch (_) {
-          print('  ⚠️ Project not found: $projectId');
+          if (kDebugMode) print('  ⚠️ Project not found: $projectId');
         }
       }
 
-      print('🎵 Final playlist has ${items.length} items');
+      if (kDebugMode) print('🎵 Final playlist has ${items.length} items');
 
       // Update state with fresh data
       if (mounted) {
@@ -770,10 +771,10 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
           _playlistItems = items;
           _isLoading = false;
         });
-        print('✨ UI updated with new data');
+        if (kDebugMode) print('✨ UI updated with new data');
       }
     } catch (e) {
-      print('❌ Error reloading: $e');
+      if (kDebugMode) print('❌ Error reloading: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -1157,7 +1158,8 @@ class _PlaylistPlayerPageState extends ConsumerState<PlaylistPlayerPage> {
                 if (_isPlaying) {
                   await _audioPlayer.pause();
                 }
-                
+                if (!mounted) return;
+
                 // Navigate to main playlist page's edit dialog
                 final result = await Navigator.of(context).push(
                   MaterialPageRoute(

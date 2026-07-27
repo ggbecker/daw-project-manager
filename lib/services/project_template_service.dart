@@ -234,22 +234,40 @@ class ProjectTemplateService {
       excludedPaths.add(p.join(template.sourceFolderPath, siblingFirstSegment));
     }
 
-    await _copyDirectory(
-      sourceDir,
-      Directory(destinationFolderPath),
-      excludedPaths: excludedPaths,
-    );
+    // The destination folder must not already exist when we're called (see
+    // the class doc comment — callers validate that first), so anything
+    // found under it on failure is ours to clean up: a half-copied folder
+    // left behind would otherwise collide with a same-named retry ("folder
+    // already exists") with no way for the user to tell it apart from a
+    // real project.
+    try {
+      await _copyDirectory(
+        sourceDir,
+        Directory(destinationFolderPath),
+        excludedPaths: excludedPaths,
+      );
 
-    final copiedMainFile = File(
-      p.join(destinationFolderPath, template.mainFileRelativePath),
-    );
-    final newFileName =
-        '$newProjectName${p.extension(template.mainFileRelativePath)}';
-    final newMainFilePath = p.join(p.dirname(copiedMainFile.path), newFileName);
-    final renamedMainFile = await copiedMainFile.rename(newMainFilePath);
-    await renamedMainFile.setLastModified(DateTime.now());
+      final copiedMainFile = File(
+        p.join(destinationFolderPath, template.mainFileRelativePath),
+      );
+      final newFileName =
+          '$newProjectName${p.extension(template.mainFileRelativePath)}';
+      final newMainFilePath = p.join(p.dirname(copiedMainFile.path), newFileName);
+      final renamedMainFile = await copiedMainFile.rename(newMainFilePath);
+      await renamedMainFile.setLastModified(DateTime.now());
 
-    return newMainFilePath;
+      return newMainFilePath;
+    } catch (_) {
+      final destinationDir = Directory(destinationFolderPath);
+      if (await destinationDir.exists()) {
+        try {
+          await destinationDir.delete(recursive: true);
+        } catch (_) {
+          // Best-effort cleanup — surface the original copy failure either way.
+        }
+      }
+      rethrow;
+    }
   }
 
   static Future<void> _copyDirectory(

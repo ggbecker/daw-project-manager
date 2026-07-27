@@ -2141,6 +2141,132 @@ abstract class AppLocalizations {
   /// **'Failed to export project info: {error}'**
   String failedToExportProjectInfo(String error);
 
+  /// No description provided for @projectExportHeaderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'DAW PROJECT MANAGER — PROJECT EXPORT'**
+  String get projectExportHeaderTitle;
+
+  /// Timestamp line in a plain-text project export
+  ///
+  /// In en, this message translates to:
+  /// **'Exported: {dateTime}'**
+  String projectExportExportedLabel(String dateTime);
+
+  /// Project count line in a plain-text bulk export
+  ///
+  /// In en, this message translates to:
+  /// **'Total projects: {count}'**
+  String projectExportTotalProjectsLabel(int count);
+
+  /// Project name line in a plain-text project export
+  ///
+  /// In en, this message translates to:
+  /// **'Project: {name}'**
+  String projectExportProjectLabel(String name);
+
+  /// DAW type line in a plain-text project export, no version known
+  ///
+  /// In en, this message translates to:
+  /// **'DAW: {dawType}'**
+  String projectExportDawLabel(String dawType);
+
+  /// DAW type + version line in a plain-text project export
+  ///
+  /// In en, this message translates to:
+  /// **'DAW: {dawType} {version}'**
+  String projectExportDawWithVersionLabel(String dawType, String version);
+
+  /// Status line in a plain-text project export
+  ///
+  /// In en, this message translates to:
+  /// **'Status: {status}'**
+  String projectExportStatusLabel(String status);
+
+  /// BPM line in a plain-text project export
+  ///
+  /// In en, this message translates to:
+  /// **'BPM: {bpm}'**
+  String projectExportBpmLabel(String bpm);
+
+  /// Musical key line in a plain-text project export, no Camelot code known
+  ///
+  /// In en, this message translates to:
+  /// **'Key: {key}'**
+  String projectExportKeyLabel(String key);
+
+  /// Musical key + Camelot code line in a plain-text project export
+  ///
+  /// In en, this message translates to:
+  /// **'Key: {key} (Camelot {code})'**
+  String projectExportKeyWithCamelotLabel(String key, String code);
+
+  /// File path line in a plain-text project export
+  ///
+  /// In en, this message translates to:
+  /// **'File path: {path}'**
+  String projectExportFilePathLabel(String path);
+
+  /// File size line in a plain-text project export
+  ///
+  /// In en, this message translates to:
+  /// **'File size: {size}'**
+  String projectExportFileSizeLabel(String size);
+
+  /// File creation date line in a plain-text project export
+  ///
+  /// In en, this message translates to:
+  /// **'File created: {date}'**
+  String projectExportFileCreatedLabel(String date);
+
+  /// Date added to library line in a plain-text project export
+  ///
+  /// In en, this message translates to:
+  /// **'Added to library: {date}'**
+  String projectExportAddedToLibraryLabel(String date);
+
+  /// Last modified date line in a plain-text project export
+  ///
+  /// In en, this message translates to:
+  /// **'Last modified: {date}'**
+  String projectExportLastModifiedLabel(String date);
+
+  /// Deadline line in a plain-text project export, no status known
+  ///
+  /// In en, this message translates to:
+  /// **'Deadline: {date}'**
+  String projectExportDeadlineLabel(String date);
+
+  /// Deadline + status line in a plain-text project export
+  ///
+  /// In en, this message translates to:
+  /// **'Deadline: {date} ({status})'**
+  String projectExportDeadlineWithStatusLabel(String date, String status);
+
+  /// Total time worked line in a plain-text project export
+  ///
+  /// In en, this message translates to:
+  /// **'Total time worked: {duration}'**
+  String projectExportTotalTimeWorkedLabel(String duration);
+
+  /// No description provided for @projectExportNotesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes:'**
+  String get projectExportNotesLabel;
+
+  /// No description provided for @projectExportTodosLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'To-dos:'**
+  String get projectExportTodosLabel;
+
+  /// Work sessions section header in a plain-text project export
+  ///
+  /// In en, this message translates to:
+  /// **'Work sessions ({count}):'**
+  String projectExportWorkSessionsLabel(int count);
+
   /// No description provided for @noProjectsToExport.
   ///
   /// In en, this message translates to:

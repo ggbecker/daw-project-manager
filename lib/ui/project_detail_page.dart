@@ -307,7 +307,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
   Future<void> _exportProjectInfo(MusicProject project) async {
     final l10n = AppLocalizations.of(context)!;
     try {
-      final text = ProjectTextExportService.formatProject(project);
+      final text = ProjectTextExportService.formatProject(project, l10n);
       final destPath = await FilePicker.saveFile(
         dialogTitle: l10n.exportProjectInfo,
         fileName: ProjectTextExportService.suggestedFileNameFor(project),
@@ -1106,6 +1106,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                   ref.invalidate(allProjectsStreamProvider);
                                   // Wait a bit for the stream to update
                                   await Future.delayed(const Duration(milliseconds: 100));
+                                  if (!mounted) return;
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       content: Text(

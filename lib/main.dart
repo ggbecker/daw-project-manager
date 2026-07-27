@@ -7,7 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'generated/l10n/app_localizations.dart';
-import 'dart:io' show Platform, Process, ServerSocket, Socket, InternetAddress, SocketException, File, Directory, FileSystemException, exit;
+import 'dart:io' show Platform, Process, ServerSocket, Socket, InternetAddress, SocketException, File, Directory, FileSystemEntity, FileSystemException, exit;
 import 'package:window_manager/window_manager.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
@@ -316,14 +316,26 @@ Future<void> _onFolderWatcherActivity(
     final ignoredPaths =
         repo.getIgnoredPaths().map((p) => p.path).toList(growable: false);
     final knownPaths = repo.getAllProjects().map((p) => p.filePath).toSet();
-    final newIds = <String>[];
 
+    // Materialize the newly-seen entities first, then persist them in one
+    // batched write — upsertFromFileSystemEntity's per-entity Box.put() used
+    // to fire one Hive change event per file, which the debounced
+    // watchAllProjects stream now smooths over on the read side, but batching
+    // here also cuts the write cost itself (see upsertManyFromFileSystemEntities).
+    final newEntities = <FileSystemEntity>[];
     await for (final entity
         in scanner.scanDirectory(rootPath, ignoredPaths: ignoredPaths)) {
       if (knownPaths.contains(entity.path)) continue;
-      await repo.upsertFromFileSystemEntity(entity, fullMetadata: false);
-      final saved = repo.getByPath(entity.path);
-      if (saved != null) newIds.add(saved.id);
+      newEntities.add(entity);
+    }
+
+    final newIds = <String>[];
+    if (newEntities.isNotEmpty) {
+      await repo.upsertManyFromFileSystemEntities(newEntities, fullMetadata: false);
+      for (final entity in newEntities) {
+        final saved = repo.getByPath(entity.path);
+        if (saved != null) newIds.add(saved.id);
+      }
     }
 
     if (newIds.isNotEmpty) {
@@ -400,12 +412,15 @@ Future<int> _runInitialScan(ProjectRepository repo, ProviderContainer container)
     final knownPaths = repo.getAllProjects().map((p) => p.filePath).toSet();
     final newlyDiscoveredIds = <String>[];
     for (final root in repo.getRoots()) {
-      final foundPaths = <String>{};
+      final entities = <FileSystemEntity>[];
       await for (final entity in scanner.scanDirectory(root.path, ignoredPaths: ignoredPaths)) {
-        await repo.upsertFromFileSystemEntity(entity);
-        foundPaths.add(entity.path);
-        foundCount++;
+        entities.add(entity);
       }
+      if (entities.isNotEmpty) {
+        await repo.upsertManyFromFileSystemEntities(entities);
+        foundCount += entities.length;
+      }
+      final foundPaths = entities.map((e) => e.path).toSet();
       if (knownPaths.isNotEmpty) {
         for (final path in newlyFoundPaths(foundPaths, knownPaths)) {
           final saved = repo.getByPath(path);

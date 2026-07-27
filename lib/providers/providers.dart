@@ -81,7 +81,14 @@ final repositoryProvider = FutureProvider<ProjectRepository>((ref) async {
   if (currentProfile == null) {
     throw Exception('No active profile found');
   }
-  return ProjectRepository.init(profileRepo);
+  final repo = await ProjectRepository.init(profileRepo);
+  // Close this profile's boxes when the provider rebuilds (profile switch)
+  // or is torn down — otherwise every profile ever visited this session
+  // stays fully resident in memory.
+  ref.onDispose(() {
+    repo.closeBoxes().catchError((_) {});
+  });
+  return repo;
 });
 
 final customMixdownFoldersProvider = FutureProvider<List<String>>((ref) async {
@@ -294,6 +301,32 @@ final showHiddenProjectsProvider =
 
 // REMOVEMOS: projectsWatchProvider (substituído pela reatividade do stream abaixo)
 
+// Caches File(...).existsSync() / Directory(...).existsSync() results by
+// path. Existence checks were previously re-run per project on every
+// projectsProvider rebuild AND per visible grid row on every frame — real
+// syscalls on the UI thread, repeated far more often than the filesystem
+// actually changes. The cache is invalidated wholesale whenever the project
+// list changes (scan, rescan, manual edit) via fileExistenceCacheProvider
+// below, which is exactly when on-disk state is expected to have moved.
+class FileExistenceCache {
+  final Map<String, bool> _cache = {};
+
+  bool exists(String path) {
+    return _cache.putIfAbsent(
+      path,
+      () => File(path).existsSync() || Directory(path).existsSync(),
+    );
+  }
+
+  void invalidateAll() => _cache.clear();
+}
+
+final fileExistenceCacheProvider = Provider<FileExistenceCache>((ref) {
+  final cache = FileExistenceCache();
+  ref.listen(allProjectsStreamProvider, (_, _) => cache.invalidateAll());
+  return cache;
+});
+
 // NOVO PROVIDER CORRIGIDO: Stream que emite a lista bruta de projetos
 // Ele usa o novo método watchAllProjects() do repositório (que você precisa garantir que existe)
 // This provider automatically invalidates when repositoryProvider changes (profile switch)
@@ -324,6 +357,7 @@ final projectsProvider = Provider<List<MusicProject>>((ref) {
   // 3. Observa releases e scan roots para filter preserved projects
   final releasesAsync = ref.watch(releasesProvider);
   final scanRoots = ref.watch(scanRootsProvider);
+  final fileExistenceCache = ref.watch(fileExistenceCacheProvider);
 
   // 4. Usa .whenData para acessar a lista quando estiver pronta e aplicar o filtro/ordenação
   return allProjectsAsync
@@ -355,9 +389,7 @@ final projectsProvider = Provider<List<MusicProject>>((ref) {
 
             // File not present locally → metadata-only from backup / different machine.
             // Always show so the user can inspect / edit metadata.
-            final fileExistsLocally =
-                File(project.filePath).existsSync() ||
-                Directory(project.filePath).existsSync();
+            final fileExistsLocally = fileExistenceCache.exists(project.filePath);
             if (!fileExistsLocally) return true;
 
             // File exists locally: only show if it's under an active scan root.

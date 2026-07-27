@@ -330,7 +330,8 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
       }
     } catch (e) {
       if (kDebugMode) print('Error during sign-in: $e');
-      
+      if (!mounted) return;
+
       String errorMessage = AppLocalizations.of(context)!.unknownError;
       String errorDetails = e.toString();
 
@@ -486,6 +487,7 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
     try {
       // Check if remote backup is newer before uploading
       final backupInfo = await _syncService.getBackupInfo();
+      if (!mounted) return;
       if (backupInfo['isNewer'] == true) {
         // Show confirmation dialog
         final confirmed = await showDialog<bool>(
@@ -529,7 +531,8 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
       }
 
       final projectRepo = await ref.read(repositoryProvider.future);
-      
+      if (!mounted) return;
+
       // Show progress dialog on all platforms
       showDialog(
         context: context,
@@ -635,6 +638,7 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
 
     try {
       final profileRepo = await ref.read(profileRepositoryProvider.future);
+      if (!mounted) return;
 
       // On mobile, allow download even without active profile (will activate first profile after download)
       // On desktop, require active profile

@@ -586,9 +586,21 @@ class MetadataExtractor {
 
     if (title == null && author == null && notesBody == null) return null;
 
+    // No "by "-style connector word here: this string is written straight
+    // into projectNotes, which is persisted to Hive and synced to Drive —
+    // baking in an English joining word would leak into every locale's
+    // stored data. Extraction runs headlessly during scans (no BuildContext
+    // available), so localizing the word isn't an option. An em dash is
+    // punctuation, not a word, so it joins title and author on one line
+    // without needing translation.
     final buffer = StringBuffer();
-    if (title != null) buffer.writeln(title);
-    if (author != null) buffer.writeln('by $author');
+    if (title != null && author != null) {
+      buffer.writeln('$title — $author');
+    } else if (title != null) {
+      buffer.writeln(title);
+    } else if (author != null) {
+      buffer.writeln(author);
+    }
     if ((title != null || author != null) && notesBody != null) buffer.writeln();
     if (notesBody != null) buffer.write(notesBody);
 
