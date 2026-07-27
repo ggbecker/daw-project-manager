@@ -312,6 +312,16 @@ class _ReleasesTableState extends ConsumerState<_ReleasesTable> {
     }
   }
 
+  @override
+  void dispose() {
+    stateManager?.removeListener(_onStateManagerChanged);
+    super.dispose();
+  }
+
+  void _onStateManagerChanged() {
+    if (mounted) setState(() {});
+  }
+
   List<TrinaRow> _mapReleasesToRows(List<Release> releases) {
     return releases.map((release) {
       final releaseProjects = widget.projects
@@ -614,11 +624,31 @@ class _ReleasesTableState extends ConsumerState<_ReleasesTable> {
 
     final initialRows = _mapReleasesToRows(widget.releases);
 
+    final rowSelectColor = Theme.of(
+      context,
+    ).colorScheme.primary.withValues(alpha: 0.18);
+    final oddColor = Theme.of(context).cardColor;
+    final evenColor = Theme.of(context).brightness == Brightness.dark
+        ? Color.alphaBlend(
+            Colors.white.withValues(alpha: 0.05),
+            Theme.of(context).cardColor,
+          )
+        : Color.alphaBlend(
+            Colors.black.withValues(alpha: 0.04),
+            Theme.of(context).cardColor,
+          );
+
     return TrinaGrid(
       columns: columns,
       rows: initialRows,
+      rowColorCallback: (TrinaRowColorContext ctx) {
+        final isActivated = stateManager?.currentRow == ctx.row;
+        if (isActivated) return rowSelectColor;
+        return ctx.rowIdx.isOdd ? oddColor : evenColor;
+      },
       onLoaded: (TrinaGridOnLoadedEvent event) {
         stateManager = event.stateManager;
+        stateManager!.addListener(_onStateManagerChanged);
       },
       configuration: TrinaGridConfiguration(
         style: TrinaGridStyleConfig(
@@ -640,16 +670,14 @@ class _ReleasesTableState extends ConsumerState<_ReleasesTable> {
           ),
           columnHeight: 44,
           rowHeight: 70, // Taller rows to accommodate thumbnails
-          activatedBorderColor: Theme.of(context).colorScheme.primary,
-          activatedColor: Theme.of(context).brightness == Brightness.dark
-              ? Colors.white.withValues(alpha: 0.15)
-              : Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+          // Transparent so rowColorCallback controls all row backgrounds
+          // (odd/even and click-selection) with no per-cell border/fill on click.
+          activatedBorderColor: Colors.transparent,
+          activatedColor: Colors.transparent,
           iconColor: Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey,
           menuBackgroundColor: Theme.of(context).cardColor,
-          oddRowColor: Theme.of(context).cardColor,
-          evenRowColor: Theme.of(context).brightness == Brightness.dark
-              ? Color.alphaBlend(Colors.white.withValues(alpha: 0.05), Theme.of(context).cardColor)
-              : Color.alphaBlend(Colors.black.withValues(alpha: 0.04), Theme.of(context).cardColor),
+          oddRowColor: oddColor,
+          evenRowColor: evenColor,
         ),
         scrollbar: const TrinaGridScrollbarConfig(
           showHorizontal: false,

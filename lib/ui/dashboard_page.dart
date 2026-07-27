@@ -7618,9 +7618,10 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           ),
           columnHeight: 44,
           rowHeight: 48,
-          activatedBorderColor: activeTheme.colorScheme.primary,
           // Transparent so rowColorCallback controls all row backgrounds
-          // (session green/yellow, playing, and click-selection).
+          // (session green/yellow, playing, and click-selection) with no
+          // per-cell border/fill on click.
+          activatedBorderColor: Colors.transparent,
           activatedColor: Colors.transparent,
           iconColor: isNeon
               ? activeTheme.colorScheme.primary.withValues(alpha: 0.7)
