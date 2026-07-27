@@ -76,6 +76,8 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
   // selectedTemplatesProvider since it's a transient interaction concept.
   String? _selectionAnchorId;
 
+  TrinaGridStateManager? _tableStateManager;
+
   @override
   void initState() {
     super.initState();
@@ -94,7 +96,12 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
   void dispose() {
     _searchController.dispose();
     _searchFocusNode.dispose();
+    _tableStateManager?.removeListener(_onTableStateManagerChanged);
     super.dispose();
+  }
+
+  void _onTableStateManagerChanged() {
+    if (mounted) setState(() {});
   }
 
   /// Focuses the search box and selects its current text, same as the main
@@ -960,6 +967,13 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
     final activeTheme = ref.watch(themeDataProvider);
     final isNeon = ref.watch(themeTypeProvider) == AppThemeType.neonDark;
     final isDark = activeTheme.brightness == Brightness.dark;
+    // Classic Dark's primary is a muted gray-blue, so tinting with it reads
+    // as barely-there against the dark card background — lean on white
+    // instead for a highlight that actually contrasts. Neon Dark's bright
+    // primary already pops, so keep that one colored.
+    final rowSelectColor = isNeon
+        ? activeTheme.colorScheme.primary.withValues(alpha: 0.18)
+        : Colors.white.withValues(alpha: 0.14);
     final oddColor = isNeon
         ? activeTheme.scaffoldBackgroundColor
         : activeTheme.cardColor;
@@ -1179,11 +1193,24 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
                                   ),
                                   columns: _buildColumns(l10n, orderedIds),
                                   rows: _buildRows(filtered),
-                                  rowColorCallback:
-                                      (TrinaRowColorContext ctx) =>
-                                          ctx.rowIdx.isOdd
-                                          ? oddColor
-                                          : evenColor,
+                                  rowColorCallback: (TrinaRowColorContext ctx) {
+                                    final isActivated =
+                                        _tableStateManager?.currentRow ==
+                                        ctx.row;
+                                    if (isActivated) return rowSelectColor;
+                                    return ctx.rowIdx.isOdd
+                                        ? oddColor
+                                        : evenColor;
+                                  },
+                                  onLoaded: (TrinaGridOnLoadedEvent event) {
+                                    _tableStateManager?.removeListener(
+                                      _onTableStateManagerChanged,
+                                    );
+                                    _tableStateManager = event.stateManager;
+                                    _tableStateManager!.addListener(
+                                      _onTableStateManagerChanged,
+                                    );
+                                  },
                                   configuration: TrinaGridConfiguration(
                                     style: TrinaGridStyleConfig(
                                       gridBackgroundColor:
@@ -1222,8 +1249,10 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
                                       ),
                                       columnHeight: 44,
                                       rowHeight: 48,
-                                      activatedBorderColor:
-                                          activeTheme.colorScheme.primary,
+                                      // Transparent so rowColorCallback controls all row
+                                      // backgrounds (odd/even and click-selection) with
+                                      // no per-cell border/fill on click.
+                                      activatedBorderColor: Colors.transparent,
                                       activatedColor: Colors.transparent,
                                       iconColor: isNeon
                                           ? activeTheme.colorScheme.primary
