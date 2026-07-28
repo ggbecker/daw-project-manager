@@ -6,6 +6,24 @@ Supports **macOS**, **Windows**, **Android**, and **iOS**. Primary development t
 
 ---
 
+## Features
+
+- **Smart two-phase scanning** — instant file detection, then background deep extraction of BPM, key, and DAW version.
+- **Customizable production phases** — rename, reorder, color, and mark phases as "finished"; not limited to a fixed Idea → Finished pipeline.
+- **Task Queue** — every open todo across every project in one unified, checkable list.
+- **Releases** — group projects into EPs/albums/singles with artwork, description, attached files, and a "download all as ZIP" export.
+- **Project & Todo Templates** — spin up new projects pre-filled from a saved template; import reusable todo checklists.
+- **Music Player** — a full library player on desktop (queue, shuffle, Camelot-wheel key-compatible auto-queue) and a "Now Playing" screen on mobile, on top of the per-project preview player.
+- **Playlists** *(Android/iOS)* — ordered sequences of preview songs for reviewing work on the go.
+- **Statistics** — global library dashboard plus per-project phase/activity history.
+- **Multiple Profiles** — fully isolated scan roots, projects, and settings per profile.
+- **Google Drive sync** — back up metadata, preview songs, and artwork, with an optional auto-backup interval (30 min / hourly / 6-hourly / daily).
+- **Background / tray mode** *(desktop)* — keep running after closing the window, with a tray/menu-bar icon for quick backup and work-session controls.
+- **Cross-platform sharing** — shares preview songs through the OS share sheet, transcoding to AAC (macOS) or MP3 (Windows, via bundled ffmpeg) when the source format isn't shareable directly.
+- **9 languages** — fully localized UI, switchable at any time.
+
+---
+
 ## Supported DAWs
 
 | DAW | Extension(s) |
