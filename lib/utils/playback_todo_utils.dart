@@ -12,3 +12,18 @@ String formatPlaybackTimestamp(Duration duration) {
 String buildTimestampedTodoText(Duration position, String note) {
   return '[${formatPlaybackTimestamp(position)}] ${note.trim()}';
 }
+
+/// Builds the text for a new task on a project's task list. Only stamps a
+/// timestamp when [isCurrentlyPlaying] is true — i.e. the task's project is
+/// the one actually loaded in the player right now — since [position]
+/// otherwise refers to a different (or no) track.
+String buildTaskTextForProject({
+  required bool isCurrentlyPlaying,
+  required Duration position,
+  required String text,
+}) {
+  final trimmed = text.trim();
+  return isCurrentlyPlaying
+      ? buildTimestampedTodoText(position, trimmed)
+      : trimmed;
+}

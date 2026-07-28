@@ -9,6 +9,7 @@ import '../models/music_project.dart';
 import '../models/todo_item.dart';
 import '../providers/providers.dart';
 import '../services/camelot_playlist_generator.dart';
+import '../utils/playback_todo_utils.dart';
 import 'camelot_wheel_widget.dart';
 import 'project_detail_page.dart';
 
@@ -98,9 +99,18 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
     final trimmed = text.trim();
     if (trimmed.isEmpty) return;
     _addTodoController.clear();
+    // If the task's project is the one actually playing right now, stamp it
+    // with the current playback position — same convention as the bottom
+    // player bar's "add task at timestamp" action.
+    final todoText = buildTaskTextForProject(
+      isCurrentlyPlaying:
+          ref.read(desktopPlayerProvider)?.project.id == project.id,
+      position: ref.read(desktopPlayerPositionProvider),
+      text: trimmed,
+    );
     final newTodo = TodoItem(
       id: '${DateTime.now().millisecondsSinceEpoch}',
-      text: trimmed,
+      text: todoText,
       createdAt: DateTime.now(),
     );
     final repo = await ref.read(repositoryProvider.future);

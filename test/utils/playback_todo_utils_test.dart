@@ -49,4 +49,47 @@ void main() {
       );
     });
   });
+
+  group('buildTaskTextForProject', () {
+    test('stamps a timestamp when the project is currently playing', () {
+      expect(
+        buildTaskTextForProject(
+          isCurrentlyPlaying: true,
+          position: const Duration(minutes: 1, seconds: 23),
+          text: 'fix vocal reverb',
+        ),
+        '[01:23] fix vocal reverb',
+      );
+    });
+
+    test('leaves plain text untouched when the project is not playing', () {
+      expect(
+        buildTaskTextForProject(
+          isCurrentlyPlaying: false,
+          position: const Duration(minutes: 1, seconds: 23),
+          text: 'fix vocal reverb',
+        ),
+        'fix vocal reverb',
+      );
+    });
+
+    test('trims whitespace whether or not it stamps a timestamp', () {
+      expect(
+        buildTaskTextForProject(
+          isCurrentlyPlaying: false,
+          position: Duration.zero,
+          text: '  needs reverb  ',
+        ),
+        'needs reverb',
+      );
+      expect(
+        buildTaskTextForProject(
+          isCurrentlyPlaying: true,
+          position: Duration.zero,
+          text: '  needs reverb  ',
+        ),
+        '[00:00] needs reverb',
+      );
+    });
+  });
 }
