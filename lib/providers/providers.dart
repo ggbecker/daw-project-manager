@@ -2235,6 +2235,22 @@ final desktopIsPlayingProvider =
       DesktopIsPlayingNotifier.new,
     );
 
+/// Live playback position of the desktop player's current track, kept in
+/// sync by _DesktopPlayerBarState. Lets other widgets that don't own the
+/// player (e.g. the music player's per-project task list) read the current
+/// timestamp to stamp new tasks when adding one for the track that's
+/// actually playing.
+class DesktopPlayerPositionNotifier extends Notifier<Duration> {
+  @override
+  Duration build() => Duration.zero;
+  void set(Duration value) => state = value;
+}
+
+final desktopPlayerPositionProvider =
+    NotifierProvider<DesktopPlayerPositionNotifier, Duration>(
+      DesktopPlayerPositionNotifier.new,
+    );
+
 /// Bumped to ask whoever owns the desktop player's AudioPlayer (currently
 /// _DesktopPlayerBarState) to toggle play/pause on the current track, from
 /// UI that doesn't have direct access to that widget's state — e.g. the

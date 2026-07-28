@@ -8995,6 +8995,7 @@ class _DesktopPlayerBar extends ConsumerStatefulWidget {
 class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
   late AudioPlayer _player;
   late DesktopIsPlayingNotifier _isPlayingNotifier;
+  late DesktopPlayerPositionNotifier _positionNotifier;
   bool _isPlaying = false;
   bool _playbackEnded = false;
   Duration _position = Duration.zero;
@@ -9076,6 +9077,7 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
   void initState() {
     super.initState();
     _isPlayingNotifier = ref.read(desktopIsPlayingProvider.notifier);
+    _positionNotifier = ref.read(desktopPlayerPositionProvider.notifier);
     _loadBarHeight();
     HardwareKeyboard.instance.addHandler(_handleKeyboard);
     _player = AudioPlayer();
@@ -9092,6 +9094,7 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
     _player.onPositionChanged.listen((p) {
       if (!mounted) return;
       setState(() => _position = p);
+      _positionNotifier.set(p);
     });
     _player.onPlayerComplete.listen((_) {
       if (!mounted) return;
@@ -9101,6 +9104,7 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
         _playbackEnded = true;
       });
       _isPlayingNotifier.set(false);
+      _positionNotifier.set(Duration.zero);
       if (widget.request.isQueuedPlayback) {
         ref.read(desktopPlayerCompletedProvider.notifier).increment();
       }
@@ -9119,6 +9123,7 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
       // phase and Riverpod forbids provider writes at that point.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _isPlayingNotifier.set(false);
+        _positionNotifier.set(Duration.zero);
       });
       setState(() {
         _isPlaying = false;
@@ -9749,6 +9754,7 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
                                 .round(),
                           );
                           setState(() => _position = target);
+                          _positionNotifier.set(target);
                           _player.seek(target);
                         }
                       },
