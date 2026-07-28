@@ -560,9 +560,13 @@
                 <p class="sidebar-section-title">More Features</p>
                 <ul class="sidebar-nav">
                     <li><a href="#task-queue">Task Queue</a></li>
+                    <li><a href="#music-player">Music Player</a></li>
                     <li><a href="#playlists">Playlists</a></li>
+                    <li><a href="#templates">Templates</a></li>
                     <li><a href="#statistics">Statistics</a></li>
                     <li><a href="#profiles">Profiles</a></li>
+                    <li><a href="#sharing">Sharing</a></li>
+                    <li><a href="#background-mode">Background &amp; Tray Mode</a></li>
                 </ul>
 
                 <p class="sidebar-section-title">Google Drive Sync</p>
@@ -599,14 +603,14 @@
                     <li><strong>Download the DMG</strong> from the <a href="https://github.com/bandpassrecords/daw-project-manager/releases" style="color:var(--accent);">Releases page</a> on GitHub.</li>
                     <li><strong>Open the DMG</strong> and drag <em>DAW Project Manager.app</em> into your Applications folder.</li>
                     <li><strong>First launch:</strong> macOS may show a Gatekeeper warning because the app is not distributed through the Mac App Store. Open System Settings → Privacy &amp; Security and click <em>Open Anyway</em>.</li>
-                    <li>The app opens and the <a href="#first-launch">First Launch dialog</a> appears.</li>
+                    <li>The app opens and the <a href="#first-launch">onboarding wizard</a> appears.</li>
                 </ol>
 
                 <h4>Windows</h4>
                 <ol class="steps">
                     <li><strong>Download from the Microsoft Store</strong> — search for "DAW Project Manager" or use the direct link on the website.</li>
                     <li>Click <em>Install</em>. The app is signed and installs without warnings.</li>
-                    <li>Launch from the Start menu. The First Launch dialog appears if no folders are configured.</li>
+                    <li>Launch from the Start menu. The onboarding wizard appears on first run.</li>
                 </ol>
 
                 <h4>Android</h4>
@@ -622,12 +626,24 @@
 
                 <!-- First Launch -->
                 <h3 id="first-launch">First Launch</h3>
-                <p>On desktop, if no scan roots are configured yet, a startup dialog appears the first time you open the app (and again whenever all roots are removed). It gives you two paths:</p>
-                <ul>
-                    <li><strong>Add Project Folder</strong> — Browse your file system and pick the folder(s) where your DAW projects live. Best starting point for new users.</li>
-                    <li><strong>Sync Google Drive Backup</strong> — Restore an existing database from Google Drive. Choose this if you previously backed up from another machine.</li>
-                </ul>
-                <p>A checkbox labelled <em>"Don't show this on startup"</em> lets you skip the dialog on future launches. You can always add folders later from Settings.</p>
+                <p>The first time you open the app, an onboarding wizard walks you through initial setup. It won't appear again once completed. The steps are:</p>
+                <ol class="steps">
+                    <li><strong>Welcome</strong> — a quick overview of what the app does.</li>
+                    <li><strong>Language</strong> — pick from the app's <a href="#settings">9 supported languages</a>.</li>
+                    <li><strong>Theme</strong> — choose Classic Dark or Neon Dark.</li>
+                    <li><strong>Tabs</strong> — choose which navigation tabs are visible (Projects is always on).</li>
+                    <li><strong>Folders</strong> <span class="badge-inline">Desktop</span> — add your first scan root(s), or choose to restore from a <a href="#google-drive-sync">Google Drive backup</a> instead if you're setting up on a new machine.</li>
+                    <li><strong>Updates</strong> — configure automatic update checks.</li>
+                    <li><strong>Suggestions</strong> — opt in or out of sharing anonymous feedback/suggestions.</li>
+                    <li><strong>Session Mode</strong> — see below.</li>
+                    <li><strong>Phases</strong> — a first look at the default <a href="#production-phases">production phases</a>, which you can customize later.</li>
+                    <li><strong>Startup</strong> <span class="badge-inline">Desktop</span> — optionally launch the app automatically when you log in.</li>
+                    <li><strong>Done</strong> — you land on the Dashboard.</li>
+                </ol>
+                <p>Every step you set here can be changed later — none of it is permanent. Add more scan folders any time from Settings.</p>
+
+                <h4>Session Mode</h4>
+                <p>Session Mode is an opt-in guardrail around your work timer. When it's on, starting, switching, or ending a work session on a project requires an explicit confirmation, and the app shows elapsed time for the current session. It's aimed at producers who want to be deliberate about context-switching between projects rather than losing track of where their time went. Toggle it any time from Settings — it isn't limited to the onboarding wizard.</p>
 
                 <!-- Adding Folders -->
                 <h3 id="adding-folders">Adding Folders</h3>
@@ -918,7 +934,7 @@
 
                 <!-- Production phases -->
                 <h3 id="production-phases">Production Phases</h3>
-                <p>Every project has a <strong>phase</strong> that represents where it sits in your creative workflow. The default progression is:</p>
+                <p>Every project has a <strong>phase</strong> that represents where it sits in your creative workflow. Out of the box, the progression is:</p>
 
                 <div class="phase-chips">
                     <span class="phase-chip chip-idea">Idea</span>
@@ -928,13 +944,23 @@
                     <span class="phase-chip chip-finished">Finished</span>
                 </div>
 
-                <p>You can change the phase in three places:</p>
+                <p>You can change a project's phase in three places:</p>
                 <ul>
                     <li>The <strong>Phase dropdown</strong> in the Project Detail page</li>
                     <li>The <strong>inline dropdown</strong> in the Dashboard table (click the Phase cell)</li>
                     <li><strong>Bulk change</strong> — select multiple projects and use the bulk action toolbar</li>
                 </ul>
                 <p>Every phase change is recorded in the project's <a href="#project-timeline">Timeline</a> with a timestamp, so you can see how long a project spent in each stage.</p>
+
+                <h4>Customizing Phases</h4>
+                <p>The default five phases are just a starting point. Open <strong>Settings → Phases</strong> to:</p>
+                <ul>
+                    <li><strong>Rename, add, or delete</strong> phases to match your own workflow.</li>
+                    <li><strong>Reorder</strong> them by dragging — the order shown here is entirely up to you.</li>
+                    <li><strong>Assign a color</strong> to each phase from a palette, used throughout the Dashboard and charts.</li>
+                    <li><strong>Mark one or more phases as "finished" states</strong> — these are what <em>Hide Finished</em> filters out on the Dashboard.</li>
+                </ul>
+                <p>Deleting a phase that's still in use warns you how many projects reference it before you confirm. A <strong>Reset to Defaults</strong> button restores the original five phases at any time.</p>
 
                 <!-- Todos -->
                 <h3 id="todos">Todos</h3>
@@ -1052,6 +1078,24 @@
             </div>
 
             <!-- ================================================================
+                 MUSIC PLAYER
+            ================================================================ -->
+            <div class="docs-section" id="music-player">
+                <h2>Music Player</h2>
+                <p>Beyond the single-track <a href="#preview-songs">preview player</a> inside each project, the app has a dedicated Music Player for browsing and listening across your whole library at once. The experience differs by platform.</p>
+
+                <h3>Desktop</h3>
+                <p>The desktop Music Player is a three-pane view: your track list, the selected project's details, and a drag-and-drop queue. It supports shuffle and repeat, and includes a <strong>Camelot-wheel key-compatible auto-queue</strong> — build a queue of tracks that are harmonically compatible with the one currently playing, using the <a href="#project-metadata">key</a> metadata already extracted from your projects. You can add a todo at the exact playback timestamp without leaving the player.</p>
+
+                <h3>Mobile</h3>
+                <p>On Android and iOS, the Music Player is a swipeable "Now Playing" screen covering every project in your library that has a preview song. It includes a mono-mix toggle (useful for checking mixes in mono), the same add-todo-at-timestamp shortcut, and quick access to <a href="#sharing">sharing</a> and ZIP export for the current track.</p>
+
+                <div class="callout callout-info">
+                    <strong>Note:</strong> The Music Player and the per-project preview player both use the same underlying audio engine, but the Music Player queues across your whole library while the preview player stays scoped to one project.
+                </div>
+            </div>
+
+            <!-- ================================================================
                  PLAYLISTS
             ================================================================ -->
             <div class="docs-section" id="playlists">
@@ -1072,6 +1116,21 @@
                 <div class="callout callout-info">
                     <strong>Tip:</strong> Upload preview songs from your Mac via Google Drive Backup, then download them to your Android phone. Now you have your latest mixdowns available in a playlist for review on the go.
                 </div>
+            </div>
+
+            <!-- ================================================================
+                 TEMPLATES
+            ================================================================ -->
+            <div class="docs-section" id="templates">
+                <h2>Templates</h2>
+                <p>There are two kinds of templates, covering two different needs: starting a new project, and checking off recurring work.</p>
+
+                <h3>Project Templates</h3>
+                <p>Open <strong>Settings → Project Templates</strong> to register any existing project folder as a template — its BPM, key, DAW type, and starter files are captured. You can also point the app at a "template roots" parent folder and it will scan for candidate template folders automatically. Templates can be searched and filtered by DAW or key.</p>
+                <p>To use one, click <strong>Use</strong> on a template — this opens the Create Project dialog pre-filled from the template, so your new project starts with the right metadata and starter files instead of a blank slate.</p>
+
+                <h3>Todo Templates</h3>
+                <p>Covered under <a href="#todos">Todos</a> and <a href="#settings">Settings</a> — reusable checklists (e.g. "Mixing Checklist", "Pre-Release Checklist") you can import into any project's todo list.</p>
             </div>
 
             <!-- ================================================================
@@ -1158,6 +1217,9 @@
                     <li>Profile photos</li>
                 </ul>
 
+                <h4>Auto-Backup</h4>
+                <p>Instead of uploading manually, set an interval from the same settings page: <strong>every 30 minutes</strong>, <strong>hourly</strong>, <strong>every 6 hours</strong>, or <strong>daily</strong>. The page shows when the next backup is due. Auto-backup keeps running even when the app is <a href="#background-mode">minimized to the tray</a>, so it doesn't require the main window to stay open.</p>
+
                 <!-- Drive download -->
                 <h3 id="drive-download">Download (Restore)</h3>
                 <p>Downloading replaces the current profile's database with the contents of the Drive backup.</p>
@@ -1170,6 +1232,44 @@
 
                 <div class="callout callout-warning">
                     <strong>Warning:</strong> Downloading a backup overwrites your current local database for the active profile. Back up first if you have local changes you want to keep.
+                </div>
+            </div>
+
+            <!-- ================================================================
+                 SHARING
+            ================================================================ -->
+            <div class="docs-section" id="sharing">
+                <h2>Sharing</h2>
+                <p>Share a preview song straight to the OS share sheet — Messages, WhatsApp, Slack, email, whatever's installed — from the <a href="#preview-songs">Project Detail page</a> or the <a href="#music-player">Music Player</a>.</p>
+                <p>Some apps reject raw <code style="font-family:monospace;">.wav</code>, <code style="font-family:monospace;">.aiff</code>, or <code style="font-family:monospace;">.flac</code> attachments. When you share one of these formats, the app automatically transcodes it first:</p>
+                <ul>
+                    <li><strong>macOS</strong> — converts to AAC (<code style="font-family:monospace;">.m4a</code>) using the built-in <code style="font-family:monospace;">afconvert</code> tool.</li>
+                    <li><strong>Windows</strong> — converts to MP3 using a bundled copy of ffmpeg, so nothing extra needs to be installed.</li>
+                </ul>
+                <p>A progress dialog shows while conversion runs. If conversion fails for any reason, the app falls back to sharing the original file. There's also a separate <strong>Share as ZIP</strong> action that packages the original file without any conversion.</p>
+            </div>
+
+            <!-- ================================================================
+                 BACKGROUND & TRAY MODE
+            ================================================================ -->
+            <div class="docs-section" id="background-mode">
+                <h2>Background &amp; Tray Mode <span class="badge-inline">Desktop</span></h2>
+                <p>On Windows and macOS, closing the app window doesn't have to quit it. With <strong>close to tray</strong> enabled, closing the window hides it instead — the app keeps running in the background, so scheduled <a href="#drive-upload">auto-backups</a> and active work sessions keep going.</p>
+                <ul>
+                    <li>On <strong>Windows</strong>, a system tray icon appears.</li>
+                    <li>On <strong>macOS</strong>, a menu-bar icon appears.</li>
+                </ul>
+                <p>Right-click (or click, on macOS) the icon to open a menu with:</p>
+                <ul>
+                    <li>The time of your last Google Drive backup</li>
+                    <li><strong>Backup Now</strong> — trigger an upload immediately</li>
+                    <li>Pause / resume the active work session</li>
+                    <li><strong>Show Window</strong> — bring the app back to the foreground</li>
+                    <li><strong>Quit</strong> — actually exit the app</li>
+                </ul>
+                <p>The first time the window is hidden, a one-time notification explains that the app is still running in the background so it doesn't come as a surprise.</p>
+                <div class="callout callout-info">
+                    <strong>Tip:</strong> If close-to-tray is turned off, closing the window shows a normal quit-confirmation dialog instead. You can toggle this behavior from Settings.
                 </div>
             </div>
 
@@ -1207,8 +1307,17 @@
                 <h3>TODO Templates</h3>
                 <p>Create reusable to-do lists that can be imported into any project. Example templates: "Mixing Checklist", "Pre-Release Checklist", "Collab Workflow". Each template is a list of text items. Apply a template in Project Detail by clicking <em>Import Template</em>.</p>
 
+                <h3>Project Templates</h3>
+                <p>Register existing projects as reusable starting points for new ones. See <a href="#templates">Templates</a> for details.</p>
+
+                <h3>Phases</h3>
+                <p>Rename, add, remove, reorder, and color your production phases. See <a href="#production-phases">Production Phases</a> for details.</p>
+
                 <h3>Notification Preferences (Android)</h3>
                 <p>On Android, the app can send local notifications for approaching deadlines. Configure how many days in advance you want to be reminded. Requires notification permission to be granted.</p>
+
+                <h3>Work Session Reminders</h3>
+                <p>On all platforms, while a work session is active the app can send a periodic reminder so you don't lose track of time. Choose an interval — 15, 30, 45, 60, 90, or 120 minutes, or a custom value.</p>
 
                 <h3>Clear Library</h3>
                 <p>Removes all projects from the current profile's database. Scan roots and settings are preserved. Running a rescan after clearing will re-populate projects from disk.</p>
@@ -1360,13 +1469,18 @@
                         <tbody>
                             <tr>
                                 <td>Ableton Live</td>
-                                <td><code class="daw-ext">.als</code></td>
+                                <td><code class="daw-ext">.als</code>, <code class="daw-ext">.alp</code></td>
                                 <td>BPM and version extracted during deep scan.</td>
                             </tr>
                             <tr>
                                 <td>Bitwig Studio</td>
                                 <td><code class="daw-ext">.bwproject</code></td>
                                 <td>BPM and tempo extracted during deep scan.</td>
+                            </tr>
+                            <tr>
+                                <td>Cakewalk / Sonar</td>
+                                <td><code class="daw-ext">.cwp</code>, <code class="daw-ext">.wrk</code>, <code class="daw-ext">.bun</code></td>
+                                <td>Project, legacy, and bundle formats all detected.</td>
                             </tr>
                             <tr>
                                 <td>Cubase</td>
@@ -1384,8 +1498,13 @@
                                 <td>Directory bundle (macOS only). BPM and key extracted.</td>
                             </tr>
                             <tr>
+                                <td>MAGDA</td>
+                                <td><code class="daw-ext">.mgd</code></td>
+                                <td>Project file detected; metadata availability varies by version.</td>
+                            </tr>
+                            <tr>
                                 <td>Maschine</td>
-                                <td><code class="daw-ext">.maschine</code></td>
+                                <td><code class="daw-ext">.maschine</code>, <code class="daw-ext">.maschine2</code></td>
                                 <td>Project file detected; metadata availability varies by version.</td>
                             </tr>
                             <tr>
@@ -1395,8 +1514,8 @@
                             </tr>
                             <tr>
                                 <td>Pro Tools</td>
-                                <td><code class="daw-ext">.ptx</code></td>
-                                <td>Project file detected; BPM extraction supported.</td>
+                                <td><code class="daw-ext">.ptx</code>, <code class="daw-ext">.pts</code></td>
+                                <td>Project and session files detected; BPM extraction supported.</td>
                             </tr>
                             <tr>
                                 <td>Reaper</td>
@@ -1407,6 +1526,16 @@
                                 <td>Studio One</td>
                                 <td><code class="daw-ext">.song</code></td>
                                 <td>BPM and key extracted during deep scan.</td>
+                            </tr>
+                            <tr>
+                                <td>Tracktion Waveform</td>
+                                <td><code class="daw-ext">.tracktionedit</code>, <code class="daw-ext">.tracktion</code></td>
+                                <td>Both edit and project file formats detected.</td>
+                            </tr>
+                            <tr>
+                                <td>Universal Audio LUNA</td>
+                                <td><code class="daw-ext">.luna</code></td>
+                                <td>Package bundle; project file detected.</td>
                             </tr>
                         </tbody>
                     </table>
