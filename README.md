@@ -2,7 +2,7 @@
 
 Cross-platform app for organizing and tracking music production projects. Scan your drives, manage metadata, track todos, group releases, and sync everything via Google Drive.
 
-Supports **macOS**, **Windows**, **Android**, and **iOS**. Primary development target is macOS desktop.
+Supports **macOS**, **Windows**, **Android** (closed testing).
 
 ---
 
