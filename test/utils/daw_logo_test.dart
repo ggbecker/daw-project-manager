@@ -39,6 +39,7 @@ void main() {
         'Samplitude / Sequoia': 'samplitude-sequoia.png',
         'ACID Pro': 'acid-pro.png',
         'Mixcraft': 'mixcraft.png',
+        'Rosegarden': 'rosegarden.png',
       };
 
       for (final entry in expected.entries) {
@@ -55,11 +56,5 @@ void main() {
       expect(getDawLogoPath('LUNA'.toLowerCase()), 'resources/daw/logos/luna.png');
     });
 
-    test('Rosegarden has no logo asset yet and falls back to null', () {
-      // Deliberately unmapped — the only image sourced for it turned out to
-      // be a photo of an actual garden rose, not the software's logo. See
-      // resources/daw/logos/MISSING_LOGOS.md.
-      expect(getDawLogoPath('Rosegarden'), isNull);
-    });
   });
 }

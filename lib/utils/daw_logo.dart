@@ -41,8 +41,7 @@ String? getDawLogoPath(String? dawType) {
     'samplitude / sequoia': 'samplitude-sequoia.png',
     'acid pro': 'acid-pro.png',
     'mixcraft': 'mixcraft.png',
-    // 'rosegarden' intentionally omitted — no logo asset yet, falls back to
-    // null (no logo) rather than a wrong one. See MISSING_LOGOS.md.
+    'rosegarden': 'rosegarden.png',
   };
 
   // Try exact match first
