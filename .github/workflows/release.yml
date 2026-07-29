@@ -713,20 +713,30 @@ jobs:
           sudo apt-get install -y flatpak flatpak-builder
           flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 
-      - name: Point manifest at this checkout for CI validation
+      - name: Point manifest at the exact commit under test
+        env:
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git
+          COMMIT_SHA: ${{ github.sha }}
         run: |
-          # The committed manifest's `git` source (pinned to a release tag)
-          # is what Flathub's own build will use. For CI validation we build
-          # straight from the checkout instead — works on PRs too, where no
-          # release tag exists yet — via a small Python edit rather than a
-          # brittle multi-line sed.
+          # The committed manifest's `git` source is pinned to a release tag,
+          # which doesn't exist yet on a PR. flatpak-flutter's own
+          # source-fetch step only understands `type: git` sources (it
+          # clones the repo itself to inspect pubspec.lock) — a `type: dir`
+          # source silently fails deep inside it (confirmed by running this
+          # job) — so for CI validation we keep it a git source, just
+          # repointed at this exact commit instead of the pinned tag.
           python3 - <<'PY'
-          import re, pathlib
+          import os, re, pathlib
           p = pathlib.Path("flatpak/com.bandpassrecords.dpm.yml")
           text = p.read_text()
+          replacement = (
+              "      - type: git\n"
+              f"        url: {os.environ['REPO_URL']}\n"
+              f"        commit: {os.environ['COMMIT_SHA']}\n"
+          )
           text, n = re.subn(
               r"      - type: git\n(?:.*\n)*?        commit: [0-9a-f]{40}\n",
-              "      - type: dir\n        path: ..\n",
+              replacement,
               text,
           )
           assert n == 1, f"expected exactly one git source block to replace, replaced {n}"
