@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:path/path.dart' as p;
 import 'package:daw_project_manager/models/music_project.dart';
 import 'package:daw_project_manager/models/project_event.dart';
+import 'package:daw_project_manager/models/project_template.dart';
 import 'package:daw_project_manager/models/release.dart';
 import 'package:daw_project_manager/models/todo_template.dart';
 import 'package:daw_project_manager/repository/profile_repository.dart';
@@ -48,7 +50,10 @@ void main() {
       );
 
       expect(profile.name, DemoDataService.demoProfileName);
-      expect(profileRepo.getAllProfiles().length, 1);
+      // Plus the two lighter-weight secondary demo profiles (see
+      // DemoDataService._secondaryDemoProfileNames), used to give the
+      // Profile Manager more than one profile to show in screenshots.
+      expect(profileRepo.getAllProfiles().length, 3);
     });
 
     test('running twice reuses the same profile and does not duplicate data', () async {
@@ -68,7 +73,7 @@ void main() {
       );
 
       expect(second.id, first.id);
-      expect(profileRepo.getAllProfiles().length, 1);
+      expect(profileRepo.getAllProfiles().length, 3);
 
       final secondProjects = await Hive.openBox<MusicProject>('${second.id}_projects');
       expect(secondProjects.length, firstCount);
@@ -89,8 +94,8 @@ void main() {
         dawTypes,
         {
           'Ableton Live', 'Bitwig Studio', 'Cubase', 'FL Studio', 'Logic Pro',
-          'Maschine', 'Nuendo', 'Pro Tools', 'Reaper', 'Studio One', 'Waveform',
-          'LUNA',
+          'Maschine', 'MAGDA', 'Nuendo', 'Pro Tools', 'Reaper', 'Sonar',
+          'Studio One', 'Waveform', 'LUNA',
         },
       );
       expect(statuses, {'Idea', 'Arranging', 'Mixing', 'Mastering', 'Finished'});
@@ -195,7 +200,7 @@ void main() {
       expect(realRepo.getById('real-project-1'), isNotNull);
     });
 
-    test('does not touch the global todoTemplates box', () async {
+    test('adds demo-tagged entries to the global todoTemplates box without touching a real one', () async {
       final templatesBox = await Hive.openBox<TodoTemplate>('todoTemplates');
       final template = TodoTemplate(
         id: 'real-template-1',
@@ -212,8 +217,84 @@ void main() {
         demoFilesPathProvider: fakeDemoFilesPath,
       );
 
-      expect(templatesBox.length, 1);
       expect(templatesBox.get('real-template-1')?.name, 'My Real Template');
+      final demoEntries = templatesBox.values.where((t) => t.name.startsWith('Demo — '));
+      expect(demoEntries, isNotEmpty);
+    });
+
+    test('adds demo-tagged Project Templates with a real placeholder source folder', () async {
+      await DemoDataService().generate(
+        profileRepo,
+        previewSongsPathProvider: fakePreviewSongsPath,
+        demoFilesPathProvider: fakeDemoFilesPath,
+      );
+
+      final templatesBox = await Hive.openBox<ProjectTemplate>('projectTemplates');
+      final demoTemplates = templatesBox.values.where((t) => t.name.startsWith('Demo — ')).toList();
+      expect(demoTemplates, isNotEmpty);
+
+      for (final template in demoTemplates) {
+        expect(Directory(template.sourceFolderPath).existsSync(), isTrue);
+        final mainFilePath = p.join(template.sourceFolderPath, template.mainFileRelativePath);
+        final existsAsFile = File(mainFilePath).existsSync();
+        final existsAsDirectory = Directory(mainFilePath).existsSync();
+        expect(existsAsFile || existsAsDirectory, isTrue);
+      }
+    });
+
+    test('main profile releases have artwork and attached files pointing to real placeholders', () async {
+      final profile = await DemoDataService().generate(
+        profileRepo,
+        previewSongsPathProvider: fakePreviewSongsPath,
+        demoFilesPathProvider: fakeDemoFilesPath,
+      );
+      final releases = await Hive.openBox<Release>('${profile.id}_releases');
+
+      expect(releases.values, isNotEmpty);
+      for (final release in releases.values) {
+        expect(release.artworkImagePath, isNotNull);
+        expect(File(release.artworkImagePath!).existsSync(), isTrue);
+        expect(release.files, isNotEmpty);
+        for (final file in release.files) {
+          expect(File(file.filePath).existsSync(), isTrue);
+        }
+      }
+    });
+
+    test('release artwork is a real decodable 512x512 PNG, not just a file that exists', () async {
+      // Regression coverage for the hand-rolled PNG encoder in
+      // DemoDataService — a malformed chunk/CRC would make the file exist
+      // on disk but fail to decode, showing a broken-image icon in
+      // screenshots instead of real cover art.
+      final profile = await DemoDataService().generate(
+        profileRepo,
+        previewSongsPathProvider: fakePreviewSongsPath,
+        demoFilesPathProvider: fakeDemoFilesPath,
+      );
+      final releases = await Hive.openBox<Release>('${profile.id}_releases');
+      final artworkPath = releases.values.first.artworkImagePath!;
+      final bytes = await File(artworkPath).readAsBytes();
+
+      final codec = await ui.instantiateImageCodec(bytes);
+      final frame = await codec.getNextFrame();
+
+      expect(frame.image.width, 512);
+      expect(frame.image.height, 512);
+    });
+
+    test('creates the secondary demo profiles alongside the main one', () async {
+      await DemoDataService().generate(
+        profileRepo,
+        previewSongsPathProvider: fakePreviewSongsPath,
+        demoFilesPathProvider: fakeDemoFilesPath,
+      );
+
+      final names = profileRepo.getAllProfiles().map((p) => p.name).toSet();
+      expect(names, {
+        DemoDataService.demoProfileName,
+        'Demo — Solo Artist',
+        'Demo — Studio B',
+      });
     });
   });
 
@@ -301,6 +382,58 @@ void main() {
       await DemoDataService().remove(profileRepo, demoFilesPathProvider: fakeDemoFilesPath);
 
       expect(demoFilesDir.existsSync(), isFalse);
+    });
+
+    test('deletes the secondary demo profiles too when another profile exists', () async {
+      await profileRepo.createProfile('Real Profile');
+      await DemoDataService().generate(
+        profileRepo,
+        previewSongsPathProvider: fakePreviewSongsPath,
+        demoFilesPathProvider: fakeDemoFilesPath,
+      );
+
+      await DemoDataService().remove(profileRepo, demoFilesPathProvider: fakeDemoFilesPath);
+
+      final names = profileRepo.getAllProfiles().map((p) => p.name).toSet();
+      expect(names, {'Real Profile'});
+    });
+
+    test('keeps exactly one demo profile (emptied) when demo profiles are the only ones', () async {
+      await DemoDataService().generate(
+        profileRepo,
+        previewSongsPathProvider: fakePreviewSongsPath,
+        demoFilesPathProvider: fakeDemoFilesPath,
+      );
+
+      await DemoDataService().remove(profileRepo, demoFilesPathProvider: fakeDemoFilesPath);
+
+      expect(profileRepo.getAllProfiles().length, 1);
+      expect(profileRepo.getAllProfiles().first.name, DemoDataService.demoProfileName);
+    });
+
+    test('removes demo-tagged template entries without touching a real one', () async {
+      final todoBox = await Hive.openBox<TodoTemplate>('todoTemplates');
+      final realTemplate = TodoTemplate(
+        id: 'real-template-1',
+        name: 'My Real Template',
+        items: const ['Step 1'],
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+      await todoBox.put(realTemplate.id, realTemplate);
+
+      await profileRepo.createProfile('Real Profile');
+      await DemoDataService().generate(
+        profileRepo,
+        previewSongsPathProvider: fakePreviewSongsPath,
+        demoFilesPathProvider: fakeDemoFilesPath,
+      );
+      expect(todoBox.values.any((t) => t.name.startsWith('Demo — ')), isTrue);
+
+      await DemoDataService().remove(profileRepo, demoFilesPathProvider: fakeDemoFilesPath);
+
+      expect(todoBox.values.any((t) => t.name.startsWith('Demo — ')), isFalse);
+      expect(todoBox.get('real-template-1')?.name, 'My Real Template');
     });
   });
 }
