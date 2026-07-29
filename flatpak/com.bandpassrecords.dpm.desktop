@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=DAW Project Manager
+GenericName=Music Project Manager
+Comment=Track, organize, and back up your DAW projects across Ableton, Cubase, FL Studio, Logic, and more
+Exec=daw_project_manager %U
+Icon=com.bandpassrecords.dpm
+Terminal=false
+Categories=Audio;AudioVideo;Music;
+StartupWMClass=com.bandpassrecords.dpm
+StartupNotify=true
