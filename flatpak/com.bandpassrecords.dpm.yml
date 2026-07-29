@@ -50,17 +50,26 @@ finish-args:
   # --filesystem grant is needed for this to work.
 
 modules:
-  # flatpak-flutter inserts the Flutter SDK module here and adjusts the
-  # app module below (PATH, build-commands) to use it — nothing to do by
-  # hand.
-
+  # flatpak-flutter looks for a module named daw-project-manager (see
+  # --app-module in the CI job) containing a `git` source whose url starts
+  # with https://github.com/flutter/flutter and has a `tag:` — that's how
+  # it decides which Flutter version to build from source, and it silently
+  # no-ops (no error, nothing written) if that source is missing, which is
+  # exactly what happened before this was added. It also expects
+  # `build-options.append-path` to already contain a placeholder path
+  # ending in "<dest>/bin" (dest: flutter below) — it rewrites that
+  # specific entry to the real sandbox path, it doesn't add one from
+  # scratch — and inserts `setup-flutter.sh` into build-commands right
+  # before whichever command it finds first containing "flutter " or
+  # "dart ". Do not remove any of that scaffolding as unused-looking.
   - name: daw-project-manager
     buildsystem: simple
     build-options:
+      append-path: /run/build/daw-project-manager/flutter/bin
       env:
         PUB_CACHE: /run/build/daw-project-manager/.pub-cache
     build-commands:
-      - flutter build linux --release
+      - flutter build linux --release --no-pub
       - install -Dm755 build/linux/x64/release/bundle/daw_project_manager /app/bin/daw_project_manager
       - cp -r build/linux/x64/release/bundle/data /app/bin/data
       - cp -r build/linux/x64/release/bundle/lib /app/bin/lib
@@ -74,6 +83,10 @@ modules:
         tag: v2.6.1
         commit: d61773779679f3137be72d095b4860557c069580
 
-      # --- BEGIN generated: pubspec-sources.json (see flatpak/README.md) ---
-      # - pubspec-sources.json
-      # --- END generated ---
+      # Pinned to the same Flutter version the rest of CI builds with
+      # (FLUTTER_BASE_VERSION in .github/workflows/release.yml) — keep
+      # these in sync.
+      - type: git
+        url: https://github.com/flutter/flutter.git
+        tag: '3.41.9'
+        dest: flutter
