@@ -808,9 +808,15 @@ jobs:
       # This artifact is the Flathub submission bundle: flatpak-flutter
       # overwrites the manifest in place (its output filename is
       # <app-id>.yml, same as our input) and writes the vendored
-      # modules/sources/patches under generated/. Together with
-      # secrets.dart and the shared-modules submodule, these are exactly
-      # the files that go into the flathub/com.bandpassrecords.dpm repo.
+      # modules/sources/patches under generated/. secrets.dart is included
+      # too — this is the only place it exists as a downloadable artifact,
+      # since it's generated fresh in this job from the GitHub secrets and
+      # otherwise never leaves the runner. That's intentional, not an
+      # oversight: it has to end up committed in the flathub repo anyway
+      # (the manifest's `type: file` source expects it sitting next to the
+      # manifest), and Google's own OAuth docs don't treat installed-app
+      # client credentials as confidential — every shipped binary embeds
+      # them regardless of who can see this artifact.
       # (.flatpak-builder/ is deliberately not included — it's a large
       # build cache, and upload-artifact skips hidden dirs by default.)
       - name: Upload generated Flathub sources
@@ -821,6 +827,7 @@ jobs:
           path: |
             flatpak/com.bandpassrecords.dpm.yml
             flatpak/generated/
+            flatpak/secrets.dart
           retention-days: 14
           if-no-files-found: warn
 

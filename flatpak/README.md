@@ -120,17 +120,40 @@ the code):
 
 ## Submitting to Flathub
 
-Once it builds and runs locally: fork
-[flathub/flathub](https://github.com/flathub/flathub), create a new
-repository named `com.bandpassrecords.dpm` under the Flathub org (via their
-"New app" request flow), push this manifest (with the generated sources
-merged in) there, and open the PR. The Flathub-side repo also needs a copy of
-`secrets.dart` committed next to the manifest (the `type: file` source) —
-that's acceptable: per Google's OAuth documentation, installed-app client
-credentials are not treated as confidential, and every shipped binary embeds
-them anyway. Their CI will build it and a human reviewer will check the
-`finish-args` — be ready to justify `--share=network` (Google Drive sync)
-and the D-Bus `--talk-name`s above if asked.
+1. **Get the submission bundle from CI, don't hand-assemble it.** Every
+   `build_flatpak` run uploads a `flatpak-generated-sources` artifact
+   containing exactly what needs to go into the Flathub repo:
+   - `com.bandpassrecords.dpm.yml` — the *rewritten* manifest (Flutter SDK
+     module wired in, `pubspec-sources.json` etc. appended) — not the
+     template version in this directory.
+   - `generated/` — the vendored modules/sources/patches that manifest
+     references.
+   - `secrets.dart` — generated fresh in that CI run from the repo's GitHub
+     secrets. This is the only place this file exists as a downloadable
+     artifact; it's not committed anywhere in this repo. Committing it into
+     the public Flathub repo is intentional, not an oversight to be careful
+     about — Google's OAuth documentation doesn't treat installed-app
+     client credentials as confidential (every shipped binary embeds them
+     regardless of who can read this artifact).
+
+   Download it from a run **on the actual release tag** you're submitting
+   (not a PR run) — that's what makes the manifest's `commit:` match a real,
+   permanent release rather than a moving PR head. Note the CI substitution
+   drops the `tag:` line and keeps only `commit:` (correct for building,
+   just add `tag: vX.Y.Z` back in by hand for readability if you want it).
+
+2. Fork [flathub/flathub](https://github.com/flathub/flathub) and use their
+   "New app" request flow to get a repository created at
+   `flathub/com.bandpassrecords.dpm`.
+
+3. Push the three items from the artifact into that repo's root (so
+   `secrets.dart` and `generated/` sit next to the manifest, matching the
+   relative paths the manifest's sources use), and open the PR.
+
+4. Their CI builds it and a human reviewer checks the `finish-args` — be
+   ready to justify `--share=network` (Google Drive sync) and the D-Bus
+   `--talk-name`s above if asked; the comments already in the manifest cover
+   the reasoning for each.
 
 Per-release maintenance of the Flathub manifest is nearly hands-off:
 
