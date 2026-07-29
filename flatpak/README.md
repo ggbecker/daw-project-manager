@@ -94,8 +94,8 @@ flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flath
 # The manifest has a `type: file` source for the OAuth credentials —
 # flatpak-builder fetches the app from git inside the sandbox, so the
 # secrets can't be injected into a checkout like the other CI jobs do:
-./scripts/inject_secret.sh -d "<desktop-id>" -s "<secret>" -a "<android-id>"
-cp lib/config/secrets.dart flatpak/secrets.dart
+./scripts/inject_oauth_config.sh -d "<desktop-id>" -s "<secret>" -a "<android-id>"
+cp lib/config/oauth_config.dart flatpak/oauth_config.dart
 # after running flatpak-flutter as above:
 flatpak-builder --repo=repo --force-clean --sandbox --user \
   --install-deps-from=flathub build com.bandpassrecords.dpm.yml
@@ -128,7 +128,7 @@ the code):
      template version in this directory.
    - `generated/` — the vendored modules/sources/patches that manifest
      references.
-   - `secrets.dart` — generated fresh in that CI run from the repo's GitHub
+   - `oauth_config.dart` — generated fresh in that CI run from the repo's GitHub
      secrets. This is the only place this file exists as a downloadable
      artifact; it's not committed anywhere in this repo. Committing it into
      the public Flathub repo is intentional, not an oversight to be careful
@@ -147,7 +147,7 @@ the code):
    `flathub/com.bandpassrecords.dpm`.
 
 3. Push the three items from the artifact into that repo's root (so
-   `secrets.dart` and `generated/` sit next to the manifest, matching the
+   `oauth_config.dart` and `generated/` sit next to the manifest, matching the
    relative paths the manifest's sources use), and open the PR.
 
 4. Their CI builds it and a human reviewer checks the `finish-args` — be

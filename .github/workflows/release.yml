@@ -41,8 +41,8 @@ jobs:
 
       - name: Inject OAuth Credentials
         run: |
-          chmod +x scripts/inject_secret.sh
-          ./scripts/inject_secret.sh -d "${{ secrets.DESKTOP_CLIENT_ID }}" -s "${{ secrets.DESKTOP_CLIENT_SECRET }}" -a "${{ secrets.ANDROID_WEB_CLIENT_ID }}"
+          chmod +x scripts/inject_oauth_config.sh
+          ./scripts/inject_oauth_config.sh -d "${{ secrets.DESKTOP_CLIENT_ID }}" -s "${{ secrets.DESKTOP_CLIENT_SECRET }}" -a "${{ secrets.ANDROID_WEB_CLIENT_ID }}"
         env:
           DESKTOP_CLIENT_ID: ${{ secrets.DESKTOP_CLIENT_ID }}
           DESKTOP_CLIENT_SECRET: ${{ secrets.DESKTOP_CLIENT_SECRET }}
@@ -82,7 +82,7 @@ jobs:
       # Inject OAuth Credentials from GitHub Secrets
       - name: Inject OAuth Credentials
         run: |
-            powershell -ExecutionPolicy Bypass -File scripts/inject_secret.ps1 `
+            powershell -ExecutionPolicy Bypass -File scripts/inject_oauth_config.ps1 `
               -DesktopClientId "${{ secrets.DESKTOP_CLIENT_ID }}" `
               -DesktopClientSecret "${{ secrets.DESKTOP_CLIENT_SECRET }}" `
               -AndroidWebClientId "${{ secrets.ANDROID_WEB_CLIENT_ID }}"
@@ -197,7 +197,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         shell: pwsh
         run: |
-          powershell -ExecutionPolicy Bypass -File scripts/inject_secret.ps1 `
+          powershell -ExecutionPolicy Bypass -File scripts/inject_oauth_config.ps1 `
             -DesktopClientId "${{ secrets.DESKTOP_CLIENT_ID }}" `
             -DesktopClientSecret "${{ secrets.DESKTOP_CLIENT_SECRET }}" `
             -AndroidWebClientId "${{ secrets.ANDROID_WEB_CLIENT_ID }}"
@@ -209,8 +209,8 @@ jobs:
       - name: Inject OAuth Credentials (macOS/Linux)
         if: matrix.os != 'windows-latest'
         run: |
-          chmod +x scripts/inject_secret.sh
-          ./scripts/inject_secret.sh -d "${{ secrets.DESKTOP_CLIENT_ID }}" -s "${{ secrets.DESKTOP_CLIENT_SECRET }}" -a "${{ secrets.ANDROID_WEB_CLIENT_ID }}"
+          chmod +x scripts/inject_oauth_config.sh
+          ./scripts/inject_oauth_config.sh -d "${{ secrets.DESKTOP_CLIENT_ID }}" -s "${{ secrets.DESKTOP_CLIENT_SECRET }}" -a "${{ secrets.ANDROID_WEB_CLIENT_ID }}"
         env:
           DESKTOP_CLIENT_ID: ${{ secrets.DESKTOP_CLIENT_ID }}
           DESKTOP_CLIENT_SECRET: ${{ secrets.DESKTOP_CLIENT_SECRET }}
@@ -563,8 +563,8 @@ jobs:
 
       - name: Inject OAuth Credentials
         run: |
-          chmod +x scripts/inject_secret.sh
-          ./scripts/inject_secret.sh -d "${{ secrets.DESKTOP_CLIENT_ID }}" -s "${{ secrets.DESKTOP_CLIENT_SECRET }}" -a "${{ secrets.ANDROID_WEB_CLIENT_ID }}"
+          chmod +x scripts/inject_oauth_config.sh
+          ./scripts/inject_oauth_config.sh -d "${{ secrets.DESKTOP_CLIENT_ID }}" -s "${{ secrets.DESKTOP_CLIENT_SECRET }}" -a "${{ secrets.ANDROID_WEB_CLIENT_ID }}"
         env:
           DESKTOP_CLIENT_ID: ${{ secrets.DESKTOP_CLIENT_ID }}
           DESKTOP_CLIENT_SECRET: ${{ secrets.DESKTOP_CLIENT_SECRET }}
@@ -717,15 +717,15 @@ jobs:
           sudo apt-get install -y flatpak flatpak-builder
           flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 
-      # The manifest carries a `type: file` source for lib/config/secrets.dart
+      # The manifest carries a `type: file` source for lib/config/oauth_config.dart
       # because flatpak-builder fetches the app from git inside the sandbox —
       # injecting into this checkout (like the other jobs do) would never
       # reach the build. Generate the file the manifest points at.
-      - name: Generate OAuth secrets file for the Flatpak build
+      - name: Generate OAuth config file for the Flatpak build
         run: |
-          chmod +x scripts/inject_secret.sh
-          ./scripts/inject_secret.sh -d "${{ secrets.DESKTOP_CLIENT_ID }}" -s "${{ secrets.DESKTOP_CLIENT_SECRET }}" -a "${{ secrets.ANDROID_WEB_CLIENT_ID }}"
-          cp lib/config/secrets.dart flatpak/secrets.dart
+          chmod +x scripts/inject_oauth_config.sh
+          ./scripts/inject_oauth_config.sh -d "${{ secrets.DESKTOP_CLIENT_ID }}" -s "${{ secrets.DESKTOP_CLIENT_SECRET }}" -a "${{ secrets.ANDROID_WEB_CLIENT_ID }}"
+          cp lib/config/oauth_config.dart flatpak/oauth_config.dart
 
       - name: Point manifest at the exact commit under test
         env:
@@ -808,11 +808,12 @@ jobs:
       # This artifact is the Flathub submission bundle: flatpak-flutter
       # overwrites the manifest in place (its output filename is
       # <app-id>.yml, same as our input) and writes the vendored
-      # modules/sources/patches under generated/. secrets.dart is included
-      # too — this is the only place it exists as a downloadable artifact,
-      # since it's generated fresh in this job from the GitHub secrets and
-      # otherwise never leaves the runner. That's intentional, not an
-      # oversight: it has to end up committed in the flathub repo anyway
+      # modules/sources/patches under generated/. oauth_config.dart is
+      # included too — this is the only place it exists as a downloadable
+      # artifact, since it's generated fresh in this job from the GitHub
+      # Actions secrets and otherwise never leaves the runner. That's
+      # intentional, not an oversight: it has to end up committed in the
+      # flathub repo anyway
       # (the manifest's `type: file` source expects it sitting next to the
       # manifest), and Google's own OAuth docs don't treat installed-app
       # client credentials as confidential — every shipped binary embeds
@@ -827,7 +828,7 @@ jobs:
           path: |
             flatpak/com.bandpassrecords.dpm.yml
             flatpak/generated/
-            flatpak/secrets.dart
+            flatpak/oauth_config.dart
           retention-days: 14
           if-no-files-found: warn
 
@@ -896,8 +897,8 @@ jobs:
 
       - name: Inject OAuth Credentials
         run: |
-          chmod +x scripts/inject_secret.sh
-          ./scripts/inject_secret.sh \
+          chmod +x scripts/inject_oauth_config.sh
+          ./scripts/inject_oauth_config.sh \
             -d "${{ secrets.DESKTOP_CLIENT_ID }}" \
             -s "${{ secrets.DESKTOP_CLIENT_SECRET }}" \
             -a "${{ secrets.ANDROID_WEB_CLIENT_ID }}"

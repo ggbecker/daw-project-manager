@@ -122,16 +122,16 @@ flutter run -d <device-id> # Android or iOS — list with: flutter devices
 
 ### Google Drive sync (optional)
 
-Drive sync requires OAuth credentials injected into `lib/config/secrets.dart` (not versioned).
+Drive sync requires OAuth config injected into `lib/config/oauth_config.dart` (not versioned).
 
 **Quickest way — use the setup script:**
 
 ```bash
 # macOS / Linux
-./scripts/setup_local_secret.sh
+./scripts/setup_local_oauth_config.sh
 
 # Windows
-.\scripts\setup_local_secret.ps1
+.\scripts\setup_local_oauth_config.ps1
 ```
 
 The script prompts for your Google Cloud OAuth credentials (`DESKTOP_CLIENT_ID`, `DESKTOP_CLIENT_SECRET`, `ANDROID_WEB_CLIENT_ID`) and writes the file for you. Without it the app runs normally; only Drive features won't authenticate.
