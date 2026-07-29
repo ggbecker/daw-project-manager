@@ -1,5 +1,5 @@
-# PowerShell script to inject OAuth credentials during build
-# Usage: .\scripts\inject_secret.ps1 -DesktopClientId "id" -DesktopClientSecret "secret" -AndroidWebClientId "id"
+# PowerShell script to inject OAuth config during build
+# Usage: .\scripts\inject_oauth_config.ps1 -DesktopClientId "id" -DesktopClientSecret "secret" -AndroidWebClientId "id"
 
 param(
     [Parameter(Mandatory=$false)]
@@ -15,8 +15,8 @@ param(
 $ErrorActionPreference = "Stop"
 
 # Paths
-$templateFile = "lib\config\secrets.dart.template"
-$outputFile = "lib\config\secrets.dart"
+$templateFile = "lib\config\oauth_config.dart.template"
+$outputFile = "lib\config\oauth_config.dart"
 
 if (-not (Test-Path $templateFile)) {
     Write-Error "Template file not found: $templateFile"

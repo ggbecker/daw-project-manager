@@ -91,6 +91,15 @@ All other supported DAWs are detected and scanned but rely on manual entry today
   - **macOS / iOS** — Xcode (latest)
   - **Windows** — Visual Studio with the "Desktop development with C++" workload
   - **Android** — Android Studio (latest)
+  - **Linux** — GTK/GStreamer/libsecret dev headers, plus a C++ toolchain:
+    ```bash
+    sudo apt-get install -y clang cmake ninja-build pkg-config unzip \
+      libgtk-3-dev liblzma-dev libsecret-1-dev libayatana-appindicator3-dev \
+      libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
+    ```
+    (Linux isn't a released platform yet — see `flatpak/README.md` for the
+    in-progress Flathub packaging effort — but `flutter run -d linux` works
+    for local development.)
 
 ### Install and generate
 
@@ -107,21 +116,22 @@ dart run build_runner build --delete-conflicting-outputs
 ```bash
 flutter run -d macos       # macOS
 flutter run -d windows     # Windows
+flutter run -d linux       # Linux
 flutter run -d <device-id> # Android or iOS — list with: flutter devices
 ```
 
 ### Google Drive sync (optional)
 
-Drive sync requires OAuth credentials injected into `lib/config/secrets.dart` (not versioned).
+Drive sync requires OAuth config injected into `lib/config/oauth_config.dart` (not versioned).
 
 **Quickest way — use the setup script:**
 
 ```bash
 # macOS / Linux
-./scripts/setup_local_secret.sh
+./scripts/setup_local_oauth_config.sh
 
 # Windows
-.\scripts\setup_local_secret.ps1
+.\scripts\setup_local_oauth_config.ps1
 ```
 
 The script prompts for your Google Cloud OAuth credentials (`DESKTOP_CLIENT_ID`, `DESKTOP_CLIENT_SECRET`, `ANDROID_WEB_CLIENT_ID`) and writes the file for you. Without it the app runs normally; only Drive features won't authenticate.

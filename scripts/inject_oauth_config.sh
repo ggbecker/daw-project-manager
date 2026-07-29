@@ -1,7 +1,7 @@
 #!/bin/bash
-# Bash script to inject OAuth credentials during build
-# Usage: ./scripts/inject_secret.sh -d "desktop-id" -s "secret" -a "android-id"
-#   or: ./scripts/inject_secret.sh --desktop-id "id" --secret "secret" --android-id "id"
+# Bash script to inject OAuth config during build
+# Usage: ./scripts/inject_oauth_config.sh -d "desktop-id" -s "secret" -a "android-id"
+#   or: ./scripts/inject_oauth_config.sh --desktop-id "id" --secret "secret" --android-id "id"
 
 set -e
 
@@ -33,8 +33,8 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Paths
-TEMPLATE_FILE="lib/config/secrets.dart.template"
-OUTPUT_FILE="lib/config/secrets.dart"
+TEMPLATE_FILE="lib/config/oauth_config.dart.template"
+OUTPUT_FILE="lib/config/oauth_config.dart"
 
 if [ ! -f "$TEMPLATE_FILE" ]; then
     echo "Error: Template file not found: $TEMPLATE_FILE"

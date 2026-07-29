@@ -1,0 +1,148 @@
+# Flatpak manifest (template) for DAW Project Manager.
+#
+# This file is the INPUT to https://github.com/TheAppgineer/flatpak-flutter,
+# not the final buildable manifest — that tool rewrites it (Flutter SDK
+# module wired in, pubspec.lock vendored as hashed sources into
+# pubspec-sources.json) so the actual Flathub build never touches the
+# network. The `build_flatpak` job in .github/workflows/release.yml runs
+# that step automatically on every PR and tag; see flatpak/README.md for
+# how to do the same thing by hand on Linux/WSL2.
+
+app-id: com.bandpassrecords.dpm
+runtime: org.freedesktop.Platform
+# Paired with sdk-extensions/llvm20 below to match flatpak-flutter's own
+# template exactly (_generate_template_for_url in flatpak-flutter.py) —
+# compiling Flutter's C++ engine needs clang++, which plain
+# org.freedesktop.Sdk doesn't ship; the LLVM extension version has to match
+# what's actually published for this runtime branch, and this is the
+# combination the tool's own maintainers ship and test against.
+runtime-version: '25.08'
+sdk: org.freedesktop.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.llvm20
+command: daw_project_manager
+
+finish-args:
+  # Rendering (GTK/Flutter Linux embedder).
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --share=ipc
+  - --device=dri
+
+  # Google Drive sync: OAuth flow + Drive API calls.
+  - --share=network
+
+  # Deadline reminder notifications (flutter_local_notifications talks to
+  # org.freedesktop.Notifications directly over D-Bus, not through the
+  # notification portal).
+  - --talk-name=org.freedesktop.Notifications
+
+  # flutter_secure_storage on Linux stores OAuth tokens via libsecret /
+  # the Secret Service API.
+  - --talk-name=org.freedesktop.secrets
+
+  # tray_manager's system tray icon (StatusNotifierItem protocol). Some
+  # desktop environments don't run a StatusNotifierWatcher at all — the
+  # tray icon silently not appearing there is a desktop-environment
+  # limitation, not a sandboxing bug, and is not blocking for review.
+  - --talk-name=org.kde.StatusNotifierWatcher
+
+  # Deliberately NOT requesting --filesystem=host or --filesystem=home.
+  # Every folder the scanner walks (see lib/services/scanner_service.dart)
+  # is chosen through file_picker's Linux backend, which talks directly to
+  # org.freedesktop.portal.FileChooser over D-Bus (see
+  # file_picker/lib/src/linux/file_picker_linux.dart) rather than opening
+  # its own dialog. The portal grants — and persists across app restarts —
+  # access scoped to just the folder the user picked, which is exactly the
+  # minimal-permission pattern Flathub review expects. No extra
+  # --filesystem grant is needed for this to work.
+
+modules:
+  # tray_manager's Linux CMakeLists requires ayatana-appindicator3-0.1 or
+  # appindicator3-0.1 via pkg-config, and plain org.freedesktop.Platform
+  # doesn't ship either. Building it from the shared module Flathub apps
+  # use for this (flatpak/shared-modules/ is a git submodule of
+  # flathub/shared-modules) rather than pinning our own source archive —
+  # this one builds legacy libappindicator, which provides
+  # appindicator3-0.1. Must come before daw-project-manager in this list
+  # so its pkg-config files exist by the time that module's CMake
+  # configure step runs.
+  - shared-modules/libappindicator/libappindicator-gtk3-12.10.json
+
+  # flatpak-flutter looks for a module named daw-project-manager (see
+  # --app-module in the CI job) containing a `git` source whose url starts
+  # with https://github.com/flutter/flutter and has a `tag:` — that's how
+  # it decides which Flutter version to build from source, and it silently
+  # no-ops (no error, nothing written) if that source is missing, which is
+  # exactly what happened before this was added. It also expects
+  # `build-options.append-path` to already contain a placeholder path
+  # ending in "<dest>/bin" (dest: flutter below) — it rewrites that
+  # specific entry to the real sandbox path, it doesn't add one from
+  # scratch — and inserts `setup-flutter.sh` into build-commands right
+  # before whichever command it finds first containing "flutter " or
+  # "dart ". Do not remove any of that scaffolding as unused-looking.
+  - name: daw-project-manager
+    buildsystem: simple
+    build-options:
+      append-path: /usr/lib/sdk/llvm20/bin:/run/build/daw-project-manager/flutter/bin
+      prepend-ld-library-path: /usr/lib/sdk/llvm20/lib
+      env:
+        PUB_CACHE: /run/build/daw-project-manager/.pub-cache
+    build-commands:
+      # APP_VERSION is derived from the git tag the app source below is
+      # pinned to (flatpak-builder checks the source out as a real git
+      # clone, so `git describe` sees the tag) — nothing to bump here on
+      # a release. Falls back to 0.0.0 when no tag is reachable, which
+      # matches what the other CI jobs use for untagged PR builds.
+      - APP_VERSION=$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//');
+        flutter build linux --release --no-pub --dart-define=APP_VERSION=${APP_VERSION:-0.0.0}
+      - install -Dm755 build/linux/x64/release/bundle/daw_project_manager /app/bin/daw_project_manager
+      - cp -r build/linux/x64/release/bundle/data /app/bin/data
+      - cp -r build/linux/x64/release/bundle/lib /app/bin/lib
+      - install -Dm644 flatpak/com.bandpassrecords.dpm.desktop /app/share/applications/com.bandpassrecords.dpm.desktop
+      - install -Dm644 flatpak/com.bandpassrecords.dpm.metainfo.xml /app/share/metainfo/com.bandpassrecords.dpm.metainfo.xml
+      - install -Dm644 flatpak/icons/com.bandpassrecords.dpm_128.png /app/share/icons/hicolor/128x128/apps/com.bandpassrecords.dpm.png
+      - install -Dm644 flatpak/icons/com.bandpassrecords.dpm_256.png /app/share/icons/hicolor/256x256/apps/com.bandpassrecords.dpm.png
+    sources:
+      # x-checker-data: once this manifest lives in the Flathub repo,
+      # Flathub's flatpak-external-data-checker bot watches for new v* tags
+      # on this repo and automatically opens a PR there bumping tag: and
+      # commit: — combined with the git-describe-derived APP_VERSION above,
+      # a release needs no manual manifest edits, just merging the bot's PR.
+      - type: git
+        url: https://github.com/bandpassrecords/daw-project-manager.git
+        # v2.6.2 doesn't exist as a tag yet (it's the release this manifest
+        # is being staged for) — commit: below is still v2.6.1's SHA, since
+        # that's the only real commit to pin to right now. Update it to
+        # v2.6.2's actual commit (`git rev-list -n 1 v2.6.2`) once that tag
+        # is cut; don't submit to Flathub with this mismatch.
+        tag: v2.6.2
+        commit: d61773779679f3137be72d095b4860557c069580
+        x-checker-data:
+          type: git
+          tag-pattern: ^v([\d.]+)$
+
+      # Pinned to the same Flutter version the rest of CI builds with
+      # (FLUTTER_BASE_VERSION in .github/workflows/release.yml) — keep
+      # these in sync.
+      - type: git
+        url: https://github.com/flutter/flutter.git
+        tag: '3.41.9'
+        dest: flutter
+
+      # Google OAuth client config, dropped on top of the git checkout (the
+      # repo only versions lib/config/oauth_config.dart.template — the other
+      # CI jobs inject the real file into their checkout, but flatpak-builder
+      # fetches sources fresh inside the sandbox, so it must come in as a
+      # source). flatpak/oauth_config.dart is gitignored here and generated
+      # by CI via scripts/inject_oauth_config.sh; to build locally, run that
+      # script and `cp lib/config/oauth_config.dart flatpak/`. For the
+      # Flathub submission the file is committed verbatim to the Flathub
+      # manifest repo: per Google's own OAuth docs, installed-app client
+      # credentials are not treated as confidential — every shipped binary
+      # embeds them anyway, and Flathub's build sandbox has no mechanism for
+      # injecting anything at build time that isn't already sitting in the
+      # repo (no equivalent of GitHub Actions secrets).
+      - type: file
+        path: oauth_config.dart
+        dest: lib/config

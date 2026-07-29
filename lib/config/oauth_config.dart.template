@@ -1,8 +1,8 @@
 // This file is a template. Do not edit directly.
-// For local development: copy this file to secrets.dart and fill in your values
+// For local development: copy this file to oauth_config.dart and fill in your values
 // For CI/CD: This file will be processed by build scripts
-// 
-// Generated file: lib/config/secrets.dart (not versioned)
+//
+// Generated file: lib/config/oauth_config.dart (not versioned)
 
 /// Desktop OAuth Client ID (Desktop application type in Google Cloud Console)
 /// This value is obfuscated (base64) and injected during build time

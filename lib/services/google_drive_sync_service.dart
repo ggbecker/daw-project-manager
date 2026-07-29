@@ -26,7 +26,7 @@ import '../models/backup_progress.dart';
 import '../repository/profile_repository.dart';
 import '../repository/project_repository.dart';
 import '../utils/app_paths.dart' show ensureHiveInitialized, getLocalAppDataPath, getPreviewSongsPath, getReleaseArtworkPath;
-import '../config/secrets.dart' show desktopClientSecret, desktopClientId, androidWebClientId;
+import '../config/oauth_config.dart' show desktopClientSecret, desktopClientId, androidWebClientId;
 
 /// Exception thrown when user cancels an upload operation
 class UploadCancelledException implements Exception {
@@ -103,7 +103,7 @@ class GoogleDriveSyncService {
   auth_io.AutoRefreshingAuthClient? get desktopAuthClient => _desktopAuthClient;
   set desktopAuthClient(auth_io.AutoRefreshingAuthClient? client) => _desktopAuthClient = client;
 
-  // Desktop Client ID - loaded from secrets.dart (injected during build or from local file)
+  // Desktop Client ID - loaded from oauth_config.dart (injected during build or from local file)
   // The ID is obfuscated (base64) and decoded at runtime
   static String get _desktopClientId {
     try {
@@ -117,7 +117,7 @@ class GoogleDriveSyncService {
     }
   }
   
-  // Desktop Client Secret - loaded from secrets.dart (injected during build or from local file)
+  // Desktop Client Secret - loaded from oauth_config.dart (injected during build or from local file)
   // The secret is obfuscated (base64) and decoded at runtime
   static String get _desktopClientSecret {
     try {
@@ -137,7 +137,7 @@ class GoogleDriveSyncService {
     // 'https://www.googleapis.com/auth/drive.appdata',
   ];
 
-  // Android Web Client ID - loaded from secrets.dart (injected during build or from local file)
+  // Android Web Client ID - loaded from oauth_config.dart (injected during build or from local file)
   // Google automatically detects debug/release by package name, so only one Client ID is needed
   // The ID is obfuscated (base64) and decoded at runtime
   static String get _androidWebClientId {

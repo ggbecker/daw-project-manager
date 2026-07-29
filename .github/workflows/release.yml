@@ -1,4 +1,4 @@
-name: Flutter CI/CD (Windows, macOS & Android)
+name: Flutter CI/CD (Windows, macOS, Linux & Android)
 
 # PERMISSÃO: Necessária para que a ação 'upload-release-asset' funcione.
 permissions:
@@ -41,8 +41,8 @@ jobs:
 
       - name: Inject OAuth Credentials
         run: |
-          chmod +x scripts/inject_secret.sh
-          ./scripts/inject_secret.sh -d "${{ secrets.DESKTOP_CLIENT_ID }}" -s "${{ secrets.DESKTOP_CLIENT_SECRET }}" -a "${{ secrets.ANDROID_WEB_CLIENT_ID }}"
+          chmod +x scripts/inject_oauth_config.sh
+          ./scripts/inject_oauth_config.sh -d "${{ secrets.DESKTOP_CLIENT_ID }}" -s "${{ secrets.DESKTOP_CLIENT_SECRET }}" -a "${{ secrets.ANDROID_WEB_CLIENT_ID }}"
         env:
           DESKTOP_CLIENT_ID: ${{ secrets.DESKTOP_CLIENT_ID }}
           DESKTOP_CLIENT_SECRET: ${{ secrets.DESKTOP_CLIENT_SECRET }}
@@ -82,7 +82,7 @@ jobs:
       # Inject OAuth Credentials from GitHub Secrets
       - name: Inject OAuth Credentials
         run: |
-            powershell -ExecutionPolicy Bypass -File scripts/inject_secret.ps1 `
+            powershell -ExecutionPolicy Bypass -File scripts/inject_oauth_config.ps1 `
               -DesktopClientId "${{ secrets.DESKTOP_CLIENT_ID }}" `
               -DesktopClientSecret "${{ secrets.DESKTOP_CLIENT_SECRET }}" `
               -AndroidWebClientId "${{ secrets.ANDROID_WEB_CLIENT_ID }}"
@@ -197,7 +197,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         shell: pwsh
         run: |
-          powershell -ExecutionPolicy Bypass -File scripts/inject_secret.ps1 `
+          powershell -ExecutionPolicy Bypass -File scripts/inject_oauth_config.ps1 `
             -DesktopClientId "${{ secrets.DESKTOP_CLIENT_ID }}" `
             -DesktopClientSecret "${{ secrets.DESKTOP_CLIENT_SECRET }}" `
             -AndroidWebClientId "${{ secrets.ANDROID_WEB_CLIENT_ID }}"
@@ -209,8 +209,8 @@ jobs:
       - name: Inject OAuth Credentials (macOS/Linux)
         if: matrix.os != 'windows-latest'
         run: |
-          chmod +x scripts/inject_secret.sh
-          ./scripts/inject_secret.sh -d "${{ secrets.DESKTOP_CLIENT_ID }}" -s "${{ secrets.DESKTOP_CLIENT_SECRET }}" -a "${{ secrets.ANDROID_WEB_CLIENT_ID }}"
+          chmod +x scripts/inject_oauth_config.sh
+          ./scripts/inject_oauth_config.sh -d "${{ secrets.DESKTOP_CLIENT_ID }}" -s "${{ secrets.DESKTOP_CLIENT_SECRET }}" -a "${{ secrets.ANDROID_WEB_CLIENT_ID }}"
         env:
           DESKTOP_CLIENT_ID: ${{ secrets.DESKTOP_CLIENT_ID }}
           DESKTOP_CLIENT_SECRET: ${{ secrets.DESKTOP_CLIENT_SECRET }}
@@ -533,6 +533,336 @@ jobs:
           path: ${{ steps.set_asset_paths.outputs.asset_path }}
           retention-days: 7
 
+  # Linux Build Job — plain tarball of the Flutter Linux bundle, for users who
+  # don't use Flatpak. This does NOT depend on the flatpak-flutter vendoring
+  # step below; it's a normal `flutter build linux` like any other platform.
+  build_linux:
+    name: Build & Upload (Linux)
+    needs: unit_tests
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev \
+            libsecret-1-dev libayatana-appindicator3-dev libnotify-dev \
+            libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
+
+      - name: Setup Flutter ${{ env.FLUTTER_BASE_VERSION }} (Stable)
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_BASE_VERSION }}
+          channel: 'stable'
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Inject OAuth Credentials
+        run: |
+          chmod +x scripts/inject_oauth_config.sh
+          ./scripts/inject_oauth_config.sh -d "${{ secrets.DESKTOP_CLIENT_ID }}" -s "${{ secrets.DESKTOP_CLIENT_SECRET }}" -a "${{ secrets.ANDROID_WEB_CLIENT_ID }}"
+        env:
+          DESKTOP_CLIENT_ID: ${{ secrets.DESKTOP_CLIENT_ID }}
+          DESKTOP_CLIENT_SECRET: ${{ secrets.DESKTOP_CLIENT_SECRET }}
+          ANDROID_WEB_CLIENT_ID: ${{ secrets.ANDROID_WEB_CLIENT_ID }}
+
+      - name: Generate Hive Adapters
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Generate Localizations
+        run: flutter gen-l10n
+
+      - name: Enable Linux desktop
+        run: flutter config --enable-linux-desktop
+
+      - name: Precache Flutter Artifacts
+        run: flutter precache --linux
+
+      - name: Sanitize ref name
+        id: sanitize_ref
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            echo "sanitized_ref=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" == "pull_request" ]; then
+            echo "sanitized_ref=pr${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+          else
+            SANITIZED=$(echo "${{ github.ref_name }}" | sed 's/[\/\\:*?"<>|]/_/g')
+            echo "sanitized_ref=$SANITIZED" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Determine build version (tag/PR)
+        id: build_version
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            VERSION_NAME="${GITHUB_REF#refs/tags/v}"
+            IFS='.' read -r MAJOR MINOR PATCH <<< "${VERSION_NAME}"
+            VERSION_CODE=$((MAJOR * 10000 + MINOR * 100 + PATCH))
+          else
+            VERSION_NAME="0.0.0"
+            VERSION_CODE="${GITHUB_RUN_NUMBER}"
+          fi
+          echo "version_name=${VERSION_NAME}" >> "$GITHUB_OUTPUT"
+          echo "version_code=${VERSION_CODE}" >> "$GITHUB_OUTPUT"
+
+      - name: Build Linux Bundle
+        run: |
+          VERSION_NAME="${{ steps.build_version.outputs.version_name }}"
+          VERSION_CODE="${{ steps.build_version.outputs.version_code }}"
+          flutter build linux --release --build-name="${VERSION_NAME}" --build-number="${VERSION_CODE}" --dart-define=APP_VERSION="${VERSION_NAME}"
+
+      - name: Package tarball
+        id: package
+        run: |
+          SANITIZED_REF="${{ steps.sanitize_ref.outputs.sanitized_ref }}"
+          ASSET_NAME="DAW_Project_Manager_Linux_${SANITIZED_REF}.tar.gz"
+          tar -C build/linux/x64/release/bundle -czf "${ASSET_NAME}" .
+          echo "asset_path=${ASSET_NAME}" >> "$GITHUB_OUTPUT"
+          echo "asset_name=${ASSET_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Generate SHA256 checksum
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          CHECKSUM=$(sha256sum "${{ steps.package.outputs.asset_path }}" | awk '{print $1}')
+          echo "${CHECKSUM}  ${{ steps.package.outputs.asset_name }}" > "${{ steps.package.outputs.asset_path }}.sha256"
+
+      - name: Find Existing Release URL
+        if: startsWith(github.ref, 'refs/tags/v')
+        id: find_release
+        uses: actions/github-script@v6
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        with:
+          script: |
+            try {
+              const { data: release } = await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag: process.env.RELEASE_TAG,
+              });
+              core.setOutput('upload_url', release.upload_url);
+              console.log(`Found Release URL: ${release.upload_url}`);
+            } catch (error) {
+              core.setFailed(`Release with tag ${process.env.RELEASE_TAG} not found. Please create a Release manually on GitHub matching this tag before pushing the tag.`);
+            }
+
+      - name: Upload Linux Release Asset
+        if: startsWith(github.ref, 'refs/tags/v') && steps.find_release.outputs.upload_url != ''
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.find_release.outputs.upload_url }}
+          asset_path: ${{ steps.package.outputs.asset_path }}
+          asset_name: ${{ steps.package.outputs.asset_name }}
+          asset_content_type: application/gzip
+
+      - name: Upload Linux SHA256 Checksum
+        if: startsWith(github.ref, 'refs/tags/v') && steps.find_release.outputs.upload_url != ''
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.find_release.outputs.upload_url }}
+          asset_path: ${{ steps.package.outputs.asset_path }}.sha256
+          asset_name: ${{ steps.package.outputs.asset_name }}.sha256
+          asset_content_type: text/plain
+
+      - name: Upload Linux Artifact
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Linux_${{ steps.package.outputs.asset_name }}
+          path: ${{ steps.package.outputs.asset_path }}
+          retention-days: 7
+
+  # Flatpak Build Job — runs flatpak-flutter (https://github.com/TheAppgineer/flatpak-flutter)
+  # to vendor the Flutter SDK + every pubspec.lock package as hashed sources,
+  # then builds flatpak/com.bandpassrecords.dpm.yml offline with
+  # flatpak-builder, exactly like Flathub's own infrastructure eventually
+  # will. Runs on every PR and on tags — nothing here requires anything to be
+  # pre-generated on a Linux machine anymore, CI does the whole thing itself.
+  #
+  # This does NOT produce what gets submitted to Flathub — Flathub builds
+  # independently from the manifest once it's merged into flathub/flathub.
+  # It proves the manifest is actually buildable, and (on a tagged release)
+  # attaches a sideloadable .flatpak bundle so people can `flatpak install`
+  # it directly while a real Flathub submission is pending/in review.
+  #
+  # `continue-on-error: true` for now: this is the first time this pipeline
+  # has actually been run end-to-end (no Linux/flatpak tooling was available
+  # to test it beforehand), so a failure here shouldn't block Windows/macOS/
+  # Android artifacts while it gets debugged from the Actions log. Remove
+  # once it's proven green a few times.
+  build_flatpak:
+    name: Build Flatpak (Flathub validation)
+    needs: unit_tests
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    continue-on-error: true
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # flatpak/shared-modules is a submodule (provides libappindicator
+          # for tray_manager's pkg-config requirement).
+          submodules: true
+
+      - name: Install flatpak & flatpak-builder
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder
+          flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
+      # The manifest carries a `type: file` source for lib/config/oauth_config.dart
+      # because flatpak-builder fetches the app from git inside the sandbox —
+      # injecting into this checkout (like the other jobs do) would never
+      # reach the build. Generate the file the manifest points at.
+      - name: Generate OAuth config file for the Flatpak build
+        run: |
+          chmod +x scripts/inject_oauth_config.sh
+          ./scripts/inject_oauth_config.sh -d "${{ secrets.DESKTOP_CLIENT_ID }}" -s "${{ secrets.DESKTOP_CLIENT_SECRET }}" -a "${{ secrets.ANDROID_WEB_CLIENT_ID }}"
+          cp lib/config/oauth_config.dart flatpak/oauth_config.dart
+
+      - name: Point manifest at the exact commit under test
+        env:
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          # The committed manifest's `git` source is pinned to a release tag,
+          # which doesn't exist yet on a PR. flatpak-flutter's own
+          # source-fetch step only understands `type: git` sources (it
+          # clones the repo itself to inspect pubspec.lock) — a `type: dir`
+          # source silently fails deep inside it (confirmed by running this
+          # job) — so for CI validation we keep it a git source, just
+          # repointed at this exact commit instead of the pinned tag.
+          python3 - <<'PY'
+          import os, re, pathlib
+          p = pathlib.Path("flatpak/com.bandpassrecords.dpm.yml")
+          text = p.read_text()
+          replacement = (
+              "      - type: git\n"
+              f"        url: {os.environ['REPO_URL']}\n"
+              f"        commit: {os.environ['COMMIT_SHA']}\n"
+          )
+          text, n = re.subn(
+              r"      - type: git\n(?:.*\n)*?        commit: [0-9a-f]{40}\n",
+              replacement,
+              text,
+          )
+          assert n == 1, f"expected exactly one git source block to replace, replaced {n}"
+          p.write_text(text)
+          PY
+          cat flatpak/com.bandpassrecords.dpm.yml
+
+      - name: Set up flatpak-flutter
+        run: |
+          git clone --depth 1 https://github.com/TheAppgineer/flatpak-flutter.git /tmp/flatpak-flutter
+          pip install -r /tmp/flatpak-flutter/requirements.txt
+          echo "--- flatpak-flutter.py --help (authoritative CLI contract) ---"
+          python3 /tmp/flatpak-flutter/flatpak-flutter.py --help
+
+      - name: Generate vendored Flutter/pub sources
+        working-directory: flatpak
+        run: |
+          # Snapshot mtimes everywhere plausible before running, so we can
+          # find whatever the tool wrote even if it's not where expected —
+          # the last run produced no visible output at all (no error, no
+          # pubspec-sources.json, manifest byte-identical), so the previous
+          # `ls -la`-only debugging wasn't enough to see what happened.
+          touch /tmp/before_marker
+          set -x
+          # flatpak-flutter guesses the app module's name from the last
+          # app-id segment (here, "dpm") and errors out if no module is
+          # named that — our app module is named "daw-project-manager"
+          # (see modules: in the manifest), so it has to be told explicitly.
+          python3 /tmp/flatpak-flutter/flatpak-flutter.py --app-module daw-project-manager com.bandpassrecords.dpm.yml
+          echo "exit code: $?"
+          set +x
+          echo "--- flatpak/ after generation (recursive) ---"
+          find . -type f | sort
+          echo "--- anything modified/created under /tmp or the workspace since before this step ---"
+          find /tmp "$GITHUB_WORKSPACE" -newer /tmp/before_marker -type f 2>/dev/null | sort
+          echo "--- diff of the manifest itself ---"
+          git -C .. diff -- flatpak/com.bandpassrecords.dpm.yml || true
+
+      - name: Build Flatpak (offline, from vendored sources)
+        working-directory: flatpak
+        run: |
+          flatpak-builder --repo=repo --force-clean --sandbox --user \
+            --install-deps-from=flathub build com.bandpassrecords.dpm.yml
+
+      - name: Build .flatpak bundle
+        if: startsWith(github.ref, 'refs/tags/v')
+        working-directory: flatpak
+        run: |
+          flatpak build-bundle repo "../DAW_Project_Manager_${{ github.ref_name }}.flatpak" \
+            com.bandpassrecords.dpm --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo
+
+      # So the generated pubspec-sources.json (and anything else flatpak-flutter
+      # produced) can be inspected/committed by hand once this is verified to
+      # work, rather than only ever existing inside an ephemeral CI run.
+      # This artifact is the Flathub submission bundle: flatpak-flutter
+      # overwrites the manifest in place (its output filename is
+      # <app-id>.yml, same as our input) and writes the vendored
+      # modules/sources/patches under generated/. oauth_config.dart is
+      # included too — this is the only place it exists as a downloadable
+      # artifact, since it's generated fresh in this job from the GitHub
+      # Actions secrets and otherwise never leaves the runner. That's
+      # intentional, not an oversight: it has to end up committed in the
+      # flathub repo anyway
+      # (the manifest's `type: file` source expects it sitting next to the
+      # manifest), and Google's own OAuth docs don't treat installed-app
+      # client credentials as confidential — every shipped binary embeds
+      # them regardless of who can see this artifact.
+      # (.flatpak-builder/ is deliberately not included — it's a large
+      # build cache, and upload-artifact skips hidden dirs by default.)
+      - name: Upload generated Flathub sources
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flatpak-generated-sources
+          path: |
+            flatpak/com.bandpassrecords.dpm.yml
+            flatpak/generated/
+            flatpak/oauth_config.dart
+          retention-days: 14
+          if-no-files-found: warn
+
+      - name: Find Existing Release URL
+        if: startsWith(github.ref, 'refs/tags/v')
+        id: find_release
+        uses: actions/github-script@v6
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        with:
+          script: |
+            try {
+              const { data: release } = await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag: process.env.RELEASE_TAG,
+              });
+              core.setOutput('upload_url', release.upload_url);
+              console.log(`Found Release URL: ${release.upload_url}`);
+            } catch (error) {
+              core.setFailed(`Release with tag ${process.env.RELEASE_TAG} not found. Please create a Release manually on GitHub matching this tag before pushing the tag.`);
+            }
+
+      - name: Upload Flatpak Bundle to Release
+        if: startsWith(github.ref, 'refs/tags/v') && steps.find_release.outputs.upload_url != ''
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.find_release.outputs.upload_url }}
+          asset_path: DAW_Project_Manager_${{ github.ref_name }}.flatpak
+          asset_name: DAW_Project_Manager_${{ github.ref_name }}.flatpak
+          asset_content_type: application/vnd.flatpak
+
   # Android Build Job (for both PRs and Releases)
   build-android:
     name: Build Android (${{ github.event_name == 'pull_request' && 'PR Test' || 'Release' }})
@@ -567,8 +897,8 @@ jobs:
 
       - name: Inject OAuth Credentials
         run: |
-          chmod +x scripts/inject_secret.sh
-          ./scripts/inject_secret.sh \
+          chmod +x scripts/inject_oauth_config.sh
+          ./scripts/inject_oauth_config.sh \
             -d "${{ secrets.DESKTOP_CLIENT_ID }}" \
             -s "${{ secrets.DESKTOP_CLIENT_SECRET }}" \
             -a "${{ secrets.ANDROID_WEB_CLIENT_ID }}"

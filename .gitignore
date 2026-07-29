@@ -61,8 +61,16 @@ test_certificate.*
 test_private_key.*
 test-signing.keychain*
 
-# Secrets (DO NOT COMMIT)
-lib/config/secrets.dart
+# OAuth config (DO NOT COMMIT locally — the Flatpak build is the one place
+# this is meant to end up committed; see flatpak/README.md)
+lib/config/oauth_config.dart
+# CI-generated copy fed to flatpak-builder as a `type: file` source
+flatpak/oauth_config.dart
+# flatpak-flutter/flatpak-builder working artifacts (see build_flatpak in CI)
+flatpak/.flatpak-builder/
+flatpak/generated/
+flatpak/build/
+flatpak/repo/
 
 # Reference data used to derive lookup tables during development, not a
 # runtime asset — see the doc comment above _getReaperRootNote in

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2026 BandPass Records -->
+<component type="desktop-application">
+  <id>com.bandpassrecords.dpm</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <name>DAW Project Manager</name>
+  <summary>Track and organize your DAW projects across every studio</summary>
+  <description>
+    <p>
+      DAW Project Manager scans your drives for music production projects —
+      Ableton Live, Cubase, FL Studio, Logic Pro, Bitwig, Pro Tools, Reaper,
+      Studio One, and over twenty other DAWs — and keeps them organized in one
+      dashboard.
+    </p>
+    <p>
+      Track project phases and deadlines, tag releases, manage a task queue
+      per project, sync your library across machines with Google Drive, and
+      browse everything with filtering, search, and playlists for quick
+      A/B listening.
+    </p>
+  </description>
+
+  <launchable type="desktop-id">com.bandpassrecords.dpm.desktop</launchable>
+
+  <!--
+    TODO before Flathub submission: resources/screenshots/**/*.png are 0-byte
+    placeholders right now (see resources/screenshots/README.md). Flathub's
+    validator fetches these URLs and will reject the submission on a broken
+    image. Replace with real captures, then update the URLs below to point at
+    a tagged release (not a moving branch ref) so they don't change under a
+    past review.
+  -->
+  <screenshots>
+    <screenshot type="default">
+      <caption>Dashboard overview with projects across multiple DAWs</caption>
+      <image>https://raw.githubusercontent.com/bandpassrecords/daw-project-manager/v2.6.2/resources/screenshots/dashboard/dashboard-overview.png</image>
+    </screenshot>
+  </screenshots>
+
+  <url type="homepage">https://dpm.bandpassrecords.com</url>
+  <url type="bugtracker">https://github.com/bandpassrecords/daw-project-manager/issues</url>
+  <url type="vcs-browser">https://github.com/bandpassrecords/daw-project-manager</url>
+
+  <developer id="com.bandpassrecords">
+    <name>BandPass Records</name>
+  </developer>
+
+  <content_rating type="oars-1.1" />
+
+  <releases>
+    <release version="2.6.2" date="2026-07-29">
+      <description>
+        <p>See the GitHub release notes for details.</p>
+      </description>
+      <url>https://github.com/bandpassrecords/daw-project-manager/releases/tag/v2.6.2</url>
+    </release>
+  </releases>
+
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+  </supports>
+
+  <recommends>
+    <display_length compare="ge">1080</display_length>
+  </recommends>
+</component>
