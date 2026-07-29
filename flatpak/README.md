@@ -5,15 +5,22 @@ this has to satisfy Flathub's review bar — a reproducible, network-free
 build, AppStream metadata, and minimal/justified sandbox permissions.
 
 Everything here was authored on Windows, where none of the Flatpak tooling
-can actually run. **Nothing in this directory has been build-tested yet.**
-The steps below have to happen on Linux (a real machine or WSL2) before this
-is submission-ready.
+can actually run — so the `build_flatpak` job in
+`.github/workflows/release.yml` is the actual first test of this pipeline,
+on every PR and tag push. It runs `flatpak-flutter` to vendor the Flutter SDK
+and every `pubspec.lock` package as hashed sources, then builds
+`com.bandpassrecords.dpm.yml` offline with `flatpak-builder` — the same shape
+of build Flathub's own infrastructure will eventually run. `flatpak-flutter`'s
+exact CLI/output conventions were taken from its README, not verified by
+running it, so expect the first CI run to need a round of debugging from the
+Actions log (the job is marked `continue-on-error` for exactly this reason —
+it won't block the other platform builds while that happens).
 
 ## Files in this directory
 
 | File | Purpose |
 |---|---|
-| `com.bandpassrecords.dpm.yml` | The Flatpak manifest. Has two `# --- BEGIN generated ---` placeholders that need real content — see below. |
+| `com.bandpassrecords.dpm.yml` | The Flatpak manifest — actually a *template* for `flatpak-flutter` (see above), not the final buildable manifest. |
 | `com.bandpassrecords.dpm.desktop` | Desktop entry (app menu, launcher, taskbar). |
 | `com.bandpassrecords.dpm.metainfo.xml` | AppStream metadata Flathub uses for the store listing. Has a `TODO` on the screenshots section — see below. |
 | `icons/com.bandpassrecords.dpm_{128,256}.png` | Derived from `app_icon.png`. No scalable/SVG source exists in the repo; Flathub accepts raster-only, but a vector icon is preferred if one ever gets made. |
@@ -53,40 +60,41 @@ image. Capture real screenshots, replace the files in place, cut a new tag,
 and update the tag in the screenshot URL (and in `<release>`/the manifest's
 `git` source) to match.
 
-### 3. Generate the two vendored-source files
+### 3. Vendoring the Flutter SDK + pub packages — now automated in CI
 
 Flathub builds are sandboxed with no network access, and `org.freedesktop.Sdk`
 doesn't include Flutter — so the manifest needs every dependency pinned as a
 hashed source up front: the Flutter SDK itself, plus every package in
-`pubspec.lock`. Hand-writing that is impractical; use
-[`flatpak-flutter`](https://github.com/TheAppgineer/flatpak-flutter), which
-generates it from your `pubspec.lock` automatically. On a Linux machine (or
-WSL2) with Python 3 and `flatpak`/`flatpak-builder` installed:
+`pubspec.lock`. This is what `build_flatpak` does in CI now (see above) via
+[`flatpak-flutter`](https://github.com/TheAppgineer/flatpak-flutter) — nothing
+to do by hand for a PR/tag build.
+
+To reproduce the same thing locally (Linux/WSL2 only, e.g. to debug a CI
+failure faster than round-tripping through Actions):
 
 ```bash
-git clone https://github.com/TheAppgineer/flatpak-flutter.git
-cd flatpak-flutter
-# Check that project's README for the current invocation — flags have
-# changed across versions. As of this writing it's driven by pointing it
-# at the target repo/manifest and it emits flutter-sdk.json plus a pub
-# package sources file next to it.
-python3 flatpak-flutter.py --help
+git clone --depth 1 https://github.com/TheAppgineer/flatpak-flutter.git /tmp/flatpak-flutter
+pip install -r /tmp/flatpak-flutter/requirements.txt
+cd flatpak
+python3 /tmp/flatpak-flutter/flatpak-flutter.py com.bandpassrecords.dpm.yml
 ```
 
-Drop the generated `flutter-sdk.json` and pubspec-sources file into this
-directory, then uncomment/merge them into `com.bandpassrecords.dpm.yml` at
-the two `# --- BEGIN generated ---` markers. The app module's
-`build-options.append-path` may need adjusting to match wherever the
-generated Flutter SDK module actually installs its `flutter` binary — check
-the module the tool generates rather than trusting the placeholder path in
-the manifest as-is.
+That rewrites the manifest in place with the Flutter SDK module wired in and
+writes `pubspec-sources.json` alongside it — check `git diff` here before
+committing anything, since this working copy's `git` source (pinned to the
+`v2.6.1` tag) is what a real Flathub build needs; CI instead swaps that for a
+`type: dir` source pointing at the checkout, so it can validate PRs before a
+release tag exists. Don't commit the CI-only `type: dir` swap.
 
-## Local build/test (once the above is done, on Linux)
+## Local build/test (Linux/WSL2 only)
 
 ```bash
-flatpak install flathub org.freedesktop.Platform//24.08 org.freedesktop.Sdk//24.08
-flatpak-builder --user --install build-dir flatpak/com.bandpassrecords.dpm.yml
-flatpak run com.bandpassrecords.dpm
+sudo apt install flatpak flatpak-builder
+flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+# after running flatpak-flutter as above:
+flatpak-builder --repo=repo --force-clean --sandbox --user \
+  --install-deps-from=flathub build com.bandpassrecords.dpm.yml
+flatpak-builder --run build com.bandpassrecords.dpm.yml daw_project_manager
 ```
 
 Things that can only be verified this way (not from Windows, not by reading
