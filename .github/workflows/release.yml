@@ -748,17 +748,32 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/TheAppgineer/flatpak-flutter.git /tmp/flatpak-flutter
           pip install -r /tmp/flatpak-flutter/requirements.txt
+          echo "--- flatpak-flutter.py --help (authoritative CLI contract) ---"
+          python3 /tmp/flatpak-flutter/flatpak-flutter.py --help
 
       - name: Generate vendored Flutter/pub sources
         working-directory: flatpak
         run: |
+          # Snapshot mtimes everywhere plausible before running, so we can
+          # find whatever the tool wrote even if it's not where expected —
+          # the last run produced no visible output at all (no error, no
+          # pubspec-sources.json, manifest byte-identical), so the previous
+          # `ls -la`-only debugging wasn't enough to see what happened.
+          touch /tmp/before_marker
+          set -x
           # flatpak-flutter guesses the app module's name from the last
           # app-id segment (here, "dpm") and errors out if no module is
           # named that — our app module is named "daw-project-manager"
           # (see modules: in the manifest), so it has to be told explicitly.
           python3 /tmp/flatpak-flutter/flatpak-flutter.py --app-module daw-project-manager com.bandpassrecords.dpm.yml
-          echo "--- flatpak/ after generation ---"
-          ls -la
+          echo "exit code: $?"
+          set +x
+          echo "--- flatpak/ after generation (recursive) ---"
+          find . -type f | sort
+          echo "--- anything modified/created under /tmp or the workspace since before this step ---"
+          find /tmp "$GITHUB_WORKSPACE" -newer /tmp/before_marker -type f 2>/dev/null | sort
+          echo "--- diff of the manifest itself ---"
+          git -C .. diff -- flatpak/com.bandpassrecords.dpm.yml || true
 
       - name: Build Flatpak (offline, from vendored sources)
         working-directory: flatpak
