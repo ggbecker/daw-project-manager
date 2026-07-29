@@ -10,8 +10,16 @@
 
 app-id: com.bandpassrecords.dpm
 runtime: org.freedesktop.Platform
-runtime-version: '24.08'
+# Paired with sdk-extensions/llvm20 below to match flatpak-flutter's own
+# template exactly (_generate_template_for_url in flatpak-flutter.py) —
+# compiling Flutter's C++ engine needs clang++, which plain
+# org.freedesktop.Sdk doesn't ship; the LLVM extension version has to match
+# what's actually published for this runtime branch, and this is the
+# combination the tool's own maintainers ship and test against.
+runtime-version: '25.08'
 sdk: org.freedesktop.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.llvm20
 command: daw_project_manager
 
 finish-args:
@@ -65,7 +73,8 @@ modules:
   - name: daw-project-manager
     buildsystem: simple
     build-options:
-      append-path: /run/build/daw-project-manager/flutter/bin
+      append-path: /usr/lib/sdk/llvm20/bin:/run/build/daw-project-manager/flutter/bin
+      prepend-ld-library-path: /usr/lib/sdk/llvm20/lib
       env:
         PUB_CACHE: /run/build/daw-project-manager/.pub-cache
     build-commands:
