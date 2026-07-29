@@ -253,10 +253,30 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get deepScanConfirm =>
-      'A Varredura Profunda extrai metadados completos dos arquivos de projeto:\n• BPM (Batidas Por Minuto)\n• Tom Musical\n• Versão do DAW\nSuportado atualmente: Ableton Live, Cubase, Bitwig Studio e MAGDA.\n\nIsso é mais lento que uma varredura comum e pode levar um tempo. Continuar?';
+      'A Varredura Profunda extrai metadados completos dos arquivos de projeto:\n• BPM (Batidas Por Minuto)\n• Tom Musical\n• Versão do DAW\n• Notas do Projeto (somente Reaper)\nSuportado atualmente: Ableton Live, Bitwig Studio, Cubase, Nuendo, FL Studio, MAGDA e Reaper.\n\nIsso é mais lento que uma varredura comum e pode levar um tempo. Continuar?';
 
   @override
   String get deepScanOnlyUnscanned => 'Escanear apenas projetos sem metadados';
+
+  @override
+  String get metadataExtractionTitle => 'Metadata Extraction';
+
+  @override
+  String get metadataExtractionSubtitle => 'See which data each DAW supports';
+
+  @override
+  String get metadataExtractionIntro =>
+      'Deep Scan can automatically read some of these fields straight from a project file — the rest have to be entered by hand. This table shows what\'s automatic for each supported DAW today.';
+
+  @override
+  String get metadataFieldKey => 'Key';
+
+  @override
+  String get metadataFieldVersion => 'DAW Version';
+
+  @override
+  String get metadataExtractionManualNote =>
+      'Any field without automatic support can still be entered manually in Project Detail. For BPM and Key specifically, dropping a bpm.txt or key.txt file next to the project is also picked up on the next scan.';
 
   @override
   String get metadataExtractedSuccessfully => 'Metadados extraídos com sucesso';

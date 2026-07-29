@@ -565,7 +565,7 @@ abstract class AppLocalizations {
   /// No description provided for @deepScanConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Deep Scan extracts full metadata from project files:\n• BPM (Beats Per Minute)\n• Musical Key\n• DAW Version\nCurrently supported: Ableton Live, Cubase, Bitwig Studio and MAGDA.\n\nThis is slower than a regular scan and may take a while. Continue?'**
+  /// **'Deep Scan extracts full metadata from project files:\n• BPM (Beats Per Minute)\n• Musical Key\n• DAW Version\n• Project Notes (Reaper only)\nCurrently supported: Ableton Live, Bitwig Studio, Cubase, Nuendo, FL Studio, MAGDA and Reaper.\n\nThis is slower than a regular scan and may take a while. Continue?'**
   String get deepScanConfirm;
 
   /// No description provided for @deepScanOnlyUnscanned.
@@ -573,6 +573,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Only scan projects without metadata'**
   String get deepScanOnlyUnscanned;
+
+  /// No description provided for @metadataExtractionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Metadata Extraction'**
+  String get metadataExtractionTitle;
+
+  /// No description provided for @metadataExtractionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'See which data each DAW supports'**
+  String get metadataExtractionSubtitle;
+
+  /// No description provided for @metadataExtractionIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Deep Scan can automatically read some of these fields straight from a project file — the rest have to be entered by hand. This table shows what\'s automatic for each supported DAW today.'**
+  String get metadataExtractionIntro;
+
+  /// No description provided for @metadataFieldKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Key'**
+  String get metadataFieldKey;
+
+  /// No description provided for @metadataFieldVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'DAW Version'**
+  String get metadataFieldVersion;
+
+  /// No description provided for @metadataExtractionManualNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Any field without automatic support can still be entered manually in Project Detail. For BPM and Key specifically, dropping a bpm.txt or key.txt file next to the project is also picked up on the next scan.'**
+  String get metadataExtractionManualNote;
 
   /// No description provided for @metadataExtractedSuccessfully.
   ///

@@ -245,10 +245,30 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get deepScanConfirm =>
-      '深度扫描从项目文件中提取完整的元数据：\n• BPM（每分钟节拍数）\n• 音乐调性\n• DAW版本\n目前支持：Ableton Live、Cubase、Bitwig Studio 和 MAGDA。\n\n这比常规扫描慢，可能需要一些时间。继续吗？';
+      '深度扫描从项目文件中提取完整的元数据：\n• BPM（每分钟节拍数）\n• 音乐调性\n• DAW版本\n• 项目备注（仅限 Reaper）\n目前支持：Ableton Live、Bitwig Studio、Cubase、Nuendo、FL Studio、MAGDA 和 Reaper。\n\n这比常规扫描慢，可能需要一些时间。继续吗？';
 
   @override
   String get deepScanOnlyUnscanned => '仅扫描没有元数据的项目';
+
+  @override
+  String get metadataExtractionTitle => 'Metadata Extraction';
+
+  @override
+  String get metadataExtractionSubtitle => 'See which data each DAW supports';
+
+  @override
+  String get metadataExtractionIntro =>
+      'Deep Scan can automatically read some of these fields straight from a project file — the rest have to be entered by hand. This table shows what\'s automatic for each supported DAW today.';
+
+  @override
+  String get metadataFieldKey => 'Key';
+
+  @override
+  String get metadataFieldVersion => 'DAW Version';
+
+  @override
+  String get metadataExtractionManualNote =>
+      'Any field without automatic support can still be entered manually in Project Detail. For BPM and Key specifically, dropping a bpm.txt or key.txt file next to the project is also picked up on the next scan.';
 
   @override
   String get metadataExtractedSuccessfully => '元数据提取成功';

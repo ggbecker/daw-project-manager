@@ -5,6 +5,7 @@ import 'package:path/path.dart' as p;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'metadata_extraction_info_page.dart';
 import 'notification_settings_page.dart';
 import 'phases_settings_page.dart';
 import 'widgets/desktop_title_bar.dart';
@@ -600,6 +601,20 @@ class _ProjectFoldersSettingsPageState extends ConsumerState<ProjectFoldersSetti
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => const NotificationSettingsPage(),
+                    ),
+                  ),
+                ),
+                const Divider(height: 20),
+                ListTile(
+                  leading: const Icon(Icons.table_chart_outlined),
+                  title: Text(l10n.metadataExtractionTitle),
+                  subtitle: Text(l10n.metadataExtractionSubtitle,
+                      style: Theme.of(context).textTheme.bodySmall),
+                  trailing: const Icon(Icons.chevron_right),
+                  contentPadding: EdgeInsets.zero,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const MetadataExtractionInfoPage(),
                     ),
                   ),
                 ),
