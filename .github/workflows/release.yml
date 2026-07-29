@@ -549,7 +549,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev \
-            libsecret-1-dev libayatana-appindicator3-dev libnotify-dev
+            libsecret-1-dev libayatana-appindicator3-dev libnotify-dev \
+            libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
 
       - name: Setup Flutter ${{ env.FLUTTER_BASE_VERSION }} (Stable)
         uses: subosito/flutter-action@v2
@@ -741,7 +742,11 @@ jobs:
       - name: Generate vendored Flutter/pub sources
         working-directory: flatpak
         run: |
-          python3 /tmp/flatpak-flutter/flatpak-flutter.py com.bandpassrecords.dpm.yml
+          # flatpak-flutter guesses the app module's name from the last
+          # app-id segment (here, "dpm") and errors out if no module is
+          # named that — our app module is named "daw-project-manager"
+          # (see modules: in the manifest), so it has to be told explicitly.
+          python3 /tmp/flatpak-flutter/flatpak-flutter.py --app-module daw-project-manager com.bandpassrecords.dpm.yml
           echo "--- flatpak/ after generation ---"
           ls -la
 
