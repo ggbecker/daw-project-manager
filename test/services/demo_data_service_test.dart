@@ -96,6 +96,9 @@ void main() {
           'Ableton Live', 'Bitwig Studio', 'Cubase', 'FL Studio', 'Logic Pro',
           'Maschine', 'MAGDA', 'Nuendo', 'Pro Tools', 'Reaper', 'Sonar',
           'Studio One', 'Waveform', 'LUNA',
+          'Ardour', 'GarageBand', 'Renoise', 'LMMS', 'Audacity', 'Qtractor',
+          'Rosegarden', 'Reason', 'Digital Performer', 'Adobe Audition',
+          'Samplitude / Sequoia', 'ACID Pro', 'Mixcraft',
         },
       );
       expect(statuses, {'Idea', 'Arranging', 'Mixing', 'Mastering', 'Finished'});
@@ -117,7 +120,7 @@ void main() {
       }
     });
 
-    test('package-bundle DAWs (Logic Pro, LUNA) get a real directory, not a file', () async {
+    test('package-bundle DAWs (Logic Pro, LUNA, GarageBand) get a real directory, not a file', () async {
       final profile = await DemoDataService().generate(
         profileRepo,
         previewSongsPathProvider: fakePreviewSongsPath,
@@ -126,7 +129,7 @@ void main() {
       final projects = await Hive.openBox<MusicProject>('${profile.id}_projects');
 
       final bundleProjects = projects.values
-          .where((p) => p.fileExtension == '.logicx' || p.fileExtension == '.luna');
+          .where((p) => p.fileExtension == '.logicx' || p.fileExtension == '.luna' || p.fileExtension == '.band');
       expect(bundleProjects, isNotEmpty);
       for (final project in bundleProjects) {
         expect(Directory(project.filePath).existsSync(), isTrue,

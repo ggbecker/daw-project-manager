@@ -27,6 +27,18 @@ void main() {
         'Waveform': 'tracktion-waveform.png',
         'LUNA': 'luna.png',
         'MAGDA': 'magda.png',
+        'Ardour': 'ardour.png',
+        'GarageBand': 'garageband.png',
+        'Renoise': 'renoise.png',
+        'LMMS': 'lmms.png',
+        'Audacity': 'audacity.png',
+        'Qtractor': 'qtractor.png',
+        'Reason': 'reason.png',
+        'Digital Performer': 'digital-performer.png',
+        'Adobe Audition': 'adobe-audition.png',
+        'Samplitude / Sequoia': 'samplitude-sequoia.png',
+        'ACID Pro': 'acid-pro.png',
+        'Mixcraft': 'mixcraft.png',
       };
 
       for (final entry in expected.entries) {
@@ -41,6 +53,13 @@ void main() {
     test('matching is case-insensitive', () {
       expect(getDawLogoPath('ableton live'), 'resources/daw/logos/ableton-live.png');
       expect(getDawLogoPath('LUNA'.toLowerCase()), 'resources/daw/logos/luna.png');
+    });
+
+    test('Rosegarden has no logo asset yet and falls back to null', () {
+      // Deliberately unmapped — the only image sourced for it turned out to
+      // be a photo of an actual garden rose, not the software's logo. See
+      // resources/daw/logos/MISSING_LOGOS.md.
+      expect(getDawLogoPath('Rosegarden'), isNull);
     });
   });
 }

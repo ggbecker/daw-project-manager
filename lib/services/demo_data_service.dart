@@ -63,6 +63,19 @@ class DemoDataService {
     _DawSpec('.song', 'Studio One', '6'),
     _DawSpec('.tracktionedit', 'Waveform', '13'),
     _DawSpec('.luna', 'LUNA', '2'),
+    _DawSpec('.ardour', 'Ardour', '7'),
+    _DawSpec('.band', 'GarageBand', '10'),
+    _DawSpec('.xrns', 'Renoise', '3.4'),
+    _DawSpec('.mmp', 'LMMS', '1.2'),
+    _DawSpec('.aup3', 'Audacity', '3.4'),
+    _DawSpec('.qtr', 'Qtractor', '0.9'),
+    _DawSpec('.rg', 'Rosegarden', '1.8'),
+    _DawSpec('.reason', 'Reason', '12'),
+    _DawSpec('.dpproj', 'Digital Performer', '11'),
+    _DawSpec('.sesx', 'Adobe Audition', '2024'),
+    _DawSpec('.vip', 'Samplitude / Sequoia', '2024'),
+    _DawSpec('.acd', 'ACID Pro', '11'),
+    _DawSpec('.mx9', 'Mixcraft', '9'),
   ];
 
   static const _statuses = ['Idea', 'Arranging', 'Mixing', 'Mastering', 'Finished'];
@@ -135,7 +148,7 @@ class DemoDataService {
   // Extensions that are actually directories ("package bundles") on disk
   // rather than a single file — mirrors the special-casing in
   // ScannerService/MixdownDetectorService for Logic Pro and LUNA.
-  static const _folderBasedExtensions = {'.logicx', '.luna'};
+  static const _folderBasedExtensions = {'.logicx', '.luna', '.band'};
 
   // Pentatonic-scale frequencies (A2-D4) used to give each preview a distinct audible pitch.
   static const _previewFrequencies = [110.0, 130.8, 146.8, 164.8, 196.0, 220.0, 261.6, 293.7];

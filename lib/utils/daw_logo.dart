@@ -29,6 +29,20 @@ String? getDawLogoPath(String? dawType) {
     'sonar': 'cakewalk.png',
     'luna': 'luna.png',
     'magda': 'magda.png',
+    'ardour': 'ardour.png',
+    'garageband': 'garageband.png',
+    'renoise': 'renoise.png',
+    'lmms': 'lmms.png',
+    'audacity': 'audacity.png',
+    'qtractor': 'qtractor.png',
+    'reason': 'reason.png',
+    'digital performer': 'digital-performer.png',
+    'adobe audition': 'adobe-audition.png',
+    'samplitude / sequoia': 'samplitude-sequoia.png',
+    'acid pro': 'acid-pro.png',
+    'mixcraft': 'mixcraft.png',
+    // 'rosegarden' intentionally omitted — no logo asset yet, falls back to
+    // null (no logo) rather than a wrong one. See MISSING_LOGOS.md.
   };
 
   // Try exact match first
