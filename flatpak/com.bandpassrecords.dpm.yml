@@ -111,7 +111,12 @@ modules:
       # a release needs no manual manifest edits, just merging the bot's PR.
       - type: git
         url: https://github.com/bandpassrecords/daw-project-manager.git
-        tag: v2.6.1
+        # v2.6.2 doesn't exist as a tag yet (it's the release this manifest
+        # is being staged for) — commit: below is still v2.6.1's SHA, since
+        # that's the only real commit to pin to right now. Update it to
+        # v2.6.2's actual commit (`git rev-list -n 1 v2.6.2`) once that tag
+        # is cut; don't submit to Flathub with this mismatch.
+        tag: v2.6.2
         commit: d61773779679f3137be72d095b4860557c069580
         x-checker-data:
           type: git

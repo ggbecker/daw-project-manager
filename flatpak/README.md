@@ -54,11 +54,11 @@ file.
 
 `resources/screenshots/**/*.png` (see `resources/screenshots/README.md`) are
 placeholder files, not real captures. The metainfo's `<screenshots>` block
-currently points at `dashboard/dashboard-overview.png` on the `v2.6.1` tag —
-Flathub's linter fetches that URL and will fail the submission on a broken
-image. Capture real screenshots, replace the files in place, cut a new tag,
-and update the tag in the screenshot URL (and in `<release>`/the manifest's
-`git` source) to match.
+points at `dashboard/dashboard-overview.png` on the `v2.6.2` tag (bumped
+ahead of `v2.6.1`, since that's the version this screenshot is expected to
+ship in) — Flathub's linter fetches that URL and will fail the submission on
+a broken image until the real file exists at that tag. Capture the
+screenshot, replace the file in place, and cut `v2.6.2`.
 
 ### 3. Vendoring the Flutter SDK + pub packages — now automated in CI
 
@@ -82,9 +82,10 @@ python3 /tmp/flatpak-flutter/flatpak-flutter.py com.bandpassrecords.dpm.yml
 That rewrites the manifest in place with the Flutter SDK module wired in and
 writes `pubspec-sources.json` alongside it — check `git diff` here before
 committing anything, since this working copy's `git` source (pinned to the
-`v2.6.1` tag) is what a real Flathub build needs; CI instead swaps that for a
-`type: dir` source pointing at the checkout, so it can validate PRs before a
-release tag exists. Don't commit the CI-only `type: dir` swap.
+`v2.6.2` tag) is what a real Flathub build needs; CI instead repoints that
+same `git` source at the exact commit under test (`github.sha`), so it can
+validate PRs before a release tag exists. Don't commit the CI-only commit
+swap.
 
 ## Local build/test (Linux/WSL2 only)
 
