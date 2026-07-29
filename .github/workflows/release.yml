@@ -805,14 +805,22 @@ jobs:
       # So the generated pubspec-sources.json (and anything else flatpak-flutter
       # produced) can be inspected/committed by hand once this is verified to
       # work, rather than only ever existing inside an ephemeral CI run.
+      # This artifact is the Flathub submission bundle: flatpak-flutter
+      # overwrites the manifest in place (its output filename is
+      # <app-id>.yml, same as our input) and writes the vendored
+      # modules/sources/patches under generated/. Together with
+      # secrets.dart and the shared-modules submodule, these are exactly
+      # the files that go into the flathub/com.bandpassrecords.dpm repo.
+      # (.flatpak-builder/ is deliberately not included — it's a large
+      # build cache, and upload-artifact skips hidden dirs by default.)
       - name: Upload generated Flathub sources
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: flatpak-generated-sources
           path: |
-            flatpak/*.json
-            flatpak/.flatpak-builder/
+            flatpak/com.bandpassrecords.dpm.yml
+            flatpak/generated/
           retention-days: 14
           if-no-files-found: warn
 
