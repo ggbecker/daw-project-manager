@@ -162,11 +162,41 @@ class MetadataExtractor {
       case '.cwp':
       case '.wrk':
       case '.bun':
-        return 'Sonnar';
+        return 'Sonar';
       case '.luna':
         return 'LUNA';
       case '.mgd':
         return 'MAGDA';
+      case '.ardour':
+        return 'Ardour';
+      case '.band':
+        return 'GarageBand';
+      case '.xrns':
+        return 'Renoise';
+      case '.mmp':
+      case '.mmpz':
+        return 'LMMS';
+      case '.aup3':
+        return 'Audacity';
+      case '.qtr':
+        return 'Qtractor';
+      case '.rg':
+        return 'Rosegarden';
+      case '.reason':
+      case '.rns':
+        return 'Reason';
+      case '.dpproj':
+        return 'Digital Performer';
+      case '.sesx':
+        return 'Adobe Audition';
+      case '.vip':
+        return 'Samplitude / Sequoia';
+      case '.acd':
+        return 'ACID Pro';
+      case '.mx8':
+      case '.mx9':
+      case '.mx10':
+        return 'Mixcraft';
       default:
         return null;
     }

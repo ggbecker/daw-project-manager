@@ -43,6 +43,43 @@ Supports **macOS**, **Windows**, **Android** (closed testing).
 | Tracktion Waveform | `.tracktionedit`, `.tracktion` |
 | Universal Audio LUNA | `.luna` |
 
+**Additional DAWs** — detected and scanned like the above, but without automatic BPM/key/version extraction yet (see [Metadata Extraction](#metadata-extraction) below):
+
+| DAW | Extension(s) |
+|-----|-------------|
+| ACID Pro | `.acd` |
+| Adobe Audition | `.sesx` |
+| Ardour | `.ardour` |
+| Audacity | `.aup3` |
+| Digital Performer | `.dpproj` |
+| GarageBand | `.band` |
+| LMMS | `.mmp`, `.mmpz` |
+| Mixcraft | `.mx8`, `.mx9`, `.mx10` |
+| Qtractor | `.qtr` |
+| Reason | `.reason`, `.rns` |
+| Renoise | `.xrns` |
+| Rosegarden | `.rg` |
+| Samplitude / Sequoia | `.vip` |
+
+Not yet supported: Harrison Mixbus and SAWStudio/Pyramix/Zynewave Podium (no reliably documented file extension), and browser-only tools like BandLab/Soundtrap/Audiotool (no local project file to scan). Missing a DAW? Open an issue.
+
+---
+
+## Metadata Extraction
+
+Deep Scan reads BPM, musical key, DAW version, and (Reaper only) project notes directly from certain project files. Everything else needs the field entered manually, or picked up from an optional `bpm.txt`/`key.txt` file dropped next to the project. See **Settings → Metadata Extraction** in the app for the full breakdown by DAW.
+
+| Automatic extraction | BPM | Key | Version | Notes |
+|---|---|---|---|---|
+| Ableton Live | ✓ | ✓ | ✓ | |
+| Bitwig Studio | ✓ | ✓ | ✓ | |
+| Cubase / Nuendo | ✓ | ✓ | ✓ | |
+| FL Studio | ✓ | | ✓ | |
+| MAGDA | ✓ | ✓ | ✓ | |
+| Reaper | ✓ | ✓ | ✓ | ✓ |
+
+All other supported DAWs are detected and scanned but rely on manual entry today.
+
 ---
 
 ## Getting Started

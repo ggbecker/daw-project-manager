@@ -550,11 +550,13 @@ class ProjectRepository {
     bool fullMetadata = false,
     String? parentProjectId,
   }) async {
-    final isLogicBundle = entity is Directory && entity.path.toLowerCase().endsWith('.logicx');
     final filePath = entity.path;
     final stat = await entity.stat();
     final fileName = p.basename(filePath);
-    final ext = isLogicBundle ? '.logicx' : p.extension(filePath).toLowerCase();
+    // Works for directory bundles too (Logic Pro .logicx, LUNA .luna,
+    // GarageBand .band) — extension parsing is purely string-based and
+    // doesn't care whether the path is a file or a directory.
+    final ext = p.extension(filePath).toLowerCase();
     final size = stat.size;
     final lastModified = stat.modified;
 

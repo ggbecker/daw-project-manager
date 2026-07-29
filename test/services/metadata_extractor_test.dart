@@ -74,16 +74,16 @@ void main() {
       expect(await dawTypeFor('.tracktion'), 'Waveform');
     });
 
-    test('.cwp → Sonnar', () async {
-      expect(await dawTypeFor('.cwp'), 'Sonnar');
+    test('.cwp → Sonar', () async {
+      expect(await dawTypeFor('.cwp'), 'Sonar');
     });
 
-    test('.wrk → Sonnar', () async {
-      expect(await dawTypeFor('.wrk'), 'Sonnar');
+    test('.wrk → Sonar', () async {
+      expect(await dawTypeFor('.wrk'), 'Sonar');
     });
 
-    test('.bun → Sonnar', () async {
-      expect(await dawTypeFor('.bun'), 'Sonnar');
+    test('.bun → Sonar', () async {
+      expect(await dawTypeFor('.bun'), 'Sonar');
     });
 
     test('.luna → LUNA', () async {
@@ -92,6 +92,74 @@ void main() {
 
     test('.mgd → MAGDA', () async {
       expect(await dawTypeFor('.mgd'), 'MAGDA');
+    });
+
+    test('.ardour → Ardour', () async {
+      expect(await dawTypeFor('.ardour'), 'Ardour');
+    });
+
+    test('.band → GarageBand', () async {
+      expect(await dawTypeFor('.band'), 'GarageBand');
+    });
+
+    test('.xrns → Renoise', () async {
+      expect(await dawTypeFor('.xrns'), 'Renoise');
+    });
+
+    test('.mmp → LMMS', () async {
+      expect(await dawTypeFor('.mmp'), 'LMMS');
+    });
+
+    test('.mmpz → LMMS', () async {
+      expect(await dawTypeFor('.mmpz'), 'LMMS');
+    });
+
+    test('.aup3 → Audacity', () async {
+      expect(await dawTypeFor('.aup3'), 'Audacity');
+    });
+
+    test('.qtr → Qtractor', () async {
+      expect(await dawTypeFor('.qtr'), 'Qtractor');
+    });
+
+    test('.rg → Rosegarden', () async {
+      expect(await dawTypeFor('.rg'), 'Rosegarden');
+    });
+
+    test('.reason → Reason', () async {
+      expect(await dawTypeFor('.reason'), 'Reason');
+    });
+
+    test('.rns → Reason', () async {
+      expect(await dawTypeFor('.rns'), 'Reason');
+    });
+
+    test('.dpproj → Digital Performer', () async {
+      expect(await dawTypeFor('.dpproj'), 'Digital Performer');
+    });
+
+    test('.sesx → Adobe Audition', () async {
+      expect(await dawTypeFor('.sesx'), 'Adobe Audition');
+    });
+
+    test('.vip → Samplitude / Sequoia', () async {
+      expect(await dawTypeFor('.vip'), 'Samplitude / Sequoia');
+    });
+
+    test('.acd → ACID Pro', () async {
+      expect(await dawTypeFor('.acd'), 'ACID Pro');
+    });
+
+    test('.mx8 → Mixcraft', () async {
+      expect(await dawTypeFor('.mx8'), 'Mixcraft');
+    });
+
+    test('.mx9 → Mixcraft', () async {
+      expect(await dawTypeFor('.mx9'), 'Mixcraft');
+    });
+
+    test('.mx10 → Mixcraft', () async {
+      expect(await dawTypeFor('.mx10'), 'Mixcraft');
     });
 
     test('unknown extension → null', () async {

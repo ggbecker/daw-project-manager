@@ -38,7 +38,34 @@ class ScannerService {
     '.bun', // Cakewalk Bundle
     '.luna', // Universal Audio LUNA (package bundle)
     '.mgd', // MAGDA
+    '.ardour', // Ardour
+    '.band', // GarageBand (bundle on macOS/iOS)
+    '.xrns', // Renoise
+    '.mmp', // LMMS (uncompressed)
+    '.mmpz', // LMMS (gzip-compressed)
+    '.aup3', // Audacity (SQLite-based, Audacity 3+)
+    '.qtr', // Qtractor
+    '.rg', // Rosegarden
+    '.reason', // Reason
+    '.rns', // Reason (legacy)
+    '.dpproj', // Digital Performer
+    '.sesx', // Adobe Audition (multitrack session)
+    '.vip', // Samplitude / Sequoia (Magix)
+    '.acd', // ACID Pro (Magix)
+    '.mx8', // Mixcraft 8
+    '.mx9', // Mixcraft 9
+    '.mx10', // Mixcraft 10
   };
+
+  // Extensions that are directories ("package bundles") rather than a single
+  // file — checked before the plain-file extension lookup wherever a
+  // directory entry is encountered during scanning.
+  static const _bundleExtensions = {'.logicx', '.luna', '.band'};
+
+  static bool _isBundleDirectory(String path) {
+    final lower = path.toLowerCase();
+    return _bundleExtensions.any((ext) => lower.endsWith(ext));
+  }
 
   static const _backupFolderNames = {
     'backup',               // Ableton Live, FL Studio, Cubase
@@ -71,8 +98,9 @@ class ScannerService {
 
     await for (final entity in dir.list(recursive: false, followLinks: false)) {
       if (entity is! File) {
-        // Logic Pro .logicx bundles are directories
-        if (entity is Directory && entity.path.toLowerCase().endsWith('.logicx')) {
+        // Some DAWs (Logic Pro, LUNA, GarageBand) save as a directory bundle
+        // rather than a single file.
+        if (entity is Directory && _isBundleDirectory(entity.path)) {
           final stat = await entity.stat();
           final stem = p.basenameWithoutExtension(entity.path).toLowerCase();
           if (best == null || stem == folderName || stat.modified.isAfter(bestModified!)) {
@@ -201,8 +229,9 @@ class ScannerService {
 
           yield entity;
         } else if (entity is Directory) {
-          // Logic Pro projects present as .logicx bundles (directories)
-          if (entity.path.toLowerCase().endsWith('.logicx')) {
+          // Some DAWs (Logic Pro, LUNA, GarageBand) present projects as
+          // directory bundles rather than a single file.
+          if (_isBundleDirectory(entity.path)) {
             yield entity;
             continue;
           }
