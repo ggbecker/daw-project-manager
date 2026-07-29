@@ -471,6 +471,49 @@
         .nav-links a.nav-active {
             color: var(--accent) !important;
         }
+
+        /* ── Section copy-link buttons ── */
+        .docs-section h2,
+        .docs-section h3 {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .section-link-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            width: 26px;
+            height: 26px;
+            padding: 0;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: 5px;
+            opacity: 0;
+            transition: opacity 0.15s ease, color 0.15s ease, background 0.15s ease;
+        }
+        .docs-section h2:hover .section-link-btn,
+        .docs-section h3:hover .section-link-btn,
+        .section-link-btn:focus-visible {
+            opacity: 1;
+        }
+        .section-link-btn:hover {
+            color: var(--accent);
+            background: rgba(74, 158, 255, 0.12);
+        }
+        .section-link-btn.copied {
+            color: #34C759;
+            opacity: 1;
+        }
+        @media (max-width: 768px) {
+            /* No hover on touch — keep the button always visible instead of unreachable */
+            .section-link-btn {
+                opacity: 0.55;
+            }
+        }
     </style>
 </head>
 <body>
@@ -581,6 +624,7 @@
                     <li><a href="#settings">Settings</a></li>
                     <li><a href="#keyboard-shortcuts">Keyboard Shortcuts</a></li>
                     <li><a href="#supported-daws">Supported DAWs</a></li>
+                    <li><a href="#metadata-extraction">Metadata Extraction</a></li>
                 </ul>
             </div>
         </aside>
@@ -1455,7 +1499,7 @@
             ================================================================ -->
             <div class="docs-section" id="supported-daws">
                 <h2>Supported DAWs</h2>
-                <p>DAW Project Manager detects project files by extension. The following DAWs are supported. Deep metadata extraction (BPM, key, version) is available for most of them — where it's not, you can enter BPM and key manually.</p>
+                <p>DAW Project Manager detects project files by extension. The following 14 DAWs get full treatment — deep metadata extraction is available for six of them (see <a href="#metadata-extraction">Metadata Extraction</a> below); the rest are detected and scanned the same way, just with BPM/key entered manually.</p>
 
                 <div class="docs-table-wrap">
                     <table class="docs-table">
@@ -1470,86 +1514,147 @@
                             <tr>
                                 <td>Ableton Live</td>
                                 <td><code class="daw-ext">.als</code>, <code class="daw-ext">.alp</code></td>
-                                <td>BPM and version extracted during deep scan.</td>
+                                <td>BPM, key, and version extracted during deep scan.</td>
                             </tr>
                             <tr>
                                 <td>Bitwig Studio</td>
                                 <td><code class="daw-ext">.bwproject</code></td>
-                                <td>BPM and tempo extracted during deep scan.</td>
+                                <td>BPM, key (Bitwig 6+), and version extracted during deep scan.</td>
                             </tr>
                             <tr>
                                 <td>Cakewalk / Sonar</td>
                                 <td><code class="daw-ext">.cwp</code>, <code class="daw-ext">.wrk</code>, <code class="daw-ext">.bun</code></td>
-                                <td>Project, legacy, and bundle formats all detected.</td>
+                                <td>Project, legacy, and bundle formats all detected. No automatic extraction yet.</td>
                             </tr>
                             <tr>
                                 <td>Cubase</td>
                                 <td><code class="daw-ext">.cpr</code></td>
-                                <td>BPM and version extracted during deep scan.</td>
+                                <td>BPM, key, and version extracted during deep scan.</td>
                             </tr>
                             <tr>
                                 <td>FL Studio</td>
                                 <td><code class="daw-ext">.flp</code></td>
-                                <td>BPM extracted during deep scan.</td>
+                                <td>BPM and version extracted during deep scan. Key is not.</td>
                             </tr>
                             <tr>
                                 <td>Logic Pro</td>
                                 <td><code class="daw-ext">.logicx</code></td>
-                                <td>Directory bundle (macOS only). BPM and key extracted.</td>
+                                <td>Directory bundle (macOS only). No automatic extraction yet.</td>
                             </tr>
                             <tr>
                                 <td>MAGDA</td>
                                 <td><code class="daw-ext">.mgd</code></td>
-                                <td>Project file detected; metadata availability varies by version.</td>
+                                <td>BPM, key, and version extracted during deep scan.</td>
                             </tr>
                             <tr>
                                 <td>Maschine</td>
                                 <td><code class="daw-ext">.maschine</code>, <code class="daw-ext">.maschine2</code></td>
-                                <td>Project file detected; metadata availability varies by version.</td>
+                                <td>Project file detected. No automatic extraction yet.</td>
                             </tr>
                             <tr>
                                 <td>Nuendo</td>
                                 <td><code class="daw-ext">.npr</code></td>
-                                <td>BPM and version extracted during deep scan.</td>
+                                <td>BPM, key, and version extracted during deep scan.</td>
                             </tr>
                             <tr>
                                 <td>Pro Tools</td>
                                 <td><code class="daw-ext">.ptx</code>, <code class="daw-ext">.pts</code></td>
-                                <td>Project and session files detected; BPM extraction supported.</td>
+                                <td>Project and session files detected. No automatic extraction yet.</td>
                             </tr>
                             <tr>
                                 <td>Reaper</td>
                                 <td><code class="daw-ext">.rpp</code></td>
-                                <td>BPM extracted during deep scan. Plain-text format.</td>
+                                <td>BPM, key, version, and project notes extracted during deep scan — the only DAW with automatic notes extraction. Plain-text format.</td>
                             </tr>
                             <tr>
                                 <td>Studio One</td>
                                 <td><code class="daw-ext">.song</code></td>
-                                <td>BPM and key extracted during deep scan.</td>
+                                <td>Project file detected. No automatic extraction yet.</td>
                             </tr>
                             <tr>
                                 <td>Tracktion Waveform</td>
                                 <td><code class="daw-ext">.tracktionedit</code>, <code class="daw-ext">.tracktion</code></td>
-                                <td>Both edit and project file formats detected.</td>
+                                <td>Both edit and project file formats detected. No automatic extraction yet.</td>
                             </tr>
                             <tr>
                                 <td>Universal Audio LUNA</td>
                                 <td><code class="daw-ext">.luna</code></td>
-                                <td>Package bundle; project file detected.</td>
+                                <td>Package bundle; project file detected. No automatic extraction yet.</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
 
+                <h3>Additional DAWs</h3>
+                <p>These are detected and scanned exactly like the DAWs above — they just don't have automatic metadata extraction yet, same as Logic Pro or Pro Tools.</p>
+
+                <div class="docs-table-wrap">
+                    <table class="docs-table">
+                        <thead>
+                            <tr>
+                                <th>DAW</th>
+                                <th>Extension</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>ACID Pro</td><td><code class="daw-ext">.acd</code></td></tr>
+                            <tr><td>Adobe Audition</td><td><code class="daw-ext">.sesx</code></td></tr>
+                            <tr><td>Ardour</td><td><code class="daw-ext">.ardour</code></td></tr>
+                            <tr><td>Audacity</td><td><code class="daw-ext">.aup3</code></td></tr>
+                            <tr><td>Digital Performer</td><td><code class="daw-ext">.dpproj</code></td></tr>
+                            <tr><td>GarageBand</td><td><code class="daw-ext">.band</code></td></tr>
+                            <tr><td>LMMS</td><td><code class="daw-ext">.mmp</code>, <code class="daw-ext">.mmpz</code></td></tr>
+                            <tr><td>Mixcraft</td><td><code class="daw-ext">.mx8</code>, <code class="daw-ext">.mx9</code>, <code class="daw-ext">.mx10</code></td></tr>
+                            <tr><td>Qtractor</td><td><code class="daw-ext">.qtr</code></td></tr>
+                            <tr><td>Reason</td><td><code class="daw-ext">.reason</code>, <code class="daw-ext">.rns</code></td></tr>
+                            <tr><td>Renoise</td><td><code class="daw-ext">.xrns</code></td></tr>
+                            <tr><td>Rosegarden</td><td><code class="daw-ext">.rg</code></td></tr>
+                            <tr><td>Samplitude / Sequoia</td><td><code class="daw-ext">.vip</code></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
                 <div class="callout callout-info">
-                    <strong>Don't see your DAW?</strong> Open an issue on <a href="https://github.com/bandpassrecords/daw-project-manager/issues" target="_blank" rel="noopener noreferrer" style="color:var(--accent);">GitHub</a> with the DAW name and file extension. New DAW support is added regularly based on requests.
+                    <strong>Don't see your DAW?</strong> Open an issue on <a href="https://github.com/bandpassrecords/daw-project-manager/issues" target="_blank" rel="noopener noreferrer" style="color:var(--accent);">GitHub</a> with the DAW name and file extension. New DAW support is added regularly based on requests. Not currently supported: Harrison Mixbus, SAWStudio, Pyramix, and Zynewave Podium (no reliably documented file extension), plus browser-only tools like BandLab, Soundtrap, and Audiotool (no local project file to scan).
                 </div>
 
                 <h3>Logic Pro Note (macOS)</h3>
-                <p>Logic Pro project packages end in <code class="daw-ext">.logicx</code> and are actually directories (bundles) on macOS. The app detects them correctly and treats the bundle as a single project entry. File size is calculated from the total size of the package contents.</p>
+                <p>Logic Pro project packages end in <code class="daw-ext">.logicx</code> and are actually directories (bundles) on macOS — same for Universal Audio LUNA (<code class="daw-ext">.luna</code>) and GarageBand (<code class="daw-ext">.band</code>). The app detects all three correctly and treats each bundle as a single project entry.</p>
 
                 <h3>BPM and Key Override</h3>
                 <p>If deep scan cannot extract BPM or key from a particular file, or if the extracted value is wrong, you can always override it manually in the Project Detail page. Manual values are stored in the app database and take precedence over future deep scans.</p>
+            </div>
+
+            <!-- ================================================================
+                 METADATA EXTRACTION
+            ================================================================ -->
+            <div class="docs-section" id="metadata-extraction">
+                <h2>Metadata Extraction</h2>
+                <p>Deep Scan can read some fields straight from a project file — the rest have to be entered by hand, or picked up from an optional <code style="font-family:monospace;">bpm.txt</code>/<code style="font-family:monospace;">key.txt</code> file dropped next to the project on the next scan. The same reference table is available in the app itself, under <strong>Settings → Metadata Extraction</strong>.</p>
+
+                <div class="docs-table-wrap">
+                    <table class="docs-table">
+                        <thead>
+                            <tr>
+                                <th>DAW</th>
+                                <th>BPM</th>
+                                <th>Key</th>
+                                <th>DAW Version</th>
+                                <th>Project Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Ableton Live</td><td>✓</td><td>✓</td><td>✓</td><td></td></tr>
+                            <tr><td>Bitwig Studio</td><td>✓</td><td>✓</td><td>✓</td><td></td></tr>
+                            <tr><td>Cubase / Nuendo</td><td>✓</td><td>✓</td><td>✓</td><td></td></tr>
+                            <tr><td>FL Studio</td><td>✓</td><td></td><td>✓</td><td></td></tr>
+                            <tr><td>MAGDA</td><td>✓</td><td>✓</td><td>✓</td><td></td></tr>
+                            <tr><td>Reaper</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <p>All other supported DAWs — including the 13 <a href="#supported-daws">additional DAWs</a> above — are detected and scanned but rely on manual entry today.</p>
             </div>
 
         </main>
@@ -1686,6 +1791,64 @@
                 if (best) setActive(best);
             });
         }, { passive: true });
+
+        // ── Section copy-link buttons ──
+        // Every h2/h3 inside a docs-section gets a small link icon (visible
+        // on hover, or always-on for touch) that copies a deep link to that
+        // section's #anchor to the clipboard.
+        (function () {
+            const slugify = (text) => text
+                .toLowerCase()
+                .trim()
+                .replace(/[^\w\s-]/g, '')
+                .replace(/\s+/g, '-');
+
+            const sectionHeadings = document.querySelectorAll('.docs-section h2, .docs-section h3');
+            const usedIds = new Set();
+
+            sectionHeadings.forEach(heading => {
+                if (!heading.id) {
+                    const base = slugify(heading.textContent) || 'section';
+                    let candidate = base;
+                    let n = 1;
+                    while (document.getElementById(candidate) || usedIds.has(candidate)) {
+                        candidate = `${base}-${n++}`;
+                    }
+                    heading.id = candidate;
+                }
+                usedIds.add(heading.id);
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'section-link-btn';
+                btn.setAttribute('aria-label', 'Copy link to this section');
+                btn.title = 'Copy link to this section';
+                btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
+
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const url = `${location.origin}${location.pathname}#${heading.id}`;
+                    const done = () => {
+                        btn.classList.add('copied');
+                        btn.setAttribute('aria-label', 'Copied!');
+                        setTimeout(() => {
+                            btn.classList.remove('copied');
+                            btn.setAttribute('aria-label', 'Copy link to this section');
+                        }, 1500);
+                    };
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(url).then(done).catch(() => {
+                            history.replaceState(null, '', `#${heading.id}`);
+                        });
+                    } else {
+                        history.replaceState(null, '', `#${heading.id}`);
+                        done();
+                    }
+                });
+
+                heading.appendChild(btn);
+            });
+        })();
     </script>
 </body>
 </html>
