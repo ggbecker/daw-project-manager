@@ -20,23 +20,28 @@ is submission-ready.
 
 ## Outstanding blockers before this can be submitted
 
-### 1. Domain verification (bandpassrecords.com)
+### 1. Domain verification (dpm.bandpassrecords.com)
 
-The app ID `com.bandpassrecords.dpm` is a domain-based reverse-DNS ID, so
-Flathub requires proving ownership of `bandpassrecords.com` before it will
-publish the app (this happens *after* the PR is merged, via Flathub's "manage
-app" verification flow — it doesn't block opening the submission PR, but
-does block it going live).
+The app ID `com.bandpassrecords.dpm` is a domain-based reverse-DNS ID.
+Flathub's website-verification method checks the *exact* subdomain you get by
+reversing the ID component-for-component — `com.bandpassrecords.dpm` reversed
+is `dpm.bandpassrecords.com`, **not** the bare `bandpassrecords.com` — before
+it will publish the app (this happens *after* the PR is merged, via Flathub's
+"manage app" verification flow — it doesn't block opening the submission PR,
+but does block it going live). That subdomain is already the site you run for
+this app, so this should be a straightforward upload rather than a new hosting
+setup.
 
 Upload `flatpak/org.flatpak.VerifiedApps.txt` (already created in this
 directory) to:
 
 ```
-https://bandpassrecords.com/.well-known/org.flatpak.VerifiedApps.txt
+https://dpm.bandpassrecords.com/.well-known/org.flatpak.VerifiedApps.txt
 ```
 
 Then, on the Flathub developer portal for this app, choose "Website"
-verification and point it at `bandpassrecords.com` — it checks for that file.
+verification and point it at `dpm.bandpassrecords.com` — it checks for that
+file.
 
 ### 2. Screenshots are 0-byte placeholders
 

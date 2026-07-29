@@ -1,4 +1,4 @@
-name: Flutter CI/CD (Windows, macOS & Android)
+name: Flutter CI/CD (Windows, macOS, Linux & Android)
 
 # PERMISSÃO: Necessária para que a ação 'upload-release-asset' funcione.
 permissions:
@@ -532,6 +532,236 @@ jobs:
           name: ${{ matrix.os_name }}_${{ steps.set_asset_paths.outputs.asset_name }}
           path: ${{ steps.set_asset_paths.outputs.asset_path }}
           retention-days: 7
+
+  # Linux Build Job — plain tarball of the Flutter Linux bundle, for users who
+  # don't use Flatpak. This does NOT depend on the flatpak-flutter vendoring
+  # step below; it's a normal `flutter build linux` like any other platform.
+  build_linux:
+    name: Build & Upload (Linux)
+    needs: unit_tests
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev \
+            libsecret-1-dev libayatana-appindicator3-dev libnotify-dev
+
+      - name: Setup Flutter ${{ env.FLUTTER_BASE_VERSION }} (Stable)
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_BASE_VERSION }}
+          channel: 'stable'
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Inject OAuth Credentials
+        run: |
+          chmod +x scripts/inject_secret.sh
+          ./scripts/inject_secret.sh -d "${{ secrets.DESKTOP_CLIENT_ID }}" -s "${{ secrets.DESKTOP_CLIENT_SECRET }}" -a "${{ secrets.ANDROID_WEB_CLIENT_ID }}"
+        env:
+          DESKTOP_CLIENT_ID: ${{ secrets.DESKTOP_CLIENT_ID }}
+          DESKTOP_CLIENT_SECRET: ${{ secrets.DESKTOP_CLIENT_SECRET }}
+          ANDROID_WEB_CLIENT_ID: ${{ secrets.ANDROID_WEB_CLIENT_ID }}
+
+      - name: Generate Hive Adapters
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Generate Localizations
+        run: flutter gen-l10n
+
+      - name: Enable Linux desktop
+        run: flutter config --enable-linux-desktop
+
+      - name: Precache Flutter Artifacts
+        run: flutter precache --linux
+
+      - name: Sanitize ref name
+        id: sanitize_ref
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            echo "sanitized_ref=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" == "pull_request" ]; then
+            echo "sanitized_ref=pr${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+          else
+            SANITIZED=$(echo "${{ github.ref_name }}" | sed 's/[\/\\:*?"<>|]/_/g')
+            echo "sanitized_ref=$SANITIZED" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Determine build version (tag/PR)
+        id: build_version
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            VERSION_NAME="${GITHUB_REF#refs/tags/v}"
+            IFS='.' read -r MAJOR MINOR PATCH <<< "${VERSION_NAME}"
+            VERSION_CODE=$((MAJOR * 10000 + MINOR * 100 + PATCH))
+          else
+            VERSION_NAME="0.0.0"
+            VERSION_CODE="${GITHUB_RUN_NUMBER}"
+          fi
+          echo "version_name=${VERSION_NAME}" >> "$GITHUB_OUTPUT"
+          echo "version_code=${VERSION_CODE}" >> "$GITHUB_OUTPUT"
+
+      - name: Build Linux Bundle
+        run: |
+          VERSION_NAME="${{ steps.build_version.outputs.version_name }}"
+          VERSION_CODE="${{ steps.build_version.outputs.version_code }}"
+          flutter build linux --release --build-name="${VERSION_NAME}" --build-number="${VERSION_CODE}" --dart-define=APP_VERSION="${VERSION_NAME}"
+
+      - name: Package tarball
+        id: package
+        run: |
+          SANITIZED_REF="${{ steps.sanitize_ref.outputs.sanitized_ref }}"
+          ASSET_NAME="DAW_Project_Manager_Linux_${SANITIZED_REF}.tar.gz"
+          tar -C build/linux/x64/release/bundle -czf "${ASSET_NAME}" .
+          echo "asset_path=${ASSET_NAME}" >> "$GITHUB_OUTPUT"
+          echo "asset_name=${ASSET_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Generate SHA256 checksum
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          CHECKSUM=$(sha256sum "${{ steps.package.outputs.asset_path }}" | awk '{print $1}')
+          echo "${CHECKSUM}  ${{ steps.package.outputs.asset_name }}" > "${{ steps.package.outputs.asset_path }}.sha256"
+
+      - name: Find Existing Release URL
+        if: startsWith(github.ref, 'refs/tags/v')
+        id: find_release
+        uses: actions/github-script@v6
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        with:
+          script: |
+            try {
+              const { data: release } = await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag: process.env.RELEASE_TAG,
+              });
+              core.setOutput('upload_url', release.upload_url);
+              console.log(`Found Release URL: ${release.upload_url}`);
+            } catch (error) {
+              core.setFailed(`Release with tag ${process.env.RELEASE_TAG} not found. Please create a Release manually on GitHub matching this tag before pushing the tag.`);
+            }
+
+      - name: Upload Linux Release Asset
+        if: startsWith(github.ref, 'refs/tags/v') && steps.find_release.outputs.upload_url != ''
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.find_release.outputs.upload_url }}
+          asset_path: ${{ steps.package.outputs.asset_path }}
+          asset_name: ${{ steps.package.outputs.asset_name }}
+          asset_content_type: application/gzip
+
+      - name: Upload Linux SHA256 Checksum
+        if: startsWith(github.ref, 'refs/tags/v') && steps.find_release.outputs.upload_url != ''
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.find_release.outputs.upload_url }}
+          asset_path: ${{ steps.package.outputs.asset_path }}.sha256
+          asset_name: ${{ steps.package.outputs.asset_name }}.sha256
+          asset_content_type: text/plain
+
+      - name: Upload Linux Artifact
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Linux_${{ steps.package.outputs.asset_name }}
+          path: ${{ steps.package.outputs.asset_path }}
+          retention-days: 7
+
+  # Flatpak Build Job — validates flatpak/com.bandpassrecords.dpm.yml actually
+  # builds, and produces a sideloadable .flatpak bundle attached to the
+  # release. This is NOT what gets submitted to Flathub — Flathub builds
+  # independently from the manifest once it's merged into flathub/flathub;
+  # this job only proves the manifest works and gives users something to
+  # `flatpak install` while a Flathub submission is pending/in review.
+  #
+  # Gated to tag pushes only (not every PR): it depends on flatpak/flutter-sdk.json
+  # and flatpak/pubspec-sources.json, which are generated by the flatpak-flutter
+  # tool on a Linux machine (see flatpak/README.md) and committed to the repo —
+  # neither exists yet, so this job currently no-ops with a warning rather than
+  # failing the release. Also, the runtime/SDK download this job needs is large
+  # (~1-2GB), which is worth paying for a release but not for every PR.
+  build_flatpak:
+    name: Build Flatpak (Flathub validation)
+    needs: unit_tests
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    container:
+      # Bundles flatpak-builder plus the freedesktop runtime/SDK matching
+      # flatpak/com.bandpassrecords.dpm.yml's `runtime-version: '24.08'`.
+      # If that manifest's runtime-version changes, this tag needs to move
+      # with it — check https://github.com/flatpak/flatpak-github-actions
+      # for the currently published image tags.
+      image: bilelmoussaoui/flatpak-github-actions:freedesktop-24.08
+      options: --privileged
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check vendored Flutter/pub sources are present
+        id: sources_check
+        run: |
+          if [ ! -f flatpak/flutter-sdk.json ] || [ ! -f flatpak/pubspec-sources.json ]; then
+            echo "::warning::flatpak/flutter-sdk.json and/or flatpak/pubspec-sources.json are missing. Generate them with flatpak-flutter on a Linux machine (see flatpak/README.md) and commit them — until then, the Flatpak build is skipped rather than failing the release."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Pin manifest to this release's tag and commit
+        if: steps.sources_check.outputs.ready == 'true'
+        run: |
+          sed -i "s|tag: v[0-9][0-9.]*|tag: ${{ github.ref_name }}|" flatpak/com.bandpassrecords.dpm.yml
+          sed -i "s|commit: [0-9a-f]\{40\}|commit: ${{ github.sha }}|" flatpak/com.bandpassrecords.dpm.yml
+
+      - name: Build Flatpak
+        if: steps.sources_check.outputs.ready == 'true'
+        uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+        with:
+          bundle: DAW_Project_Manager_${{ github.ref_name }}.flatpak
+          manifest-path: flatpak/com.bandpassrecords.dpm.yml
+          cache-key: flatpak-builder-${{ github.sha }}
+
+      - name: Find Existing Release URL
+        if: steps.sources_check.outputs.ready == 'true'
+        id: find_release
+        uses: actions/github-script@v6
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        with:
+          script: |
+            try {
+              const { data: release } = await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag: process.env.RELEASE_TAG,
+              });
+              core.setOutput('upload_url', release.upload_url);
+              console.log(`Found Release URL: ${release.upload_url}`);
+            } catch (error) {
+              core.setFailed(`Release with tag ${process.env.RELEASE_TAG} not found. Please create a Release manually on GitHub matching this tag before pushing the tag.`);
+            }
+
+      - name: Upload Flatpak Bundle to Release
+        if: steps.sources_check.outputs.ready == 'true' && steps.find_release.outputs.upload_url != ''
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.find_release.outputs.upload_url }}
+          asset_path: DAW_Project_Manager_${{ github.ref_name }}.flatpak
+          asset_name: DAW_Project_Manager_${{ github.ref_name }}.flatpak
+          asset_content_type: application/vnd.flatpak
 
   # Android Build Job (for both PRs and Releases)
   build-android:
