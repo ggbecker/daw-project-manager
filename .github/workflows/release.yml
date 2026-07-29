@@ -717,6 +717,16 @@ jobs:
           sudo apt-get install -y flatpak flatpak-builder
           flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 
+      # The manifest carries a `type: file` source for lib/config/secrets.dart
+      # because flatpak-builder fetches the app from git inside the sandbox —
+      # injecting into this checkout (like the other jobs do) would never
+      # reach the build. Generate the file the manifest points at.
+      - name: Generate OAuth secrets file for the Flatpak build
+        run: |
+          chmod +x scripts/inject_secret.sh
+          ./scripts/inject_secret.sh -d "${{ secrets.DESKTOP_CLIENT_ID }}" -s "${{ secrets.DESKTOP_CLIENT_SECRET }}" -a "${{ secrets.ANDROID_WEB_CLIENT_ID }}"
+          cp lib/config/secrets.dart flatpak/secrets.dart
+
       - name: Point manifest at the exact commit under test
         env:
           REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git

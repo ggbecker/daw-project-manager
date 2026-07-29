@@ -63,6 +63,13 @@ test-signing.keychain*
 
 # Secrets (DO NOT COMMIT)
 lib/config/secrets.dart
+# CI-generated copy fed to flatpak-builder as a `type: file` source
+flatpak/secrets.dart
+# flatpak-flutter/flatpak-builder working artifacts (see build_flatpak in CI)
+flatpak/.flatpak-builder/
+flatpak/generated/
+flatpak/build/
+flatpak/repo/
 
 # Reference data used to derive lookup tables during development, not a
 # runtime asset — see the doc comment above _getReaperRootNote in

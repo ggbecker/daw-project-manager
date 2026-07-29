@@ -91,6 +91,11 @@ release tag exists. Don't commit the CI-only `type: dir` swap.
 ```bash
 sudo apt install flatpak flatpak-builder
 flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+# The manifest has a `type: file` source for the OAuth credentials —
+# flatpak-builder fetches the app from git inside the sandbox, so the
+# secrets can't be injected into a checkout like the other CI jobs do:
+./scripts/inject_secret.sh -d "<desktop-id>" -s "<secret>" -a "<android-id>"
+cp lib/config/secrets.dart flatpak/secrets.dart
 # after running flatpak-flutter as above:
 flatpak-builder --repo=repo --force-clean --sandbox --user \
   --install-deps-from=flathub build com.bandpassrecords.dpm.yml
@@ -119,6 +124,21 @@ Once it builds and runs locally: fork
 [flathub/flathub](https://github.com/flathub/flathub), create a new
 repository named `com.bandpassrecords.dpm` under the Flathub org (via their
 "New app" request flow), push this manifest (with the generated sources
-merged in) there, and open the PR. Their CI will build it and a human
-reviewer will check the `finish-args` — be ready to justify `--share=network`
-(Google Drive sync) and the D-Bus `--talk-name`s above if asked.
+merged in) there, and open the PR. The Flathub-side repo also needs a copy of
+`secrets.dart` committed next to the manifest (the `type: file` source) —
+that's acceptable: per Google's OAuth documentation, installed-app client
+credentials are not treated as confidential, and every shipped binary embeds
+them anyway. Their CI will build it and a human reviewer will check the
+`finish-args` — be ready to justify `--share=network` (Google Drive sync)
+and the D-Bus `--talk-name`s above if asked.
+
+Per-release maintenance of the Flathub manifest is nearly hands-off:
+
+- The app source carries `x-checker-data`, so Flathub's
+  flatpak-external-data-checker bot watches this repo for new `v*` tags and
+  automatically opens a PR on the Flathub repo bumping `tag:`/`commit:` —
+  you just merge it.
+- `APP_VERSION` is derived at build time from `git describe` on the pinned
+  checkout, so it always matches the tag with no manual edit.
+- The one still-manual step: add a `<release>` entry to the metainfo for
+  each version (Flathub surfaces these as the changelog).
