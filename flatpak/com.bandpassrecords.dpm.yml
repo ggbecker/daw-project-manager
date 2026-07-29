@@ -58,6 +58,17 @@ finish-args:
   # --filesystem grant is needed for this to work.
 
 modules:
+  # tray_manager's Linux CMakeLists requires ayatana-appindicator3-0.1 or
+  # appindicator3-0.1 via pkg-config, and plain org.freedesktop.Platform
+  # doesn't ship either. Building it from the shared module Flathub apps
+  # use for this (flatpak/shared-modules/ is a git submodule of
+  # flathub/shared-modules) rather than pinning our own source archive —
+  # this one builds legacy libappindicator, which provides
+  # appindicator3-0.1. Must come before daw-project-manager in this list
+  # so its pkg-config files exist by the time that module's CMake
+  # configure step runs.
+  - shared-modules/libappindicator/libappindicator-gtk3-12.10.json
+
   # flatpak-flutter looks for a module named daw-project-manager (see
   # --app-module in the CI job) containing a `git` source whose url starts
   # with https://github.com/flutter/flutter and has a `tag:` — that's how

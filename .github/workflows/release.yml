@@ -706,6 +706,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          # flatpak/shared-modules is a submodule (provides libappindicator
+          # for tray_manager's pkg-config requirement).
+          submodules: true
 
       - name: Install flatpak & flatpak-builder
         run: |
