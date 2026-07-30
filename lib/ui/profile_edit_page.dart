@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -13,33 +14,140 @@ import '../utils/mobile_utils.dart';
 import '../utils/file_launcher.dart';
 import '../generated/l10n/app_localizations.dart';
 
-class ProfileViewPage extends ConsumerStatefulWidget {
+class ProfileEditPage extends ConsumerStatefulWidget {
   final String profileId;
 
-  const ProfileViewPage({
+  const ProfileEditPage({
     super.key,
     required this.profileId,
   });
 
   @override
-  ConsumerState<ProfileViewPage> createState() => _ProfileViewPageState();
+  ConsumerState<ProfileEditPage> createState() => _ProfileEditPageState();
 }
 
-class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
+class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
   final _bioController = TextEditingController();
   final _assetNameController = TextEditingController();
-  bool _isSaving = false;
+  final _nameController = TextEditingController();
+  Timer? _nameSaveTimer;
+  Timer? _bioSaveTimer;
 
   @override
   void dispose() {
+    _nameSaveTimer?.cancel();
+    _bioSaveTimer?.cancel();
     _bioController.dispose();
     _assetNameController.dispose();
+    _nameController.dispose();
     super.dispose();
   }
 
   Future<String> _getProfileAssetsPath() async {
     final basePath = await getLocalAppDataPath();
     return path.join(basePath, 'profile_assets', widget.profileId);
+  }
+
+  Future<String> _getProfilePhotosPath() async {
+    final basePath = await getLocalAppDataPath();
+    return path.join(basePath, 'profile_photos');
+  }
+
+  void _scheduleNameAutoSave(Profile profile) {
+    _nameSaveTimer?.cancel();
+    _nameSaveTimer = Timer(const Duration(milliseconds: 500), () => _saveName(profile));
+  }
+
+  // Silent auto-save, same rationale as _saveBio above.
+  Future<void> _saveName(Profile profile) async {
+    final newName = _nameController.text.trim();
+    if (newName.isEmpty || newName == profile.name) return;
+
+    try {
+      final profileRepo = await ref.read(profileRepositoryProvider.future);
+      await profileRepo.updateProfile(profile.copyWith(name: newName));
+      ref.invalidate(currentProfileProvider);
+      ref.invalidate(allProfilesProvider);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedToRenameProfile(e.toString()))),
+        );
+      }
+    }
+  }
+
+  Future<void> _pickProfilePhoto(Profile profile) async {
+    final result = await FilePicker.pickFiles(type: FileType.image);
+    if (result == null || result.files.single.path == null) return;
+
+    final sourcePath = result.files.single.path!;
+    final sourceFile = File(sourcePath);
+
+    if (!await sourceFile.exists()) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.selectedFileDoesNotExist)),
+        );
+      }
+      return;
+    }
+
+    try {
+      final photosDirPath = await _getProfilePhotosPath();
+      final photosDir = Directory(photosDirPath);
+      if (!await photosDir.exists()) {
+        await photosDir.create(recursive: true);
+      }
+
+      final fileExtension = path.extension(sourcePath);
+      final destPath = path.join(photosDir.path, '${profile.id}$fileExtension');
+      await sourceFile.copy(destPath);
+
+      final profileRepo = await ref.read(profileRepositoryProvider.future);
+      await profileRepo.updateProfile(profile.copyWith(photoPath: destPath));
+      ref.invalidate(currentProfileProvider);
+      ref.invalidate(allProfilesProvider);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.profilePhotoUpdated)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedToSaveProfilePhoto(e.toString()))),
+        );
+      }
+    }
+  }
+
+  Future<void> _removeProfilePhoto(Profile profile) async {
+    if (profile.photoPath == null) return;
+    try {
+      final photoFile = File(profile.photoPath!);
+      if (await photoFile.exists()) {
+        await photoFile.delete();
+      }
+
+      final profileRepo = await ref.read(profileRepositoryProvider.future);
+      await profileRepo.updateProfile(profile.copyWith(clearPhotoPath: true));
+      ref.invalidate(currentProfileProvider);
+      ref.invalidate(allProfilesProvider);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.profilePhotoRemoved)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedToRemoveProfilePhoto(e.toString()))),
+        );
+      }
+    }
   }
 
   Future<void> _pickFile({
@@ -87,23 +195,19 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
     }
   }
 
+  void _scheduleBioAutoSave() {
+    _bioSaveTimer?.cancel();
+    _bioSaveTimer = Timer(const Duration(milliseconds: 500), _saveBio);
+  }
+
+  // Silent auto-save (no success snackbar) — triggered from typing, the same
+  // way project_detail_page.dart debounces its own fields, rather than an
+  // explicit Save button the user has to remember to press.
   Future<void> _saveBio() async {
-    if (_isSaving) return;
-
-    setState(() => _isSaving = true);
-
     try {
       final profileRepo = await ref.read(profileRepositoryProvider.future);
       final currentProfile = profileRepo.getProfileById(widget.profileId);
-
-      if (currentProfile == null) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.profileNotFound)),
-          );
-        }
-        return;
-      }
+      if (currentProfile == null) return;
 
       final updatedProfile = currentProfile.copyWith(
         bio: _bioController.text.trim().isEmpty ? null : _bioController.text.trim(),
@@ -111,21 +215,11 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
 
       await profileRepo.updateProfile(updatedProfile);
       ref.invalidate(currentProfileProvider);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.biographySaved)),
-        );
-      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppLocalizations.of(context)!.failedToSaveBiography(e.toString()))),
         );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isSaving = false);
       }
     }
   }
@@ -328,7 +422,14 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
             if (!currentArtworkPaths.contains(filePath)) {
               currentArtworkPaths.add(filePath);
             }
-            final updatedProfile = currentProfile.copyWith(artworkPaths: currentArtworkPaths);
+            // getAllArtworkPaths() folds the legacy singular artworkPath in
+            // above, so it must be cleared here — otherwise it keeps
+            // resurrecting itself (and duplicating into artworkPaths) on
+            // every future read, regardless of what artworkPaths says.
+            final updatedProfile = currentProfile.copyWith(
+              artworkPaths: currentArtworkPaths,
+              clearArtworkPath: true,
+            );
             await profileRepo.updateProfile(updatedProfile);
             ref.invalidate(currentProfileProvider);
             if (mounted) {
@@ -355,7 +456,12 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
       if (currentProfile != null) {
         final currentArtworkPaths = List<String>.from(currentProfile.getAllArtworkPaths());
         currentArtworkPaths.remove(artworkPath);
-        final updatedProfile = currentProfile.copyWith(artworkPaths: currentArtworkPaths.isEmpty ? null : currentArtworkPaths);
+        // Same reason as _addArtwork: clear the legacy singular field so a
+        // removed artwork doesn't reappear from it on the next read.
+        final updatedProfile = currentProfile.copyWith(
+          artworkPaths: currentArtworkPaths.isEmpty ? null : currentArtworkPaths,
+          clearArtworkPath: true,
+        );
         await profileRepo.updateProfile(updatedProfile);
         ref.invalidate(currentProfileProvider);
         if (mounted) {
@@ -385,7 +491,12 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
             if (!currentPressKitPaths.contains(filePath)) {
               currentPressKitPaths.add(filePath);
             }
-            final updatedProfile = currentProfile.copyWith(pressKitPaths: currentPressKitPaths);
+            // Same reason as artwork above: fold in and retire the legacy
+            // singular pressKitPath so it can't resurrect a removed file.
+            final updatedProfile = currentProfile.copyWith(
+              pressKitPaths: currentPressKitPaths,
+              clearPressKitPath: true,
+            );
             await profileRepo.updateProfile(updatedProfile);
             ref.invalidate(currentProfileProvider);
             if (mounted) {
@@ -412,7 +523,10 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
       if (currentProfile != null) {
         final currentPressKitPaths = List<String>.from(currentProfile.getAllPressKitPaths());
         currentPressKitPaths.remove(pressKitPath);
-        final updatedProfile = currentProfile.copyWith(pressKitPaths: currentPressKitPaths.isEmpty ? null : currentPressKitPaths);
+        final updatedProfile = currentProfile.copyWith(
+          pressKitPaths: currentPressKitPaths.isEmpty ? null : currentPressKitPaths,
+          clearPressKitPath: true,
+        );
         await profileRepo.updateProfile(updatedProfile);
         ref.invalidate(currentProfileProvider);
         if (mounted) {
@@ -793,7 +907,7 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
     return Scaffold(
       appBar: isMobile
           ? AppBar(
-              title: Text(AppLocalizations.of(context)!.profile),
+              title: Text(AppLocalizations.of(context)!.editProfile),
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () => Navigator.pop(context),
@@ -803,7 +917,7 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
       body: Column(
         children: [
           DesktopTitleBar(
-            title: AppLocalizations.of(context)!.profile,
+            title: AppLocalizations.of(context)!.editProfile,
             showBack: true,
           ),
           Expanded(
@@ -828,14 +942,20 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
                       if (_bioController.text != (profile.bio ?? '')) {
                         _bioController.text = profile.bio ?? '';
                       }
+                      if (_nameController.text != profile.name) {
+                        _nameController.text = profile.name;
+                      }
                       return _buildProfileContent(profile);
                     },
                   );
                 }
 
-                // Initialize bio controller if not already set
+                // Initialize bio/name controllers if not already set
                 if (_bioController.text != (profile.bio ?? '')) {
                   _bioController.text = profile.bio ?? '';
+                }
+                if (_nameController.text != profile.name) {
+                  _nameController.text = profile.name;
                 }
                 return _buildProfileContent(profile);
               },
@@ -843,6 +963,41 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildNameField(Profile profile, {required TextAlign textAlign}) {
+    return TextField(
+      controller: _nameController,
+      textAlign: textAlign,
+      style: Theme.of(context).textTheme.bodyLarge,
+      decoration: InputDecoration(
+        labelText: AppLocalizations.of(context)!.name,
+        isDense: true,
+      ),
+      onChanged: (_) => _scheduleNameAutoSave(profile),
+    );
+  }
+
+  Widget _buildPhotoActions(Profile profile) {
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 4,
+      children: [
+        TextButton.icon(
+          icon: const Icon(Icons.photo, size: 16),
+          label: Text(AppLocalizations.of(context)!.changePhoto, style: const TextStyle(fontSize: 12)),
+          onPressed: () => _pickProfilePhoto(profile),
+          style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8), minimumSize: Size.zero),
+        ),
+        if (profile.photoPath != null)
+          TextButton.icon(
+            icon: const Icon(Icons.delete_outline, size: 16),
+            label: Text(AppLocalizations.of(context)!.remove, style: const TextStyle(fontSize: 12)),
+            onPressed: () => _removeProfilePhoto(profile),
+            style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8), minimumSize: Size.zero),
+          ),
+      ],
     );
   }
 
@@ -894,17 +1049,15 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
                                               child: const Icon(Icons.person, size: 50),
                                             ),
                                     ),
-                                    const SizedBox(height: 16),
+                                    const SizedBox(height: 8),
+                                    Center(child: _buildPhotoActions(profile)),
+                                    const SizedBox(height: 8),
                                     // Profile Name and Info
                                     Center(
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.center,
                                         children: [
-                                          Text(
-                                            profile.name,
-                                            style: Theme.of(context).textTheme.headlineSmall,
-                                            textAlign: TextAlign.center,
-                                          ),
+                                          _buildNameField(profile, textAlign: TextAlign.center),
                                           const SizedBox(height: 8),
                                           Text(
                                             'Created: ${profile.createdAt.toString().split('.')[0]}',
@@ -937,49 +1090,53 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
                                   ],
                                 )
                               : Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     // Profile Photo
-                                    if (profile.photoPath != null && File(profile.photoPath!).existsSync())
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(12),
-                                        child: Image.file(
-                                          File(profile.photoPath!),
-                                          width: 120,
-                                          height: 120,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (context, error, stackTrace) {
-                                            return Container(
+                                    Column(
+                                      children: [
+                                        if (profile.photoPath != null && File(profile.photoPath!).existsSync())
+                                          ClipRRect(
+                                            borderRadius: BorderRadius.circular(12),
+                                            child: Image.file(
+                                              File(profile.photoPath!),
                                               width: 120,
                                               height: 120,
-                                              decoration: BoxDecoration(
-                                                color: Theme.of(context).cardColor,
-                                                borderRadius: BorderRadius.circular(12),
-                                              ),
-                                              child: const Icon(Icons.person, size: 60),
-                                            );
-                                          },
-                                        ),
-                                      )
-                                    else
-                                      Container(
-                                        width: 120,
-                                        height: 120,
-                                        decoration: BoxDecoration(
-                                          color: Theme.of(context).cardColor,
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: const Icon(Icons.person, size: 60),
-                                      ),
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (context, error, stackTrace) {
+                                                return Container(
+                                                  width: 120,
+                                                  height: 120,
+                                                  decoration: BoxDecoration(
+                                                    color: Theme.of(context).cardColor,
+                                                    borderRadius: BorderRadius.circular(12),
+                                                  ),
+                                                  child: const Icon(Icons.person, size: 60),
+                                                );
+                                              },
+                                            ),
+                                          )
+                                        else
+                                          Container(
+                                            width: 120,
+                                            height: 120,
+                                            decoration: BoxDecoration(
+                                              color: Theme.of(context).cardColor,
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                            child: const Icon(Icons.person, size: 60),
+                                          ),
+                                        const SizedBox(height: 8),
+                                        _buildPhotoActions(profile),
+                                      ],
+                                    ),
                                     const SizedBox(width: 24),
                                     // Profile Name and Info
                                     Expanded(
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          Text(
-                                            profile.name,
-                                            style: Theme.of(context).textTheme.headlineSmall,
-                                          ),
+                                          _buildNameField(profile, textAlign: TextAlign.start),
                                           const SizedBox(height: 8),
                                           Text(
                                             'Created: ${profile.createdAt.toString().split('.')[0]}',
@@ -1018,26 +1175,9 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Biography',
-                                    style: Theme.of(context).textTheme.titleLarge,
-                                  ),
-                                  if (_isSaving)
-                                    const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
-                                    )
-                                  else
-                                    IconButton(
-                                      icon: const Icon(Icons.save),
-                                      onPressed: _saveBio,
-                                      tooltip: AppLocalizations.of(context)!.saveBiographyTooltip,
-                                    ),
-                                ],
+                              Text(
+                                'Biography',
+                                style: Theme.of(context).textTheme.titleLarge,
                               ),
                               const SizedBox(height: 12),
                               TextField(
@@ -1047,9 +1187,7 @@ class _ProfileViewPageState extends ConsumerState<ProfileViewPage> {
                                   hintText: AppLocalizations.of(context)!.enterBiographyHint,
                                   border: const OutlineInputBorder(),
                                 ),
-                                onChanged: (_) {
-                                  // Auto-save could be implemented here if needed
-                                },
+                                onChanged: (_) => _scheduleBioAutoSave(),
                               ),
                             ],
                           ),
