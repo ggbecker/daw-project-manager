@@ -561,14 +561,13 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Inject OAuth Credentials
-        run: |
-          chmod +x scripts/inject_oauth_config.sh
-          ./scripts/inject_oauth_config.sh -d "${{ secrets.DESKTOP_CLIENT_ID }}" -s "${{ secrets.DESKTOP_CLIENT_SECRET }}" -a "${{ secrets.ANDROID_WEB_CLIENT_ID }}"
-        env:
-          DESKTOP_CLIENT_ID: ${{ secrets.DESKTOP_CLIENT_ID }}
-          DESKTOP_CLIENT_SECRET: ${{ secrets.DESKTOP_CLIENT_SECRET }}
-          ANDROID_WEB_CLIENT_ID: ${{ secrets.ANDROID_WEB_CLIENT_ID }}
+      # lib/config/oauth_config.dart is required to compile (it's a plain
+      # Dart import, not conditional on platform), but its contents don't
+      # matter here: Google Drive sync isn't offered on Linux at all — see
+      # GoogleDriveSyncService.isSupported — so no real OAuth values, and no
+      # GitHub secrets, are needed for this build at all.
+      - name: Generate placeholder OAuth config (Drive sync isn't offered on Linux)
+        run: cp lib/config/oauth_config.dart.template lib/config/oauth_config.dart
 
       - name: Generate Hive Adapters
         run: dart run build_runner build --delete-conflicting-outputs
@@ -717,16 +716,6 @@ jobs:
           sudo apt-get install -y flatpak flatpak-builder
           flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 
-      # The manifest carries a `type: file` source for lib/config/oauth_config.dart
-      # because flatpak-builder fetches the app from git inside the sandbox —
-      # injecting into this checkout (like the other jobs do) would never
-      # reach the build. Generate the file the manifest points at.
-      - name: Generate OAuth config file for the Flatpak build
-        run: |
-          chmod +x scripts/inject_oauth_config.sh
-          ./scripts/inject_oauth_config.sh -d "${{ secrets.DESKTOP_CLIENT_ID }}" -s "${{ secrets.DESKTOP_CLIENT_SECRET }}" -a "${{ secrets.ANDROID_WEB_CLIENT_ID }}"
-          cp lib/config/oauth_config.dart flatpak/oauth_config.dart
-
       - name: Point manifest at the exact commit under test
         env:
           REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git
@@ -808,16 +797,12 @@ jobs:
       # This artifact is the Flathub submission bundle: flatpak-flutter
       # overwrites the manifest in place (its output filename is
       # <app-id>.yml, same as our input) and writes the vendored
-      # modules/sources/patches under generated/. oauth_config.dart is
-      # included too — this is the only place it exists as a downloadable
-      # artifact, since it's generated fresh in this job from the GitHub
-      # Actions secrets and otherwise never leaves the runner. That's
-      # intentional, not an oversight: it has to end up committed in the
-      # flathub repo anyway
-      # (the manifest's `type: file` source expects it sitting next to the
-      # manifest), and Google's own OAuth docs don't treat installed-app
-      # client credentials as confidential — every shipped binary embeds
-      # them regardless of who can see this artifact.
+      # modules/sources/patches under generated/. No oauth_config.dart here
+      # anymore — Google Drive sync isn't offered on Linux at all (see
+      # GoogleDriveSyncService.isSupported), so the manifest's build-commands
+      # generate a placeholder file from the committed template directly;
+      # there's no secret, and nothing GitHub-secrets-sourced, involved in
+      # this build at all.
       # (.flatpak-builder/ is deliberately not included — it's a large
       # build cache, and upload-artifact skips hidden dirs by default.)
       - name: Upload generated Flathub sources
@@ -828,7 +813,6 @@ jobs:
           path: |
             flatpak/com.bandpassrecords.dpm.yml
             flatpak/generated/
-            flatpak/oauth_config.dart
           retention-days: 14
           if-no-files-found: warn
 

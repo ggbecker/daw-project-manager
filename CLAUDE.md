@@ -18,10 +18,16 @@ Instructions for AI assistants working on this codebase.
 - Add the key to all locale ARB files, then run `flutter gen-l10n`.
 - The app ships in 9 languages — hardcoded strings silently break all non-English users.
 
-### New model fields must be evaluated for Drive sync
+### New model fields must be evaluated for Drive sync AND local backup
 - When adding a field to `MusicProject` (or any synced model), decide: is this user-generated data or a device-local preference?
 - **User data** (metadata, timers, todos, paths) → add to `_serializeProject` AND `_deserializeProject` in `lib/services/google_drive_sync_service.dart`. If skipped, the field is silently lost on every Drive restore.
 - **Device-local settings** (theme, layout, update checks) → do NOT sync. `AppSettings` fields are generally device-local.
+- Also check `lib/services/backup_service.dart` (local file export/import) for the same question, for any *global* (non-per-profile) data — `TodoTemplate`, `ProjectTemplate`, `TemplateRoot`, custom mixdown folder names, phase settings. This is Linux's only backup path (see below), so a field skipped here is a field Linux users can never back up at all, not just "won't survive a Drive restore."
+
+### Google Drive sync is not offered on Linux
+- `GoogleDriveSyncService.isSupported` is `false` on Linux, `true` everywhere else. Every UI entry point to `GoogleDriveSyncPage` (dashboard, profile page, startup dialog, tray menu) is gated on it — don't add a new one without the same gate.
+- Why: the desktop OAuth flow requires a client secret (confirmed against a live Google sign-in attempt — PKCE alone isn't accepted for this app's "Desktop app" OAuth client type; see the long comment on `_desktopClientSecret` in `google_drive_sync_service.dart`). Flathub's build sandbox has no secret-injection mechanism, so shipping the secret there would mean committing it in the open in the public Flathub submission repo. Not offering the feature was chosen over that.
+- Linux/Flatpak builds compile `lib/config/oauth_config.dart` from the committed template's placeholder text directly (no real values, no GitHub secrets involved) — see `flatpak/README.md`.
 
 ---
 
@@ -39,8 +45,9 @@ Instructions for AI assistants working on this codebase.
 
 ### Platform detection
 - Use `MobileUtils.isMobile()` (from `lib/utils/mobile_utils.dart`) for mobile vs desktop checks — not `Platform.isAndroid` or `Platform.isIOS` directly.
-- Desktop = macOS + Windows. Mobile = Android + iOS.
+- Desktop = macOS + Windows + Linux. Mobile = Android + iOS.
 - Primary development and test target is **macOS**.
+- Linux is otherwise a full desktop target, with one deliberate feature gap: Google Drive sync (see `GoogleDriveSyncService.isSupported` above).
 
 ### Themes
 - Two active themes: `AppThemeType.neonDark` and `AppThemeType.classicDark`.
@@ -80,7 +87,9 @@ Instructions for AI assistants working on this codebase.
 | Hive repository | `lib/repository/project_repository.dart` |
 | File scanner | `lib/services/scanner_service.dart` |
 | Metadata extractor (BPM, key, DAW version) | `lib/services/metadata_extractor.dart` |
-| Google Drive sync | `lib/services/google_drive_sync_service.dart` |
+| Google Drive sync (not available on Linux) | `lib/services/google_drive_sync_service.dart` |
+| Local backup/restore (Linux's only backup path) | `lib/services/backup_service.dart` |
+| Settings hub (data management + links to other settings pages) | `lib/ui/settings_page.dart` |
 | Main dashboard | `lib/ui/dashboard_page.dart` |
 | Project detail / editor | `lib/ui/project_detail_page.dart` |
 | Localization strings (source of truth) | `lib/l10n/app_en.arb` |

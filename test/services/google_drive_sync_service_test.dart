@@ -63,6 +63,20 @@ void main() {
     });
   });
 
+  group('GoogleDriveSyncService.isSupported', () {
+    // Drive sync's desktop OAuth flow requires a client secret, which
+    // Flathub's build sandbox has no way to keep out of the public
+    // submission repo (see flatpak/README.md and CLAUDE.md) — so it's not
+    // offered on Linux at all. Asserted relative to Platform.isLinux rather
+    // than a fixed expectation, so this is a genuine check in both places it
+    // matters: passes on a Windows/macOS dev machine, and — since the
+    // unit_tests CI job runs on ubuntu-latest — actually exercises the
+    // isFalse branch for real in CI.
+    test('is false only on Linux', () {
+      expect(GoogleDriveSyncService.isSupported, Platform.isLinux ? isFalse : isTrue);
+    });
+  });
+
   group('GoogleDriveSyncService cross-instance auth sync', () {
     // Regression: the app creates a separate GoogleDriveSyncService instance
     // per consumer (e.g. one for the tray, one for the sign-in page). Auth

@@ -61,11 +61,12 @@ test_certificate.*
 test_private_key.*
 test-signing.keychain*
 
-# OAuth config (DO NOT COMMIT locally — the Flatpak build is the one place
-# this is meant to end up committed; see flatpak/README.md)
+# OAuth config (DO NOT COMMIT — contains a real client secret on
+# Windows/macOS/Android builds; see lib/config/README.md). The Flatpak/Linux
+# build never touches this file at all — it generates its own placeholder
+# copy from the committed template directly, since Drive sync isn't offered
+# on Linux; see flatpak/README.md.
 lib/config/oauth_config.dart
-# CI-generated copy fed to flatpak-builder as a `type: file` source
-flatpak/oauth_config.dart
 # flatpak-flutter/flatpak-builder working artifacts (see build_flatpak in CI)
 flatpak/.flatpak-builder/
 flatpak/generated/

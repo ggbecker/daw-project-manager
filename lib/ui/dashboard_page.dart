@@ -38,7 +38,7 @@ import 'project_detail_page.dart';
 import 'releases_tab_page.dart';
 import 'release_detail_page.dart';
 import 'profile_manager_page.dart';
-import 'project_folders_settings_page.dart';
+import 'settings_page.dart';
 import 'playlists_page.dart';
 import 'google_drive_sync_page.dart';
 import 'statistics_page.dart';
@@ -66,6 +66,7 @@ import '../models/scan_mode.dart';
 import '../models/scan_root.dart';
 import '../models/todo_item.dart';
 import '../providers/providers.dart';
+import '../services/google_drive_sync_service.dart' show GoogleDriveSyncService;
 import '../utils/playback_todo_utils.dart';
 import 'package:uuid/uuid.dart';
 
@@ -1480,8 +1481,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                           context,
                                         )!.notificationSettings,
                                       ),
-                                    // Google Drive sync (hidden when left rail — shown there instead)
-                                    if (!isLeftRail)
+                                    // Google Drive sync (hidden when left rail — shown there instead).
+                                    // Not offered on Linux at all — see
+                                    // GoogleDriveSyncService.isSupported.
+                                    if (!isLeftRail && GoogleDriveSyncService.isSupported)
                                       IconButton(
                                         icon: const Icon(Icons.cloud_outlined),
                                         tooltip: AppLocalizations.of(
@@ -2502,7 +2505,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                                         ).push(
                                                           MaterialPageRoute(
                                                             builder: (_) =>
-                                                                const ProjectFoldersSettingsPage(),
+                                                                const SettingsPage(),
                                                           ),
                                                         );
                                                       },
@@ -2699,9 +2702,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                           ],
                                         ),
                                         const SizedBox(width: 8),
-                                        // Google Drive sync (hidden when left rail — shown there instead)
+                                        // Google Drive sync (hidden when left rail — shown there instead).
+                                        // Not offered on Linux at all — see
+                                        // GoogleDriveSyncService.isSupported.
                                         if (!MobileUtils.isMobile() &&
-                                            !isLeftRail)
+                                            !isLeftRail &&
+                                            GoogleDriveSyncService.isSupported)
                                           Tooltip(
                                             message: AppLocalizations.of(
                                               context,
@@ -3499,23 +3505,26 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                               ),
                                         ),
                                         const SizedBox(height: 8),
-                                        // Google Drive sync
-                                        RailAction(
-                                          icon: const Icon(
-                                            Icons.cloud_outlined,
-                                          ),
-                                          label: AppLocalizations.of(
-                                            context,
-                                          )!.googleDrive,
-                                          showLabel: !railCollapsed,
-                                          onPressed: () =>
-                                              Navigator.of(context).push(
-                                                MaterialPageRoute(
-                                                  builder: (_) =>
-                                                      const GoogleDriveSyncPage(),
+                                        // Google Drive sync — not offered on
+                                        // Linux at all, see
+                                        // GoogleDriveSyncService.isSupported.
+                                        if (GoogleDriveSyncService.isSupported)
+                                          RailAction(
+                                            icon: const Icon(
+                                              Icons.cloud_outlined,
+                                            ),
+                                            label: AppLocalizations.of(
+                                              context,
+                                            )!.googleDrive,
+                                            showLabel: !railCollapsed,
+                                            onPressed: () =>
+                                                Navigator.of(context).push(
+                                                  MaterialPageRoute(
+                                                    builder: (_) =>
+                                                        const GoogleDriveSyncPage(),
+                                                  ),
                                                 ),
-                                              ),
-                                        ),
+                                          ),
                                         const SizedBox(height: 8),
                                         // Rescan
                                         RailAction(
@@ -3698,7 +3707,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                               Navigator.of(context).push(
                                                 MaterialPageRoute(
                                                   builder: (_) =>
-                                                      const ProjectFoldersSettingsPage(),
+                                                      const SettingsPage(),
                                                 ),
                                               ),
                                         ),

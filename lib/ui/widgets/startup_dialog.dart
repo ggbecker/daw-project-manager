@@ -5,6 +5,7 @@ import 'package:hive_ce/hive.dart';
 
 import '../../generated/l10n/app_localizations.dart';
 import '../../providers/providers.dart';
+import '../../services/google_drive_sync_service.dart' show GoogleDriveSyncService;
 import '../google_drive_sync_page.dart';
 
 const _kHideStartupDialogKey = 'hideStartupDialog';
@@ -103,13 +104,16 @@ class _StartupDialogState extends ConsumerState<_StartupDialog> {
               subtitle: l10n.startupAddFolderSubtitle,
               onTap: _busy ? null : _addFolder,
             ),
-            const SizedBox(height: 12),
-            _OptionCard(
-              icon: Icons.cloud_download_outlined,
-              title: l10n.startupGoogleDriveTitle,
-              subtitle: l10n.startupGoogleDriveSubtitle,
-              onTap: _busy ? null : _openGoogleDrive,
-            ),
+            // Not offered on Linux at all — see GoogleDriveSyncService.isSupported.
+            if (GoogleDriveSyncService.isSupported) ...[
+              const SizedBox(height: 12),
+              _OptionCard(
+                icon: Icons.cloud_download_outlined,
+                title: l10n.startupGoogleDriveTitle,
+                subtitle: l10n.startupGoogleDriveSubtitle,
+                onTap: _busy ? null : _openGoogleDrive,
+              ),
+            ],
             const SizedBox(height: 16),
             CheckboxListTile(
               value: _dontShowAgain,

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:file_picker/file_picker.dart';
+import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:path/path.dart' as p;
 import '../models/music_project.dart';
 import '../models/scan_root.dart';
@@ -10,6 +11,9 @@ import '../models/release.dart';
 import '../models/release_file.dart';
 import '../models/profile.dart';
 import '../models/todo_item.dart';
+import '../models/todo_template.dart';
+import '../models/project_template.dart';
+import '../models/template_root.dart';
 import '../repository/project_repository.dart';
 import '../repository/profile_repository.dart';
 import '../utils/app_paths.dart';
@@ -30,9 +34,25 @@ class BackupService {
       final releases = projectRepo.getAllReleases();
       final profile = profileRepo.getProfileById(profileId);
 
+      // Globally-scoped user data (not per-profile). Drive sync has always
+      // included these; a local backup that omitted them meant anyone without
+      // Drive — notably Linux, where Drive sync is unavailable — had no way to
+      // back up their templates or phase customization at all.
+      final templates = await _readGlobalTemplates();
+      final projectTemplates = await _readGlobalProjectTemplates();
+      final templateRoots = await _readGlobalTemplateRoots();
+      final customMixdownFolders = await _readCustomMixdownFolders();
+      // Unlike Drive (which stores a byProfile map for every profile), a local
+      // backup covers a single profile, so only that profile's phase settings
+      // are relevant here.
+      final phaseSettings = await _readPhaseSettings(profileId);
+
       // Create backup data structure
       final backupData = {
-        'version': '1.0',
+        // 1.1 added templates/projectTemplates/templateRoots/
+        // customMixdownFolders/phaseSettings. Importing a 1.0 file still works
+        // — every new key is read with a null check on the way back in.
+        'version': '1.1',
         'exportDate': DateTime.now().toIso8601String(),
         'profileId': profileId,
         'profile': profile != null ? await _profileToJson(profile) : null,
@@ -40,6 +60,11 @@ class BackupService {
         'roots': roots.map((r) => _rootToJson(r)).toList(),
         'ignoredPaths': ignoredPaths.map((ip) => _ignoredPathToJson(ip)).toList(),
         'releases': await Future.wait(releases.map((r) => _releaseToJson(r))),
+        'templates': templates.map(_todoTemplateToJson).toList(),
+        'projectTemplates': projectTemplates.map(_projectTemplateToJson).toList(),
+        'templateRoots': templateRoots.map(_templateRootToJson).toList(),
+        'customMixdownFolders': customMixdownFolders,
+        'phaseSettings': phaseSettings,
       };
 
       // Convert to JSON
@@ -158,6 +183,49 @@ class BackupService {
         }
       }
 
+      // Import global (non-per-profile) data — added in backup version 1.1.
+      // Absent entirely on a 1.0 file, so every block below is a no-op there.
+      final importedTemplates = <TodoTemplate>[];
+      if (backupData['templates'] != null) {
+        for (final templateJson in backupData['templates'] as List) {
+          try {
+            importedTemplates.add(_todoTemplateFromJson(templateJson as Map<String, dynamic>));
+          } catch (e) {
+            continue;
+          }
+        }
+      }
+
+      final importedProjectTemplates = <ProjectTemplate>[];
+      if (backupData['projectTemplates'] != null) {
+        for (final templateJson in backupData['projectTemplates'] as List) {
+          try {
+            importedProjectTemplates.add(_projectTemplateFromJson(templateJson as Map<String, dynamic>));
+          } catch (e) {
+            continue;
+          }
+        }
+      }
+
+      final importedTemplateRoots = <TemplateRoot>[];
+      if (backupData['templateRoots'] != null) {
+        for (final rootJson in backupData['templateRoots'] as List) {
+          try {
+            importedTemplateRoots.add(_templateRootFromJson(rootJson as Map<String, dynamic>));
+          } catch (e) {
+            continue;
+          }
+        }
+      }
+
+      final importedCustomMixdownFolders = (backupData['customMixdownFolders'] as List?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const <String>[];
+
+      final importedPhaseSettings =
+          (backupData['phaseSettings'] as Map?)?.cast<String, dynamic>() ?? const <String, dynamic>{};
+
       // Apply import based on mode
       ProjectRepository targetRepo;
       String targetProfileId;
@@ -226,6 +294,17 @@ class BackupService {
         await targetRepo.updateRelease(release);
       }
 
+      // Restore global (non-per-profile) data. These boxes are shared across
+      // every profile, so — unlike the per-profile data above — writing them
+      // is never gated on importMode being merge vs. createNewProfile; the
+      // only mode-sensitive behavior is Replace clearing each box first, same
+      // as targetRepo.clearAllData() does for the per-profile boxes above.
+      await _writeGlobalTemplates(importedTemplates, importMode);
+      await _writeGlobalProjectTemplates(importedProjectTemplates, importMode);
+      await _writeGlobalTemplateRoots(importedTemplateRoots, importMode);
+      await _writeCustomMixdownFolders(importedCustomMixdownFolders);
+      await _writePhaseSettings(targetProfileId, importedPhaseSettings);
+
       // Restore profile photo if embedded in backup
       final profileJson = backupData['profile'] as Map<String, dynamic>?;
       if (profileJson != null) {
@@ -253,6 +332,8 @@ class BackupService {
         rootsCount: importedRoots.length,
         ignoredPathsCount: importedIgnoredPaths.length,
         releasesCount: importedReleases.length,
+        templatesCount: importedTemplates.length,
+        projectTemplatesCount: importedProjectTemplates.length,
         newProfileId: createdProfileId,
       );
     } catch (e) {
@@ -260,10 +341,230 @@ class BackupService {
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Global (non-per-profile) user data.
+  //
+  // These live in their own top-level Hive boxes rather than behind
+  // ProjectRepository, so they're read/written directly here. Every read is
+  // failure-tolerant and returns an empty result: a box that can't be opened
+  // should degrade to "nothing to back up for this section", never abort an
+  // export the user asked for.
+  // ---------------------------------------------------------------------------
+
+  static const String _appSettingsBoxName = 'app_settings';
+  static const String _todoTemplatesBoxName = 'todoTemplates';
+  static const String _projectTemplatesBoxName = 'projectTemplates';
+  static const String _templateRootsBoxName = 'templateRoots';
+  static const String _customMixdownFoldersKey = 'customMixdownFolders';
+
+  static Future<List<TodoTemplate>> _readGlobalTemplates() async {
+    try {
+      final box = await Hive.openBox<TodoTemplate>(_todoTemplatesBoxName);
+      return box.values.toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  static Future<List<ProjectTemplate>> _readGlobalProjectTemplates() async {
+    try {
+      final box = await Hive.openBox<ProjectTemplate>(_projectTemplatesBoxName);
+      return box.values.toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  static Future<List<TemplateRoot>> _readGlobalTemplateRoots() async {
+    try {
+      final box = await Hive.openBox<TemplateRoot>(_templateRootsBoxName);
+      return box.values.toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  static Future<List<String>> _readCustomMixdownFolders() async {
+    try {
+      final box = await Hive.openBox<String>(_appSettingsBoxName);
+      final raw = box.get(_customMixdownFoldersKey);
+      if (raw == null) return const [];
+      return (jsonDecode(raw) as List).map((e) => e.toString()).toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  /// Phase customization for [profileId]: custom phase names, their colors, and
+  /// which phases count as "finished". Keys mirror the ones Drive sync uses so
+  /// the two backup formats stay readable against each other.
+  static Future<Map<String, dynamic>> _readPhaseSettings(String profileId) async {
+    try {
+      final box = await Hive.openBox<String>(_appSettingsBoxName);
+      final phasesRaw = box.get('${profileId}_phases');
+      final colorsRaw = box.get('${profileId}_phase_colors');
+      final finishedRaw = box.get('${profileId}_finished_phases');
+      final legacyFinishedRaw = box.get('${profileId}_finished_phase');
+
+      final settings = <String, dynamic>{};
+      if (phasesRaw != null) settings['phases'] = jsonDecode(phasesRaw);
+      if (colorsRaw != null) settings['phaseColors'] = jsonDecode(colorsRaw);
+      if (finishedRaw != null) {
+        settings['finishedPhases'] = jsonDecode(finishedRaw);
+      } else if (legacyFinishedRaw != null) {
+        // Pre-multi-phase backups stored a single phase name under a
+        // singular key; normalize it to the list shape on the way out.
+        settings['finishedPhases'] = [legacyFinishedRaw];
+      }
+      return settings;
+    } catch (_) {
+      return const {};
+    }
+  }
+
+  static Future<void> _writeGlobalTemplates(
+    List<TodoTemplate> templates,
+    ImportMode importMode,
+  ) async {
+    if (templates.isEmpty) return;
+    try {
+      final box = await Hive.openBox<TodoTemplate>(_todoTemplatesBoxName);
+      if (importMode == ImportMode.replace) await box.clear();
+      for (final template in templates) {
+        // Keyed by id so a re-import updates in place instead of duplicating.
+        await box.put(template.id, template);
+      }
+    } catch (_) {
+      // A failed template restore shouldn't fail the whole import — the
+      // projects/releases the user actually came for are already in.
+    }
+  }
+
+  static Future<void> _writeGlobalProjectTemplates(
+    List<ProjectTemplate> templates,
+    ImportMode importMode,
+  ) async {
+    if (templates.isEmpty) return;
+    try {
+      final box = await Hive.openBox<ProjectTemplate>(_projectTemplatesBoxName);
+      if (importMode == ImportMode.replace) await box.clear();
+      for (final template in templates) {
+        await box.put(template.id, template);
+      }
+    } catch (_) {}
+  }
+
+  static Future<void> _writeGlobalTemplateRoots(
+    List<TemplateRoot> roots,
+    ImportMode importMode,
+  ) async {
+    if (roots.isEmpty) return;
+    try {
+      final box = await Hive.openBox<TemplateRoot>(_templateRootsBoxName);
+      if (importMode == ImportMode.replace) await box.clear();
+      for (final root in roots) {
+        await box.put(root.id, root);
+      }
+    } catch (_) {}
+  }
+
+  /// Merges [folders] into the stored custom mixdown folder names. Union rather
+  /// than overwrite, matching how Drive sync merges the same preference — these
+  /// are additive folder names, so losing a local one to an older backup would
+  /// be surprising.
+  static Future<void> _writeCustomMixdownFolders(List<String> folders) async {
+    if (folders.isEmpty) return;
+    try {
+      final box = await Hive.openBox<String>(_appSettingsBoxName);
+      final existingRaw = box.get(_customMixdownFoldersKey);
+      final merged = <String>{
+        if (existingRaw != null)
+          ...(jsonDecode(existingRaw) as List).map((e) => e.toString()),
+        ...folders,
+      };
+      await box.put(_customMixdownFoldersKey, jsonEncode(merged.toList()));
+    } catch (_) {}
+  }
+
+  static Future<void> _writePhaseSettings(
+    String profileId,
+    Map<String, dynamic> settings,
+  ) async {
+    if (settings.isEmpty) return;
+    try {
+      final box = await Hive.openBox<String>(_appSettingsBoxName);
+      if (settings['phases'] != null) {
+        await box.put('${profileId}_phases', jsonEncode(settings['phases']));
+      }
+      if (settings['phaseColors'] != null) {
+        await box.put('${profileId}_phase_colors', jsonEncode(settings['phaseColors']));
+      }
+      if (settings['finishedPhases'] != null) {
+        await box.put('${profileId}_finished_phases', jsonEncode(settings['finishedPhases']));
+      }
+    } catch (_) {}
+  }
+
+  // Global-data read/write — exposed for testing so a test can drive the
+  // actual Hive box interaction (merge vs. replace semantics, box-not-openable
+  // fallbacks) rather than only the pure JSON conversion below.
+  @visibleForTesting
+  static Future<List<TodoTemplate>> readGlobalTemplatesForTest() => _readGlobalTemplates();
+  @visibleForTesting
+  static Future<void> writeGlobalTemplatesForTest(List<TodoTemplate> templates, ImportMode mode) =>
+      _writeGlobalTemplates(templates, mode);
+
+  @visibleForTesting
+  static Future<List<ProjectTemplate>> readGlobalProjectTemplatesForTest() =>
+      _readGlobalProjectTemplates();
+  @visibleForTesting
+  static Future<void> writeGlobalProjectTemplatesForTest(
+    List<ProjectTemplate> templates,
+    ImportMode mode,
+  ) =>
+      _writeGlobalProjectTemplates(templates, mode);
+
+  @visibleForTesting
+  static Future<List<TemplateRoot>> readGlobalTemplateRootsForTest() => _readGlobalTemplateRoots();
+  @visibleForTesting
+  static Future<void> writeGlobalTemplateRootsForTest(List<TemplateRoot> roots, ImportMode mode) =>
+      _writeGlobalTemplateRoots(roots, mode);
+
+  @visibleForTesting
+  static Future<List<String>> readCustomMixdownFoldersForTest() => _readCustomMixdownFolders();
+  @visibleForTesting
+  static Future<void> writeCustomMixdownFoldersForTest(List<String> folders) =>
+      _writeCustomMixdownFolders(folders);
+
+  @visibleForTesting
+  static Future<Map<String, dynamic>> readPhaseSettingsForTest(String profileId) =>
+      _readPhaseSettings(profileId);
+  @visibleForTesting
+  static Future<void> writePhaseSettingsForTest(String profileId, Map<String, dynamic> settings) =>
+      _writePhaseSettings(profileId, settings);
+
   // JSON serialization helpers — exposed for testing via the public wrappers below.
   @visibleForTesting
   static Map<String, dynamic> projectToJson(MusicProject project) =>
       _projectToJson(project);
+
+  @visibleForTesting
+  static Map<String, dynamic> todoTemplateToJson(TodoTemplate template) =>
+      _todoTemplateToJson(template);
+  @visibleForTesting
+  static TodoTemplate todoTemplateFromJson(Map<String, dynamic> json) => _todoTemplateFromJson(json);
+
+  @visibleForTesting
+  static Map<String, dynamic> projectTemplateToJson(ProjectTemplate template) =>
+      _projectTemplateToJson(template);
+  @visibleForTesting
+  static ProjectTemplate projectTemplateFromJson(Map<String, dynamic> json) =>
+      _projectTemplateFromJson(json);
+
+  @visibleForTesting
+  static Map<String, dynamic> templateRootToJson(TemplateRoot root) => _templateRootToJson(root);
+  @visibleForTesting
+  static TemplateRoot templateRootFromJson(Map<String, dynamic> json) => _templateRootFromJson(json);
 
   @visibleForTesting
   static MusicProject projectFromJson(Map<String, dynamic> json) =>
@@ -375,6 +676,73 @@ class BackupService {
       id: json['id'] as String? ?? '',
       path: json['path'] as String,
       addedAt: json['addedAt'] != null ? DateTime.parse(json['addedAt'] as String) : DateTime.now(),
+    );
+  }
+
+  static Map<String, dynamic> _todoTemplateToJson(TodoTemplate template) {
+    return {
+      'id': template.id,
+      'name': template.name,
+      'items': template.items,
+      'createdAt': template.createdAt.toIso8601String(),
+      'updatedAt': template.updatedAt.toIso8601String(),
+    };
+  }
+
+  static TodoTemplate _todoTemplateFromJson(Map<String, dynamic> json) {
+    return TodoTemplate(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      items: (json['items'] as List<dynamic>).cast<String>(),
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      updatedAt: DateTime.parse(json['updatedAt'] as String),
+    );
+  }
+
+  static Map<String, dynamic> _projectTemplateToJson(ProjectTemplate template) {
+    return {
+      'id': template.id,
+      'name': template.name,
+      'sourceFolderPath': template.sourceFolderPath,
+      'mainFileRelativePath': template.mainFileRelativePath,
+      'createdAt': template.createdAt.toIso8601String(),
+      'updatedAt': template.updatedAt.toIso8601String(),
+      'bpm': template.bpm,
+      'musicalKey': template.musicalKey,
+      'dawVersion': template.dawVersion,
+    };
+  }
+
+  static ProjectTemplate _projectTemplateFromJson(Map<String, dynamic> json) {
+    return ProjectTemplate(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      sourceFolderPath: json['sourceFolderPath'] as String,
+      mainFileRelativePath: json['mainFileRelativePath'] as String,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      updatedAt: DateTime.parse(json['updatedAt'] as String),
+      bpm: (json['bpm'] as num?)?.toDouble(),
+      musicalKey: json['musicalKey'] as String?,
+      dawVersion: json['dawVersion'] as String?,
+    );
+  }
+
+  static Map<String, dynamic> _templateRootToJson(TemplateRoot root) {
+    return {
+      'id': root.id,
+      'path': root.path,
+      'addedAt': root.addedAt.toIso8601String(),
+      'lastRefreshedAt': root.lastRefreshedAt?.toIso8601String(),
+    };
+  }
+
+  static TemplateRoot _templateRootFromJson(Map<String, dynamic> json) {
+    return TemplateRoot(
+      id: json['id'] as String,
+      path: json['path'] as String,
+      addedAt: DateTime.parse(json['addedAt'] as String),
+      lastRefreshedAt:
+          json['lastRefreshedAt'] != null ? DateTime.parse(json['lastRefreshedAt'] as String) : null,
     );
   }
 
@@ -513,6 +881,8 @@ class ImportResult {
   final int rootsCount;
   final int ignoredPathsCount;
   final int releasesCount;
+  final int templatesCount;
+  final int projectTemplatesCount;
   final String? newProfileId;
 
   ImportResult({
@@ -521,6 +891,8 @@ class ImportResult {
     this.rootsCount = 0,
     this.ignoredPathsCount = 0,
     this.releasesCount = 0,
+    this.templatesCount = 0,
+    this.projectTemplatesCount = 0,
     this.newProfileId,
   });
 }
