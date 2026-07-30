@@ -1513,8 +1513,10 @@ final warnBeforeQuitProvider = NotifierProvider<WarnBeforeQuitNotifier, bool>(
 // ---------------------------------------------------------------------------
 
 /// Whether closing the window (the X button) minimizes the app to the
-/// system tray / menu bar instead of quitting it. Defaults to true so
-/// background services (auto-backup, deadline notifications) keep running.
+/// system tray / menu bar instead of quitting it. Defaults to false — the
+/// window's close button quits the app like any other desktop app unless
+/// the user explicitly opts in to keep background services (auto-backup,
+/// deadline notifications) running after closing it.
 class CloseToTrayNotifier extends Notifier<bool> {
   // Same synchronous-read rationale as WarnBeforeQuitNotifier above — the
   // settings box is guaranteed already open by the time this builds, so
@@ -1530,7 +1532,7 @@ class CloseToTrayNotifier extends Notifier<bool> {
     } catch (e) {
       if (kDebugMode) print('Failed to load closeToTray: $e');
     }
-    return true;
+    return false;
   }
 
   Future<void> set(bool value) async {

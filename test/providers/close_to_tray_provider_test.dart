@@ -54,20 +54,20 @@ void main() {
       expect(container.read(closeToTrayProvider), isTrue);
     });
 
-    test('defaults to true when nothing has been saved yet', () async {
+    test('defaults to false when nothing has been saved yet', () async {
       await Hive.openBox<String>('settings');
 
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
-      expect(container.read(closeToTrayProvider), isTrue);
+      expect(container.read(closeToTrayProvider), isFalse);
     });
 
     test('falls back to the default instead of throwing if the settings box was never opened', () {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
-      expect(container.read(closeToTrayProvider), isTrue);
+      expect(container.read(closeToTrayProvider), isFalse);
     });
   });
 
