@@ -753,7 +753,21 @@ class ProjectRepository {
     Timer? debounceTimer;
 
     void emitCurrent() {
-      final projects = projectsBox.values.toList();
+      // The debounce timer below can fire after this profile's boxes were
+      // closed out from under it — e.g. a fast profile switch, where
+      // repositoryProvider's onDispose closes projectsBox before this
+      // stream's own subscription (on the outgoing allProjectsStreamProvider)
+      // gets cancelled. Touching a closed box throws HiveError, and since
+      // this runs inside a bare Timer callback with no surrounding
+      // try/catch, that becomes an uncaught async exception. Guard instead
+      // of relying on cross-provider disposal ordering.
+      if (!projectsBox.isOpen) return;
+      List<MusicProject> projects;
+      try {
+        projects = projectsBox.values.toList();
+      } catch (_) {
+        return;
+      }
       if (kDebugMode) {
         print('watchAllProjects: emitting ${projects.length} projects for profile $profileId');
       }

@@ -24,7 +24,8 @@ class _OnboardingWizardPageState extends ConsumerState<OnboardingWizardPage> {
   final _controller = PageController();
   int _page = 0;
 
-  // Project-folder management is desktop-only (see project_folders_settings_page.dart).
+  // Project-folder management is desktop-only (see the Project Folders
+  // section of settings_page.dart).
   bool get _showFolders => !MobileUtils.isMobile();
 
   // The startup step is skipped entirely on platforms that have no

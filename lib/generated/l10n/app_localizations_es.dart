@@ -1212,6 +1212,18 @@ class AppLocalizationsEs extends AppLocalizations {
   String get backupAndRestore => 'Respaldo y Restauración';
 
   @override
+  String get backupTabLabel => 'Backup';
+
+  @override
+  String get aboutTabLabel => 'About';
+
+  @override
+  String get localBackup => 'Local Backup';
+
+  @override
+  String get appearanceTabLabel => 'Appearance';
+
+  @override
   String get exportBackup => 'Exportar Respaldo';
 
   @override
@@ -1827,6 +1839,12 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get notSignedInYet => 'Not signed in';
+
+  @override
+  String get never => 'Never';
+
+  @override
   String signedInAs(String email) {
     return 'Conectado como: $email';
   }
@@ -1926,6 +1944,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settings => 'Configuración';
+
+  @override
+  String get searchSettings => 'Search settings';
+
+  @override
+  String noSettingsFoundFor(String query) {
+    return 'No settings found for \"$query\"';
+  }
 
   @override
   String get language => 'Idioma';
@@ -2974,6 +3000,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get customizeTabs => 'Personalizar pestanas';
 
   @override
+  String get alwaysVisible => '(always visible)';
+
+  @override
   String get customizeTabsDescription =>
       'Elige que pestanas mostrar en la barra de navegacion. La pestana Proyectos siempre es visible.';
 
@@ -3494,6 +3523,20 @@ class AppLocalizationsEs extends AppLocalizations {
       'Suscríbete a un proyecto antes de lanzarlo para rastrear el tiempo de trabajo y gestionarlo desde la barra de herramientas';
 
   @override
+  String get workSessionsTabLabel => 'Work Sessions';
+
+  @override
+  String get normalMode => 'Normal Mode';
+
+  @override
+  String get normalModeDescription =>
+      'Projects open directly in their DAW when launched.';
+
+  @override
+  String get sessionModeCardDescription =>
+      'Subscribe first to track work time from the toolbar.';
+
+  @override
   String get startSession => 'Iniciar sesión';
 
   @override
@@ -3796,6 +3839,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Agregar, eliminar y reordenar fases del proyecto';
 
   @override
+  String get phasesDescription =>
+      'Phases track each project\'s stage in your workflow (e.g. Idea → Mixing → Mastering). Drag to reorder, tap a color dot to recolor, and flag a phase as finished to treat it as complete throughout the app.';
+
+  @override
   String get resetToDefaults => 'Restablecer predeterminados';
 
   @override
@@ -3838,6 +3885,10 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get resetPhasesWarningNote =>
       'Esos proyectos conservarán su estado actual pero no aparecerán en los filtros de fase. Siempre puedes volver a añadir esas fases.';
+
+  @override
+  String get resetPhasesConfirm =>
+      'Reset all custom phases, colors, and finished-phase flags back to the defaults?';
 
   @override
   String get camelotGenerateButton => 'Generar mezcla';

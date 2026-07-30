@@ -89,7 +89,7 @@ Instructions for AI assistants working on this codebase.
 | Metadata extractor (BPM, key, DAW version) | `lib/services/metadata_extractor.dart` |
 | Google Drive sync (not available on Linux) | `lib/services/google_drive_sync_service.dart` |
 | Local backup/restore (Linux's only backup path) | `lib/services/backup_service.dart` |
-| Settings hub (data management + links to other settings pages) | `lib/ui/settings_page.dart` |
+| Settings hub — single scrollable page, left nav jumps to section | `lib/ui/settings_page.dart` |
 | Main dashboard | `lib/ui/dashboard_page.dart` |
 | Project detail / editor | `lib/ui/project_detail_page.dart` |
 | Localization strings (source of truth) | `lib/l10n/app_en.arb` |

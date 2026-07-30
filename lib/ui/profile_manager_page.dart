@@ -17,6 +17,7 @@ import 'profile_view_page.dart';
 import '../services/crash_logger.dart';
 import 'package:share_plus/share_plus.dart';
 import 'google_drive_sync_page.dart';
+import 'settings_page.dart';
 import '../services/google_drive_sync_service.dart' show GoogleDriveSyncService;
 import 'widgets/theme_switcher.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -948,7 +949,9 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
                               onPressed: () {
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
-                                    builder: (_) => const GoogleDriveSyncPage(),
+                                    builder: (_) => MobileUtils.isMobile()
+                                        ? const GoogleDriveSyncPage()
+                                        : const SettingsPage(initialSection: SettingsSection.backup),
                                   ),
                                 );
                               },

@@ -1185,6 +1185,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupAndRestore => '备份和恢复';
 
   @override
+  String get backupTabLabel => 'Backup';
+
+  @override
+  String get aboutTabLabel => 'About';
+
+  @override
+  String get localBackup => 'Local Backup';
+
+  @override
+  String get appearanceTabLabel => 'Appearance';
+
+  @override
   String get exportBackup => '导出备份';
 
   @override
@@ -1767,6 +1779,12 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get notSignedInYet => 'Not signed in';
+
+  @override
+  String get never => 'Never';
+
+  @override
   String signedInAs(String email) {
     return '登录为: $email';
   }
@@ -1856,6 +1874,14 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settings => '设置';
+
+  @override
+  String get searchSettings => 'Search settings';
+
+  @override
+  String noSettingsFoundFor(String query) {
+    return 'No settings found for \"$query\"';
+  }
 
   @override
   String get language => '语言';
@@ -2866,6 +2892,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get customizeTabs => '自定义标签页';
 
   @override
+  String get alwaysVisible => '(always visible)';
+
+  @override
   String get customizeTabsDescription => '选择在导航栏中显示哪些标签页。项目标签页始终可见。';
 
   @override
@@ -3365,6 +3394,20 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sessionModeDescription => '启动前订阅项目，以跟踪工作时间并从工具栏管理';
 
   @override
+  String get workSessionsTabLabel => 'Work Sessions';
+
+  @override
+  String get normalMode => 'Normal Mode';
+
+  @override
+  String get normalModeDescription =>
+      'Projects open directly in their DAW when launched.';
+
+  @override
+  String get sessionModeCardDescription =>
+      'Subscribe first to track work time from the toolbar.';
+
+  @override
   String get startSession => '开始会话';
 
   @override
@@ -3645,6 +3688,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get phasesSubtitle => '添加、删除和重新排序项目阶段';
 
   @override
+  String get phasesDescription =>
+      'Phases track each project\'s stage in your workflow (e.g. Idea → Mixing → Mastering). Drag to reorder, tap a color dot to recolor, and flag a phase as finished to treat it as complete throughout the app.';
+
+  @override
   String get resetToDefaults => '恢复默认设置';
 
   @override
@@ -3687,6 +3734,10 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get resetPhasesWarningNote =>
       '这些项目将保留当前状态，但不会出现在阶段筛选器中。您随时可以重新添加这些阶段。';
+
+  @override
+  String get resetPhasesConfirm =>
+      'Reset all custom phases, colors, and finished-phase flags back to the defaults?';
 
   @override
   String get camelotGenerateButton => '生成混音';

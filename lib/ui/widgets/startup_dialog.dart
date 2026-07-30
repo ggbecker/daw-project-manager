@@ -6,7 +6,9 @@ import 'package:hive_ce/hive.dart';
 import '../../generated/l10n/app_localizations.dart';
 import '../../providers/providers.dart';
 import '../../services/google_drive_sync_service.dart' show GoogleDriveSyncService;
+import '../../utils/mobile_utils.dart';
 import '../google_drive_sync_page.dart';
+import '../settings_page.dart';
 
 const _kHideStartupDialogKey = 'hideStartupDialog';
 
@@ -73,7 +75,14 @@ class _StartupDialogState extends ConsumerState<_StartupDialog> {
     await _savePref();
     if (!mounted) return;
     Navigator.pop(context);
-    Navigator.push(context, MaterialPageRoute(builder: (_) => const GoogleDriveSyncPage()));
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MobileUtils.isMobile()
+            ? const GoogleDriveSyncPage()
+            : const SettingsPage(initialSection: SettingsSection.backup),
+      ),
+    );
   }
 
   Future<void> _dismiss() async {

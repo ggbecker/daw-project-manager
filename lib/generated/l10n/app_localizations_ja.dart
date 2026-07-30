@@ -1190,6 +1190,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String get backupAndRestore => 'バックアップと復元';
 
   @override
+  String get backupTabLabel => 'Backup';
+
+  @override
+  String get aboutTabLabel => 'About';
+
+  @override
+  String get localBackup => 'Local Backup';
+
+  @override
+  String get appearanceTabLabel => 'Appearance';
+
+  @override
   String get exportBackup => 'バックアップをエクスポート';
 
   @override
@@ -1787,6 +1799,12 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get notSignedInYet => 'Not signed in';
+
+  @override
+  String get never => 'Never';
+
+  @override
   String signedInAs(String email) {
     return 'サインイン: $email';
   }
@@ -1877,6 +1895,14 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settings => '設定';
+
+  @override
+  String get searchSettings => 'Search settings';
+
+  @override
+  String noSettingsFoundFor(String query) {
+    return 'No settings found for \"$query\"';
+  }
 
   @override
   String get language => '言語';
@@ -2893,6 +2919,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get customizeTabs => 'タブのカスタマイズ';
 
   @override
+  String get alwaysVisible => '(always visible)';
+
+  @override
   String get customizeTabsDescription =>
       'ナビゲーションバーに表示するタブを選択します。プロジェクトタブは常に表示されます。';
 
@@ -3397,6 +3426,20 @@ class AppLocalizationsJa extends AppLocalizations {
   String get sessionModeDescription => '起動前にプロジェクトを購読して、作業時間を追跡し、ツールバーから管理します';
 
   @override
+  String get workSessionsTabLabel => 'Work Sessions';
+
+  @override
+  String get normalMode => 'Normal Mode';
+
+  @override
+  String get normalModeDescription =>
+      'Projects open directly in their DAW when launched.';
+
+  @override
+  String get sessionModeCardDescription =>
+      'Subscribe first to track work time from the toolbar.';
+
+  @override
   String get startSession => 'セッション開始';
 
   @override
@@ -3680,6 +3723,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get phasesSubtitle => 'プロジェクトフェーズの追加・削除・並べ替え';
 
   @override
+  String get phasesDescription =>
+      'Phases track each project\'s stage in your workflow (e.g. Idea → Mixing → Mastering). Drag to reorder, tap a color dot to recolor, and flag a phase as finished to treat it as complete throughout the app.';
+
+  @override
   String get resetToDefaults => 'デフォルトにリセット';
 
   @override
@@ -3722,6 +3769,10 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get resetPhasesWarningNote =>
       'これらのプロジェクトは現在のステータスを保持しますが、フェーズフィルターには表示されません。後でいつでもフェーズを再追加できます。';
+
+  @override
+  String get resetPhasesConfirm =>
+      'Reset all custom phases, colors, and finished-phase flags back to the defaults?';
 
   @override
   String get camelotGenerateButton => 'ミックス生成';

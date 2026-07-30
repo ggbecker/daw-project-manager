@@ -2720,7 +2720,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                                   Navigator.of(context).push(
                                                     MaterialPageRoute(
                                                       builder: (_) =>
-                                                          const GoogleDriveSyncPage(),
+                                                          const SettingsPage(
+                                                        initialSection:
+                                                            SettingsSection.backup,
+                                                      ),
                                                     ),
                                                   ),
                                             ),
@@ -3520,8 +3523,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                             onPressed: () =>
                                                 Navigator.of(context).push(
                                                   MaterialPageRoute(
-                                                    builder: (_) =>
-                                                        const GoogleDriveSyncPage(),
+                                                    builder: (_) => const SettingsPage(
+                                                      initialSection: SettingsSection.backup,
+                                                    ),
                                                   ),
                                                 ),
                                           ),

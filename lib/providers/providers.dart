@@ -82,12 +82,17 @@ final repositoryProvider = FutureProvider<ProjectRepository>((ref) async {
     throw Exception('No active profile found');
   }
   final repo = await ProjectRepository.init(profileRepo);
-  // Close this profile's boxes when the provider rebuilds (profile switch)
-  // or is torn down — otherwise every profile ever visited this session
-  // stays fully resident in memory.
-  ref.onDispose(() {
-    repo.closeBoxes().catchError((_) {});
-  });
+  // Deliberately NOT closing this profile's boxes via ref.onDispose on
+  // profile switch (as a memory optimization once was) — Riverpod keeps
+  // exposing the outgoing FutureProvider's previous value as .value while
+  // the new one loads (AsyncValue's "keep previous data during reload"
+  // behavior), so any build-time code that reads repositoryProvider's
+  // .value synchronously (e.g. dashboard_page.dart's startup-dialog check)
+  // can still be holding this exact repo object after onDispose already
+  // closed its boxes underneath it — a HiveError "Box has already been
+  // closed" thrown mid-build, not from any one call site we can just guard,
+  // but from the dispose timing itself. Every profile visited this session
+  // stays resident in memory as a result; that's the accepted tradeoff.
   return repo;
 });
 

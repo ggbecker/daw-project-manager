@@ -2123,6 +2123,30 @@ abstract class AppLocalizations {
   /// **'Backup & Restore'**
   String get backupAndRestore;
 
+  /// No description provided for @backupTabLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup'**
+  String get backupTabLabel;
+
+  /// No description provided for @aboutTabLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get aboutTabLabel;
+
+  /// No description provided for @localBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Local Backup'**
+  String get localBackup;
+
+  /// No description provided for @appearanceTabLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get appearanceTabLabel;
+
   /// No description provided for @exportBackup.
   ///
   /// In en, this message translates to:
@@ -3011,6 +3035,18 @@ abstract class AppLocalizations {
   /// **'Error downloading backup: {error}'**
   String errorDownloadingBackup(String error);
 
+  /// No description provided for @notSignedInYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not signed in'**
+  String get notSignedInYet;
+
+  /// No description provided for @never.
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get never;
+
   /// No description provided for @signedInAs.
   ///
   /// In en, this message translates to:
@@ -3166,6 +3202,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Settings'**
   String get settings;
+
+  /// No description provided for @searchSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Search settings'**
+  String get searchSettings;
+
+  /// No description provided for @noSettingsFoundFor.
+  ///
+  /// In en, this message translates to:
+  /// **'No settings found for \"{query}\"'**
+  String noSettingsFoundFor(String query);
 
   /// No description provided for @language.
   ///
@@ -4670,7 +4718,7 @@ abstract class AppLocalizations {
   /// No description provided for @noProjectsFoundHint.
   ///
   /// In en, this message translates to:
-  /// **'Add a scan root folder in settings to get started.'**
+  /// **'Add a scan folder in settings to get started.'**
   String get noProjectsFoundHint;
 
   /// No description provided for @queueTab.
@@ -4954,6 +5002,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Customize Tabs'**
   String get customizeTabs;
+
+  /// No description provided for @alwaysVisible.
+  ///
+  /// In en, this message translates to:
+  /// **'(always visible)'**
+  String get alwaysVisible;
 
   /// No description provided for @customizeTabsDescription.
   ///
@@ -5867,6 +5921,30 @@ abstract class AppLocalizations {
   /// **'Subscribe to a project before launching, to track work time and manage it from the toolbar'**
   String get sessionModeDescription;
 
+  /// No description provided for @workSessionsTabLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Work Sessions'**
+  String get workSessionsTabLabel;
+
+  /// No description provided for @normalMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal Mode'**
+  String get normalMode;
+
+  /// No description provided for @normalModeDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Projects open directly in their DAW when launched.'**
+  String get normalModeDescription;
+
+  /// No description provided for @sessionModeCardDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribe first to track work time from the toolbar.'**
+  String get sessionModeCardDescription;
+
   /// No description provided for @startSession.
   ///
   /// In en, this message translates to:
@@ -6395,6 +6473,12 @@ abstract class AppLocalizations {
   /// **'Add, remove, and reorder project phases'**
   String get phasesSubtitle;
 
+  /// No description provided for @phasesDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Phases track each project\'s stage in your workflow (e.g. Idea → Mixing → Mastering). Drag to reorder, tap a color dot to recolor, and flag a phase as finished to treat it as complete throughout the app.'**
+  String get phasesDescription;
+
   /// No description provided for @resetToDefaults.
   ///
   /// In en, this message translates to:
@@ -6448,6 +6532,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Those projects will keep their current status but won\'t appear in phase filters. You can always re-add those phases later.'**
   String get resetPhasesWarningNote;
+
+  /// No description provided for @resetPhasesConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset all custom phases, colors, and finished-phase flags back to the defaults?'**
+  String get resetPhasesConfirm;
 
   /// No description provided for @camelotGenerateButton.
   ///
