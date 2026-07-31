@@ -24,17 +24,17 @@
   <launchable type="desktop-id">com.bandpassrecords.dpm.desktop</launchable>
 
   <!--
-    TODO before Flathub submission: resources/screenshots/**/*.png are 0-byte
-    placeholders right now (see resources/screenshots/README.md). Flathub's
-    validator fetches these URLs and will reject the submission on a broken
-    image. Replace with real captures, then update the URLs below to point at
-    a tagged release (not a moving branch ref) so they don't change under a
-    past review.
+    NOTE: resources/screenshots/dashboard/dashboard-bulk-actions.png,
+    dashboard-customize-tabs.png, and dashboard-filters-search.png are still
+    0-byte placeholders (see resources/screenshots/README.md) — fine for now
+    since nothing below references them, but don't add a <screenshot> for one
+    of them without replacing it with a real capture first; Flathub's
+    validator fetches these URLs and rejects the submission on a broken image.
   -->
   <screenshots>
     <screenshot type="default">
       <caption>Dashboard overview with projects across multiple DAWs</caption>
-      <image>https://raw.githubusercontent.com/bandpassrecords/daw-project-manager/v2.6.2/resources/screenshots/dashboard/dashboard-overview.png</image>
+      <image>https://raw.githubusercontent.com/bandpassrecords/daw-project-manager/@GIT_TAG@/resources/screenshots/dashboard/dashboard-overview.png</image>
     </screenshot>
   </screenshots>
 
@@ -49,11 +49,22 @@
   <content_rating type="oars-1.1" />
 
   <releases>
-    <release version="2.6.2" date="2026-07-29">
+    <!--
+      This entry is regenerated from @APP_VERSION@/@GIT_TAG@/@RELEASE_DATE@
+      on every build (see the daw-project-manager module's build-commands in
+      com.bandpassrecords.dpm.yml), so it always matches whatever tag the
+      build is pinned to — nothing to bump here for the *current* release.
+      What's still manual: once a release actually ships on Flathub, freeze
+      that version's entry with its real values (copy them from a build log,
+      or from `flatpak run com.bandpassrecords.dpm.metainfo.xml` if you have
+      the built one handy) as a new hardcoded <release> block above this one,
+      so the changelog accumulates instead of only ever showing the latest.
+    -->
+    <release version="@APP_VERSION@" date="@RELEASE_DATE@">
       <description>
         <p>See the GitHub release notes for details.</p>
       </description>
-      <url>https://github.com/bandpassrecords/daw-project-manager/releases/tag/v2.6.2</url>
+      <url>https://github.com/bandpassrecords/daw-project-manager/releases/tag/@GIT_TAG@</url>
     </release>
   </releases>
 

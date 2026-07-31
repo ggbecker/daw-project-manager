@@ -99,13 +99,24 @@ modules:
       # directly — no real client ID, no secret, nothing to source from
       # anywhere, unlike Windows/macOS builds.
       - cp lib/config/oauth_config.dart.template lib/config/oauth_config.dart
-      # APP_VERSION is derived from the git tag the app source below is
-      # pinned to (flatpak-builder checks the source out as a real git
-      # clone, so `git describe` sees the tag) — nothing to bump here on
-      # a release. Falls back to 0.0.0 when no tag is reachable, which
-      # matches what the other CI jobs use for untagged PR builds.
+      # APP_VERSION/GIT_TAG/RELEASE_DATE are derived from the git tag the app
+      # source below is pinned to (flatpak-builder checks the source out as a
+      # real git clone, so `git describe`/`git log` see the tag and its
+      # commit date) — nothing to bump by hand on a release. Falls back to
+      # placeholder values when no tag is reachable (untagged PR builds),
+      # matching what the other CI jobs do for APP_VERSION already. The same
+      # values are stamped into the AppStream metainfo (screenshot URL,
+      # <release> version/date/url) via com.bandpassrecords.dpm.metainfo.xml.template
+      # — see that file's own comment for what's still manual (accumulating
+      # past releases into the changelog).
       - APP_VERSION=$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//');
-        flutter build linux --release --no-pub --dart-define=APP_VERSION=${APP_VERSION:-0.0.0}
+        GIT_TAG=$(git describe --tags --abbrev=0 2>/dev/null);
+        RELEASE_DATE=$(git log -1 --format=%cd --date=short 2>/dev/null);
+        flutter build linux --release --no-pub --dart-define=APP_VERSION=${APP_VERSION:-0.0.0};
+        sed -e "s/@APP_VERSION@/${APP_VERSION:-0.0.0}/g"
+            -e "s/@GIT_TAG@/${GIT_TAG:-v0.0.0}/g"
+            -e "s/@RELEASE_DATE@/${RELEASE_DATE:-1970-01-01}/g"
+            flatpak/com.bandpassrecords.dpm.metainfo.xml.template > com.bandpassrecords.dpm.metainfo.xml
       # `flutter build linux` names the bundle directory after the *host*
       # architecture (build/linux/x64/... on x86_64, build/linux/arm64/... on
       # aarch64)
@@ -114,7 +125,7 @@ modules:
         cp -r "$BUNDLE/data" /app/bin/data;
         cp -r "$BUNDLE/lib" /app/bin/lib
       - install -Dm644 flatpak/com.bandpassrecords.dpm.desktop /app/share/applications/com.bandpassrecords.dpm.desktop
-      - install -Dm644 flatpak/com.bandpassrecords.dpm.metainfo.xml /app/share/metainfo/com.bandpassrecords.dpm.metainfo.xml
+      - install -Dm644 com.bandpassrecords.dpm.metainfo.xml /app/share/metainfo/com.bandpassrecords.dpm.metainfo.xml
       - install -Dm644 flatpak/icons/com.bandpassrecords.dpm_128.png /app/share/icons/hicolor/128x128/apps/com.bandpassrecords.dpm.png
       - install -Dm644 flatpak/icons/com.bandpassrecords.dpm_256.png /app/share/icons/hicolor/256x256/apps/com.bandpassrecords.dpm.png
     sources:

@@ -22,7 +22,7 @@ it won't block the other platform builds while that happens).
 |---|---|
 | `com.bandpassrecords.dpm.yml` | The Flatpak manifest — actually a *template* for `flatpak-flutter` (see above), not the final buildable manifest. |
 | `com.bandpassrecords.dpm.desktop` | Desktop entry (app menu, launcher, taskbar). |
-| `com.bandpassrecords.dpm.metainfo.xml` | AppStream metadata Flathub uses for the store listing. Has a `TODO` on the screenshots section — see below. |
+| `com.bandpassrecords.dpm.metainfo.xml.template` | AppStream metadata Flathub uses for the store listing. `@APP_VERSION@`/`@GIT_TAG@`/`@RELEASE_DATE@` are stamped in at build time from the pinned git tag (see the daw-project-manager module's build-commands in `com.bandpassrecords.dpm.yml`) — never edit those by hand, and never install this file directly. |
 | `icons/com.bandpassrecords.dpm_{128,256}.png` | Derived from `app_icon.png`. No scalable/SVG source exists in the repo; Flathub accepts raster-only, but a vector icon is preferred if one ever gets made. |
 
 ## Outstanding blockers before this can be submitted
@@ -157,9 +157,10 @@ this decision — see its own history for what that covers).
 
    Download it from a run **on the actual release tag** you're submitting
    (not a PR run) — that's what makes the manifest's `commit:` match a real,
-   permanent release rather than a moving PR head. Note the CI substitution
-   drops the `tag:` line and keeps only `commit:` (correct for building,
-   just add `tag: vX.Y.Z` back in by hand for readability if you want it).
+   permanent release rather than a moving PR head. On a tag-triggered run the
+   substitution step also keeps a `tag: vX.Y.Z` line alongside `commit:`
+   (a PR run has no tag yet, so it's `commit:`-only there) — nothing to add
+   back by hand.
 
 2. Fork [flathub/flathub](https://github.com/flathub/flathub) and use their
    "New app" request flow to get a repository created at

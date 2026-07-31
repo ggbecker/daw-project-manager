@@ -720,6 +720,10 @@ jobs:
         env:
           REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git
           COMMIT_SHA: ${{ github.sha }}
+          # Only set on an actual tag push — empty on a PR run, where there's
+          # no tag yet to pin to (github.ref_name on a PR is the PR number,
+          # not a tag, so it's deliberately not used there at all).
+          RELEASE_TAG: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || '' }}
         run: |
           # The committed manifest's `git` source is pinned to a release tag,
           # which doesn't exist yet on a PR. flatpak-flutter's own
@@ -727,14 +731,21 @@ jobs:
           # clones the repo itself to inspect pubspec.lock) — a `type: dir`
           # source silently fails deep inside it (confirmed by running this
           # job) — so for CI validation we keep it a git source, just
-          # repointed at this exact commit instead of the pinned tag.
+          # repointed at this exact commit instead of the pinned tag. On a
+          # real release, RELEASE_TAG is also set, so the rewritten manifest
+          # keeps a `tag:` line alongside `commit:` — matching what actually
+          # goes into the Flathub submission — instead of requiring it to be
+          # added back by hand afterward.
           python3 - <<'PY'
           import os, re, pathlib
           p = pathlib.Path("flatpak/com.bandpassrecords.dpm.yml")
           text = p.read_text()
+          tag = os.environ.get("RELEASE_TAG", "")
+          tag_line = f"        tag: {tag}\n" if tag else ""
           replacement = (
               "      - type: git\n"
               f"        url: {os.environ['REPO_URL']}\n"
+              f"{tag_line}"
               f"        commit: {os.environ['COMMIT_SHA']}\n"
           )
           text, n = re.subn(
