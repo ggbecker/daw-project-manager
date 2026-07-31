@@ -76,7 +76,11 @@ To reproduce the same thing locally (Linux/WSL2 only, e.g. to debug a CI
 failure faster than round-tripping through Actions):
 
 ```bash
-git clone --depth 1 https://github.com/TheAppgineer/flatpak-flutter.git /tmp/flatpak-flutter
+# Pin to the same flatpak-flutter release CI uses (FLATPAK_FLUTTER_VERSION in
+# .github/workflows/release.yml) — not master, so an upstream change there
+# can't break this build with no warning. Check that value before running
+# this if it's been a while.
+git clone --depth 1 --branch 0.15.0 https://github.com/TheAppgineer/flatpak-flutter.git /tmp/flatpak-flutter
 pip install -r /tmp/flatpak-flutter/requirements.txt
 cd flatpak
 python3 /tmp/flatpak-flutter/flatpak-flutter.py com.bandpassrecords.dpm.yml

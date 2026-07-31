@@ -18,6 +18,12 @@ on:
 # Variáveis de Configuração
 env:
   FLUTTER_BASE_VERSION: 3.41.9
+  # Pinned instead of tracking flatpak-flutter's master, so an upstream
+  # change there (e.g. a cargokit patch that stops applying, see the long
+  # discussion on Flathub PR #9573) can't break this build with zero
+  # warning — bumping this is a deliberate, reviewable choice instead.
+  # Check https://github.com/TheAppgineer/flatpak-flutter/releases before bumping.
+  FLATPAK_FLUTTER_VERSION: '0.15.0'
 
 # 2. Jobs
 jobs:
@@ -760,7 +766,7 @@ jobs:
 
       - name: Set up flatpak-flutter
         run: |
-          git clone --depth 1 https://github.com/TheAppgineer/flatpak-flutter.git /tmp/flatpak-flutter
+          git clone --depth 1 --branch "$FLATPAK_FLUTTER_VERSION" https://github.com/TheAppgineer/flatpak-flutter.git /tmp/flatpak-flutter
           pip install -r /tmp/flatpak-flutter/requirements.txt
           echo "--- flatpak-flutter.py --help (authoritative CLI contract) ---"
           python3 /tmp/flatpak-flutter/flatpak-flutter.py --help
