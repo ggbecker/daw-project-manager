@@ -27,28 +27,31 @@ it won't block the other platform builds while that happens).
 
 ## Outstanding blockers before this can be submitted
 
-### 1. Domain verification (dpm.bandpassrecords.com)
+### 1. Domain verification (bandpassrecords.com)
 
-The app ID `com.bandpassrecords.dpm` is a domain-based reverse-DNS ID.
-Flathub's website-verification method checks the *exact* subdomain you get by
-reversing the ID component-for-component — `com.bandpassrecords.dpm` reversed
-is `dpm.bandpassrecords.com`, **not** the bare `bandpassrecords.com` — before
-it will publish the app (this happens *after* the PR is merged, via Flathub's
+`com.bandpassrecords.dpm.metainfo.xml` declares `<developer id="com.bandpassrecords">`
+(not just the app's own `com.bandpassrecords.dpm` id), so Flathub verifies at
+the **developer**-id level, not the app-id level — reversing
+`com.bandpassrecords` gives the bare `bandpassrecords.com`, not the
+`dpm.bandpassrecords.com` subdomain this section used to say. (An earlier
+version of this doc assumed app-id-level verification, i.e. the subdomain;
+Flathub's own submission-bot comment on the PR is what confirmed it actually
+checks the bare domain here — trust that live signal over this doc if they
+ever disagree again.) This happens *after* the PR is merged, via Flathub's
 "manage app" verification flow — it doesn't block opening the submission PR,
-but does block it going live). That subdomain is already the site you run for
-this app, so this should be a straightforward upload rather than a new hosting
-setup.
+but does block it going live.
 
-Upload `flatpak/org.flatpak.VerifiedApps.txt` (already created in this
-directory) to:
+Upload the **empty** `flatpak/org.flathub.VerifiedApps.txt` (already created
+in this directory — note it's `org.flathub`, not `org.flatpak`; Flathub's own
+bot comment names the exact filename it's looking for, so re-check that
+against whatever it says if this is ever redone) to:
 
 ```
-https://dpm.bandpassrecords.com/.well-known/org.flatpak.VerifiedApps.txt
+https://bandpassrecords.com/.well-known/org.flathub.VerifiedApps.txt
 ```
 
 Then, on the Flathub developer portal for this app, choose "Website"
-verification and point it at `dpm.bandpassrecords.com` — it checks for that
-file.
+verification and point it at `bandpassrecords.com` — it checks for that file.
 
 ### 2. Screenshots are 0-byte placeholders
 
@@ -164,7 +167,27 @@ this decision — see its own history for what that covers).
 
 3. Push the two items from the artifact into that repo's root (so
    `generated/` sits next to the manifest, matching the relative paths the
-   manifest's sources use), and open the PR.
+   manifest's sources use).
+
+4. **Also add the `shared-modules` submodule at that repo's root** — the
+   `libappindicator` module entry (`shared-modules/libappindicator/libappindicator-gtk3-12.10.json`)
+   isn't something `flatpak-flutter` rewrites or vendors into `generated/`;
+   it's a relative reference straight into this submodule, same as in this
+   directory (see `.gitmodules` at the repo root here). Skipping this step
+   is exactly what produces `flatpak-builder-lint`'s
+   `Failed to load included manifest (.../shared-modules/libappindicator/libappindicator-gtk3-12.10.json): No such file or directory`
+   during the Flathub PR's own CI:
+
+   ```bash
+   git submodule add https://github.com/flathub/shared-modules.git shared-modules
+   git submodule update --init
+   ```
+
+   Pin it to the same commit this repo's `flatpak/shared-modules` is on
+   (`git -C flatpak/shared-modules rev-parse HEAD` from this repo) unless a
+   newer `shared-modules` release is preferred.
+
+5. Open the PR.
 
 4. Their CI builds it and a human reviewer checks the `finish-args` — be
    ready to justify `--share=network` (the GitHub releases update check —
