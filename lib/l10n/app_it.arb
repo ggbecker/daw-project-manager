@@ -2118,6 +2118,30 @@
       "time": { "type": "String" }
     }
   },
+  "autoBackupNextSoon": "a breve",
+  "@autoBackupNextSoon": {},
+  "autoBackupNextInMinutes": "tra {count} min",
+  "@autoBackupNextInMinutes": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "autoBackupNextInOneHour": "tra 1 ora",
+  "@autoBackupNextInOneHour": {},
+  "autoBackupNextInHours": "tra {count} ore",
+  "@autoBackupNextInHours": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "autoBackupNextInOneDay": "tra 1 giorno",
+  "@autoBackupNextInOneDay": {},
+  "autoBackupNextInDays": "tra {count} giorni",
+  "@autoBackupNextInDays": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "playerTitle": "Lettore musicale",
   "playerToggleQueue": "Attiva/disattiva coda",
   "playerSearchHint": "Cerca tracce…",

@@ -5369,6 +5369,42 @@ abstract class AppLocalizations {
   /// **'Next backup: {time}'**
   String autoBackupNextBackup(String time);
 
+  /// No description provided for @autoBackupNextSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'soon'**
+  String get autoBackupNextSoon;
+
+  /// No description provided for @autoBackupNextInMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'in {count} min'**
+  String autoBackupNextInMinutes(int count);
+
+  /// No description provided for @autoBackupNextInOneHour.
+  ///
+  /// In en, this message translates to:
+  /// **'in 1 hour'**
+  String get autoBackupNextInOneHour;
+
+  /// No description provided for @autoBackupNextInHours.
+  ///
+  /// In en, this message translates to:
+  /// **'in {count} hours'**
+  String autoBackupNextInHours(int count);
+
+  /// No description provided for @autoBackupNextInOneDay.
+  ///
+  /// In en, this message translates to:
+  /// **'in 1 day'**
+  String get autoBackupNextInOneDay;
+
+  /// No description provided for @autoBackupNextInDays.
+  ///
+  /// In en, this message translates to:
+  /// **'in {count} days'**
+  String autoBackupNextInDays(int count);
+
   /// No description provided for @playerTitle.
   ///
   /// In en, this message translates to:

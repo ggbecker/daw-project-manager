@@ -1168,16 +1168,30 @@ class _GoogleDriveSyncSectionState extends ConsumerState<GoogleDriveSyncSection>
                     ),
                   ],
                 ),
-                if (ref.watch(autoBackupIntervalProvider) != AutoBackupInterval.off && _lastUploadTime != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4.0),
-                    child: Text(
-                      l10n.autoBackupNextBackup(
-                        _nextBackupLabel(ref.watch(autoBackupIntervalProvider), _lastUploadTime!),
+                Builder(builder: (context) {
+                  // _lastUploadTime starts null while timestamps are still
+                  // loading, so this line would otherwise pop in/out (and
+                  // resize the card) once it resolves. maintainSize keeps its
+                  // footprint reserved the whole time, same as the Status row
+                  // above.
+                  final interval = ref.watch(autoBackupIntervalProvider);
+                  final showNextBackup = interval != AutoBackupInterval.off && _lastUploadTime != null;
+                  return Visibility(
+                    visible: showNextBackup,
+                    maintainSize: true,
+                    maintainAnimation: true,
+                    maintainState: true,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 4.0),
+                      child: Text(
+                        showNextBackup
+                            ? l10n.autoBackupNextBackup(_nextBackupLabel(l10n, interval, _lastUploadTime!))
+                            : '',
+                        style: Theme.of(context).textTheme.bodySmall,
                       ),
-                      style: Theme.of(context).textTheme.bodySmall,
                     ),
-                  ),
+                  );
+                }),
                 const Divider(height: 24),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
@@ -1199,15 +1213,15 @@ class _GoogleDriveSyncSectionState extends ConsumerState<GoogleDriveSyncSection>
     );
   }
 
-  String _nextBackupLabel(AutoBackupInterval interval, DateTime lastUpload) {
+  String _nextBackupLabel(AppLocalizations l10n, AutoBackupInterval interval, DateTime lastUpload) {
     final next = lastUpload.add(interval.duration!);
     final diff = next.difference(DateTime.now());
-    if (diff.isNegative || diff.inSeconds < 30) return 'soon';
-    if (diff.inMinutes < 60) return 'in ${diff.inMinutes} min';
-    if (diff.inHours == 1) return 'in 1 hour';
-    if (diff.inHours < 24) return 'in ${diff.inHours} hours';
-    if (diff.inDays == 1) return 'in 1 day';
-    return 'in ${diff.inDays} days';
+    if (diff.isNegative || diff.inSeconds < 30) return l10n.autoBackupNextSoon;
+    if (diff.inMinutes < 60) return l10n.autoBackupNextInMinutes(diff.inMinutes);
+    if (diff.inHours == 1) return l10n.autoBackupNextInOneHour;
+    if (diff.inHours < 24) return l10n.autoBackupNextInHours(diff.inHours);
+    if (diff.inDays == 1) return l10n.autoBackupNextInOneDay;
+    return l10n.autoBackupNextInDays(diff.inDays);
   }
 }
 

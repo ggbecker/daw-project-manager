@@ -2142,6 +2142,30 @@
       "time": { "type": "String" }
     }
   },
+  "autoBackupNextSoon": "em breve",
+  "@autoBackupNextSoon": {},
+  "autoBackupNextInMinutes": "em {count} min",
+  "@autoBackupNextInMinutes": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "autoBackupNextInOneHour": "em 1 hora",
+  "@autoBackupNextInOneHour": {},
+  "autoBackupNextInHours": "em {count} horas",
+  "@autoBackupNextInHours": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "autoBackupNextInOneDay": "em 1 dia",
+  "@autoBackupNextInOneDay": {},
+  "autoBackupNextInDays": "em {count} dias",
+  "@autoBackupNextInDays": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "playerTitle": "Reprodutor de Música",
   "playerToggleQueue": "Alternar fila",
   "playerSearchHint": "Pesquisar faixas…",

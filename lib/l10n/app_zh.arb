@@ -2118,6 +2118,30 @@
       "time": { "type": "String" }
     }
   },
+  "autoBackupNextSoon": "很快",
+  "@autoBackupNextSoon": {},
+  "autoBackupNextInMinutes": "{count}分钟后",
+  "@autoBackupNextInMinutes": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "autoBackupNextInOneHour": "1小时后",
+  "@autoBackupNextInOneHour": {},
+  "autoBackupNextInHours": "{count}小时后",
+  "@autoBackupNextInHours": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "autoBackupNextInOneDay": "1天后",
+  "@autoBackupNextInOneDay": {},
+  "autoBackupNextInDays": "{count}天后",
+  "@autoBackupNextInDays": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "playerTitle": "音乐播放器",
   "playerToggleQueue": "切换队列",
   "playerSearchHint": "搜索曲目…",

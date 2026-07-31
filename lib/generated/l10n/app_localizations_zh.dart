@@ -3081,6 +3081,30 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get autoBackupNextSoon => '很快';
+
+  @override
+  String autoBackupNextInMinutes(int count) {
+    return '$count分钟后';
+  }
+
+  @override
+  String get autoBackupNextInOneHour => '1小时后';
+
+  @override
+  String autoBackupNextInHours(int count) {
+    return '$count小时后';
+  }
+
+  @override
+  String get autoBackupNextInOneDay => '1天后';
+
+  @override
+  String autoBackupNextInDays(int count) {
+    return '$count天后';
+  }
+
+  @override
   String get playerTitle => '音乐播放器';
 
   @override

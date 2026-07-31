@@ -3184,6 +3184,30 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get autoBackupNextSoon => 'скоро';
+
+  @override
+  String autoBackupNextInMinutes(int count) {
+    return 'через $count мин';
+  }
+
+  @override
+  String get autoBackupNextInOneHour => 'через 1 час';
+
+  @override
+  String autoBackupNextInHours(int count) {
+    return 'через $count ч';
+  }
+
+  @override
+  String get autoBackupNextInOneDay => 'через 1 день';
+
+  @override
+  String autoBackupNextInDays(int count) {
+    return 'через $count дн.';
+  }
+
+  @override
   String get playerTitle => 'Музыкальный плеер';
 
   @override

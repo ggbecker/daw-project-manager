@@ -3211,6 +3211,30 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get autoBackupNextSoon => 'bientôt';
+
+  @override
+  String autoBackupNextInMinutes(int count) {
+    return 'dans $count min';
+  }
+
+  @override
+  String get autoBackupNextInOneHour => 'dans 1 heure';
+
+  @override
+  String autoBackupNextInHours(int count) {
+    return 'dans $count heures';
+  }
+
+  @override
+  String get autoBackupNextInOneDay => 'dans 1 jour';
+
+  @override
+  String autoBackupNextInDays(int count) {
+    return 'dans $count jours';
+  }
+
+  @override
   String get playerTitle => 'Lecteur de musique';
 
   @override

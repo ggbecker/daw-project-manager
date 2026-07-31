@@ -2118,6 +2118,30 @@
       "time": { "type": "String" }
     }
   },
+  "autoBackupNextSoon": "まもなく",
+  "@autoBackupNextSoon": {},
+  "autoBackupNextInMinutes": "あと{count}分",
+  "@autoBackupNextInMinutes": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "autoBackupNextInOneHour": "あと1時間",
+  "@autoBackupNextInOneHour": {},
+  "autoBackupNextInHours": "あと{count}時間",
+  "@autoBackupNextInHours": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "autoBackupNextInOneDay": "あと1日",
+  "@autoBackupNextInOneDay": {},
+  "autoBackupNextInDays": "あと{count}日",
+  "@autoBackupNextInDays": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "playerTitle": "ミュージックプレイヤー",
   "playerToggleQueue": "キューを切り替え",
   "playerSearchHint": "トラックを検索…",

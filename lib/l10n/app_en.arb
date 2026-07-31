@@ -3232,6 +3232,30 @@
       "time": { "type": "String" }
     }
   },
+  "autoBackupNextSoon": "soon",
+  "@autoBackupNextSoon": {},
+  "autoBackupNextInMinutes": "in {count} min",
+  "@autoBackupNextInMinutes": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "autoBackupNextInOneHour": "in 1 hour",
+  "@autoBackupNextInOneHour": {},
+  "autoBackupNextInHours": "in {count} hours",
+  "@autoBackupNextInHours": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "autoBackupNextInOneDay": "in 1 day",
+  "@autoBackupNextInOneDay": {},
+  "autoBackupNextInDays": "in {count} days",
+  "@autoBackupNextInDays": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "playerTitle": "Music Player",
   "@playerTitle": {},
   "playerToggleQueue": "Toggle queue",

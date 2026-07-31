@@ -3112,6 +3112,30 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get autoBackupNextSoon => 'まもなく';
+
+  @override
+  String autoBackupNextInMinutes(int count) {
+    return 'あと$count分';
+  }
+
+  @override
+  String get autoBackupNextInOneHour => 'あと1時間';
+
+  @override
+  String autoBackupNextInHours(int count) {
+    return 'あと$count時間';
+  }
+
+  @override
+  String get autoBackupNextInOneDay => 'あと1日';
+
+  @override
+  String autoBackupNextInDays(int count) {
+    return 'あと$count日';
+  }
+
+  @override
   String get playerTitle => 'ミュージックプレイヤー';
 
   @override

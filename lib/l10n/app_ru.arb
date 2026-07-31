@@ -2118,6 +2118,30 @@
       "time": { "type": "String" }
     }
   },
+  "autoBackupNextSoon": "скоро",
+  "@autoBackupNextSoon": {},
+  "autoBackupNextInMinutes": "через {count} мин",
+  "@autoBackupNextInMinutes": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "autoBackupNextInOneHour": "через 1 час",
+  "@autoBackupNextInOneHour": {},
+  "autoBackupNextInHours": "через {count} ч",
+  "@autoBackupNextInHours": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "autoBackupNextInOneDay": "через 1 день",
+  "@autoBackupNextInOneDay": {},
+  "autoBackupNextInDays": "через {count} дн.",
+  "@autoBackupNextInDays": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "playerTitle": "Музыкальный плеер",
   "playerToggleQueue": "Переключить очередь",
   "playerSearchHint": "Поиск треков…",
