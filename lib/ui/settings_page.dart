@@ -863,7 +863,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         _SearchEntry(7, Icons.delete_sweep_rounded, l10n.deleteAllData, l10n.deleteAllDataSubtitle),
         _SearchEntry(8, Icons.keyboard_outlined, l10n.keyboardShortcuts, null),
         _SearchEntry(9, Icons.info_outline, l10n.aboutTabLabel, l10n.appDescription),
-        _SearchEntry(9, Icons.system_update_alt_outlined, l10n.checkForUpdates, l10n.checkForUpdatesDescription),
+        if (UpdateCheckService.isSupported)
+          _SearchEntry(9, Icons.system_update_alt_outlined, l10n.checkForUpdates, l10n.checkForUpdatesDescription),
         _SearchEntry(9, Icons.favorite, l10n.donate, null),
         _SearchEntry(9, Icons.web, l10n.website, null),
         _SearchEntry(9, Icons.menu_book_outlined, l10n.menuDocumentation, null),
@@ -2161,65 +2162,70 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             ),
           ),
         ),
-        const SizedBox(height: 12),
-        Card(
-          clipBehavior: Clip.antiAlias,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.system_update_alt_outlined),
-                    const SizedBox(width: 10),
-                    Text(l10n.checkForUpdates, style: Theme.of(context).textTheme.titleMedium),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                SwitchListTile(
-                  value: ref.watch(checkForUpdatesProvider),
-                  onChanged: (v) => ref.read(checkForUpdatesProvider.notifier).toggle(),
-                  title: Text(l10n.checkForUpdates),
-                  subtitle: Text(l10n.checkForUpdatesDescription,
-                      style: Theme.of(context).textTheme.bodySmall),
-                  contentPadding: EdgeInsets.zero,
-                  dense: true,
-                ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton.icon(
-                    onPressed: _checkingUpdate
-                        ? null
-                        : () async {
-                            setState(() => _checkingUpdate = true);
-                            final result = await UpdateCheckService.checkForUpdate(appVersion);
-                            if (!mounted) return;
-                            setState(() => _checkingUpdate = false);
-                            if (result != null) {
-                              ref.read(availableUpdateProvider.notifier).set(result);
-                              UpdateAvailableDialog.show(context, result);
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(l10n.upToDate)),
-                              );
-                            }
-                          },
-                    icon: _checkingUpdate
-                        ? const SizedBox(
-                            width: 14,
-                            height: 14,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.refresh, size: 16),
-                    label: Text(l10n.checkNow),
-                    style: TextButton.styleFrom(padding: EdgeInsets.zero),
+        // Hidden on Linux: Flathub owns update delivery there, and the
+        // GitHub-release-page link this points to isn't the right place to
+        // send a Flatpak user anyway — see UpdateCheckService.isSupported.
+        if (UpdateCheckService.isSupported) ...[
+          const SizedBox(height: 12),
+          Card(
+            clipBehavior: Clip.antiAlias,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.system_update_alt_outlined),
+                      const SizedBox(width: 10),
+                      Text(l10n.checkForUpdates, style: Theme.of(context).textTheme.titleMedium),
+                    ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  SwitchListTile(
+                    value: ref.watch(checkForUpdatesProvider),
+                    onChanged: (v) => ref.read(checkForUpdatesProvider.notifier).toggle(),
+                    title: Text(l10n.checkForUpdates),
+                    subtitle: Text(l10n.checkForUpdatesDescription,
+                        style: Theme.of(context).textTheme.bodySmall),
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      onPressed: _checkingUpdate
+                          ? null
+                          : () async {
+                              setState(() => _checkingUpdate = true);
+                              final result = await UpdateCheckService.checkForUpdate(appVersion);
+                              if (!mounted) return;
+                              setState(() => _checkingUpdate = false);
+                              if (result != null) {
+                                ref.read(availableUpdateProvider.notifier).set(result);
+                                UpdateAvailableDialog.show(context, result);
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(l10n.upToDate)),
+                                );
+                              }
+                            },
+                      icon: _checkingUpdate
+                          ? const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.refresh, size: 16),
+                      label: Text(l10n.checkNow),
+                      style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
+        ],
         const SizedBox(height: 12),
         Card(
           clipBehavior: Clip.antiAlias,

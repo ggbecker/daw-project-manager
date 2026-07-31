@@ -9,6 +9,7 @@ import '../generated/l10n/app_localizations.dart';
 import '../providers/providers.dart';
 import '../providers/theme_provider.dart';
 import '../services/auto_start_service.dart';
+import '../services/update_check_service.dart';
 import '../utils/mobile_utils.dart';
 import 'dashboard_page.dart' show DashboardPage;
 import 'widgets/language_switcher.dart';
@@ -32,13 +33,17 @@ class _OnboardingWizardPageState extends ConsumerState<OnboardingWizardPage> {
   // launch-at-login concept (mobile).
   bool get _showStartup => AutoStartService.isSupported;
 
+  // Update checks are skipped entirely on Linux — see
+  // UpdateCheckService.isSupported for why.
+  bool get _showUpdates => UpdateCheckService.isSupported;
+
   List<Widget> _pages(AppLocalizations l10n) => [
         _WelcomePage(l10n: l10n),
         _LanguagePage(l10n: l10n),
         _ThemePage(l10n: l10n),
         _TabsPage(l10n: l10n),
         if (_showFolders) _FoldersPage(l10n: l10n),
-        _UpdatesPage(l10n: l10n),
+        if (_showUpdates) _UpdatesPage(l10n: l10n),
         _SuggestionsPage(l10n: l10n),
         _SessionModePage(l10n: l10n),
         _PhasesPage(l10n: l10n),
@@ -46,8 +51,9 @@ class _OnboardingWizardPageState extends ConsumerState<OnboardingWizardPage> {
         _DonePage(l10n: l10n),
       ];
 
-  // Welcome, Language, Theme, Tabs, [Folders], Updates, Suggestions, SessionMode, Phases, [Startup], Done.
-  int get _totalPages => 9 + (_showFolders ? 1 : 0) + (_showStartup ? 1 : 0);
+  // Welcome, Language, Theme, Tabs, [Folders], [Updates], Suggestions, SessionMode, Phases, [Startup], Done.
+  int get _totalPages =>
+      8 + (_showFolders ? 1 : 0) + (_showUpdates ? 1 : 0) + (_showStartup ? 1 : 0);
 
   @override
   void dispose() {

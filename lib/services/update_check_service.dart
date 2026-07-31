@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
@@ -7,6 +8,16 @@ const String _kGithubOwner = String.fromEnvironment('GITHUB_OWNER', defaultValue
 const String _kGithubRepo  = String.fromEnvironment('GITHUB_REPO',  defaultValue: 'daw-project-manager');
 
 class UpdateCheckService {
+  /// False on Linux — this pings the GitHub releases API and, if newer,
+  /// links out to the release page to download an installer, which is the
+  /// wrong pattern under Flatpak: Flathub already owns update delivery
+  /// (`flatpak update`, the software center), and a GitHub release page
+  /// isn't even the right place to send a Flatpak user. Every UI entry
+  /// point (startup check, Settings, onboarding toggle) is gated on this,
+  /// which is also what lets the Flatpak manifest drop --share=network
+  /// entirely — see flatpak/README.md.
+  static bool get isSupported => !Platform.isLinux;
+
   /// Returns the latest tag name (e.g. "v1.2.3") if it is strictly newer than
   /// [currentVersion], or null if the app is up-to-date or the check fails.
   static Future<String?> checkForUpdate(String currentVersion) async {

@@ -29,19 +29,23 @@ finish-args:
   - --share=ipc
   - --device=dri
 
-  # Update check (lib/services/update_check_service.dart) pings the GitHub
-  # releases API. Google Drive sync — the other thing that would have
-  # needed this — isn't offered on Linux at all; see the long comment on
-  # GoogleDriveSyncService.isSupported for why. That also means this
-  # manifest doesn't need a --talk-name for the Secret Service
-  # (flutter_secure_storage, which only Drive sync used, for OAuth
-  # refresh tokens) — one less permission to justify at review.
-  - --share=network
+  # Deliberately NO --share=network. The two things that would have
+  # needed it are both switched off on Linux instead of granted the
+  # permission: Google Drive sync (GoogleDriveSyncService.isSupported)
+  # and the GitHub-releases update check (UpdateCheckService.isSupported —
+  # redundant under Flatpak anyway, since Flathub already owns update
+  # delivery via `flatpak update`/the software center, and linking a
+  # Flatpak user to a GitHub release page to download an installer isn't
+  # even the right flow for this distribution channel). That also means no
+  # --talk-name for the Secret Service either (flutter_secure_storage,
+  # which only Drive sync used, for OAuth refresh tokens).
 
-  # Deadline reminder notifications (flutter_local_notifications talks to
-  # org.freedesktop.Notifications directly over D-Bus, not through the
-  # notification portal).
-  - --talk-name=org.freedesktop.Notifications
+  # Deadline reminder / work-timer notifications on Linux go through
+  # org.freedesktop.portal.Notification (lib/services/linux_portal_notifier.dart)
+  # instead of flutter_local_notifications' Linux backend, which talks to
+  # org.freedesktop.Notifications directly, bypassing the portal — that's
+  # why there's no --talk-name for notifications here: portal calls need
+  # no special permission, sandboxed or not.
 
   # tray_manager's system tray icon (StatusNotifierItem protocol). Some
   # desktop environments don't run a StatusNotifierWatcher at all — the
@@ -99,18 +103,33 @@ modules:
       # directly — no real client ID, no secret, nothing to source from
       # anywhere, unlike Windows/macOS builds.
       - cp lib/config/oauth_config.dart.template lib/config/oauth_config.dart
-      # APP_VERSION is derived from the git tag the app source below is
-      # pinned to (flatpak-builder checks the source out as a real git
-      # clone, so `git describe` sees the tag) — nothing to bump here on
-      # a release. Falls back to 0.0.0 when no tag is reachable, which
-      # matches what the other CI jobs use for untagged PR builds.
+      # APP_VERSION/GIT_TAG/RELEASE_DATE are derived from the git tag the app
+      # source below is pinned to (flatpak-builder checks the source out as a
+      # real git clone, so `git describe`/`git log` see the tag and its
+      # commit date) — nothing to bump by hand on a release. Falls back to
+      # placeholder values when no tag is reachable (untagged PR builds),
+      # matching what the other CI jobs do for APP_VERSION already. The same
+      # values are stamped into the AppStream metainfo (screenshot URL,
+      # <release> version/date/url) via com.bandpassrecords.dpm.metainfo.xml.template
+      # — see that file's own comment for what's still manual (accumulating
+      # past releases into the changelog).
       - APP_VERSION=$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//');
-        flutter build linux --release --no-pub --dart-define=APP_VERSION=${APP_VERSION:-0.0.0}
-      - install -Dm755 build/linux/x64/release/bundle/daw_project_manager /app/bin/daw_project_manager
-      - cp -r build/linux/x64/release/bundle/data /app/bin/data
-      - cp -r build/linux/x64/release/bundle/lib /app/bin/lib
+        GIT_TAG=$(git describe --tags --abbrev=0 2>/dev/null);
+        RELEASE_DATE=$(git log -1 --format=%cd --date=short 2>/dev/null);
+        flutter build linux --release --no-pub --dart-define=APP_VERSION=${APP_VERSION:-0.0.0};
+        sed -e "s/@APP_VERSION@/${APP_VERSION:-0.0.0}/g"
+            -e "s/@GIT_TAG@/${GIT_TAG:-v0.0.0}/g"
+            -e "s/@RELEASE_DATE@/${RELEASE_DATE:-1970-01-01}/g"
+            flatpak/com.bandpassrecords.dpm.metainfo.xml.template > com.bandpassrecords.dpm.metainfo.xml
+      # `flutter build linux` names the bundle directory after the *host*
+      # architecture (build/linux/x64/... on x86_64, build/linux/arm64/... on
+      # aarch64)
+      - BUNDLE=$(echo build/linux/*/release/bundle);
+        install -Dm755 "$BUNDLE/daw_project_manager" /app/bin/daw_project_manager;
+        cp -r "$BUNDLE/data" /app/bin/data;
+        cp -r "$BUNDLE/lib" /app/bin/lib
       - install -Dm644 flatpak/com.bandpassrecords.dpm.desktop /app/share/applications/com.bandpassrecords.dpm.desktop
-      - install -Dm644 flatpak/com.bandpassrecords.dpm.metainfo.xml /app/share/metainfo/com.bandpassrecords.dpm.metainfo.xml
+      - install -Dm644 com.bandpassrecords.dpm.metainfo.xml /app/share/metainfo/com.bandpassrecords.dpm.metainfo.xml
       - install -Dm644 flatpak/icons/com.bandpassrecords.dpm_128.png /app/share/icons/hicolor/128x128/apps/com.bandpassrecords.dpm.png
       - install -Dm644 flatpak/icons/com.bandpassrecords.dpm_256.png /app/share/icons/hicolor/256x256/apps/com.bandpassrecords.dpm.png
     sources:
@@ -121,13 +140,19 @@ modules:
       # a release needs no manual manifest edits, just merging the bot's PR.
       - type: git
         url: https://github.com/bandpassrecords/daw-project-manager.git
-        # v2.6.2 doesn't exist as a tag yet (it's the release this manifest
-        # is being staged for) — commit: below is still v2.6.1's SHA, since
-        # that's the only real commit to pin to right now. Update it to
-        # v2.6.2's actual commit (`git rev-list -n 1 v2.6.2`) once that tag
-        # is cut; don't submit to Flathub with this mismatch.
-        tag: v2.6.2
-        commit: d61773779679f3137be72d095b4860557c069580
+        # Placeholder — this block is always rewritten before it's actually
+        # used, by the "Point manifest at the exact commit under test" step
+        # in .github/workflows/release.yml's build_flatpak job: a `commit:`
+        # only (PR run, no tag exists yet) or `tag:` + `commit:` together (a
+        # real tag push). That keeps this template from going stale between
+        # releases — it used to hardcode a real tag/commit pair here, which
+        # is exactly the kind of value that's easy to forget to bump.
+        #
+        # Only fill these in for real if you're bypassing that CI step
+        # entirely — e.g. the README's manual "Local build/test" flow — in
+        # which case: tag: vX.Y.Z, commit: <git rev-list -n 1 vX.Y.Z>.
+        tag: PLACEHOLDER_REWRITTEN_BY_CI
+        commit: 0000000000000000000000000000000000000000
         x-checker-data:
           type: git
           tag-pattern: ^v([\d.]+)$

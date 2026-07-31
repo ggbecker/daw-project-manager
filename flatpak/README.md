@@ -22,33 +22,36 @@ it won't block the other platform builds while that happens).
 |---|---|
 | `com.bandpassrecords.dpm.yml` | The Flatpak manifest — actually a *template* for `flatpak-flutter` (see above), not the final buildable manifest. |
 | `com.bandpassrecords.dpm.desktop` | Desktop entry (app menu, launcher, taskbar). |
-| `com.bandpassrecords.dpm.metainfo.xml` | AppStream metadata Flathub uses for the store listing. Has a `TODO` on the screenshots section — see below. |
+| `com.bandpassrecords.dpm.metainfo.xml.template` | AppStream metadata Flathub uses for the store listing. `@APP_VERSION@`/`@GIT_TAG@`/`@RELEASE_DATE@` are stamped in at build time from the pinned git tag (see the daw-project-manager module's build-commands in `com.bandpassrecords.dpm.yml`) — never edit those by hand, and never install this file directly. |
 | `icons/com.bandpassrecords.dpm_{128,256}.png` | Derived from `app_icon.png`. No scalable/SVG source exists in the repo; Flathub accepts raster-only, but a vector icon is preferred if one ever gets made. |
 
 ## Outstanding blockers before this can be submitted
 
-### 1. Domain verification (dpm.bandpassrecords.com)
+### 1. Domain verification (bandpassrecords.com)
 
-The app ID `com.bandpassrecords.dpm` is a domain-based reverse-DNS ID.
-Flathub's website-verification method checks the *exact* subdomain you get by
-reversing the ID component-for-component — `com.bandpassrecords.dpm` reversed
-is `dpm.bandpassrecords.com`, **not** the bare `bandpassrecords.com` — before
-it will publish the app (this happens *after* the PR is merged, via Flathub's
+`com.bandpassrecords.dpm.metainfo.xml` declares `<developer id="com.bandpassrecords">`
+(not just the app's own `com.bandpassrecords.dpm` id), so Flathub verifies at
+the **developer**-id level, not the app-id level — reversing
+`com.bandpassrecords` gives the bare `bandpassrecords.com`, not the
+`dpm.bandpassrecords.com` subdomain this section used to say. (An earlier
+version of this doc assumed app-id-level verification, i.e. the subdomain;
+Flathub's own submission-bot comment on the PR is what confirmed it actually
+checks the bare domain here — trust that live signal over this doc if they
+ever disagree again.) This happens *after* the PR is merged, via Flathub's
 "manage app" verification flow — it doesn't block opening the submission PR,
-but does block it going live). That subdomain is already the site you run for
-this app, so this should be a straightforward upload rather than a new hosting
-setup.
+but does block it going live.
 
-Upload `flatpak/org.flatpak.VerifiedApps.txt` (already created in this
-directory) to:
+Upload the **empty** `flatpak/org.flathub.VerifiedApps.txt` (already created
+in this directory — note it's `org.flathub`, not `org.flatpak`; Flathub's own
+bot comment names the exact filename it's looking for, so re-check that
+against whatever it says if this is ever redone) to:
 
 ```
-https://dpm.bandpassrecords.com/.well-known/org.flatpak.VerifiedApps.txt
+https://bandpassrecords.com/.well-known/org.flathub.VerifiedApps.txt
 ```
 
 Then, on the Flathub developer portal for this app, choose "Website"
-verification and point it at `dpm.bandpassrecords.com` — it checks for that
-file.
+verification and point it at `bandpassrecords.com` — it checks for that file.
 
 ### 2. Screenshots are 0-byte placeholders
 
@@ -73,7 +76,11 @@ To reproduce the same thing locally (Linux/WSL2 only, e.g. to debug a CI
 failure faster than round-tripping through Actions):
 
 ```bash
-git clone --depth 1 https://github.com/TheAppgineer/flatpak-flutter.git /tmp/flatpak-flutter
+# Pin to the same flatpak-flutter release CI uses (FLATPAK_FLUTTER_VERSION in
+# .github/workflows/release.yml) — not master, so an upstream change there
+# can't break this build with no warning. Check that value before running
+# this if it's been a while.
+git clone --depth 1 --branch 0.15.0 https://github.com/TheAppgineer/flatpak-flutter.git /tmp/flatpak-flutter
 pip install -r /tmp/flatpak-flutter/requirements.txt
 cd flatpak
 python3 /tmp/flatpak-flutter/flatpak-flutter.py com.bandpassrecords.dpm.yml
@@ -113,7 +120,9 @@ the code):
   Flatpak sandbox is inconsistent across desktop environments; confirm it at
   least degrades gracefully where there's no `StatusNotifierWatcher` running.
 - **Notifications** — confirm deadline reminders actually show up via
-  `org.freedesktop.Notifications`.
+  `org.freedesktop.portal.Notification` (`lib/services/linux_portal_notifier.dart`),
+  now that this goes through the portal instead of
+  `flutter_local_notifications`' Linux backend.
 - **Drag-and-drop** (`desktop_drop`) — there's no mature portal for DnD yet;
   worth confirming dropping a project folder onto the window still works
   sandboxed.
@@ -154,9 +163,10 @@ this decision — see its own history for what that covers).
 
    Download it from a run **on the actual release tag** you're submitting
    (not a PR run) — that's what makes the manifest's `commit:` match a real,
-   permanent release rather than a moving PR head. Note the CI substitution
-   drops the `tag:` line and keeps only `commit:` (correct for building,
-   just add `tag: vX.Y.Z` back in by hand for readability if you want it).
+   permanent release rather than a moving PR head. On a tag-triggered run the
+   substitution step also keeps a `tag: vX.Y.Z` line alongside `commit:`
+   (a PR run has no tag yet, so it's `commit:`-only there) — nothing to add
+   back by hand.
 
 2. Fork [flathub/flathub](https://github.com/flathub/flathub) and use their
    "New app" request flow to get a repository created at
@@ -164,13 +174,35 @@ this decision — see its own history for what that covers).
 
 3. Push the two items from the artifact into that repo's root (so
    `generated/` sits next to the manifest, matching the relative paths the
-   manifest's sources use), and open the PR.
+   manifest's sources use).
 
-4. Their CI builds it and a human reviewer checks the `finish-args` — be
-   ready to justify `--share=network` (the GitHub releases update check —
-   not Drive sync, which isn't offered on Linux) and the D-Bus
-   `--talk-name`s above if asked; the comments already in the manifest cover
-   the reasoning for each.
+4. **Also add the `shared-modules` submodule at that repo's root** — the
+   `libappindicator` module entry (`shared-modules/libappindicator/libappindicator-gtk3-12.10.json`)
+   isn't something `flatpak-flutter` rewrites or vendors into `generated/`;
+   it's a relative reference straight into this submodule, same as in this
+   directory (see `.gitmodules` at the repo root here). Skipping this step
+   is exactly what produces `flatpak-builder-lint`'s
+   `Failed to load included manifest (.../shared-modules/libappindicator/libappindicator-gtk3-12.10.json): No such file or directory`
+   during the Flathub PR's own CI:
+
+   ```bash
+   git submodule add https://github.com/flathub/shared-modules.git shared-modules
+   git submodule update --init
+   ```
+
+   Pin it to the same commit this repo's `flatpak/shared-modules` is on
+   (`git -C flatpak/shared-modules rev-parse HEAD` from this repo) unless a
+   newer `shared-modules` release is preferred.
+
+5. Open the PR.
+
+6. Their CI builds it and a human reviewer checks the `finish-args` — be
+   ready to justify the D-Bus `--talk-name`s above if asked; the comments
+   already in the manifest cover the reasoning for each. There's no
+   `--share=network` to justify — both things that would have needed it
+   (Drive sync, the GitHub-releases update check) are switched off on
+   Linux instead of granted the permission; see
+   `GoogleDriveSyncService.isSupported`/`UpdateCheckService.isSupported`.
 
 Per-release maintenance of the Flathub manifest is nearly hands-off:
 

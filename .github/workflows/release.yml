@@ -18,6 +18,12 @@ on:
 # Variáveis de Configuração
 env:
   FLUTTER_BASE_VERSION: 3.41.9
+  # Pinned instead of tracking flatpak-flutter's master, so an upstream
+  # change there (e.g. a cargokit patch that stops applying, see the long
+  # discussion on Flathub PR #9573) can't break this build with zero
+  # warning — bumping this is a deliberate, reviewable choice instead.
+  # Check https://github.com/TheAppgineer/flatpak-flutter/releases before bumping.
+  FLATPAK_FLUTTER_VERSION: '0.15.0'
 
 # 2. Jobs
 jobs:
@@ -720,6 +726,10 @@ jobs:
         env:
           REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git
           COMMIT_SHA: ${{ github.sha }}
+          # Only set on an actual tag push — empty on a PR run, where there's
+          # no tag yet to pin to (github.ref_name on a PR is the PR number,
+          # not a tag, so it's deliberately not used there at all).
+          RELEASE_TAG: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || '' }}
         run: |
           # The committed manifest's `git` source is pinned to a release tag,
           # which doesn't exist yet on a PR. flatpak-flutter's own
@@ -727,14 +737,21 @@ jobs:
           # clones the repo itself to inspect pubspec.lock) — a `type: dir`
           # source silently fails deep inside it (confirmed by running this
           # job) — so for CI validation we keep it a git source, just
-          # repointed at this exact commit instead of the pinned tag.
+          # repointed at this exact commit instead of the pinned tag. On a
+          # real release, RELEASE_TAG is also set, so the rewritten manifest
+          # keeps a `tag:` line alongside `commit:` — matching what actually
+          # goes into the Flathub submission — instead of requiring it to be
+          # added back by hand afterward.
           python3 - <<'PY'
           import os, re, pathlib
           p = pathlib.Path("flatpak/com.bandpassrecords.dpm.yml")
           text = p.read_text()
+          tag = os.environ.get("RELEASE_TAG", "")
+          tag_line = f"        tag: {tag}\n" if tag else ""
           replacement = (
               "      - type: git\n"
               f"        url: {os.environ['REPO_URL']}\n"
+              f"{tag_line}"
               f"        commit: {os.environ['COMMIT_SHA']}\n"
           )
           text, n = re.subn(
@@ -749,7 +766,7 @@ jobs:
 
       - name: Set up flatpak-flutter
         run: |
-          git clone --depth 1 https://github.com/TheAppgineer/flatpak-flutter.git /tmp/flatpak-flutter
+          git clone --depth 1 --branch "$FLATPAK_FLUTTER_VERSION" https://github.com/TheAppgineer/flatpak-flutter.git /tmp/flatpak-flutter
           pip install -r /tmp/flatpak-flutter/requirements.txt
           echo "--- flatpak-flutter.py --help (authoritative CLI contract) ---"
           python3 /tmp/flatpak-flutter/flatpak-flutter.py --help
