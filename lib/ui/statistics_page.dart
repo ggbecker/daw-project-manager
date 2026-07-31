@@ -54,6 +54,7 @@ class StatisticsPage extends ConsumerStatefulWidget {
 
 class _StatisticsPageState extends ConsumerState<StatisticsPage> {
   MusicProject? _selectedProject;
+  double _historyPanelWidth = 340.0;
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +69,7 @@ class _StatisticsPageState extends ConsumerState<StatisticsPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SizedBox(
-                width: 340,
+                width: _historyPanelWidth,
                 child: _HistoryPanel(
                   selectedProject: _selectedProject,
                   onProjectSelected: (p) =>
@@ -76,7 +77,27 @@ class _StatisticsPageState extends ConsumerState<StatisticsPage> {
                   l10n: l10n,
                 ),
               ),
-              const VerticalDivider(width: 1),
+              // Drag handle to resize the history panel, so long project
+              // names don't have to stay truncated.
+              MouseRegion(
+                cursor: SystemMouseCursors.resizeColumn,
+                child: GestureDetector(
+                  onHorizontalDragUpdate: (details) => setState(() {
+                    _historyPanelWidth = (_historyPanelWidth + details.delta.dx)
+                        .clamp(260.0, constraints.maxWidth - 360.0);
+                  }),
+                  child: Container(
+                    width: 6,
+                    color: Colors.transparent,
+                    child: Center(
+                      child: Container(
+                        width: 1,
+                        color: Theme.of(context).dividerColor,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
               Expanded(
                 flex: 3,
                 child: _ChartsPanel(stats: stats, l10n: l10n),
