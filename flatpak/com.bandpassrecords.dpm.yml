@@ -136,13 +136,19 @@ modules:
       # a release needs no manual manifest edits, just merging the bot's PR.
       - type: git
         url: https://github.com/bandpassrecords/daw-project-manager.git
-        # v2.6.2 doesn't exist as a tag yet (it's the release this manifest
-        # is being staged for) — commit: below is still v2.6.1's SHA, since
-        # that's the only real commit to pin to right now. Update it to
-        # v2.6.2's actual commit (`git rev-list -n 1 v2.6.2`) once that tag
-        # is cut; don't submit to Flathub with this mismatch.
-        tag: v2.6.2
-        commit: d61773779679f3137be72d095b4860557c069580
+        # Placeholder — this block is always rewritten before it's actually
+        # used, by the "Point manifest at the exact commit under test" step
+        # in .github/workflows/release.yml's build_flatpak job: a `commit:`
+        # only (PR run, no tag exists yet) or `tag:` + `commit:` together (a
+        # real tag push). That keeps this template from going stale between
+        # releases — it used to hardcode a real tag/commit pair here, which
+        # is exactly the kind of value that's easy to forget to bump.
+        #
+        # Only fill these in for real if you're bypassing that CI step
+        # entirely — e.g. the README's manual "Local build/test" flow — in
+        # which case: tag: vX.Y.Z, commit: <git rev-list -n 1 vX.Y.Z>.
+        tag: PLACEHOLDER_REWRITTEN_BY_CI
+        commit: 0000000000000000000000000000000000000000
         x-checker-data:
           type: git
           tag-pattern: ^v([\d.]+)$
