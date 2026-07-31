@@ -505,7 +505,7 @@ abstract class AppLocalizations {
   /// No description provided for @switchProfile.
   ///
   /// In en, this message translates to:
-  /// **'Switch Profile'**
+  /// **'Activate Profile'**
   String get switchProfile;
 
   /// No description provided for @edit.
@@ -3227,6 +3227,18 @@ abstract class AppLocalizations {
   /// **'Theme'**
   String get theme;
 
+  /// No description provided for @languageSettingDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'The language used throughout the app.'**
+  String get languageSettingDescription;
+
+  /// No description provided for @themeSettingDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'The app\'s color theme.'**
+  String get themeSettingDescription;
+
   /// No description provided for @support.
   ///
   /// In en, this message translates to:
@@ -4030,6 +4042,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Profile not found'**
   String get profileNotFound;
+
+  /// No description provided for @downloadFilesSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Download Files'**
+  String get downloadFilesSectionTitle;
+
+  /// No description provided for @downloadFilesSectionDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Download all of this profile\'s files — biography, artwork, press kit, and additional assets — as a single ZIP, or select which ones to include.'**
+  String get downloadFilesSectionDescription;
 
   /// Button label to select files
   ///
@@ -4889,6 +4913,30 @@ abstract class AppLocalizations {
   /// **'No custom folders added — DAW defaults will be used.'**
   String get noCustomMixdownFolders;
 
+  /// No description provided for @mixdownFoldersTabLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Mixdown Folders'**
+  String get mixdownFoldersTabLabel;
+
+  /// No description provided for @mixdownFoldersSectionDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Controls which folder the app looks in for a project\'s exported/bounced audio, used as its preview song when none is set manually. Expand a DAW below to see the folder names it already checks by default, and add your own on top of them if your setup uses a different name.'**
+  String get mixdownFoldersSectionDescription;
+
+  /// No description provided for @mixdownFoldersDefaultsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Default folders checked:'**
+  String get mixdownFoldersDefaultsLabel;
+
+  /// No description provided for @mixdownFoldersCustomLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Your additions for this DAW:'**
+  String get mixdownFoldersCustomLabel;
+
   /// No description provided for @dawInfoLabel.
   ///
   /// In en, this message translates to:
@@ -5728,6 +5776,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Organize all your music projects across every DAW in one place.'**
   String get onboardingWelcomeBody;
+
+  /// No description provided for @onboardingFeatureScanFolders.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan DAW project folders automatically'**
+  String get onboardingFeatureScanFolders;
+
+  /// No description provided for @onboardingFeatureTrackMetadata.
+  ///
+  /// In en, this message translates to:
+  /// **'Track BPM, key, status and deadlines'**
+  String get onboardingFeatureTrackMetadata;
+
+  /// No description provided for @onboardingFeatureSyncDrive.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync metadata to Google Drive'**
+  String get onboardingFeatureSyncDrive;
+
+  /// No description provided for @onboardingFeatureTrackTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Track time spent on each project'**
+  String get onboardingFeatureTrackTime;
 
   /// No description provided for @onboardingLanguageTitle.
   ///

@@ -69,7 +69,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get scanning => 'Сканирование…';
 
   @override
-  String get newProjectBadge => 'NEW';
+  String get newProjectBadge => 'НОВОЕ';
 
   @override
   String get projectName => 'Название проекта';
@@ -260,24 +260,25 @@ class AppLocalizationsRu extends AppLocalizations {
       'Сканировать только проекты без метаданных';
 
   @override
-  String get metadataExtractionTitle => 'Metadata Extraction';
+  String get metadataExtractionTitle => 'Извлечение метаданных';
 
   @override
-  String get metadataExtractionSubtitle => 'See which data each DAW supports';
+  String get metadataExtractionSubtitle =>
+      'Посмотрите, какие данные поддерживает каждая DAW';
 
   @override
   String get metadataExtractionIntro =>
       'Deep Scan can automatically read some of these fields straight from a project file — the rest have to be entered by hand. This table shows what\'s automatic for each supported DAW today.';
 
   @override
-  String get metadataFieldKey => 'Key';
+  String get metadataFieldKey => 'Тональность';
 
   @override
-  String get metadataFieldVersion => 'DAW Version';
+  String get metadataFieldVersion => 'Версия DAW';
 
   @override
   String get metadataExtractionManualNote =>
-      'Any field without automatic support can still be entered manually in Project Detail. For BPM and Key specifically, dropping a bpm.txt or key.txt file next to the project is also picked up on the next scan.';
+      'Любое поле без автоматической поддержки можно ввести вручную в деталях проекта. Специально для BPM и тональности: файл bpm.txt или key.txt, помещённый рядом с проектом, также будет обнаружен при следующем сканировании.';
 
   @override
   String get metadataExtractedSuccessfully => 'Метаданные успешно извлечены';
@@ -502,22 +503,22 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get deleteMissingProjects => 'Delete Missing';
+  String get deleteMissingProjects => 'Удалить отсутствующие';
 
   @override
-  String get deleteMissingProjectsTitle => 'Delete missing projects?';
+  String get deleteMissingProjectsTitle => 'Удалить отсутствующие проекты?';
 
   @override
   String deleteMissingProjectsConfirm(int count, String plural) {
-    return '$count project$plural whose file could not be found on this machine will be permanently deleted, along with all notes, deadlines, and session history. This can\'t be undone.';
+    return '$count проект$plural, файл которых не найден на этом компьютере, будут безвозвратно удалены вместе со всеми заметками, сроками и историей сессий. Это действие нельзя отменить.';
   }
 
   @override
-  String get deleteMissingProjectsConfirmButton => 'Delete Permanently';
+  String get deleteMissingProjectsConfirmButton => 'Удалить навсегда';
 
   @override
   String missingProjectsDeleted(int count, String plural) {
-    return '$count missing project$plural deleted.';
+    return 'Удалено $count отсутствующих проект$plural.';
   }
 
   @override
@@ -525,7 +526,7 @@ class AppLocalizationsRu extends AppLocalizations {
     int count,
     String plural,
   ) {
-    return 'Also delete $count project$plural that are part of a release (removes them from that release too)';
+    return 'Также удалить $count проект$plural, входящих в релиз (также удаляет их из этого релиза)';
   }
 
   @override
@@ -857,12 +858,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String addTodoAtTimestamp(String timestamp) {
-    return 'Add todo at $timestamp';
+    return 'Добавить задачу на $timestamp';
   }
 
   @override
   String todoAddedAtTimestamp(String timestamp) {
-    return 'Added todo at $timestamp';
+    return 'Задача добавлена на $timestamp';
   }
 
   @override
@@ -1183,14 +1184,14 @@ class AppLocalizationsRu extends AppLocalizations {
   String get clickToBrowseArtwork => 'Нажмите, чтобы найти обложку';
 
   @override
-  String get dropImageHere => 'Drop image here';
+  String get dropImageHere => 'Перетащите изображение сюда';
 
   @override
-  String get removeArtwork => 'Remove Artwork';
+  String get removeArtwork => 'Удалить обложку';
 
   @override
   String get removeArtworkConfirm =>
-      'Remove this artwork? The image file will be deleted.';
+      'Удалить эту обложку? Файл изображения будет удалён.';
 
   @override
   String get noFilesAddedYet =>
@@ -1206,16 +1207,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get backupAndRestore => 'Резервное копирование и восстановление';
 
   @override
-  String get backupTabLabel => 'Backup';
+  String get backupTabLabel => 'Резервная копия';
 
   @override
-  String get aboutTabLabel => 'About';
+  String get aboutTabLabel => 'О программе';
 
   @override
-  String get localBackup => 'Local Backup';
+  String get localBackup => 'Локальная резервная копия';
 
   @override
-  String get appearanceTabLabel => 'Appearance';
+  String get appearanceTabLabel => 'Внешний вид';
 
   @override
   String get exportBackup => 'Экспорт резервной копии';
@@ -1255,17 +1256,17 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String projectExportExportedLabel(String dateTime) {
-    return 'Exported: $dateTime';
+    return 'Экспортировано: $dateTime';
   }
 
   @override
   String projectExportTotalProjectsLabel(int count) {
-    return 'Total projects: $count';
+    return 'Всего проектов: $count';
   }
 
   @override
   String projectExportProjectLabel(String name) {
-    return 'Project: $name';
+    return 'Проект: $name';
   }
 
   @override
@@ -1280,7 +1281,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String projectExportStatusLabel(String status) {
-    return 'Status: $status';
+    return 'Статус: $status';
   }
 
   @override
@@ -1290,63 +1291,63 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String projectExportKeyLabel(String key) {
-    return 'Key: $key';
+    return 'Тональность: $key';
   }
 
   @override
   String projectExportKeyWithCamelotLabel(String key, String code) {
-    return 'Key: $key (Camelot $code)';
+    return 'Тональность: $key (Camelot $code)';
   }
 
   @override
   String projectExportFilePathLabel(String path) {
-    return 'File path: $path';
+    return 'Путь к файлу: $path';
   }
 
   @override
   String projectExportFileSizeLabel(String size) {
-    return 'File size: $size';
+    return 'Размер файла: $size';
   }
 
   @override
   String projectExportFileCreatedLabel(String date) {
-    return 'File created: $date';
+    return 'Файл создан: $date';
   }
 
   @override
   String projectExportAddedToLibraryLabel(String date) {
-    return 'Added to library: $date';
+    return 'Добавлено в библиотеку: $date';
   }
 
   @override
   String projectExportLastModifiedLabel(String date) {
-    return 'Last modified: $date';
+    return 'Последнее изменение: $date';
   }
 
   @override
   String projectExportDeadlineLabel(String date) {
-    return 'Deadline: $date';
+    return 'Срок: $date';
   }
 
   @override
   String projectExportDeadlineWithStatusLabel(String date, String status) {
-    return 'Deadline: $date ($status)';
+    return 'Срок: $date ($status)';
   }
 
   @override
   String projectExportTotalTimeWorkedLabel(String duration) {
-    return 'Total time worked: $duration';
+    return 'Общее время работы: $duration';
   }
 
   @override
-  String get projectExportNotesLabel => 'Notes:';
+  String get projectExportNotesLabel => 'Заметки:';
 
   @override
-  String get projectExportTodosLabel => 'To-dos:';
+  String get projectExportTodosLabel => 'Задачи:';
 
   @override
   String projectExportWorkSessionsLabel(int count) {
-    return 'Work sessions ($count):';
+    return 'Рабочие сессии ($count):';
   }
 
   @override
@@ -1829,10 +1830,10 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get notSignedInYet => 'Not signed in';
+  String get notSignedInYet => 'Не выполнен вход';
 
   @override
-  String get never => 'Never';
+  String get never => 'Никогда';
 
   @override
   String signedInAs(String email) {
@@ -1935,11 +1936,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settings => 'Настройки';
 
   @override
-  String get searchSettings => 'Search settings';
+  String get searchSettings => 'Поиск по настройкам';
 
   @override
   String noSettingsFoundFor(String query) {
-    return 'No settings found for \"$query\"';
+    return 'Настройки для \"$query\" не найдены';
   }
 
   @override
@@ -1947,6 +1948,13 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get theme => 'Тема';
+
+  @override
+  String get languageSettingDescription =>
+      'Язык, используемый во всём приложении.';
+
+  @override
+  String get themeSettingDescription => 'Цветовая тема приложения.';
 
   @override
   String get support => 'Поддержать';
@@ -2420,6 +2428,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get profileNotFound => 'Профиль не найден';
 
   @override
+  String get downloadFilesSectionTitle => 'Скачать файлы';
+
+  @override
+  String get downloadFilesSectionDescription =>
+      'Скачайте все файлы этого профиля — биографию, обложку, пресс-кит и дополнительные ресурсы — в виде одного ZIP-архива, либо выберите, что включить.';
+
+  @override
   String get selectFiles => 'Выбрать файлы';
 
   @override
@@ -2551,7 +2566,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get switchToNeonTheme => 'Переключить на Neon тему';
 
   @override
-  String get switchToStudioLight => 'Switch to Studio Light';
+  String get switchToStudioLight => 'Переключить на Studio Light';
 
   @override
   String get menuTheme => 'Тема';
@@ -2567,7 +2582,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get classicDarkThemeName => 'Классическая тёмная';
 
   @override
-  String get studioLightThemeName => 'Studio Light';
+  String get studioLightThemeName => 'Студийная светлая';
 
   @override
   String get statisticsTab => 'Статистика';
@@ -2905,6 +2920,19 @@ class AppLocalizationsRu extends AppLocalizations {
       'Пользовательские папки не добавлены — будут использованы значения по умолчанию DAW.';
 
   @override
+  String get mixdownFoldersTabLabel => 'Папки для микса';
+
+  @override
+  String get mixdownFoldersSectionDescription =>
+      'Определяет, в какой папке приложение ищет экспортированное/сведённое аудио проекта, используемое как превью-песня, если она не задана вручную. Разверните DAW ниже, чтобы увидеть имена папок, проверяемые по умолчанию, и добавьте свои, если в вашей настройке используется другое имя.';
+
+  @override
+  String get mixdownFoldersDefaultsLabel => 'Проверяемые по умолчанию папки:';
+
+  @override
+  String get mixdownFoldersCustomLabel => 'Ваши добавления для этой DAW:';
+
+  @override
   String dawInfoLabel(String daw) {
     return 'DAW: $daw';
   }
@@ -2982,7 +3010,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get customizeTabs => 'Настроить вкладки';
 
   @override
-  String get alwaysVisible => '(always visible)';
+  String get alwaysVisible => '(всегда видно)';
 
   @override
   String get customizeTabsDescription =>
@@ -3126,29 +3154,29 @@ class AppLocalizationsRu extends AppLocalizations {
   String get keepCurrent => 'Оставить текущую';
 
   @override
-  String get autoBackup => 'Auto Backup';
+  String get autoBackup => 'Автоматическая резервная копия';
 
   @override
   String get autoBackupDescription =>
-      'Automatically upload a backup to Google Drive at the selected interval.';
+      'Автоматически загружает резервную копию на Google Drive с выбранным интервалом.';
 
   @override
-  String get autoBackupInterval => 'Backup interval';
+  String get autoBackupInterval => 'Интервал резервного копирования';
 
   @override
-  String get autoBackupOff => 'Off';
+  String get autoBackupOff => 'Выкл.';
 
   @override
-  String get autoBackupEvery30Min => 'Every 30 minutes';
+  String get autoBackupEvery30Min => 'Каждые 30 минут';
 
   @override
-  String get autoBackupHourly => 'Every hour';
+  String get autoBackupHourly => 'Каждый час';
 
   @override
-  String get autoBackupEvery6Hours => 'Every 6 hours';
+  String get autoBackupEvery6Hours => 'Каждые 6 часов';
 
   @override
-  String get autoBackupDaily => 'Daily';
+  String get autoBackupDaily => 'Ежедневно';
 
   @override
   String autoBackupNextBackup(String time) {
@@ -3403,6 +3431,22 @@ class AppLocalizationsRu extends AppLocalizations {
       'Управляйте всеми музыкальными проектами в одном месте.';
 
   @override
+  String get onboardingFeatureScanFolders =>
+      'Автоматически сканирует папки проектов DAW';
+
+  @override
+  String get onboardingFeatureTrackMetadata =>
+      'Отслеживает BPM, тональность, статус и сроки';
+
+  @override
+  String get onboardingFeatureSyncDrive =>
+      'Синхронизирует метаданные с Google Drive';
+
+  @override
+  String get onboardingFeatureTrackTime =>
+      'Отслеживает время, потраченное на каждый проект';
+
+  @override
   String get onboardingLanguageTitle => 'Выберите язык';
 
   @override
@@ -3457,7 +3501,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get pause => 'Пауза';
 
   @override
-  String get playPauseTooltip => 'Play / Pause';
+  String get playPauseTooltip => 'Воспроизвести / Пауза';
 
   @override
   String get resume => 'Продолжить';
@@ -3507,18 +3551,18 @@ class AppLocalizationsRu extends AppLocalizations {
       'Подпишитесь на проект перед запуском, чтобы отслеживать рабочее время и управлять им с панели инструментов';
 
   @override
-  String get workSessionsTabLabel => 'Work Sessions';
+  String get workSessionsTabLabel => 'Рабочие сессии';
 
   @override
-  String get normalMode => 'Normal Mode';
+  String get normalMode => 'Обычный режим';
 
   @override
   String get normalModeDescription =>
-      'Projects open directly in their DAW when launched.';
+      'Проекты открываются напрямую в своей DAW при запуске.';
 
   @override
   String get sessionModeCardDescription =>
-      'Subscribe first to track work time from the toolbar.';
+      'Сначала включите, чтобы отслеживать рабочее время через панель инструментов.';
 
   @override
   String get startSession => 'Начать сессию';
@@ -3818,7 +3862,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get phasesDescription =>
-      'Phases track each project\'s stage in your workflow (e.g. Idea → Mixing → Mastering). Drag to reorder, tap a color dot to recolor, and flag a phase as finished to treat it as complete throughout the app.';
+      'Фазы отслеживают этап каждого проекта в вашем рабочем процессе (например, Идея → Сведение → Мастеринг). Перетаскивайте для изменения порядка, нажмите на цветную точку, чтобы изменить цвет, и отметьте фазу как завершённую, чтобы считать её завершённой во всём приложении.';
 
   @override
   String get resetToDefaults => 'Сбросить до стандартных';
@@ -3870,7 +3914,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get resetPhasesConfirm =>
-      'Reset all custom phases, colors, and finished-phase flags back to the defaults?';
+      'Сбросить все пользовательские фазы, цвета и флаги завершённых фаз к значениям по умолчанию?';
 
   @override
   String get camelotGenerateButton => 'Создать микс';
@@ -3942,20 +3986,20 @@ class AppLocalizationsRu extends AppLocalizations {
   String get playerMixSuggestions => 'ПРЕДЛОЖЕНИЯ МИКСА';
 
   @override
-  String get nowPlaying => 'Now Playing';
+  String get nowPlaying => 'Сейчас играет';
 
   @override
-  String get noPreviewSongsAvailable => 'No preview songs available';
+  String get noPreviewSongsAvailable => 'Нет доступных песен для предпросмотра';
 
   @override
   String get upNext => 'Далее';
 
   @override
-  String get playbackModeNormal => 'Normal';
+  String get playbackModeNormal => 'Обычный';
 
   @override
-  String get playbackModeRepeat => 'Repeat';
+  String get playbackModeRepeat => 'Повтор';
 
   @override
-  String get playbackModeShuffle => 'Shuffle';
+  String get playbackModeShuffle => 'Перемешать';
 }

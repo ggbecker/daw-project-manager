@@ -23,7 +23,7 @@
   "rescan": "Повторное сканирование",
   "refreshProject": "Обновить",
   "scanning": "Сканирование…",
-  "newProjectBadge": "NEW",
+  "newProjectBadge": "НОВОЕ",
   "projectName": "Название проекта",
   "bpm": "BPM",
   "key": "Тональность (например: C#m, F мажор)",
@@ -115,12 +115,12 @@
   "tryDifferentSearch": "Попробуйте другой поисковый запрос",
   "deepScanConfirm": "Глубокое сканирование извлекает полные метаданные из файлов проекта:\n• BPM (ударов в минуту)\n• Музыкальная тональность\n• Версия DAW\n• Заметки проекта (только Reaper)\nПоддерживается: Ableton Live, Bitwig Studio, Cubase, Nuendo, FL Studio, MAGDA и Reaper.\n\nЭто медленнее обычного сканирования и может занять некоторое время. Продолжить?",
   "deepScanOnlyUnscanned": "Сканировать только проекты без метаданных",
-  "metadataExtractionTitle": "Metadata Extraction",
-  "metadataExtractionSubtitle": "See which data each DAW supports",
+  "metadataExtractionTitle": "Извлечение метаданных",
+  "metadataExtractionSubtitle": "Посмотрите, какие данные поддерживает каждая DAW",
   "metadataExtractionIntro": "Deep Scan can automatically read some of these fields straight from a project file — the rest have to be entered by hand. This table shows what's automatic for each supported DAW today.",
-  "metadataFieldKey": "Key",
-  "metadataFieldVersion": "DAW Version",
-  "metadataExtractionManualNote": "Any field without automatic support can still be entered manually in Project Detail. For BPM and Key specifically, dropping a bpm.txt or key.txt file next to the project is also picked up on the next scan.",
+  "metadataFieldKey": "Тональность",
+  "metadataFieldVersion": "Версия DAW",
+  "metadataExtractionManualNote": "Любое поле без автоматической поддержки можно ввести вручную в деталях проекта. Специально для BPM и тональности: файл bpm.txt или key.txt, помещённый рядом с проектом, также будет обнаружен при следующем сканировании.",
   "metadataExtractedSuccessfully": "Метаданные успешно извлечены",
   "failedToExtractMetadata": "Ошибка извлечения метаданных: {error}",
   "@failedToExtractMetadata": {
@@ -303,9 +303,9 @@
       }
     }
   },
-  "deleteMissingProjects": "Delete Missing",
-  "deleteMissingProjectsTitle": "Delete missing projects?",
-  "deleteMissingProjectsConfirm": "{count} project{plural} whose file could not be found on this machine will be permanently deleted, along with all notes, deadlines, and session history. This can't be undone.",
+  "deleteMissingProjects": "Удалить отсутствующие",
+  "deleteMissingProjectsTitle": "Удалить отсутствующие проекты?",
+  "deleteMissingProjectsConfirm": "{count} проект{plural}, файл которых не найден на этом компьютере, будут безвозвратно удалены вместе со всеми заметками, сроками и историей сессий. Это действие нельзя отменить.",
   "@deleteMissingProjectsConfirm": {
     "placeholders": {
       "count": {
@@ -316,8 +316,8 @@
       }
     }
   },
-  "deleteMissingProjectsConfirmButton": "Delete Permanently",
-  "missingProjectsDeleted": "{count} missing project{plural} deleted.",
+  "deleteMissingProjectsConfirmButton": "Удалить навсегда",
+  "missingProjectsDeleted": "Удалено {count} отсутствующих проект{plural}.",
   "@missingProjectsDeleted": {
     "placeholders": {
       "count": {
@@ -328,7 +328,7 @@
       }
     }
   },
-  "deleteMissingProjectsAlsoDeleteReleaseTracked": "Also delete {count} project{plural} that are part of a release (removes them from that release too)",
+  "deleteMissingProjectsAlsoDeleteReleaseTracked": "Также удалить {count} проект{plural}, входящих в релиз (также удаляет их из этого релиза)",
   "@deleteMissingProjectsAlsoDeleteReleaseTracked": {
     "placeholders": {
       "count": {
@@ -699,8 +699,8 @@
   "enterTodoText": "Введите текст задачи",
   "addNewTodo": "Добавить новую задачу",
   "enterTodoItem": "Введите элемент задачи",
-  "addTodoAtTimestamp": "Add todo at {timestamp}",
-  "todoAddedAtTimestamp": "Added todo at {timestamp}",
+  "addTodoAtTimestamp": "Добавить задачу на {timestamp}",
+  "todoAddedAtTimestamp": "Задача добавлена на {timestamp}",
   "todoList": "Список Задач",
   "todoTemplates": "Шаблоны TODO",
   "createTemplate": "Создать Шаблон",
@@ -900,17 +900,17 @@
   "noDateSet": "Дата не установлена",
   "imageNotFound": "Изображение не найдено",
   "clickToBrowseArtwork": "Нажмите, чтобы найти обложку",
-  "dropImageHere": "Drop image here",
-  "removeArtwork": "Remove Artwork",
-  "removeArtworkConfirm": "Remove this artwork? The image file will be deleted.",
+  "dropImageHere": "Перетащите изображение сюда",
+  "removeArtwork": "Удалить обложку",
+  "removeArtworkConfirm": "Удалить эту обложку? Файл изображения будет удалён.",
   "noFilesAddedYet": "Файлы еще не добавлены.\nНажмите \"Добавить Файлы\", чтобы загрузить файлы релиза.",
   "noTodosYet": "Задач пока нет. Добавьте одну выше.",
   "done": "Готово",
   "backupAndRestore": "Резервное копирование и восстановление",
-  "backupTabLabel": "Backup",
-  "aboutTabLabel": "About",
-  "localBackup": "Local Backup",
-  "appearanceTabLabel": "Appearance",
+  "backupTabLabel": "Резервная копия",
+  "aboutTabLabel": "О программе",
+  "localBackup": "Локальная резервная копия",
+  "appearanceTabLabel": "Внешний вид",
   "exportBackup": "Экспорт резервной копии",
   "importBackup": "Импорт резервной копии",
   "exportProjectInfo": "Экспорт информации",
@@ -937,7 +937,7 @@
     }
   },
   "projectExportHeaderTitle": "DAW PROJECT MANAGER — PROJECT EXPORT",
-  "projectExportExportedLabel": "Exported: {dateTime}",
+  "projectExportExportedLabel": "Экспортировано: {dateTime}",
   "@projectExportExportedLabel": {
     "description": "Timestamp line in a plain-text project export",
     "placeholders": {
@@ -946,7 +946,7 @@
       }
     }
   },
-  "projectExportTotalProjectsLabel": "Total projects: {count}",
+  "projectExportTotalProjectsLabel": "Всего проектов: {count}",
   "@projectExportTotalProjectsLabel": {
     "description": "Project count line in a plain-text bulk export",
     "placeholders": {
@@ -955,7 +955,7 @@
       }
     }
   },
-  "projectExportProjectLabel": "Project: {name}",
+  "projectExportProjectLabel": "Проект: {name}",
   "@projectExportProjectLabel": {
     "description": "Project name line in a plain-text project export",
     "placeholders": {
@@ -985,7 +985,7 @@
       }
     }
   },
-  "projectExportStatusLabel": "Status: {status}",
+  "projectExportStatusLabel": "Статус: {status}",
   "@projectExportStatusLabel": {
     "description": "Status line in a plain-text project export",
     "placeholders": {
@@ -1003,7 +1003,7 @@
       }
     }
   },
-  "projectExportKeyLabel": "Key: {key}",
+  "projectExportKeyLabel": "Тональность: {key}",
   "@projectExportKeyLabel": {
     "description": "Musical key line in a plain-text project export, no Camelot code known",
     "placeholders": {
@@ -1012,7 +1012,7 @@
       }
     }
   },
-  "projectExportKeyWithCamelotLabel": "Key: {key} (Camelot {code})",
+  "projectExportKeyWithCamelotLabel": "Тональность: {key} (Camelot {code})",
   "@projectExportKeyWithCamelotLabel": {
     "description": "Musical key + Camelot code line in a plain-text project export",
     "placeholders": {
@@ -1024,7 +1024,7 @@
       }
     }
   },
-  "projectExportFilePathLabel": "File path: {path}",
+  "projectExportFilePathLabel": "Путь к файлу: {path}",
   "@projectExportFilePathLabel": {
     "description": "File path line in a plain-text project export",
     "placeholders": {
@@ -1033,7 +1033,7 @@
       }
     }
   },
-  "projectExportFileSizeLabel": "File size: {size}",
+  "projectExportFileSizeLabel": "Размер файла: {size}",
   "@projectExportFileSizeLabel": {
     "description": "File size line in a plain-text project export",
     "placeholders": {
@@ -1042,7 +1042,7 @@
       }
     }
   },
-  "projectExportFileCreatedLabel": "File created: {date}",
+  "projectExportFileCreatedLabel": "Файл создан: {date}",
   "@projectExportFileCreatedLabel": {
     "description": "File creation date line in a plain-text project export",
     "placeholders": {
@@ -1051,7 +1051,7 @@
       }
     }
   },
-  "projectExportAddedToLibraryLabel": "Added to library: {date}",
+  "projectExportAddedToLibraryLabel": "Добавлено в библиотеку: {date}",
   "@projectExportAddedToLibraryLabel": {
     "description": "Date added to library line in a plain-text project export",
     "placeholders": {
@@ -1060,7 +1060,7 @@
       }
     }
   },
-  "projectExportLastModifiedLabel": "Last modified: {date}",
+  "projectExportLastModifiedLabel": "Последнее изменение: {date}",
   "@projectExportLastModifiedLabel": {
     "description": "Last modified date line in a plain-text project export",
     "placeholders": {
@@ -1069,7 +1069,7 @@
       }
     }
   },
-  "projectExportDeadlineLabel": "Deadline: {date}",
+  "projectExportDeadlineLabel": "Срок: {date}",
   "@projectExportDeadlineLabel": {
     "description": "Deadline line in a plain-text project export, no status known",
     "placeholders": {
@@ -1078,7 +1078,7 @@
       }
     }
   },
-  "projectExportDeadlineWithStatusLabel": "Deadline: {date} ({status})",
+  "projectExportDeadlineWithStatusLabel": "Срок: {date} ({status})",
   "@projectExportDeadlineWithStatusLabel": {
     "description": "Deadline + status line in a plain-text project export",
     "placeholders": {
@@ -1090,7 +1090,7 @@
       }
     }
   },
-  "projectExportTotalTimeWorkedLabel": "Total time worked: {duration}",
+  "projectExportTotalTimeWorkedLabel": "Общее время работы: {duration}",
   "@projectExportTotalTimeWorkedLabel": {
     "description": "Total time worked line in a plain-text project export",
     "placeholders": {
@@ -1099,9 +1099,9 @@
       }
     }
   },
-  "projectExportNotesLabel": "Notes:",
-  "projectExportTodosLabel": "To-dos:",
-  "projectExportWorkSessionsLabel": "Work sessions ({count}):",
+  "projectExportNotesLabel": "Заметки:",
+  "projectExportTodosLabel": "Задачи:",
+  "projectExportWorkSessionsLabel": "Рабочие сессии ({count}):",
   "@projectExportWorkSessionsLabel": {
     "description": "Work sessions section header in a plain-text project export",
     "placeholders": {
@@ -1271,8 +1271,8 @@
   "downloadCancelled": "Скачивание отменено",
   "backupDownloaded": "Резервная копия скачана! Проекты: +{projectsAdded} ~{projectsUpdated}, Релизы: +{releasesAdded} ~{releasesUpdated}",
   "errorDownloadingBackup": "Ошибка скачивания резервной копии: {error}",
-  "notSignedInYet": "Not signed in",
-  "never": "Never",
+  "notSignedInYet": "Не выполнен вход",
+  "never": "Никогда",
   "signedInAs": "Вход выполнен как: {email}",
   "lastSync": "Последняя синхронизация: {date}",
   "remoteBackupTime": "Удаленная копия: {date}",
@@ -1299,8 +1299,8 @@
   "oneDay": "1 день",
   "xDays": "{count} дней",
   "settings": "Настройки",
-  "searchSettings": "Search settings",
-  "noSettingsFoundFor": "No settings found for \"{query}\"",
+  "searchSettings": "Поиск по настройкам",
+  "noSettingsFoundFor": "Настройки для \"{query}\" не найдены",
   "@noSettingsFoundFor": {
     "placeholders": {
       "query": {
@@ -1310,6 +1310,8 @@
   },
   "language": "Язык",
   "theme": "Тема",
+  "languageSettingDescription": "Язык, используемый во всём приложении.",
+  "themeSettingDescription": "Цветовая тема приложения.",
   "support": "Поддержать",
   "shareDiagnosticLog": "Поделиться журналом диагностики",
   "shareDiagnosticLogEmpty": "Журнал диагностики пока отсутствует",
@@ -1686,6 +1688,8 @@
   "@profileNotFound": {
     "description": "Message when a profile cannot be found"
   },
+  "downloadFilesSectionTitle": "Скачать файлы",
+  "downloadFilesSectionDescription": "Скачайте все файлы этого профиля — биографию, обложку, пресс-кит и дополнительные ресурсы — в виде одного ZIP-архива, либо выберите, что включить.",
   "selectFiles": "Выбрать файлы",
   "@selectFiles": {
     "description": "Button label to select files"
@@ -1794,7 +1798,7 @@
   "@switchToNeonTheme": {
     "description": "Tooltip to switch to neon theme"
   },
-  "switchToStudioLight": "Switch to Studio Light",
+  "switchToStudioLight": "Переключить на Studio Light",
   "menuTheme": "Тема",
   "@menuTheme": {
     "description": "macOS menu item for theme switching"
@@ -1802,7 +1806,7 @@
   "appDescription": "Менеджер проектов для музыкальных продюсеров и звуковых дизайнеров.",
   "neonDarkThemeName": "Неоновая тёмная",
   "classicDarkThemeName": "Классическая тёмная",
-  "studioLightThemeName": "Studio Light",
+  "studioLightThemeName": "Студийная светлая",
   "statisticsTab": "Статистика",
   "statsTotalProjects": "Всего проектов",
   "statsInProgress": "В работе",
@@ -1979,6 +1983,10 @@
   "mixdownFoldersOtherDawLabel": "Другое / нераспознанная DAW",
   "addMixdownFolder": "Добавить",
   "noCustomMixdownFolders": "Пользовательские папки не добавлены — будут использованы значения по умолчанию DAW.",
+  "mixdownFoldersTabLabel": "Папки для микса",
+  "mixdownFoldersSectionDescription": "Определяет, в какой папке приложение ищет экспортированное/сведённое аудио проекта, используемое как превью-песня, если она не задана вручную. Разверните DAW ниже, чтобы увидеть имена папок, проверяемые по умолчанию, и добавьте свои, если в вашей настройке используется другое имя.",
+  "mixdownFoldersDefaultsLabel": "Проверяемые по умолчанию папки:",
+  "mixdownFoldersCustomLabel": "Ваши добавления для этой DAW:",
   "dawInfoLabel": "DAW: {daw}",
   "@dawInfoLabel": {
     "placeholders": {
@@ -2092,18 +2100,18 @@
   "noPreviewSongDragHint": "Вы также можете перетащить аудиофайл прямо на строку проекта в таблице.",
   "@noPreviewSongDragHint": {},
   "customizeTabs": "Настроить вкладки",
-  "alwaysVisible": "(always visible)",
+  "alwaysVisible": "(всегда видно)",
   "@customizeTabs": {},
   "customizeTabsDescription": "Выберите, какие вкладки отображать на панели навигации. Вкладка «Проекты» всегда видима.",
   "@customizeTabsDescription": {},
-  "autoBackup": "Auto Backup",
-  "autoBackupDescription": "Automatically upload a backup to Google Drive at the selected interval.",
-  "autoBackupInterval": "Backup interval",
-  "autoBackupOff": "Off",
-  "autoBackupEvery30Min": "Every 30 minutes",
-  "autoBackupHourly": "Every hour",
-  "autoBackupEvery6Hours": "Every 6 hours",
-  "autoBackupDaily": "Daily",
+  "autoBackup": "Автоматическая резервная копия",
+  "autoBackupDescription": "Автоматически загружает резервную копию на Google Drive с выбранным интервалом.",
+  "autoBackupInterval": "Интервал резервного копирования",
+  "autoBackupOff": "Выкл.",
+  "autoBackupEvery30Min": "Каждые 30 минут",
+  "autoBackupHourly": "Каждый час",
+  "autoBackupEvery6Hours": "Каждые 6 часов",
+  "autoBackupDaily": "Ежедневно",
   "autoBackupNextBackup": "Следующий бэкап: {time}",
   "@autoBackupNextBackup": {
     "placeholders": {
@@ -2254,6 +2262,14 @@
   "@onboardingWelcomeTitle": {},
   "onboardingWelcomeBody": "Управляйте всеми музыкальными проектами в одном месте.",
   "@onboardingWelcomeBody": {},
+  "onboardingFeatureScanFolders": "Автоматически сканирует папки проектов DAW",
+  "@onboardingFeatureScanFolders": {},
+  "onboardingFeatureTrackMetadata": "Отслеживает BPM, тональность, статус и сроки",
+  "@onboardingFeatureTrackMetadata": {},
+  "onboardingFeatureSyncDrive": "Синхронизирует метаданные с Google Drive",
+  "@onboardingFeatureSyncDrive": {},
+  "onboardingFeatureTrackTime": "Отслеживает время, потраченное на каждый проект",
+  "@onboardingFeatureTrackTime": {},
   "onboardingLanguageTitle": "Выберите язык",
   "@onboardingLanguageTitle": {},
   "onboardingThemeTitle": "Выберите тему",
@@ -2288,7 +2304,7 @@
   "@stop": {},
   "pause": "Пауза",
   "@pause": {},
-  "playPauseTooltip": "Play / Pause",
+  "playPauseTooltip": "Воспроизвести / Пауза",
   "@playPauseTooltip": {},
   "resume": "Продолжить",
   "@resume": {},
@@ -2319,10 +2335,10 @@
   "sessionMode": "Режим сессии",
   "@sessionMode": {},
   "sessionModeDescription": "Подпишитесь на проект перед запуском, чтобы отслеживать рабочее время и управлять им с панели инструментов",
-  "workSessionsTabLabel": "Work Sessions",
-  "normalMode": "Normal Mode",
-  "normalModeDescription": "Projects open directly in their DAW when launched.",
-  "sessionModeCardDescription": "Subscribe first to track work time from the toolbar.",
+  "workSessionsTabLabel": "Рабочие сессии",
+  "normalMode": "Обычный режим",
+  "normalModeDescription": "Проекты открываются напрямую в своей DAW при запуске.",
+  "sessionModeCardDescription": "Сначала включите, чтобы отслеживать рабочее время через панель инструментов.",
   "@sessionModeDescription": {},
   "startSession": "Начать сессию",
   "@startSession": {},
@@ -2516,7 +2532,7 @@
   "@pendingProjectNotFound": {},
   "phases": "Фазы",
   "phasesSubtitle": "Добавление, удаление и изменение порядка фаз проекта",
-  "phasesDescription": "Phases track each project's stage in your workflow (e.g. Idea → Mixing → Mastering). Drag to reorder, tap a color dot to recolor, and flag a phase as finished to treat it as complete throughout the app.",
+  "phasesDescription": "Фазы отслеживают этап каждого проекта в вашем рабочем процессе (например, Идея → Сведение → Мастеринг). Перетаскивайте для изменения порядка, нажмите на цветную точку, чтобы изменить цвет, и отметьте фазу как завершённую, чтобы считать её завершённой во всём приложении.",
   "resetToDefaults": "Сбросить до стандартных",
   "addPhase": "Добавить фазу",
   "phaseNameHint": "Название фазы",
@@ -2526,7 +2542,7 @@
   "markAsFinished": "Отметить как завершённую фазу",
   "resetPhasesWarning": "{count, plural, =1{1 проект использует фазу, которой больше не будет.} few{{count} проекта используют фазы, которых больше не будет.} many{{count} проектов используют фазы, которых больше не будет.} other{{count} проекта используют фазы, которых больше не будет.}}",
   "resetPhasesWarningNote": "Эти проекты сохранят текущий статус, но не будут отображаться в фильтрах фаз. Вы всегда можете снова добавить эти фазы позже.",
-  "resetPhasesConfirm": "Reset all custom phases, colors, and finished-phase flags back to the defaults?",
+  "resetPhasesConfirm": "Сбросить все пользовательские фазы, цвета и флаги завершённых фаз к значениям по умолчанию?",
   "camelotGenerateButton": "Создать микс",
   "camelotDialogTitle": "Микс Camelot",
   "camelotDialogDescription": "Сортирует треки по гармонической совместимости с помощью колеса Camelot. Близость BPM используется как дополнительный критерий.",
@@ -2548,14 +2564,14 @@
   "playerMixSuggestions": "ПРЕДЛОЖЕНИЯ МИКСА",
   "@playerMixSuggestions": {}
 ,
-  "nowPlaying": "Now Playing",
-  "noPreviewSongsAvailable": "No preview songs available",
+  "nowPlaying": "Сейчас играет",
+  "noPreviewSongsAvailable": "Нет доступных песен для предпросмотра",
   "upNext": "Далее",
   "@upNext": { "description": "Queue panel title - tracks coming up next" },
-  "playbackModeNormal": "Normal",
+  "playbackModeNormal": "Обычный",
   "@playbackModeNormal": { "description": "Playback mode: play queue once in order" },
-  "playbackModeRepeat": "Repeat",
+  "playbackModeRepeat": "Повтор",
   "@playbackModeRepeat": { "description": "Playback mode: loop the entire queue" },
-  "playbackModeShuffle": "Shuffle",
+  "playbackModeShuffle": "Перемешать",
   "@playbackModeShuffle": { "description": "Playback mode: random order" }
 }

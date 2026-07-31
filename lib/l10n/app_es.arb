@@ -23,7 +23,7 @@
   "rescan": "Reescanear",
   "refreshProject": "Actualizar",
   "scanning": "Escaneando…",
-  "newProjectBadge": "NEW",
+  "newProjectBadge": "NUEVO",
   "projectName": "Nombre del Proyecto",
   "bpm": "BPM",
   "key": "Tonalidad (ej: C#m, F mayor)",
@@ -115,12 +115,12 @@
   "tryDifferentSearch": "Intenta con un término de búsqueda diferente",
   "deepScanConfirm": "El Escaneo Profundo extrae metadatos completos de los archivos de proyecto:\n• BPM (Pulsos Por Minuto)\n• Tonalidad Musical\n• Versión del DAW\n• Notas del Proyecto (solo Reaper)\nCompatible actualmente: Ableton Live, Bitwig Studio, Cubase, Nuendo, FL Studio, MAGDA y Reaper.\n\nEsto es más lento que un escaneo regular y puede tardar un tiempo. ¿Continuar?",
   "deepScanOnlyUnscanned": "Solo escanear proyectos sin metadatos",
-  "metadataExtractionTitle": "Metadata Extraction",
-  "metadataExtractionSubtitle": "See which data each DAW supports",
+  "metadataExtractionTitle": "Extracción de Metadatos",
+  "metadataExtractionSubtitle": "Vea qué datos admite cada DAW",
   "metadataExtractionIntro": "Deep Scan can automatically read some of these fields straight from a project file — the rest have to be entered by hand. This table shows what's automatic for each supported DAW today.",
-  "metadataFieldKey": "Key",
-  "metadataFieldVersion": "DAW Version",
-  "metadataExtractionManualNote": "Any field without automatic support can still be entered manually in Project Detail. For BPM and Key specifically, dropping a bpm.txt or key.txt file next to the project is also picked up on the next scan.",
+  "metadataFieldKey": "Tonalidad",
+  "metadataFieldVersion": "Versión de DAW",
+  "metadataExtractionManualNote": "Cualquier campo sin soporte automático se puede introducir manualmente en el Detalle del Proyecto. Para BPM y Tonalidad en particular, colocar un archivo bpm.txt o key.txt junto al proyecto también se detecta en el siguiente escaneo.",
   "metadataExtractedSuccessfully": "Metadatos extraídos exitosamente",
   "failedToExtractMetadata": "Error al extraer metadatos: {error}",
   "@failedToExtractMetadata": {
@@ -303,9 +303,9 @@
       }
     }
   },
-  "deleteMissingProjects": "Delete Missing",
-  "deleteMissingProjectsTitle": "Delete missing projects?",
-  "deleteMissingProjectsConfirm": "{count} project{plural} whose file could not be found on this machine will be permanently deleted, along with all notes, deadlines, and session history. This can't be undone.",
+  "deleteMissingProjects": "Eliminar faltantes",
+  "deleteMissingProjectsTitle": "¿Eliminar proyectos faltantes?",
+  "deleteMissingProjectsConfirm": "{count} proyecto{plural} cuyo archivo no se pudo encontrar en esta máquina se eliminarán permanentemente, junto con todas las notas, plazos e historial de sesiones. Esto no se puede deshacer.",
   "@deleteMissingProjectsConfirm": {
     "placeholders": {
       "count": {
@@ -316,8 +316,8 @@
       }
     }
   },
-  "deleteMissingProjectsConfirmButton": "Delete Permanently",
-  "missingProjectsDeleted": "{count} missing project{plural} deleted.",
+  "deleteMissingProjectsConfirmButton": "Eliminar permanentemente",
+  "missingProjectsDeleted": "{count} proyecto{plural} faltante eliminado.",
   "@missingProjectsDeleted": {
     "placeholders": {
       "count": {
@@ -328,7 +328,7 @@
       }
     }
   },
-  "deleteMissingProjectsAlsoDeleteReleaseTracked": "Also delete {count} project{plural} that are part of a release (removes them from that release too)",
+  "deleteMissingProjectsAlsoDeleteReleaseTracked": "Eliminar también {count} proyecto{plural} que forman parte de un lanzamiento (también los elimina de ese lanzamiento)",
   "@deleteMissingProjectsAlsoDeleteReleaseTracked": {
     "placeholders": {
       "count": {
@@ -699,8 +699,8 @@
   "enterTodoText": "Ingrese el texto de la tarea",
   "addNewTodo": "Agregar nueva tarea",
   "enterTodoItem": "Ingrese el item de la tarea",
-  "addTodoAtTimestamp": "Add todo at {timestamp}",
-  "todoAddedAtTimestamp": "Added todo at {timestamp}",
+  "addTodoAtTimestamp": "Añadir tarea en {timestamp}",
+  "todoAddedAtTimestamp": "Tarea añadida en {timestamp}",
   "todoList": "Lista de Tareas",
   "todoTemplates": "Plantillas de TODO",
   "createTemplate": "Crear Plantilla",
@@ -900,17 +900,17 @@
   "noDateSet": "No se ha establecido fecha",
   "imageNotFound": "Imagen no encontrada",
   "clickToBrowseArtwork": "Haga clic para buscar arte",
-  "dropImageHere": "Drop image here",
-  "removeArtwork": "Remove Artwork",
-  "removeArtworkConfirm": "Remove this artwork? The image file will be deleted.",
+  "dropImageHere": "Suelta la imagen aquí",
+  "removeArtwork": "Eliminar arte",
+  "removeArtworkConfirm": "¿Eliminar este arte? El archivo de imagen se eliminará.",
   "noFilesAddedYet": "No se han agregado archivos todavía.\nHaga clic en \"Agregar Archivos\" para subir archivos del lanzamiento.",
   "noTodosYet": "No hay tareas todavía. Agregue una arriba.",
   "done": "Hecho",
   "backupAndRestore": "Respaldo y Restauración",
-  "backupTabLabel": "Backup",
-  "aboutTabLabel": "About",
-  "localBackup": "Local Backup",
-  "appearanceTabLabel": "Appearance",
+  "backupTabLabel": "Respaldo",
+  "aboutTabLabel": "Acerca de",
+  "localBackup": "Respaldo Local",
+  "appearanceTabLabel": "Apariencia",
   "exportBackup": "Exportar Respaldo",
   "importBackup": "Importar Respaldo",
   "exportProjectInfo": "Exportar información",
@@ -937,7 +937,7 @@
     }
   },
   "projectExportHeaderTitle": "DAW PROJECT MANAGER — PROJECT EXPORT",
-  "projectExportExportedLabel": "Exported: {dateTime}",
+  "projectExportExportedLabel": "Exportado: {dateTime}",
   "@projectExportExportedLabel": {
     "description": "Timestamp line in a plain-text project export",
     "placeholders": {
@@ -946,7 +946,7 @@
       }
     }
   },
-  "projectExportTotalProjectsLabel": "Total projects: {count}",
+  "projectExportTotalProjectsLabel": "Total de proyectos: {count}",
   "@projectExportTotalProjectsLabel": {
     "description": "Project count line in a plain-text bulk export",
     "placeholders": {
@@ -955,7 +955,7 @@
       }
     }
   },
-  "projectExportProjectLabel": "Project: {name}",
+  "projectExportProjectLabel": "Proyecto: {name}",
   "@projectExportProjectLabel": {
     "description": "Project name line in a plain-text project export",
     "placeholders": {
@@ -985,7 +985,7 @@
       }
     }
   },
-  "projectExportStatusLabel": "Status: {status}",
+  "projectExportStatusLabel": "Estado: {status}",
   "@projectExportStatusLabel": {
     "description": "Status line in a plain-text project export",
     "placeholders": {
@@ -1003,7 +1003,7 @@
       }
     }
   },
-  "projectExportKeyLabel": "Key: {key}",
+  "projectExportKeyLabel": "Tonalidad: {key}",
   "@projectExportKeyLabel": {
     "description": "Musical key line in a plain-text project export, no Camelot code known",
     "placeholders": {
@@ -1012,7 +1012,7 @@
       }
     }
   },
-  "projectExportKeyWithCamelotLabel": "Key: {key} (Camelot {code})",
+  "projectExportKeyWithCamelotLabel": "Tonalidad: {key} (Camelot {code})",
   "@projectExportKeyWithCamelotLabel": {
     "description": "Musical key + Camelot code line in a plain-text project export",
     "placeholders": {
@@ -1024,7 +1024,7 @@
       }
     }
   },
-  "projectExportFilePathLabel": "File path: {path}",
+  "projectExportFilePathLabel": "Ruta del archivo: {path}",
   "@projectExportFilePathLabel": {
     "description": "File path line in a plain-text project export",
     "placeholders": {
@@ -1033,7 +1033,7 @@
       }
     }
   },
-  "projectExportFileSizeLabel": "File size: {size}",
+  "projectExportFileSizeLabel": "Tamaño del archivo: {size}",
   "@projectExportFileSizeLabel": {
     "description": "File size line in a plain-text project export",
     "placeholders": {
@@ -1042,7 +1042,7 @@
       }
     }
   },
-  "projectExportFileCreatedLabel": "File created: {date}",
+  "projectExportFileCreatedLabel": "Archivo creado: {date}",
   "@projectExportFileCreatedLabel": {
     "description": "File creation date line in a plain-text project export",
     "placeholders": {
@@ -1051,7 +1051,7 @@
       }
     }
   },
-  "projectExportAddedToLibraryLabel": "Added to library: {date}",
+  "projectExportAddedToLibraryLabel": "Añadido a la biblioteca: {date}",
   "@projectExportAddedToLibraryLabel": {
     "description": "Date added to library line in a plain-text project export",
     "placeholders": {
@@ -1060,7 +1060,7 @@
       }
     }
   },
-  "projectExportLastModifiedLabel": "Last modified: {date}",
+  "projectExportLastModifiedLabel": "Última modificación: {date}",
   "@projectExportLastModifiedLabel": {
     "description": "Last modified date line in a plain-text project export",
     "placeholders": {
@@ -1069,7 +1069,7 @@
       }
     }
   },
-  "projectExportDeadlineLabel": "Deadline: {date}",
+  "projectExportDeadlineLabel": "Fecha límite: {date}",
   "@projectExportDeadlineLabel": {
     "description": "Deadline line in a plain-text project export, no status known",
     "placeholders": {
@@ -1078,7 +1078,7 @@
       }
     }
   },
-  "projectExportDeadlineWithStatusLabel": "Deadline: {date} ({status})",
+  "projectExportDeadlineWithStatusLabel": "Fecha límite: {date} ({status})",
   "@projectExportDeadlineWithStatusLabel": {
     "description": "Deadline + status line in a plain-text project export",
     "placeholders": {
@@ -1090,7 +1090,7 @@
       }
     }
   },
-  "projectExportTotalTimeWorkedLabel": "Total time worked: {duration}",
+  "projectExportTotalTimeWorkedLabel": "Tiempo total trabajado: {duration}",
   "@projectExportTotalTimeWorkedLabel": {
     "description": "Total time worked line in a plain-text project export",
     "placeholders": {
@@ -1099,9 +1099,9 @@
       }
     }
   },
-  "projectExportNotesLabel": "Notes:",
-  "projectExportTodosLabel": "To-dos:",
-  "projectExportWorkSessionsLabel": "Work sessions ({count}):",
+  "projectExportNotesLabel": "Notas:",
+  "projectExportTodosLabel": "Tareas:",
+  "projectExportWorkSessionsLabel": "Sesiones de trabajo ({count}):",
   "@projectExportWorkSessionsLabel": {
     "description": "Work sessions section header in a plain-text project export",
     "placeholders": {
@@ -1271,8 +1271,8 @@
   "downloadCancelled": "Descarga cancelada",
   "backupDownloaded": "¡Copia de seguridad descargada! Proyectos: +{projectsAdded} ~{projectsUpdated}, Lanzamientos: +{releasesAdded} ~{releasesUpdated}",
   "errorDownloadingBackup": "Error al descargar copia de seguridad: {error}",
-  "notSignedInYet": "Not signed in",
-  "never": "Never",
+  "notSignedInYet": "No conectado",
+  "never": "Nunca",
   "signedInAs": "Conectado como: {email}",
   "lastSync": "Última sincronización: {date}",
   "remoteBackupTime": "Copia de seguridad remota: {date}",
@@ -1299,8 +1299,8 @@
   "oneDay": "1 día",
   "xDays": "{count} días",
   "settings": "Configuración",
-  "searchSettings": "Search settings",
-  "noSettingsFoundFor": "No settings found for \"{query}\"",
+  "searchSettings": "Buscar en la configuración",
+  "noSettingsFoundFor": "No se encontraron ajustes para \"{query}\"",
   "@noSettingsFoundFor": {
     "placeholders": {
       "query": {
@@ -1310,6 +1310,8 @@
   },
   "language": "Idioma",
   "theme": "Tema",
+  "languageSettingDescription": "El idioma utilizado en toda la aplicación.",
+  "themeSettingDescription": "El tema de color de la aplicación.",
   "support": "Apoyar",
   "shareDiagnosticLog": "Compartir Registro de Diagnóstico",
   "shareDiagnosticLogEmpty": "Aún no hay registro de diagnóstico",
@@ -1686,6 +1688,8 @@
   "@profileNotFound": {
     "description": "Message when a profile cannot be found"
   },
+  "downloadFilesSectionTitle": "Descargar Archivos",
+  "downloadFilesSectionDescription": "Descarga todos los archivos de este perfil — biografía, arte, kit de prensa y activos adicionales — como un único ZIP, o selecciona cuáles incluir.",
   "selectFiles": "Seleccionar Archivos",
   "@selectFiles": {
     "description": "Button label to select files"
@@ -1794,7 +1798,7 @@
   "@switchToNeonTheme": {
     "description": "Tooltip to switch to neon theme"
   },
-  "switchToStudioLight": "Switch to Studio Light",
+  "switchToStudioLight": "Cambiar a Studio Light",
   "menuTheme": "Tema",
   "@menuTheme": {
     "description": "macOS menu item for theme switching"
@@ -1802,7 +1806,7 @@
   "appDescription": "Un gestor de proyectos para productores musicales y diseñadores de sonido.",
   "neonDarkThemeName": "Neón Oscuro",
   "classicDarkThemeName": "Clásico Oscuro",
-  "studioLightThemeName": "Studio Light",
+  "studioLightThemeName": "Studio Claro",
   "statisticsTab": "Estadísticas",
   "statsTotalProjects": "Total de Proyectos",
   "statsInProgress": "En curso",
@@ -1979,6 +1983,10 @@
   "mixdownFoldersOtherDawLabel": "Otro / DAW no reconocido",
   "addMixdownFolder": "Añadir",
   "noCustomMixdownFolders": "No se agregaron carpetas personalizadas — se usarán los valores predeterminados del DAW.",
+  "mixdownFoldersTabLabel": "Carpetas de Mezcla",
+  "mixdownFoldersSectionDescription": "Controla en qué carpeta busca la app el audio exportado/mezclado de un proyecto, usado como canción de vista previa cuando no se ha establecido ninguna manualmente. Expande un DAW abajo para ver los nombres de carpeta que ya comprueba por defecto, y añade los tuyos si tu configuración usa un nombre diferente.",
+  "mixdownFoldersDefaultsLabel": "Carpetas comprobadas por defecto:",
+  "mixdownFoldersCustomLabel": "Tus adiciones para este DAW:",
   "dawInfoLabel": "DAW: {daw}",
   "@dawInfoLabel": {
     "placeholders": {
@@ -2092,18 +2100,18 @@
   "noPreviewSongDragHint": "También puedes arrastrar y soltar un archivo de audio directamente en la fila del proyecto en la tabla.",
   "@noPreviewSongDragHint": {},
   "customizeTabs": "Personalizar pestanas",
-  "alwaysVisible": "(always visible)",
+  "alwaysVisible": "(siempre visible)",
   "@customizeTabs": {},
   "customizeTabsDescription": "Elige que pestanas mostrar en la barra de navegacion. La pestana Proyectos siempre es visible.",
   "@customizeTabsDescription": {},
-  "autoBackup": "Auto Backup",
-  "autoBackupDescription": "Automatically upload a backup to Google Drive at the selected interval.",
-  "autoBackupInterval": "Backup interval",
-  "autoBackupOff": "Off",
-  "autoBackupEvery30Min": "Every 30 minutes",
-  "autoBackupHourly": "Every hour",
-  "autoBackupEvery6Hours": "Every 6 hours",
-  "autoBackupDaily": "Daily",
+  "autoBackup": "Respaldo Automático",
+  "autoBackupDescription": "Sube automáticamente un respaldo a Google Drive en el intervalo seleccionado.",
+  "autoBackupInterval": "Intervalo de respaldo",
+  "autoBackupOff": "Desactivado",
+  "autoBackupEvery30Min": "Cada 30 minutos",
+  "autoBackupHourly": "Cada hora",
+  "autoBackupEvery6Hours": "Cada 6 horas",
+  "autoBackupDaily": "Diariamente",
   "autoBackupNextBackup": "Próxima copia: {time}",
   "@autoBackupNextBackup": {
     "placeholders": {
@@ -2254,6 +2262,14 @@
   "@onboardingWelcomeTitle": {},
   "onboardingWelcomeBody": "Organiza todos tus proyectos musicales en un solo lugar.",
   "@onboardingWelcomeBody": {},
+  "onboardingFeatureScanFolders": "Escanea automáticamente las carpetas de proyectos DAW",
+  "@onboardingFeatureScanFolders": {},
+  "onboardingFeatureTrackMetadata": "Registra BPM, tonalidad, estado y plazos",
+  "@onboardingFeatureTrackMetadata": {},
+  "onboardingFeatureSyncDrive": "Sincroniza metadatos con Google Drive",
+  "@onboardingFeatureSyncDrive": {},
+  "onboardingFeatureTrackTime": "Registra el tiempo dedicado a cada proyecto",
+  "@onboardingFeatureTrackTime": {},
   "onboardingLanguageTitle": "Elige tu idioma",
   "@onboardingLanguageTitle": {},
   "onboardingThemeTitle": "Elige un tema",
@@ -2288,7 +2304,7 @@
   "@stop": {},
   "pause": "Pausar",
   "@pause": {},
-  "playPauseTooltip": "Play / Pause",
+  "playPauseTooltip": "Reproducir / Pausar",
   "@playPauseTooltip": {},
   "resume": "Reanudar",
   "@resume": {},
@@ -2319,10 +2335,10 @@
   "sessionMode": "Modo sesión",
   "@sessionMode": {},
   "sessionModeDescription": "Suscríbete a un proyecto antes de lanzarlo para rastrear el tiempo de trabajo y gestionarlo desde la barra de herramientas",
-  "workSessionsTabLabel": "Work Sessions",
-  "normalMode": "Normal Mode",
-  "normalModeDescription": "Projects open directly in their DAW when launched.",
-  "sessionModeCardDescription": "Subscribe first to track work time from the toolbar.",
+  "workSessionsTabLabel": "Sesiones de Trabajo",
+  "normalMode": "Modo Normal",
+  "normalModeDescription": "Los proyectos se abren directamente en su DAW al iniciarlos.",
+  "sessionModeCardDescription": "Actívalo primero para registrar el tiempo de trabajo desde la barra de herramientas.",
   "@sessionModeDescription": {},
   "startSession": "Iniciar sesión",
   "@startSession": {},
@@ -2516,7 +2532,7 @@
   "@pendingProjectNotFound": {},
   "phases": "Fases",
   "phasesSubtitle": "Agregar, eliminar y reordenar fases del proyecto",
-  "phasesDescription": "Phases track each project's stage in your workflow (e.g. Idea → Mixing → Mastering). Drag to reorder, tap a color dot to recolor, and flag a phase as finished to treat it as complete throughout the app.",
+  "phasesDescription": "Las fases rastrean la etapa de cada proyecto en tu flujo de trabajo (p. ej., Idea → Mezcla → Masterización). Arrastra para reordenar, toca un punto de color para recolorear, y marca una fase como finalizada para tratarla como completa en toda la app.",
   "resetToDefaults": "Restablecer predeterminados",
   "addPhase": "Agregar fase",
   "phaseNameHint": "Nombre de fase",
@@ -2526,7 +2542,7 @@
   "markAsFinished": "Marcar como fase finalizada",
   "resetPhasesWarning": "{count, plural, =1{1 proyecto usa una fase que ya no existirá.} other{{count} proyectos usan fases que ya no existirán.}}",
   "resetPhasesWarningNote": "Esos proyectos conservarán su estado actual pero no aparecerán en los filtros de fase. Siempre puedes volver a añadir esas fases.",
-  "resetPhasesConfirm": "Reset all custom phases, colors, and finished-phase flags back to the defaults?",
+  "resetPhasesConfirm": "¿Restablecer todas las fases personalizadas, colores y marcas de fase finalizada a los valores predeterminados?",
   "camelotGenerateButton": "Generar mezcla",
   "camelotDialogTitle": "Mezcla Camelot",
   "camelotDialogDescription": "Ordena tus pistas por compatibilidad armónica usando la rueda Camelot. La proximidad de BPM se usa como criterio de desempate.",
@@ -2548,14 +2564,14 @@
   "playerMixSuggestions": "SUGERENCIAS DE MIX",
   "@playerMixSuggestions": {}
 ,
-  "nowPlaying": "Now Playing",
-  "noPreviewSongsAvailable": "No preview songs available",
+  "nowPlaying": "Reproduciendo ahora",
+  "noPreviewSongsAvailable": "No hay canciones de vista previa disponibles",
   "upNext": "A continuación",
   "@upNext": { "description": "Queue panel title - tracks coming up next" },
   "playbackModeNormal": "Normal",
   "@playbackModeNormal": { "description": "Playback mode: play queue once in order" },
-  "playbackModeRepeat": "Repeat",
+  "playbackModeRepeat": "Repetir",
   "@playbackModeRepeat": { "description": "Playback mode: loop the entire queue" },
-  "playbackModeShuffle": "Shuffle",
+  "playbackModeShuffle": "Aleatorio",
   "@playbackModeShuffle": { "description": "Playback mode: random order" }
 }

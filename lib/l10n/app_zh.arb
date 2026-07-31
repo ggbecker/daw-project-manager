@@ -23,7 +23,7 @@
   "rescan": "重新扫描",
   "refreshProject": "刷新",
   "scanning": "扫描中…",
-  "newProjectBadge": "NEW",
+  "newProjectBadge": "新",
   "projectName": "项目名称",
   "bpm": "BPM",
   "key": "调性（例如：C#m，F大调）",
@@ -115,12 +115,12 @@
   "tryDifferentSearch": "尝试不同的搜索词",
   "deepScanConfirm": "深度扫描从项目文件中提取完整的元数据：\n• BPM（每分钟节拍数）\n• 音乐调性\n• DAW版本\n• 项目备注（仅限 Reaper）\n目前支持：Ableton Live、Bitwig Studio、Cubase、Nuendo、FL Studio、MAGDA 和 Reaper。\n\n这比常规扫描慢，可能需要一些时间。继续吗？",
   "deepScanOnlyUnscanned": "仅扫描没有元数据的项目",
-  "metadataExtractionTitle": "Metadata Extraction",
-  "metadataExtractionSubtitle": "See which data each DAW supports",
+  "metadataExtractionTitle": "元数据提取",
+  "metadataExtractionSubtitle": "查看每种DAW支持哪些数据",
   "metadataExtractionIntro": "Deep Scan can automatically read some of these fields straight from a project file — the rest have to be entered by hand. This table shows what's automatic for each supported DAW today.",
-  "metadataFieldKey": "Key",
-  "metadataFieldVersion": "DAW Version",
-  "metadataExtractionManualNote": "Any field without automatic support can still be entered manually in Project Detail. For BPM and Key specifically, dropping a bpm.txt or key.txt file next to the project is also picked up on the next scan.",
+  "metadataFieldKey": "调性",
+  "metadataFieldVersion": "DAW版本",
+  "metadataExtractionManualNote": "没有自动支持的字段仍可以在项目详情中手动输入。特别是对于BPM和调性，在项目旁放置bpm.txt或key.txt文件，也会在下次扫描时被读取。",
   "metadataExtractedSuccessfully": "元数据提取成功",
   "failedToExtractMetadata": "元数据提取失败: {error}",
   "@failedToExtractMetadata": {
@@ -303,9 +303,9 @@
       }
     }
   },
-  "deleteMissingProjects": "Delete Missing",
-  "deleteMissingProjectsTitle": "Delete missing projects?",
-  "deleteMissingProjectsConfirm": "{count} project{plural} whose file could not be found on this machine will be permanently deleted, along with all notes, deadlines, and session history. This can't be undone.",
+  "deleteMissingProjects": "删除缺失项目",
+  "deleteMissingProjectsTitle": "删除缺失的项目？",
+  "deleteMissingProjectsConfirm": "在此设备上找不到文件的{count}个项目{plural}将被永久删除，包括所有备注、截止日期和会话历史。此操作无法撤销。",
   "@deleteMissingProjectsConfirm": {
     "placeholders": {
       "count": {
@@ -316,8 +316,8 @@
       }
     }
   },
-  "deleteMissingProjectsConfirmButton": "Delete Permanently",
-  "missingProjectsDeleted": "{count} missing project{plural} deleted.",
+  "deleteMissingProjectsConfirmButton": "永久删除",
+  "missingProjectsDeleted": "已删除{count}个缺失的项目{plural}。",
   "@missingProjectsDeleted": {
     "placeholders": {
       "count": {
@@ -328,7 +328,7 @@
       }
     }
   },
-  "deleteMissingProjectsAlsoDeleteReleaseTracked": "Also delete {count} project{plural} that are part of a release (removes them from that release too)",
+  "deleteMissingProjectsAlsoDeleteReleaseTracked": "同时删除属于发行版的{count}个项目{plural}（也会将它们从该发行版中移除）",
   "@deleteMissingProjectsAlsoDeleteReleaseTracked": {
     "placeholders": {
       "count": {
@@ -699,8 +699,8 @@
   "enterTodoText": "输入待办事项文本",
   "addNewTodo": "添加新待办事项",
   "enterTodoItem": "输入待办事项项",
-  "addTodoAtTimestamp": "Add todo at {timestamp}",
-  "todoAddedAtTimestamp": "Added todo at {timestamp}",
+  "addTodoAtTimestamp": "在{timestamp}添加待办事项",
+  "todoAddedAtTimestamp": "已在{timestamp}添加待办事项",
   "todoList": "待办事项列表",
   "todoTemplates": "TODO模板",
   "createTemplate": "创建模板",
@@ -900,17 +900,17 @@
   "noDateSet": "未设置日期",
   "imageNotFound": "未找到图像",
   "clickToBrowseArtwork": "点击浏览封面",
-  "dropImageHere": "Drop image here",
-  "removeArtwork": "Remove Artwork",
-  "removeArtworkConfirm": "Remove this artwork? The image file will be deleted.",
+  "dropImageHere": "将图片拖放到此处",
+  "removeArtwork": "移除封面",
+  "removeArtworkConfirm": "移除此封面？图片文件将被删除。",
   "noFilesAddedYet": "尚未添加文件。\n点击\"添加文件\"上传发布文件。",
   "noTodosYet": "还没有待办事项。请在上面添加一个。",
   "done": "完成",
   "backupAndRestore": "备份和恢复",
-  "backupTabLabel": "Backup",
-  "aboutTabLabel": "About",
-  "localBackup": "Local Backup",
-  "appearanceTabLabel": "Appearance",
+  "backupTabLabel": "备份",
+  "aboutTabLabel": "关于",
+  "localBackup": "本地备份",
+  "appearanceTabLabel": "外观",
   "exportBackup": "导出备份",
   "importBackup": "导入备份",
   "exportProjectInfo": "导出信息",
@@ -937,7 +937,7 @@
     }
   },
   "projectExportHeaderTitle": "DAW PROJECT MANAGER — PROJECT EXPORT",
-  "projectExportExportedLabel": "Exported: {dateTime}",
+  "projectExportExportedLabel": "导出时间：{dateTime}",
   "@projectExportExportedLabel": {
     "description": "Timestamp line in a plain-text project export",
     "placeholders": {
@@ -946,7 +946,7 @@
       }
     }
   },
-  "projectExportTotalProjectsLabel": "Total projects: {count}",
+  "projectExportTotalProjectsLabel": "项目总数：{count}",
   "@projectExportTotalProjectsLabel": {
     "description": "Project count line in a plain-text bulk export",
     "placeholders": {
@@ -955,7 +955,7 @@
       }
     }
   },
-  "projectExportProjectLabel": "Project: {name}",
+  "projectExportProjectLabel": "项目：{name}",
   "@projectExportProjectLabel": {
     "description": "Project name line in a plain-text project export",
     "placeholders": {
@@ -964,7 +964,7 @@
       }
     }
   },
-  "projectExportDawLabel": "DAW: {dawType}",
+  "projectExportDawLabel": "DAW：{dawType}",
   "@projectExportDawLabel": {
     "description": "DAW type line in a plain-text project export, no version known",
     "placeholders": {
@@ -973,7 +973,7 @@
       }
     }
   },
-  "projectExportDawWithVersionLabel": "DAW: {dawType} {version}",
+  "projectExportDawWithVersionLabel": "DAW：{dawType} {version}",
   "@projectExportDawWithVersionLabel": {
     "description": "DAW type + version line in a plain-text project export",
     "placeholders": {
@@ -985,7 +985,7 @@
       }
     }
   },
-  "projectExportStatusLabel": "Status: {status}",
+  "projectExportStatusLabel": "状态：{status}",
   "@projectExportStatusLabel": {
     "description": "Status line in a plain-text project export",
     "placeholders": {
@@ -994,7 +994,7 @@
       }
     }
   },
-  "projectExportBpmLabel": "BPM: {bpm}",
+  "projectExportBpmLabel": "BPM：{bpm}",
   "@projectExportBpmLabel": {
     "description": "BPM line in a plain-text project export",
     "placeholders": {
@@ -1003,7 +1003,7 @@
       }
     }
   },
-  "projectExportKeyLabel": "Key: {key}",
+  "projectExportKeyLabel": "调性：{key}",
   "@projectExportKeyLabel": {
     "description": "Musical key line in a plain-text project export, no Camelot code known",
     "placeholders": {
@@ -1012,7 +1012,7 @@
       }
     }
   },
-  "projectExportKeyWithCamelotLabel": "Key: {key} (Camelot {code})",
+  "projectExportKeyWithCamelotLabel": "调性：{key}（Camelot {code}）",
   "@projectExportKeyWithCamelotLabel": {
     "description": "Musical key + Camelot code line in a plain-text project export",
     "placeholders": {
@@ -1024,7 +1024,7 @@
       }
     }
   },
-  "projectExportFilePathLabel": "File path: {path}",
+  "projectExportFilePathLabel": "文件路径：{path}",
   "@projectExportFilePathLabel": {
     "description": "File path line in a plain-text project export",
     "placeholders": {
@@ -1033,7 +1033,7 @@
       }
     }
   },
-  "projectExportFileSizeLabel": "File size: {size}",
+  "projectExportFileSizeLabel": "文件大小：{size}",
   "@projectExportFileSizeLabel": {
     "description": "File size line in a plain-text project export",
     "placeholders": {
@@ -1042,7 +1042,7 @@
       }
     }
   },
-  "projectExportFileCreatedLabel": "File created: {date}",
+  "projectExportFileCreatedLabel": "文件创建日期：{date}",
   "@projectExportFileCreatedLabel": {
     "description": "File creation date line in a plain-text project export",
     "placeholders": {
@@ -1051,7 +1051,7 @@
       }
     }
   },
-  "projectExportAddedToLibraryLabel": "Added to library: {date}",
+  "projectExportAddedToLibraryLabel": "添加到库的日期：{date}",
   "@projectExportAddedToLibraryLabel": {
     "description": "Date added to library line in a plain-text project export",
     "placeholders": {
@@ -1060,7 +1060,7 @@
       }
     }
   },
-  "projectExportLastModifiedLabel": "Last modified: {date}",
+  "projectExportLastModifiedLabel": "最后修改：{date}",
   "@projectExportLastModifiedLabel": {
     "description": "Last modified date line in a plain-text project export",
     "placeholders": {
@@ -1069,7 +1069,7 @@
       }
     }
   },
-  "projectExportDeadlineLabel": "Deadline: {date}",
+  "projectExportDeadlineLabel": "截止日期：{date}",
   "@projectExportDeadlineLabel": {
     "description": "Deadline line in a plain-text project export, no status known",
     "placeholders": {
@@ -1078,7 +1078,7 @@
       }
     }
   },
-  "projectExportDeadlineWithStatusLabel": "Deadline: {date} ({status})",
+  "projectExportDeadlineWithStatusLabel": "截止日期：{date}（{status}）",
   "@projectExportDeadlineWithStatusLabel": {
     "description": "Deadline + status line in a plain-text project export",
     "placeholders": {
@@ -1090,7 +1090,7 @@
       }
     }
   },
-  "projectExportTotalTimeWorkedLabel": "Total time worked: {duration}",
+  "projectExportTotalTimeWorkedLabel": "总工作时长：{duration}",
   "@projectExportTotalTimeWorkedLabel": {
     "description": "Total time worked line in a plain-text project export",
     "placeholders": {
@@ -1099,9 +1099,9 @@
       }
     }
   },
-  "projectExportNotesLabel": "Notes:",
-  "projectExportTodosLabel": "To-dos:",
-  "projectExportWorkSessionsLabel": "Work sessions ({count}):",
+  "projectExportNotesLabel": "备注：",
+  "projectExportTodosLabel": "待办事项：",
+  "projectExportWorkSessionsLabel": "工作会话（{count}）：",
   "@projectExportWorkSessionsLabel": {
     "description": "Work sessions section header in a plain-text project export",
     "placeholders": {
@@ -1271,8 +1271,8 @@
   "downloadCancelled": "下载已取消",
   "backupDownloaded": "备份已下载！项目: +{projectsAdded} ~{projectsUpdated}，发布: +{releasesAdded} ~{releasesUpdated}",
   "errorDownloadingBackup": "下载备份错误: {error}",
-  "notSignedInYet": "Not signed in",
-  "never": "Never",
+  "notSignedInYet": "未登录",
+  "never": "从未",
   "signedInAs": "登录为: {email}",
   "lastSync": "最后同步: {date}",
   "remoteBackupTime": "远程备份: {date}",
@@ -1299,8 +1299,8 @@
   "oneDay": "1天",
   "xDays": "{count}天",
   "settings": "设置",
-  "searchSettings": "Search settings",
-  "noSettingsFoundFor": "No settings found for \"{query}\"",
+  "searchSettings": "搜索设置",
+  "noSettingsFoundFor": "未找到与\"{query}\"相关的设置",
   "@noSettingsFoundFor": {
     "placeholders": {
       "query": {
@@ -1310,6 +1310,8 @@
   },
   "language": "语言",
   "theme": "主题",
+  "languageSettingDescription": "整个应用程序中使用的语言。",
+  "themeSettingDescription": "应用程序的配色主题。",
   "support": "支持",
   "shareDiagnosticLog": "分享诊断日志",
   "shareDiagnosticLogEmpty": "暂无诊断日志",
@@ -1686,6 +1688,8 @@
   "@profileNotFound": {
     "description": "Message when a profile cannot be found"
   },
+  "downloadFilesSectionTitle": "下载文件",
+  "downloadFilesSectionDescription": "将此档案的所有文件——简介、封面、新闻资料包和附加资源——下载为一个ZIP压缩包，或选择要包含的文件。",
   "selectFiles": "选择文件",
   "@selectFiles": {
     "description": "Button label to select files"
@@ -1794,7 +1798,7 @@
   "@switchToNeonTheme": {
     "description": "Tooltip to switch to neon theme"
   },
-  "switchToStudioLight": "Switch to Studio Light",
+  "switchToStudioLight": "切换到 Studio Light",
   "menuTheme": "主题",
   "@menuTheme": {
     "description": "macOS menu item for theme switching"
@@ -1802,7 +1806,7 @@
   "appDescription": "面向音乐制作人和音效设计师的项目管理工具。",
   "neonDarkThemeName": "霓虹暗色",
   "classicDarkThemeName": "经典暗色",
-  "studioLightThemeName": "Studio Light",
+  "studioLightThemeName": "工作室亮色",
   "statisticsTab": "统计",
   "statsTotalProjects": "总项目数",
   "statsInProgress": "进行中",
@@ -1979,6 +1983,10 @@
   "mixdownFoldersOtherDawLabel": "其他 / 未识别的DAW",
   "addMixdownFolder": "添加",
   "noCustomMixdownFolders": "未添加自定义文件夹 — 将使用DAW默认值。",
+  "mixdownFoldersTabLabel": "混音文件夹",
+  "mixdownFoldersSectionDescription": "控制应用程序在哪个文件夹中查找项目导出/缩混的音频，当未手动设置预览曲目时会使用它。展开下方的DAW可查看默认检查的文件夹名称，如果你的设置使用不同的名称，也可以自行添加。",
+  "mixdownFoldersDefaultsLabel": "默认检查的文件夹：",
+  "mixdownFoldersCustomLabel": "你为此DAW添加的文件夹：",
   "dawInfoLabel": "DAW：{daw}",
   "@dawInfoLabel": {
     "placeholders": {
@@ -2092,18 +2100,18 @@
   "noPreviewSongDragHint": "您也可以将音频文件直接拖放到表格中的项目行上。",
   "@noPreviewSongDragHint": {},
   "customizeTabs": "自定义标签页",
-  "alwaysVisible": "(always visible)",
+  "alwaysVisible": "（始终可见）",
   "@customizeTabs": {},
   "customizeTabsDescription": "选择在导航栏中显示哪些标签页。项目标签页始终可见。",
   "@customizeTabsDescription": {},
-  "autoBackup": "Auto Backup",
-  "autoBackupDescription": "Automatically upload a backup to Google Drive at the selected interval.",
-  "autoBackupInterval": "Backup interval",
-  "autoBackupOff": "Off",
-  "autoBackupEvery30Min": "Every 30 minutes",
-  "autoBackupHourly": "Every hour",
-  "autoBackupEvery6Hours": "Every 6 hours",
-  "autoBackupDaily": "Daily",
+  "autoBackup": "自动备份",
+  "autoBackupDescription": "按所选时间间隔自动将备份上传到Google Drive。",
+  "autoBackupInterval": "备份间隔",
+  "autoBackupOff": "关闭",
+  "autoBackupEvery30Min": "每30分钟",
+  "autoBackupHourly": "每小时",
+  "autoBackupEvery6Hours": "每6小时",
+  "autoBackupDaily": "每天",
   "autoBackupNextBackup": "下次备份：{time}",
   "@autoBackupNextBackup": {
     "placeholders": {
@@ -2254,6 +2262,14 @@
   "@onboardingWelcomeTitle": {},
   "onboardingWelcomeBody": "在一个地方管理您所有的音乐项目。",
   "@onboardingWelcomeBody": {},
+  "onboardingFeatureScanFolders": "自动扫描DAW项目文件夹",
+  "@onboardingFeatureScanFolders": {},
+  "onboardingFeatureTrackMetadata": "跟踪BPM、调性、状态和截止日期",
+  "@onboardingFeatureTrackMetadata": {},
+  "onboardingFeatureSyncDrive": "将元数据同步到Google Drive",
+  "@onboardingFeatureSyncDrive": {},
+  "onboardingFeatureTrackTime": "跟踪每个项目所花费的时间",
+  "@onboardingFeatureTrackTime": {},
   "onboardingLanguageTitle": "选择语言",
   "@onboardingLanguageTitle": {},
   "onboardingThemeTitle": "选择主题",
@@ -2288,7 +2304,7 @@
   "@stop": {},
   "pause": "暂停",
   "@pause": {},
-  "playPauseTooltip": "Play / Pause",
+  "playPauseTooltip": "播放/暂停",
   "@playPauseTooltip": {},
   "resume": "继续",
   "@resume": {},
@@ -2319,10 +2335,10 @@
   "sessionMode": "会话模式",
   "@sessionMode": {},
   "sessionModeDescription": "启动前订阅项目，以跟踪工作时间并从工具栏管理",
-  "workSessionsTabLabel": "Work Sessions",
-  "normalMode": "Normal Mode",
-  "normalModeDescription": "Projects open directly in their DAW when launched.",
-  "sessionModeCardDescription": "Subscribe first to track work time from the toolbar.",
+  "workSessionsTabLabel": "工作会话",
+  "normalMode": "普通模式",
+  "normalModeDescription": "启动时项目会直接在其DAW中打开。",
+  "sessionModeCardDescription": "先启用此模式，即可通过工具栏跟踪工作时间。",
   "@sessionModeDescription": {},
   "startSession": "开始会话",
   "@startSession": {},
@@ -2516,7 +2532,7 @@
   "@pendingProjectNotFound": {},
   "phases": "阶段",
   "phasesSubtitle": "添加、删除和重新排序项目阶段",
-  "phasesDescription": "Phases track each project's stage in your workflow (e.g. Idea → Mixing → Mastering). Drag to reorder, tap a color dot to recolor, and flag a phase as finished to treat it as complete throughout the app.",
+  "phasesDescription": "阶段用于跟踪每个项目在你的工作流程中所处的位置（例如：创意 → 混音 → 母带）。拖动可重新排序，点击彩色圆点可更改颜色，将某个阶段标记为已完成后，整个应用中都会将其视为完成状态。",
   "resetToDefaults": "恢复默认设置",
   "addPhase": "添加阶段",
   "phaseNameHint": "阶段名称",
@@ -2526,7 +2542,7 @@
   "markAsFinished": "标记为完成阶段",
   "resetPhasesWarning": "{count, plural, =1{1个项目使用了将不再存在的阶段。} other{{count}个项目使用了将不再存在的阶段。}}",
   "resetPhasesWarningNote": "这些项目将保留当前状态，但不会出现在阶段筛选器中。您随时可以重新添加这些阶段。",
-  "resetPhasesConfirm": "Reset all custom phases, colors, and finished-phase flags back to the defaults?",
+  "resetPhasesConfirm": "将所有自定义阶段、颜色和已完成阶段标记重置为默认值？",
   "camelotGenerateButton": "生成混音",
   "camelotDialogTitle": "Camelot 混音",
   "camelotDialogDescription": "使用 Camelot 轮盘按和声兼容性排列曲目，以 BPM 接近度作为同等情况下的决胜标准。",
@@ -2548,14 +2564,14 @@
   "playerMixSuggestions": "混音建议",
   "@playerMixSuggestions": {}
 ,
-  "nowPlaying": "Now Playing",
-  "noPreviewSongsAvailable": "No preview songs available",
+  "nowPlaying": "正在播放",
+  "noPreviewSongsAvailable": "没有可用的预览曲目",
   "upNext": "接下来",
   "@upNext": { "description": "Queue panel title - tracks coming up next" },
-  "playbackModeNormal": "Normal",
+  "playbackModeNormal": "正常",
   "@playbackModeNormal": { "description": "Playback mode: play queue once in order" },
-  "playbackModeRepeat": "Repeat",
+  "playbackModeRepeat": "循环",
   "@playbackModeRepeat": { "description": "Playback mode: loop the entire queue" },
-  "playbackModeShuffle": "Shuffle",
+  "playbackModeShuffle": "随机播放",
   "@playbackModeShuffle": { "description": "Playback mode: random order" }
 }

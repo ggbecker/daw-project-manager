@@ -69,7 +69,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get scanning => '扫描中…';
 
   @override
-  String get newProjectBadge => 'NEW';
+  String get newProjectBadge => '新';
 
   @override
   String get projectName => '项目名称';
@@ -251,24 +251,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get deepScanOnlyUnscanned => '仅扫描没有元数据的项目';
 
   @override
-  String get metadataExtractionTitle => 'Metadata Extraction';
+  String get metadataExtractionTitle => '元数据提取';
 
   @override
-  String get metadataExtractionSubtitle => 'See which data each DAW supports';
+  String get metadataExtractionSubtitle => '查看每种DAW支持哪些数据';
 
   @override
   String get metadataExtractionIntro =>
       'Deep Scan can automatically read some of these fields straight from a project file — the rest have to be entered by hand. This table shows what\'s automatic for each supported DAW today.';
 
   @override
-  String get metadataFieldKey => 'Key';
+  String get metadataFieldKey => '调性';
 
   @override
-  String get metadataFieldVersion => 'DAW Version';
+  String get metadataFieldVersion => 'DAW版本';
 
   @override
   String get metadataExtractionManualNote =>
-      'Any field without automatic support can still be entered manually in Project Detail. For BPM and Key specifically, dropping a bpm.txt or key.txt file next to the project is also picked up on the next scan.';
+      '没有自动支持的字段仍可以在项目详情中手动输入。特别是对于BPM和调性，在项目旁放置bpm.txt或key.txt文件，也会在下次扫描时被读取。';
 
   @override
   String get metadataExtractedSuccessfully => '元数据提取成功';
@@ -492,22 +492,22 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get deleteMissingProjects => 'Delete Missing';
+  String get deleteMissingProjects => '删除缺失项目';
 
   @override
-  String get deleteMissingProjectsTitle => 'Delete missing projects?';
+  String get deleteMissingProjectsTitle => '删除缺失的项目？';
 
   @override
   String deleteMissingProjectsConfirm(int count, String plural) {
-    return '$count project$plural whose file could not be found on this machine will be permanently deleted, along with all notes, deadlines, and session history. This can\'t be undone.';
+    return '在此设备上找不到文件的$count个项目$plural将被永久删除，包括所有备注、截止日期和会话历史。此操作无法撤销。';
   }
 
   @override
-  String get deleteMissingProjectsConfirmButton => 'Delete Permanently';
+  String get deleteMissingProjectsConfirmButton => '永久删除';
 
   @override
   String missingProjectsDeleted(int count, String plural) {
-    return '$count missing project$plural deleted.';
+    return '已删除$count个缺失的项目$plural。';
   }
 
   @override
@@ -515,7 +515,7 @@ class AppLocalizationsZh extends AppLocalizations {
     int count,
     String plural,
   ) {
-    return 'Also delete $count project$plural that are part of a release (removes them from that release too)';
+    return '同时删除属于发行版的$count个项目$plural（也会将它们从该发行版中移除）';
   }
 
   @override
@@ -843,12 +843,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String addTodoAtTimestamp(String timestamp) {
-    return 'Add todo at $timestamp';
+    return '在$timestamp添加待办事项';
   }
 
   @override
   String todoAddedAtTimestamp(String timestamp) {
-    return 'Added todo at $timestamp';
+    return '已在$timestamp添加待办事项';
   }
 
   @override
@@ -1163,14 +1163,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get clickToBrowseArtwork => '点击浏览封面';
 
   @override
-  String get dropImageHere => 'Drop image here';
+  String get dropImageHere => '将图片拖放到此处';
 
   @override
-  String get removeArtwork => 'Remove Artwork';
+  String get removeArtwork => '移除封面';
 
   @override
-  String get removeArtworkConfirm =>
-      'Remove this artwork? The image file will be deleted.';
+  String get removeArtworkConfirm => '移除此封面？图片文件将被删除。';
 
   @override
   String get noFilesAddedYet => '尚未添加文件。\n点击\"添加文件\"上传发布文件。';
@@ -1185,16 +1184,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupAndRestore => '备份和恢复';
 
   @override
-  String get backupTabLabel => 'Backup';
+  String get backupTabLabel => '备份';
 
   @override
-  String get aboutTabLabel => 'About';
+  String get aboutTabLabel => '关于';
 
   @override
-  String get localBackup => 'Local Backup';
+  String get localBackup => '本地备份';
 
   @override
-  String get appearanceTabLabel => 'Appearance';
+  String get appearanceTabLabel => '外观';
 
   @override
   String get exportBackup => '导出备份';
@@ -1232,98 +1231,98 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String projectExportExportedLabel(String dateTime) {
-    return 'Exported: $dateTime';
+    return '导出时间：$dateTime';
   }
 
   @override
   String projectExportTotalProjectsLabel(int count) {
-    return 'Total projects: $count';
+    return '项目总数：$count';
   }
 
   @override
   String projectExportProjectLabel(String name) {
-    return 'Project: $name';
+    return '项目：$name';
   }
 
   @override
   String projectExportDawLabel(String dawType) {
-    return 'DAW: $dawType';
+    return 'DAW：$dawType';
   }
 
   @override
   String projectExportDawWithVersionLabel(String dawType, String version) {
-    return 'DAW: $dawType $version';
+    return 'DAW：$dawType $version';
   }
 
   @override
   String projectExportStatusLabel(String status) {
-    return 'Status: $status';
+    return '状态：$status';
   }
 
   @override
   String projectExportBpmLabel(String bpm) {
-    return 'BPM: $bpm';
+    return 'BPM：$bpm';
   }
 
   @override
   String projectExportKeyLabel(String key) {
-    return 'Key: $key';
+    return '调性：$key';
   }
 
   @override
   String projectExportKeyWithCamelotLabel(String key, String code) {
-    return 'Key: $key (Camelot $code)';
+    return '调性：$key（Camelot $code）';
   }
 
   @override
   String projectExportFilePathLabel(String path) {
-    return 'File path: $path';
+    return '文件路径：$path';
   }
 
   @override
   String projectExportFileSizeLabel(String size) {
-    return 'File size: $size';
+    return '文件大小：$size';
   }
 
   @override
   String projectExportFileCreatedLabel(String date) {
-    return 'File created: $date';
+    return '文件创建日期：$date';
   }
 
   @override
   String projectExportAddedToLibraryLabel(String date) {
-    return 'Added to library: $date';
+    return '添加到库的日期：$date';
   }
 
   @override
   String projectExportLastModifiedLabel(String date) {
-    return 'Last modified: $date';
+    return '最后修改：$date';
   }
 
   @override
   String projectExportDeadlineLabel(String date) {
-    return 'Deadline: $date';
+    return '截止日期：$date';
   }
 
   @override
   String projectExportDeadlineWithStatusLabel(String date, String status) {
-    return 'Deadline: $date ($status)';
+    return '截止日期：$date（$status）';
   }
 
   @override
   String projectExportTotalTimeWorkedLabel(String duration) {
-    return 'Total time worked: $duration';
+    return '总工作时长：$duration';
   }
 
   @override
-  String get projectExportNotesLabel => 'Notes:';
+  String get projectExportNotesLabel => '备注：';
 
   @override
-  String get projectExportTodosLabel => 'To-dos:';
+  String get projectExportTodosLabel => '待办事项：';
 
   @override
   String projectExportWorkSessionsLabel(int count) {
-    return 'Work sessions ($count):';
+    return '工作会话（$count）：';
   }
 
   @override
@@ -1779,10 +1778,10 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get notSignedInYet => 'Not signed in';
+  String get notSignedInYet => '未登录';
 
   @override
-  String get never => 'Never';
+  String get never => '从未';
 
   @override
   String signedInAs(String email) {
@@ -1876,11 +1875,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings => '设置';
 
   @override
-  String get searchSettings => 'Search settings';
+  String get searchSettings => '搜索设置';
 
   @override
   String noSettingsFoundFor(String query) {
-    return 'No settings found for \"$query\"';
+    return '未找到与\"$query\"相关的设置';
   }
 
   @override
@@ -1888,6 +1887,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get theme => '主题';
+
+  @override
+  String get languageSettingDescription => '整个应用程序中使用的语言。';
+
+  @override
+  String get themeSettingDescription => '应用程序的配色主题。';
 
   @override
   String get support => '支持';
@@ -2350,6 +2355,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get profileNotFound => '找不到个人资料';
 
   @override
+  String get downloadFilesSectionTitle => '下载文件';
+
+  @override
+  String get downloadFilesSectionDescription =>
+      '将此档案的所有文件——简介、封面、新闻资料包和附加资源——下载为一个ZIP压缩包，或选择要包含的文件。';
+
+  @override
   String get selectFiles => '选择文件';
 
   @override
@@ -2476,7 +2488,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get switchToNeonTheme => '切换到霓虹主题';
 
   @override
-  String get switchToStudioLight => 'Switch to Studio Light';
+  String get switchToStudioLight => '切换到 Studio Light';
 
   @override
   String get menuTheme => '主题';
@@ -2491,7 +2503,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get classicDarkThemeName => '经典暗色';
 
   @override
-  String get studioLightThemeName => 'Studio Light';
+  String get studioLightThemeName => '工作室亮色';
 
   @override
   String get statisticsTab => '统计';
@@ -2817,6 +2829,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noCustomMixdownFolders => '未添加自定义文件夹 — 将使用DAW默认值。';
 
   @override
+  String get mixdownFoldersTabLabel => '混音文件夹';
+
+  @override
+  String get mixdownFoldersSectionDescription =>
+      '控制应用程序在哪个文件夹中查找项目导出/缩混的音频，当未手动设置预览曲目时会使用它。展开下方的DAW可查看默认检查的文件夹名称，如果你的设置使用不同的名称，也可以自行添加。';
+
+  @override
+  String get mixdownFoldersDefaultsLabel => '默认检查的文件夹：';
+
+  @override
+  String get mixdownFoldersCustomLabel => '你为此DAW添加的文件夹：';
+
+  @override
   String dawInfoLabel(String daw) {
     return 'DAW：$daw';
   }
@@ -2892,7 +2917,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get customizeTabs => '自定义标签页';
 
   @override
-  String get alwaysVisible => '(always visible)';
+  String get alwaysVisible => '（始终可见）';
 
   @override
   String get customizeTabsDescription => '选择在导航栏中显示哪些标签页。项目标签页始终可见。';
@@ -3027,29 +3052,28 @@ class AppLocalizationsZh extends AppLocalizations {
   String get keepCurrent => '保留当前';
 
   @override
-  String get autoBackup => 'Auto Backup';
+  String get autoBackup => '自动备份';
 
   @override
-  String get autoBackupDescription =>
-      'Automatically upload a backup to Google Drive at the selected interval.';
+  String get autoBackupDescription => '按所选时间间隔自动将备份上传到Google Drive。';
 
   @override
-  String get autoBackupInterval => 'Backup interval';
+  String get autoBackupInterval => '备份间隔';
 
   @override
-  String get autoBackupOff => 'Off';
+  String get autoBackupOff => '关闭';
 
   @override
-  String get autoBackupEvery30Min => 'Every 30 minutes';
+  String get autoBackupEvery30Min => '每30分钟';
 
   @override
-  String get autoBackupHourly => 'Every hour';
+  String get autoBackupHourly => '每小时';
 
   @override
-  String get autoBackupEvery6Hours => 'Every 6 hours';
+  String get autoBackupEvery6Hours => '每6小时';
 
   @override
-  String get autoBackupDaily => 'Daily';
+  String get autoBackupDaily => '每天';
 
   @override
   String autoBackupNextBackup(String time) {
@@ -3295,6 +3319,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onboardingWelcomeBody => '在一个地方管理您所有的音乐项目。';
 
   @override
+  String get onboardingFeatureScanFolders => '自动扫描DAW项目文件夹';
+
+  @override
+  String get onboardingFeatureTrackMetadata => '跟踪BPM、调性、状态和截止日期';
+
+  @override
+  String get onboardingFeatureSyncDrive => '将元数据同步到Google Drive';
+
+  @override
+  String get onboardingFeatureTrackTime => '跟踪每个项目所花费的时间';
+
+  @override
   String get onboardingLanguageTitle => '选择语言';
 
   @override
@@ -3346,7 +3382,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pause => '暂停';
 
   @override
-  String get playPauseTooltip => 'Play / Pause';
+  String get playPauseTooltip => '播放/暂停';
 
   @override
   String get resume => '继续';
@@ -3394,18 +3430,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sessionModeDescription => '启动前订阅项目，以跟踪工作时间并从工具栏管理';
 
   @override
-  String get workSessionsTabLabel => 'Work Sessions';
+  String get workSessionsTabLabel => '工作会话';
 
   @override
-  String get normalMode => 'Normal Mode';
+  String get normalMode => '普通模式';
 
   @override
-  String get normalModeDescription =>
-      'Projects open directly in their DAW when launched.';
+  String get normalModeDescription => '启动时项目会直接在其DAW中打开。';
 
   @override
-  String get sessionModeCardDescription =>
-      'Subscribe first to track work time from the toolbar.';
+  String get sessionModeCardDescription => '先启用此模式，即可通过工具栏跟踪工作时间。';
 
   @override
   String get startSession => '开始会话';
@@ -3689,7 +3723,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get phasesDescription =>
-      'Phases track each project\'s stage in your workflow (e.g. Idea → Mixing → Mastering). Drag to reorder, tap a color dot to recolor, and flag a phase as finished to treat it as complete throughout the app.';
+      '阶段用于跟踪每个项目在你的工作流程中所处的位置（例如：创意 → 混音 → 母带）。拖动可重新排序，点击彩色圆点可更改颜色，将某个阶段标记为已完成后，整个应用中都会将其视为完成状态。';
 
   @override
   String get resetToDefaults => '恢复默认设置';
@@ -3736,8 +3770,7 @@ class AppLocalizationsZh extends AppLocalizations {
       '这些项目将保留当前状态，但不会出现在阶段筛选器中。您随时可以重新添加这些阶段。';
 
   @override
-  String get resetPhasesConfirm =>
-      'Reset all custom phases, colors, and finished-phase flags back to the defaults?';
+  String get resetPhasesConfirm => '将所有自定义阶段、颜色和已完成阶段标记重置为默认值？';
 
   @override
   String get camelotGenerateButton => '生成混音';
@@ -3806,20 +3839,20 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playerMixSuggestions => '混音建议';
 
   @override
-  String get nowPlaying => 'Now Playing';
+  String get nowPlaying => '正在播放';
 
   @override
-  String get noPreviewSongsAvailable => 'No preview songs available';
+  String get noPreviewSongsAvailable => '没有可用的预览曲目';
 
   @override
   String get upNext => '接下来';
 
   @override
-  String get playbackModeNormal => 'Normal';
+  String get playbackModeNormal => '正常';
 
   @override
-  String get playbackModeRepeat => 'Repeat';
+  String get playbackModeRepeat => '循环';
 
   @override
-  String get playbackModeShuffle => 'Shuffle';
+  String get playbackModeShuffle => '随机播放';
 }

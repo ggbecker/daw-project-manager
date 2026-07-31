@@ -222,7 +222,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get active => 'Active';
 
   @override
-  String get switchProfile => 'Switch Profile';
+  String get switchProfile => 'Activate Profile';
 
   @override
   String get edit => 'Edit';
@@ -1946,6 +1946,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get theme => 'Theme';
 
   @override
+  String get languageSettingDescription =>
+      'The language used throughout the app.';
+
+  @override
+  String get themeSettingDescription => 'The app\'s color theme.';
+
+  @override
   String get support => 'Support';
 
   @override
@@ -2414,6 +2421,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileNotFound => 'Profile not found';
+
+  @override
+  String get downloadFilesSectionTitle => 'Download Files';
+
+  @override
+  String get downloadFilesSectionDescription =>
+      'Download all of this profile\'s files — biography, artwork, press kit, and additional assets — as a single ZIP, or select which ones to include.';
 
   @override
   String get selectFiles => 'Select Files';
@@ -2899,6 +2913,19 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get noCustomMixdownFolders =>
       'No custom folders added — DAW defaults will be used.';
+
+  @override
+  String get mixdownFoldersTabLabel => 'Mixdown Folders';
+
+  @override
+  String get mixdownFoldersSectionDescription =>
+      'Controls which folder the app looks in for a project\'s exported/bounced audio, used as its preview song when none is set manually. Expand a DAW below to see the folder names it already checks by default, and add your own on top of them if your setup uses a different name.';
+
+  @override
+  String get mixdownFoldersDefaultsLabel => 'Default folders checked:';
+
+  @override
+  String get mixdownFoldersCustomLabel => 'Your additions for this DAW:';
 
   @override
   String dawInfoLabel(String daw) {
@@ -3394,6 +3421,20 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get onboardingWelcomeBody =>
       'Organize all your music projects across every DAW in one place.';
+
+  @override
+  String get onboardingFeatureScanFolders =>
+      'Scan DAW project folders automatically';
+
+  @override
+  String get onboardingFeatureTrackMetadata =>
+      'Track BPM, key, status and deadlines';
+
+  @override
+  String get onboardingFeatureSyncDrive => 'Sync metadata to Google Drive';
+
+  @override
+  String get onboardingFeatureTrackTime => 'Track time spent on each project';
 
   @override
   String get onboardingLanguageTitle => 'Choose Your Language';

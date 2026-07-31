@@ -113,7 +113,7 @@
   "create": "Create",
   "profiles": "Profiles",
   "active": "Active",
-  "switchProfile": "Switch Profile",
+  "switchProfile": "Activate Profile",
   "edit": "Edit",
   "delete": "Delete",
   "addFolder": "Add Folder",
@@ -2079,6 +2079,8 @@
   },
   "language": "Language",
   "theme": "Theme",
+  "languageSettingDescription": "The language used throughout the app.",
+  "themeSettingDescription": "The app's color theme.",
   "support": "Support",
   "shareDiagnosticLog": "Share Diagnostic Log",
   "shareDiagnosticLogEmpty": "No diagnostic log yet",
@@ -2740,6 +2742,8 @@
   "@profileNotFound": {
     "description": "Message when a profile cannot be found"
   },
+  "downloadFilesSectionTitle": "Download Files",
+  "downloadFilesSectionDescription": "Download all of this profile's files — biography, artwork, press kit, and additional assets — as a single ZIP, or select which ones to include.",
   "selectFiles": "Select Files",
   "@selectFiles": {
     "description": "Button label to select files"
@@ -3106,6 +3110,10 @@
   "mixdownFoldersOtherDawLabel": "Other / unrecognized DAW",
   "addMixdownFolder": "Add",
   "noCustomMixdownFolders": "No custom folders added — DAW defaults will be used.",
+  "mixdownFoldersTabLabel": "Mixdown Folders",
+  "mixdownFoldersSectionDescription": "Controls which folder the app looks in for a project's exported/bounced audio, used as its preview song when none is set manually. Expand a DAW below to see the folder names it already checks by default, and add your own on top of them if your setup uses a different name.",
+  "mixdownFoldersDefaultsLabel": "Default folders checked:",
+  "mixdownFoldersCustomLabel": "Your additions for this DAW:",
 
   "dawInfoLabel": "DAW: {daw}",
   "@dawInfoLabel": {
@@ -3408,6 +3416,14 @@
   "@onboardingWelcomeTitle": {},
   "onboardingWelcomeBody": "Organize all your music projects across every DAW in one place.",
   "@onboardingWelcomeBody": {},
+  "onboardingFeatureScanFolders": "Scan DAW project folders automatically",
+  "@onboardingFeatureScanFolders": {},
+  "onboardingFeatureTrackMetadata": "Track BPM, key, status and deadlines",
+  "@onboardingFeatureTrackMetadata": {},
+  "onboardingFeatureSyncDrive": "Sync metadata to Google Drive",
+  "@onboardingFeatureSyncDrive": {},
+  "onboardingFeatureTrackTime": "Track time spent on each project",
+  "@onboardingFeatureTrackTime": {},
   "onboardingLanguageTitle": "Choose Your Language",
   "@onboardingLanguageTitle": {},
   "onboardingThemeTitle": "Choose a Theme",
