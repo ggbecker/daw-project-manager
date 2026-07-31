@@ -1067,26 +1067,6 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                                         ],
                                       ),
                                     ),
-                                    const SizedBox(height: 16),
-                                    // Download Buttons - Stack vertically on mobile
-                                    SizedBox(
-                                      width: double.infinity,
-                                      child: Column(
-                                        children: [
-                                          ElevatedButton.icon(
-                                            icon: const Icon(Icons.select_all, size: 18),
-                                            label: Text(AppLocalizations.of(context)!.selectFiles),
-                                            onPressed: () => _showSelectFilesDialog(profile),
-                                          ),
-                                          const SizedBox(height: 8),
-                                          ElevatedButton.icon(
-                                            icon: const Icon(Icons.download, size: 18),
-                                            label: Text(AppLocalizations.of(context)!.downloadAll),
-                                            onPressed: () => _downloadAllFiles(profile),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
                                   ],
                                 )
                               : Row(
@@ -1145,25 +1125,55 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                                         ],
                                       ),
                                     ),
-                                    // Download Buttons
-                                    Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        ElevatedButton.icon(
-                                          icon: const Icon(Icons.select_all, size: 18),
-                                          label: Text(AppLocalizations.of(context)!.selectFiles),
-                                          onPressed: () => _showSelectFilesDialog(profile),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        ElevatedButton.icon(
-                                          icon: const Icon(Icons.download, size: 18),
-                                          label: Text(AppLocalizations.of(context)!.downloadAll),
-                                          onPressed: () => _downloadAllFiles(profile),
-                                        ),
-                                      ],
-                                    ),
                                   ],
                                 ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Download Files section — separated from the header
+                      // since these act on the whole profile's files, not
+                      // the name/photo above them.
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.folder_zip_outlined),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    AppLocalizations.of(context)!.downloadFilesSectionTitle,
+                                    style: Theme.of(context).textTheme.titleLarge,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                AppLocalizations.of(context)!.downloadFilesSectionDescription,
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                              const SizedBox(height: 16),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: [
+                                  ElevatedButton.icon(
+                                    icon: const Icon(Icons.select_all, size: 18),
+                                    label: Text(AppLocalizations.of(context)!.selectFiles),
+                                    onPressed: () => _showSelectFilesDialog(profile),
+                                  ),
+                                  ElevatedButton.icon(
+                                    icon: const Icon(Icons.download, size: 18),
+                                    label: Text(AppLocalizations.of(context)!.downloadAll),
+                                    onPressed: () => _downloadAllFiles(profile),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                       const SizedBox(height: 16),

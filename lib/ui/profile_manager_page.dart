@@ -2,23 +2,17 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:path/path.dart' as path;
 import 'widgets/desktop_title_bar.dart';
 import '../models/profile.dart';
 import '../providers/providers.dart';
 import '../repository/project_repository.dart';
 import '../services/demo_data_service.dart';
 import '../services/scanner_service.dart';
-import '../utils/app_paths.dart';
 import '../utils/mobile_utils.dart';
 import '../generated/l10n/app_localizations.dart';
-import 'profile_view_page.dart';
+import 'profile_edit_page.dart';
 import '../services/crash_logger.dart';
 import 'package:share_plus/share_plus.dart';
-import 'google_drive_sync_page.dart';
-import 'settings_page.dart';
-import '../services/google_drive_sync_service.dart' show GoogleDriveSyncService;
 import 'widgets/theme_switcher.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'widgets/language_switcher.dart';
@@ -186,206 +180,6 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
     // No need to show a message here as the scan state change will trigger UI updates
   }
 
-  Future<String> _getProfilePhotosPath() async {
-    final basePath = await getLocalAppDataPath();
-    return path.join(basePath, 'profile_photos');
-  }
-
-  Future<void> _pickProfilePhoto(Profile profile) async {
-    final result = await FilePicker.pickFiles(type: FileType.image);
-    if (result != null && result.files.single.path != null) {
-      final sourcePath = result.files.single.path!;
-      final sourceFile = File(sourcePath);
-      
-      if (!await sourceFile.exists()) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.selectedFileDoesNotExist)),
-          );
-        }
-        return;
-      }
-
-      try {
-        // Get profile photos directory
-        final photosDirPath = await _getProfilePhotosPath();
-        final photosDir = Directory(photosDirPath);
-        
-        // Create directory if it doesn't exist
-        if (!await photosDir.exists()) {
-          await photosDir.create(recursive: true);
-        }
-
-        // Copy file to profile photos directory with profile ID as name
-        final fileExtension = path.extension(sourcePath);
-        final destPath = path.join(photosDir.path, '${profile.id}$fileExtension');
-        await sourceFile.copy(destPath);
-
-        // Update profile with photo path
-        final profileRepo = await ref.read(profileRepositoryProvider.future);
-        final updatedProfile = profile.copyWith(photoPath: destPath);
-        await profileRepo.updateProfile(updatedProfile);
-        
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.profilePhotoUpdated)),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.failedToSaveProfilePhoto(e.toString()))),
-          );
-        }
-      }
-    }
-  }
-
-  Future<void> _removeProfilePhoto(Profile profile) async {
-    if (profile.photoPath != null) {
-      try {
-        final photoFile = File(profile.photoPath!);
-        if (await photoFile.exists()) {
-          await photoFile.delete();
-        }
-        
-        final profileRepo = await ref.read(profileRepositoryProvider.future);
-        final updatedProfile = profile.copyWith(clearPhotoPath: true);
-        await profileRepo.updateProfile(updatedProfile);
-        
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.profilePhotoRemoved)),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.failedToRemoveProfilePhoto(e.toString()))),
-          );
-        }
-      }
-    }
-  }
-
-  Future<void> _editProfile(Profile profile) async {
-    final editController = TextEditingController(text: profile.name);
-    
-    final result = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Theme.of(context).cardColor,
-        title: Text(AppLocalizations.of(context)!.editProfile),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: editController,
-              decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.profileName,
-                hintText: AppLocalizations.of(context)!.profileName,
-              ),
-              autofocus: true,
-              onSubmitted: (value) {
-                if (value.trim().isNotEmpty) {
-                  Navigator.pop(ctx, value.trim());
-                }
-              },
-            ),
-            const SizedBox(height: 16),
-            // Profile photo preview and controls
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if (profile.photoPath != null && File(profile.photoPath!).existsSync())
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.file(
-                      File(profile.photoPath!),
-                      width: 80,
-                      height: 80,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return const SizedBox(
-                          width: 80,
-                          height: 80,
-                          child: Icon(Icons.broken_image),
-                        );
-                      },
-                    ),
-                  )
-                else
-                  const SizedBox(
-                    width: 80,
-                    height: 80,
-                    child: Icon(Icons.person, size: 40),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                TextButton.icon(
-                  icon: const Icon(Icons.photo),
-                  label: Text(AppLocalizations.of(context)!.changePhoto),
-                  onPressed: () async {
-                    Navigator.pop(ctx);
-                    await _pickProfilePhoto(profile);
-                  },
-                ),
-                if (profile.photoPath != null)
-                  TextButton.icon(
-                    icon: const Icon(Icons.delete),
-                    label: Text(AppLocalizations.of(context)!.remove),
-                    onPressed: () async {
-                      Navigator.pop(ctx);
-                      await _removeProfilePhoto(profile);
-                    },
-                  ),
-              ],
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(AppLocalizations.of(context)!.cancel),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final newName = editController.text.trim();
-              if (newName.isNotEmpty) {
-                Navigator.pop(ctx, newName);
-              }
-            },
-            child: Text(AppLocalizations.of(context)!.saveName),
-          ),
-        ],
-      ),
-    );
-
-    if (result != null && result.isNotEmpty && result != profile.name) {
-      try {
-        final profileRepo = await ref.read(profileRepositoryProvider.future);
-        final updatedProfile = profile.copyWith(name: result);
-        await profileRepo.updateProfile(updatedProfile);
-        
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.profileRenamed(result))),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.failedToRenameProfile(e.toString()))),
-          );
-        }
-      }
-    }
-  }
-
   Future<void> _deleteProfile(Profile profile) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -431,87 +225,6 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
       }
     }
   }
-
-  Future<void> _showProfileContextMenu(BuildContext context, Profile profile, Offset position, bool isCurrent, int totalProfiles) async {
-    final l10n = AppLocalizations.of(context)!;
-    
-    final result = await showMenu<String>(
-      context: context,
-      position: RelativeRect.fromLTRB(
-        position.dx,
-        position.dy,
-        position.dx,
-        position.dy,
-      ),
-      items: [
-        PopupMenuItem<String>(
-          value: 'view',
-          child: Row(
-            children: [
-              const Icon(Icons.visibility, size: 20),
-              const SizedBox(width: 8),
-              Text(AppLocalizations.of(context)!.viewProfile),
-            ],
-          ),
-        ),
-        PopupMenuItem<String>(
-          value: 'edit',
-          child: Row(
-            children: [
-              const Icon(Icons.edit_outlined, size: 20),
-              const SizedBox(width: 8),
-              Text(l10n.tooltipEditProfileName),
-            ],
-          ),
-        ),
-        if (!isCurrent)
-          PopupMenuItem<String>(
-            value: 'switch',
-            child: Row(
-              children: [
-                const Icon(Icons.swap_horiz, size: 20),
-                const SizedBox(width: 8),
-                Text(l10n.switchProfile),
-              ],
-            ),
-          ),
-        if (totalProfiles > 1)
-          PopupMenuItem<String>(
-            value: 'delete',
-            child: Row(
-              children: [
-                Icon(Icons.delete_outline, size: 20, color: Colors.red.shade300),
-                const SizedBox(width: 8),
-                Text(l10n.delete, style: TextStyle(color: Colors.red.shade300)),
-              ],
-            ),
-          ),
-      ],
-      color: Theme.of(context).cardColor,
-    );
-
-    if (result != null && mounted) {
-      switch (result) {
-        case 'view':
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => ProfileViewPage(profileId: profile.id),
-            ),
-          );
-          break;
-        case 'edit':
-          await _editProfile(profile);
-          break;
-        case 'switch':
-          await _switchProfile(profile.id);
-          break;
-        case 'delete':
-          await _deleteProfile(profile);
-          break;
-      }
-    }
-  }
-
 
   Future<void> _shareDiagnosticLog() async {
     final files = await CrashLogger.existingLogFiles();
@@ -915,52 +628,6 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
                       ),
                     ),
                   ],
-                  // Google Drive Sync section - Link to dedicated page.
-                  // Not offered on Linux at all — see
-                  // GoogleDriveSyncService.isSupported.
-                  if (GoogleDriveSyncService.isSupported) ...[
-                    const SizedBox(height: 24),
-                    Card(
-                      color: Theme.of(context).cardColor,
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(Icons.cloud, size: 24),
-                                const SizedBox(width: 8),
-                                Text(
-                                  AppLocalizations.of(context)!.googleDriveSync,
-                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              AppLocalizations.of(context)!.googleDriveSyncDescription,
-                              style: TextStyle(fontSize: 14, color: Theme.of(context).textTheme.bodySmall?.color),
-                            ),
-                            const SizedBox(height: 16),
-                            ElevatedButton.icon(
-                              icon: const Icon(Icons.settings),
-                              label: Text(AppLocalizations.of(context)!.manageGoogleDriveSync),
-                              onPressed: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) => MobileUtils.isMobile()
-                                        ? const GoogleDriveSyncPage()
-                                        : const SettingsPage(initialSection: SettingsSection.backup),
-                                  ),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
                   const SizedBox(height: 24),
                   // Profiles list
                   if (profilesAsync.hasValue)
@@ -1002,7 +669,7 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
                                 onDoubleTap: () {
                                   Navigator.of(context).push(
                                     MaterialPageRoute(
-                                      builder: (_) => ProfileViewPage(profileId: profile.id),
+                                      builder: (_) => ProfileEditPage(profileId: profile.id),
                                     ),
                                   );
                                 },
@@ -1064,21 +731,15 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
                                                   child: Text(AppLocalizations.of(context)!.switchProfile),
                                                 ),
                                               IconButton(
-                                                icon: const Icon(Icons.visibility),
-                                                color: Theme.of(context).textTheme.bodyMedium?.color,
-                                                tooltip: AppLocalizations.of(context)!.viewProfile,
+                                                icon: const Icon(Icons.edit_outlined),
+                                                tooltip: AppLocalizations.of(context)!.editProfile,
                                                 onPressed: () {
                                                   Navigator.of(context).push(
                                                     MaterialPageRoute(
-                                                      builder: (_) => ProfileViewPage(profileId: profile.id),
+                                                      builder: (_) => ProfileEditPage(profileId: profile.id),
                                                     ),
                                                   );
                                                 },
-                                              ),
-                                              IconButton(
-                                                icon: const Icon(Icons.edit),
-                                                tooltip: AppLocalizations.of(context)!.editProfile,
-                                                onPressed: () => _editProfile(profile),
                                               ),
                                               IconButton(
                                                 icon: Icon(Icons.delete, color: Colors.red.shade300),
@@ -1169,20 +830,15 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
                   ),
                 ),
               OutlinedButton.icon(
-                icon: const Icon(Icons.visibility, size: 18),
-                label: Text(AppLocalizations.of(context)!.viewProfile),
+                icon: const Icon(Icons.edit_outlined, size: 18),
+                label: Text(AppLocalizations.of(context)!.editProfile),
                 onPressed: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => ProfileViewPage(profileId: profile.id),
+                      builder: (_) => ProfileEditPage(profileId: profile.id),
                     ),
                   );
                 },
-              ),
-              OutlinedButton.icon(
-                icon: const Icon(Icons.edit, size: 18),
-                label: Text(AppLocalizations.of(context)!.editProfile),
-                onPressed: () => _editProfile(profile),
               ),
               OutlinedButton.icon(
                 icon: Icon(Icons.delete, size: 18, color: Colors.red.shade300),
