@@ -23,6 +23,7 @@ import '../services/project_template_service.dart';
 import '../services/scanner_service.dart';
 import '../utils/app_paths.dart';
 import '../utils/daw_logo.dart';
+import '../utils/file_launcher.dart';
 import '../utils/mobile_utils.dart';
 import 'dialogs/create_project_dialog.dart';
 import 'widgets/desktop_title_bar.dart';
@@ -455,9 +456,12 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
                         final root = roots[index];
                         return ListTile(
                           leading: const Icon(Icons.folder_outlined),
-                          title: Text(
-                            root.path,
-                            overflow: TextOverflow.ellipsis,
+                          title: Tooltip(
+                            message: root.path,
+                            child: Text(
+                              root.path,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                           subtitle: root.lastRefreshedAt != null
                               ? Text(
@@ -468,9 +472,20 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
                                   ),
                                 )
                               : null,
-                          trailing: IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () => _removeTemplateRoot(root),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.folder_open_outlined),
+                                tooltip: l10n.openFolder,
+                                onPressed: () => FileLauncher.openFolder(root.path),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete, color: Colors.red),
+                                tooltip: l10n.remove,
+                                onPressed: () => _removeTemplateRoot(root),
+                              ),
+                            ],
                           ),
                         );
                       },
