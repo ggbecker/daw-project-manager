@@ -69,7 +69,6 @@ class _GoogleDriveSyncSectionState extends ConsumerState<GoogleDriveSyncSection>
   bool _isCheckingSession = false;
   bool _hasNewerBackupAvailable = false;
   DateTime? _remoteBackupTime;
-  DateTime? _lastDownloadTime;
   DateTime? _lastUploadTime;
   StreamSubscription<bool>? _authStateSubscription;
 
@@ -241,19 +240,20 @@ class _GoogleDriveSyncSectionState extends ConsumerState<GoogleDriveSyncSection>
         });
       }
 
-      // Load local backup timestamps
-      final lastDownload = await _syncService.getLastBackupDownloadTimestamp();
+      // Local record of this device's last upload — still used to compute
+      // the auto-backup section's "next backup" label.
       final lastUpload = await _syncService.getLastBackupUploadTimestamp();
-
       if (mounted) {
         setState(() {
-          _lastDownloadTime = lastDownload;
           _lastUploadTime = lastUpload;
         });
       }
 
-      // Check if newer backup is available (only if signed in and on mobile)
-      if (_isSignedIn && MobileUtils.isMobile()) {
+      // Populates Remote Backup Time (what's actually on Drive right now,
+      // which can differ from Last Sync if another device pushed since) —
+      // shown on every platform. Only the "newer backup available" banner
+      // itself stays mobile-only, gated at render time below.
+      if (_isSignedIn) {
         await _checkForNewerBackup();
       }
     } catch (e) {
@@ -917,9 +917,15 @@ class _GoogleDriveSyncSectionState extends ConsumerState<GoogleDriveSyncSection>
           Icon(icon, size: 16, color: color),
           const SizedBox(width: 10),
           Expanded(
-            child: DefaultTextStyle.merge(
-              style: TextStyle(fontSize: 13, color: color),
-              child: child,
+            child: SizedBox(
+              height: 18,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: DefaultTextStyle.merge(
+                  style: TextStyle(fontSize: 13, color: color),
+                  child: child,
+                ),
+              ),
             ),
           ),
         ],
@@ -1008,28 +1014,35 @@ class _GoogleDriveSyncSectionState extends ConsumerState<GoogleDriveSyncSection>
                     : Wrap(spacing: 8, runSpacing: 8, children: buttons),
                 const Divider(height: 24),
                 Builder(builder: (context) {
-                  final statusText = _syncStatus ?? (connected ? l10n.sessionActive : l10n.notSignedInYet);
-                  final isError = statusText.contains('Error') || statusText.contains('Failed');
-                  final statusColor = isError ? Colors.red : Colors.green;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 5),
-                    child: Row(
-                      children: [
-                        Icon(
-                          isError ? Icons.error_outline : Icons.check_circle_outline,
-                          size: 16,
-                          color: statusColor,
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            '${l10n.status}: $statusText',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(fontSize: 13, color: statusColor),
+                  // Only worth surfacing when something went wrong — "signed in
+                  // and everything's fine" is already obvious from the rows
+                  // below, so a permanent "Session active" line was just noise.
+                  // maintainSize keeps this row's footprint constant whether or
+                  // not it has content, so the card never resizes around it.
+                  final statusText = _syncStatus;
+                  final isError = statusText != null &&
+                      (statusText.contains('Error') || statusText.contains('Failed'));
+                  return Visibility(
+                    visible: isError,
+                    maintainSize: true,
+                    maintainAnimation: true,
+                    maintainState: true,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 5),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.error_outline, size: 16, color: Colors.red),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              '${l10n.status}: ${statusText ?? ''}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 13, color: Colors.red),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   );
                 }),
@@ -1040,7 +1053,11 @@ class _GoogleDriveSyncSectionState extends ConsumerState<GoogleDriveSyncSection>
                       ? Text(l10n.notSignedInYet)
                       : (_loadingEmail
                           ? const _ShimmerLine(width: 170)
-                          : Text(_userEmail == null ? l10n.notSignedInYet : l10n.signedInAs(_userEmail!))),
+                          : Text(
+                              _userEmail == null ? l10n.notSignedInYet : l10n.signedInAs(_userEmail!),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            )),
                 ),
                 _infoRow(
                   icon: Icons.sync,
@@ -1055,20 +1072,6 @@ class _GoogleDriveSyncSectionState extends ConsumerState<GoogleDriveSyncSection>
                   child: _loadingTimestamps
                       ? const _ShimmerLine(width: 150)
                       : Text(l10n.remoteBackupTime(_remoteBackupTime == null ? l10n.never : fmt(_remoteBackupTime!))),
-                ),
-                _infoRow(
-                  icon: Icons.cloud_upload_outlined,
-                  dimmed: !connected,
-                  child: _loadingTimestamps
-                      ? const _ShimmerLine(width: 140)
-                      : Text(l10n.lastUploadTime(_lastUploadTime == null ? l10n.never : fmt(_lastUploadTime!))),
-                ),
-                _infoRow(
-                  icon: Icons.cloud_download_outlined,
-                  dimmed: !connected,
-                  child: _loadingTimestamps
-                      ? const _ShimmerLine(width: 140)
-                      : Text(l10n.lastDownloadTime(_lastDownloadTime == null ? l10n.never : fmt(_lastDownloadTime!))),
                 ),
                 // Newer-backup banner — mobile only, unrelated to the
                 // fixed-size fields above (an alert, not a loading field).
