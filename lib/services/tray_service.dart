@@ -68,25 +68,33 @@ class TrayService with TrayListener {
     final paused = _container.read(workTimerPausedProvider);
 
     DateTime? lastUpload;
-    try {
-      lastUpload = await _syncService.getLastBackupUploadTimestamp();
-    } catch (_) {}
+    if (GoogleDriveSyncService.isSupported) {
+      try {
+        lastUpload = await _syncService.getLastBackupUploadTimestamp();
+      } catch (_) {}
+    }
 
     final items = <MenuItem>[
       MenuItem(key: 'show', label: l10n.trayShowWindow),
-      MenuItem.separator(),
-      MenuItem(
-        key: 'backup_status',
-        label: lastUpload != null
-            ? l10n.trayLastBackup(formatLastBackupLabel(lastUpload))
-            : l10n.trayNeverBackedUp,
-        disabled: true,
-      ),
-      MenuItem(
-        key: 'backup_now',
-        label: l10n.trayBackupNow,
-        disabled: !_syncService.isSignedIn,
-      ),
+      // Drive backup status/action — not offered on Linux at all, see
+      // GoogleDriveSyncService.isSupported. Omitted rather than shown
+      // permanently disabled, since there's no way it could ever become
+      // available on this platform.
+      if (GoogleDriveSyncService.isSupported) ...[
+        MenuItem.separator(),
+        MenuItem(
+          key: 'backup_status',
+          label: lastUpload != null
+              ? l10n.trayLastBackup(formatLastBackupLabel(lastUpload))
+              : l10n.trayNeverBackedUp,
+          disabled: true,
+        ),
+        MenuItem(
+          key: 'backup_now',
+          label: l10n.trayBackupNow,
+          disabled: !_syncService.isSignedIn,
+        ),
+      ],
     ];
 
     if (project != null) {

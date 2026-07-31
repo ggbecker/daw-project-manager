@@ -15,14 +15,51 @@ import '../utils/mobile_utils.dart';
 import '../generated/l10n/app_localizations.dart';
 import 'google_drive_sync_page_download_dialog.dart';
 
-class GoogleDriveSyncPage extends ConsumerStatefulWidget {
+class GoogleDriveSyncPage extends StatelessWidget {
   const GoogleDriveSyncPage({super.key});
 
   @override
-  ConsumerState<GoogleDriveSyncPage> createState() => _GoogleDriveSyncPageState();
+  Widget build(BuildContext context) {
+    final isMobile = MobileUtils.isMobile();
+    return Scaffold(
+      appBar: isMobile
+          ? AppBar(
+              title: Text(AppLocalizations.of(context)!.googleDriveSync),
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => Navigator.pop(context),
+              ),
+            )
+          : null,
+      body: Column(
+        children: [
+          DesktopTitleBar(
+            title: AppLocalizations.of(context)!.googleDriveSync,
+            showBack: true,
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: MobileUtils.getResponsivePadding(context),
+              child: const GoogleDriveSyncSection(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
+/// The actual Google Drive sign-in / backup / auto-backup UI, extracted so it
+/// can be embedded both as its own page (mobile, and desktop's quick-access
+/// shortcut) and inline as the Backup tab's Drive section in SettingsPage.
+class GoogleDriveSyncSection extends ConsumerStatefulWidget {
+  const GoogleDriveSyncSection({super.key});
+
+  @override
+  ConsumerState<GoogleDriveSyncSection> createState() => _GoogleDriveSyncSectionState();
+}
+
+class _GoogleDriveSyncSectionState extends ConsumerState<GoogleDriveSyncSection> {
   final GoogleDriveSyncService _syncService = GoogleDriveSyncService();
   bool _isSyncing = false;
   String? _syncStatus;
@@ -32,9 +69,17 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
   bool _isCheckingSession = false;
   bool _hasNewerBackupAvailable = false;
   DateTime? _remoteBackupTime;
-  DateTime? _lastDownloadTime;
   DateTime? _lastUploadTime;
   StreamSubscription<bool>? _authStateSubscription;
+
+  // Cached separately from the rest of the sync status so the "Signed in
+  // as" row can show its own loading placeholder independent of the
+  // timestamp rows below it — see _loadUserEmail.
+  String? _userEmail;
+  bool _loadingEmail = false;
+  // Gates the shimmer placeholders on the four timestamp rows while
+  // _loadSyncStatus is in flight, so those fields never render blank.
+  bool _loadingTimestamps = true;
 
   @override
   void initState() {
@@ -51,9 +96,28 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
             _syncStatus = AppLocalizations.of(context)!.sessionActive;
           }
         });
-        if (isSignedIn) _loadSyncStatus();
+        if (isSignedIn) {
+          _loadSyncStatus();
+          _loadUserEmail();
+        }
       }
     });
+  }
+
+  /// Fetches the signed-in user's email once and caches it, instead of the
+  /// FutureBuilder-per-build approach this used to use (which re-issued the
+  /// lookup on every rebuild and left the row blank while pending).
+  Future<void> _loadUserEmail() async {
+    if (!mounted) return;
+    setState(() => _loadingEmail = true);
+    try {
+      final email = await _syncService.getCurrentUserEmail();
+      if (mounted) setState(() => _userEmail = email);
+    } catch (_) {
+      // Row falls back to its empty placeholder below.
+    } finally {
+      if (mounted) setState(() => _loadingEmail = false);
+    }
   }
 
   @override
@@ -97,6 +161,7 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
                 _syncStatus = null;
               }
             });
+            if (restored) _loadUserEmail();
           }
           return; // Exit early if we restored (or failed to restore) on desktop
         } catch (e) {
@@ -137,6 +202,7 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
             _syncStatus = null;
           }
         });
+        if (isSignedIn) _loadUserEmail();
       }
     } catch (e) {
       if (kDebugMode) print('Error checking session status: $e');
@@ -165,6 +231,7 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
   }
 
   Future<void> _loadSyncStatus() async {
+    if (mounted) setState(() => _loadingTimestamps = true);
     try {
       final lastSync = await _syncService.getLastSyncTime();
       if (lastSync != null) {
@@ -172,24 +239,27 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
           _lastSyncTime = lastSync;
         });
       }
-      
-      // Load local backup timestamps
-      final lastDownload = await _syncService.getLastBackupDownloadTimestamp();
+
+      // Local record of this device's last upload — still used to compute
+      // the auto-backup section's "next backup" label.
       final lastUpload = await _syncService.getLastBackupUploadTimestamp();
-      
       if (mounted) {
         setState(() {
-          _lastDownloadTime = lastDownload;
           _lastUploadTime = lastUpload;
         });
       }
-      
-      // Check if newer backup is available (only if signed in and on mobile)
-      if (_isSignedIn && MobileUtils.isMobile()) {
+
+      // Populates Remote Backup Time (what's actually on Drive right now,
+      // which can differ from Last Sync if another device pushed since) —
+      // shown on every platform. Only the "newer backup available" banner
+      // itself stays mobile-only, gated at render time below.
+      if (_isSignedIn) {
         await _checkForNewerBackup();
       }
     } catch (e) {
       if (kDebugMode) print('Error loading sync status: $e');
+    } finally {
+      if (mounted) setState(() => _loadingTimestamps = false);
     }
   }
 
@@ -255,6 +325,7 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
             }
 
             await _loadSyncStatus();
+            _loadUserEmail();
           } else {
             setState(() {
               _syncStatus = AppLocalizations.of(context)!.signInCancelledOrFailed;
@@ -312,6 +383,7 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
           }
 
           await _loadSyncStatus();
+          _loadUserEmail();
         } catch (e) {
           setState(() {
             _syncStatus = AppLocalizations.of(context)!.errorSigningIn(e.toString());
@@ -384,6 +456,7 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
         _isSignedIn = false;
         _syncStatus = AppLocalizations.of(context)!.signedOutFromGoogleDrive;
         _lastSyncTime = null;
+        _userEmail = null;
       });
     } catch (e) {
       setState(() {
@@ -828,380 +901,31 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final isMobile = MobileUtils.isMobile();
-    return Scaffold(
-      appBar: isMobile
-          ? AppBar(
-              title: Text(AppLocalizations.of(context)!.googleDriveSync),
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () => Navigator.pop(context),
-              ),
-            )
-          : null,
-      body: Column(
+  /// A single info row (icon + text) that always renders at the same
+  /// height regardless of state — real value, shimmer placeholder while
+  /// loading, or a muted/dimmed value when signed out. This is what keeps
+  /// the whole card a fixed size instead of growing/shrinking as data
+  /// becomes available (see the class doc comment).
+  Widget _infoRow({required IconData icon, required bool dimmed, required Widget child}) {
+    final cs = Theme.of(context).colorScheme;
+    final color = dimmed ? cs.onSurfaceVariant.withValues(alpha: 0.5) : cs.onSurfaceVariant;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          DesktopTitleBar(
-            title: AppLocalizations.of(context)!.googleDriveSync,
-            showBack: true,
-          ),
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 10),
           Expanded(
-            child: SingleChildScrollView(
-              padding: MobileUtils.getResponsivePadding(context),
-              child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Google Drive Sync section
-            Card(
-              color: Theme.of(context).cardColor,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.cloud, size: 24),
-                        const SizedBox(width: 8),
-                        Text(
-                          AppLocalizations.of(context)!.googleDriveSync,
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Use Wrap on mobile, Row on desktop
-                        isMobile
-                            ? Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: [
-                                  if (!_isSignedIn)
-                                    SizedBox(
-                                      width: double.infinity,
-                                      child: ElevatedButton.icon(
-                                        icon: const Icon(Icons.login),
-                                        label: Text(AppLocalizations.of(context)!.signInToGoogleDrive),
-                                        onPressed: (_isSyncing || _isCheckingSession) ? null : () => _signInToGoogleDrive(),
-                                      ),
-                                    )
-                                  else ...[
-                                    SizedBox(
-                                      width: double.infinity,
-                                      child: ElevatedButton.icon(
-                                        icon: const Icon(Icons.refresh, size: 18),
-                                        label: Text(AppLocalizations.of(context)!.checkForBackup),
-                                        onPressed: _isSyncing ? null : () => _checkForBackupManually(),
-                                      ),
-                                    ),
-                                    SizedBox(
-                                      width: double.infinity,
-                                      child: ElevatedButton.icon(
-                                        icon: const Icon(Icons.cloud_upload, size: 18),
-                                        label: Text(AppLocalizations.of(context)!.uploadBackup),
-                                        onPressed: _isSyncing ? null : () => _uploadBackupToDrive(),
-                                      ),
-                                    ),
-                                    SizedBox(
-                                      width: double.infinity,
-                                      child: ElevatedButton.icon(
-                                        icon: const Icon(Icons.cloud_download, size: 18),
-                                        label: Text(AppLocalizations.of(context)!.downloadBackup),
-                                        onPressed: _isSyncing ? null : () => _downloadBackupFromDrive(),
-                                      ),
-                                    ),
-                                    SizedBox(
-                                      width: double.infinity,
-                                      child: TextButton.icon(
-                                        icon: const Icon(Icons.logout, size: 18),
-                                        label: Text(AppLocalizations.of(context)!.signOut),
-                                        onPressed: _isSyncing ? null : () => _signOutFromGoogleDrive(),
-                                      ),
-                                    ),
-                                  ],
-                                  if (_isSyncing)
-                                    const Center(
-                                      child: Padding(
-                                        padding: EdgeInsets.all(8.0),
-                                        child: SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: CircularProgressIndicator(strokeWidth: 2),
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              )
-                            : Row(
-                                children: [
-                                  if (!_isSignedIn)
-                                    ElevatedButton.icon(
-                                      icon: const Icon(Icons.login),
-                                      label: Text(AppLocalizations.of(context)!.signInToGoogleDrive),
-                                      onPressed: (_isSyncing || _isCheckingSession) ? null : () => _signInToGoogleDrive(),
-                                    )
-                                  else ...[
-                                    Wrap(
-                                      spacing: 8,
-                                      runSpacing: 8,
-                                      children: [
-                                        ElevatedButton.icon(
-                                          icon: const Icon(Icons.refresh, size: 18),
-                                          label: Text(AppLocalizations.of(context)!.checkForBackup),
-                                          onPressed: _isSyncing ? null : () => _checkForBackupManually(),
-                                        ),
-                                        ElevatedButton.icon(
-                                          icon: const Icon(Icons.cloud_upload, size: 18),
-                                          label: Text(AppLocalizations.of(context)!.uploadBackup),
-                                          onPressed: _isSyncing ? null : () => _uploadBackupToDrive(),
-                                        ),
-                                        ElevatedButton.icon(
-                                          icon: const Icon(Icons.cloud_download, size: 18),
-                                          label: Text(AppLocalizations.of(context)!.downloadBackup),
-                                          onPressed: _isSyncing ? null : () => _downloadBackupFromDrive(),
-                                        ),
-                                        TextButton.icon(
-                                          icon: const Icon(Icons.logout, size: 18),
-                                          label: Text(AppLocalizations.of(context)!.signOut),
-                                          onPressed: _isSyncing ? null : () => _signOutFromGoogleDrive(),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                  if (_isSyncing) ...[
-                                    const SizedBox(width: 16),
-                                    const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                        if (_syncStatus != null) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            _syncStatus!,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: _syncStatus!.contains('Error') || _syncStatus!.contains('Failed')
-                                  ? Colors.red
-                                  : Colors.green,
-                            ),
-                          ),
-                        ],
-                        // Show status information below buttons
-                        if (_isSignedIn) ...[
-                          const SizedBox(height: 16),
-                          const Divider(),
-                          const SizedBox(height: 8),
-                          FutureBuilder<String?>(
-                            future: _syncService.getCurrentUserEmail(),
-                            builder: (context, emailSnapshot) {
-                              if (emailSnapshot.hasData && emailSnapshot.data != null) {
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: 8.0),
-                                  child: Text(
-                                    AppLocalizations.of(context)!.signedInAs(emailSnapshot.data!),
-                                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                                  ),
-                                );
-                              }
-                              return const SizedBox.shrink();
-                            },
-                          ),
-                          if (_lastSyncTime != null)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 8.0),
-                              child: Text(
-                                AppLocalizations.of(context)!.lastSync(
-                                  DateFormat.yMMMd(Localizations.localeOf(context).toString()).add_jm().format(_lastSyncTime!),
-                                ),
-                                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                              ),
-                            ),
-                          // Show remote backup time if available
-                          if (_remoteBackupTime != null)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 4.0),
-                              child: Text(
-                                AppLocalizations.of(context)!.remoteBackupTime(
-                                  DateFormat.yMMMd(Localizations.localeOf(context).toString()).add_jm().format(_remoteBackupTime!),
-                                ),
-                                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                              ),
-                            ),
-                          // Show last upload time if available
-                          if (_lastUploadTime != null)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 4.0),
-                              child: Text(
-                                AppLocalizations.of(context)!.lastUploadTime(
-                                  DateFormat.yMMMd(Localizations.localeOf(context).toString()).add_jm().format(_lastUploadTime!),
-                                ),
-                                style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-                              ),
-                            ),
-                          // Show last download time if available
-                          if (_lastDownloadTime != null)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 0.0),
-                              child: Text(
-                                AppLocalizations.of(context)!.lastDownloadTime(
-                                  DateFormat.yMMMd(Localizations.localeOf(context).toString()).add_jm().format(_lastDownloadTime!),
-                                ),
-                                style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-                              ),
-                            ),
-                          // Newer backup banner — shown at the bottom so it doesn't shift buttons
-                          if (MobileUtils.isMobile())
-                            AnimatedContainer(
-                              duration: const Duration(milliseconds: 300),
-                              margin: const EdgeInsets.only(top: 12.0),
-                              height: _hasNewerBackupAvailable ? null : 0,
-                              child: _hasNewerBackupAvailable
-                                  ? Container(
-                                      padding: const EdgeInsets.all(12.0),
-                                      decoration: BoxDecoration(
-                                        color: Colors.orange.shade50,
-                                        border: Border.all(color: Colors.orange.shade300, width: 1),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.cloud_download, color: Colors.orange.shade700, size: 20),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: Text(
-                                              AppLocalizations.of(context)!.newerBackupAvailable,
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                color: Colors.orange.shade900,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    )
-                                  : const SizedBox.shrink(),
-                            ),
-                        ],
-                      ],
-                    ),
-                  ],
+            child: SizedBox(
+              height: 18,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: DefaultTextStyle.merge(
+                  style: TextStyle(fontSize: 13, color: color),
+                  child: child,
                 ),
               ),
-            ),
-          // Auto Backup section (only when signed in)
-          if (_isSignedIn) ...[
-            const SizedBox(height: 16),
-            Card(
-              color: Theme.of(context).cardColor,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.schedule, size: 24),
-                        const SizedBox(width: 8),
-                        Text(
-                          AppLocalizations.of(context)!.autoBackup,
-                          style: const TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      AppLocalizations.of(context)!.autoBackupDescription,
-                      style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Text(
-                          AppLocalizations.of(context)!.autoBackupInterval,
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                        const SizedBox(width: 16),
-                        DropdownButton<AutoBackupInterval>(
-                          value: ref.watch(autoBackupIntervalProvider),
-                          items: [
-                            DropdownMenuItem(
-                              value: AutoBackupInterval.off,
-                              child: Text(AppLocalizations.of(context)!.autoBackupOff),
-                            ),
-                            DropdownMenuItem(
-                              value: AutoBackupInterval.every30min,
-                              child: Text(AppLocalizations.of(context)!.autoBackupEvery30Min),
-                            ),
-                            DropdownMenuItem(
-                              value: AutoBackupInterval.hourly,
-                              child: Text(AppLocalizations.of(context)!.autoBackupHourly),
-                            ),
-                            DropdownMenuItem(
-                              value: AutoBackupInterval.every6hours,
-                              child: Text(AppLocalizations.of(context)!.autoBackupEvery6Hours),
-                            ),
-                            DropdownMenuItem(
-                              value: AutoBackupInterval.daily,
-                              child: Text(AppLocalizations.of(context)!.autoBackupDaily),
-                            ),
-                          ],
-                          onChanged: (value) {
-                            if (value != null) {
-                              ref
-                                  .read(autoBackupIntervalProvider.notifier)
-                                  .setInterval(value);
-                            }
-                          },
-                        ),
-                      ],
-                    ),
-                    if (ref.watch(autoBackupIntervalProvider) !=
-                            AutoBackupInterval.off &&
-                        _lastUploadTime != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4.0),
-                        child: Text(
-                          AppLocalizations.of(context)!.autoBackupNextBackup(
-                            _nextBackupLabel(
-                              ref.watch(autoBackupIntervalProvider),
-                              _lastUploadTime!,
-                            ),
-                          ),
-                          style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                        ),
-                      ),
-                    const Divider(height: 24),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(AppLocalizations.of(context)!.uploadAutoDetectedPreviewSongs,
-                          style: const TextStyle(fontSize: 14)),
-                      subtitle: Text(
-                        AppLocalizations.of(context)!.uploadAutoDetectedPreviewSongsSubtitle,
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                      ),
-                      value: ref.watch(uploadAutoPreviewSongsProvider),
-                      onChanged: (_) => ref
-                          .read(uploadAutoPreviewSongsProvider.notifier)
-                          .toggle(),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ],
-        ),
             ),
           ),
         ],
@@ -1209,15 +933,340 @@ class _GoogleDriveSyncPageState extends ConsumerState<GoogleDriveSyncPage> {
     );
   }
 
-  String _nextBackupLabel(AutoBackupInterval interval, DateTime lastUpload) {
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final isMobile = MobileUtils.isMobile();
+    final cs = Theme.of(context).colorScheme;
+    final connected = _isSignedIn;
+    final locale = Localizations.localeOf(context).toString();
+    String fmt(DateTime d) => DateFormat.yMMMd(locale).add_jm().format(d);
+
+    // Always the same four buttons — only which ones are enabled changes —
+    // so the button row never grows or shrinks between signed-in/out.
+    final signInOutButton = connected
+        ? OutlinedButton.icon(
+            icon: const Icon(Icons.logout, size: 18),
+            label: Text(l10n.signOut),
+            onPressed: _isSyncing ? null : _signOutFromGoogleDrive,
+          )
+        : ElevatedButton.icon(
+            icon: const Icon(Icons.login, size: 18),
+            label: Text(l10n.signInToGoogleDrive),
+            onPressed: (_isSyncing || _isCheckingSession) ? null : _signInToGoogleDrive,
+          );
+    final checkButton = ElevatedButton.icon(
+      icon: const Icon(Icons.refresh, size: 18),
+      label: Text(l10n.checkForBackup),
+      onPressed: (connected && !_isSyncing) ? _checkForBackupManually : null,
+    );
+    final uploadButton = ElevatedButton.icon(
+      icon: const Icon(Icons.cloud_upload_outlined, size: 18),
+      label: Text(l10n.uploadBackup),
+      onPressed: (connected && !_isSyncing) ? _uploadBackupToDrive : null,
+    );
+    final downloadButton = ElevatedButton.icon(
+      icon: const Icon(Icons.cloud_download_outlined, size: 18),
+      label: Text(l10n.downloadBackup),
+      onPressed: (connected && !_isSyncing) ? _downloadBackupFromDrive : null,
+    );
+    final buttons = [signInOutButton, checkButton, uploadButton, downloadButton];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Card(
+          color: Theme.of(context).cardColor,
+          clipBehavior: Clip.antiAlias,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.cloud_outlined, size: 22, color: cs.primary),
+                    const SizedBox(width: 10),
+                    Text(
+                      l10n.googleDriveSync,
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const Spacer(),
+                    if (_isSyncing)
+                      const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                isMobile
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          for (var i = 0; i < buttons.length; i++) ...[
+                            if (i > 0) const SizedBox(height: 8),
+                            buttons[i],
+                          ],
+                        ],
+                      )
+                    : Wrap(spacing: 8, runSpacing: 8, children: buttons),
+                const Divider(height: 24),
+                Builder(builder: (context) {
+                  // Only worth surfacing when something went wrong — "signed in
+                  // and everything's fine" is already obvious from the rows
+                  // below, so a permanent "Session active" line was just noise.
+                  // maintainSize keeps this row's footprint constant whether or
+                  // not it has content, so the card never resizes around it.
+                  final statusText = _syncStatus;
+                  final isError = statusText != null &&
+                      (statusText.contains('Error') || statusText.contains('Failed'));
+                  return Visibility(
+                    visible: isError,
+                    maintainSize: true,
+                    maintainAnimation: true,
+                    maintainState: true,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 5),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.error_outline, size: 16, color: Colors.red),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              '${l10n.status}: ${statusText ?? ''}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 13, color: Colors.red),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+                _infoRow(
+                  icon: Icons.person_outline,
+                  dimmed: !connected,
+                  child: !connected
+                      ? Text(l10n.notSignedInYet)
+                      : (_loadingEmail
+                          ? const _ShimmerLine(width: 170)
+                          : Text(
+                              _userEmail == null ? l10n.notSignedInYet : l10n.signedInAs(_userEmail!),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            )),
+                ),
+                _infoRow(
+                  icon: Icons.sync,
+                  dimmed: !connected,
+                  child: _loadingTimestamps
+                      ? const _ShimmerLine(width: 140)
+                      : Text(l10n.lastSync(_lastSyncTime == null ? l10n.never : fmt(_lastSyncTime!))),
+                ),
+                _infoRow(
+                  icon: Icons.cloud_queue,
+                  dimmed: !connected,
+                  child: _loadingTimestamps
+                      ? const _ShimmerLine(width: 150)
+                      : Text(l10n.remoteBackupTime(_remoteBackupTime == null ? l10n.never : fmt(_remoteBackupTime!))),
+                ),
+                // Newer-backup banner — mobile only, unrelated to the
+                // fixed-size fields above (an alert, not a loading field).
+                if (isMobile && _hasNewerBackupAvailable)
+                  Container(
+                    margin: const EdgeInsets.only(top: 12.0),
+                    padding: const EdgeInsets.all(12.0),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade50,
+                      border: Border.all(color: Colors.orange.shade300, width: 1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.cloud_download, color: Colors.orange.shade700, size: 20),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            l10n.newerBackupAvailable,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.orange.shade900,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Card(
+          color: Theme.of(context).cardColor,
+          clipBehavior: Clip.antiAlias,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.schedule_outlined, size: 22, color: cs.primary),
+                    const SizedBox(width: 10),
+                    Text(
+                      l10n.autoBackup,
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  l10n.autoBackupDescription,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Text(l10n.autoBackupInterval, style: const TextStyle(fontSize: 14)),
+                    const SizedBox(width: 16),
+                    DropdownButton<AutoBackupInterval>(
+                      value: ref.watch(autoBackupIntervalProvider),
+                      items: [
+                        DropdownMenuItem(
+                          value: AutoBackupInterval.off,
+                          child: Text(l10n.autoBackupOff),
+                        ),
+                        DropdownMenuItem(
+                          value: AutoBackupInterval.every30min,
+                          child: Text(l10n.autoBackupEvery30Min),
+                        ),
+                        DropdownMenuItem(
+                          value: AutoBackupInterval.hourly,
+                          child: Text(l10n.autoBackupHourly),
+                        ),
+                        DropdownMenuItem(
+                          value: AutoBackupInterval.every6hours,
+                          child: Text(l10n.autoBackupEvery6Hours),
+                        ),
+                        DropdownMenuItem(
+                          value: AutoBackupInterval.daily,
+                          child: Text(l10n.autoBackupDaily),
+                        ),
+                      ],
+                      onChanged: !connected
+                          ? null
+                          : (value) {
+                              if (value != null) {
+                                ref.read(autoBackupIntervalProvider.notifier).setInterval(value);
+                              }
+                            },
+                    ),
+                  ],
+                ),
+                Builder(builder: (context) {
+                  // _lastUploadTime starts null while timestamps are still
+                  // loading, so this line would otherwise pop in/out (and
+                  // resize the card) once it resolves. maintainSize keeps its
+                  // footprint reserved the whole time, same as the Status row
+                  // above.
+                  final interval = ref.watch(autoBackupIntervalProvider);
+                  final showNextBackup = interval != AutoBackupInterval.off && _lastUploadTime != null;
+                  return Visibility(
+                    visible: showNextBackup,
+                    maintainSize: true,
+                    maintainAnimation: true,
+                    maintainState: true,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 4.0),
+                      child: Text(
+                        showNextBackup
+                            ? l10n.autoBackupNextBackup(_nextBackupLabel(l10n, interval, _lastUploadTime!))
+                            : '',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ),
+                  );
+                }),
+                const Divider(height: 24),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(l10n.uploadAutoDetectedPreviewSongs, style: const TextStyle(fontSize: 14)),
+                  subtitle: Text(
+                    l10n.uploadAutoDetectedPreviewSongsSubtitle,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  value: ref.watch(uploadAutoPreviewSongsProvider),
+                  onChanged: !connected
+                      ? null
+                      : (_) => ref.read(uploadAutoPreviewSongsProvider.notifier).toggle(),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _nextBackupLabel(AppLocalizations l10n, AutoBackupInterval interval, DateTime lastUpload) {
     final next = lastUpload.add(interval.duration!);
     final diff = next.difference(DateTime.now());
-    if (diff.isNegative || diff.inSeconds < 30) return 'soon';
-    if (diff.inMinutes < 60) return 'in ${diff.inMinutes} min';
-    if (diff.inHours == 1) return 'in 1 hour';
-    if (diff.inHours < 24) return 'in ${diff.inHours} hours';
-    if (diff.inDays == 1) return 'in 1 day';
-    return 'in ${diff.inDays} days';
+    if (diff.isNegative || diff.inSeconds < 30) return l10n.autoBackupNextSoon;
+    if (diff.inMinutes < 60) return l10n.autoBackupNextInMinutes(diff.inMinutes);
+    if (diff.inHours == 1) return l10n.autoBackupNextInOneHour;
+    if (diff.inHours < 24) return l10n.autoBackupNextInHours(diff.inHours);
+    if (diff.inDays == 1) return l10n.autoBackupNextInOneDay;
+    return l10n.autoBackupNextInDays(diff.inDays);
+  }
+}
+
+/// A pulsing translucent bar standing in for a value that's still being
+/// fetched — the loading-feedback equivalent of a skeleton screen, scoped
+/// to a single text field instead of the whole card.
+class _ShimmerLine extends StatefulWidget {
+  final double width;
+
+  const _ShimmerLine({this.width = 120});
+
+  @override
+  State<_ShimmerLine> createState() => _ShimmerLineState();
+}
+
+class _ShimmerLineState extends State<_ShimmerLine> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  )..repeat(reverse: true);
+
+  late final Animation<double> _opacity = Tween<double>(begin: 0.25, end: 0.6).animate(
+    CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+  );
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final baseColor = Theme.of(context).colorScheme.onSurface;
+    return AnimatedBuilder(
+      animation: _opacity,
+      builder: (context, _) => Container(
+        width: widget.width,
+        height: 12,
+        decoration: BoxDecoration(
+          color: baseColor.withValues(alpha: _opacity.value * 0.3),
+          borderRadius: BorderRadius.circular(4),
+        ),
+      ),
+    );
   }
 }
 

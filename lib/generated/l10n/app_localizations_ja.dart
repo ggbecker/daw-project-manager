@@ -69,7 +69,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get scanning => 'スキャン中…';
 
   @override
-  String get newProjectBadge => 'NEW';
+  String get newProjectBadge => '新規';
 
   @override
   String get projectName => 'プロジェクト名';
@@ -255,24 +255,24 @@ class AppLocalizationsJa extends AppLocalizations {
   String get deepScanOnlyUnscanned => 'メタデータのないプロジェクトのみスキャン';
 
   @override
-  String get metadataExtractionTitle => 'Metadata Extraction';
+  String get metadataExtractionTitle => 'メタデータ抽出';
 
   @override
-  String get metadataExtractionSubtitle => 'See which data each DAW supports';
+  String get metadataExtractionSubtitle => '各DAWがサポートするデータを確認';
 
   @override
   String get metadataExtractionIntro =>
       'Deep Scan can automatically read some of these fields straight from a project file — the rest have to be entered by hand. This table shows what\'s automatic for each supported DAW today.';
 
   @override
-  String get metadataFieldKey => 'Key';
+  String get metadataFieldKey => 'キー';
 
   @override
-  String get metadataFieldVersion => 'DAW Version';
+  String get metadataFieldVersion => 'DAWバージョン';
 
   @override
   String get metadataExtractionManualNote =>
-      'Any field without automatic support can still be entered manually in Project Detail. For BPM and Key specifically, dropping a bpm.txt or key.txt file next to the project is also picked up on the next scan.';
+      '自動対応していない項目は、プロジェクト詳細で手動入力できます。特にBPMとキーについては、プロジェクトの隣にbpm.txtまたはkey.txtファイルを置くと、次回のスキャンで読み込まれます。';
 
   @override
   String get metadataExtractedSuccessfully => 'メタデータの抽出に成功しました';
@@ -496,22 +496,22 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get deleteMissingProjects => 'Delete Missing';
+  String get deleteMissingProjects => '見つからない項目を削除';
 
   @override
-  String get deleteMissingProjectsTitle => 'Delete missing projects?';
+  String get deleteMissingProjectsTitle => '見つからないプロジェクトを削除しますか？';
 
   @override
   String deleteMissingProjectsConfirm(int count, String plural) {
-    return '$count project$plural whose file could not be found on this machine will be permanently deleted, along with all notes, deadlines, and session history. This can\'t be undone.';
+    return 'このマシンでファイルが見つからなかった$count件のプロジェクト$pluralは、すべてのメモ、締切、セッション履歴とともに完全に削除されます。この操作は元に戻せません。';
   }
 
   @override
-  String get deleteMissingProjectsConfirmButton => 'Delete Permanently';
+  String get deleteMissingProjectsConfirmButton => '完全に削除';
 
   @override
   String missingProjectsDeleted(int count, String plural) {
-    return '$count missing project$plural deleted.';
+    return '見つからないプロジェクト$pluralを$count件削除しました。';
   }
 
   @override
@@ -519,7 +519,7 @@ class AppLocalizationsJa extends AppLocalizations {
     int count,
     String plural,
   ) {
-    return 'Also delete $count project$plural that are part of a release (removes them from that release too)';
+    return 'リリースの一部である$count件のプロジェクト$pluralも削除する（そのリリースからも削除されます）';
   }
 
   @override
@@ -847,12 +847,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String addTodoAtTimestamp(String timestamp) {
-    return 'Add todo at $timestamp';
+    return '$timestampにToDoを追加';
   }
 
   @override
   String todoAddedAtTimestamp(String timestamp) {
-    return 'Added todo at $timestamp';
+    return '$timestampにToDoを追加しました';
   }
 
   @override
@@ -1167,14 +1167,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get clickToBrowseArtwork => 'アートワークを参照するにはクリック';
 
   @override
-  String get dropImageHere => 'Drop image here';
+  String get dropImageHere => 'ここに画像をドロップ';
 
   @override
-  String get removeArtwork => 'Remove Artwork';
+  String get removeArtwork => 'アートワークを削除';
 
   @override
-  String get removeArtworkConfirm =>
-      'Remove this artwork? The image file will be deleted.';
+  String get removeArtworkConfirm => 'このアートワークを削除しますか？画像ファイルが削除されます。';
 
   @override
   String get noFilesAddedYet =>
@@ -1188,6 +1187,18 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get backupAndRestore => 'バックアップと復元';
+
+  @override
+  String get backupTabLabel => 'バックアップ';
+
+  @override
+  String get aboutTabLabel => 'アプリについて';
+
+  @override
+  String get localBackup => 'ローカルバックアップ';
+
+  @override
+  String get appearanceTabLabel => '外観';
 
   @override
   String get exportBackup => 'バックアップをエクスポート';
@@ -1226,17 +1237,17 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String projectExportExportedLabel(String dateTime) {
-    return 'Exported: $dateTime';
+    return 'エクスポート日時: $dateTime';
   }
 
   @override
   String projectExportTotalProjectsLabel(int count) {
-    return 'Total projects: $count';
+    return '総プロジェクト数: $count';
   }
 
   @override
   String projectExportProjectLabel(String name) {
-    return 'Project: $name';
+    return 'プロジェクト: $name';
   }
 
   @override
@@ -1251,7 +1262,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String projectExportStatusLabel(String status) {
-    return 'Status: $status';
+    return 'ステータス: $status';
   }
 
   @override
@@ -1261,63 +1272,63 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String projectExportKeyLabel(String key) {
-    return 'Key: $key';
+    return 'キー: $key';
   }
 
   @override
   String projectExportKeyWithCamelotLabel(String key, String code) {
-    return 'Key: $key (Camelot $code)';
+    return 'キー: $key（Camelot $code）';
   }
 
   @override
   String projectExportFilePathLabel(String path) {
-    return 'File path: $path';
+    return 'ファイルパス: $path';
   }
 
   @override
   String projectExportFileSizeLabel(String size) {
-    return 'File size: $size';
+    return 'ファイルサイズ: $size';
   }
 
   @override
   String projectExportFileCreatedLabel(String date) {
-    return 'File created: $date';
+    return 'ファイル作成日: $date';
   }
 
   @override
   String projectExportAddedToLibraryLabel(String date) {
-    return 'Added to library: $date';
+    return 'ライブラリに追加: $date';
   }
 
   @override
   String projectExportLastModifiedLabel(String date) {
-    return 'Last modified: $date';
+    return '最終更新日: $date';
   }
 
   @override
   String projectExportDeadlineLabel(String date) {
-    return 'Deadline: $date';
+    return '締切: $date';
   }
 
   @override
   String projectExportDeadlineWithStatusLabel(String date, String status) {
-    return 'Deadline: $date ($status)';
+    return '締切: $date（$status）';
   }
 
   @override
   String projectExportTotalTimeWorkedLabel(String duration) {
-    return 'Total time worked: $duration';
+    return '総作業時間: $duration';
   }
 
   @override
-  String get projectExportNotesLabel => 'Notes:';
+  String get projectExportNotesLabel => 'メモ:';
 
   @override
-  String get projectExportTodosLabel => 'To-dos:';
+  String get projectExportTodosLabel => 'ToDo:';
 
   @override
   String projectExportWorkSessionsLabel(int count) {
-    return 'Work sessions ($count):';
+    return '作業セッション（$count件）:';
   }
 
   @override
@@ -1787,6 +1798,12 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get notSignedInYet => 'サインインしていません';
+
+  @override
+  String get never => 'なし';
+
+  @override
   String signedInAs(String email) {
     return 'サインイン: $email';
   }
@@ -1879,10 +1896,24 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settings => '設定';
 
   @override
+  String get searchSettings => '設定を検索';
+
+  @override
+  String noSettingsFoundFor(String query) {
+    return '「$query」に一致する設定は見つかりませんでした';
+  }
+
+  @override
   String get language => '言語';
 
   @override
   String get theme => 'テーマ';
+
+  @override
+  String get languageSettingDescription => 'アプリ全体で使用される言語です。';
+
+  @override
+  String get themeSettingDescription => 'アプリのカラーテーマです。';
 
   @override
   String get support => 'サポート';
@@ -2346,6 +2377,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get profileNotFound => 'プロフィールが見つかりません';
 
   @override
+  String get downloadFilesSectionTitle => 'ファイルをダウンロード';
+
+  @override
+  String get downloadFilesSectionDescription =>
+      'このプロフィールのすべてのファイル（プロフィール文、アートワーク、プレスキット、追加アセット）を1つのZIPとしてダウンロードするか、含めるものを選択できます。';
+
+  @override
   String get selectFiles => 'ファイルを選択';
 
   @override
@@ -2476,7 +2514,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get switchToNeonTheme => 'Neon テーマに切り替え';
 
   @override
-  String get switchToStudioLight => 'Switch to Studio Light';
+  String get switchToStudioLight => 'Studio Light に切り替え';
 
   @override
   String get menuTheme => 'テーマ';
@@ -2491,7 +2529,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get classicDarkThemeName => 'クラシックダーク';
 
   @override
-  String get studioLightThemeName => 'Studio Light';
+  String get studioLightThemeName => 'スタジオライト';
 
   @override
   String get statisticsTab => '統計';
@@ -2817,6 +2855,19 @@ class AppLocalizationsJa extends AppLocalizations {
   String get noCustomMixdownFolders => 'カスタムフォルダが追加されていません — DAWのデフォルトが使用されます。';
 
   @override
+  String get mixdownFoldersTabLabel => 'ミックスダウンフォルダ';
+
+  @override
+  String get mixdownFoldersSectionDescription =>
+      '手動でプレビュー曲が設定されていない場合に、プロジェクトのエクスポート/バウンス済み音声を探すフォルダを制御します。以下のDAWを展開すると、デフォルトで確認されるフォルダ名が表示されます。異なる名前を使用している場合は、独自のフォルダ名を追加できます。';
+
+  @override
+  String get mixdownFoldersDefaultsLabel => 'デフォルトで確認されるフォルダ:';
+
+  @override
+  String get mixdownFoldersCustomLabel => 'このDAW用に追加したフォルダ:';
+
+  @override
   String dawInfoLabel(String daw) {
     return 'DAW: $daw';
   }
@@ -2891,6 +2942,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get customizeTabs => 'タブのカスタマイズ';
+
+  @override
+  String get alwaysVisible => '（常に表示）';
 
   @override
   String get customizeTabsDescription =>
@@ -3028,33 +3082,57 @@ class AppLocalizationsJa extends AppLocalizations {
   String get keepCurrent => '現在のを保持';
 
   @override
-  String get autoBackup => 'Auto Backup';
+  String get autoBackup => '自動バックアップ';
 
   @override
   String get autoBackupDescription =>
-      'Automatically upload a backup to Google Drive at the selected interval.';
+      '選択した間隔で自動的にGoogle Driveにバックアップをアップロードします。';
 
   @override
-  String get autoBackupInterval => 'Backup interval';
+  String get autoBackupInterval => 'バックアップ間隔';
 
   @override
-  String get autoBackupOff => 'Off';
+  String get autoBackupOff => 'オフ';
 
   @override
-  String get autoBackupEvery30Min => 'Every 30 minutes';
+  String get autoBackupEvery30Min => '30分ごと';
 
   @override
-  String get autoBackupHourly => 'Every hour';
+  String get autoBackupHourly => '1時間ごと';
 
   @override
-  String get autoBackupEvery6Hours => 'Every 6 hours';
+  String get autoBackupEvery6Hours => '6時間ごと';
 
   @override
-  String get autoBackupDaily => 'Daily';
+  String get autoBackupDaily => '毎日';
 
   @override
   String autoBackupNextBackup(String time) {
     return '次回バックアップ：$time';
+  }
+
+  @override
+  String get autoBackupNextSoon => 'まもなく';
+
+  @override
+  String autoBackupNextInMinutes(int count) {
+    return 'あと$count分';
+  }
+
+  @override
+  String get autoBackupNextInOneHour => 'あと1時間';
+
+  @override
+  String autoBackupNextInHours(int count) {
+    return 'あと$count時間';
+  }
+
+  @override
+  String get autoBackupNextInOneDay => 'あと1日';
+
+  @override
+  String autoBackupNextInDays(int count) {
+    return 'あと$count日';
   }
 
   @override
@@ -3298,6 +3376,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String get onboardingWelcomeBody => 'すべての音楽プロジェクトを一か所で管理できます。';
 
   @override
+  String get onboardingFeatureScanFolders => 'DAWプロジェクトフォルダを自動的にスキャン';
+
+  @override
+  String get onboardingFeatureTrackMetadata => 'BPM、キー、ステータス、締切を管理';
+
+  @override
+  String get onboardingFeatureSyncDrive => 'メタデータをGoogle Driveと同期';
+
+  @override
+  String get onboardingFeatureTrackTime => '各プロジェクトに費やした時間を記録';
+
+  @override
   String get onboardingLanguageTitle => '言語を選択';
 
   @override
@@ -3349,7 +3439,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get pause => '一時停止';
 
   @override
-  String get playPauseTooltip => 'Play / Pause';
+  String get playPauseTooltip => '再生 / 一時停止';
 
   @override
   String get resume => '再開';
@@ -3395,6 +3485,18 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get sessionModeDescription => '起動前にプロジェクトを購読して、作業時間を追跡し、ツールバーから管理します';
+
+  @override
+  String get workSessionsTabLabel => '作業セッション';
+
+  @override
+  String get normalMode => '通常モード';
+
+  @override
+  String get normalModeDescription => '起動時にプロジェクトが直接DAWで開きます。';
+
+  @override
+  String get sessionModeCardDescription => 'まず有効にすると、ツールバーから作業時間を記録できます。';
 
   @override
   String get startSession => 'セッション開始';
@@ -3680,6 +3782,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get phasesSubtitle => 'プロジェクトフェーズの追加・削除・並べ替え';
 
   @override
+  String get phasesDescription =>
+      'フェーズは、ワークフロー内の各プロジェクトの段階（例：アイデア → ミキシング → マスタリング）を追跡します。ドラッグして並べ替え、カラードットをタップして色を変更し、フェーズを完了としてフラグ付けすると、アプリ全体で完了扱いになります。';
+
+  @override
   String get resetToDefaults => 'デフォルトにリセット';
 
   @override
@@ -3722,6 +3828,9 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get resetPhasesWarningNote =>
       'これらのプロジェクトは現在のステータスを保持しますが、フェーズフィルターには表示されません。後でいつでもフェーズを再追加できます。';
+
+  @override
+  String get resetPhasesConfirm => 'カスタムフェーズ、色、完了フェーズのフラグをすべてデフォルトにリセットしますか？';
 
   @override
   String get camelotGenerateButton => 'ミックス生成';
@@ -3792,20 +3901,20 @@ class AppLocalizationsJa extends AppLocalizations {
   String get playerMixSuggestions => 'ミックス候補';
 
   @override
-  String get nowPlaying => 'Now Playing';
+  String get nowPlaying => '再生中';
 
   @override
-  String get noPreviewSongsAvailable => 'No preview songs available';
+  String get noPreviewSongsAvailable => '利用可能なプレビュー曲がありません';
 
   @override
   String get upNext => '次の曲';
 
   @override
-  String get playbackModeNormal => 'Normal';
+  String get playbackModeNormal => '通常';
 
   @override
-  String get playbackModeRepeat => 'Repeat';
+  String get playbackModeRepeat => 'リピート';
 
   @override
-  String get playbackModeShuffle => 'Shuffle';
+  String get playbackModeShuffle => 'シャッフル';
 }

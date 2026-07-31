@@ -23,7 +23,7 @@
   "rescan": "再スキャン",
   "refreshProject": "更新",
   "scanning": "スキャン中…",
-  "newProjectBadge": "NEW",
+  "newProjectBadge": "新規",
   "projectName": "プロジェクト名",
   "bpm": "BPM",
   "key": "キー（例：C#m、F major）",
@@ -115,12 +115,12 @@
   "tryDifferentSearch": "別の検索用語を試してください",
   "deepScanConfirm": "詳細スキャンは、プロジェクトファイルから完全なメタデータを抽出します：\n• BPM（1分あたりのビート数）\n• 音楽キー\n• DAWバージョン\n• プロジェクトノート（Reaperのみ）\n現在対応: Ableton Live、Bitwig Studio、Cubase、Nuendo、FL Studio、MAGDAとReaper。\n\n通常のスキャンより時間がかかります。続行しますか？",
   "deepScanOnlyUnscanned": "メタデータのないプロジェクトのみスキャン",
-  "metadataExtractionTitle": "Metadata Extraction",
-  "metadataExtractionSubtitle": "See which data each DAW supports",
+  "metadataExtractionTitle": "メタデータ抽出",
+  "metadataExtractionSubtitle": "各DAWがサポートするデータを確認",
   "metadataExtractionIntro": "Deep Scan can automatically read some of these fields straight from a project file — the rest have to be entered by hand. This table shows what's automatic for each supported DAW today.",
-  "metadataFieldKey": "Key",
-  "metadataFieldVersion": "DAW Version",
-  "metadataExtractionManualNote": "Any field without automatic support can still be entered manually in Project Detail. For BPM and Key specifically, dropping a bpm.txt or key.txt file next to the project is also picked up on the next scan.",
+  "metadataFieldKey": "キー",
+  "metadataFieldVersion": "DAWバージョン",
+  "metadataExtractionManualNote": "自動対応していない項目は、プロジェクト詳細で手動入力できます。特にBPMとキーについては、プロジェクトの隣にbpm.txtまたはkey.txtファイルを置くと、次回のスキャンで読み込まれます。",
   "metadataExtractedSuccessfully": "メタデータの抽出に成功しました",
   "failedToExtractMetadata": "メタデータの抽出に失敗しました: {error}",
   "@failedToExtractMetadata": {
@@ -303,9 +303,9 @@
       }
     }
   },
-  "deleteMissingProjects": "Delete Missing",
-  "deleteMissingProjectsTitle": "Delete missing projects?",
-  "deleteMissingProjectsConfirm": "{count} project{plural} whose file could not be found on this machine will be permanently deleted, along with all notes, deadlines, and session history. This can't be undone.",
+  "deleteMissingProjects": "見つからない項目を削除",
+  "deleteMissingProjectsTitle": "見つからないプロジェクトを削除しますか？",
+  "deleteMissingProjectsConfirm": "このマシンでファイルが見つからなかった{count}件のプロジェクト{plural}は、すべてのメモ、締切、セッション履歴とともに完全に削除されます。この操作は元に戻せません。",
   "@deleteMissingProjectsConfirm": {
     "placeholders": {
       "count": {
@@ -316,8 +316,8 @@
       }
     }
   },
-  "deleteMissingProjectsConfirmButton": "Delete Permanently",
-  "missingProjectsDeleted": "{count} missing project{plural} deleted.",
+  "deleteMissingProjectsConfirmButton": "完全に削除",
+  "missingProjectsDeleted": "見つからないプロジェクト{plural}を{count}件削除しました。",
   "@missingProjectsDeleted": {
     "placeholders": {
       "count": {
@@ -328,7 +328,7 @@
       }
     }
   },
-  "deleteMissingProjectsAlsoDeleteReleaseTracked": "Also delete {count} project{plural} that are part of a release (removes them from that release too)",
+  "deleteMissingProjectsAlsoDeleteReleaseTracked": "リリースの一部である{count}件のプロジェクト{plural}も削除する（そのリリースからも削除されます）",
   "@deleteMissingProjectsAlsoDeleteReleaseTracked": {
     "placeholders": {
       "count": {
@@ -699,8 +699,8 @@
   "enterTodoText": "タスクテキストを入力",
   "addNewTodo": "新しいタスクを追加",
   "enterTodoItem": "タスク項目を入力",
-  "addTodoAtTimestamp": "Add todo at {timestamp}",
-  "todoAddedAtTimestamp": "Added todo at {timestamp}",
+  "addTodoAtTimestamp": "{timestamp}にToDoを追加",
+  "todoAddedAtTimestamp": "{timestamp}にToDoを追加しました",
   "todoList": "タスクリスト",
   "todoTemplates": "TODOテンプレート",
   "createTemplate": "テンプレート作成",
@@ -900,13 +900,17 @@
   "noDateSet": "日付が設定されていません",
   "imageNotFound": "画像が見つかりません",
   "clickToBrowseArtwork": "アートワークを参照するにはクリック",
-  "dropImageHere": "Drop image here",
-  "removeArtwork": "Remove Artwork",
-  "removeArtworkConfirm": "Remove this artwork? The image file will be deleted.",
+  "dropImageHere": "ここに画像をドロップ",
+  "removeArtwork": "アートワークを削除",
+  "removeArtworkConfirm": "このアートワークを削除しますか？画像ファイルが削除されます。",
   "noFilesAddedYet": "まだファイルが追加されていません。\n「ファイルを追加」をクリックしてリリースファイルをアップロードしてください。",
   "noTodosYet": "まだタスクがありません。上に追加してください。",
   "done": "完了",
   "backupAndRestore": "バックアップと復元",
+  "backupTabLabel": "バックアップ",
+  "aboutTabLabel": "アプリについて",
+  "localBackup": "ローカルバックアップ",
+  "appearanceTabLabel": "外観",
   "exportBackup": "バックアップをエクスポート",
   "importBackup": "バックアップをインポート",
   "exportProjectInfo": "情報をエクスポート",
@@ -933,7 +937,7 @@
     }
   },
   "projectExportHeaderTitle": "DAW PROJECT MANAGER — PROJECT EXPORT",
-  "projectExportExportedLabel": "Exported: {dateTime}",
+  "projectExportExportedLabel": "エクスポート日時: {dateTime}",
   "@projectExportExportedLabel": {
     "description": "Timestamp line in a plain-text project export",
     "placeholders": {
@@ -942,7 +946,7 @@
       }
     }
   },
-  "projectExportTotalProjectsLabel": "Total projects: {count}",
+  "projectExportTotalProjectsLabel": "総プロジェクト数: {count}",
   "@projectExportTotalProjectsLabel": {
     "description": "Project count line in a plain-text bulk export",
     "placeholders": {
@@ -951,7 +955,7 @@
       }
     }
   },
-  "projectExportProjectLabel": "Project: {name}",
+  "projectExportProjectLabel": "プロジェクト: {name}",
   "@projectExportProjectLabel": {
     "description": "Project name line in a plain-text project export",
     "placeholders": {
@@ -981,7 +985,7 @@
       }
     }
   },
-  "projectExportStatusLabel": "Status: {status}",
+  "projectExportStatusLabel": "ステータス: {status}",
   "@projectExportStatusLabel": {
     "description": "Status line in a plain-text project export",
     "placeholders": {
@@ -999,7 +1003,7 @@
       }
     }
   },
-  "projectExportKeyLabel": "Key: {key}",
+  "projectExportKeyLabel": "キー: {key}",
   "@projectExportKeyLabel": {
     "description": "Musical key line in a plain-text project export, no Camelot code known",
     "placeholders": {
@@ -1008,7 +1012,7 @@
       }
     }
   },
-  "projectExportKeyWithCamelotLabel": "Key: {key} (Camelot {code})",
+  "projectExportKeyWithCamelotLabel": "キー: {key}（Camelot {code}）",
   "@projectExportKeyWithCamelotLabel": {
     "description": "Musical key + Camelot code line in a plain-text project export",
     "placeholders": {
@@ -1020,7 +1024,7 @@
       }
     }
   },
-  "projectExportFilePathLabel": "File path: {path}",
+  "projectExportFilePathLabel": "ファイルパス: {path}",
   "@projectExportFilePathLabel": {
     "description": "File path line in a plain-text project export",
     "placeholders": {
@@ -1029,7 +1033,7 @@
       }
     }
   },
-  "projectExportFileSizeLabel": "File size: {size}",
+  "projectExportFileSizeLabel": "ファイルサイズ: {size}",
   "@projectExportFileSizeLabel": {
     "description": "File size line in a plain-text project export",
     "placeholders": {
@@ -1038,7 +1042,7 @@
       }
     }
   },
-  "projectExportFileCreatedLabel": "File created: {date}",
+  "projectExportFileCreatedLabel": "ファイル作成日: {date}",
   "@projectExportFileCreatedLabel": {
     "description": "File creation date line in a plain-text project export",
     "placeholders": {
@@ -1047,7 +1051,7 @@
       }
     }
   },
-  "projectExportAddedToLibraryLabel": "Added to library: {date}",
+  "projectExportAddedToLibraryLabel": "ライブラリに追加: {date}",
   "@projectExportAddedToLibraryLabel": {
     "description": "Date added to library line in a plain-text project export",
     "placeholders": {
@@ -1056,7 +1060,7 @@
       }
     }
   },
-  "projectExportLastModifiedLabel": "Last modified: {date}",
+  "projectExportLastModifiedLabel": "最終更新日: {date}",
   "@projectExportLastModifiedLabel": {
     "description": "Last modified date line in a plain-text project export",
     "placeholders": {
@@ -1065,7 +1069,7 @@
       }
     }
   },
-  "projectExportDeadlineLabel": "Deadline: {date}",
+  "projectExportDeadlineLabel": "締切: {date}",
   "@projectExportDeadlineLabel": {
     "description": "Deadline line in a plain-text project export, no status known",
     "placeholders": {
@@ -1074,7 +1078,7 @@
       }
     }
   },
-  "projectExportDeadlineWithStatusLabel": "Deadline: {date} ({status})",
+  "projectExportDeadlineWithStatusLabel": "締切: {date}（{status}）",
   "@projectExportDeadlineWithStatusLabel": {
     "description": "Deadline + status line in a plain-text project export",
     "placeholders": {
@@ -1086,7 +1090,7 @@
       }
     }
   },
-  "projectExportTotalTimeWorkedLabel": "Total time worked: {duration}",
+  "projectExportTotalTimeWorkedLabel": "総作業時間: {duration}",
   "@projectExportTotalTimeWorkedLabel": {
     "description": "Total time worked line in a plain-text project export",
     "placeholders": {
@@ -1095,9 +1099,9 @@
       }
     }
   },
-  "projectExportNotesLabel": "Notes:",
-  "projectExportTodosLabel": "To-dos:",
-  "projectExportWorkSessionsLabel": "Work sessions ({count}):",
+  "projectExportNotesLabel": "メモ:",
+  "projectExportTodosLabel": "ToDo:",
+  "projectExportWorkSessionsLabel": "作業セッション（{count}件）:",
   "@projectExportWorkSessionsLabel": {
     "description": "Work sessions section header in a plain-text project export",
     "placeholders": {
@@ -1267,6 +1271,8 @@
   "downloadCancelled": "ダウンロードがキャンセルされました",
   "backupDownloaded": "バックアップをダウンロードしました！プロジェクト: +{projectsAdded} ~{projectsUpdated}、リリース: +{releasesAdded} ~{releasesUpdated}",
   "errorDownloadingBackup": "バックアップのダウンロードエラー: {error}",
+  "notSignedInYet": "サインインしていません",
+  "never": "なし",
   "signedInAs": "サインイン: {email}",
   "lastSync": "最終同期: {date}",
   "remoteBackupTime": "リモートバックアップ: {date}",
@@ -1293,8 +1299,19 @@
   "oneDay": "1日",
   "xDays": "{count}日",
   "settings": "設定",
+  "searchSettings": "設定を検索",
+  "noSettingsFoundFor": "「{query}」に一致する設定は見つかりませんでした",
+  "@noSettingsFoundFor": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
   "language": "言語",
   "theme": "テーマ",
+  "languageSettingDescription": "アプリ全体で使用される言語です。",
+  "themeSettingDescription": "アプリのカラーテーマです。",
   "support": "サポート",
   "shareDiagnosticLog": "診断ログを共有",
   "shareDiagnosticLogEmpty": "診断ログはまだありません",
@@ -1671,6 +1688,8 @@
   "@profileNotFound": {
     "description": "Message when a profile cannot be found"
   },
+  "downloadFilesSectionTitle": "ファイルをダウンロード",
+  "downloadFilesSectionDescription": "このプロフィールのすべてのファイル（プロフィール文、アートワーク、プレスキット、追加アセット）を1つのZIPとしてダウンロードするか、含めるものを選択できます。",
   "selectFiles": "ファイルを選択",
   "@selectFiles": {
     "description": "Button label to select files"
@@ -1779,7 +1798,7 @@
   "@switchToNeonTheme": {
     "description": "Tooltip to switch to neon theme"
   },
-  "switchToStudioLight": "Switch to Studio Light",
+  "switchToStudioLight": "Studio Light に切り替え",
   "menuTheme": "テーマ",
   "@menuTheme": {
     "description": "macOS menu item for theme switching"
@@ -1787,7 +1806,7 @@
   "appDescription": "音楽プロデューサーとサウンドデザイナーのためのプロジェクト管理ツール。",
   "neonDarkThemeName": "ネオンダーク",
   "classicDarkThemeName": "クラシックダーク",
-  "studioLightThemeName": "Studio Light",
+  "studioLightThemeName": "スタジオライト",
   "statisticsTab": "統計",
   "statsTotalProjects": "総プロジェクト数",
   "statsInProgress": "進行中",
@@ -1964,6 +1983,10 @@
   "mixdownFoldersOtherDawLabel": "その他 / 不明なDAW",
   "addMixdownFolder": "追加",
   "noCustomMixdownFolders": "カスタムフォルダが追加されていません — DAWのデフォルトが使用されます。",
+  "mixdownFoldersTabLabel": "ミックスダウンフォルダ",
+  "mixdownFoldersSectionDescription": "手動でプレビュー曲が設定されていない場合に、プロジェクトのエクスポート/バウンス済み音声を探すフォルダを制御します。以下のDAWを展開すると、デフォルトで確認されるフォルダ名が表示されます。異なる名前を使用している場合は、独自のフォルダ名を追加できます。",
+  "mixdownFoldersDefaultsLabel": "デフォルトで確認されるフォルダ:",
+  "mixdownFoldersCustomLabel": "このDAW用に追加したフォルダ:",
   "dawInfoLabel": "DAW: {daw}",
   "@dawInfoLabel": {
     "placeholders": {
@@ -2077,21 +2100,46 @@
   "noPreviewSongDragHint": "テーブルのプロジェクト行にオーディオファイルを直接ドラッグ＆ドロップすることもできます。",
   "@noPreviewSongDragHint": {},
   "customizeTabs": "タブのカスタマイズ",
+  "alwaysVisible": "（常に表示）",
   "@customizeTabs": {},
   "customizeTabsDescription": "ナビゲーションバーに表示するタブを選択します。プロジェクトタブは常に表示されます。",
   "@customizeTabsDescription": {},
-  "autoBackup": "Auto Backup",
-  "autoBackupDescription": "Automatically upload a backup to Google Drive at the selected interval.",
-  "autoBackupInterval": "Backup interval",
-  "autoBackupOff": "Off",
-  "autoBackupEvery30Min": "Every 30 minutes",
-  "autoBackupHourly": "Every hour",
-  "autoBackupEvery6Hours": "Every 6 hours",
-  "autoBackupDaily": "Daily",
+  "autoBackup": "自動バックアップ",
+  "autoBackupDescription": "選択した間隔で自動的にGoogle Driveにバックアップをアップロードします。",
+  "autoBackupInterval": "バックアップ間隔",
+  "autoBackupOff": "オフ",
+  "autoBackupEvery30Min": "30分ごと",
+  "autoBackupHourly": "1時間ごと",
+  "autoBackupEvery6Hours": "6時間ごと",
+  "autoBackupDaily": "毎日",
   "autoBackupNextBackup": "次回バックアップ：{time}",
   "@autoBackupNextBackup": {
     "placeholders": {
       "time": { "type": "String" }
+    }
+  },
+  "autoBackupNextSoon": "まもなく",
+  "@autoBackupNextSoon": {},
+  "autoBackupNextInMinutes": "あと{count}分",
+  "@autoBackupNextInMinutes": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "autoBackupNextInOneHour": "あと1時間",
+  "@autoBackupNextInOneHour": {},
+  "autoBackupNextInHours": "あと{count}時間",
+  "@autoBackupNextInHours": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "autoBackupNextInOneDay": "あと1日",
+  "@autoBackupNextInOneDay": {},
+  "autoBackupNextInDays": "あと{count}日",
+  "@autoBackupNextInDays": {
+    "placeholders": {
+      "count": { "type": "int" }
     }
   },
   "playerTitle": "ミュージックプレイヤー",
@@ -2238,6 +2286,14 @@
   "@onboardingWelcomeTitle": {},
   "onboardingWelcomeBody": "すべての音楽プロジェクトを一か所で管理できます。",
   "@onboardingWelcomeBody": {},
+  "onboardingFeatureScanFolders": "DAWプロジェクトフォルダを自動的にスキャン",
+  "@onboardingFeatureScanFolders": {},
+  "onboardingFeatureTrackMetadata": "BPM、キー、ステータス、締切を管理",
+  "@onboardingFeatureTrackMetadata": {},
+  "onboardingFeatureSyncDrive": "メタデータをGoogle Driveと同期",
+  "@onboardingFeatureSyncDrive": {},
+  "onboardingFeatureTrackTime": "各プロジェクトに費やした時間を記録",
+  "@onboardingFeatureTrackTime": {},
   "onboardingLanguageTitle": "言語を選択",
   "@onboardingLanguageTitle": {},
   "onboardingThemeTitle": "テーマを選択",
@@ -2272,7 +2328,7 @@
   "@stop": {},
   "pause": "一時停止",
   "@pause": {},
-  "playPauseTooltip": "Play / Pause",
+  "playPauseTooltip": "再生 / 一時停止",
   "@playPauseTooltip": {},
   "resume": "再開",
   "@resume": {},
@@ -2303,6 +2359,10 @@
   "sessionMode": "セッションモード",
   "@sessionMode": {},
   "sessionModeDescription": "起動前にプロジェクトを購読して、作業時間を追跡し、ツールバーから管理します",
+  "workSessionsTabLabel": "作業セッション",
+  "normalMode": "通常モード",
+  "normalModeDescription": "起動時にプロジェクトが直接DAWで開きます。",
+  "sessionModeCardDescription": "まず有効にすると、ツールバーから作業時間を記録できます。",
   "@sessionModeDescription": {},
   "startSession": "セッション開始",
   "@startSession": {},
@@ -2496,6 +2556,7 @@
   "@pendingProjectNotFound": {},
   "phases": "フェーズ",
   "phasesSubtitle": "プロジェクトフェーズの追加・削除・並べ替え",
+  "phasesDescription": "フェーズは、ワークフロー内の各プロジェクトの段階（例：アイデア → ミキシング → マスタリング）を追跡します。ドラッグして並べ替え、カラードットをタップして色を変更し、フェーズを完了としてフラグ付けすると、アプリ全体で完了扱いになります。",
   "resetToDefaults": "デフォルトにリセット",
   "addPhase": "フェーズを追加",
   "phaseNameHint": "フェーズ名",
@@ -2505,6 +2566,7 @@
   "markAsFinished": "完了フェーズとしてマーク",
   "resetPhasesWarning": "{count, plural, =1{1件のプロジェクトが存在しなくなるフェーズを使用しています。} other{{count}件のプロジェクトが存在しなくなるフェーズを使用しています。}}",
   "resetPhasesWarningNote": "これらのプロジェクトは現在のステータスを保持しますが、フェーズフィルターには表示されません。後でいつでもフェーズを再追加できます。",
+  "resetPhasesConfirm": "カスタムフェーズ、色、完了フェーズのフラグをすべてデフォルトにリセットしますか？",
   "camelotGenerateButton": "ミックス生成",
   "camelotDialogTitle": "キャメロットミックス",
   "camelotDialogDescription": "キャメロットホイールを使って和声的な互換性順にトラックを並べ替えます。同等の場合はBPMの近さを優先します。",
@@ -2526,14 +2588,14 @@
   "playerMixSuggestions": "ミックス候補",
   "@playerMixSuggestions": {}
 ,
-  "nowPlaying": "Now Playing",
-  "noPreviewSongsAvailable": "No preview songs available",
+  "nowPlaying": "再生中",
+  "noPreviewSongsAvailable": "利用可能なプレビュー曲がありません",
   "upNext": "次の曲",
   "@upNext": { "description": "Queue panel title - tracks coming up next" },
-  "playbackModeNormal": "Normal",
+  "playbackModeNormal": "通常",
   "@playbackModeNormal": { "description": "Playback mode: play queue once in order" },
-  "playbackModeRepeat": "Repeat",
+  "playbackModeRepeat": "リピート",
   "@playbackModeRepeat": { "description": "Playback mode: loop the entire queue" },
-  "playbackModeShuffle": "Shuffle",
+  "playbackModeShuffle": "シャッフル",
   "@playbackModeShuffle": { "description": "Playback mode: random order" }
 }

@@ -92,16 +92,19 @@ swap.
 ```bash
 sudo apt install flatpak flatpak-builder
 flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-# The manifest has a `type: file` source for the OAuth credentials —
-# flatpak-builder fetches the app from git inside the sandbox, so the
-# secrets can't be injected into a checkout like the other CI jobs do:
-./scripts/inject_oauth_config.sh -d "<desktop-id>" -s "<secret>" -a "<android-id>"
-cp lib/config/oauth_config.dart flatpak/oauth_config.dart
 # after running flatpak-flutter as above:
 flatpak-builder --repo=repo --force-clean --sandbox --user \
   --install-deps-from=flathub build com.bandpassrecords.dpm.yml
 flatpak-builder --run build com.bandpassrecords.dpm.yml daw_project_manager
 ```
+
+No OAuth credentials to set up for this build at all — Google Drive sync
+isn't offered on Linux (see `GoogleDriveSyncService.isSupported` in
+`lib/services/google_drive_sync_service.dart`), so the manifest's
+build-commands generate a placeholder `lib/config/oauth_config.dart` straight
+from the committed template. See "Why Drive sync is Linux-only-unavailable"
+below for the reasoning, and `lib/services/backup_service.dart` for the
+local-file backup/restore Linux uses instead.
 
 Things that can only be verified this way (not from Windows, not by reading
 the code):
@@ -109,15 +112,28 @@ the code):
 - **System tray icon** (`tray_manager`) — appindicator support inside a
   Flatpak sandbox is inconsistent across desktop environments; confirm it at
   least degrades gracefully where there's no `StatusNotifierWatcher` running.
-- **Secure storage** (`flutter_secure_storage`) — needs a Secret Service
-  provider (e.g. `gnome-keyring`) reachable through
-  `--talk-name=org.freedesktop.secrets`; confirm Google Drive sign-in tokens
-  actually persist across a restart.
 - **Notifications** — confirm deadline reminders actually show up via
   `org.freedesktop.Notifications`.
 - **Drag-and-drop** (`desktop_drop`) — there's no mature portal for DnD yet;
   worth confirming dropping a project folder onto the window still works
   sandboxed.
+
+## Why Google Drive sync isn't offered on Linux
+
+The desktop OAuth flow needs a client secret — confirmed against a live
+Google sign-in attempt, Google's token endpoint rejects the exchange without
+one for this app's "Desktop app" OAuth client type, even with PKCE (Google's
+docs list `client_secret` as "not applicable" only for Android/iOS/Chrome-app
+client types, not Desktop). That's fine for Windows/macOS, which never
+distribute the secret outside this repo's own CI. It's not something to
+accept for Linux, since the only realistic distribution channel is Flathub,
+and Flathub's build sandbox has no secret-injection mechanism at all — the
+file would have to be committed in the open in the public Flathub submission
+repo. Rather than ship a secret that broadly, `GoogleDriveSyncService.isSupported`
+is `false` on Linux and every UI entry point (dashboard, profile page, the
+startup dialog, the tray menu) is gated on it. `BackupService`'s local JSON
+export/import covers the same user data instead (extended in lockstep with
+this decision — see its own history for what that covers).
 
 ## Submitting to Flathub
 
@@ -129,13 +145,12 @@ the code):
      template version in this directory.
    - `generated/` — the vendored modules/sources/patches that manifest
      references.
-   - `oauth_config.dart` — generated fresh in that CI run from the repo's GitHub
-     secrets. This is the only place this file exists as a downloadable
-     artifact; it's not committed anywhere in this repo. Committing it into
-     the public Flathub repo is intentional, not an oversight to be careful
-     about — Google's OAuth documentation doesn't treat installed-app
-     client credentials as confidential (every shipped binary embeds them
-     regardless of who can read this artifact).
+
+   That's it — no OAuth config file to worry about. Google Drive sync isn't
+   offered on Linux at all (see "Why Google Drive sync isn't offered on
+   Linux" above), so the manifest's build-commands generate a placeholder
+   `oauth_config.dart` from the already-public template at build time; there
+   was never anything here that needed to stay out of a public artifact.
 
    Download it from a run **on the actual release tag** you're submitting
    (not a PR run) — that's what makes the manifest's `commit:` match a real,
@@ -147,12 +162,13 @@ the code):
    "New app" request flow to get a repository created at
    `flathub/com.bandpassrecords.dpm`.
 
-3. Push the three items from the artifact into that repo's root (so
-   `oauth_config.dart` and `generated/` sit next to the manifest, matching the
-   relative paths the manifest's sources use), and open the PR.
+3. Push the two items from the artifact into that repo's root (so
+   `generated/` sits next to the manifest, matching the relative paths the
+   manifest's sources use), and open the PR.
 
 4. Their CI builds it and a human reviewer checks the `finish-args` — be
-   ready to justify `--share=network` (Google Drive sync) and the D-Bus
+   ready to justify `--share=network` (the GitHub releases update check —
+   not Drive sync, which isn't offered on Linux) and the D-Bus
    `--talk-name`s above if asked; the comments already in the manifest cover
    the reasoning for each.
 

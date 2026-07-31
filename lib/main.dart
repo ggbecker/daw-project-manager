@@ -219,6 +219,7 @@ void _startAutoBackupTimer(
 
       // On desktop, try to silently restore session if not already signed in
       if (!syncService.isSignedIn) {
+        if (!GoogleDriveSyncService.isSupported) return;
         if (!kIsWeb && !MobileUtils.isMobile()) {
           try {
             final restored = await syncService.restoreSession();

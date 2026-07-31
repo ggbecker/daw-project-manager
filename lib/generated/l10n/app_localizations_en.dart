@@ -222,7 +222,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get active => 'Active';
 
   @override
-  String get switchProfile => 'Switch Profile';
+  String get switchProfile => 'Activate Profile';
 
   @override
   String get edit => 'Edit';
@@ -1206,6 +1206,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupAndRestore => 'Backup & Restore';
 
   @override
+  String get backupTabLabel => 'Backup';
+
+  @override
+  String get aboutTabLabel => 'About';
+
+  @override
+  String get localBackup => 'Local Backup';
+
+  @override
+  String get appearanceTabLabel => 'Appearance';
+
+  @override
   String get exportBackup => 'Export Backup';
 
   @override
@@ -1814,6 +1826,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get notSignedInYet => 'Not signed in';
+
+  @override
+  String get never => 'Never';
+
+  @override
   String signedInAs(String email) {
     return 'Signed in as: $email';
   }
@@ -1914,10 +1932,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings => 'Settings';
 
   @override
+  String get searchSettings => 'Search settings';
+
+  @override
+  String noSettingsFoundFor(String query) {
+    return 'No settings found for \"$query\"';
+  }
+
+  @override
   String get language => 'Language';
 
   @override
   String get theme => 'Theme';
+
+  @override
+  String get languageSettingDescription =>
+      'The language used throughout the app.';
+
+  @override
+  String get themeSettingDescription => 'The app\'s color theme.';
 
   @override
   String get support => 'Support';
@@ -2390,6 +2423,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileNotFound => 'Profile not found';
 
   @override
+  String get downloadFilesSectionTitle => 'Download Files';
+
+  @override
+  String get downloadFilesSectionDescription =>
+      'Download all of this profile\'s files — biography, artwork, press kit, and additional assets — as a single ZIP, or select which ones to include.';
+
+  @override
   String get selectFiles => 'Select Files';
 
   @override
@@ -2771,7 +2811,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noProjectsFoundHint =>
-      'Add a scan root folder in settings to get started.';
+      'Add a scan folder in settings to get started.';
 
   @override
   String get queueTab => 'Tasks';
@@ -2875,6 +2915,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'No custom folders added — DAW defaults will be used.';
 
   @override
+  String get mixdownFoldersTabLabel => 'Mixdown Folders';
+
+  @override
+  String get mixdownFoldersSectionDescription =>
+      'Controls which folder the app looks in for a project\'s exported/bounced audio, used as its preview song when none is set manually. Expand a DAW below to see the folder names it already checks by default, and add your own on top of them if your setup uses a different name.';
+
+  @override
+  String get mixdownFoldersDefaultsLabel => 'Default folders checked:';
+
+  @override
+  String get mixdownFoldersCustomLabel => 'Your additions for this DAW:';
+
+  @override
   String dawInfoLabel(String daw) {
     return 'DAW: $daw';
   }
@@ -2950,6 +3003,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get customizeTabs => 'Customize Tabs';
+
+  @override
+  String get alwaysVisible => '(always visible)';
 
   @override
   String get customizeTabsDescription =>
@@ -3119,6 +3175,30 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String autoBackupNextBackup(String time) {
     return 'Next backup: $time';
+  }
+
+  @override
+  String get autoBackupNextSoon => 'soon';
+
+  @override
+  String autoBackupNextInMinutes(int count) {
+    return 'in $count min';
+  }
+
+  @override
+  String get autoBackupNextInOneHour => 'in 1 hour';
+
+  @override
+  String autoBackupNextInHours(int count) {
+    return 'in $count hours';
+  }
+
+  @override
+  String get autoBackupNextInOneDay => 'in 1 day';
+
+  @override
+  String autoBackupNextInDays(int count) {
+    return 'in $count days';
   }
 
   @override
@@ -3367,6 +3447,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Organize all your music projects across every DAW in one place.';
 
   @override
+  String get onboardingFeatureScanFolders =>
+      'Scan DAW project folders automatically';
+
+  @override
+  String get onboardingFeatureTrackMetadata =>
+      'Track BPM, key, status and deadlines';
+
+  @override
+  String get onboardingFeatureSyncDrive => 'Sync metadata to Google Drive';
+
+  @override
+  String get onboardingFeatureTrackTime => 'Track time spent on each project';
+
+  @override
   String get onboardingLanguageTitle => 'Choose Your Language';
 
   @override
@@ -3469,6 +3563,20 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get sessionModeDescription =>
       'Subscribe to a project before launching, to track work time and manage it from the toolbar';
+
+  @override
+  String get workSessionsTabLabel => 'Work Sessions';
+
+  @override
+  String get normalMode => 'Normal Mode';
+
+  @override
+  String get normalModeDescription =>
+      'Projects open directly in their DAW when launched.';
+
+  @override
+  String get sessionModeCardDescription =>
+      'Subscribe first to track work time from the toolbar.';
 
   @override
   String get startSession => 'Start Session';
@@ -3769,6 +3877,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get phasesSubtitle => 'Add, remove, and reorder project phases';
 
   @override
+  String get phasesDescription =>
+      'Phases track each project\'s stage in your workflow (e.g. Idea → Mixing → Mastering). Drag to reorder, tap a color dot to recolor, and flag a phase as finished to treat it as complete throughout the app.';
+
+  @override
   String get resetToDefaults => 'Reset to defaults';
 
   @override
@@ -3811,6 +3923,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get resetPhasesWarningNote =>
       'Those projects will keep their current status but won\'t appear in phase filters. You can always re-add those phases later.';
+
+  @override
+  String get resetPhasesConfirm =>
+      'Reset all custom phases, colors, and finished-phase flags back to the defaults?';
 
   @override
   String get camelotGenerateButton => 'Generate Mix';

@@ -63,6 +63,20 @@ void main() {
     });
   });
 
+  group('GoogleDriveSyncService.isSupported', () {
+    // Drive sync's desktop OAuth flow requires a client secret, which
+    // Flathub's build sandbox has no way to keep out of the public
+    // submission repo (see flatpak/README.md and CLAUDE.md) — so it's not
+    // offered on Linux at all. Asserted relative to Platform.isLinux rather
+    // than a fixed expectation, so this is a genuine check in both places it
+    // matters: passes on a Windows/macOS dev machine, and — since the
+    // unit_tests CI job runs on ubuntu-latest — actually exercises the
+    // isFalse branch for real in CI.
+    test('is false only on Linux', () {
+      expect(GoogleDriveSyncService.isSupported, Platform.isLinux ? isFalse : isTrue);
+    });
+  });
+
   group('GoogleDriveSyncService cross-instance auth sync', () {
     // Regression: the app creates a separate GoogleDriveSyncService instance
     // per consumer (e.g. one for the tray, one for the sign-in page). Auth
@@ -162,6 +176,53 @@ void main() {
       expect(merged, ['Mixdowns', 'exports', 'Bounces']);
     });
 
+    test('restores per-DAW custom mixdown folders from a backup with none stored locally', () async {
+      final service = GoogleDriveSyncService();
+      await service.mergeData(
+        remoteData: {
+          'customMixdownFoldersByDaw': {
+            'Ableton Live': ['MyBounces'],
+          },
+        },
+        projectRepo: projectRepo,
+        profileRepo: profileRepo,
+      );
+
+      final raw = appSettingsBox.get('customMixdownFoldersByDaw');
+      expect(raw, isNotNull);
+      expect(jsonDecode(raw!), {
+        'Ableton Live': ['MyBounces'],
+      });
+    });
+
+    test('unions local and remote per-DAW custom mixdown folders without duplicates', () async {
+      await appSettingsBox.put(
+        'customMixdownFoldersByDaw',
+        jsonEncode({
+          'Ableton Live': ['MyBounces'],
+        }),
+      );
+
+      final service = GoogleDriveSyncService();
+      await service.mergeData(
+        remoteData: {
+          'customMixdownFoldersByDaw': {
+            'Ableton Live': ['MyBounces', 'MoreExports'],
+            'FL Studio': ['Renders'],
+          },
+        },
+        projectRepo: projectRepo,
+        profileRepo: profileRepo,
+      );
+
+      final raw = appSettingsBox.get('customMixdownFoldersByDaw');
+      final merged = (jsonDecode(raw!) as Map).map(
+        (k, v) => MapEntry(k as String, (v as List).cast<String>()),
+      );
+      expect(merged['Ableton Live'], ['MyBounces', 'MoreExports']);
+      expect(merged['FL Studio'], ['Renders']);
+    });
+
     test('fills in phase settings for a profile that has none locally', () async {
       final service = GoogleDriveSyncService();
       await service.mergeData(
@@ -244,6 +305,28 @@ void main() {
       );
 
       expect(restored.projectNotes, 'Notes 1\nby Audio Crawler\n\nSome project notes');
+    });
+
+    test('preserves sourceTemplateId', () {
+      final service = GoogleDriveSyncService();
+      final original = TestFactories.makeProject(sourceTemplateId: 'template-42');
+
+      final restored = service.deserializeProjectForTest(
+        service.serializeProjectForTest(original),
+      );
+
+      expect(restored.sourceTemplateId, 'template-42');
+    });
+
+    test('preserves null sourceTemplateId', () {
+      final service = GoogleDriveSyncService();
+      final original = TestFactories.makeProject(sourceTemplateId: null);
+
+      final restored = service.deserializeProjectForTest(
+        service.serializeProjectForTest(original),
+      );
+
+      expect(restored.sourceTemplateId, isNull);
     });
   });
 

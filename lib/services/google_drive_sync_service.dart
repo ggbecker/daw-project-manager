@@ -39,6 +39,24 @@ class UploadCancelledException implements Exception {
 
 /// Service for synchronizing database data with Google Drive
 class GoogleDriveSyncService {
+  /// Whether Drive sync can be offered on this platform at all.
+  ///
+  /// False on Linux only. The desktop OAuth flow (see
+  /// signInDesktopWithLoopback below) requires a client secret — Google's
+  /// token endpoint rejects the exchange without one for this app's "Desktop
+  /// app" OAuth client type, even with PKCE (verified against a live Google
+  /// sign-in attempt; see the PKCE-removal revert in git history for the
+  /// investigation). That's fine for Windows/macOS builds, which never
+  /// distribute the secret outside this repo's own CI. It's not something we
+  /// can accept for Linux, since the only realistic Linux distribution
+  /// channel is Flathub, whose build sandbox has no secret-injection
+  /// mechanism at all — the file would have to be committed in the open in
+  /// the public Flathub submission repo. Rather than ship a secret that
+  /// broadly, Drive sync is simply not offered on Linux; see
+  /// flatpak/README.md and CLAUDE.md for the rest of that story, and
+  /// BackupService for the local-file backup/restore Linux uses instead.
+  static bool get isSupported => !Platform.isLinux;
+
   static const String _appDataFolderName = 'DAW Project Manager';
   static const String _databaseFileName = 'database_backup.json';
   static const String _metadataFileName = 'sync_metadata.json';
@@ -750,7 +768,11 @@ class GoogleDriveSyncService {
             request.response
               ..statusCode = 400
               ..headers.contentType = ContentType.html
-              ..write('''<!DOCTYPE html><html><body><p>Invalid state. Please try again.</p></body></html>''');
+              ..write(_loopbackResponsePage(
+                heading: 'Something went wrong',
+                message: 'Invalid sign-in state. Please close this window and try again from DAW Project Manager.',
+                isError: true,
+              ));
             await request.response.close();
             codeCompleter.complete(null);
             return;
@@ -758,7 +780,10 @@ class GoogleDriveSyncService {
           request.response
             ..statusCode = 200
             ..headers.contentType = ContentType.html
-            ..write('''<!DOCTYPE html><html><head><meta charset="utf-8"><title>Sign-in successful</title></head><body><p>Sign-in successful. You can close this window and return to the app.</p></body></html>''');
+            ..write(_loopbackResponsePage(
+              heading: 'Sign-in successful',
+              message: 'You can close this window and return to DAW Project Manager.',
+            ));
           await request.response.close();
           codeCompleter.complete(code);
         } else if (uri.queryParameters.containsKey('error')) {
@@ -766,7 +791,11 @@ class GoogleDriveSyncService {
           request.response
             ..statusCode = 200
             ..headers.contentType = ContentType.html
-            ..write('''<!DOCTYPE html><html><body><p>Sign-in was denied or failed. You can close this window.</p></body></html>''');
+            ..write(_loopbackResponsePage(
+              heading: 'Sign-in cancelled',
+              message: 'Sign-in was denied or failed. You can close this window and return to DAW Project Manager to try again.',
+              isError: true,
+            ));
           await request.response.close();
           codeCompleter.complete(null);
         }
@@ -804,6 +833,79 @@ class GoogleDriveSyncService {
     } finally {
       await server?.close(force: true);
     }
+  }
+
+  /// HTML page shown in the system browser tab the loopback redirect lands
+  /// on — the only feedback the user gets there, since control then returns
+  /// to the app via the already-running loopback server, not a deep link.
+  /// Styled to match the color palette/typography of the dpm.bandpassrecords.com
+  /// marketing site (see styles.css there) rather than an unbranded system page.
+  static String _loopbackResponsePage({required String heading, required String message, bool isError = false}) {
+    final accent = isError ? '#FF6B6B' : '#4A9EFF';
+    return '''<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>DAW Project Manager</title>
+<style>
+  :root {
+    --bg-darker: #0F1113;
+    --bg-card: #2B2D31;
+    --text-primary: #FFFFFF;
+    --text-secondary: #B0B3B8;
+    --border-color: #3C3F43;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: var(--bg-darker);
+    color: var(--text-primary);
+  }
+  main {
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+    padding: 2.5rem 2rem;
+    margin: 1.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+  }
+  .icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 1.25rem;
+    border-radius: 50%;
+    background: $accent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+  }
+  h1 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+  }
+  p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    font-size: 0.95rem;
+  }
+</style>
+</head>
+<body>
+<main>
+<div class="icon">${isError ? '!' : '✓'}</div>
+<h1>$heading</h1>
+<p>$message</p>
+</main>
+</body>
+</html>''';
   }
 
   static String _generateState() {
@@ -2908,6 +3010,22 @@ class GoogleDriveSyncService {
         }
       }
 
+      // Collect per-DAW custom mixdown folders (global preference, not per-profile)
+      Map<String, dynamic> customMixdownFoldersByDaw = {};
+      try {
+        final raw = appSettingsBox.get('customMixdownFoldersByDaw');
+        if (raw != null) {
+          customMixdownFoldersByDaw = jsonDecode(raw) as Map<String, dynamic>;
+        }
+        if (kDebugMode) {
+          print('Collected per-DAW mixdown folders for ${customMixdownFoldersByDaw.length} DAWs');
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error collecting per-DAW custom mixdown folders: $e');
+        }
+      }
+
       final data = {
         'timestamp': DateTime.now().toIso8601String(),
         'version': '1.6', // Incremented version to include release artwork
@@ -2920,6 +3038,8 @@ class GoogleDriveSyncService {
         'templateRoots': allTemplateRoots.map((r) => _serializeTemplateRoot(r)).toList(),
         // NEW: Custom mixdown folder names (global preference, not per-profile)
         'customMixdownFolders': customMixdownFolders,
+        // NEW: Per-DAW custom mixdown folder names (global preference, not per-profile)
+        'customMixdownFoldersByDaw': customMixdownFoldersByDaw,
         // NEW: Per-profile phase customization (custom phase names, colors, finished set)
         'phaseSettingsByProfile': phaseSettingsByProfile,
         // NEW: Profile mappings to restore correct associations
@@ -4517,6 +4637,49 @@ class GoogleDriveSyncService {
       }
     }
 
+    // Merge per-DAW custom mixdown folders (global preference, not per-profile)
+    // - union per DAW key, same as the flat list above.
+    if (remoteData['customMixdownFoldersByDaw'] != null) {
+      try {
+        final remoteByDaw =
+            (remoteData['customMixdownFoldersByDaw'] as Map).map(
+          (key, value) => MapEntry(
+            key as String,
+            (value as List).map((f) => f.toString()).toList(),
+          ),
+        );
+        if (remoteByDaw.isNotEmpty) {
+          final appSettingsBox = await Hive.openBox<String>('app_settings');
+          final localRaw = appSettingsBox.get('customMixdownFoldersByDaw');
+          final localByDaw = localRaw != null
+              ? (jsonDecode(localRaw) as Map).map(
+                  (key, value) => MapEntry(
+                    key as String,
+                    (value as List).map((f) => f.toString()).toList(),
+                  ),
+                )
+              : <String, List<String>>{};
+          final merged = <String, List<String>>{
+            for (final entry in localByDaw.entries) entry.key: [...entry.value],
+          };
+          for (final entry in remoteByDaw.entries) {
+            final existing = merged.putIfAbsent(entry.key, () => []);
+            for (final folder in entry.value) {
+              if (!existing.any((f) => f.toLowerCase() == folder.toLowerCase())) {
+                existing.add(folder);
+              }
+            }
+          }
+          await appSettingsBox.put('customMixdownFoldersByDaw', jsonEncode(merged));
+          if (kDebugMode) {
+            print('  Per-DAW custom mixdown folders: ${merged.length} DAWs after merge');
+          }
+        }
+      } catch (e) {
+        if (kDebugMode) print('Error merging per-DAW custom mixdown folders: $e');
+      }
+    }
+
     // Merge project templates (global, not per-profile) - remote wins per id only
     // when it's newer, so a local template created/edited since the last backup
     // isn't clobbered by an older remote copy.
@@ -4749,6 +4912,7 @@ class GoogleDriveSyncService {
       'parentProjectId': project.parentProjectId,
       'ignoredNewerSongPath': project.ignoredNewerSongPath,
       'projectNotes': project.projectNotes,
+      'sourceTemplateId': project.sourceTemplateId,
     };
   }
 
@@ -4799,6 +4963,7 @@ class GoogleDriveSyncService {
       parentProjectId: data['parentProjectId'] as String?,
       ignoredNewerSongPath: data['ignoredNewerSongPath'] as String?,
       projectNotes: data['projectNotes'] as String?,
+      sourceTemplateId: data['sourceTemplateId'] as String?,
     );
   }
 

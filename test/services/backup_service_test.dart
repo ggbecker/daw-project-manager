@@ -1,5 +1,10 @@
+import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:daw_project_manager/services/backup_service.dart';
+import 'package:daw_project_manager/models/project_template.dart';
+import 'package:daw_project_manager/models/template_root.dart';
+import 'package:daw_project_manager/models/todo_template.dart';
+import '../helpers/hive_test_helper.dart';
 import '../helpers/test_factories.dart';
 
 void main() {
@@ -230,6 +235,24 @@ void main() {
       expect(restored.projectNotes, 'Notes 1\nby Audio Crawler\n\nSome project notes');
     });
 
+    test('preserves sourceTemplateId', () {
+      final original = TestFactories.makeProject(sourceTemplateId: 'template-42');
+
+      final restored =
+          BackupService.projectFromJson(BackupService.projectToJson(original));
+
+      expect(restored.sourceTemplateId, 'template-42');
+    });
+
+    test('preserves null sourceTemplateId', () {
+      final original = TestFactories.makeProject(sourceTemplateId: null);
+
+      final restored =
+          BackupService.projectFromJson(BackupService.projectToJson(original));
+
+      expect(restored.sourceTemplateId, isNull);
+    });
+
     test('preserves null projectNotes', () {
       final original = TestFactories.makeProject(projectNotes: null);
 
@@ -253,6 +276,297 @@ void main() {
         isFalse,
         reason: 'lastModifiedAt must not be bumped to now during round-trip',
       );
+    });
+  });
+
+  // Backup version 1.1 added these — previously, a local backup had no way to
+  // carry todo templates, project templates, template roots, custom mixdown
+  // folder names, or phase customization at all, which mattered most for
+  // Linux, where Google Drive sync (the only other place these were backed
+  // up) isn't available.
+  group('BackupService JSON round-trip — templates', () {
+    test('TodoTemplate preserves all fields', () {
+      final original = TodoTemplate(
+        id: 'tt-1',
+        name: 'Mixdown checklist',
+        items: ['Check levels', 'Bounce stems'],
+        createdAt: DateTime(2024, 1, 1),
+        updatedAt: DateTime(2024, 2, 1),
+      );
+
+      final restored = BackupService.todoTemplateFromJson(BackupService.todoTemplateToJson(original));
+
+      expect(restored.id, original.id);
+      expect(restored.name, original.name);
+      expect(restored.items, original.items);
+      expect(restored.createdAt, original.createdAt);
+      expect(restored.updatedAt, original.updatedAt);
+    });
+
+    test('TodoTemplate preserves an empty items list', () {
+      final original = TodoTemplate(
+        id: 'tt-2',
+        name: 'Empty',
+        items: const [],
+        createdAt: DateTime(2024, 1, 1),
+        updatedAt: DateTime(2024, 1, 1),
+      );
+
+      final restored = BackupService.todoTemplateFromJson(BackupService.todoTemplateToJson(original));
+
+      expect(restored.items, isEmpty);
+    });
+
+    test('ProjectTemplate preserves all fields including optional metadata', () {
+      final original = ProjectTemplate(
+        id: 'pt-1',
+        name: 'Techno starter',
+        sourceFolderPath: '/Users/artist/Templates/Techno',
+        mainFileRelativePath: 'Techno.als',
+        createdAt: DateTime(2023, 5, 1),
+        updatedAt: DateTime(2023, 6, 1),
+        bpm: 128.0,
+        musicalKey: 'A minor',
+        dawVersion: '11.3',
+      );
+
+      final restored =
+          BackupService.projectTemplateFromJson(BackupService.projectTemplateToJson(original));
+
+      expect(restored.id, original.id);
+      expect(restored.name, original.name);
+      expect(restored.sourceFolderPath, original.sourceFolderPath);
+      expect(restored.mainFileRelativePath, original.mainFileRelativePath);
+      expect(restored.createdAt, original.createdAt);
+      expect(restored.updatedAt, original.updatedAt);
+      expect(restored.bpm, 128.0);
+      expect(restored.musicalKey, 'A minor');
+      expect(restored.dawVersion, '11.3');
+    });
+
+    test('ProjectTemplate preserves null optional metadata', () {
+      final original = ProjectTemplate(
+        id: 'pt-2',
+        name: 'Blank',
+        sourceFolderPath: '/Templates/Blank',
+        mainFileRelativePath: 'Blank.als',
+        createdAt: DateTime(2023, 1, 1),
+        updatedAt: DateTime(2023, 1, 1),
+      );
+
+      final restored =
+          BackupService.projectTemplateFromJson(BackupService.projectTemplateToJson(original));
+
+      expect(restored.bpm, isNull);
+      expect(restored.musicalKey, isNull);
+      expect(restored.dawVersion, isNull);
+    });
+
+    test('TemplateRoot preserves all fields', () {
+      final original = TemplateRoot(
+        id: 'root-1',
+        path: '/Users/artist/Templates',
+        addedAt: DateTime(2023, 1, 1),
+        lastRefreshedAt: DateTime(2023, 2, 1),
+      );
+
+      final restored = BackupService.templateRootFromJson(BackupService.templateRootToJson(original));
+
+      expect(restored.id, original.id);
+      expect(restored.path, original.path);
+      expect(restored.addedAt, original.addedAt);
+      expect(restored.lastRefreshedAt, original.lastRefreshedAt);
+    });
+
+    test('TemplateRoot preserves null lastRefreshedAt', () {
+      final original = TemplateRoot(
+        id: 'root-2',
+        path: '/Templates',
+        addedAt: DateTime(2023, 1, 1),
+      );
+
+      final restored = BackupService.templateRootFromJson(BackupService.templateRootToJson(original));
+
+      expect(restored.lastRefreshedAt, isNull);
+    });
+  });
+
+  group('BackupService global data — Hive read/write', () {
+    late Directory tempDir;
+
+    setUp(() async {
+      tempDir = await HiveTestHelper.setUp();
+    });
+
+    tearDown(() async {
+      await HiveTestHelper.tearDown(tempDir);
+    });
+
+    test('todo templates: write then read round-trips', () async {
+      final template = TodoTemplate(
+        id: 'tt-1',
+        name: 'Checklist',
+        items: ['a', 'b'],
+        createdAt: DateTime(2024, 1, 1),
+        updatedAt: DateTime(2024, 1, 1),
+      );
+
+      await BackupService.writeGlobalTemplatesForTest([template], ImportMode.merge);
+      final read = await BackupService.readGlobalTemplatesForTest();
+
+      expect(read, hasLength(1));
+      expect(read.single.id, 'tt-1');
+      expect(read.single.items, ['a', 'b']);
+    });
+
+    test('todo templates: merge mode keeps existing entries alongside new ones', () async {
+      final first = TodoTemplate(
+        id: 'tt-1',
+        name: 'First',
+        items: const [],
+        createdAt: DateTime(2024, 1, 1),
+        updatedAt: DateTime(2024, 1, 1),
+      );
+      final second = TodoTemplate(
+        id: 'tt-2',
+        name: 'Second',
+        items: const [],
+        createdAt: DateTime(2024, 1, 1),
+        updatedAt: DateTime(2024, 1, 1),
+      );
+
+      await BackupService.writeGlobalTemplatesForTest([first], ImportMode.merge);
+      await BackupService.writeGlobalTemplatesForTest([second], ImportMode.merge);
+      final read = await BackupService.readGlobalTemplatesForTest();
+
+      expect(read.map((t) => t.id).toSet(), {'tt-1', 'tt-2'});
+    });
+
+    test('todo templates: replace mode clears entries from a previous write first', () async {
+      final first = TodoTemplate(
+        id: 'tt-1',
+        name: 'First',
+        items: const [],
+        createdAt: DateTime(2024, 1, 1),
+        updatedAt: DateTime(2024, 1, 1),
+      );
+      final second = TodoTemplate(
+        id: 'tt-2',
+        name: 'Second',
+        items: const [],
+        createdAt: DateTime(2024, 1, 1),
+        updatedAt: DateTime(2024, 1, 1),
+      );
+
+      await BackupService.writeGlobalTemplatesForTest([first], ImportMode.merge);
+      await BackupService.writeGlobalTemplatesForTest([second], ImportMode.replace);
+      final read = await BackupService.readGlobalTemplatesForTest();
+
+      expect(read.map((t) => t.id).toSet(), {'tt-2'});
+    });
+
+    test('project templates: write then read round-trips', () async {
+      final template = ProjectTemplate(
+        id: 'pt-1',
+        name: 'Techno starter',
+        sourceFolderPath: '/Templates/Techno',
+        mainFileRelativePath: 'Techno.als',
+        createdAt: DateTime(2024, 1, 1),
+        updatedAt: DateTime(2024, 1, 1),
+      );
+
+      await BackupService.writeGlobalProjectTemplatesForTest([template], ImportMode.merge);
+      final read = await BackupService.readGlobalProjectTemplatesForTest();
+
+      expect(read, hasLength(1));
+      expect(read.single.sourceFolderPath, '/Templates/Techno');
+    });
+
+    test('template roots: write then read round-trips', () async {
+      final root = TemplateRoot(
+        id: 'root-1',
+        path: '/Templates',
+        addedAt: DateTime(2024, 1, 1),
+      );
+
+      await BackupService.writeGlobalTemplateRootsForTest([root], ImportMode.merge);
+      final read = await BackupService.readGlobalTemplateRootsForTest();
+
+      expect(read, hasLength(1));
+      expect(read.single.path, '/Templates');
+    });
+
+    test('custom mixdown folders: union-merges with what is already stored, does not overwrite', () async {
+      await BackupService.writeCustomMixdownFoldersForTest(['Bounces']);
+      await BackupService.writeCustomMixdownFoldersForTest(['Mixdown']);
+      final read = await BackupService.readCustomMixdownFoldersForTest();
+
+      expect(read.toSet(), {'Bounces', 'Mixdown'});
+    });
+
+    test('custom mixdown folders: writing an empty list is a no-op', () async {
+      await BackupService.writeCustomMixdownFoldersForTest(['Bounces']);
+      await BackupService.writeCustomMixdownFoldersForTest([]);
+      final read = await BackupService.readCustomMixdownFoldersForTest();
+
+      expect(read, ['Bounces']);
+    });
+
+    test('per-DAW custom mixdown folders: union-merges per DAW key, does not overwrite', () async {
+      await BackupService.writeCustomMixdownFoldersByDawForTest({
+        'Ableton Live': ['Bounces'],
+      });
+      await BackupService.writeCustomMixdownFoldersByDawForTest({
+        'Ableton Live': ['Mixdown'],
+        'FL Studio': ['Renders'],
+      });
+      final read = await BackupService.readCustomMixdownFoldersByDawForTest();
+
+      expect(read['Ableton Live']!.toSet(), {'Bounces', 'Mixdown'});
+      expect(read['FL Studio'], ['Renders']);
+    });
+
+    test('per-DAW custom mixdown folders: writing an empty map is a no-op', () async {
+      await BackupService.writeCustomMixdownFoldersByDawForTest({
+        'Ableton Live': ['Bounces'],
+      });
+      await BackupService.writeCustomMixdownFoldersByDawForTest({});
+      final read = await BackupService.readCustomMixdownFoldersByDawForTest();
+
+      expect(read, {'Ableton Live': ['Bounces']});
+    });
+
+    test('phase settings: write then read round-trips phases, colors, and finished phases', () async {
+      final settings = {
+        'phases': ['Idea', 'Mixing', 'Mastered'],
+        'phaseColors': {'Idea': '#FF0000'},
+        'finishedPhases': ['Mastered'],
+      };
+
+      await BackupService.writePhaseSettingsForTest('profile-1', settings);
+      final read = await BackupService.readPhaseSettingsForTest('profile-1');
+
+      expect(read['phases'], ['Idea', 'Mixing', 'Mastered']);
+      expect(read['phaseColors'], {'Idea': '#FF0000'});
+      expect(read['finishedPhases'], ['Mastered']);
+    });
+
+    test('phase settings: settings for one profile do not leak into another', () async {
+      await BackupService.writePhaseSettingsForTest('profile-1', {
+        'phases': ['A'],
+      });
+      final readOther = await BackupService.readPhaseSettingsForTest('profile-2');
+
+      expect(readOther, isEmpty);
+    });
+
+    test('reading global data from empty boxes returns empty results, not an error', () async {
+      expect(await BackupService.readGlobalTemplatesForTest(), isEmpty);
+      expect(await BackupService.readGlobalProjectTemplatesForTest(), isEmpty);
+      expect(await BackupService.readGlobalTemplateRootsForTest(), isEmpty);
+      expect(await BackupService.readCustomMixdownFoldersForTest(), isEmpty);
+      expect(await BackupService.readCustomMixdownFoldersByDawForTest(), isEmpty);
+      expect(await BackupService.readPhaseSettingsForTest('no-such-profile'), isEmpty);
     });
   });
 }

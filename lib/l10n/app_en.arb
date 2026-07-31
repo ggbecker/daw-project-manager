@@ -113,7 +113,7 @@
   "create": "Create",
   "profiles": "Profiles",
   "active": "Active",
-  "switchProfile": "Switch Profile",
+  "switchProfile": "Activate Profile",
   "edit": "Edit",
   "delete": "Delete",
   "addFolder": "Add Folder",
@@ -1112,6 +1112,10 @@
   "noTodosYet": "No todos yet. Add one above.",
   "done": "Done",
   "backupAndRestore": "Backup & Restore",
+  "backupTabLabel": "Backup",
+  "aboutTabLabel": "About",
+  "localBackup": "Local Backup",
+  "appearanceTabLabel": "Appearance",
   "exportBackup": "Export Backup",
   "importBackup": "Import Backup",
   "exportProjectInfo": "Export Info",
@@ -1924,6 +1928,8 @@
     
 }
   },
+  "notSignedInYet": "Not signed in",
+  "never": "Never",
   "signedInAs": "Signed in as: {email}",
   "@signedInAs": {
     "placeholders": {
@@ -2062,8 +2068,19 @@
 }
   },
   "settings": "Settings",
+  "searchSettings": "Search settings",
+  "noSettingsFoundFor": "No settings found for \"{query}\"",
+  "@noSettingsFoundFor": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
   "language": "Language",
   "theme": "Theme",
+  "languageSettingDescription": "The language used throughout the app.",
+  "themeSettingDescription": "The app's color theme.",
   "support": "Support",
   "shareDiagnosticLog": "Share Diagnostic Log",
   "shareDiagnosticLogEmpty": "No diagnostic log yet",
@@ -2725,6 +2742,8 @@
   "@profileNotFound": {
     "description": "Message when a profile cannot be found"
   },
+  "downloadFilesSectionTitle": "Download Files",
+  "downloadFilesSectionDescription": "Download all of this profile's files — biography, artwork, press kit, and additional assets — as a single ZIP, or select which ones to include.",
   "selectFiles": "Select Files",
   "@selectFiles": {
     "description": "Button label to select files"
@@ -3028,7 +3047,7 @@
   "noResultsForFilter": "No results for current filter",
   "noResultsForFilterHint": "Try adjusting your search or filters to find projects.",
   "noProjectsFound": "No projects found",
-  "noProjectsFoundHint": "Add a scan root folder in settings to get started.",
+  "noProjectsFoundHint": "Add a scan folder in settings to get started.",
   "queueTab": "Tasks",
   "queueSearchHint": "Search tasks...",
   "queueNoPendingTasks": "All caught up!",
@@ -3091,6 +3110,10 @@
   "mixdownFoldersOtherDawLabel": "Other / unrecognized DAW",
   "addMixdownFolder": "Add",
   "noCustomMixdownFolders": "No custom folders added — DAW defaults will be used.",
+  "mixdownFoldersTabLabel": "Mixdown Folders",
+  "mixdownFoldersSectionDescription": "Controls which folder the app looks in for a project's exported/bounced audio, used as its preview song when none is set manually. Expand a DAW below to see the folder names it already checks by default, and add your own on top of them if your setup uses a different name.",
+  "mixdownFoldersDefaultsLabel": "Default folders checked:",
+  "mixdownFoldersCustomLabel": "Your additions for this DAW:",
 
   "dawInfoLabel": "DAW: {daw}",
   "@dawInfoLabel": {
@@ -3144,6 +3167,7 @@
     }
   },
   "customizeTabs": "Customize Tabs",
+  "alwaysVisible": "(always visible)",
   "@customizeTabs": {},
   "customizeTabsDescription": "Choose which tabs to show in the navigation bar. The Projects tab is always visible.",
   "@customizeTabsDescription": {},
@@ -3206,6 +3230,30 @@
   "@autoBackupNextBackup": {
     "placeholders": {
       "time": { "type": "String" }
+    }
+  },
+  "autoBackupNextSoon": "soon",
+  "@autoBackupNextSoon": {},
+  "autoBackupNextInMinutes": "in {count} min",
+  "@autoBackupNextInMinutes": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "autoBackupNextInOneHour": "in 1 hour",
+  "@autoBackupNextInOneHour": {},
+  "autoBackupNextInHours": "in {count} hours",
+  "@autoBackupNextInHours": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "autoBackupNextInOneDay": "in 1 day",
+  "@autoBackupNextInOneDay": {},
+  "autoBackupNextInDays": "in {count} days",
+  "@autoBackupNextInDays": {
+    "placeholders": {
+      "count": { "type": "int" }
     }
   },
   "playerTitle": "Music Player",
@@ -3392,6 +3440,14 @@
   "@onboardingWelcomeTitle": {},
   "onboardingWelcomeBody": "Organize all your music projects across every DAW in one place.",
   "@onboardingWelcomeBody": {},
+  "onboardingFeatureScanFolders": "Scan DAW project folders automatically",
+  "@onboardingFeatureScanFolders": {},
+  "onboardingFeatureTrackMetadata": "Track BPM, key, status and deadlines",
+  "@onboardingFeatureTrackMetadata": {},
+  "onboardingFeatureSyncDrive": "Sync metadata to Google Drive",
+  "@onboardingFeatureSyncDrive": {},
+  "onboardingFeatureTrackTime": "Track time spent on each project",
+  "@onboardingFeatureTrackTime": {},
   "onboardingLanguageTitle": "Choose Your Language",
   "@onboardingLanguageTitle": {},
   "onboardingThemeTitle": "Choose a Theme",
@@ -3458,6 +3514,10 @@
   "@sessionMode": {},
   "sessionModeDescription": "Subscribe to a project before launching, to track work time and manage it from the toolbar",
   "@sessionModeDescription": {},
+  "workSessionsTabLabel": "Work Sessions",
+  "normalMode": "Normal Mode",
+  "normalModeDescription": "Projects open directly in their DAW when launched.",
+  "sessionModeCardDescription": "Subscribe first to track work time from the toolbar.",
   "startSession": "Start Session",
   "@startSession": {},
   "endSession": "End session",
@@ -3660,6 +3720,7 @@
   "@phases": {},
   "phasesSubtitle": "Add, remove, and reorder project phases",
   "@phasesSubtitle": {},
+  "phasesDescription": "Phases track each project's stage in your workflow (e.g. Idea → Mixing → Mastering). Drag to reorder, tap a color dot to recolor, and flag a phase as finished to treat it as complete throughout the app.",
   "resetToDefaults": "Reset to defaults",
   "@resetToDefaults": {},
   "addPhase": "Add phase",
@@ -3686,6 +3747,7 @@
   },
   "resetPhasesWarningNote": "Those projects will keep their current status but won't appear in phase filters. You can always re-add those phases later.",
   "@resetPhasesWarningNote": {},
+  "resetPhasesConfirm": "Reset all custom phases, colors, and finished-phase flags back to the defaults?",
   "camelotGenerateButton": "Generate Mix",
   "@camelotGenerateButton": {},
   "camelotDialogTitle": "Camelot Mix",

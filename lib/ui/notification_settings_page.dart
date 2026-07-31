@@ -111,7 +111,7 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
       children: [
           // ── Work Session Reminders (desktop only) ───────────────────────
           if (!Platform.isAndroid && !Platform.isIOS)
-            _WorkTimerSection(l10n: l10n),
+            WorkTimerSection(l10n: l10n),
 
           if (Platform.isAndroid) ...[
           const Divider(height: 32),
@@ -603,16 +603,17 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
   }
 }
 
-/// Work timer notification settings — shown on all platforms.
-class _WorkTimerSection extends ConsumerStatefulWidget {
+/// Work timer notification settings — shown on all platforms. Also embedded
+/// directly as the "Notifications" section of the desktop SettingsPage.
+class WorkTimerSection extends ConsumerStatefulWidget {
   final AppLocalizations l10n;
-  const _WorkTimerSection({required this.l10n});
+  const WorkTimerSection({super.key, required this.l10n});
 
   @override
-  ConsumerState<_WorkTimerSection> createState() => _WorkTimerSectionState();
+  ConsumerState<WorkTimerSection> createState() => _WorkTimerSectionState();
 }
 
-class _WorkTimerSectionState extends ConsumerState<_WorkTimerSection> {
+class _WorkTimerSectionState extends ConsumerState<WorkTimerSection> {
   static const _intervalSeconds = [900, 1800, 2700, 3600, 5400, 7200];
   static const _customSentinel = -1;
 
@@ -671,8 +672,13 @@ class _WorkTimerSectionState extends ConsumerState<_WorkTimerSection> {
               value: dropdownValue,
               underline: const SizedBox.shrink(),
               selectedItemBuilder: (_) => [
-                ..._intervalSeconds.map((s) => Text(_label(s))),
-                Text(isCustom ? _label(interval) : l10n.customInterval),
+                ..._intervalSeconds.map(
+                  (s) => Align(alignment: Alignment.centerLeft, child: Text(_label(s))),
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(isCustom ? _label(interval) : l10n.customInterval),
+                ),
               ],
               items: [
                 ..._intervalSeconds.map((s) => DropdownMenuItem(

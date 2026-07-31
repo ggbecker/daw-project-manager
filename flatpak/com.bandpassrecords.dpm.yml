@@ -29,17 +29,19 @@ finish-args:
   - --share=ipc
   - --device=dri
 
-  # Google Drive sync: OAuth flow + Drive API calls.
+  # Update check (lib/services/update_check_service.dart) pings the GitHub
+  # releases API. Google Drive sync — the other thing that would have
+  # needed this — isn't offered on Linux at all; see the long comment on
+  # GoogleDriveSyncService.isSupported for why. That also means this
+  # manifest doesn't need a --talk-name for the Secret Service
+  # (flutter_secure_storage, which only Drive sync used, for OAuth
+  # refresh tokens) — one less permission to justify at review.
   - --share=network
 
   # Deadline reminder notifications (flutter_local_notifications talks to
   # org.freedesktop.Notifications directly over D-Bus, not through the
   # notification portal).
   - --talk-name=org.freedesktop.Notifications
-
-  # flutter_secure_storage on Linux stores OAuth tokens via libsecret /
-  # the Secret Service API.
-  - --talk-name=org.freedesktop.secrets
 
   # tray_manager's system tray icon (StatusNotifierItem protocol). Some
   # desktop environments don't run a StatusNotifierWatcher at all — the
@@ -89,6 +91,14 @@ modules:
       env:
         PUB_CACHE: /run/build/daw-project-manager/.pub-cache
     build-commands:
+      # lib/config/oauth_config.dart is required to compile (it's a plain
+      # Dart import, not conditional on platform) but its contents don't
+      # matter here: Google Drive sync isn't offered on Linux at all (see
+      # GoogleDriveSyncService.isSupported), so these values are compiled in
+      # but never read. Using the committed template's placeholder text
+      # directly — no real client ID, no secret, nothing to source from
+      # anywhere, unlike Windows/macOS builds.
+      - cp lib/config/oauth_config.dart.template lib/config/oauth_config.dart
       # APP_VERSION is derived from the git tag the app source below is
       # pinned to (flatpak-builder checks the source out as a real git
       # clone, so `git describe` sees the tag) — nothing to bump here on
@@ -129,20 +139,3 @@ modules:
         url: https://github.com/flutter/flutter.git
         tag: '3.41.9'
         dest: flutter
-
-      # Google OAuth client config, dropped on top of the git checkout (the
-      # repo only versions lib/config/oauth_config.dart.template — the other
-      # CI jobs inject the real file into their checkout, but flatpak-builder
-      # fetches sources fresh inside the sandbox, so it must come in as a
-      # source). flatpak/oauth_config.dart is gitignored here and generated
-      # by CI via scripts/inject_oauth_config.sh; to build locally, run that
-      # script and `cp lib/config/oauth_config.dart flatpak/`. For the
-      # Flathub submission the file is committed verbatim to the Flathub
-      # manifest repo: per Google's own OAuth docs, installed-app client
-      # credentials are not treated as confidential — every shipped binary
-      # embeds them anyway, and Flathub's build sandbox has no mechanism for
-      # injecting anything at build time that isn't already sitting in the
-      # repo (no equivalent of GitHub Actions secrets).
-      - type: file
-        path: oauth_config.dart
-        dest: lib/config

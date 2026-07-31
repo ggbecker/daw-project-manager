@@ -312,6 +312,108 @@ void main() {
       }
     });
 
+    test('checks customFoldersByDaw for this project\'s DAW before that DAW\'s hardcoded defaults', () async {
+      final dir = await Directory.systemTemp.createTemp('daw_by_daw_custom_');
+      try {
+        final perDawDir = Directory('${dir.path}/MyAbletonBounces');
+        final dawDir = Directory('${dir.path}/Bounces');
+        await perDawDir.create();
+        await dawDir.create();
+        await File('${dawDir.path}/from_daw.wav').create();
+        await File('${perDawDir.path}/from_per_daw.wav').create();
+
+        final project = TestFactories.makeProject(
+          filePath: '${dir.path}/project.als',
+          dawType: 'Ableton Live',
+        );
+        final result = MixdownDetectorService.findLatestMixdown(
+          project,
+          customFoldersByDaw: {
+            'Ableton Live': ['MyAbletonBounces'],
+          },
+        );
+        expect(result, isNotNull);
+        expect(result!.path, contains('from_per_daw'));
+      } finally {
+        await dir.delete(recursive: true);
+      }
+    });
+
+    test('customFoldersByDaw entries for a different DAW are not applied', () async {
+      final dir = await Directory.systemTemp.createTemp('daw_by_daw_wrong_daw_');
+      try {
+        final wrongDawDir = Directory('${dir.path}/FLStudioOnly');
+        await wrongDawDir.create();
+        await File('${wrongDawDir.path}/should_not_be_found.wav').create();
+
+        final project = TestFactories.makeProject(
+          filePath: '${dir.path}/project.als',
+          dawType: 'Ableton Live',
+        );
+        final result = MixdownDetectorService.findLatestMixdown(
+          project,
+          customFoldersByDaw: {
+            'FL Studio': ['FLStudioOnly'],
+          },
+        );
+        expect(result, isNull);
+      } finally {
+        await dir.delete(recursive: true);
+      }
+    });
+
+    test('customFoldersByDaw falls back to otherDawKey for an unrecognized DAW', () async {
+      final dir = await Directory.systemTemp.createTemp('daw_by_daw_other_');
+      try {
+        final otherDir = Directory('${dir.path}/CustomExports');
+        await otherDir.create();
+        await File('${otherDir.path}/mix.wav').create();
+
+        final project = TestFactories.makeProject(
+          filePath: '${dir.path}/project.proj',
+          dawType: null,
+        );
+        final result = MixdownDetectorService.findLatestMixdown(
+          project,
+          customFoldersByDaw: {
+            MixdownDetectorService.otherDawKey: ['CustomExports'],
+          },
+        );
+        expect(result, isNotNull);
+        expect(result!.path, contains('mix.wav'));
+      } finally {
+        await dir.delete(recursive: true);
+      }
+    });
+
+    test('global customFolders still take priority over customFoldersByDaw', () async {
+      final dir = await Directory.systemTemp.createTemp('daw_global_vs_per_daw_');
+      try {
+        final globalDir = Directory('${dir.path}/GlobalChoice');
+        final perDawDir = Directory('${dir.path}/PerDawChoice');
+        await globalDir.create();
+        await perDawDir.create();
+        await File('${globalDir.path}/from_global.wav').create();
+        await File('${perDawDir.path}/from_per_daw.wav').create();
+
+        final project = TestFactories.makeProject(
+          filePath: '${dir.path}/project.als',
+          dawType: 'Ableton Live',
+        );
+        final result = MixdownDetectorService.findLatestMixdown(
+          project,
+          customFolders: ['GlobalChoice'],
+          customFoldersByDaw: {
+            'Ableton Live': ['PerDawChoice'],
+          },
+        );
+        expect(result, isNotNull);
+        expect(result!.path, contains('from_global'));
+      } finally {
+        await dir.delete(recursive: true);
+      }
+    });
+
     test('falls back to generic Mixdown folder for unknown DAW type', () async {
       final dir = await Directory.systemTemp.createTemp('daw_fallback_');
       try {

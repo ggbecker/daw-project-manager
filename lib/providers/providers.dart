@@ -82,18 +82,28 @@ final repositoryProvider = FutureProvider<ProjectRepository>((ref) async {
     throw Exception('No active profile found');
   }
   final repo = await ProjectRepository.init(profileRepo);
-  // Close this profile's boxes when the provider rebuilds (profile switch)
-  // or is torn down — otherwise every profile ever visited this session
-  // stays fully resident in memory.
-  ref.onDispose(() {
-    repo.closeBoxes().catchError((_) {});
-  });
+  // Deliberately NOT closing this profile's boxes via ref.onDispose on
+  // profile switch (as a memory optimization once was) — Riverpod keeps
+  // exposing the outgoing FutureProvider's previous value as .value while
+  // the new one loads (AsyncValue's "keep previous data during reload"
+  // behavior), so any build-time code that reads repositoryProvider's
+  // .value synchronously (e.g. dashboard_page.dart's startup-dialog check)
+  // can still be holding this exact repo object after onDispose already
+  // closed its boxes underneath it — a HiveError "Box has already been
+  // closed" thrown mid-build, not from any one call site we can just guard,
+  // but from the dispose timing itself. Every profile visited this session
+  // stays resident in memory as a result; that's the accepted tradeoff.
   return repo;
 });
 
 final customMixdownFoldersProvider = FutureProvider<List<String>>((ref) async {
   final repo = await ref.watch(repositoryProvider.future);
   return repo.getCustomMixdownFolders();
+});
+
+final customMixdownFoldersByDawProvider = FutureProvider<Map<String, List<String>>>((ref) async {
+  final repo = await ref.watch(repositoryProvider.future);
+  return repo.getCustomMixdownFoldersByDaw();
 });
 
 final rootsWatchProvider = StreamProvider<void>((ref) async* {
@@ -1513,8 +1523,10 @@ final warnBeforeQuitProvider = NotifierProvider<WarnBeforeQuitNotifier, bool>(
 // ---------------------------------------------------------------------------
 
 /// Whether closing the window (the X button) minimizes the app to the
-/// system tray / menu bar instead of quitting it. Defaults to true so
-/// background services (auto-backup, deadline notifications) keep running.
+/// system tray / menu bar instead of quitting it. Defaults to false — the
+/// window's close button quits the app like any other desktop app unless
+/// the user explicitly opts in to keep background services (auto-backup,
+/// deadline notifications) running after closing it.
 class CloseToTrayNotifier extends Notifier<bool> {
   // Same synchronous-read rationale as WarnBeforeQuitNotifier above — the
   // settings box is guaranteed already open by the time this builds, so
@@ -1530,7 +1542,7 @@ class CloseToTrayNotifier extends Notifier<bool> {
     } catch (e) {
       if (kDebugMode) print('Failed to load closeToTray: $e');
     }
-    return true;
+    return false;
   }
 
   Future<void> set(bool value) async {

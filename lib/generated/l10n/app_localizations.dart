@@ -505,7 +505,7 @@ abstract class AppLocalizations {
   /// No description provided for @switchProfile.
   ///
   /// In en, this message translates to:
-  /// **'Switch Profile'**
+  /// **'Activate Profile'**
   String get switchProfile;
 
   /// No description provided for @edit.
@@ -2123,6 +2123,30 @@ abstract class AppLocalizations {
   /// **'Backup & Restore'**
   String get backupAndRestore;
 
+  /// No description provided for @backupTabLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup'**
+  String get backupTabLabel;
+
+  /// No description provided for @aboutTabLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get aboutTabLabel;
+
+  /// No description provided for @localBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Local Backup'**
+  String get localBackup;
+
+  /// No description provided for @appearanceTabLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get appearanceTabLabel;
+
   /// No description provided for @exportBackup.
   ///
   /// In en, this message translates to:
@@ -3011,6 +3035,18 @@ abstract class AppLocalizations {
   /// **'Error downloading backup: {error}'**
   String errorDownloadingBackup(String error);
 
+  /// No description provided for @notSignedInYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not signed in'**
+  String get notSignedInYet;
+
+  /// No description provided for @never.
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get never;
+
   /// No description provided for @signedInAs.
   ///
   /// In en, this message translates to:
@@ -3167,6 +3203,18 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get settings;
 
+  /// No description provided for @searchSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Search settings'**
+  String get searchSettings;
+
+  /// No description provided for @noSettingsFoundFor.
+  ///
+  /// In en, this message translates to:
+  /// **'No settings found for \"{query}\"'**
+  String noSettingsFoundFor(String query);
+
   /// No description provided for @language.
   ///
   /// In en, this message translates to:
@@ -3178,6 +3226,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Theme'**
   String get theme;
+
+  /// No description provided for @languageSettingDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'The language used throughout the app.'**
+  String get languageSettingDescription;
+
+  /// No description provided for @themeSettingDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'The app\'s color theme.'**
+  String get themeSettingDescription;
 
   /// No description provided for @support.
   ///
@@ -3983,6 +4043,18 @@ abstract class AppLocalizations {
   /// **'Profile not found'**
   String get profileNotFound;
 
+  /// No description provided for @downloadFilesSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Download Files'**
+  String get downloadFilesSectionTitle;
+
+  /// No description provided for @downloadFilesSectionDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Download all of this profile\'s files — biography, artwork, press kit, and additional assets — as a single ZIP, or select which ones to include.'**
+  String get downloadFilesSectionDescription;
+
   /// Button label to select files
   ///
   /// In en, this message translates to:
@@ -4670,7 +4742,7 @@ abstract class AppLocalizations {
   /// No description provided for @noProjectsFoundHint.
   ///
   /// In en, this message translates to:
-  /// **'Add a scan root folder in settings to get started.'**
+  /// **'Add a scan folder in settings to get started.'**
   String get noProjectsFoundHint;
 
   /// No description provided for @queueTab.
@@ -4841,6 +4913,30 @@ abstract class AppLocalizations {
   /// **'No custom folders added — DAW defaults will be used.'**
   String get noCustomMixdownFolders;
 
+  /// No description provided for @mixdownFoldersTabLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Mixdown Folders'**
+  String get mixdownFoldersTabLabel;
+
+  /// No description provided for @mixdownFoldersSectionDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Controls which folder the app looks in for a project\'s exported/bounced audio, used as its preview song when none is set manually. Expand a DAW below to see the folder names it already checks by default, and add your own on top of them if your setup uses a different name.'**
+  String get mixdownFoldersSectionDescription;
+
+  /// No description provided for @mixdownFoldersDefaultsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Default folders checked:'**
+  String get mixdownFoldersDefaultsLabel;
+
+  /// No description provided for @mixdownFoldersCustomLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Your additions for this DAW:'**
+  String get mixdownFoldersCustomLabel;
+
   /// No description provided for @dawInfoLabel.
   ///
   /// In en, this message translates to:
@@ -4954,6 +5050,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Customize Tabs'**
   String get customizeTabs;
+
+  /// No description provided for @alwaysVisible.
+  ///
+  /// In en, this message translates to:
+  /// **'(always visible)'**
+  String get alwaysVisible;
 
   /// No description provided for @customizeTabsDescription.
   ///
@@ -5266,6 +5368,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Next backup: {time}'**
   String autoBackupNextBackup(String time);
+
+  /// No description provided for @autoBackupNextSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'soon'**
+  String get autoBackupNextSoon;
+
+  /// No description provided for @autoBackupNextInMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'in {count} min'**
+  String autoBackupNextInMinutes(int count);
+
+  /// No description provided for @autoBackupNextInOneHour.
+  ///
+  /// In en, this message translates to:
+  /// **'in 1 hour'**
+  String get autoBackupNextInOneHour;
+
+  /// No description provided for @autoBackupNextInHours.
+  ///
+  /// In en, this message translates to:
+  /// **'in {count} hours'**
+  String autoBackupNextInHours(int count);
+
+  /// No description provided for @autoBackupNextInOneDay.
+  ///
+  /// In en, this message translates to:
+  /// **'in 1 day'**
+  String get autoBackupNextInOneDay;
+
+  /// No description provided for @autoBackupNextInDays.
+  ///
+  /// In en, this message translates to:
+  /// **'in {count} days'**
+  String autoBackupNextInDays(int count);
 
   /// No description provided for @playerTitle.
   ///
@@ -5675,6 +5813,30 @@ abstract class AppLocalizations {
   /// **'Organize all your music projects across every DAW in one place.'**
   String get onboardingWelcomeBody;
 
+  /// No description provided for @onboardingFeatureScanFolders.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan DAW project folders automatically'**
+  String get onboardingFeatureScanFolders;
+
+  /// No description provided for @onboardingFeatureTrackMetadata.
+  ///
+  /// In en, this message translates to:
+  /// **'Track BPM, key, status and deadlines'**
+  String get onboardingFeatureTrackMetadata;
+
+  /// No description provided for @onboardingFeatureSyncDrive.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync metadata to Google Drive'**
+  String get onboardingFeatureSyncDrive;
+
+  /// No description provided for @onboardingFeatureTrackTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Track time spent on each project'**
+  String get onboardingFeatureTrackTime;
+
   /// No description provided for @onboardingLanguageTitle.
   ///
   /// In en, this message translates to:
@@ -5866,6 +6028,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Subscribe to a project before launching, to track work time and manage it from the toolbar'**
   String get sessionModeDescription;
+
+  /// No description provided for @workSessionsTabLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Work Sessions'**
+  String get workSessionsTabLabel;
+
+  /// No description provided for @normalMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal Mode'**
+  String get normalMode;
+
+  /// No description provided for @normalModeDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Projects open directly in their DAW when launched.'**
+  String get normalModeDescription;
+
+  /// No description provided for @sessionModeCardDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribe first to track work time from the toolbar.'**
+  String get sessionModeCardDescription;
 
   /// No description provided for @startSession.
   ///
@@ -6395,6 +6581,12 @@ abstract class AppLocalizations {
   /// **'Add, remove, and reorder project phases'**
   String get phasesSubtitle;
 
+  /// No description provided for @phasesDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Phases track each project\'s stage in your workflow (e.g. Idea → Mixing → Mastering). Drag to reorder, tap a color dot to recolor, and flag a phase as finished to treat it as complete throughout the app.'**
+  String get phasesDescription;
+
   /// No description provided for @resetToDefaults.
   ///
   /// In en, this message translates to:
@@ -6448,6 +6640,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Those projects will keep their current status but won\'t appear in phase filters. You can always re-add those phases later.'**
   String get resetPhasesWarningNote;
+
+  /// No description provided for @resetPhasesConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset all custom phases, colors, and finished-phase flags back to the defaults?'**
+  String get resetPhasesConfirm;
 
   /// No description provided for @camelotGenerateButton.
   ///

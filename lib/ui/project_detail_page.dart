@@ -32,7 +32,6 @@ import '../services/mixdown_detector_service.dart';
 import '../services/project_text_export_service.dart';
 import 'widgets/conversion_progress_dialog.dart';
 import 'widgets/desktop_title_bar.dart';
-import 'widgets/drag_to_share_button.dart';
 import 'widgets/project_detail_header.dart';
 import 'widgets/resizable_text_field.dart';
 import 'widgets/todo_list_widget.dart';
@@ -1414,7 +1413,12 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
     }
     Future.microtask(() async {
       final customFolders = ref.read(customMixdownFoldersProvider).value;
-      final file = MixdownDetectorService.findLatestMixdown(widget.project, customFolders: customFolders);
+      final customFoldersByDaw = ref.read(customMixdownFoldersByDawProvider).value;
+      final file = MixdownDetectorService.findLatestMixdown(
+        widget.project,
+        customFolders: customFolders,
+        customFoldersByDaw: customFoldersByDaw,
+      );
       if (mounted && file != null) {
         setState(() => _autoDetectedPath = file.path);
         final repo = await ref.read(repositoryProvider.future);
@@ -2741,7 +2745,6 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
                               icon: const Icon(Icons.share),
                               label: Text(AppLocalizations.of(context)!.share),
                             ),
-                            DragToShareButton(sourcePath: _effectivePreviewPath!),
                           ],
                         ],
                       ),

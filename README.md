@@ -17,7 +17,7 @@ Supports **macOS**, **Windows**, **Android** (closed testing).
 - **Playlists** *(Android/iOS)* — ordered sequences of preview songs for reviewing work on the go.
 - **Statistics** — global library dashboard plus per-project phase/activity history.
 - **Multiple Profiles** — fully isolated scan roots, projects, and settings per profile.
-- **Google Drive sync** — back up metadata, preview songs, and artwork, with an optional auto-backup interval (30 min / hourly / 6-hourly / daily).
+- **Google Drive sync** *(Windows/macOS/Android/iOS)* — back up metadata, preview songs, and artwork, with an optional auto-backup interval (30 min / hourly / 6-hourly / daily). Not available on Linux (see `flatpak/README.md`); use local backup/restore instead.
 - **Background / tray mode** *(desktop)* — keep running after closing the window, with a tray/menu-bar icon for quick backup and work-session controls.
 - **Cross-platform sharing** — shares preview songs through the OS share sheet, transcoding to AAC (macOS) or MP3 (Windows, via bundled ffmpeg) when the source format isn't shareable directly.
 - **9 languages** — fully localized UI, switchable at any time.
@@ -120,9 +120,9 @@ flutter run -d linux       # Linux
 flutter run -d <device-id> # Android or iOS — list with: flutter devices
 ```
 
-### Google Drive sync (optional)
+### Google Drive sync (optional, not available on Linux)
 
-Drive sync requires OAuth config injected into `lib/config/oauth_config.dart` (not versioned).
+Drive sync requires OAuth config injected into `lib/config/oauth_config.dart` (not versioned). This only actually enables Drive sign-in on Windows/macOS/Android/iOS — on Linux the feature is hidden in the UI regardless of what's in this file (see `flatpak/README.md` for why), so there's no need to run this setup step on a Linux dev machine.
 
 **Quickest way — use the setup script:**
 

@@ -453,6 +453,16 @@ void main() {
       final p = TestFactories.makeProject(customDisplayName: 'My Track');
       expect(p.copyWith(customDisplayName: null).customDisplayName, 'My Track');
     });
+
+    test('copyWith sets sourceTemplateId when provided', () {
+      final p = TestFactories.makeProject(sourceTemplateId: null);
+      expect(p.copyWith(sourceTemplateId: 'template-1').sourceTemplateId, 'template-1');
+    });
+
+    test('clearSourceTemplateId sets sourceTemplateId to null', () {
+      final p = TestFactories.makeProject(sourceTemplateId: 'template-1');
+      expect(p.copyWith(clearSourceTemplateId: true).sourceTemplateId, isNull);
+    });
   });
 
   group('MusicProjectAdapter (Hive round-trip)', () {
@@ -469,6 +479,7 @@ void main() {
         dawType: 'FL Studio',
         dawVersion: '21',
         projectNotes: 'Notes 1\nby Audio Crawler\n\nSome project notes',
+        sourceTemplateId: 'template-42',
       );
 
       final box = await Hive.openBox<MusicProject>('round_trip_test');
@@ -486,6 +497,7 @@ void main() {
       expect(restored.deadline, original.deadline);
       expect(restored.dawType, original.dawType);
       expect(restored.projectNotes, original.projectNotes);
+      expect(restored.sourceTemplateId, original.sourceTemplateId);
       expect(restored.todos.length, 1);
       expect(restored.todos.first.text, todo.text);
     });
@@ -501,6 +513,7 @@ void main() {
       expect(restored.bpm, isNull);
       expect(restored.notes, isNull);
       expect(restored.todos, isEmpty);
+      expect(restored.sourceTemplateId, isNull);
     });
   });
 

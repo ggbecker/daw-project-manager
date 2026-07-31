@@ -24,7 +24,8 @@ class _OnboardingWizardPageState extends ConsumerState<OnboardingWizardPage> {
   final _controller = PageController();
   int _page = 0;
 
-  // Project-folder management is desktop-only (see project_folders_settings_page.dart).
+  // Project-folder management is desktop-only (see the Project Folders
+  // section of settings_page.dart).
   bool get _showFolders => !MobileUtils.isMobile();
 
   // The startup step is skipped entirely on platforms that have no
@@ -281,22 +282,23 @@ class _WelcomePage extends StatelessWidget {
       iconSize: 80,
       title: l10n.onboardingWelcomeTitle,
       subtitle: l10n.onboardingWelcomeBody,
-      child: _FeatureList(theme: theme),
+      child: _FeatureList(theme: theme, l10n: l10n),
     );
   }
 }
 
 class _FeatureList extends StatelessWidget {
   final ThemeData theme;
-  const _FeatureList({required this.theme});
+  final AppLocalizations l10n;
+  const _FeatureList({required this.theme, required this.l10n});
 
   @override
   Widget build(BuildContext context) {
     final items = [
-      (Icons.folder_open, 'Scan DAW project folders automatically'),
-      (Icons.bar_chart, 'Track BPM, key, status and deadlines'),
-      (Icons.cloud_upload_outlined, 'Sync metadata to Google Drive'),
-      (Icons.timer_outlined, 'Track time spent on each project'),
+      (Icons.folder_open, l10n.onboardingFeatureScanFolders),
+      (Icons.bar_chart, l10n.onboardingFeatureTrackMetadata),
+      (Icons.cloud_upload_outlined, l10n.onboardingFeatureSyncDrive),
+      (Icons.timer_outlined, l10n.onboardingFeatureTrackTime),
     ];
     return Column(
       children: items
@@ -1203,7 +1205,7 @@ class _TabsPage extends ConsumerWidget {
     AppTab.playlists  => l10n.playlists,
     AppTab.queue      => l10n.queueTab,
     AppTab.statistics => l10n.statisticsTab,
-    AppTab.player     => 'Music Player',
+    AppTab.player     => l10n.musicPlayerTab,
   };
 
   @override

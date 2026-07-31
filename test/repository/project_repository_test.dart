@@ -290,6 +290,48 @@ void main() {
     });
   });
 
+  group('ProjectRepository.custom mixdown folders by DAW', () {
+    test('getCustomMixdownFoldersByDaw returns empty map when not configured', () async {
+      final repo = await HiveTestHelper.createRepository();
+      expect(repo.getCustomMixdownFoldersByDaw(), isEmpty);
+    });
+
+    test('setCustomMixdownFoldersByDaw saves trimmed, non-empty values per DAW', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.setCustomMixdownFoldersByDaw({
+        'Ableton Live': ['  Exports  ', 'Mixdowns', ''],
+        'FL Studio': ['Renders'],
+      });
+      expect(repo.getCustomMixdownFoldersByDaw(), {
+        'Ableton Live': ['Exports', 'Mixdowns'],
+        'FL Studio': ['Renders'],
+      });
+    });
+
+    test('setCustomMixdownFoldersByDaw drops DAW keys left with no folders after trimming', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.setCustomMixdownFoldersByDaw({
+        'Ableton Live': ['Exports'],
+        'FL Studio': ['  ', ''],
+      });
+      expect(repo.getCustomMixdownFoldersByDaw(), {'Ableton Live': ['Exports']});
+    });
+
+    test('setCustomMixdownFoldersByDaw with an empty map deletes the setting', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.setCustomMixdownFoldersByDaw({'Ableton Live': ['Exports']});
+      await repo.setCustomMixdownFoldersByDaw({});
+      expect(repo.getCustomMixdownFoldersByDaw(), isEmpty);
+    });
+
+    test('setCustomMixdownFoldersByDaw overwrites the previously stored map', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.setCustomMixdownFoldersByDaw({'Ableton Live': ['Exports']});
+      await repo.setCustomMixdownFoldersByDaw({'FL Studio': ['Renders']});
+      expect(repo.getCustomMixdownFoldersByDaw(), {'FL Studio': ['Renders']});
+    });
+  });
+
   group('ProjectRepository.pending folders', () {
     test('getPendingFolders returns empty list when not configured', () async {
       final repo = await HiveTestHelper.createRepository();
@@ -451,6 +493,33 @@ void main() {
       expect(emissions.length, greaterThanOrEqualTo(2));
       final saved = emissions.last.firstWhere((p) => p.id == 'scanned');
       expect(saved.lastModifiedAt, DateTime(2025, 6, 10));
+    });
+
+    test('a pending debounced emit does not throw if the box closes first', () async {
+      // Regression: repositoryProvider's onDispose closes a profile's boxes
+      // on every profile switch (to avoid keeping every visited profile
+      // resident in memory). If that close races ahead of the outgoing
+      // allProjectsStreamProvider subscription being cancelled, the 200ms
+      // debounce Timer here fires afterward and used to call
+      // projectsBox.values on an already-closed box — a HiveError thrown
+      // from inside a bare Timer callback, i.e. an uncaught async exception
+      // (reported in the field as "Box has already been closed" on every
+      // profile switch).
+      final repo = await HiveTestHelper.createRepository();
+      await repo.updateProject(TestFactories.makeProject(id: 'p1'));
+
+      final sub = repo.watchAllProjects().listen((_) {});
+      await Future.delayed(Duration.zero);
+
+      // Schedules the debounce timer, then closes the box before it fires —
+      // simulating the profile-switch race without needing two profiles.
+      await repo.updateProject(TestFactories.makeProject(id: 'p2'));
+      await repo.projectsBox.close();
+
+      // If unguarded, the pending Timer fires during this wait and throws
+      // with nothing to catch it, failing this test via an uncaught error.
+      await Future.delayed(const Duration(milliseconds: 300));
+      await sub.cancel();
     });
   });
 
