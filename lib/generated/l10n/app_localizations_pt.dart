@@ -2734,7 +2734,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get sortTitleZA => 'Título Z–A';
 
   @override
-  String get musicPlayerTab => 'Leitor de música';
+  String get musicPlayerTab => 'Reprodutor de Música';
 
   @override
   String get previewAudioChangedRefreshing =>
@@ -2742,14 +2742,14 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get audioFileChangedRefreshing =>
-      'O ficheiro de áudio mudou no disco — atualizando a forma de onda…';
+      'O arquivo de áudio mudou no disco — atualizando a forma de onda…';
 
   @override
   String get autoFitAllColumns => 'Ajustar automaticamente todas as colunas';
 
   @override
   String get uploadAutoDetectedPreviewSongs =>
-      'Enviar músicas de pré-visualização detetadas automaticamente';
+      'Enviar músicas de pré-visualização detectadas automaticamente';
 
   @override
   String get uploadAutoDetectedPreviewSongsSubtitle =>
@@ -2760,7 +2760,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String errorHandlingDroppedFiles(String error) {
-    return 'Erro ao processar os ficheiros largados: $error';
+    return 'Erro ao processar os arquivos soltos: $error';
   }
 
   @override
@@ -2785,7 +2785,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get monoToggleTooltip => 'Alternar reprodução mono';
 
   @override
-  String get monoRequiresWav => 'A mixagem mono requer um ficheiro WAV';
+  String get monoRequiresWav => 'A mixagem mono requer um arquivo WAV';
 
   @override
   String get monoUnsupportedFormat =>
@@ -2803,7 +2803,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get reAnalyzeLabel => 'Re-analisar';
 
   @override
-  String get analysisRequiresWav => 'A análise requer um ficheiro WAV';
+  String get analysisRequiresWav => 'A análise requer um arquivo WAV';
 
   @override
   String get noResultsForFilter => 'Nenhum resultado para o filtro atual';

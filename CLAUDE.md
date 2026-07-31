@@ -17,6 +17,7 @@ Instructions for AI assistants working on this codebase.
 - Any label, tooltip, snackbar message, dialog text, or button label must have a key in `lib/l10n/app_en.arb` and be referenced via `AppLocalizations.of(context)!.someKey`.
 - Add the key to all locale ARB files, then run `flutter gen-l10n`.
 - The app ships in 9 languages — hardcoded strings silently break all non-English users.
+- `app_pt.arb` is Brazilian Portuguese only — there is a single Portuguese locale for this app, and it targets Brazil. Never introduce European Portuguese spelling or vocabulary (e.g. "ficheiro", "deteção"/"detetar", "descarregar", "ecrã", "utilizador", "está a fazer"-style progressive) — use the Brazilian equivalent instead (e.g. "arquivo", "detecção"/"detectar", "baixar", "tela", "usuário", "está fazendo"). When adding or editing a `pt` string, match the vocabulary already established in the rest of `app_pt.arb`.
 
 ### New model fields must be evaluated for Drive sync AND local backup
 - When adding a field to `MusicProject` (or any synced model), decide: is this user-generated data or a device-local preference?

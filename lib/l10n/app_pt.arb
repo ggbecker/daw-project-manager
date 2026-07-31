@@ -1892,14 +1892,14 @@
   "sortOldestFirst": "Mais antigos primeiro",
   "sortTitleAZ": "Título A–Z",
   "sortTitleZA": "Título Z–A",
-  "musicPlayerTab": "Leitor de música",
+  "musicPlayerTab": "Reprodutor de Música",
   "previewAudioChangedRefreshing": "O áudio de pré-visualização mudou no disco — atualizando a forma de onda…",
-  "audioFileChangedRefreshing": "O ficheiro de áudio mudou no disco — atualizando a forma de onda…",
+  "audioFileChangedRefreshing": "O arquivo de áudio mudou no disco — atualizando a forma de onda…",
   "autoFitAllColumns": "Ajustar automaticamente todas as colunas",
-  "uploadAutoDetectedPreviewSongs": "Enviar músicas de pré-visualização detetadas automaticamente",
+  "uploadAutoDetectedPreviewSongs": "Enviar músicas de pré-visualização detectadas automaticamente",
   "uploadAutoDetectedPreviewSongsSubtitle": "Incluir músicas encontradas automaticamente pelo scanner, não apenas as definidas manualmente.",
   "monoGenerating": "Mono…",
-  "errorHandlingDroppedFiles": "Erro ao processar os ficheiros largados: {error}",
+  "errorHandlingDroppedFiles": "Erro ao processar os arquivos soltos: {error}",
   "@errorHandlingDroppedFiles": {
     "placeholders": {
       "error": { "type": "String" }
@@ -1917,7 +1917,7 @@
   "githubButtonLabel": "GitHub",
   "monoLabel": "Mono",
   "monoToggleTooltip": "Alternar reprodução mono",
-  "monoRequiresWav": "A mixagem mono requer um ficheiro WAV",
+  "monoRequiresWav": "A mixagem mono requer um arquivo WAV",
   "monoUnsupportedFormat": "Não foi possível criar a mistura mono — formato não suportado",
   "monoSwitchFailed": "Falha na troca para mono: {error}",
   "@monoSwitchFailed": {
@@ -1929,7 +1929,7 @@
   },
   "analyzeLabel": "Analisar",
   "reAnalyzeLabel": "Re-analisar",
-  "analysisRequiresWav": "A análise requer um ficheiro WAV",
+  "analysisRequiresWav": "A análise requer um arquivo WAV",
   "noResultsForFilter": "Nenhum resultado para o filtro atual",
   "noResultsForFilterHint": "Tente ajustar a pesquisa ou os filtros.",
   "noProjectsFound": "Nenhum projeto encontrado",
