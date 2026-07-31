@@ -56,6 +56,14 @@ dependencies:
   just_audio_background: ^0.0.1-beta.12
   audio_service: ^0.18.15
   desktop_drop: ^0.7.0
+  # Canonical-maintained typed wrapper around org.freedesktop.portal.*,
+  # used by lib/services/linux_portal_notifier.dart to show notifications
+  # via the portal instead of flutter_local_notifications' Linux backend
+  # (which talks to org.freedesktop.Notifications directly, bypassing the
+  # portal — see flatpak/README.md). Linux-only package, but fine as a
+  # regular (non-platform-gated) dependency the same way plenty of other
+  # Linux-only plugins here already are.
+  xdg_desktop_portal: ^0.1.14
   google_sign_in: ^7.2.0
   google_sign_in_platform_interface: ^3.1.0
   googleapis: ^16.0.0
@@ -84,6 +92,11 @@ dev_dependencies:
   hive_ce_generator: ^1.0.0
   flutter_launcher_icons: ^0.14.4
   flutter_native_splash: ^2.4.6
+  # test/services/linux_portal_notifier_test.dart spins up a private D-Bus
+  # test server/fake portal object directly — xdg_desktop_portal (a
+  # regular dependency) pulls this in transitively too, but the test
+  # imports it directly so it should be listed, not just riding along.
+  dbus: ^0.7.14
 
 dependency_overrides:
   yaml: ^3.0.0

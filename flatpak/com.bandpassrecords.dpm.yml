@@ -38,10 +38,12 @@ finish-args:
   # refresh tokens) — one less permission to justify at review.
   - --share=network
 
-  # Deadline reminder notifications (flutter_local_notifications talks to
-  # org.freedesktop.Notifications directly over D-Bus, not through the
-  # notification portal).
-  - --talk-name=org.freedesktop.Notifications
+  # Deadline reminder / work-timer notifications on Linux go through
+  # org.freedesktop.portal.Notification (lib/services/linux_portal_notifier.dart)
+  # instead of flutter_local_notifications' Linux backend, which talks to
+  # org.freedesktop.Notifications directly, bypassing the portal — that's
+  # why there's no --talk-name for notifications here: portal calls need
+  # no special permission, sandboxed or not.
 
   # tray_manager's system tray icon (StatusNotifierItem protocol). Some
   # desktop environments don't run a StatusNotifierWatcher at all — the

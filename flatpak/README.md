@@ -120,7 +120,9 @@ the code):
   Flatpak sandbox is inconsistent across desktop environments; confirm it at
   least degrades gracefully where there's no `StatusNotifierWatcher` running.
 - **Notifications** — confirm deadline reminders actually show up via
-  `org.freedesktop.Notifications`.
+  `org.freedesktop.portal.Notification` (`lib/services/linux_portal_notifier.dart`),
+  now that this goes through the portal instead of
+  `flutter_local_notifications`' Linux backend.
 - **Drag-and-drop** (`desktop_drop`) — there's no mature portal for DnD yet;
   worth confirming dropping a project folder onto the window still works
   sandboxed.

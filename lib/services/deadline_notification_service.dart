@@ -7,6 +7,7 @@ import 'package:timezone/timezone.dart' as tz;
 import '../models/notification_preferences.dart';
 import '../models/music_project.dart';
 import '../utils/app_paths.dart';
+import 'linux_portal_notifier.dart';
 
 /// Service for managing deadline notifications
 /// Based on working implementation from Retro1 app
@@ -60,6 +61,17 @@ class DeadlineNotificationService {
   /// Safe to call multiple times — no-ops after first success.
   Future<void> initializeDesktop() async {
     if (_isDesktopInitialized || Platform.isAndroid || Platform.isIOS) return;
+
+    // Linux shows notifications via LinuxPortalNotifier (org.freedesktop.
+    // portal.Notification) instead of this plugin — see
+    // showWorkTimerNotification/showSimpleNotification below — so there's
+    // nothing of this plugin's to initialize here. Its Linux backend talks
+    // to org.freedesktop.Notifications directly, bypassing the portal.
+    if (Platform.isLinux) {
+      _isDesktopInitialized = true;
+      return;
+    }
+
     try {
       if (Platform.isWindows) _registerWindowsAumid();
 
@@ -73,12 +85,8 @@ class DeadlineNotificationService {
         appUserModelId: 'BandPassRecords.DAWProjectManager',
         guid: 'a3c9f2e1-4b87-4d6a-9e05-2c1d8f3b7a94',
       );
-      const linuxSettings = LinuxInitializationSettings(
-        defaultActionName: 'Open',
-      );
       const initSettings = InitializationSettings(
         macOS: darwinSettings,
-        linux: linuxSettings,
         windows: windowsSettings,
       );
       await _notifications.initialize(settings: initSettings);
@@ -98,6 +106,10 @@ class DeadlineNotificationService {
   /// Show a work-session reminder notification on any platform.
   /// [body] is the pre-localised notification body string.
   Future<void> showWorkTimerNotification(String projectName, String body) async {
+    if (Platform.isLinux) {
+      await LinuxPortalNotifier.show(title: projectName, body: body);
+      return;
+    }
     if (!Platform.isAndroid && !_isDesktopInitialized) {
       await initializeDesktop();
     }
@@ -140,6 +152,10 @@ class DeadlineNotificationService {
   /// notice. Kept separate from the work-timer notification so they don't
   /// overwrite each other (distinct notification ids/channels).
   Future<void> showSimpleNotification(String title, String body) async {
+    if (Platform.isLinux) {
+      await LinuxPortalNotifier.show(title: title, body: body);
+      return;
+    }
     if (!Platform.isAndroid && !_isDesktopInitialized) {
       await initializeDesktop();
     }
