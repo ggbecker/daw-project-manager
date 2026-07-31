@@ -42,6 +42,7 @@ class BackupService {
       final projectTemplates = await _readGlobalProjectTemplates();
       final templateRoots = await _readGlobalTemplateRoots();
       final customMixdownFolders = await _readCustomMixdownFolders();
+      final customMixdownFoldersByDaw = await _readCustomMixdownFoldersByDaw();
       // Unlike Drive (which stores a byProfile map for every profile), a local
       // backup covers a single profile, so only that profile's phase settings
       // are relevant here.
@@ -64,6 +65,7 @@ class BackupService {
         'projectTemplates': projectTemplates.map(_projectTemplateToJson).toList(),
         'templateRoots': templateRoots.map(_templateRootToJson).toList(),
         'customMixdownFolders': customMixdownFolders,
+        'customMixdownFoldersByDaw': customMixdownFoldersByDaw,
         'phaseSettings': phaseSettings,
       };
 
@@ -223,6 +225,15 @@ class BackupService {
               .toList() ??
           const <String>[];
 
+      final importedCustomMixdownFoldersByDaw =
+          (backupData['customMixdownFoldersByDaw'] as Map?)?.map(
+                (key, value) => MapEntry(
+                  key as String,
+                  (value as List).map((f) => f.toString()).toList(),
+                ),
+              ) ??
+          const <String, List<String>>{};
+
       final importedPhaseSettings =
           (backupData['phaseSettings'] as Map?)?.cast<String, dynamic>() ?? const <String, dynamic>{};
 
@@ -303,6 +314,7 @@ class BackupService {
       await _writeGlobalProjectTemplates(importedProjectTemplates, importMode);
       await _writeGlobalTemplateRoots(importedTemplateRoots, importMode);
       await _writeCustomMixdownFolders(importedCustomMixdownFolders);
+      await _writeCustomMixdownFoldersByDaw(importedCustomMixdownFoldersByDaw);
       await _writePhaseSettings(targetProfileId, importedPhaseSettings);
 
       // Restore profile photo if embedded in backup
@@ -356,6 +368,7 @@ class BackupService {
   static const String _projectTemplatesBoxName = 'projectTemplates';
   static const String _templateRootsBoxName = 'templateRoots';
   static const String _customMixdownFoldersKey = 'customMixdownFolders';
+  static const String _customMixdownFoldersByDawKey = 'customMixdownFoldersByDaw';
 
   static Future<List<TodoTemplate>> _readGlobalTemplates() async {
     try {
@@ -392,6 +405,22 @@ class BackupService {
       return (jsonDecode(raw) as List).map((e) => e.toString()).toList();
     } catch (_) {
       return const [];
+    }
+  }
+
+  static Future<Map<String, List<String>>> _readCustomMixdownFoldersByDaw() async {
+    try {
+      final box = await Hive.openBox<String>(_appSettingsBoxName);
+      final raw = box.get(_customMixdownFoldersByDawKey);
+      if (raw == null) return const {};
+      return (jsonDecode(raw) as Map).map(
+        (key, value) => MapEntry(
+          key as String,
+          (value as List).map((f) => f.toString()).toList(),
+        ),
+      );
+    } catch (_) {
+      return const {};
     }
   }
 
@@ -486,6 +515,35 @@ class BackupService {
     } catch (_) {}
   }
 
+  /// Merges [foldersByDaw] into the stored per-DAW custom mixdown folder
+  /// names, unioning each DAW's list rather than overwriting it — same
+  /// rationale as [_writeCustomMixdownFolders].
+  static Future<void> _writeCustomMixdownFoldersByDaw(
+    Map<String, List<String>> foldersByDaw,
+  ) async {
+    if (foldersByDaw.isEmpty) return;
+    try {
+      final box = await Hive.openBox<String>(_appSettingsBoxName);
+      final existingRaw = box.get(_customMixdownFoldersByDawKey);
+      final merged = <String, List<String>>{
+        if (existingRaw != null)
+          ...(jsonDecode(existingRaw) as Map).map(
+            (key, value) => MapEntry(
+              key as String,
+              (value as List).map((f) => f.toString()).toList(),
+            ),
+          ),
+      };
+      for (final entry in foldersByDaw.entries) {
+        final existing = merged.putIfAbsent(entry.key, () => []);
+        for (final folder in entry.value) {
+          if (!existing.contains(folder)) existing.add(folder);
+        }
+      }
+      await box.put(_customMixdownFoldersByDawKey, jsonEncode(merged));
+    } catch (_) {}
+  }
+
   static Future<void> _writePhaseSettings(
     String profileId,
     Map<String, dynamic> settings,
@@ -535,6 +593,13 @@ class BackupService {
   @visibleForTesting
   static Future<void> writeCustomMixdownFoldersForTest(List<String> folders) =>
       _writeCustomMixdownFolders(folders);
+
+  @visibleForTesting
+  static Future<Map<String, List<String>>> readCustomMixdownFoldersByDawForTest() =>
+      _readCustomMixdownFoldersByDaw();
+  @visibleForTesting
+  static Future<void> writeCustomMixdownFoldersByDawForTest(Map<String, List<String>> foldersByDaw) =>
+      _writeCustomMixdownFoldersByDaw(foldersByDaw);
 
   @visibleForTesting
   static Future<Map<String, dynamic>> readPhaseSettingsForTest(String profileId) =>
@@ -603,6 +668,7 @@ class BackupService {
       'parentProjectId': project.parentProjectId,
       'ignoredNewerSongPath': project.ignoredNewerSongPath,
       'projectNotes': project.projectNotes,
+      'sourceTemplateId': project.sourceTemplateId,
     };
   }
 
@@ -642,6 +708,7 @@ class BackupService {
       parentProjectId: json['parentProjectId'] as String?,
       ignoredNewerSongPath: json['ignoredNewerSongPath'] as String?,
       projectNotes: json['projectNotes'] as String?,
+      sourceTemplateId: json['sourceTemplateId'] as String?,
     );
   }
 

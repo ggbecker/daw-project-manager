@@ -39,6 +39,7 @@ class ProjectRepository {
 
   static const _keyCustomMixdownFolder = 'customMixdownFolder';
   static const _keyCustomMixdownFolders = 'customMixdownFolders';
+  static const _keyCustomMixdownFoldersByDaw = 'customMixdownFoldersByDaw';
 
   ProjectRepository({
     required this.profileId,
@@ -89,6 +90,39 @@ class ProjectRepository {
       await appSettingsBox.delete(_keyCustomMixdownFolders);
     } else {
       await appSettingsBox.put(_keyCustomMixdownFolders, jsonEncode(cleaned));
+    }
+  }
+
+  // Subfolder names checked per-DAW (keyed by the same strings as
+  // MixdownDetectorService.dawFolders, or MixdownDetectorService.otherDawKey
+  // for unrecognized DAWs) — additive to, and checked after, the fully-global
+  // list above, but before that DAW's hardcoded defaults.
+  Map<String, List<String>> getCustomMixdownFoldersByDaw() {
+    final raw = appSettingsBox.get(_keyCustomMixdownFoldersByDaw);
+    if (raw == null) return const {};
+    try {
+      final decoded = jsonDecode(raw) as Map;
+      return Map.unmodifiable(
+        decoded.map(
+          (key, value) =>
+              MapEntry(key as String, List<String>.unmodifiable((value as List).cast<String>())),
+        ),
+      );
+    } catch (_) {
+      return const {};
+    }
+  }
+
+  Future<void> setCustomMixdownFoldersByDaw(Map<String, List<String>> foldersByDaw) async {
+    final cleaned = <String, List<String>>{};
+    for (final entry in foldersByDaw.entries) {
+      final names = entry.value.map((f) => f.trim()).where((f) => f.isNotEmpty).toList();
+      if (names.isNotEmpty) cleaned[entry.key] = names;
+    }
+    if (cleaned.isEmpty) {
+      await appSettingsBox.delete(_keyCustomMixdownFoldersByDaw);
+    } else {
+      await appSettingsBox.put(_keyCustomMixdownFoldersByDaw, jsonEncode(cleaned));
     }
   }
 

@@ -1413,7 +1413,12 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
     }
     Future.microtask(() async {
       final customFolders = ref.read(customMixdownFoldersProvider).value;
-      final file = MixdownDetectorService.findLatestMixdown(widget.project, customFolders: customFolders);
+      final customFoldersByDaw = ref.read(customMixdownFoldersByDawProvider).value;
+      final file = MixdownDetectorService.findLatestMixdown(
+        widget.project,
+        customFolders: customFolders,
+        customFoldersByDaw: customFoldersByDaw,
+      );
       if (mounted && file != null) {
         setState(() => _autoDetectedPath = file.path);
         final repo = await ref.read(repositoryProvider.future);

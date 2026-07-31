@@ -52,16 +52,33 @@ class MixdownDetectorService {
     'bounce',  'Render',  'Export',
   ];
 
+  /// Key used in [findLatestMixdown]'s `customFoldersByDaw` map for projects
+  /// whose `dawType` is null or not one of [dawFolders]' keys — mirrors how
+  /// those projects already fall back to [fallbackFolders].
+  static const String otherDawKey = '_other';
+
   /// Returns the most recently modified audio file found in the project's
   /// mixdown folder, or null if nothing is found.
   ///
   /// [customFolders] are optional user-defined subfolder names, checked
   /// first and in order, before the DAW-specific and generic defaults.
-  static File? findLatestMixdown(MusicProject project, {List<String>? customFolders}) {
+  /// [customFoldersByDaw] are optional user-defined additions scoped to a
+  /// single DAW (keyed by the same strings as [dawFolders], or
+  /// [otherDawKey]) — checked after [customFolders] but before that DAW's
+  /// hardcoded defaults, so a user addition takes priority over the guess.
+  static File? findLatestMixdown(
+    MusicProject project, {
+    List<String>? customFolders,
+    Map<String, List<String>>? customFoldersByDaw,
+  }) {
     if (MobileUtils.isMobile()) return null;
     if (project.filePath.isEmpty) return null;
 
-    for (final dir in _candidateDirs(project, customFolders: customFolders)) {
+    for (final dir in _candidateDirs(
+      project,
+      customFolders: customFolders,
+      customFoldersByDaw: customFoldersByDaw,
+    )) {
       if (!dir.existsSync()) continue;
 
       final files = dir
@@ -110,7 +127,11 @@ class MixdownDetectorService {
     return null;
   }
 
-  static List<Directory> _candidateDirs(MusicProject project, {List<String>? customFolders}) {
+  static List<Directory> _candidateDirs(
+    MusicProject project, {
+    List<String>? customFolders,
+    Map<String, List<String>>? customFoldersByDaw,
+  }) {
     final projectFile = File(project.filePath);
     final projectDir = projectFile.parent.path;
     final dirs = <String>[];
@@ -118,6 +139,17 @@ class MixdownDetectorService {
     // User-defined folders are checked first, in the given order
     if (customFolders != null) {
       for (final name in customFolders) {
+        if (name.isEmpty) continue;
+        dirs.add(p.join(projectDir, name));
+      }
+    }
+
+    // User-defined additions scoped to this project's DAW, checked next —
+    // ahead of that DAW's hardcoded defaults but after the fully-global list.
+    final perDawFolders =
+        customFoldersByDaw?[project.dawType ?? otherDawKey];
+    if (perDawFolders != null) {
+      for (final name in perDawFolders) {
         if (name.isEmpty) continue;
         dirs.add(p.join(projectDir, name));
       }

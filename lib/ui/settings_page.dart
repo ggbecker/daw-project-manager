@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../generated/l10n/app_localizations.dart';
 import '../models/scan_mode.dart';
 import '../providers/providers.dart';
+import '../providers/theme_provider.dart';
 import '../repository/project_repository.dart';
 import '../services/auto_start_service.dart';
 import '../services/backup_service.dart';
@@ -19,6 +20,7 @@ import '../services/mixdown_detector_service.dart';
 import '../services/project_text_export_service.dart';
 import '../services/scanner_service.dart';
 import '../services/update_check_service.dart';
+import '../utils/daw_logo.dart';
 import '../utils/file_launcher.dart';
 import '../utils/mobile_utils.dart';
 import '../utils/phase_colors.dart';
@@ -28,6 +30,7 @@ import 'metadata_extraction_info_page.dart';
 import 'notification_settings_page.dart' show WorkTimerSection;
 import 'onboarding_wizard_page.dart';
 import 'widgets/desktop_title_bar.dart';
+import 'widgets/language_switcher.dart' show LanguageSwitcher;
 import 'widgets/shortcuts_help_dialog.dart';
 import 'widgets/update_available_dialog.dart';
 
@@ -40,6 +43,7 @@ enum SettingsSection {
   general,
   appearance,
   projectFolders,
+  mixdownFolders,
   phases,
   workSessions,
   backup,
@@ -74,6 +78,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   bool _busy = false;
   bool _checkingUpdate = false;
   late final TextEditingController _newMixdownFolderCtrl;
+  final Map<String, TextEditingController> _mixdownFolderByDawCtrls = {};
   final _addPhaseController = TextEditingController();
   String? _addPhaseError;
 
@@ -89,6 +94,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     _newMixdownFolderCtrl.dispose();
+    for (final c in _mixdownFolderByDawCtrls.values) {
+      c.dispose();
+    }
     _addPhaseController.dispose();
     super.dispose();
   }
@@ -354,6 +362,38 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     ref.invalidate(customMixdownFoldersProvider);
   }
 
+  TextEditingController _mixdownFolderCtrlFor(String dawKey) =>
+      _mixdownFolderByDawCtrls.putIfAbsent(dawKey, () => TextEditingController());
+
+  Future<void> _addMixdownFolderForDaw(String dawKey, String value) async {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return;
+    final current = ref.read(customMixdownFoldersByDawProvider).value ?? const <String, List<String>>{};
+    final existing = current[dawKey] ?? const <String>[];
+    if (existing.any((f) => f.toLowerCase() == trimmed.toLowerCase())) {
+      _mixdownFolderCtrlFor(dawKey).clear();
+      return;
+    }
+    final repo = await ref.read(repositoryProvider.future);
+    await repo.setCustomMixdownFoldersByDaw({
+      ...current,
+      dawKey: [...existing, trimmed],
+    });
+    ref.invalidate(customMixdownFoldersByDawProvider);
+    _mixdownFolderCtrlFor(dawKey).clear();
+  }
+
+  Future<void> _removeMixdownFolderForDaw(String dawKey, String folder) async {
+    final current = ref.read(customMixdownFoldersByDawProvider).value ?? const <String, List<String>>{};
+    final existing = current[dawKey] ?? const <String>[];
+    final repo = await ref.read(repositoryProvider.future);
+    await repo.setCustomMixdownFoldersByDaw({
+      ...current,
+      dawKey: existing.where((f) => f != folder).toList(),
+    });
+    ref.invalidate(customMixdownFoldersByDawProvider);
+  }
+
   Future<void> _exportAllProjectsInfo() async {
     final l10n = AppLocalizations.of(context)!;
     final repo = await ref.read(repositoryProvider.future);
@@ -392,71 +432,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         );
       }
     }
-  }
-
-  void _showMixdownInfoDialog() {
-    final l10n = AppLocalizations.of(context)!;
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.mixdownFoldersInfoDialogTitle),
-        content: SizedBox(
-          width: 420,
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(l10n.mixdownFoldersInfoDialogBody),
-                const SizedBox(height: 16),
-                Text(
-                  l10n.mixdownFoldersDawDefaultsHeading,
-                  style: Theme.of(ctx).textTheme.labelLarge,
-                ),
-                const SizedBox(height: 8),
-                for (final entry in MixdownDetectorService.dawFolders.entries)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: RichText(
-                      text: TextSpan(
-                        style: Theme.of(ctx).textTheme.bodySmall,
-                        children: [
-                          TextSpan(
-                            text: '${entry.key}: ',
-                            style: const TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                          TextSpan(text: entry.value.join(', ')),
-                        ],
-                      ),
-                    ),
-                  ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: RichText(
-                    text: TextSpan(
-                      style: Theme.of(ctx).textTheme.bodySmall,
-                      children: [
-                        TextSpan(
-                          text: '${l10n.mixdownFoldersOtherDawLabel}: ',
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        TextSpan(text: MixdownDetectorService.fallbackFolders.join(', ')),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n.close),
-          ),
-        ],
-      ),
-    );
   }
 
   Future<void> _scanOnlyFolder(ProjectRepository repo, String folderId, String folderPath) async {
@@ -825,6 +800,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         _NavItem(icon: Icons.tune_outlined, label: l10n.general),
         _NavItem(icon: Icons.palette_outlined, label: l10n.appearanceTabLabel),
         _NavItem(icon: Icons.folder_outlined, label: l10n.roots),
+        _NavItem(icon: Icons.audio_file_outlined, label: l10n.mixdownFoldersTabLabel),
         _NavItem(icon: Icons.timeline_outlined, label: l10n.phases),
         _NavItem(icon: Icons.bookmark_outlined, label: l10n.workSessionsTabLabel),
         _NavItem(icon: Icons.backup_outlined, label: l10n.backupTabLabel, newGroup: true),
@@ -837,6 +813,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         _buildGeneralSection,
         _buildAppearanceSection,
         _buildProjectFoldersSection,
+        _buildMixdownFoldersSection,
         _buildPhasesSection,
         _buildWorkSessionsSection,
         _buildBackupSection,
@@ -854,8 +831,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         _SearchEntry(0, Icons.dock_outlined, l10n.closeToTray, l10n.closeToTrayDescription),
         _SearchEntry(0, Icons.power_settings_new, l10n.autoStart, l10n.autoStartDescription),
         _SearchEntry(0, Icons.minimize, l10n.startMinimized, l10n.startMinimizedDescription),
+        _SearchEntry(0, Icons.language, l10n.language, l10n.languageSettingDescription),
         _SearchEntry(0, Icons.table_chart_outlined, l10n.metadataExtractionTitle, l10n.metadataExtractionSubtitle),
         _SearchEntry(0, Icons.restart_alt, l10n.resetOnboarding, null),
+        _SearchEntry(1, Icons.palette_outlined, l10n.theme, l10n.themeSettingDescription),
         _SearchEntry(1, Icons.tab_outlined, l10n.customizeTabs, l10n.customizeTabsDescription),
         _SearchEntry(1, Icons.view_sidebar_outlined, l10n.tabPosition, null),
         _SearchEntry(2, Icons.folder_outlined, l10n.projectFoldersSectionTitle, l10n.projectFoldersSectionSubtitle),
@@ -864,28 +843,31 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         _SearchEntry(2, Icons.merge, l10n.mergeSmartFoldersByName, l10n.mergeSmartFoldersByNameDescription),
         _SearchEntry(2, Icons.visibility_outlined, l10n.alwaysShowSmartFolders, l10n.alwaysShowSmartFoldersDescription),
         _SearchEntry(2, Icons.block, l10n.excludedFoldersSectionTitle, l10n.excludedFoldersSectionSubtitle),
-        _SearchEntry(2, Icons.audio_file_outlined, l10n.previewMixdownFolderTitle, l10n.previewMixdownFolderSubtitle),
         _SearchEntry(2, Icons.description_outlined, l10n.exportAllProjectsInfo, l10n.exportAllProjectsInfoSubtitle),
-        _SearchEntry(3, Icons.timeline_outlined, l10n.phases, l10n.phasesDescription),
-        _SearchEntry(3, Icons.add, l10n.addPhase, null),
-        _SearchEntry(3, Icons.restart_alt, l10n.resetToDefaults, null),
-        _SearchEntry(4, Icons.bookmark_outlined, l10n.sessionMode, l10n.sessionModeDescription),
-        _SearchEntry(4, Icons.timer_outlined, l10n.workTimerSection, l10n.workTimerSectionDesc),
-        _SearchEntry(5, Icons.backup_outlined, l10n.localBackup, null),
-        _SearchEntry(5, Icons.upload_file, l10n.exportBackup, null),
-        _SearchEntry(5, Icons.download, l10n.importBackup, null),
+        _SearchEntry(3, Icons.audio_file_outlined, l10n.mixdownFoldersTabLabel, l10n.mixdownFoldersSectionDescription),
+        _SearchEntry(3, Icons.folder_open, l10n.previewMixdownFolderTitle, l10n.previewMixdownFolderSubtitle),
+        for (final dawKey in MixdownDetectorService.dawFolders.keys)
+          _SearchEntry(3, Icons.piano_outlined, dawKey, MixdownDetectorService.dawFolders[dawKey]!.join(', ')),
+        _SearchEntry(4, Icons.timeline_outlined, l10n.phases, l10n.phasesDescription),
+        _SearchEntry(4, Icons.add, l10n.addPhase, null),
+        _SearchEntry(4, Icons.restart_alt, l10n.resetToDefaults, null),
+        _SearchEntry(5, Icons.bookmark_outlined, l10n.sessionMode, l10n.sessionModeDescription),
+        _SearchEntry(5, Icons.timer_outlined, l10n.workTimerSection, l10n.workTimerSectionDesc),
+        _SearchEntry(6, Icons.backup_outlined, l10n.localBackup, null),
+        _SearchEntry(6, Icons.upload_file, l10n.exportBackup, null),
+        _SearchEntry(6, Icons.download, l10n.importBackup, null),
         if (GoogleDriveSyncService.isSupported)
-          _SearchEntry(5, Icons.cloud_outlined, l10n.googleDriveSync, null),
-        _SearchEntry(6, Icons.warning_amber_rounded, l10n.pathsSettingsDangerZoneTitle, l10n.pathsSettingsDangerZoneSubtitle),
-        _SearchEntry(6, Icons.delete_forever, l10n.clearLibrary, l10n.clearLibraryMessage),
-        _SearchEntry(6, Icons.delete_sweep_rounded, l10n.deleteAllData, l10n.deleteAllDataSubtitle),
-        _SearchEntry(7, Icons.keyboard_outlined, l10n.keyboardShortcuts, null),
-        _SearchEntry(8, Icons.info_outline, l10n.aboutTabLabel, l10n.appDescription),
-        _SearchEntry(8, Icons.system_update_alt_outlined, l10n.checkForUpdates, l10n.checkForUpdatesDescription),
-        _SearchEntry(8, Icons.favorite, l10n.donate, null),
-        _SearchEntry(8, Icons.web, l10n.website, null),
-        _SearchEntry(8, Icons.menu_book_outlined, l10n.menuDocumentation, null),
-        _SearchEntry(8, Icons.bug_report_outlined, l10n.shareDiagnosticLog, null),
+          _SearchEntry(6, Icons.cloud_outlined, l10n.googleDriveSync, null),
+        _SearchEntry(7, Icons.warning_amber_rounded, l10n.pathsSettingsDangerZoneTitle, l10n.pathsSettingsDangerZoneSubtitle),
+        _SearchEntry(7, Icons.delete_forever, l10n.clearLibrary, l10n.clearLibraryMessage),
+        _SearchEntry(7, Icons.delete_sweep_rounded, l10n.deleteAllData, l10n.deleteAllDataSubtitle),
+        _SearchEntry(8, Icons.keyboard_outlined, l10n.keyboardShortcuts, null),
+        _SearchEntry(9, Icons.info_outline, l10n.aboutTabLabel, l10n.appDescription),
+        _SearchEntry(9, Icons.system_update_alt_outlined, l10n.checkForUpdates, l10n.checkForUpdatesDescription),
+        _SearchEntry(9, Icons.favorite, l10n.donate, null),
+        _SearchEntry(9, Icons.web, l10n.website, null),
+        _SearchEntry(9, Icons.menu_book_outlined, l10n.menuDocumentation, null),
+        _SearchEntry(9, Icons.bug_report_outlined, l10n.shareDiagnosticLog, null),
       ];
 
   @override
@@ -1099,6 +1081,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     final closeToTray = ref.watch(closeToTrayProvider);
     final autoStart = ref.watch(autoStartProvider);
     final startMinimized = ref.watch(startMinimizedProvider);
+    final currentLocale = ref.watch(localeProvider);
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -1195,6 +1178,29 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               ),
             const Divider(height: 20),
             ListTile(
+              leading: const Icon(Icons.language),
+              title: Text(l10n.language),
+              subtitle: Text(l10n.languageSettingDescription,
+                  style: Theme.of(context).textTheme.bodySmall),
+              trailing: DropdownButton<Locale>(
+                value: currentLocale,
+                underline: const SizedBox.shrink(),
+                items: LanguageSwitcher.languageNames.entries.map((entry) {
+                  return DropdownMenuItem<Locale>(
+                    value: Locale(entry.key),
+                    child: Text(entry.value),
+                  );
+                }).toList(),
+                onChanged: (locale) {
+                  if (locale != null) {
+                    ref.read(localeProvider.notifier).setLocale(locale);
+                  }
+                },
+              ),
+              contentPadding: EdgeInsets.zero,
+            ),
+            const Divider(height: 20),
+            ListTile(
               leading: const Icon(Icons.table_chart_outlined),
               title: Text(l10n.metadataExtractionTitle),
               subtitle: Text(l10n.metadataExtractionSubtitle,
@@ -1252,7 +1258,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   Widget _buildProjectFoldersSection(AppLocalizations l10n) {
     final projectFolders = ref.watch(scanRootsProvider);
     final excludedFolders = ref.watch(ignoredPathsProvider);
-    final customMixdownFolders = ref.watch(customMixdownFoldersProvider).value ?? const <String>[];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1513,7 +1518,58 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
         const SizedBox(height: 12),
 
-        // Custom mixdown folders
+        // Data / export section
+        Card(
+          clipBehavior: Clip.antiAlias,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                const Icon(Icons.description_outlined),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(l10n.exportAllProjectsInfo, style: Theme.of(context).textTheme.titleMedium),
+                      const SizedBox(height: 2),
+                      Text(
+                        l10n.exportAllProjectsInfoSubtitle,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                FilledButton.tonalIcon(
+                  onPressed: _busy ? null : _exportAllProjectsInfo,
+                  icon: const Icon(Icons.description_outlined),
+                  label: Text(l10n.exportAllProjectsInfo),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMixdownFoldersSection(AppLocalizations l10n) {
+    final customMixdownFolders = ref.watch(customMixdownFoldersProvider).value ?? const <String>[];
+    final customMixdownFoldersByDaw =
+        ref.watch(customMixdownFoldersByDawProvider).value ?? const <String, List<String>>{};
+    final dawKeys = [
+      ...MixdownDetectorService.dawFolders.keys,
+      MixdownDetectorService.otherDawKey,
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(l10n.mixdownFoldersSectionDescription, style: Theme.of(context).textTheme.bodySmall),
+        const SizedBox(height: 12),
+
+        // Global custom mixdown folders — checked first, for every DAW.
         Card(
           clipBehavior: Clip.antiAlias,
           child: Padding(
@@ -1523,7 +1579,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.audio_file_outlined),
+                    const Icon(Icons.folder_open),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
@@ -1536,13 +1592,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ],
-                      ),
-                    ),
-                    Tooltip(
-                      message: l10n.mixdownFoldersInfoTooltip,
-                      child: IconButton(
-                        icon: const Icon(Icons.info_outline),
-                        onPressed: _showMixdownInfoDialog,
                       ),
                     ),
                   ],
@@ -1596,36 +1645,39 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
         const SizedBox(height: 12),
 
-        // Data / export section
+        Text(l10n.mixdownFoldersDawDefaultsHeading, style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 2),
+        Text(l10n.mixdownFoldersInfoDialogBody, style: Theme.of(context).textTheme.bodySmall),
+        const SizedBox(height: 12),
+
+        // Per-DAW defaults + user-added folder names.
         Card(
           clipBehavior: Clip.antiAlias,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                const Icon(Icons.description_outlined),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(l10n.exportAllProjectsInfo, style: Theme.of(context).textTheme.titleMedium),
-                      const SizedBox(height: 2),
-                      Text(
-                        l10n.exportAllProjectsInfoSubtitle,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                FilledButton.tonalIcon(
-                  onPressed: _busy ? null : _exportAllProjectsInfo,
-                  icon: const Icon(Icons.description_outlined),
-                  label: Text(l10n.exportAllProjectsInfo),
+          child: Column(
+            children: [
+              for (final dawKey in dawKeys) ...[
+                if (dawKey != dawKeys.first) const Divider(height: 1),
+                _MixdownDawTile(
+                  dawKey: dawKey,
+                  displayName: dawKey == MixdownDetectorService.otherDawKey
+                      ? l10n.mixdownFoldersOtherDawLabel
+                      : dawKey,
+                  defaultFolders: dawKey == MixdownDetectorService.otherDawKey
+                      ? MixdownDetectorService.fallbackFolders
+                      : MixdownDetectorService.dawFolders[dawKey]!,
+                  customFolders: customMixdownFoldersByDaw[dawKey] ?? const <String>[],
+                  controller: _mixdownFolderCtrlFor(dawKey),
+                  defaultsLabel: l10n.mixdownFoldersDefaultsLabel,
+                  customLabel: l10n.mixdownFoldersCustomLabel,
+                  emptyCustomLabel: l10n.noCustomMixdownFolders,
+                  addHint: l10n.previewMixdownFolderHint,
+                  addLabel: l10n.addMixdownFolder,
+                  removeTooltip: l10n.remove,
+                  onAdd: (value) => _addMixdownFolderForDaw(dawKey, value),
+                  onRemove: (folder) => _removeMixdownFolderForDaw(dawKey, folder),
                 ),
               ],
-            ),
+            ],
           ),
         ),
       ],
@@ -2201,69 +2253,116 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   Widget _buildAppearanceSection(AppLocalizations l10n) {
     final visibleSet = ref.watch(visibleTabsProvider);
     final tabPos = ref.watch(tabPositionProvider);
+    final themeType = ref.watch(themeTypeProvider);
     final allTabs = VisibleTabsNotifier.canonicalOrder
         .where((t) => t != AppTab.playlists) // playlists is mobile-only
         .toList();
 
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Theme selector. AppThemeType.studioLight is deliberately excluded —
+        // it's hidden from every menu/switcher until it's ready (see CLAUDE.md).
+        Card(
+          clipBehavior: Clip.antiAlias,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.tab_outlined),
-                const SizedBox(width: 10),
-                Text(l10n.customizeTabs, style: Theme.of(context).textTheme.titleMedium),
+                Row(
+                  children: [
+                    const Icon(Icons.palette_outlined),
+                    const SizedBox(width: 10),
+                    Text(l10n.theme, style: Theme.of(context).textTheme.titleMedium),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(l10n.themeSettingDescription, style: Theme.of(context).textTheme.bodySmall),
+                const SizedBox(height: 12),
+                SegmentedButton<AppThemeType>(
+                  segments: [
+                    ButtonSegment(
+                      value: AppThemeType.classicDark,
+                      icon: const Icon(Icons.dark_mode_outlined, size: 16),
+                      label: Text(l10n.classicDarkThemeName),
+                    ),
+                    ButtonSegment(
+                      value: AppThemeType.neonDark,
+                      icon: const Icon(Icons.bolt_outlined, size: 16),
+                      label: Text(l10n.neonDarkThemeName),
+                    ),
+                  ],
+                  selected: {themeType},
+                  onSelectionChanged: (s) =>
+                      ref.read(themeTypeProvider.notifier).setThemeType(s.first),
+                ),
               ],
             ),
-            const SizedBox(height: 4),
-            Text(l10n.customizeTabsDescription, style: Theme.of(context).textTheme.bodySmall),
-            const SizedBox(height: 16),
-            Text(
-              l10n.tabPosition,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 8),
-            SegmentedButton<TabPosition>(
-              segments: [
-                ButtonSegment(
-                  value: TabPosition.left,
-                  icon: const Icon(Icons.view_sidebar_outlined, size: 16),
-                  label: Text(l10n.tabPositionLeft),
-                ),
-                ButtonSegment(
-                  value: TabPosition.top,
-                  icon: const Icon(Icons.tab, size: 16),
-                  label: Text(l10n.tabPositionTop),
-                ),
-              ],
-              selected: {tabPos},
-              onSelectionChanged: (s) => ref.read(tabPositionProvider.notifier).set(s.first),
-            ),
-            const Divider(height: 24),
-            for (final tab in allTabs)
-              CheckboxListTile(
-                value: visibleSet.contains(tab),
-                onChanged: tab == AppTab.projects
-                    ? null
-                    : (v) => ref.read(visibleTabsProvider.notifier).setTabVisible(tab, v ?? false),
-                secondary: Icon(_tabIcon(tab)),
-                title: Text(_tabLabel(tab, l10n)),
-                subtitle: tab == AppTab.projects
-                    ? Text(
-                        l10n.alwaysVisible,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      )
-                    : null,
-                controlAffinity: ListTileControlAffinity.trailing,
-                contentPadding: EdgeInsets.zero,
-              ),
-          ],
+          ),
         ),
-      ),
+        const SizedBox(height: 12),
+        Card(
+          clipBehavior: Clip.antiAlias,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.tab_outlined),
+                    const SizedBox(width: 10),
+                    Text(l10n.customizeTabs, style: Theme.of(context).textTheme.titleMedium),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(l10n.customizeTabsDescription, style: Theme.of(context).textTheme.bodySmall),
+                const SizedBox(height: 16),
+                Text(
+                  l10n.tabPosition,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 8),
+                SegmentedButton<TabPosition>(
+                  segments: [
+                    ButtonSegment(
+                      value: TabPosition.left,
+                      icon: const Icon(Icons.view_sidebar_outlined, size: 16),
+                      label: Text(l10n.tabPositionLeft),
+                    ),
+                    ButtonSegment(
+                      value: TabPosition.top,
+                      icon: const Icon(Icons.tab, size: 16),
+                      label: Text(l10n.tabPositionTop),
+                    ),
+                  ],
+                  selected: {tabPos},
+                  onSelectionChanged: (s) => ref.read(tabPositionProvider.notifier).set(s.first),
+                ),
+                const Divider(height: 24),
+                for (final tab in allTabs)
+                  CheckboxListTile(
+                    value: visibleSet.contains(tab),
+                    onChanged: tab == AppTab.projects
+                        ? null
+                        : (v) => ref.read(visibleTabsProvider.notifier).setTabVisible(tab, v ?? false),
+                    secondary: Icon(_tabIcon(tab)),
+                    title: Text(_tabLabel(tab, l10n)),
+                    subtitle: tab == AppTab.projects
+                        ? Text(
+                            l10n.alwaysVisible,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          )
+                        : null,
+                    controlAffinity: ListTileControlAffinity.trailing,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -2546,6 +2645,111 @@ class _EmptyState extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Mixdown Folders — one expandable row per DAW showing its built-in default
+// folder names plus an editor for user-added ones.
+// ---------------------------------------------------------------------------
+
+class _MixdownDawTile extends StatelessWidget {
+  final String dawKey;
+  final String displayName;
+  final List<String> defaultFolders;
+  final List<String> customFolders;
+  final TextEditingController controller;
+  final String defaultsLabel;
+  final String customLabel;
+  final String emptyCustomLabel;
+  final String addHint;
+  final String addLabel;
+  final String removeTooltip;
+  final ValueChanged<String> onAdd;
+  final ValueChanged<String> onRemove;
+
+  const _MixdownDawTile({
+    required this.dawKey,
+    required this.displayName,
+    required this.defaultFolders,
+    required this.customFolders,
+    required this.controller,
+    required this.defaultsLabel,
+    required this.customLabel,
+    required this.emptyCustomLabel,
+    required this.addHint,
+    required this.addLabel,
+    required this.removeTooltip,
+    required this.onAdd,
+    required this.onRemove,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final logoPath = getDawLogoPath(dawKey);
+    return ExpansionTile(
+      leading: logoPath != null
+          ? Image.asset(logoPath, width: 24, height: 24)
+          : const Icon(Icons.piano_outlined),
+      title: Text(displayName),
+      subtitle: Text(
+        defaultFolders.join(', '),
+        style: Theme.of(context).textTheme.bodySmall,
+        overflow: TextOverflow.ellipsis,
+      ),
+      childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      expandedCrossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(defaultsLabel, style: Theme.of(context).textTheme.labelLarge),
+        const SizedBox(height: 6),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: defaultFolders.map((f) => Chip(label: Text(f))).toList(),
+        ),
+        const SizedBox(height: 16),
+        Text(customLabel, style: Theme.of(context).textTheme.labelLarge),
+        const SizedBox(height: 6),
+        if (customFolders.isEmpty)
+          Text(emptyCustomLabel, style: Theme.of(context).textTheme.bodySmall)
+        else
+          ...customFolders.map((folder) {
+            return ListTile(
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+              leading: const Icon(Icons.folder_open),
+              title: Text(folder),
+              trailing: IconButton(
+                tooltip: removeTooltip,
+                onPressed: () => onRemove(folder),
+                icon: const Icon(Icons.delete_outline),
+              ),
+            );
+          }),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: controller,
+                decoration: InputDecoration(
+                  hintText: addHint,
+                  prefixIcon: const Icon(Icons.folder_open),
+                  border: const OutlineInputBorder(),
+                  isDense: true,
+                ),
+                onSubmitted: onAdd,
+              ),
+            ),
+            const SizedBox(width: 8),
+            FilledButton.tonal(
+              onPressed: () => onAdd(controller.text),
+              child: Text(addLabel),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

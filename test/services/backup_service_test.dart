@@ -235,6 +235,24 @@ void main() {
       expect(restored.projectNotes, 'Notes 1\nby Audio Crawler\n\nSome project notes');
     });
 
+    test('preserves sourceTemplateId', () {
+      final original = TestFactories.makeProject(sourceTemplateId: 'template-42');
+
+      final restored =
+          BackupService.projectFromJson(BackupService.projectToJson(original));
+
+      expect(restored.sourceTemplateId, 'template-42');
+    });
+
+    test('preserves null sourceTemplateId', () {
+      final original = TestFactories.makeProject(sourceTemplateId: null);
+
+      final restored =
+          BackupService.projectFromJson(BackupService.projectToJson(original));
+
+      expect(restored.sourceTemplateId, isNull);
+    });
+
     test('preserves null projectNotes', () {
       final original = TestFactories.makeProject(projectNotes: null);
 
@@ -494,6 +512,30 @@ void main() {
       expect(read, ['Bounces']);
     });
 
+    test('per-DAW custom mixdown folders: union-merges per DAW key, does not overwrite', () async {
+      await BackupService.writeCustomMixdownFoldersByDawForTest({
+        'Ableton Live': ['Bounces'],
+      });
+      await BackupService.writeCustomMixdownFoldersByDawForTest({
+        'Ableton Live': ['Mixdown'],
+        'FL Studio': ['Renders'],
+      });
+      final read = await BackupService.readCustomMixdownFoldersByDawForTest();
+
+      expect(read['Ableton Live']!.toSet(), {'Bounces', 'Mixdown'});
+      expect(read['FL Studio'], ['Renders']);
+    });
+
+    test('per-DAW custom mixdown folders: writing an empty map is a no-op', () async {
+      await BackupService.writeCustomMixdownFoldersByDawForTest({
+        'Ableton Live': ['Bounces'],
+      });
+      await BackupService.writeCustomMixdownFoldersByDawForTest({});
+      final read = await BackupService.readCustomMixdownFoldersByDawForTest();
+
+      expect(read, {'Ableton Live': ['Bounces']});
+    });
+
     test('phase settings: write then read round-trips phases, colors, and finished phases', () async {
       final settings = {
         'phases': ['Idea', 'Mixing', 'Mastered'],
@@ -523,6 +565,7 @@ void main() {
       expect(await BackupService.readGlobalProjectTemplatesForTest(), isEmpty);
       expect(await BackupService.readGlobalTemplateRootsForTest(), isEmpty);
       expect(await BackupService.readCustomMixdownFoldersForTest(), isEmpty);
+      expect(await BackupService.readCustomMixdownFoldersByDawForTest(), isEmpty);
       expect(await BackupService.readPhaseSettingsForTest('no-such-profile'), isEmpty);
     });
   });

@@ -839,6 +839,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       // a previously auto-detected path. Runs after the full scan so all upserts
       // are committed before we read back the project list.
       final customFolders = ref.read(customMixdownFoldersProvider).value;
+      final customFoldersByDaw = ref.read(customMixdownFoldersByDawProvider).value;
       for (final project in repo.getAllProjects()) {
         if (project.previewSongPath != null ||
             project.previewSongAutoPath != null)
@@ -846,6 +847,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
         final detected = MixdownDetectorService.findLatestMixdown(
           project,
           customFolders: customFolders,
+          customFoldersByDaw: customFoldersByDaw,
         );
         if (detected != null) {
           await repo.updateProject(
@@ -3117,12 +3119,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                 builder: (context) {
                                   final tabView = TabBarView(
                                     controller: _tabController,
-                                    // On mobile, tabs are switched via the bottom NavigationBar;
-                                    // swiping between them is easy to trigger by accident while
-                                    // scrolling a list, so disable the swipe gesture there.
-                                    physics: MobileUtils.isMobile()
-                                        ? const NeverScrollableScrollPhysics()
-                                        : null,
+                                    // Tabs are switched via the NavigationBar/rail or the tab
+                                    // bar itself; swiping or trackpad/mouse-wheel horizontal
+                                    // scroll between them is easy to trigger by accident while
+                                    // scrolling a list, so the gesture is disabled everywhere,
+                                    // not just on mobile.
+                                    physics: const NeverScrollableScrollPhysics(),
                                     children: [
                                       for (final tab in _currentVisibleTabs)
                                         switch (tab) {
@@ -5500,6 +5502,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
 
   Future<void> _playPreviewSong(MusicProject project) async {
     final customFolders = ref.read(customMixdownFoldersProvider).value;
+    final customFoldersByDaw = ref.read(customMixdownFoldersByDawProvider).value;
     var effectivePath = project.previewSongPath?.isNotEmpty == true
         ? project.previewSongPath!
         : project.previewSongAutoPath;
@@ -5508,6 +5511,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       final detected = MixdownDetectorService.findLatestMixdown(
         project,
         customFolders: customFolders,
+        customFoldersByDaw: customFoldersByDaw,
       );
       if (detected != null) {
         effectivePath = detected.path;
@@ -6185,9 +6189,13 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
               final customFolders = ref
                   .read(customMixdownFoldersProvider)
                   .value;
+              final customFoldersByDaw = ref
+                  .read(customMixdownFoldersByDawProvider)
+                  .value;
               final detected = MixdownDetectorService.findLatestMixdown(
                 project,
                 customFolders: customFolders,
+                customFoldersByDaw: customFoldersByDaw,
               );
               if (detected != null) {
                 final fresh = repo.getById(project.id) ?? project;
@@ -7932,9 +7940,11 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
     } else {
       Future.microtask(() async {
         final customFolders = ref.read(customMixdownFoldersProvider).value;
+        final customFoldersByDaw = ref.read(customMixdownFoldersByDawProvider).value;
         final file = MixdownDetectorService.findLatestMixdown(
           widget.project,
           customFolders: customFolders,
+          customFoldersByDaw: customFoldersByDaw,
         );
         if (mounted && file != null) {
           setState(() => _autoDetectedPath = file.path);
@@ -9160,7 +9170,12 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
     _focusNode.dispose();
     _player.stop();
     _player.dispose();
-    _isPlayingNotifier.set(false);
+    // dispose() can run during widget-tree finalization (e.g. this bar
+    // getting torn down while switching preview songs), when Riverpod
+    // forbids synchronous provider writes — same reason didUpdateWidget
+    // above defers its own notifier writes, just via a Future here since
+    // there's no guarantee another frame gets scheduled after disposal.
+    Future(() => _isPlayingNotifier.set(false));
     super.dispose();
   }
 
@@ -9870,6 +9885,7 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
 
   Future<void> _playPreviewSong(MusicProject project) async {
     final customFolders = ref.read(customMixdownFoldersProvider).value;
+    final customFoldersByDaw = ref.read(customMixdownFoldersByDawProvider).value;
     var effectivePath = project.previewSongPath?.isNotEmpty == true
         ? project.previewSongPath!
         : project.previewSongAutoPath;
@@ -9878,6 +9894,7 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
       final detected = MixdownDetectorService.findLatestMixdown(
         project,
         customFolders: customFolders,
+        customFoldersByDaw: customFoldersByDaw,
       );
       if (detected != null) {
         effectivePath = detected.path;

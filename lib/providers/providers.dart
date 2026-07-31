@@ -101,6 +101,11 @@ final customMixdownFoldersProvider = FutureProvider<List<String>>((ref) async {
   return repo.getCustomMixdownFolders();
 });
 
+final customMixdownFoldersByDawProvider = FutureProvider<Map<String, List<String>>>((ref) async {
+  final repo = await ref.watch(repositoryProvider.future);
+  return repo.getCustomMixdownFoldersByDaw();
+});
+
 final rootsWatchProvider = StreamProvider<void>((ref) async* {
   final repo = await ref.watch(repositoryProvider.future);
   yield* repo.watchRoots().map((_) {});

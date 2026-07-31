@@ -214,6 +214,9 @@ class MusicProject {
   @HiveField(30)
   final String? projectNotes; // Read-only notes extracted from the DAW project file itself (e.g. Reaper's Title/Author/Notes tab)
 
+  @HiveField(31)
+  final String? sourceTemplateId; // ProjectTemplate.id this project was created from, if any (dangling if the template was later deleted)
+
   const MusicProject({
     required this.id,
     required this.filePath,
@@ -246,6 +249,7 @@ class MusicProject {
     this.metadataScanned = false,
     this.ignoredNewerSongPath,
     this.projectNotes,
+    this.sourceTemplateId,
   });
 
   String get displayName => (customDisplayName != null && customDisplayName!.trim().isNotEmpty)
@@ -469,6 +473,8 @@ class MusicProject {
     String? ignoredNewerSongPath,
     bool clearIgnoredNewerSongPath = false,
     String? projectNotes,
+    String? sourceTemplateId,
+    bool clearSourceTemplateId = false,
   }) {
     return MusicProject(
       id: id ?? this.id,
@@ -502,6 +508,7 @@ class MusicProject {
       metadataScanned: metadataScanned ?? this.metadataScanned,
       ignoredNewerSongPath: clearIgnoredNewerSongPath ? null : (ignoredNewerSongPath ?? this.ignoredNewerSongPath),
       projectNotes: projectNotes ?? this.projectNotes,
+      sourceTemplateId: clearSourceTemplateId ? null : (sourceTemplateId ?? this.sourceTemplateId),
     );
   }
 }
@@ -556,13 +563,14 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
       metadataScanned: fields.containsKey(28) ? (fields[28] as bool? ?? false) : false,
       ignoredNewerSongPath: fields.containsKey(29) ? fields[29] as String? : null,
       projectNotes: fields.containsKey(30) ? fields[30] as String? : null,
+      sourceTemplateId: fields.containsKey(31) ? fields[31] as String? : null,
     );
   }
 
   @override
   void write(BinaryWriter writer, MusicProject obj) {
     writer
-      ..writeByte(31) // 31 fields (0-30)
+      ..writeByte(32) // 32 fields (0-31)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -624,6 +632,8 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
       ..writeByte(29)
       ..write(obj.ignoredNewerSongPath)
       ..writeByte(30)
-      ..write(obj.projectNotes);
+      ..write(obj.projectNotes)
+      ..writeByte(31)
+      ..write(obj.sourceTemplateId);
   }
 }

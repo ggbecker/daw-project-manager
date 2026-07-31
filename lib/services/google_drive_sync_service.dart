@@ -3010,6 +3010,22 @@ class GoogleDriveSyncService {
         }
       }
 
+      // Collect per-DAW custom mixdown folders (global preference, not per-profile)
+      Map<String, dynamic> customMixdownFoldersByDaw = {};
+      try {
+        final raw = appSettingsBox.get('customMixdownFoldersByDaw');
+        if (raw != null) {
+          customMixdownFoldersByDaw = jsonDecode(raw) as Map<String, dynamic>;
+        }
+        if (kDebugMode) {
+          print('Collected per-DAW mixdown folders for ${customMixdownFoldersByDaw.length} DAWs');
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error collecting per-DAW custom mixdown folders: $e');
+        }
+      }
+
       final data = {
         'timestamp': DateTime.now().toIso8601String(),
         'version': '1.6', // Incremented version to include release artwork
@@ -3022,6 +3038,8 @@ class GoogleDriveSyncService {
         'templateRoots': allTemplateRoots.map((r) => _serializeTemplateRoot(r)).toList(),
         // NEW: Custom mixdown folder names (global preference, not per-profile)
         'customMixdownFolders': customMixdownFolders,
+        // NEW: Per-DAW custom mixdown folder names (global preference, not per-profile)
+        'customMixdownFoldersByDaw': customMixdownFoldersByDaw,
         // NEW: Per-profile phase customization (custom phase names, colors, finished set)
         'phaseSettingsByProfile': phaseSettingsByProfile,
         // NEW: Profile mappings to restore correct associations
@@ -4619,6 +4637,49 @@ class GoogleDriveSyncService {
       }
     }
 
+    // Merge per-DAW custom mixdown folders (global preference, not per-profile)
+    // - union per DAW key, same as the flat list above.
+    if (remoteData['customMixdownFoldersByDaw'] != null) {
+      try {
+        final remoteByDaw =
+            (remoteData['customMixdownFoldersByDaw'] as Map).map(
+          (key, value) => MapEntry(
+            key as String,
+            (value as List).map((f) => f.toString()).toList(),
+          ),
+        );
+        if (remoteByDaw.isNotEmpty) {
+          final appSettingsBox = await Hive.openBox<String>('app_settings');
+          final localRaw = appSettingsBox.get('customMixdownFoldersByDaw');
+          final localByDaw = localRaw != null
+              ? (jsonDecode(localRaw) as Map).map(
+                  (key, value) => MapEntry(
+                    key as String,
+                    (value as List).map((f) => f.toString()).toList(),
+                  ),
+                )
+              : <String, List<String>>{};
+          final merged = <String, List<String>>{
+            for (final entry in localByDaw.entries) entry.key: [...entry.value],
+          };
+          for (final entry in remoteByDaw.entries) {
+            final existing = merged.putIfAbsent(entry.key, () => []);
+            for (final folder in entry.value) {
+              if (!existing.any((f) => f.toLowerCase() == folder.toLowerCase())) {
+                existing.add(folder);
+              }
+            }
+          }
+          await appSettingsBox.put('customMixdownFoldersByDaw', jsonEncode(merged));
+          if (kDebugMode) {
+            print('  Per-DAW custom mixdown folders: ${merged.length} DAWs after merge');
+          }
+        }
+      } catch (e) {
+        if (kDebugMode) print('Error merging per-DAW custom mixdown folders: $e');
+      }
+    }
+
     // Merge project templates (global, not per-profile) - remote wins per id only
     // when it's newer, so a local template created/edited since the last backup
     // isn't clobbered by an older remote copy.
@@ -4851,6 +4912,7 @@ class GoogleDriveSyncService {
       'parentProjectId': project.parentProjectId,
       'ignoredNewerSongPath': project.ignoredNewerSongPath,
       'projectNotes': project.projectNotes,
+      'sourceTemplateId': project.sourceTemplateId,
     };
   }
 
@@ -4901,6 +4963,7 @@ class GoogleDriveSyncService {
       parentProjectId: data['parentProjectId'] as String?,
       ignoredNewerSongPath: data['ignoredNewerSongPath'] as String?,
       projectNotes: data['projectNotes'] as String?,
+      sourceTemplateId: data['sourceTemplateId'] as String?,
     );
   }
 

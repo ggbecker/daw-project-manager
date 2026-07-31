@@ -176,6 +176,53 @@ void main() {
       expect(merged, ['Mixdowns', 'exports', 'Bounces']);
     });
 
+    test('restores per-DAW custom mixdown folders from a backup with none stored locally', () async {
+      final service = GoogleDriveSyncService();
+      await service.mergeData(
+        remoteData: {
+          'customMixdownFoldersByDaw': {
+            'Ableton Live': ['MyBounces'],
+          },
+        },
+        projectRepo: projectRepo,
+        profileRepo: profileRepo,
+      );
+
+      final raw = appSettingsBox.get('customMixdownFoldersByDaw');
+      expect(raw, isNotNull);
+      expect(jsonDecode(raw!), {
+        'Ableton Live': ['MyBounces'],
+      });
+    });
+
+    test('unions local and remote per-DAW custom mixdown folders without duplicates', () async {
+      await appSettingsBox.put(
+        'customMixdownFoldersByDaw',
+        jsonEncode({
+          'Ableton Live': ['MyBounces'],
+        }),
+      );
+
+      final service = GoogleDriveSyncService();
+      await service.mergeData(
+        remoteData: {
+          'customMixdownFoldersByDaw': {
+            'Ableton Live': ['MyBounces', 'MoreExports'],
+            'FL Studio': ['Renders'],
+          },
+        },
+        projectRepo: projectRepo,
+        profileRepo: profileRepo,
+      );
+
+      final raw = appSettingsBox.get('customMixdownFoldersByDaw');
+      final merged = (jsonDecode(raw!) as Map).map(
+        (k, v) => MapEntry(k as String, (v as List).cast<String>()),
+      );
+      expect(merged['Ableton Live'], ['MyBounces', 'MoreExports']);
+      expect(merged['FL Studio'], ['Renders']);
+    });
+
     test('fills in phase settings for a profile that has none locally', () async {
       final service = GoogleDriveSyncService();
       await service.mergeData(
@@ -258,6 +305,28 @@ void main() {
       );
 
       expect(restored.projectNotes, 'Notes 1\nby Audio Crawler\n\nSome project notes');
+    });
+
+    test('preserves sourceTemplateId', () {
+      final service = GoogleDriveSyncService();
+      final original = TestFactories.makeProject(sourceTemplateId: 'template-42');
+
+      final restored = service.deserializeProjectForTest(
+        service.serializeProjectForTest(original),
+      );
+
+      expect(restored.sourceTemplateId, 'template-42');
+    });
+
+    test('preserves null sourceTemplateId', () {
+      final service = GoogleDriveSyncService();
+      final original = TestFactories.makeProject(sourceTemplateId: null);
+
+      final restored = service.deserializeProjectForTest(
+        service.serializeProjectForTest(original),
+      );
+
+      expect(restored.sourceTemplateId, isNull);
     });
   });
 

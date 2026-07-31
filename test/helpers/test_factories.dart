@@ -35,6 +35,7 @@ class TestFactories {
     String? parentProjectId,
     String? ignoredNewerSongPath,
     String? projectNotes,
+    String? sourceTemplateId,
   }) {
     return MusicProject(
       id: id,
@@ -68,6 +69,7 @@ class TestFactories {
       parentProjectId: parentProjectId,
       ignoredNewerSongPath: ignoredNewerSongPath,
       projectNotes: projectNotes,
+      sourceTemplateId: sourceTemplateId,
     );
   }
 

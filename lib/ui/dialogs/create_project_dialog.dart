@@ -347,18 +347,16 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
     // FL Studio, Logic) — fall back to whatever bpm/key the user filled in
     // manually on the template itself, same as a project's own manual fields.
     var createdProject = repo.getByPath(newMainFilePath);
-    if (createdProject != null &&
-        (template.bpm != null || template.musicalKey != null)) {
+    if (createdProject != null) {
       final needsBpm = createdProject.bpm == null && template.bpm != null;
       final needsKey =
           createdProject.musicalKey == null && template.musicalKey != null;
-      if (needsBpm || needsKey) {
-        createdProject = createdProject.copyWith(
-          bpm: needsBpm ? template.bpm : null,
-          musicalKey: needsKey ? template.musicalKey : null,
-        );
-        await repo.updateProject(createdProject);
-      }
+      createdProject = createdProject.copyWith(
+        bpm: needsBpm ? template.bpm : null,
+        musicalKey: needsKey ? template.musicalKey : null,
+        sourceTemplateId: template.id,
+      );
+      await repo.updateProject(createdProject);
     }
 
     // Flags the row with the same "New" badge a background-discovered
