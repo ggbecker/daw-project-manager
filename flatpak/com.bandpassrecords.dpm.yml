@@ -29,14 +29,16 @@ finish-args:
   - --share=ipc
   - --device=dri
 
-  # Update check (lib/services/update_check_service.dart) pings the GitHub
-  # releases API. Google Drive sync — the other thing that would have
-  # needed this — isn't offered on Linux at all; see the long comment on
-  # GoogleDriveSyncService.isSupported for why. That also means this
-  # manifest doesn't need a --talk-name for the Secret Service
-  # (flutter_secure_storage, which only Drive sync used, for OAuth
-  # refresh tokens) — one less permission to justify at review.
-  - --share=network
+  # Deliberately NO --share=network. The two things that would have
+  # needed it are both switched off on Linux instead of granted the
+  # permission: Google Drive sync (GoogleDriveSyncService.isSupported)
+  # and the GitHub-releases update check (UpdateCheckService.isSupported —
+  # redundant under Flatpak anyway, since Flathub already owns update
+  # delivery via `flatpak update`/the software center, and linking a
+  # Flatpak user to a GitHub release page to download an installer isn't
+  # even the right flow for this distribution channel). That also means no
+  # --talk-name for the Secret Service either (flutter_secure_storage,
+  # which only Drive sync used, for OAuth refresh tokens).
 
   # Deadline reminder / work-timer notifications on Linux go through
   # org.freedesktop.portal.Notification (lib/services/linux_portal_notifier.dart)

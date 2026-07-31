@@ -184,6 +184,7 @@ Future<void> _showAlreadyRunningMessage() async {
 /// which defers its Hive load to after the first frame) and, if enabled, checks
 /// for a newer release in the background.
 Future<void> _runStartupUpdateCheck(ProviderContainer container) async {
+  if (!UpdateCheckService.isSupported) return;
   try {
     final box = await Hive.openBox<String>('app_settings');
     if (box.get('checkForUpdates') != 'true') return;

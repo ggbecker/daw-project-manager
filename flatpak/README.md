@@ -196,11 +196,13 @@ this decision — see its own history for what that covers).
 
 5. Open the PR.
 
-4. Their CI builds it and a human reviewer checks the `finish-args` — be
-   ready to justify `--share=network` (the GitHub releases update check —
-   not Drive sync, which isn't offered on Linux) and the D-Bus
-   `--talk-name`s above if asked; the comments already in the manifest cover
-   the reasoning for each.
+6. Their CI builds it and a human reviewer checks the `finish-args` — be
+   ready to justify the D-Bus `--talk-name`s above if asked; the comments
+   already in the manifest cover the reasoning for each. There's no
+   `--share=network` to justify — both things that would have needed it
+   (Drive sync, the GitHub-releases update check) are switched off on
+   Linux instead of granted the permission; see
+   `GoogleDriveSyncService.isSupported`/`UpdateCheckService.isSupported`.
 
 Per-release maintenance of the Flathub manifest is nearly hands-off:
 

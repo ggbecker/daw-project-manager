@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:daw_project_manager/generated/l10n/app_localizations.dart';
 import 'package:daw_project_manager/services/auto_start_service.dart';
+import 'package:daw_project_manager/services/update_check_service.dart';
 import 'package:daw_project_manager/ui/onboarding_wizard_page.dart';
 
 import '../helpers/hive_test_helper.dart';
@@ -30,6 +31,12 @@ class _NoopAutoStartBackend implements AutoStartBackend {
 /// rewrite. This walks the real wizard end-to-end so a future edit that
 /// forgets one of these steps (or lets `_totalPages` drift from the actual
 /// page list) fails here instead of shipping silently again.
+///
+/// The Updates step itself is conditional on UpdateCheckService.isSupported
+/// (false on Linux — see that getter's doc comment) — this test follows that
+/// same condition rather than assuming the step is always present, so it
+/// stays accurate on both a Windows/macOS dev machine and the unit_tests CI
+/// job (ubuntu-latest).
 void main() {
   late Directory tempDir;
 
@@ -81,9 +88,11 @@ void main() {
 
       expect(find.text(l10n.onboardingFoldersTitle), findsOneWidget);
 
-      await next(tester, l10n); // -> Updates
-      expect(find.text(l10n.onboardingUpdatesTitle), findsOneWidget);
-      expect(find.text(l10n.checkForUpdates), findsOneWidget);
+      if (UpdateCheckService.isSupported) {
+        await next(tester, l10n); // -> Updates
+        expect(find.text(l10n.onboardingUpdatesTitle), findsOneWidget);
+        expect(find.text(l10n.checkForUpdates), findsOneWidget);
+      }
 
       await next(tester, l10n); // -> Suggestions
       expect(find.text(l10n.onboardingSuggestionsTitle), findsOneWidget);

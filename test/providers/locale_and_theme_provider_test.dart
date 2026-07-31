@@ -12,6 +12,13 @@ import 'package:daw_project_manager/providers/theme_provider.dart';
 /// section) and Theme selector (Appearance section) make —
 /// `localeProvider.notifier.setLocale` and `themeTypeProvider.notifier.setThemeType`.
 void main() {
+  // LocaleNotifier.build()/ThemeTypeNotifier.build() both call
+  // SchedulerBinding.instance.addPostFrameCallback(...) to schedule their
+  // deferred Hive load, which needs the test binding initialized first —
+  // without this, reading either provider throws "Binding has not yet been
+  // initialized" the moment build() runs.
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   late Directory tempDir;
 
   setUp(() async {
