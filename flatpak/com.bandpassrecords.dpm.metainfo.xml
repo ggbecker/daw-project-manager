@@ -34,7 +34,7 @@
   <screenshots>
     <screenshot type="default">
       <caption>Dashboard overview with projects across multiple DAWs</caption>
-      <image>https://raw.githubusercontent.com/bandpassrecords/daw-project-manager/@GIT_TAG@/resources/screenshots/dashboard/dashboard-overview.png</image>
+      <image>https://raw.githubusercontent.com/bandpassrecords/daw-project-manager/v2.7.0/resources/screenshots/dashboard/dashboard-overview.png</image>
     </screenshot>
   </screenshots>
 
@@ -50,21 +50,19 @@
 
   <releases>
     <!--
-      This entry is regenerated from @APP_VERSION@/@GIT_TAG@/@RELEASE_DATE@
-      on every build (see the daw-project-manager module's build-commands in
-      com.bandpassrecords.dpm.yml), so it always matches whatever tag the
-      build is pinned to — nothing to bump here for the *current* release.
-      What's still manual: once a release actually ships on Flathub, freeze
-      that version's entry with its real values (copy them from a build log,
-      or from `flatpak run com.bandpassrecords.dpm.metainfo.xml` if you have
-      the built one handy) as a new hardcoded <release> block above this one,
-      so the changelog accumulates instead of only ever showing the latest.
+      Manually maintained — bump version/date/url here on every release.
+      The Flatpak build reads APP_VERSION straight from this file (see
+      com.bandpassrecords.dpm.yml), and release.yml's "Verify metainfo.xml
+      version matches the tag" step fails the release workflow outright if
+      this is forgotten before tagging. Add a new <release> block above
+      this one for each shipped version instead of overwriting it, so the
+      changelog accumulates.
     -->
-    <release version="@APP_VERSION@" date="@RELEASE_DATE@">
+    <release version="2.7.0" date="2026-08-01">
       <description>
         <p>See the GitHub release notes for details.</p>
       </description>
-      <url>https://github.com/bandpassrecords/daw-project-manager/releases/tag/@GIT_TAG@</url>
+      <url>https://github.com/bandpassrecords/daw-project-manager/releases/tag/v2.7.0</url>
     </release>
   </releases>
 

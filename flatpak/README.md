@@ -22,7 +22,7 @@ it won't block the other platform builds while that happens).
 |---|---|
 | `com.bandpassrecords.dpm.yml` | The Flatpak manifest — actually a *template* for `flatpak-flutter` (see above), not the final buildable manifest. |
 | `com.bandpassrecords.dpm.desktop` | Desktop entry (app menu, launcher, taskbar). |
-| `com.bandpassrecords.dpm.metainfo.xml.template` | AppStream metadata Flathub uses for the store listing. `@APP_VERSION@`/`@GIT_TAG@`/`@RELEASE_DATE@` are stamped in at build time from the pinned git tag (see the daw-project-manager module's build-commands in `com.bandpassrecords.dpm.yml`) — never edit those by hand, and never install this file directly. |
+| `com.bandpassrecords.dpm.metainfo.xml` | AppStream metadata Flathub uses for the store listing. Manually maintained — bump the screenshot URL's tag and add a new `<release>` entry on every release (see that file's own comment). The Flatpak build reads `APP_VERSION` straight from this file's newest `<release version="...">` (see the daw-project-manager module's build-commands in `com.bandpassrecords.dpm.yml`) rather than deriving it from git, deliberately — so it doesn't depend on git tags/history being present in whatever environment ends up building it. `unit_tests`' "Verify metainfo.xml version matches the tag" step fails the release workflow if this file is forgotten before tagging. |
 | `icons/com.bandpassrecords.dpm_{128,256}.png` | Derived from `app_icon.png`. No scalable/SVG source exists in the repo; Flathub accepts raster-only, but a vector icon is preferred if one ever gets made. |
 
 ## Outstanding blockers before this can be submitted
@@ -204,13 +204,18 @@ this decision — see its own history for what that covers).
    Linux instead of granted the permission; see
    `GoogleDriveSyncService.isSupported`/`UpdateCheckService.isSupported`.
 
-Per-release maintenance of the Flathub manifest is nearly hands-off:
+Per-release maintenance of the Flathub manifest:
 
 - The app source carries `x-checker-data`, so Flathub's
   flatpak-external-data-checker bot watches this repo for new `v*` tags and
   automatically opens a PR on the Flathub repo bumping `tag:`/`commit:` —
   you just merge it.
-- `APP_VERSION` is derived at build time from `git describe` on the pinned
-  checkout, so it always matches the tag with no manual edit.
-- The one still-manual step: add a `<release>` entry to the metainfo for
-  each version (Flathub surfaces these as the changelog).
+- The one manual step, on this repo's side, before tagging a release: add a
+  new `<release version="X.Y.Z" date="...">` entry to
+  `com.bandpassrecords.dpm.metainfo.xml` (Flathub surfaces these as the
+  changelog) and update the screenshot URL's tag. `APP_VERSION` for the
+  Flatpak build is read straight from that file rather than from git (see
+  the file table above for why), so this also decides what version the
+  Linux build reports. `unit_tests`' "Verify metainfo.xml version matches
+  the tag" step fails the whole release workflow — for every platform, not
+  just Linux — if this is forgotten before pushing the tag.

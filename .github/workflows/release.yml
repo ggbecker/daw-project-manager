@@ -36,6 +36,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Catches exactly the failure mode that motivated this check: the
+      # Flatpak build reads its APP_VERSION straight from this file's first
+      # <release version="..."> entry (see the daw-project-manager module's
+      # build-commands in flatpak/com.bandpassrecords.dpm.yml) instead of
+      # deriving it from git — deliberately, so it doesn't depend on git
+      # metadata (tags/history) being present in whatever environment ends
+      # up building it. That only works if this file is actually bumped
+      # before tagging a release; this fails the workflow immediately if
+      # it's forgotten, rather than shipping a Flatpak build silently
+      # stamped with a stale version.
+      - name: Verify metainfo.xml version matches the tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
+          METAINFO_VERSION=$(grep -o '<release version="[^"]*"' flatpak/com.bandpassrecords.dpm.metainfo.xml | head -1 | sed -E 's/.*version="([^"]*)".*/\1/')
+          if [ "$TAG_VERSION" != "$METAINFO_VERSION" ]; then
+            echo "::error::Tag v${TAG_VERSION} does not match flatpak/com.bandpassrecords.dpm.metainfo.xml's newest <release version=\"${METAINFO_VERSION}\">. Add a new <release> entry there for v${TAG_VERSION} before tagging."
+            exit 1
+          fi
+          echo "Tag v${TAG_VERSION} matches metainfo.xml version ${METAINFO_VERSION}"
+
       - name: Setup Flutter ${{ env.FLUTTER_BASE_VERSION }} (Stable)
         uses: subosito/flutter-action@v2
         with:
