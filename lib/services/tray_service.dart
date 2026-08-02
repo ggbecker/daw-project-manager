@@ -30,7 +30,15 @@ class TrayService with TrayListener {
     _initialized = true;
     trayManager.addListener(this);
     await trayManager.setIcon(Platform.isWindows ? 'app_icon.ico' : 'app_icon.png');
-    await trayManager.setToolTip('DAW Project Manager');
+    // tray_manager's Linux plugin only implements destroy/setIcon/setTitle/
+    // setContextMenu — setToolTip isn't handled there and throws
+    // MissingPluginException. Left unguarded, that used to abort init()
+    // before the postFrameCallback below was ever registered, so the tray
+    // icon appeared (setIcon had already succeeded) but never got a context
+    // menu attached — every click, left or right, did nothing.
+    try {
+      await trayManager.setToolTip('DAW Project Manager');
+    } catch (_) {}
     // Localized labels need a BuildContext, which isn't ready until the
     // first frame — build the real menu right after that.
     WidgetsBinding.instance.addPostFrameCallback((_) => unawaited(_rebuildMenu()));
