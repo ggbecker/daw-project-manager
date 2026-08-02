@@ -372,6 +372,7 @@ class _ReleasesTableState extends ConsumerState<_ReleasesTable> {
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
             ),
             child: Text(AppLocalizations.of(context)!.delete),
           ),
@@ -1036,6 +1037,7 @@ class _MobileReleasesList extends ConsumerWidget {
                                 onPressed: () => Navigator.pop(ctx, true),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.red,
+                                  foregroundColor: Colors.white,
                                 ),
                                 child: Text(AppLocalizations.of(context)!.delete),
                               ),

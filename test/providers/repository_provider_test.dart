@@ -4,10 +4,12 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:daw_project_manager/models/music_project.dart';
 import 'package:daw_project_manager/providers/providers.dart';
 import 'package:daw_project_manager/repository/project_repository.dart';
 
 import '../helpers/hive_test_helper.dart';
+import '../helpers/test_factories.dart';
 
 void main() {
   late Directory tempDir;
@@ -78,6 +80,63 @@ void main() {
         // throw HiveError.
         expect(repoA.projectsBox.isOpen, isTrue);
         expect(() => repoA.getAllProjects(), returnsNormally);
+      },
+    );
+  });
+
+  group('Delete All Data provider refresh', () {
+    // settings_page.dart's Delete All Data handler calls
+    // ProjectRepository.deleteAllAppData() (which closes every Hive box
+    // across every profile) and then invalidates a specific list of
+    // providers before re-priming profileRepositoryProvider and
+    // repositoryProvider. This reproduces that exact sequence and checks
+    // that allProjectsStreamProvider — what the dashboard grid actually
+    // renders from — settles on the fresh, empty state afterwards rather
+    // than getting stuck on stale data.
+    test(
+      'allProjectsStreamProvider settles to empty after the same '
+      'invalidate sequence settings_page.dart runs',
+      () async {
+        final profileRepo = await HiveTestHelper.createProfileRepository();
+        final profileA = await profileRepo.createProfile('A');
+        await profileRepo.setCurrentProfileId(profileA.id);
+        final repoA = await HiveTestHelper.createRepository(
+          profileId: profileA.id,
+        );
+        await repoA.restoreProject(TestFactories.makeProject(id: 'a1'));
+
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
+
+        // Keep the stream actively subscribed — Riverpod pauses
+        // stream-backed providers with no listener.
+        final sub = container.listen<AsyncValue<List<MusicProject>>>(
+          allProjectsStreamProvider,
+          (_, _) {},
+          fireImmediately: true,
+        );
+        addTearDown(sub.close);
+
+        final before = await container.read(allProjectsStreamProvider.future);
+        expect(before, hasLength(1));
+
+        await ProjectRepository.deleteAllAppData();
+        container.invalidate(profileRepositoryProvider);
+        container.invalidate(currentProfileProvider);
+        container.invalidate(allProfilesProvider);
+        container.invalidate(repositoryProvider);
+        container.invalidate(rootsWatchProvider);
+        container.invalidate(scanRootsProvider);
+        container.invalidate(ignoredPathsWatchProvider);
+        container.invalidate(ignoredPathsProvider);
+        container.invalidate(allProjectsStreamProvider);
+        await container.read(profileRepositoryProvider.future);
+        await container.read(repositoryProvider.future);
+
+        final after = await container
+            .read(allProjectsStreamProvider.future)
+            .timeout(const Duration(seconds: 5));
+        expect(after, isEmpty);
       },
     );
   });

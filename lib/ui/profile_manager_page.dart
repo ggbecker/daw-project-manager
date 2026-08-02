@@ -196,6 +196,7 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
             ),
             child: Text(AppLocalizations.of(context)!.delete),
           ),
@@ -318,7 +319,10 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
             child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade300),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red.shade300,
+              foregroundColor: Colors.black,
+            ),
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(AppLocalizations.of(context)!.removeTestingDatabase),
           ),

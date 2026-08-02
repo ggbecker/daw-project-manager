@@ -1294,6 +1294,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red.shade300,
+              foregroundColor: Colors.black,
             ),
             child: Text(AppLocalizations.of(context)!.remove),
           ),
@@ -1745,6 +1746,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
                                                     onPressed: () => Navigator.pop(ctx, true),
                                                     style: ElevatedButton.styleFrom(
                                                       backgroundColor: Colors.red.shade300,
+                                                      foregroundColor: Colors.black,
                                                     ),
                                                     child: Text(AppLocalizations.of(context)!.remove),
                                                   ),
@@ -1871,6 +1873,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
                           onPressed: () => Navigator.pop(ctx, true),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.red.shade300,
+                            foregroundColor: Colors.black,
                           ),
                           child: Text(AppLocalizations.of(context)!.remove),
                         ),
@@ -1994,6 +1997,7 @@ class _FilesSectionState extends ConsumerState<_FilesSection> {
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
             ),
             child: Text(AppLocalizations.of(context)!.delete),
           ),

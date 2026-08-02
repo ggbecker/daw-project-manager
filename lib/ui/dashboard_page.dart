@@ -1257,6 +1257,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                     : () => Navigator.pop(ctx, true),
                 style: FilledButton.styleFrom(
                   backgroundColor: Colors.red.shade700,
+                  foregroundColor: Colors.white,
                 ),
                 child: Text(l10n.deleteMissingProjectsConfirmButton),
               ),
@@ -4906,6 +4907,7 @@ class _PlutoProjectsTableWithSelectionState
                                 ),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.red.shade700,
+                                  foregroundColor: Colors.white,
                                 ),
                                 onPressed: () {
                                   widget.onDeleteMissingProjects(
@@ -6475,6 +6477,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                   onPressed: () => Navigator.pop(ctx, true),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red.shade300,
+                    foregroundColor: Colors.black,
                   ),
                   child: Text(l10n.hide),
                 ),
@@ -7712,6 +7715,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                             onPressed: () => Navigator.pop(ctx, true),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.red.shade300,
+                              foregroundColor: Colors.black,
                             ),
                             child: Text(AppLocalizations.of(context)!.hide),
                           ),

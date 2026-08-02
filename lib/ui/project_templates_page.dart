@@ -1339,6 +1339,7 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
                 label: Text(l10n.deleteSelectedTemplates),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red.shade700,
+                  foregroundColor: Colors.white,
                 ),
                 onPressed: () => _deleteSelectedTemplates(selected),
               ),

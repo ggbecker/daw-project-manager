@@ -1231,6 +1231,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                         onPressed: () => Navigator.of(ctx).pop(true),
                         style: FilledButton.styleFrom(
                           backgroundColor: Theme.of(context).colorScheme.error,
+                          foregroundColor: Theme.of(context).colorScheme.onError,
                         ),
                         child: Text(l10n.resetOnboarding),
                       ),
