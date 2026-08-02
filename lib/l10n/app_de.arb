@@ -1939,6 +1939,7 @@
   "noResultsForFilterHint": "Versuche, die Suche oder Filter anzupassen.",
   "noProjectsFound": "Keine Projekte gefunden",
   "noProjectsFoundHint": "Füge einen Stammordner in den Einstellungen hinzu, um zu beginnen.",
+  "noProjectsFoundInFoldersHint": "Füge einen weiteren Ordner mit DAW-Projekten hinzu.",
   "queueTab": "Aufgaben",
   "queueSearchHint": "Aufgaben suchen...",
   "queueNoPendingTasks": "Alles erledigt!",

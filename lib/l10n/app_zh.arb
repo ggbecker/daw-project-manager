@@ -1939,6 +1939,7 @@
   "noResultsForFilterHint": "请尝试调整搜索或筛选条件。",
   "noProjectsFound": "未找到项目",
   "noProjectsFoundHint": "请在设置中添加根文件夹以开始使用。",
+  "noProjectsFoundInFoldersHint": "请尝试添加另一个包含 DAW 项目的文件夹。",
   "queueTab": "任务",
   "queueSearchHint": "搜索任务...",
   "queueNoPendingTasks": "全部完成！",

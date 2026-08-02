@@ -1939,6 +1939,7 @@
   "noResultsForFilterHint": "Essayez d'ajuster votre recherche ou vos filtres.",
   "noProjectsFound": "Aucun projet trouvé",
   "noProjectsFoundHint": "Ajoutez un dossier racine dans les paramètres pour commencer.",
+  "noProjectsFoundInFoldersHint": "Essayez d'ajouter un autre dossier contenant des projets DAW.",
   "queueTab": "Tâches",
   "queueSearchHint": "Rechercher des tâches...",
   "queueNoPendingTasks": "Tout est à jour !",

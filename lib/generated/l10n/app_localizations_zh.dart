@@ -2753,6 +2753,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noProjectsFoundHint => '请在设置中添加根文件夹以开始使用。';
 
   @override
+  String get noProjectsFoundInFoldersHint => '请尝试添加另一个包含 DAW 项目的文件夹。';
+
+  @override
   String get queueTab => '任务';
 
   @override

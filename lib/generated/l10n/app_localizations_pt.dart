@@ -2843,6 +2843,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Adicione uma pasta raiz nas configurações para começar.';
 
   @override
+  String get noProjectsFoundInFoldersHint =>
+      'Tente adicionar outra pasta que contenha projetos de DAW.';
+
+  @override
   String get queueTab => 'Tarefas';
 
   @override

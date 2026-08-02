@@ -2837,6 +2837,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Add a scan folder in settings to get started.';
 
   @override
+  String get noProjectsFoundInFoldersHint =>
+      'Try adding another folder that contains DAW projects.';
+
+  @override
   String get queueTab => 'Tasks';
 
   @override

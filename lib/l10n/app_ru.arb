@@ -1939,6 +1939,7 @@
   "noResultsForFilterHint": "Попробуйте изменить поиск или фильтры.",
   "noProjectsFound": "Проекты не найдены",
   "noProjectsFoundHint": "Добавьте корневую папку в настройках, чтобы начать.",
+  "noProjectsFoundInFoldersHint": "Попробуйте добавить другую папку с проектами DAW.",
   "queueTab": "Задачи",
   "queueSearchHint": "Поиск задач...",
   "queueNoPendingTasks": "Всё готово!",

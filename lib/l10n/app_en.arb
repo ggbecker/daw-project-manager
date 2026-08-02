@@ -3077,6 +3077,7 @@
   "noResultsForFilterHint": "Try adjusting your search or filters to find projects.",
   "noProjectsFound": "No projects found",
   "noProjectsFoundHint": "Add a scan folder in settings to get started.",
+  "noProjectsFoundInFoldersHint": "Try adding another folder that contains DAW projects.",
   "queueTab": "Tasks",
   "queueSearchHint": "Search tasks...",
   "queueNoPendingTasks": "All caught up!",

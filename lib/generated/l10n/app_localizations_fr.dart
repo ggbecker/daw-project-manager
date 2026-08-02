@@ -2868,6 +2868,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Ajoutez un dossier racine dans les paramètres pour commencer.';
 
   @override
+  String get noProjectsFoundInFoldersHint =>
+      'Essayez d\'ajouter un autre dossier contenant des projets DAW.';
+
+  @override
   String get queueTab => 'Tâches';
 
   @override

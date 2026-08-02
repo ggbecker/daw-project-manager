@@ -5003,6 +5003,33 @@ List<MusicProject>? safeGetAllProjects(ProjectRepository repo) {
   }
 }
 
+/// Why the Projects grid is showing its empty state, so the message can be
+/// tailored instead of a single generic "no projects found" covering both a
+/// fresh install and a scan root that turned up nothing.
+@visibleForTesting
+enum ProjectsEmptyStateReason {
+  /// Projects exist, but the current search/filter narrowed them to zero.
+  filteredToZero,
+
+  /// No scan roots configured yet — a genuinely fresh install.
+  noScanRootsYet,
+
+  /// At least one scan root is configured, but it hasn't found any projects
+  /// (wrong folder, DAW files not created yet, etc.) — the user has already
+  /// done the "add a folder" step, so telling them to do it again is wrong.
+  scanRootsFoundNothing,
+}
+
+@visibleForTesting
+ProjectsEmptyStateReason projectsEmptyStateReason({
+  required bool hasProjects,
+  required bool hasScanRoots,
+}) {
+  if (hasProjects) return ProjectsEmptyStateReason.filteredToZero;
+  if (hasScanRoots) return ProjectsEmptyStateReason.scanRootsFoundNothing;
+  return ProjectsEmptyStateReason.noScanRootsYet;
+}
+
 @visibleForTesting
 bool shouldBlockForOperation({
   required bool scanning,
@@ -7743,6 +7770,24 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     if (widget.projects.isEmpty) {
       final allProjectsAsync = ref.watch(allProjectsStreamProvider);
       final hasProjects = (allProjectsAsync.value?.isNotEmpty) ?? false;
+      final hasScanRoots = ref.watch(scanRootsProvider).isNotEmpty;
+      final reason = projectsEmptyStateReason(
+        hasProjects: hasProjects,
+        hasScanRoots: hasScanRoots,
+      );
+      final String title;
+      final String hint;
+      switch (reason) {
+        case ProjectsEmptyStateReason.filteredToZero:
+          title = l10n.noResultsForFilter;
+          hint = l10n.noResultsForFilterHint;
+        case ProjectsEmptyStateReason.noScanRootsYet:
+          title = l10n.noProjectsFound;
+          hint = l10n.noProjectsFoundHint;
+        case ProjectsEmptyStateReason.scanRootsFoundNothing:
+          title = l10n.noProjectsFound;
+          hint = l10n.noProjectsFoundInFoldersHint;
+      }
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -7756,16 +7801,14 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             ),
             const SizedBox(height: 16),
             Text(
-              hasProjects ? l10n.noResultsForFilter : l10n.noProjectsFound,
+              title,
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
-              hasProjects
-                  ? l10n.noResultsForFilterHint
-                  : l10n.noProjectsFoundHint,
+              hint,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Theme.of(context).textTheme.bodySmall?.color,
               ),

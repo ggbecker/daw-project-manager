@@ -2857,6 +2857,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Añade una carpeta raíz en la configuración para empezar.';
 
   @override
+  String get noProjectsFoundInFoldersHint =>
+      'Intenta añadir otra carpeta que contenga proyectos de DAW.';
+
+  @override
   String get queueTab => 'Tareas';
 
   @override

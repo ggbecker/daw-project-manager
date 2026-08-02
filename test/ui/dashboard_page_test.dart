@@ -163,6 +163,38 @@ void main() {
     });
   });
 
+  group('projectsEmptyStateReason', () {
+    // Regression: the Projects grid's empty state used to show "Add a scan
+    // folder in settings to get started" even when a scan root was already
+    // configured and simply hadn't found anything — confusing for a user
+    // who'd already done that step.
+
+    test('filteredToZero when projects exist but the current filter hides them', () {
+      expect(
+        projectsEmptyStateReason(hasProjects: true, hasScanRoots: true),
+        ProjectsEmptyStateReason.filteredToZero,
+      );
+      expect(
+        projectsEmptyStateReason(hasProjects: true, hasScanRoots: false),
+        ProjectsEmptyStateReason.filteredToZero,
+      );
+    });
+
+    test('noScanRootsYet on a genuinely fresh install', () {
+      expect(
+        projectsEmptyStateReason(hasProjects: false, hasScanRoots: false),
+        ProjectsEmptyStateReason.noScanRootsYet,
+      );
+    });
+
+    test('scanRootsFoundNothing once a root is configured but empty', () {
+      expect(
+        projectsEmptyStateReason(hasProjects: false, hasScanRoots: true),
+        ProjectsEmptyStateReason.scanRootsFoundNothing,
+      );
+    });
+  });
+
   group('shouldBlockForOperation', () {
     // Regression test: the full-screen loading overlay used to key off a
     // flag that also went true during the background initial scan at app

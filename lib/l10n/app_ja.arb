@@ -1939,6 +1939,7 @@
   "noResultsForFilterHint": "検索条件やフィルターを調整してみてください。",
   "noProjectsFound": "プロジェクトが見つかりません",
   "noProjectsFoundHint": "設定でルートフォルダを追加してください。",
+  "noProjectsFoundInFoldersHint": "DAWプロジェクトが含まれる別のフォルダを追加してみてください。",
   "queueTab": "タスク",
   "queueSearchHint": "タスクを検索...",
   "queueNoPendingTasks": "全部完了！",

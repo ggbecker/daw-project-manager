@@ -1963,6 +1963,7 @@
   "noResultsForFilterHint": "Tente ajustar a pesquisa ou os filtros.",
   "noProjectsFound": "Nenhum projeto encontrado",
   "noProjectsFoundHint": "Adicione uma pasta raiz nas configurações para começar.",
+  "noProjectsFoundInFoldersHint": "Tente adicionar outra pasta que contenha projetos de DAW.",
   "queueTab": "Tarefas",
   "queueSearchHint": "Buscar tarefas...",
   "queueNoPendingTasks": "Tudo em dia!",

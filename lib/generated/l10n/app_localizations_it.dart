@@ -2850,6 +2850,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Aggiungi una cartella radice nelle impostazioni per iniziare.';
 
   @override
+  String get noProjectsFoundInFoldersHint =>
+      'Prova ad aggiungere un\'altra cartella contenente progetti DAW.';
+
+  @override
   String get queueTab => 'Attività';
 
   @override

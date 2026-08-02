@@ -4781,6 +4781,12 @@ abstract class AppLocalizations {
   /// **'Add a scan folder in settings to get started.'**
   String get noProjectsFoundHint;
 
+  /// No description provided for @noProjectsFoundInFoldersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Try adding another folder that contains DAW projects.'**
+  String get noProjectsFoundInFoldersHint;
+
   /// No description provided for @queueTab.
   ///
   /// In en, this message translates to:

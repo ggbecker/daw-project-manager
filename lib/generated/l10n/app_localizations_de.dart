@@ -2855,6 +2855,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Füge einen Stammordner in den Einstellungen hinzu, um zu beginnen.';
 
   @override
+  String get noProjectsFoundInFoldersHint =>
+      'Füge einen weiteren Ordner mit DAW-Projekten hinzu.';
+
+  @override
   String get queueTab => 'Aufgaben';
 
   @override

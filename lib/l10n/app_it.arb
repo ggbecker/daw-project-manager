@@ -1939,6 +1939,7 @@
   "noResultsForFilterHint": "Prova a modificare la ricerca o i filtri.",
   "noProjectsFound": "Nessun progetto trovato",
   "noProjectsFoundHint": "Aggiungi una cartella radice nelle impostazioni per iniziare.",
+  "noProjectsFoundInFoldersHint": "Prova ad aggiungere un'altra cartella contenente progetti DAW.",
   "queueTab": "Attività",
   "queueSearchHint": "Cerca attività...",
   "queueNoPendingTasks": "Tutto in ordine!",

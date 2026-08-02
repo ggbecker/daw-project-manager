@@ -2841,6 +2841,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Добавьте корневую папку в настройках, чтобы начать.';
 
   @override
+  String get noProjectsFoundInFoldersHint =>
+      'Попробуйте добавить другую папку с проектами DAW.';
+
+  @override
   String get queueTab => 'Задачи';
 
   @override

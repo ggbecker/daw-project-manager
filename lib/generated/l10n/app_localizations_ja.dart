@@ -2780,6 +2780,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get noProjectsFoundHint => '設定でルートフォルダを追加してください。';
 
   @override
+  String get noProjectsFoundInFoldersHint => 'DAWプロジェクトが含まれる別のフォルダを追加してみてください。';
+
+  @override
   String get queueTab => 'タスク';
 
   @override
