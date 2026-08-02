@@ -1372,13 +1372,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
         ? safeGetAllProjects(repoAsync.value!)
         : null;
 
-    // Same "truly blank profile" condition as the startup dialog below —
-    // reused to decide whether to show the empty-library "add a scan
-    // folder" floating action button on the Projects tab.
-    final isEmptyLibrary = isEmptyProjectLibrary(
-      hasScanRoots: roots.isNotEmpty,
-      hasAnyProjects: loadedProjects?.isNotEmpty ?? true,
-    );
+    // Defaults to true (has projects) while still loading, so the "add a
+    // scan folder" FAB below doesn't flash on before data arrives.
+    final hasAnyProjects = loadedProjects?.isNotEmpty ?? true;
 
     // Show first-launch dialog on desktop when the profile is truly blank (no
     // roots AND no projects). Profiles that have projects but no roots (e.g.
@@ -1863,7 +1859,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                     floatingActionButton:
                         (!MobileUtils.isMobile() &&
                             _currentTab == AppTab.projects &&
-                            isEmptyLibrary)
+                            !hasAnyProjects)
                         ? FloatingActionButton(
                             onPressed: _addFirstScanFolder,
                             tooltip: AppLocalizations.of(context)!.addFolder,
