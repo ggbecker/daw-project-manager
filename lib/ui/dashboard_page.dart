@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:hive_ce/hive.dart';
 import 'package:trina_grid/trina_grid.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -67,6 +68,7 @@ import '../models/scan_mode.dart';
 import '../models/scan_root.dart';
 import '../models/todo_item.dart';
 import '../providers/providers.dart';
+import '../repository/project_repository.dart';
 import '../services/google_drive_sync_service.dart' show GoogleDriveSyncService;
 import '../utils/playback_todo_utils.dart';
 import 'package:uuid/uuid.dart';
@@ -1360,12 +1362,21 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     final repoAsync = ref.watch(repositoryProvider);
     final roots = ref.watch(scanRootsProvider);
 
+    // repositoryProvider's .value can still point at a repo whose Hive boxes
+    // were just closed (Clear Library / Delete All Data racing this widget's
+    // rebuild against the provider actually being invalidated) — reading
+    // through safeGetAllProjects instead of calling getAllProjects() directly
+    // avoids a HiveError("Box has already been closed") crashing this build.
+    final loadedProjects = repoAsync.hasValue
+        ? safeGetAllProjects(repoAsync.value!)
+        : null;
+
     // Same "truly blank profile" condition as the startup dialog below —
     // reused to decide whether to show the empty-library "add a scan
     // folder" floating action button on the Projects tab.
     final isEmptyLibrary = isEmptyProjectLibrary(
       hasScanRoots: roots.isNotEmpty,
-      hasAnyProjects: repoAsync.value?.getAllProjects().isNotEmpty ?? true,
+      hasAnyProjects: loadedProjects?.isNotEmpty ?? true,
     );
 
     // Show first-launch dialog on desktop when the profile is truly blank (no
@@ -1374,9 +1385,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     if (!MobileUtils.isMobile() &&
         !_startupDialogShown &&
         !_hideStartupDialog &&
-        repoAsync.hasValue &&
+        loadedProjects != null &&
         roots.isEmpty &&
-        repoAsync.value!.getAllProjects().isEmpty) {
+        loadedProjects.isEmpty) {
       _startupDialogShown = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) showStartupDialog(context);
@@ -4993,6 +5004,20 @@ bool isEmptyProjectLibrary({
   required bool hasAnyProjects,
 }) {
   return !hasScanRoots && !hasAnyProjects;
+}
+
+/// Reads all projects from [repo], returning null instead of throwing if its
+/// Hive boxes were already closed — e.g. Clear Library / Delete All Data
+/// (settings_page.dart) closing/clearing boxes while this widget is still
+/// holding the pre-invalidation repositoryProvider value. Callers should
+/// treat a null result the same as "not loaded yet".
+@visibleForTesting
+List<MusicProject>? safeGetAllProjects(ProjectRepository repo) {
+  try {
+    return repo.getAllProjects();
+  } on HiveError {
+    return null;
+  }
 }
 
 @visibleForTesting

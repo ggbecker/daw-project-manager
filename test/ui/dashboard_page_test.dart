@@ -2,12 +2,14 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hive_ce/hive.dart';
 import 'package:path/path.dart' as path;
 import 'package:trina_grid/trina_grid.dart';
 
 import 'package:daw_project_manager/generated/l10n/app_localizations_en.dart';
 import 'package:daw_project_manager/ui/dashboard_page.dart';
 
+import '../helpers/hive_test_helper.dart';
 import '../helpers/test_factories.dart';
 
 TrinaRow _flatRow(String id) {
@@ -160,6 +162,41 @@ void main() {
         isEmptyProjectLibrary(hasScanRoots: true, hasAnyProjects: true),
         isFalse,
       );
+    });
+  });
+
+  group('safeGetAllProjects', () {
+    // Regression: repositoryProvider's .value can still hold a repo whose
+    // Hive boxes were just closed (Clear Library / Delete All Data in
+    // settings_page.dart racing this widget's rebuild against the provider
+    // actually being invalidated) — DashboardPage.build() used to call
+    // repo.getAllProjects() directly there, which threw HiveError("Box has
+    // already been closed") mid-build and crashed the whole page.
+
+    late Directory tempDir;
+
+    tearDown(() async {
+      await HiveTestHelper.tearDown(tempDir);
+    });
+
+    test('returns the projects when the repository is open', () async {
+      tempDir = await HiveTestHelper.setUp();
+      final repo = await HiveTestHelper.createRepository();
+      await repo.restoreProject(TestFactories.makeProject(id: 'p1'));
+
+      final result = safeGetAllProjects(repo);
+
+      expect(result, hasLength(1));
+    });
+
+    test('returns null instead of throwing once the boxes are closed', () async {
+      tempDir = await HiveTestHelper.setUp();
+      final repo = await HiveTestHelper.createRepository();
+      await Hive.close();
+
+      final result = safeGetAllProjects(repo);
+
+      expect(result, isNull);
     });
   });
 
