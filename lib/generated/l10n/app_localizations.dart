@@ -565,8 +565,14 @@ abstract class AppLocalizations {
   /// No description provided for @deepScanConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Deep Scan extracts full metadata from project files:\n• BPM (Beats Per Minute)\n• Musical Key\n• DAW Version\n• Project Notes (Reaper only)\nCurrently supported: Ableton Live, Bitwig Studio, Cubase, Nuendo, FL Studio, MAGDA and Reaper.\n\nThis is slower than a regular scan and may take a while. Continue?'**
+  /// **'Deep Scan extracts full metadata from project files:\n• BPM (Beats Per Minute)\n• Musical Key\n• DAW Version\n• Project Notes (where supported)\n\nThis is slower than a regular scan and may take a while. Continue?'**
   String get deepScanConfirm;
+
+  /// No description provided for @deepScanViewSupportedDaws.
+  ///
+  /// In en, this message translates to:
+  /// **'View supported DAWs & fields'**
+  String get deepScanViewSupportedDaws;
 
   /// No description provided for @deepScanOnlyUnscanned.
   ///
@@ -892,6 +898,12 @@ abstract class AppLocalizations {
   /// **'Scanning projects...'**
   String get scanningProjects;
 
+  /// No description provided for @scanProgressLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading project {current} of {total}…'**
+  String scanProgressLabel(int current, int total);
+
   /// No description provided for @search.
   ///
   /// In en, this message translates to:
@@ -1138,6 +1150,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{type} complete: {count} project{plural} added/updated.'**
   String scanComplete(String type, int count, String plural);
+
+  /// No description provided for @scanFailuresSnackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} project{plural} failed to load.'**
+  String scanFailuresSnackbar(int count, String plural);
+
+  /// No description provided for @scanFailuresSnackbarAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get scanFailuresSnackbarAction;
+
+  /// No description provided for @scanFailuresDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan Errors'**
+  String get scanFailuresDialogTitle;
+
+  /// No description provided for @scanFailuresDialogIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'These files could not be read during the scan (they may have been deleted, moved, or locked by another program):'**
+  String get scanFailuresDialogIntro;
 
   /// No description provided for @projectsSelected.
   ///
@@ -6335,6 +6371,12 @@ abstract class AppLocalizations {
   /// **'Custom'**
   String get createProjectSchemeCustom;
 
+  /// No description provided for @createProjectSchemeRemix.
+  ///
+  /// In en, this message translates to:
+  /// **'Remix'**
+  String get createProjectSchemeRemix;
+
   /// No description provided for @createProjectArtistName.
   ///
   /// In en, this message translates to:
@@ -6358,6 +6400,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add artist'**
   String get createProjectAddArtist;
+
+  /// No description provided for @createProjectOriginalArtist.
+  ///
+  /// In en, this message translates to:
+  /// **'Original Artist'**
+  String get createProjectOriginalArtist;
+
+  /// No description provided for @createProjectRemixerName.
+  ///
+  /// In en, this message translates to:
+  /// **'Remixer'**
+  String get createProjectRemixerName;
+
+  /// No description provided for @createProjectAddRemixer.
+  ///
+  /// In en, this message translates to:
+  /// **'Add remixer'**
+  String get createProjectAddRemixer;
 
   /// No description provided for @createProjectSelectDaw.
   ///

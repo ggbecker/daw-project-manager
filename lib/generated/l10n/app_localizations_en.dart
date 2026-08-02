@@ -253,7 +253,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deepScanConfirm =>
-      'Deep Scan extracts full metadata from project files:\n• BPM (Beats Per Minute)\n• Musical Key\n• DAW Version\n• Project Notes (Reaper only)\nCurrently supported: Ableton Live, Bitwig Studio, Cubase, Nuendo, FL Studio, MAGDA and Reaper.\n\nThis is slower than a regular scan and may take a while. Continue?';
+      'Deep Scan extracts full metadata from project files:\n• BPM (Beats Per Minute)\n• Musical Key\n• DAW Version\n• Project Notes (where supported)\n\nThis is slower than a regular scan and may take a while. Continue?';
+
+  @override
+  String get deepScanViewSupportedDaws => 'View supported DAWs & fields';
 
   @override
   String get deepScanOnlyUnscanned => 'Only scan projects without metadata';
@@ -437,6 +440,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scanningProjects => 'Scanning projects...';
 
   @override
+  String scanProgressLabel(int current, int total) {
+    return 'Loading project $current of $total…';
+  }
+
+  @override
   String get search => 'Search';
 
   @override
@@ -607,6 +615,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String scanComplete(String type, int count, String plural) {
     return '$type complete: $count project$plural added/updated.';
   }
+
+  @override
+  String scanFailuresSnackbar(int count, String plural) {
+    return '$count project$plural failed to load.';
+  }
+
+  @override
+  String get scanFailuresSnackbarAction => 'Details';
+
+  @override
+  String get scanFailuresDialogTitle => 'Scan Errors';
+
+  @override
+  String get scanFailuresDialogIntro =>
+      'These files could not be read during the scan (they may have been deleted, moved, or locked by another program):';
 
   @override
   String projectsSelected(int count, String plural) {
@@ -3741,6 +3764,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get createProjectSchemeCustom => 'Custom';
 
   @override
+  String get createProjectSchemeRemix => 'Remix';
+
+  @override
   String get createProjectArtistName => 'Artist Name';
 
   @override
@@ -3751,6 +3777,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get createProjectAddArtist => 'Add artist';
+
+  @override
+  String get createProjectOriginalArtist => 'Original Artist';
+
+  @override
+  String get createProjectRemixerName => 'Remixer';
+
+  @override
+  String get createProjectAddRemixer => 'Add remixer';
 
   @override
   String get createProjectSelectDaw => 'Open in DAW';

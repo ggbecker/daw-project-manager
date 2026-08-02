@@ -113,7 +113,8 @@
   "noReleasesFound": "Keine Veröffentlichungen gefunden",
   "noPlaylistsFound": "Keine Playlists gefunden",
   "tryDifferentSearch": "Versuchen Sie einen anderen Suchbegriff",
-  "deepScanConfirm": "Der Tiefenscan extrahiert vollständige Metadaten aus Projektdateien:\n• BPM (Schläge Pro Minute)\n• Tonart\n• DAW-Version\n• Projektnotizen (nur Reaper)\nDerzeit unterstützt: Ableton Live, Bitwig Studio, Cubase, Nuendo, FL Studio, MAGDA und Reaper.\n\nDies ist langsamer als ein regulärer Scan und kann eine Weile dauern. Fortfahren?",
+  "deepScanConfirm": "Der Tiefenscan extrahiert vollständige Metadaten aus Projektdateien:\n• BPM (Schläge Pro Minute)\n• Tonart\n• DAW-Version\n• Projektnotizen (wo unterstützt)\n\nDies ist langsamer als ein regulärer Scan und kann eine Weile dauern. Fortfahren?",
+  "deepScanViewSupportedDaws": "Unterstützte DAWs & Felder anzeigen",
   "deepScanOnlyUnscanned": "Nur Projekte ohne Metadaten scannen",
   "metadataExtractionTitle": "Metadaten-Extraktion",
   "metadataExtractionSubtitle": "Sehen Sie, welche Daten jede DAW unterstützt",
@@ -225,6 +226,17 @@
   "selectAllProjects": "Alle Projekte auswählen",
   "switchingProfiles": "Profile wechseln...",
   "scanningProjects": "Projekte scannen...",
+  "scanProgressLabel": "Projekt {current} von {total} wird geladen…",
+  "@scanProgressLabel": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "search": "Suchen",
   "projectsTab": "Projekte",
   "releasesTab": "Veröffentlichungen",
@@ -447,6 +459,23 @@
       }
     }
   },
+  "scanFailuresSnackbar": "{count} Projekt{plural} konnte(n) nicht geladen werden.",
+  "@scanFailuresSnackbar": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      }
+    }
+  },
+  "scanFailuresSnackbarAction": "Details",
+  "@scanFailuresSnackbarAction": {},
+  "scanFailuresDialogTitle": "Scan-Fehler",
+  "@scanFailuresDialogTitle": {},
+  "scanFailuresDialogIntro": "Diese Dateien konnten beim Scan nicht gelesen werden (möglicherweise gelöscht, verschoben oder von einem anderen Programm gesperrt):",
+  "@scanFailuresDialogIntro": {},
   "projectsSelected": "{count} Projekt{plural} ausgewählt",
   "@projectsSelected": {
     "placeholders": {
@@ -2458,6 +2487,8 @@
   "@createProjectSchemeDate": {},
   "createProjectSchemeCustom": "Benutzerdefiniert",
   "@createProjectSchemeCustom": {},
+  "createProjectSchemeRemix": "Remix",
+  "@createProjectSchemeRemix": {},
   "createProjectArtistName": "Künstlername",
   "@createProjectArtistName": {},
   "createProjectTrackName": "Track-Name",
@@ -2466,6 +2497,12 @@
   "@createProjectCustomName": {},
   "createProjectAddArtist": "Künstler hinzufügen",
   "@createProjectAddArtist": {},
+  "createProjectOriginalArtist": "Originalkünstler",
+  "@createProjectOriginalArtist": {},
+  "createProjectRemixerName": "Remixer",
+  "@createProjectRemixerName": {},
+  "createProjectAddRemixer": "Remixer hinzufügen",
+  "@createProjectAddRemixer": {},
   "createProjectSelectDaw": "In DAW öffnen",
   "@createProjectSelectDaw": {},
   "createProjectSelectDawHint": "Wählen Sie die DAW für dieses Projekt",

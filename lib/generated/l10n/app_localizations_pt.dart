@@ -253,7 +253,10 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get deepScanConfirm =>
-      'A Varredura Profunda extrai metadados completos dos arquivos de projeto:\n• BPM (Batidas Por Minuto)\n• Tom Musical\n• Versão do DAW\n• Notas do Projeto (somente Reaper)\nSuportado atualmente: Ableton Live, Bitwig Studio, Cubase, Nuendo, FL Studio, MAGDA e Reaper.\n\nIsso é mais lento que uma varredura comum e pode levar um tempo. Continuar?';
+      'A Varredura Profunda extrai metadados completos dos arquivos de projeto:\n• BPM (Batidas Por Minuto)\n• Tom Musical\n• Versão do DAW\n• Notas do Projeto (quando suportado)\n\nIsso é mais lento que uma varredura comum e pode levar um tempo. Continuar?';
+
+  @override
+  String get deepScanViewSupportedDaws => 'Ver DAWs e campos suportados';
 
   @override
   String get deepScanOnlyUnscanned => 'Escanear apenas projetos sem metadados';
@@ -437,6 +440,11 @@ class AppLocalizationsPt extends AppLocalizations {
   String get scanningProjects => 'Escaneando projetos...';
 
   @override
+  String scanProgressLabel(int current, int total) {
+    return 'Carregando projeto $current de $total…';
+  }
+
+  @override
   String get search => 'Buscar';
 
   @override
@@ -607,6 +615,21 @@ class AppLocalizationsPt extends AppLocalizations {
   String scanComplete(String type, int count, String plural) {
     return '$type concluída: $count projeto$plural adicionado$plural/atualizado$plural.';
   }
+
+  @override
+  String scanFailuresSnackbar(int count, String plural) {
+    return '$count projeto$plural não pôde/puderam ser carregado$plural.';
+  }
+
+  @override
+  String get scanFailuresSnackbarAction => 'Detalhes';
+
+  @override
+  String get scanFailuresDialogTitle => 'Erros de Varredura';
+
+  @override
+  String get scanFailuresDialogIntro =>
+      'Estes arquivos não puderam ser lidos durante a varredura (podem ter sido excluídos, movidos ou bloqueados por outro programa):';
 
   @override
   String projectsSelected(int count, String plural) {
@@ -3753,6 +3776,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get createProjectSchemeCustom => 'Personalizado';
 
   @override
+  String get createProjectSchemeRemix => 'Remix';
+
+  @override
   String get createProjectArtistName => 'Nome do artista';
 
   @override
@@ -3763,6 +3789,15 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get createProjectAddArtist => 'Adicionar artista';
+
+  @override
+  String get createProjectOriginalArtist => 'Artista Original';
+
+  @override
+  String get createProjectRemixerName => 'Remixer';
+
+  @override
+  String get createProjectAddRemixer => 'Adicionar remixer';
 
   @override
   String get createProjectSelectDaw => 'Abrir no DAW';

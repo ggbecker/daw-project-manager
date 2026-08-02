@@ -104,8 +104,10 @@ class ProjectRepository {
       final decoded = jsonDecode(raw) as Map;
       return Map.unmodifiable(
         decoded.map(
-          (key, value) =>
-              MapEntry(key as String, List<String>.unmodifiable((value as List).cast<String>())),
+          (key, value) => MapEntry(
+            key as String,
+            List<String>.unmodifiable((value as List).cast<String>()),
+          ),
         ),
       );
     } catch (_) {
@@ -113,21 +115,35 @@ class ProjectRepository {
     }
   }
 
-  Future<void> setCustomMixdownFoldersByDaw(Map<String, List<String>> foldersByDaw) async {
+  Future<void> setCustomMixdownFoldersByDaw(
+    Map<String, List<String>> foldersByDaw,
+  ) async {
     final cleaned = <String, List<String>>{};
     for (final entry in foldersByDaw.entries) {
-      final names = entry.value.map((f) => f.trim()).where((f) => f.isNotEmpty).toList();
+      final names = entry.value
+          .map((f) => f.trim())
+          .where((f) => f.isNotEmpty)
+          .toList();
       if (names.isNotEmpty) cleaned[entry.key] = names;
     }
     if (cleaned.isEmpty) {
       await appSettingsBox.delete(_keyCustomMixdownFoldersByDaw);
     } else {
-      await appSettingsBox.put(_keyCustomMixdownFoldersByDaw, jsonEncode(cleaned));
+      await appSettingsBox.put(
+        _keyCustomMixdownFoldersByDaw,
+        jsonEncode(cleaned),
+      );
     }
   }
 
   // Custom Phases — ordered list of phase names, per-profile
-  static const _defaultPhases = ['Idea', 'Arranging', 'Mixing', 'Mastering', 'Finished'];
+  static const _defaultPhases = [
+    'Idea',
+    'Arranging',
+    'Mixing',
+    'Mastering',
+    'Finished',
+  ];
   String get _customPhasesKey => '${profileId}_phases';
 
   List<String> getCustomPhases() {
@@ -165,8 +181,9 @@ class ProjectRepository {
   Set<String> getFinishedPhases() {
     final raw = appSettingsBox.get(_finishedPhasesKey);
     if (raw != null) {
-      try { return (jsonDecode(raw) as List).cast<String>().toSet(); }
-      catch (_) {}
+      try {
+        return (jsonDecode(raw) as List).cast<String>().toSet();
+      } catch (_) {}
     }
     // Migrate legacy single-phase key
     final legacy = appSettingsBox.get('${profileId}_finished_phase');
@@ -188,27 +205,39 @@ class ProjectRepository {
     if (raw == null) return [];
     try {
       final list = jsonDecode(raw) as List;
-      return list.map((e) => PendingFolder.fromJson(e as Map<String, dynamic>)).toList();
+      return list
+          .map((e) => PendingFolder.fromJson(e as Map<String, dynamic>))
+          .toList();
     } catch (_) {
       return [];
     }
   }
 
   Future<void> addPendingFolder(PendingFolder folder) async {
-    final current = getPendingFolders()..removeWhere((f) => f.path == folder.path);
+    final current = getPendingFolders()
+      ..removeWhere((f) => f.path == folder.path);
     current.add(folder);
-    await appSettingsBox.put(_pendingFoldersKey, jsonEncode(current.map((f) => f.toJson()).toList()));
+    await appSettingsBox.put(
+      _pendingFoldersKey,
+      jsonEncode(current.map((f) => f.toJson()).toList()),
+    );
   }
 
   Future<void> removePendingFolder(String id) async {
     final current = getPendingFolders()..removeWhere((f) => f.id == id);
-    await appSettingsBox.put(_pendingFoldersKey, jsonEncode(current.map((f) => f.toJson()).toList()));
+    await appSettingsBox.put(
+      _pendingFoldersKey,
+      jsonEncode(current.map((f) => f.toJson()).toList()),
+    );
   }
 
   Future<void> updatePendingFolder(PendingFolder folder) async {
     final current = getPendingFolders()..removeWhere((f) => f.id == folder.id);
     current.add(folder);
-    await appSettingsBox.put(_pendingFoldersKey, jsonEncode(current.map((f) => f.toJson()).toList()));
+    await appSettingsBox.put(
+      _pendingFoldersKey,
+      jsonEncode(current.map((f) => f.toJson()).toList()),
+    );
   }
 
   /// Removes pending folders that now contain a real DAW project file, or whose
@@ -221,7 +250,10 @@ class ProjectRepository {
         .toList();
     if (toRemove.isNotEmpty) {
       final remaining = current.where((f) => !toRemove.contains(f.id)).toList();
-      await appSettingsBox.put(_pendingFoldersKey, jsonEncode(remaining.map((f) => f.toJson()).toList()));
+      await appSettingsBox.put(
+        _pendingFoldersKey,
+        jsonEncode(remaining.map((f) => f.toJson()).toList()),
+      );
     }
     return toRemove;
   }
@@ -229,7 +261,7 @@ class ProjectRepository {
   static Future<ProjectRepository> init(ProfileRepository profileRepo) async {
     // Initialize Hive with LocalAppData directory (only once)
     await ensureHiveInitialized();
-    
+
     if (!Hive.isAdapterRegistered(1)) {
       Hive.registerAdapter(MusicProjectAdapter());
     }
@@ -275,7 +307,9 @@ class ProjectRepository {
     // Use profile-specific box names
     final projects = await Hive.openBox<MusicProject>('${profileId}_projects');
     final roots = await Hive.openBox<ScanRoot>('${profileId}_roots');
-    final ignoredPaths = await Hive.openBox<IgnoredPath>('${profileId}_ignored_paths');
+    final ignoredPaths = await Hive.openBox<IgnoredPath>(
+      '${profileId}_ignored_paths',
+    );
     final releases = await Hive.openBox<Release>('${profileId}_releases');
     final playlists = await Hive.openBox<Playlist>('${profileId}_playlists');
     final events = await Hive.openBox<ProjectEvent>('${profileId}_events');
@@ -299,7 +333,10 @@ class ProjectRepository {
   }
 
   /// Reinitialize with a different profile
-  static Future<ProjectRepository> initWithProfile(ProfileRepository profileRepo, String profileId) async {
+  static Future<ProjectRepository> initWithProfile(
+    ProfileRepository profileRepo,
+    String profileId,
+  ) async {
     // Ensure Hive is initialized (only once)
     await ensureHiveInitialized();
 
@@ -310,7 +347,9 @@ class ProjectRepository {
     // Use profile-specific box names
     final projects = await Hive.openBox<MusicProject>('${profileId}_projects');
     final roots = await Hive.openBox<ScanRoot>('${profileId}_roots');
-    final ignoredPaths = await Hive.openBox<IgnoredPath>('${profileId}_ignored_paths');
+    final ignoredPaths = await Hive.openBox<IgnoredPath>(
+      '${profileId}_ignored_paths',
+    );
     final releases = await Hive.openBox<Release>('${profileId}_releases');
     final playlists = await Hive.openBox<Playlist>('${profileId}_playlists');
     final events = await Hive.openBox<ProjectEvent>('${profileId}_events');
@@ -331,39 +370,42 @@ class ProjectRepository {
   // Roots
   Future<void> addRoot(String path) async {
     final id = _uuid.v4();
-    await rootsBox.put(id, ScanRoot(id: id, path: path, addedAt: DateTime.now()));
+    await rootsBox.put(
+      id,
+      ScanRoot(id: id, path: path, addedAt: DateTime.now()),
+    );
   }
 
   Future<void> removeRoot(String id) async {
     final root = rootsBox.get(id);
     if (root == null) return;
-    
+
     // Get the root path and normalize it for comparison
     final rootPath = p.normalize(root.path);
     // Ensure root path ends with separator for proper matching
-    final rootPathNormalized = rootPath.endsWith(p.separator) 
-        ? rootPath 
+    final rootPathNormalized = rootPath.endsWith(p.separator)
+        ? rootPath
         : rootPath + p.separator;
-    
+
     // Get all project IDs that are referenced in releases (to preserve them)
     final releases = getAllReleases();
     final protectedProjectIds = <String>{};
     for (final release in releases) {
       protectedProjectIds.addAll(release.trackIds);
     }
-    
+
     // Remove all projects that belong to this root folder
     // Note: projectsBox is already profile-specific, so we only operate on current profile's projects
     final projectsToDelete = <String>[];
-    
+
     for (final project in projectsBox.values) {
       try {
         // Normalize project file path for comparison
         final projectPath = p.normalize(project.filePath);
-        
+
         // Check if project's file path is within the root folder
         // This is safe because projectsBox is profile-specific (${profileId}_projects)
-        if (projectPath.startsWith(rootPathNormalized) || 
+        if (projectPath.startsWith(rootPathNormalized) ||
             projectPath.startsWith(rootPath + p.separator)) {
           // Preserve projects that are referenced in releases
           if (!protectedProjectIds.contains(project.id)) {
@@ -375,12 +417,12 @@ class ProjectRepository {
         // Better to be safe and not delete than to delete incorrectly
       }
     }
-    
+
     // Delete all projects from this root (except those in releases)
     if (projectsToDelete.isNotEmpty) {
       await projectsBox.deleteAll(projectsToDelete);
     }
-    
+
     // Remove the root after deleting projects
     await rootsBox.delete(id);
   }
@@ -421,13 +463,21 @@ class ProjectRepository {
 
     final oldPath = p.normalize(root.path);
     final newNorm = p.normalize(newPath);
-    final oldPrefix = oldPath.endsWith(p.separator) ? oldPath : oldPath + p.separator;
-    final newPrefix = newNorm.endsWith(p.separator) ? newNorm : newNorm + p.separator;
+    final oldPrefix = oldPath.endsWith(p.separator)
+        ? oldPath
+        : oldPath + p.separator;
+    final newPrefix = newNorm.endsWith(p.separator)
+        ? newNorm
+        : newNorm + p.separator;
 
     String repath(String src) {
       final norm = p.normalize(src);
-      if (norm.startsWith(oldPrefix)) { return newPrefix + norm.substring(oldPrefix.length); }
-      if (norm == oldPath) { return newNorm; }
+      if (norm.startsWith(oldPrefix)) {
+        return newPrefix + norm.substring(oldPrefix.length);
+      }
+      if (norm == oldPath) {
+        return newNorm;
+      }
       return src;
     }
 
@@ -437,13 +487,19 @@ class ProjectRepository {
     int count = 0;
     for (final project in projectsBox.values.toList()) {
       if (!p.normalize(project.filePath).startsWith(oldPrefix) &&
-          p.normalize(project.filePath) != oldPath) { continue; }
+          p.normalize(project.filePath) != oldPath) {
+        continue;
+      }
 
       final updated = project.copyWith(
         filePath: repath(project.filePath),
         fileName: p.basename(repath(project.filePath)),
-        previewSongPath: project.previewSongPath != null ? repath(project.previewSongPath!) : null,
-        previewSongAutoPath: project.previewSongAutoPath != null ? repath(project.previewSongAutoPath!) : null,
+        previewSongPath: project.previewSongPath != null
+            ? repath(project.previewSongPath!)
+            : null,
+        previewSongAutoPath: project.previewSongAutoPath != null
+            ? repath(project.previewSongAutoPath!)
+            : null,
       );
       await projectsBox.put(updated.id, updated);
       count++;
@@ -465,7 +521,8 @@ class ProjectRepository {
     await ignoredPathsBox.delete(id);
   }
 
-  List<IgnoredPath> getIgnoredPaths() => ignoredPathsBox.values.toList(growable: false);
+  List<IgnoredPath> getIgnoredPaths() =>
+      ignoredPathsBox.values.toList(growable: false);
 
   Stream<BoxEvent> watchIgnoredPaths() => ignoredPathsBox.watch();
 
@@ -478,8 +535,9 @@ class ProjectRepository {
     }
 
     final rootPath = p.normalize(basePath);
-    final rootPathNormalized =
-        rootPath.endsWith(p.separator) ? rootPath : rootPath + p.separator;
+    final rootPathNormalized = rootPath.endsWith(p.separator)
+        ? rootPath
+        : rootPath + p.separator;
 
     final projectsToDelete = <String>[];
     for (final project in projectsBox.values) {
@@ -516,7 +574,11 @@ class ProjectRepository {
   /// Upserts a project from a file system entity
   /// [fullMetadata] if true, extracts full metadata (BPM, key, DAW version) - slower
   /// if false, only extracts DAW type from extension - faster
-  Future<void> upsertFromFileSystemEntity(FileSystemEntity entity, {bool fullMetadata = false, String? parentProjectId}) async {
+  Future<void> upsertFromFileSystemEntity(
+    FileSystemEntity entity, {
+    bool fullMetadata = false,
+    String? parentProjectId,
+  }) async {
     final built = await _buildProjectAndEvent(
       entity,
       fullMetadata: fullMetadata,
@@ -538,7 +600,17 @@ class ProjectRepository {
   /// still happens per file (it's genuinely per-file I/O), but persistence
   /// is batched into `putAll` calls, flushed every [flushEvery] entities so
   /// memory stays bounded on very large scans.
-  Future<void> upsertManyFromFileSystemEntities(
+  ///
+  /// A single unreadable/vanished file (e.g. deleted or locked mid-scan)
+  /// must not abort the whole batch — each entity is processed in its own
+  /// try/catch, and failures are collected and returned by path instead of
+  /// thrown, so callers can keep going and report them afterward rather
+  /// than losing every project after the one that failed.
+  ///
+  /// [onProgress] is invoked after each entity (whether it succeeded or
+  /// failed) with the running count and the batch's total, for callers that
+  /// want to show scan progress.
+  Future<List<String>> upsertManyFromFileSystemEntities(
     List<FileSystemEntity> entities, {
     bool fullMetadata = false,
     // Overrides [fullMetadata] per entity, for callers like the dashboard's
@@ -547,9 +619,11 @@ class ProjectRepository {
     bool Function(FileSystemEntity entity)? fullMetadataFor,
     String? parentProjectId,
     int flushEvery = 200,
+    void Function(int processed, int total)? onProgress,
   }) async {
     var pendingProjects = <String, MusicProject>{};
     var pendingEvents = <String, ProjectEvent>{};
+    final failedPaths = <String>[];
 
     Future<void> flush() async {
       if (pendingProjects.isNotEmpty) {
@@ -562,21 +636,32 @@ class ProjectRepository {
       }
     }
 
-    for (final entity in entities) {
-      final built = await _buildProjectAndEvent(
-        entity,
-        fullMetadata: fullMetadataFor?.call(entity) ?? fullMetadata,
-        parentProjectId: parentProjectId,
-      );
-      pendingProjects[built.project.id] = built.project;
-      if (built.event != null) {
-        pendingEvents[built.event!.id] = built.event!;
+    final total = entities.length;
+    for (var i = 0; i < entities.length; i++) {
+      final entity = entities[i];
+      try {
+        final built = await _buildProjectAndEvent(
+          entity,
+          fullMetadata: fullMetadataFor?.call(entity) ?? fullMetadata,
+          parentProjectId: parentProjectId,
+        );
+        pendingProjects[built.project.id] = built.project;
+        if (built.event != null) {
+          pendingEvents[built.event!.id] = built.event!;
+        }
+      } catch (e) {
+        failedPaths.add(entity.path);
+        if (kDebugMode) {
+          print('[upsertManyFromFileSystemEntities] failed ${entity.path}: $e');
+        }
       }
+      onProgress?.call(i + 1, total);
       if (pendingProjects.length >= flushEvery) {
         await flush();
       }
     }
     await flush();
+    return failedPaths;
   }
 
   Future<({MusicProject project, ProjectEvent? event})> _buildProjectAndEvent(
@@ -595,24 +680,26 @@ class ProjectRepository {
     final lastModified = stat.modified;
 
     final existing = getByPath(filePath);
-    
+
     // Extract metadata from project file
     ProjectMetadata? extractedMetadata;
     try {
       if (fullMetadata) {
         extractedMetadata = await MetadataExtractor.extractMetadata(filePath);
       } else {
-        extractedMetadata = await MetadataExtractor.extractLightweightMetadata(filePath);
+        extractedMetadata = await MetadataExtractor.extractLightweightMetadata(
+          filePath,
+        );
       }
     } catch (_) {
       // If extraction fails, continue without metadata
     }
-    
+
     // Always update BPM and key from file if available (these can change in the project)
     // Fall back to existing values only if extraction didn't find anything
     final bpm = extractedMetadata?.bpm ?? existing?.bpm;
     final key = extractedMetadata?.key ?? existing?.musicalKey;
-    
+
     // Determine DAW type: always update from file (based on extension)
     final dawType = extractedMetadata?.dawType;
     // Preserve existing DAW version if extraction didn't find anything (e.g., during lightweight scan)
@@ -620,7 +707,8 @@ class ProjectRepository {
     // Same fallback as dawVersion: only a full-metadata scan of a supported
     // DAW (currently Reaper and Cubase/Nuendo) populates this, so preserve
     // it otherwise.
-    final projectNotes = extractedMetadata?.projectNotes ?? existing?.projectNotes;
+    final projectNotes =
+        extractedMetadata?.projectNotes ?? existing?.projectNotes;
 
     // Detect file creation date from filesystem
     // On Windows, stat.changed is the creation time
@@ -637,11 +725,13 @@ class ProjectRepository {
       } else {
         // On macOS/Linux, use the earlier of modified and changed times
         // as a best approximation of creation time
-        fileCreatedAt = stat.changed.isBefore(stat.modified) ? stat.changed : stat.modified;
+        fileCreatedAt = stat.changed.isBefore(stat.modified)
+            ? stat.changed
+            : stat.modified;
       }
     }
-    
-    // Cria o objeto base, usando os dados existentes se houver, 
+
+    // Cria o objeto base, usando os dados existentes se houver,
     // mas atualizando os campos que vêm do sistema de arquivos (size, lastModified, fileName, etc.)
     final projectToSave = MusicProject(
       id: existing?.id ?? _uuid.v4(),
@@ -652,29 +742,45 @@ class ProjectRepository {
       fileExtension: ext,
       createdAt: existing?.createdAt ?? DateTime.now(),
       updatedAt: DateTime.now(),
-      
+
       // PRESERVAÇÃO: Estes campos foram editados pelo usuário e devem ser mantidos
       customDisplayName: existing?.customDisplayName, // <--- PRESERVA
-      status: existing?.status ?? 'Idea',             // <--- PRESERVA (default changed from 'Draft' to 'Idea')
-      bpm: bpm,                                        // <--- USA EXISTENTE OU EXTRAÍDO
-      musicalKey: key,                                 // <--- USA EXISTENTE OU EXTRAÍDO
-      notes: existing?.notes,                         // <--- NOVO: PRESERVA NOTAS
-      projectNotes: projectNotes,                     // <--- USA EXISTENTE OU EXTRAÍDO DO ARQUIVO (ex: Reaper, Cubase/Nuendo)
-      todos: existing?.todos ?? const [],             // <--- CRITICAL: PRESERVA TODOS
-      hidden: existing?.hidden ?? false,               // <--- CRITICAL: PRESERVA HIDDEN STATUS
-      dawType: dawType,                                // <--- SEMPRE ATUALIZA DO ARQUIVO
-      dawVersion: dawVersion,                          // <--- USA EXISTENTE OU EXTRAÍDO (preserva se já existe)
-      previewSongPath: existing?.previewSongPath,     // <--- PRESERVA PREVIEW SONG
-      previewSongFileName: existing?.previewSongFileName, // <--- PRESERVA PREVIEW SONG FILENAME
-      uploadedPreviewSongHash: existing?.uploadedPreviewSongHash, // <--- PRESERVA PREVIEW SONG HASH
-      previewSongAutoPath: existing?.previewSongAutoPath, // <--- PRESERVA AUTO-DETECTED PATH
-      fileCreatedAt: fileCreatedAt,                   // <--- FILE CREATION DATE (never override once set)
-      statusChangedAt: existing?.statusChangedAt,     // <--- PRESERVA STATUS CHANGE DATE
-      deadline: existing?.deadline,                   // <--- PRESERVA DEADLINE
+      status:
+          existing?.status ??
+          'Idea', // <--- PRESERVA (default changed from 'Draft' to 'Idea')
+      bpm: bpm, // <--- USA EXISTENTE OU EXTRAÍDO
+      musicalKey: key, // <--- USA EXISTENTE OU EXTRAÍDO
+      notes: existing?.notes, // <--- NOVO: PRESERVA NOTAS
+      projectNotes:
+          projectNotes, // <--- USA EXISTENTE OU EXTRAÍDO DO ARQUIVO (ex: Reaper, Cubase/Nuendo)
+      todos: existing?.todos ?? const [], // <--- CRITICAL: PRESERVA TODOS
+      hidden:
+          existing?.hidden ?? false, // <--- CRITICAL: PRESERVA HIDDEN STATUS
+      dawType: dawType, // <--- SEMPRE ATUALIZA DO ARQUIVO
+      dawVersion:
+          dawVersion, // <--- USA EXISTENTE OU EXTRAÍDO (preserva se já existe)
+      previewSongPath: existing?.previewSongPath, // <--- PRESERVA PREVIEW SONG
+      previewSongFileName:
+          existing?.previewSongFileName, // <--- PRESERVA PREVIEW SONG FILENAME
+      uploadedPreviewSongHash:
+          existing?.uploadedPreviewSongHash, // <--- PRESERVA PREVIEW SONG HASH
+      previewSongAutoPath:
+          existing?.previewSongAutoPath, // <--- PRESERVA AUTO-DETECTED PATH
+      fileCreatedAt:
+          fileCreatedAt, // <--- FILE CREATION DATE (never override once set)
+      statusChangedAt:
+          existing?.statusChangedAt, // <--- PRESERVA STATUS CHANGE DATE
+      deadline: existing?.deadline, // <--- PRESERVA DEADLINE
       parentProjectId: parentProjectId ?? existing?.parentProjectId,
-      totalWorkSeconds: existing?.totalWorkSeconds ?? 0, // <--- CRITICAL: PRESERVA SESSION TIME
-      sessions: existing?.sessions ?? const [],          // <--- CRITICAL: PRESERVA SESSION HISTORY
-      metadataScanned: fullMetadata ? true : (existing?.metadataScanned ?? false),
+      totalWorkSeconds:
+          existing?.totalWorkSeconds ??
+          0, // <--- CRITICAL: PRESERVA SESSION TIME
+      sessions:
+          existing?.sessions ??
+          const [], // <--- CRITICAL: PRESERVA SESSION HISTORY
+      metadataScanned: fullMetadata
+          ? true
+          : (existing?.metadataScanned ?? false),
     );
 
     // Record a file_changed event if an existing project had its file mutated
@@ -698,12 +804,13 @@ class ProjectRepository {
     return (project: projectToSave, event: event);
   }
 
-  List<MusicProject> getAllProjects() => projectsBox.values.toList(growable: false);
+  List<MusicProject> getAllProjects() =>
+      projectsBox.values.toList(growable: false);
 
   Future<void> updateProject(MusicProject project) async {
     final updatedProject = project.copyWith(updatedAt: DateTime.now());
     await projectsBox.put(updatedProject.id, updatedProject);
-    
+
     // Reschedule notifications if on Android and deadline changed
     if (Platform.isAndroid) {
       try {
@@ -726,8 +833,10 @@ class ProjectRepository {
     if (project == null) return;
 
     try {
-      final extractedMetadata = await MetadataExtractor.extractMetadata(project.filePath);
-      
+      final extractedMetadata = await MetadataExtractor.extractMetadata(
+        project.filePath,
+      );
+
       // Update project with extracted metadata, preserving existing values if extraction didn't find anything
       final updated = project.copyWith(
         bpm: extractedMetadata.bpm ?? project.bpm,
@@ -737,7 +846,7 @@ class ProjectRepository {
         projectNotes: extractedMetadata.projectNotes ?? project.projectNotes,
         updatedAt: DateTime.now(),
       );
-      
+
       await projectsBox.put(projectId, updated);
     } catch (_) {
       // If extraction fails, silently continue
@@ -770,12 +879,13 @@ class ProjectRepository {
   }
 
   // Reactive listeners
-  ValueListenable<Box<MusicProject>> projectsListenable() => projectsBox.listenable();
+  ValueListenable<Box<MusicProject>> projectsListenable() =>
+      projectsBox.listenable();
   ValueListenable<Box<ScanRoot>> rootsListenable() => rootsBox.listenable();
 
   // Stream watch for Riverpod StreamProvider usage
   Stream<BoxEvent> watchProjects() => projectsBox.watch();
-  
+
   // Emits the full project list on every Hive box change. Scans can fire
   // hundreds/thousands of individual put()s in quick succession (one per
   // discovered file), each of which would otherwise re-materialize and
@@ -804,7 +914,9 @@ class ProjectRepository {
         return;
       }
       if (kDebugMode) {
-        print('watchAllProjects: emitting ${projects.length} projects for profile $profileId');
+        print(
+          'watchAllProjects: emitting ${projects.length} projects for profile $profileId',
+        );
       }
       if (!controller.isClosed) controller.add(projects);
     }
@@ -825,7 +937,7 @@ class ProjectRepository {
 
     return controller.stream;
   }
-  
+
   Stream<BoxEvent> watchRoots() => rootsBox.watch();
 
   Future<void> clearAllData() async {
@@ -835,7 +947,7 @@ class ProjectRepository {
     for (final release in releases) {
       protectedProjectIds.addAll(release.trackIds);
     }
-    
+
     // Delete all projects except those referenced in releases
     if (protectedProjectIds.isNotEmpty) {
       final allProjectIds = projectsBox.keys.cast<String>().toSet();
@@ -847,7 +959,7 @@ class ProjectRepository {
       // No protected projects, safe to clear all
       await projectsBox.clear();
     }
-    
+
     // Always clear roots
     await rootsBox.clear();
 
@@ -865,10 +977,13 @@ class ProjectRepository {
     // errors from trying to reopen a typed box as Box<dynamic>).
     final List<String> profileIds;
     if (Hive.isBoxOpen(ProfileRepository.profilesBoxName)) {
-      profileIds = Hive.box<Profile>(ProfileRepository.profilesBoxName)
-          .keys.cast<String>().toList();
+      profileIds = Hive.box<Profile>(
+        ProfileRepository.profilesBoxName,
+      ).keys.cast<String>().toList();
     } else {
-      final box = await Hive.openBox<Profile>(ProfileRepository.profilesBoxName);
+      final box = await Hive.openBox<Profile>(
+        ProfileRepository.profilesBoxName,
+      );
       profileIds = box.keys.cast<String>().toList();
     }
 
@@ -877,7 +992,12 @@ class ProjectRepository {
 
     // Clear per-profile boxes.
     const perProfileBoxes = [
-      'projects', 'roots', 'ignored_paths', 'releases', 'playlists', 'events',
+      'projects',
+      'roots',
+      'ignored_paths',
+      'releases',
+      'playlists',
+      'events',
     ];
     for (final profileId in profileIds) {
       for (final suffix in perProfileBoxes) {
@@ -892,7 +1012,11 @@ class ProjectRepository {
     // Clear global boxes.
     const globalBoxNames = [
       'settings', 'app_settings', 'notification_preferences',
-      'todoTemplates', 'projectTemplates', 'templateRoots', 'profiles', 'backup_timestamps',
+      'todoTemplates',
+      'projectTemplates',
+      'templateRoots',
+      'profiles',
+      'backup_timestamps',
       // Legacy / misc boxes.
       'music_projects', 'projects', 'releases', 'roots',
     ];
@@ -948,7 +1072,11 @@ class ProjectRepository {
   Stream<BoxEvent> watchReleases() => releasesBox.watch();
 
   // Playlists
-  Future<Playlist> createPlaylist(String name, {List<String>? projectIds, List<String>? audioFilePaths}) async {
+  Future<Playlist> createPlaylist(
+    String name, {
+    List<String>? projectIds,
+    List<String>? audioFilePaths,
+  }) async {
     final id = _uuid.v4();
     final now = DateTime.now();
     final playlist = Playlist(
@@ -972,7 +1100,8 @@ class ProjectRepository {
     await playlistsBox.delete(id);
   }
 
-  List<Playlist> getAllPlaylists() => playlistsBox.values.toList(growable: false);
+  List<Playlist> getAllPlaylists() =>
+      playlistsBox.values.toList(growable: false);
 
   Playlist? getPlaylistById(String id) {
     try {
@@ -989,5 +1118,6 @@ class ProjectRepository {
     yield* playlistsBox.watch().map((_) => playlistsBox.values.toList());
   }
 
-  ValueListenable<Box<Playlist>> playlistsListenable() => playlistsBox.listenable();
+  ValueListenable<Box<Playlist>> playlistsListenable() =>
+      playlistsBox.listenable();
 }

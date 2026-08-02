@@ -113,7 +113,8 @@
   "noReleasesFound": "リリースが見つかりません",
   "noPlaylistsFound": "プレイリストが見つかりません",
   "tryDifferentSearch": "別の検索用語を試してください",
-  "deepScanConfirm": "詳細スキャンは、プロジェクトファイルから完全なメタデータを抽出します：\n• BPM（1分あたりのビート数）\n• 音楽キー\n• DAWバージョン\n• プロジェクトノート（Reaperのみ）\n現在対応: Ableton Live、Bitwig Studio、Cubase、Nuendo、FL Studio、MAGDAとReaper。\n\n通常のスキャンより時間がかかります。続行しますか？",
+  "deepScanConfirm": "詳細スキャンは、プロジェクトファイルから完全なメタデータを抽出します：\n• BPM（1分あたりのビート数）\n• 音楽キー\n• DAWバージョン\n• プロジェクトノート（対応DAWのみ）\n\n通常のスキャンより時間がかかります。続行しますか？",
+  "deepScanViewSupportedDaws": "対応DAWとフィールドを見る",
   "deepScanOnlyUnscanned": "メタデータのないプロジェクトのみスキャン",
   "metadataExtractionTitle": "メタデータ抽出",
   "metadataExtractionSubtitle": "各DAWがサポートするデータを確認",
@@ -225,6 +226,17 @@
   "selectAllProjects": "すべてのプロジェクトを選択",
   "switchingProfiles": "プロファイルを切り替え中...",
   "scanningProjects": "プロジェクトをスキャン中...",
+  "scanProgressLabel": "プロジェクトを読み込み中 {current} / {total}…",
+  "@scanProgressLabel": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "search": "検索",
   "projectsTab": "プロジェクト",
   "releasesTab": "リリース",
@@ -447,6 +459,23 @@
       }
     }
   },
+  "scanFailuresSnackbar": "{count}件のプロジェクト{plural}を読み込めませんでした。",
+  "@scanFailuresSnackbar": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      }
+    }
+  },
+  "scanFailuresSnackbarAction": "詳細",
+  "@scanFailuresSnackbarAction": {},
+  "scanFailuresDialogTitle": "スキャンエラー",
+  "@scanFailuresDialogTitle": {},
+  "scanFailuresDialogIntro": "スキャン中にこれらのファイルを読み取れませんでした（削除、移動、または他のプログラムによってロックされている可能性があります）：",
+  "@scanFailuresDialogIntro": {},
   "projectsSelected": "{count}プロジェクト{plural}を選択しました",
   "@projectsSelected": {
     "placeholders": {
@@ -2458,6 +2487,8 @@
   "@createProjectSchemeDate": {},
   "createProjectSchemeCustom": "カスタム",
   "@createProjectSchemeCustom": {},
+  "createProjectSchemeRemix": "リミックス",
+  "@createProjectSchemeRemix": {},
   "createProjectArtistName": "アーティスト名",
   "@createProjectArtistName": {},
   "createProjectTrackName": "トラック名",
@@ -2466,6 +2497,12 @@
   "@createProjectCustomName": {},
   "createProjectAddArtist": "アーティストを追加",
   "@createProjectAddArtist": {},
+  "createProjectOriginalArtist": "オリジナルアーティスト",
+  "@createProjectOriginalArtist": {},
+  "createProjectRemixerName": "リミキサー",
+  "@createProjectRemixerName": {},
+  "createProjectAddRemixer": "リミキサーを追加",
+  "@createProjectAddRemixer": {},
   "createProjectSelectDaw": "DAWで開く",
   "@createProjectSelectDaw": {},
   "createProjectSelectDawHint": "このプロジェクトで使用するDAWを選択してください",

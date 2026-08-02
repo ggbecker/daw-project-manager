@@ -245,7 +245,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get deepScanConfirm =>
-      '深度扫描从项目文件中提取完整的元数据：\n• BPM（每分钟节拍数）\n• 音乐调性\n• DAW版本\n• 项目备注（仅限 Reaper）\n目前支持：Ableton Live、Bitwig Studio、Cubase、Nuendo、FL Studio、MAGDA 和 Reaper。\n\n这比常规扫描慢，可能需要一些时间。继续吗？';
+      '深度扫描从项目文件中提取完整的元数据：\n• BPM（每分钟节拍数）\n• 音乐调性\n• DAW版本\n• 项目备注（视DAW支持情况而定）\n\n这比常规扫描慢，可能需要一些时间。继续吗？';
+
+  @override
+  String get deepScanViewSupportedDaws => '查看支持的DAW和字段';
 
   @override
   String get deepScanOnlyUnscanned => '仅扫描没有元数据的项目';
@@ -428,6 +431,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get scanningProjects => '扫描项目中...';
 
   @override
+  String scanProgressLabel(int current, int total) {
+    return '正在加载第 $current 个项目，共 $total 个…';
+  }
+
+  @override
   String get search => '搜索';
 
   @override
@@ -597,6 +605,20 @@ class AppLocalizationsZh extends AppLocalizations {
   String scanComplete(String type, int count, String plural) {
     return '$type完成: $count个项目$plural已添加/更新。';
   }
+
+  @override
+  String scanFailuresSnackbar(int count, String plural) {
+    return '$count个项目$plural加载失败。';
+  }
+
+  @override
+  String get scanFailuresSnackbarAction => '详情';
+
+  @override
+  String get scanFailuresDialogTitle => '扫描错误';
+
+  @override
+  String get scanFailuresDialogIntro => '扫描过程中无法读取以下文件（可能已被删除、移动或被其他程序锁定）：';
 
   @override
   String projectsSelected(int count, String plural) {
@@ -3615,6 +3637,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get createProjectSchemeCustom => '自定义';
 
   @override
+  String get createProjectSchemeRemix => '混音';
+
+  @override
   String get createProjectArtistName => '艺术家名称';
 
   @override
@@ -3625,6 +3650,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get createProjectAddArtist => '添加艺术家';
+
+  @override
+  String get createProjectOriginalArtist => '原始艺术家';
+
+  @override
+  String get createProjectRemixerName => '混音师';
+
+  @override
+  String get createProjectAddRemixer => '添加混音师';
 
   @override
   String get createProjectSelectDaw => '在DAW中打开';

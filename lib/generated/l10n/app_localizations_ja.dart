@@ -249,7 +249,10 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get deepScanConfirm =>
-      '詳細スキャンは、プロジェクトファイルから完全なメタデータを抽出します：\n• BPM（1分あたりのビート数）\n• 音楽キー\n• DAWバージョン\n• プロジェクトノート（Reaperのみ）\n現在対応: Ableton Live、Bitwig Studio、Cubase、Nuendo、FL Studio、MAGDAとReaper。\n\n通常のスキャンより時間がかかります。続行しますか？';
+      '詳細スキャンは、プロジェクトファイルから完全なメタデータを抽出します：\n• BPM（1分あたりのビート数）\n• 音楽キー\n• DAWバージョン\n• プロジェクトノート（対応DAWのみ）\n\n通常のスキャンより時間がかかります。続行しますか？';
+
+  @override
+  String get deepScanViewSupportedDaws => '対応DAWとフィールドを見る';
 
   @override
   String get deepScanOnlyUnscanned => 'メタデータのないプロジェクトのみスキャン';
@@ -432,6 +435,11 @@ class AppLocalizationsJa extends AppLocalizations {
   String get scanningProjects => 'プロジェクトをスキャン中...';
 
   @override
+  String scanProgressLabel(int current, int total) {
+    return 'プロジェクトを読み込み中 $current / $total…';
+  }
+
+  @override
   String get search => '検索';
 
   @override
@@ -601,6 +609,21 @@ class AppLocalizationsJa extends AppLocalizations {
   String scanComplete(String type, int count, String plural) {
     return '$type完了: $countプロジェクト$pluralを追加/更新しました。';
   }
+
+  @override
+  String scanFailuresSnackbar(int count, String plural) {
+    return '$count件のプロジェクト$pluralを読み込めませんでした。';
+  }
+
+  @override
+  String get scanFailuresSnackbarAction => '詳細';
+
+  @override
+  String get scanFailuresDialogTitle => 'スキャンエラー';
+
+  @override
+  String get scanFailuresDialogIntro =>
+      'スキャン中にこれらのファイルを読み取れませんでした（削除、移動、または他のプログラムによってロックされている可能性があります）：';
 
   @override
   String projectsSelected(int count, String plural) {
@@ -3651,6 +3674,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get createProjectSchemeCustom => 'カスタム';
 
   @override
+  String get createProjectSchemeRemix => 'リミックス';
+
+  @override
   String get createProjectArtistName => 'アーティスト名';
 
   @override
@@ -3661,6 +3687,15 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get createProjectAddArtist => 'アーティストを追加';
+
+  @override
+  String get createProjectOriginalArtist => 'オリジナルアーティスト';
+
+  @override
+  String get createProjectRemixerName => 'リミキサー';
+
+  @override
+  String get createProjectAddRemixer => 'リミキサーを追加';
 
   @override
   String get createProjectSelectDaw => 'DAWで開く';

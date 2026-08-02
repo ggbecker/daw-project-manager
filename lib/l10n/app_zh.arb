@@ -113,7 +113,8 @@
   "noReleasesFound": "未找到发布",
   "noPlaylistsFound": "未找到播放列表",
   "tryDifferentSearch": "尝试不同的搜索词",
-  "deepScanConfirm": "深度扫描从项目文件中提取完整的元数据：\n• BPM（每分钟节拍数）\n• 音乐调性\n• DAW版本\n• 项目备注（仅限 Reaper）\n目前支持：Ableton Live、Bitwig Studio、Cubase、Nuendo、FL Studio、MAGDA 和 Reaper。\n\n这比常规扫描慢，可能需要一些时间。继续吗？",
+  "deepScanConfirm": "深度扫描从项目文件中提取完整的元数据：\n• BPM（每分钟节拍数）\n• 音乐调性\n• DAW版本\n• 项目备注（视DAW支持情况而定）\n\n这比常规扫描慢，可能需要一些时间。继续吗？",
+  "deepScanViewSupportedDaws": "查看支持的DAW和字段",
   "deepScanOnlyUnscanned": "仅扫描没有元数据的项目",
   "metadataExtractionTitle": "元数据提取",
   "metadataExtractionSubtitle": "查看每种DAW支持哪些数据",
@@ -225,6 +226,17 @@
   "selectAllProjects": "选择所有项目",
   "switchingProfiles": "切换配置文件中...",
   "scanningProjects": "扫描项目中...",
+  "scanProgressLabel": "正在加载第 {current} 个项目，共 {total} 个…",
+  "@scanProgressLabel": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "search": "搜索",
   "projectsTab": "项目",
   "releasesTab": "发布",
@@ -447,6 +459,23 @@
       }
     }
   },
+  "scanFailuresSnackbar": "{count}个项目{plural}加载失败。",
+  "@scanFailuresSnackbar": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      }
+    }
+  },
+  "scanFailuresSnackbarAction": "详情",
+  "@scanFailuresSnackbarAction": {},
+  "scanFailuresDialogTitle": "扫描错误",
+  "@scanFailuresDialogTitle": {},
+  "scanFailuresDialogIntro": "扫描过程中无法读取以下文件（可能已被删除、移动或被其他程序锁定）：",
+  "@scanFailuresDialogIntro": {},
   "projectsSelected": "{count}个项目{plural}已选择",
   "@projectsSelected": {
     "placeholders": {
@@ -2458,6 +2487,8 @@
   "@createProjectSchemeDate": {},
   "createProjectSchemeCustom": "自定义",
   "@createProjectSchemeCustom": {},
+  "createProjectSchemeRemix": "混音",
+  "@createProjectSchemeRemix": {},
   "createProjectArtistName": "艺术家名称",
   "@createProjectArtistName": {},
   "createProjectTrackName": "曲目名称",
@@ -2466,6 +2497,12 @@
   "@createProjectCustomName": {},
   "createProjectAddArtist": "添加艺术家",
   "@createProjectAddArtist": {},
+  "createProjectOriginalArtist": "原始艺术家",
+  "@createProjectOriginalArtist": {},
+  "createProjectRemixerName": "混音师",
+  "@createProjectRemixerName": {},
+  "createProjectAddRemixer": "添加混音师",
+  "@createProjectAddRemixer": {},
   "createProjectSelectDaw": "在DAW中打开",
   "@createProjectSelectDaw": {},
   "createProjectSelectDawHint": "选择要打开哪个DAW来开始处理此项目",
