@@ -4337,21 +4337,20 @@ class _PlutoProjectsTableWithSelectionState
     final scanRoots = ref.watch(scanRootsProvider);
     final l10n = AppLocalizations.of(context)!;
 
-    // Filtering an empty library makes no sense — hide the whole filter bar
-    // on a fresh install (no scan roots registered yet and no projects at
-    // all), rather than showing dropdowns and checkboxes with nothing to
-    // act on. Once either a root is added or a project shows up, this
-    // reverts to the normal filter bar.
+    // Filtering an empty grid makes no sense — hide the whole filter bar
+    // whenever there are no projects yet, even if scan roots are already
+    // configured (e.g. a freshly added root that hasn't found anything),
+    // rather than showing dropdowns and checkboxes with nothing to act on.
+    // Uses the raw, unfiltered project count (not the currently-displayed
+    // one) so a legitimate search filtered down to zero results doesn't
+    // also hide the filter bar that could clear it.
     final allProjectsAsync = ref.watch(allProjectsStreamProvider);
-    final isEmptyLibrary = isEmptyProjectLibrary(
-      hasScanRoots: scanRoots.isNotEmpty,
-      hasAnyProjects: allProjectsAsync.value?.isNotEmpty ?? false,
-    );
+    final hasAnyProjects = allProjectsAsync.value?.isNotEmpty ?? false;
 
     return Column(
       children: [
         // Filter bar
-        if (!isEmptyLibrary)
+        if (hasAnyProjects)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             color: Theme.of(context).cardColor,
@@ -4989,20 +4988,6 @@ class _PlutoProjectsTable extends ConsumerStatefulWidget {
 /// treatment later. Switching profiles or extracting metadata both mutate
 /// state the user could otherwise interact with mid-flight, so those still
 /// block too.
-/// Whether the Projects tab is a completely fresh, unpopulated library:
-/// no scan roots registered yet AND no projects exist at all. Used to hide
-/// the filter bar (nothing to filter) and to show the "add a scan folder"
-/// floating action button instead. Deliberately distinct from "filtered to
-/// zero results" — `hasAnyProjects` must reflect the whole library, not the
-/// current search/filter state, or a legitimate empty search would also
-/// hide the filters that could clear it.
-@visibleForTesting
-bool isEmptyProjectLibrary({
-  required bool hasScanRoots,
-  required bool hasAnyProjects,
-}) {
-  return !hasScanRoots && !hasAnyProjects;
-}
 
 /// Reads all projects from [repo], returning null instead of throwing if its
 /// Hive boxes were already closed — e.g. Clear Library / Delete All Data

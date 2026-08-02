@@ -128,43 +128,6 @@ void main() {
     });
   });
 
-  group('isEmptyProjectLibrary', () {
-    // Backs hiding the Projects tab's filter bar and showing the "add a
-    // scan folder" FAB on a completely fresh install — must only fire when
-    // there is truly nothing to filter, not just a narrowed-down search.
-
-    test('true when there are no scan roots and no projects at all', () {
-      expect(
-        isEmptyProjectLibrary(hasScanRoots: false, hasAnyProjects: false),
-        isTrue,
-      );
-    });
-
-    test('false once at least one scan root is registered', () {
-      expect(
-        isEmptyProjectLibrary(hasScanRoots: true, hasAnyProjects: false),
-        isFalse,
-      );
-    });
-
-    test(
-      'false when projects exist even without scan roots (e.g. restored from Drive)',
-      () {
-        expect(
-          isEmptyProjectLibrary(hasScanRoots: false, hasAnyProjects: true),
-          isFalse,
-        );
-      },
-    );
-
-    test('false once both roots and projects exist', () {
-      expect(
-        isEmptyProjectLibrary(hasScanRoots: true, hasAnyProjects: true),
-        isFalse,
-      );
-    });
-  });
-
   group('safeGetAllProjects', () {
     // Regression: repositoryProvider's .value can still hold a repo whose
     // Hive boxes were just closed (Clear Library / Delete All Data in
