@@ -1,9 +1,14 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hive_ce/hive.dart';
 import 'package:path/path.dart' as p;
 import 'package:daw_project_manager/models/music_project.dart';
 import 'package:daw_project_manager/models/pending_folder.dart';
+import 'package:daw_project_manager/models/profile.dart';
+import 'package:daw_project_manager/models/project_event.dart';
 import 'package:daw_project_manager/models/release.dart';
+import 'package:daw_project_manager/repository/profile_repository.dart';
+import 'package:daw_project_manager/repository/project_repository.dart';
 import 'package:daw_project_manager/services/backup_service.dart';
 import '../helpers/hive_test_helper.dart';
 import '../helpers/test_factories.dart';
@@ -1250,6 +1255,99 @@ void main() {
         // was lost or corrupted by the close.
         final reopened = await HiveTestHelper.createRepository();
         expect(reopened.getById('p1'), isNotNull);
+      },
+    );
+  });
+
+  group('ProjectRepository.clearAllData', () {
+    // "Clear Library" in settings_page.dart — clears the current profile's
+    // data without closing any Hive box (unlike deleteAllAppData below).
+
+    test('clears projects, roots, ignored paths and events', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.restoreProject(TestFactories.makeProject(id: 'p1'));
+      await repo.addRoot('/music/root');
+      await repo.addIgnoredPath('/music/root/ignored');
+      await repo.addEvent(
+        ProjectEvent(
+          id: 'e1',
+          projectId: 'p1',
+          eventType: ProjectEvent.statusChange,
+          occurredAt: DateTime(2026, 1, 1),
+        ),
+      );
+
+      await repo.clearAllData();
+
+      expect(repo.getAllProjects(), isEmpty);
+      expect(repo.getRoots(), isEmpty);
+      expect(repo.getIgnoredPaths(), isEmpty);
+      expect(repo.getAllEvents(), isEmpty);
+    });
+
+    test('preserves projects referenced by a release', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.restoreProject(TestFactories.makeProject(id: 'keep'));
+      await repo.restoreProject(TestFactories.makeProject(id: 'discard'));
+      await repo.addRelease(
+        Release(id: 'r1', title: 'Release', trackIds: const ['keep']),
+      );
+
+      await repo.clearAllData();
+
+      expect(repo.getAllProjects().map((p) => p.id), ['keep']);
+    });
+  });
+
+  group('ProjectRepository.deleteAllAppData', () {
+    // "Delete All Data" in settings_page.dart — the two-confirmation
+    // "nuclear" reset. Unlike clearAllData, this closes every Hive box
+    // across every profile before clearing them (see the crash this caused
+    // in dashboard_page.dart, fixed via safeGetAllProjects). Verifying the
+    // wipe itself actually completes end-to-end here.
+
+    test(
+      "wipes every profile's data and leaves a single fresh default profile",
+      () async {
+        final profileRepo = await HiveTestHelper.createProfileRepository();
+        final profileA = await profileRepo.createProfile('A');
+        final profileB = await profileRepo.createProfile('B');
+
+        final repoA = await HiveTestHelper.createRepository(
+          profileId: profileA.id,
+        );
+        await repoA.restoreProject(TestFactories.makeProject(id: 'a1'));
+        await repoA.addRoot('/music/a');
+
+        final repoB = await HiveTestHelper.createRepository(
+          profileId: profileB.id,
+        );
+        await repoB.restoreProject(TestFactories.makeProject(id: 'b1'));
+        await repoB.addRoot('/music/b');
+
+        await ProjectRepository.deleteAllAppData();
+
+        final profiles = Hive.box<Profile>(
+          ProfileRepository.profilesBoxName,
+        ).values.toList();
+        expect(profiles, hasLength(1));
+        expect(profiles.single.name, 'Default');
+        expect(profiles.single.id, isNot(profileA.id));
+        expect(profiles.single.id, isNot(profileB.id));
+
+        final aProjects = await Hive.openBox<dynamic>(
+          '${profileA.id}_projects',
+        );
+        final bProjects = await Hive.openBox<dynamic>(
+          '${profileB.id}_projects',
+        );
+        expect(aProjects.isEmpty, isTrue);
+        expect(bProjects.isEmpty, isTrue);
+
+        final aRoots = await Hive.openBox<dynamic>('${profileA.id}_roots');
+        final bRoots = await Hive.openBox<dynamic>('${profileB.id}_roots');
+        expect(aRoots.isEmpty, isTrue);
+        expect(bRoots.isEmpty, isTrue);
       },
     );
   });
