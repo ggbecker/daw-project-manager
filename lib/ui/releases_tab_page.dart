@@ -13,6 +13,7 @@ import '../models/music_project.dart';
 import '../providers/providers.dart';
 import '../utils/mobile_utils.dart';
 import '../utils/search_utils.dart';
+import '../utils/trina_grid_locale.dart';
 import '../generated/l10n/app_localizations.dart';
 import '../providers/theme_provider.dart';
 import 'release_detail_page.dart';
@@ -657,6 +658,7 @@ class _ReleasesTableState extends ConsumerState<_ReleasesTable> {
         stateManager!.addListener(_onStateManagerChanged);
       },
       configuration: TrinaGridConfiguration(
+        localeText: trinaGridLocaleTextFor(context),
         style: TrinaGridStyleConfig(
           gridBackgroundColor: Theme.of(context).cardColor,
           gridBorderColor: Theme.of(context).dividerColor.withValues(alpha: 0.4),

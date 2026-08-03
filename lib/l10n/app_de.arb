@@ -1900,7 +1900,7 @@
   "musicPlayerTab": "Musikplayer",
   "previewAudioChangedRefreshing": "Vorschau-Audio auf der Festplatte geändert — Wellenform wird aktualisiert…",
   "audioFileChangedRefreshing": "Audiodatei auf der Festplatte geändert — Wellenform wird aktualisiert…",
-  "autoFitAllColumns": "Alle Spalten automatisch anpassen",
+  "autoFitAllColumns": "Spalten anpassen",
   "uploadAutoDetectedPreviewSongs": "Automatisch erkannte Vorschau-Songs hochladen",
   "uploadAutoDetectedPreviewSongsSubtitle": "Auch Songs einbeziehen, die automatisch vom Scanner gefunden wurden, nicht nur manuell festgelegte.",
   "monoGenerating": "Mono …",

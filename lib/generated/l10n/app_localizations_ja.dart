@@ -2710,7 +2710,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get audioFileChangedRefreshing => '音声ファイルがディスク上で変更されました — 波形を更新中…';
 
   @override
-  String get autoFitAllColumns => 'すべての列を自動調整';
+  String get autoFitAllColumns => '列を自動調整';
 
   @override
   String get uploadAutoDetectedPreviewSongs => '自動検出されたプレビュー曲をアップロード';

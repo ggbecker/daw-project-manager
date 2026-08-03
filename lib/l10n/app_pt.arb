@@ -1924,7 +1924,7 @@
   "musicPlayerTab": "Reprodutor de Música",
   "previewAudioChangedRefreshing": "O áudio de pré-visualização mudou no disco — atualizando a forma de onda…",
   "audioFileChangedRefreshing": "O arquivo de áudio mudou no disco — atualizando a forma de onda…",
-  "autoFitAllColumns": "Ajustar automaticamente todas as colunas",
+  "autoFitAllColumns": "Redimensionar colunas",
   "uploadAutoDetectedPreviewSongs": "Enviar músicas de pré-visualização detectadas automaticamente",
   "uploadAutoDetectedPreviewSongsSubtitle": "Incluir músicas encontradas automaticamente pelo scanner, não apenas as definidas manualmente.",
   "monoGenerating": "Mono…",

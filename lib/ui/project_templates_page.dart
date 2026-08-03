@@ -25,6 +25,7 @@ import '../utils/app_paths.dart';
 import '../utils/daw_logo.dart';
 import '../utils/file_launcher.dart';
 import '../utils/mobile_utils.dart';
+import '../utils/trina_grid_locale.dart';
 import 'dialogs/create_project_dialog.dart';
 import 'widgets/desktop_title_bar.dart';
 import 'widgets/filter_dropdown.dart';
@@ -1227,6 +1228,9 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
                                     );
                                   },
                                   configuration: TrinaGridConfiguration(
+                                    localeText: trinaGridLocaleTextFor(
+                                      context,
+                                    ),
                                     style: TrinaGridStyleConfig(
                                       gridBackgroundColor:
                                           activeTheme.cardColor,

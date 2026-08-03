@@ -2793,7 +2793,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le fichier audio a changé sur le disque — actualisation de la forme d\'onde…';
 
   @override
-  String get autoFitAllColumns => 'Ajuster automatiquement toutes les colonnes';
+  String get autoFitAllColumns => 'Ajuster les colonnes';
 
   @override
   String get uploadAutoDetectedPreviewSongs =>

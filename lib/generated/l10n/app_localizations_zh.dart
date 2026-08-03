@@ -2683,7 +2683,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get audioFileChangedRefreshing => '音频文件在磁盘上已更改 — 正在刷新波形…';
 
   @override
-  String get autoFitAllColumns => '自动调整所有列';
+  String get autoFitAllColumns => '自动调整列';
 
   @override
   String get uploadAutoDetectedPreviewSongs => '上传自动检测到的预览歌曲';

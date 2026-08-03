@@ -1900,7 +1900,7 @@
   "musicPlayerTab": "音乐播放器",
   "previewAudioChangedRefreshing": "预览音频在磁盘上已更改 — 正在刷新波形…",
   "audioFileChangedRefreshing": "音频文件在磁盘上已更改 — 正在刷新波形…",
-  "autoFitAllColumns": "自动调整所有列",
+  "autoFitAllColumns": "自动调整列",
   "uploadAutoDetectedPreviewSongs": "上传自动检测到的预览歌曲",
   "uploadAutoDetectedPreviewSongsSubtitle": "包括扫描器自动找到的歌曲，而不仅仅是手动设置的歌曲。",
   "monoGenerating": "单声道…",

@@ -4658,7 +4658,7 @@ abstract class AppLocalizations {
   /// No description provided for @autoFitAllColumns.
   ///
   /// In en, this message translates to:
-  /// **'Auto fit all columns'**
+  /// **'Auto-resize columns'**
   String get autoFitAllColumns;
 
   /// No description provided for @uploadAutoDetectedPreviewSongs.

@@ -1900,7 +1900,7 @@
   "musicPlayerTab": "Музыкальный плеер",
   "previewAudioChangedRefreshing": "Аудио предпросмотра изменилось на диске — обновление формы волны…",
   "audioFileChangedRefreshing": "Аудиофайл изменился на диске — обновление формы волны…",
-  "autoFitAllColumns": "Автоподбор ширины всех столбцов",
+  "autoFitAllColumns": "Автоподбор столбцов",
   "uploadAutoDetectedPreviewSongs": "Загружать автоматически найденные превью-треки",
   "uploadAutoDetectedPreviewSongsSubtitle": "Включать треки, автоматически найденные сканером, а не только заданные вручную.",
   "monoGenerating": "Моно…",

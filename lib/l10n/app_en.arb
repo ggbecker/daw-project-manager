@@ -3038,7 +3038,7 @@
   "musicPlayerTab": "Music Player",
   "previewAudioChangedRefreshing": "Preview audio changed on disk — refreshing waveform…",
   "audioFileChangedRefreshing": "Audio file changed on disk — refreshing waveform…",
-  "autoFitAllColumns": "Auto fit all columns",
+  "autoFitAllColumns": "Auto-resize columns",
   "uploadAutoDetectedPreviewSongs": "Upload auto-detected preview songs",
   "uploadAutoDetectedPreviewSongsSubtitle": "Include songs found automatically by the scanner, not just ones you set manually.",
   "monoGenerating": "Mono...",

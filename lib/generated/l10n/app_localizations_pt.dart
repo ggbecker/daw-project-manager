@@ -2768,7 +2768,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'O arquivo de áudio mudou no disco — atualizando a forma de onda…';
 
   @override
-  String get autoFitAllColumns => 'Ajustar automaticamente todas as colunas';
+  String get autoFitAllColumns => 'Redimensionar colunas';
 
   @override
   String get uploadAutoDetectedPreviewSongs =>

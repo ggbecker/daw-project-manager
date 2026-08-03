@@ -35,6 +35,7 @@ import '../providers/theme_provider.dart';
 import '../utils/file_launcher.dart';
 import '../utils/search_utils.dart';
 import '../utils/route_observer.dart';
+import '../utils/trina_grid_locale.dart';
 import 'project_detail_page.dart';
 import 'releases_tab_page.dart';
 import 'release_detail_page.dart';
@@ -7957,6 +7958,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         }
       },
       configuration: TrinaGridConfiguration(
+        localeText: trinaGridLocaleTextFor(context),
         style: TrinaGridStyleConfig(
           gridBackgroundColor: activeTheme.cardColor,
           gridBorderColor: isNeon

@@ -1900,7 +1900,7 @@
   "musicPlayerTab": "Lettore musicale",
   "previewAudioChangedRefreshing": "L'audio di anteprima è cambiato su disco — aggiornamento della forma d'onda…",
   "audioFileChangedRefreshing": "Il file audio è cambiato su disco — aggiornamento della forma d'onda…",
-  "autoFitAllColumns": "Adatta automaticamente tutte le colonne",
+  "autoFitAllColumns": "Adatta colonne",
   "uploadAutoDetectedPreviewSongs": "Carica brani di anteprima rilevati automaticamente",
   "uploadAutoDetectedPreviewSongsSubtitle": "Includi i brani trovati automaticamente dallo scanner, non solo quelli impostati manualmente.",
   "monoGenerating": "Mono…",

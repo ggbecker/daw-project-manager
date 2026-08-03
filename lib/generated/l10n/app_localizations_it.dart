@@ -2775,7 +2775,7 @@ class AppLocalizationsIt extends AppLocalizations {
       'Il file audio è cambiato su disco — aggiornamento della forma d\'onda…';
 
   @override
-  String get autoFitAllColumns => 'Adatta automaticamente tutte le colonne';
+  String get autoFitAllColumns => 'Adatta colonne';
 
   @override
   String get uploadAutoDetectedPreviewSongs =>

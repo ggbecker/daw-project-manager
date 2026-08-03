@@ -2762,7 +2762,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Audio file changed on disk — refreshing waveform…';
 
   @override
-  String get autoFitAllColumns => 'Auto fit all columns';
+  String get autoFitAllColumns => 'Auto-resize columns';
 
   @override
   String get uploadAutoDetectedPreviewSongs =>

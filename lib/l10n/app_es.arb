@@ -1900,7 +1900,7 @@
   "musicPlayerTab": "Reproductor de música",
   "previewAudioChangedRefreshing": "El audio de vista previa cambió en el disco — actualizando la forma de onda…",
   "audioFileChangedRefreshing": "El archivo de audio cambió en el disco — actualizando la forma de onda…",
-  "autoFitAllColumns": "Ajustar automáticamente todas las columnas",
+  "autoFitAllColumns": "Ajustar columnas",
   "uploadAutoDetectedPreviewSongs": "Subir canciones de vista previa detectadas automáticamente",
   "uploadAutoDetectedPreviewSongsSubtitle": "Incluir canciones encontradas automáticamente por el escáner, no solo las que estableciste manualmente.",
   "monoGenerating": "Mono…",

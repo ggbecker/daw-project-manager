@@ -1900,7 +1900,7 @@
   "musicPlayerTab": "音楽プレーヤー",
   "previewAudioChangedRefreshing": "プレビュー音声がディスク上で変更されました — 波形を更新中…",
   "audioFileChangedRefreshing": "音声ファイルがディスク上で変更されました — 波形を更新中…",
-  "autoFitAllColumns": "すべての列を自動調整",
+  "autoFitAllColumns": "列を自動調整",
   "uploadAutoDetectedPreviewSongs": "自動検出されたプレビュー曲をアップロード",
   "uploadAutoDetectedPreviewSongsSubtitle": "手動で設定した曲だけでなく、スキャナーが自動的に見つけた曲も含めます。",
   "monoGenerating": "モノラル…",

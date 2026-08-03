@@ -2780,7 +2780,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Audiodatei auf der Festplatte geändert — Wellenform wird aktualisiert…';
 
   @override
-  String get autoFitAllColumns => 'Alle Spalten automatisch anpassen';
+  String get autoFitAllColumns => 'Spalten anpassen';
 
   @override
   String get uploadAutoDetectedPreviewSongs =>

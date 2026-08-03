@@ -2767,7 +2767,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Аудиофайл изменился на диске — обновление формы волны…';
 
   @override
-  String get autoFitAllColumns => 'Автоподбор ширины всех столбцов';
+  String get autoFitAllColumns => 'Автоподбор столбцов';
 
   @override
   String get uploadAutoDetectedPreviewSongs =>
