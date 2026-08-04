@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" height="88" width="88" viewBox="0 0 88 88">
+  <!-- Simple flat penguin silhouette, drawn from scratch for this site (not a
+       reproduction of Larry Ewing's Tux artwork) — kept in the same flat,
+       single-shape style as the Windows/macOS logos alongside it. -->
+  <g fill="#111111">
+    <ellipse cx="44" cy="50" rx="20" ry="30"/>
+    <ellipse cx="44" cy="26" rx="13" ry="13"/>
+    <path d="M20 78c6 6 16 8 24 8s18-2 24-8c-6 4-14 6-24 6s-18-2-24-6z"/>
+  </g>
+  <g fill="#ffffff">
+    <ellipse cx="44" cy="54" rx="11" ry="20"/>
+    <ellipse cx="44" cy="24" rx="7" ry="7"/>
+  </g>
+  <g fill="#111111">
+    <circle cx="40.5" cy="22" r="1.6"/>
+    <circle cx="47.5" cy="22" r="1.6"/>
+  </g>
+  <path d="M42 28l2 3 2-3z" fill="#f5a623"/>
+  <g fill="#f5a623">
+    <path d="M32 82l4-6 4 6z"/>
+    <path d="M48 82l4-6 4 6z"/>
+  </g>
+</svg>

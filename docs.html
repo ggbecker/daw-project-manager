@@ -657,6 +657,18 @@
                     <li>Launch from the Start menu. The onboarding wizard appears on first run.</li>
                 </ol>
 
+                <h4>Linux</h4>
+                <ol class="steps">
+                    <li><strong>Download the AppImage</strong> from the <a href="https://github.com/bandpassrecords/daw-project-manager/releases" style="color:var(--accent);">Releases page</a> on GitHub.</li>
+                    <li><strong>Make it executable</strong> — <code style="font-family:monospace;">chmod +x DAW_Project_Manager_Linux_*.AppImage</code> — then double-click or run it directly. No installer, no root access needed.</li>
+                    <li>A <code style="font-family:monospace;">.flatpak</code> bundle is also attached to every release for sideloading (Flathub submission pending); see the <a href="https://github.com/bandpassrecords/daw-project-manager/tree/main/flatpak" target="_blank" rel="noopener noreferrer" style="color:var(--accent);">flatpak/</a> folder in the repo for how to build or install it.</li>
+                    <li>The app opens and the <a href="#first-launch">onboarding wizard</a> appears.</li>
+                </ol>
+
+                <div class="callout callout-info">
+                    <strong>Note:</strong> <a href="#google-drive-sync">Google Drive sync</a> isn't offered on Linux — the desktop OAuth flow needs a client secret that can't be safely shipped in an open sideloadable build. A local backup/restore option is available instead under <strong>Settings</strong>.
+                </div>
+
                 <h4>Android</h4>
                 <ol class="steps">
                     <li>Search <strong>DAW Project Manager</strong> on the Google Play Store.</li>
@@ -665,7 +677,7 @@
                 </ol>
 
                 <div class="callout callout-info">
-                    <strong>Tip:</strong> macOS is the primary platform and receives features first. Windows and Android are fully supported. iOS support is in progress.
+                    <strong>Tip:</strong> macOS is the primary platform and receives features first. Windows, Linux, and Android are fully supported. iOS support is in progress.
                 </div>
 
                 <!-- First Launch -->
@@ -1610,6 +1622,7 @@
                             <tr><td>Renoise</td><td><code class="daw-ext">.xrns</code></td></tr>
                             <tr><td>Rosegarden</td><td><code class="daw-ext">.rg</code></td></tr>
                             <tr><td>Samplitude / Sequoia</td><td><code class="daw-ext">.vip</code></td></tr>
+                            <tr><td>Zrythm</td><td><code class="daw-ext">.zpj</code></td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -1654,7 +1667,7 @@
                     </table>
                 </div>
 
-                <p>All other supported DAWs — including the 13 <a href="#supported-daws">additional DAWs</a> above — are detected and scanned but rely on manual entry today.</p>
+                <p>All other supported DAWs — including the 14 <a href="#supported-daws">additional DAWs</a> above — are detected and scanned but rely on manual entry today.</p>
             </div>
 
         </main>

@@ -383,6 +383,14 @@ body {
     text-align: center;
 }
 
+.other-platform-link a {
+    display: block;
+}
+
+.other-platform-link a + a {
+    margin-top: 0.4rem;
+}
+
 .btn-link {
     color: var(--text-secondary);
     text-decoration: none;

@@ -47,17 +47,25 @@ const observer = new IntersectionObserver((entries) => {
 function detectOS() {
     const userAgent = navigator.userAgent || navigator.vendor || window.opera;
     const platform = navigator.platform || navigator.userAgentData?.platform;
-    
+
     // Check for macOS
     if (/Mac|iPhone|iPad|iPod/.test(platform) || /Mac|iPhone|iPad|iPod/.test(userAgent)) {
         return 'macos';
     }
-    
+
     // Check for Windows
     if (/Win/.test(platform) || /Win/.test(userAgent) || /Windows/.test(userAgent)) {
         return 'windows';
     }
-    
+
+    // Check for Linux (desktop only — Android's user agent also contains
+    // "Linux", so it must be excluded here; there's no dedicated Android
+    // card on this page, so an Android visitor keeps falling through to the
+    // Windows default below, same as before this check was added).
+    if (!/Android/.test(userAgent) && (/Linux/.test(platform) || /Linux/.test(userAgent) || /X11/.test(userAgent))) {
+        return 'linux';
+    }
+
     // Default to Windows if unknown
     return 'windows';
 }
@@ -67,14 +75,21 @@ function showDownloadCard() {
     const os = detectOS();
     const windowsCard = document.getElementById('windows-download');
     const macosCard = document.getElementById('macos-download');
+    const linuxCard = document.getElementById('linux-download');
     const windowsOtherPlatform = document.getElementById('windows-other-platform');
     const macosOtherPlatform = document.getElementById('macos-other-platform');
+    const linuxOtherPlatform = document.getElementById('linux-other-platform');
     const heroBadges = document.getElementById('hero-badges');
-    
+
     if (os === 'macos' && macosCard) {
         macosCard.style.display = 'block';
         if (macosOtherPlatform) {
             macosOtherPlatform.style.display = 'block';
+        }
+    } else if (os === 'linux' && linuxCard) {
+        linuxCard.style.display = 'block';
+        if (linuxOtherPlatform) {
+            linuxOtherPlatform.style.display = 'block';
         }
     } else if (windowsCard) {
         windowsCard.style.display = 'block';
