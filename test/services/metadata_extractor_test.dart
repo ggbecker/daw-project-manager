@@ -162,6 +162,10 @@ void main() {
       expect(await dawTypeFor('.mx10'), 'Mixcraft');
     });
 
+    test('.zpj → Zrythm', () async {
+      expect(await dawTypeFor('.zpj'), 'Zrythm');
+    });
+
     test('unknown extension → null', () async {
       expect(await dawTypeFor('.unknown'), isNull);
     });

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 
 class ShallowScanResult {
@@ -55,6 +56,7 @@ class ScannerService {
     '.mx8', // Mixcraft 8
     '.mx9', // Mixcraft 9
     '.mx10', // Mixcraft 10
+    '.zpj', // Zrythm
   };
 
   // Extensions that are directories ("package bundles") rather than a single
@@ -185,8 +187,11 @@ class ScannerService {
     String rootPath, {
     List<String> ignoredPaths = const [],
   }) async* {
+    if (kDebugMode) debugPrint('[ScannerService] scanDirectory($rootPath): checking exists()...');
     final rootDir = Directory(rootPath);
-    if (!await rootDir.exists()) return;
+    final rootExists = await rootDir.exists();
+    if (kDebugMode) debugPrint('[ScannerService] scanDirectory($rootPath): exists() -> $rootExists');
+    if (!rootExists) return;
 
     // Normalize ignore paths for fast prefix matching.
     final ignoredBases = ignoredPaths.map((p0) => p.normalize(p0)).toList();
@@ -208,8 +213,11 @@ class ScannerService {
         continue;
       }
 
+      if (kDebugMode) debugPrint('[ScannerService] listing ${dir.path}...');
+      var entityCount = 0;
       final stream = dir.list(recursive: false, followLinks: false);
       await for (final entity in stream) {
+        entityCount++;
         if (isIgnoredPath(entity.path)) {
           continue;
         }
@@ -239,6 +247,9 @@ class ScannerService {
           // Continue traversal
           stack.add(entity);
         }
+      }
+      if (kDebugMode) {
+        debugPrint('[ScannerService] finished listing ${dir.path}: $entityCount entries');
       }
     }
   }

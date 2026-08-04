@@ -14,6 +14,7 @@ import '../providers/providers.dart';
 import '../utils/mobile_utils.dart';
 import '../utils/search_utils.dart';
 import '../utils/trina_grid_locale.dart';
+import 'widgets/trina_grid_menu_delegate.dart';
 import '../generated/l10n/app_localizations.dart';
 import '../providers/theme_provider.dart';
 import 'release_detail_page.dart';
@@ -648,6 +649,7 @@ class _ReleasesTableState extends ConsumerState<_ReleasesTable> {
     return TrinaGrid(
       columns: columns,
       rows: initialRows,
+      columnMenuDelegate: const FitAllColumnsMenuDelegate(),
       rowColorCallback: (TrinaRowColorContext ctx) {
         final isActivated = stateManager?.currentRow == ctx.row;
         if (isActivated) return rowSelectColor;

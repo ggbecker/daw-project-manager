@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/foundation.dart'
-    show kDebugMode, kIsWeb, listEquals, visibleForTesting;
+    show debugPrint, kDebugMode, kIsWeb, listEquals, visibleForTesting;
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as path; // 🚨 NOVO IMPORT
 import 'package:url_launcher/url_launcher.dart';
@@ -36,6 +36,7 @@ import '../utils/file_launcher.dart';
 import '../utils/search_utils.dart';
 import '../utils/route_observer.dart';
 import '../utils/trina_grid_locale.dart';
+import 'widgets/trina_grid_menu_delegate.dart';
 import 'project_detail_page.dart';
 import 'releases_tab_page.dart';
 import 'release_detail_page.dart';
@@ -55,7 +56,6 @@ import 'widgets/language_switcher.dart';
 import 'widgets/theme_switcher.dart';
 import 'widgets/mobile_mini_player.dart';
 import '../generated/l10n/app_localizations.dart';
-import '../main.dart' show navigatorKey;
 import 'session_actions.dart';
 import 'dialogs/create_project_dialog.dart';
 import 'project_templates_page.dart';
@@ -693,12 +693,16 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       // the slow part — per-file metadata extraction — begins below.
       final entitiesByRoot = <ScanRoot, List<FileSystemEntity>>{};
       for (final root in repo.getRoots()) {
+        if (kDebugMode) debugPrint('[_scanAll] enumerating root ${root.path}...');
         final entities = <FileSystemEntity>[];
         await for (final entity in scanner.scanDirectory(
           root.path,
           ignoredPaths: ignoredPaths,
         )) {
           entities.add(entity);
+        }
+        if (kDebugMode) {
+          debugPrint('[_scanAll] root ${root.path}: found ${entities.length} project files');
         }
         entitiesByRoot[root] = entities;
       }
@@ -7858,7 +7862,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       key: ValueKey(
         'trina_grid_${l10n.localeName}_${ref.watch(themeTypeProvider).name}_${excludeFoldersFromSort}_${mergeFoldersByName}_$alwaysShowSmartFolders',
       ),
-      columnMenuDelegate: _FitAllColumnsMenuDelegate(),
+      columnMenuDelegate: const FitAllColumnsMenuDelegate(),
       columns: columns,
       rows: initialRows,
       rowColorCallback: (TrinaRowColorContext ctx) {
@@ -11032,65 +11036,6 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
   }
 }
 
-/// Column menu delegate that extends the default TrinaGrid header context menu with
-/// an "Auto fit all columns" option that calls autoFitColumn on every column at once.
-class _FitAllColumnsMenuDelegate implements TrinaColumnMenuDelegate<dynamic> {
-  static const String _menuFitAll = 'fitAll';
-
-  @override
-  List<PopupMenuEntry<dynamic>> buildMenuItems({
-    required TrinaGridStateManager stateManager,
-    required TrinaColumn column,
-  }) {
-    final defaults = const TrinaColumnMenuDelegateDefault().buildMenuItems(
-      stateManager: stateManager,
-      column: column,
-    );
-    final context = navigatorKey.currentContext;
-    final label = context != null
-        ? AppLocalizations.of(context)!.autoFitAllColumns
-        : 'Auto fit all columns';
-    return [
-      ...defaults,
-      const PopupMenuDivider(),
-      PopupMenuItem<String>(
-        value: _menuFitAll,
-        child: Row(
-          children: [
-            const Icon(Icons.fit_screen, size: 16),
-            const SizedBox(width: 8),
-            Text(label),
-          ],
-        ),
-      ),
-    ];
-  }
-
-  @override
-  void onSelected({
-    required BuildContext context,
-    required TrinaGridStateManager stateManager,
-    required TrinaColumn column,
-    required bool mounted,
-    required dynamic selected,
-  }) {
-    if (selected == _menuFitAll) {
-      if (!mounted) return;
-      for (final col in stateManager.columns) {
-        stateManager.autoFitColumn(context, col);
-      }
-      stateManager.notifyResizingListeners();
-      return;
-    }
-    const TrinaColumnMenuDelegateDefault().onSelected(
-      context: context,
-      stateManager: stateManager,
-      column: column,
-      mounted: mounted,
-      selected: selected,
-    );
-  }
-}
 
 /// Shows a confirmation dialog before starting a session on a project.
 /// If another session is already active, offers to switch instead.

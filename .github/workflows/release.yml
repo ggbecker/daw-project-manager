@@ -705,6 +705,83 @@ jobs:
           path: ${{ steps.package.outputs.asset_path }}
           retention-days: 7
 
+      # AppImage — a third Linux distribution channel alongside the plain
+      # tarball above and the Flatpak bundle below, for users who want a
+      # single portable executable with no sandbox and no package manager
+      # involved. Built from the same bundle the tarball step just produced,
+      # so this doesn't re-run `flutter build linux`.
+      - name: Download appimagetool
+        run: |
+          wget -q -O appimagetool "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage"
+          chmod +x appimagetool
+
+      - name: Assemble AppDir
+        run: |
+          APPDIR="AppDir"
+          mkdir -p "$APPDIR/usr/bin"
+          cp -r build/linux/x64/release/bundle/. "$APPDIR/usr/bin/"
+          # appimagetool requires the .desktop and icon at the AppDir root
+          # (not just under usr/share/...) — reuse the same ones the Flatpak
+          # build already ships instead of maintaining a second copy.
+          cp flatpak/com.bandpassrecords.dpm.desktop "$APPDIR/com.bandpassrecords.dpm.desktop"
+          cp app_icon.png "$APPDIR/com.bandpassrecords.dpm.png"
+          cat > "$APPDIR/AppRun" <<'EOF'
+          #!/bin/sh
+          HERE="$(dirname "$(readlink -f "$0")")"
+          exec "$HERE/usr/bin/daw_project_manager" "$@"
+          EOF
+          chmod +x "$APPDIR/AppRun"
+
+      - name: Build AppImage
+        id: appimage
+        env:
+          # GitHub-hosted runners don't have FUSE, which appimagetool (itself
+          # shipped as an AppImage) needs to mount and run itself — this env
+          # var makes it extract-and-run instead, no FUSE required.
+          APPIMAGE_EXTRACT_AND_RUN: "1"
+        run: |
+          SANITIZED_REF="${{ steps.sanitize_ref.outputs.sanitized_ref }}"
+          ASSET_NAME="DAW_Project_Manager_Linux_${SANITIZED_REF}.AppImage"
+          ./appimagetool AppDir "$ASSET_NAME"
+          echo "asset_path=${ASSET_NAME}" >> "$GITHUB_OUTPUT"
+          echo "asset_name=${ASSET_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Generate AppImage SHA256 checksum
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          CHECKSUM=$(sha256sum "${{ steps.appimage.outputs.asset_path }}" | awk '{print $1}')
+          echo "${CHECKSUM}  ${{ steps.appimage.outputs.asset_name }}" > "${{ steps.appimage.outputs.asset_path }}.sha256"
+
+      - name: Upload AppImage Release Asset
+        if: startsWith(github.ref, 'refs/tags/v') && steps.find_release.outputs.upload_url != ''
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.find_release.outputs.upload_url }}
+          asset_path: ${{ steps.appimage.outputs.asset_path }}
+          asset_name: ${{ steps.appimage.outputs.asset_name }}
+          asset_content_type: application/vnd.appimage
+
+      - name: Upload AppImage SHA256 Checksum
+        if: startsWith(github.ref, 'refs/tags/v') && steps.find_release.outputs.upload_url != ''
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.find_release.outputs.upload_url }}
+          asset_path: ${{ steps.appimage.outputs.asset_path }}.sha256
+          asset_name: ${{ steps.appimage.outputs.asset_name }}.sha256
+          asset_content_type: text/plain
+
+      - name: Upload AppImage Artifact
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Linux_${{ steps.appimage.outputs.asset_name }}
+          path: ${{ steps.appimage.outputs.asset_path }}
+          retention-days: 7
+
   # Flatpak Build Job — runs flatpak-flutter (https://github.com/TheAppgineer/flatpak-flutter)
   # to vendor the Flutter SDK + every pubspec.lock package as hashed sources,
   # then builds flatpak/com.bandpassrecords.dpm.yml offline with
@@ -1097,10 +1174,10 @@ jobs:
           echo "### Note" >> $GITHUB_STEP_SUMMARY
           echo "This is an unsigned debug build for PR validation. Release builds with signing are only created for tagged releases." >> $GITHUB_STEP_SUMMARY
 
-  # Update the macOS download link on the gh-pages website after every tag release
+  # Update the macOS and Linux download links on the gh-pages website after every tag release
   update-gh-pages:
     name: Update gh-pages download link
-    needs: release_build_upload
+    needs: [release_build_upload, build_linux]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
 
@@ -1120,6 +1197,16 @@ jobs:
           echo "Updated download URLs to: ${NEW_URL}"
           grep -n "DAW_Project_Manager_macOS" index.html
 
+      - name: Update Linux AppImage download URL in index.html
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          NEW_URL="https://github.com/bandpassrecords/daw-project-manager/releases/download/${TAG}/DAW_Project_Manager_Linux_${TAG}.AppImage"
+          # Replace every hardcoded Linux AppImage URL (any previous version) with the new one
+          sed -i "s|https://github\.com/bandpassrecords/daw-project-manager/releases/download/[^/]*/DAW_Project_Manager_Linux_[^\"]*\.AppImage|${NEW_URL}|g" index.html
+          echo "Updated download URLs to: ${NEW_URL}"
+          grep -n "DAW_Project_Manager_Linux" index.html
+
       - name: Commit and push to gh-pages
         env:
           TAG: ${{ github.ref_name }}
@@ -1128,4 +1215,4 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add index.html
           git diff --staged --quiet && echo "No changes to commit" || \
-            git commit -m "Update macOS download link to ${TAG}" && git push
+            git commit -m "Update macOS/Linux download links to ${TAG}" && git push

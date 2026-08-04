@@ -42,6 +42,7 @@ String? getDawLogoPath(String? dawType) {
     'acid pro': 'acid-pro.png',
     'mixcraft': 'mixcraft.png',
     'rosegarden': 'rosegarden.png',
+    'zrythm': 'zrythm.png',
   };
 
   // Try exact match first

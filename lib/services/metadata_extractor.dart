@@ -198,6 +198,8 @@ class MetadataExtractor {
       case '.mx9':
       case '.mx10':
         return 'Mixcraft';
+      case '.zpj':
+        return 'Zrythm';
       default:
         return null;
     }
