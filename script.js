@@ -99,13 +99,41 @@ function showDownloadCard() {
     }
 }
 
+// Filter the Supported DAWs grid as the user types — matches against both
+// the DAW name and its file extension(s), so e.g. "als" finds Ableton Live.
+function setupDawSearch() {
+    const input = document.getElementById('daw-search-input');
+    const grid = document.getElementById('daws-grid');
+    const emptyMessage = document.getElementById('daw-search-empty');
+    if (!input || !grid) return;
+
+    const items = Array.from(grid.querySelectorAll('.daw-item'));
+
+    input.addEventListener('input', () => {
+        const query = input.value.trim().toLowerCase();
+        let visibleCount = 0;
+
+        items.forEach(item => {
+            const matches = query === '' || item.textContent.toLowerCase().includes(query);
+            item.style.display = matches ? '' : 'none';
+            if (matches) visibleCount++;
+        });
+
+        if (emptyMessage) {
+            emptyMessage.style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+    });
+}
+
 // Observe feature cards and other elements
 document.addEventListener('DOMContentLoaded', () => {
     // Show appropriate download card
     showDownloadCard();
-    
+
+    setupDawSearch();
+
     const animatedElements = document.querySelectorAll('.feature-card, .daw-item, .download-card');
-    
+
     animatedElements.forEach(el => {
         el.style.opacity = '0';
         el.style.transform = 'translateY(20px)';

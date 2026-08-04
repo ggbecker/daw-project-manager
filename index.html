@@ -187,7 +187,12 @@
             <h2 class="section-title">Supported DAWs</h2>
             <p class="section-subtitle">Automatically detects projects from all major Digital Audio Workstations</p>
 
-            <div class="daws-grid">
+            <div class="daws-search">
+                <input type="text" id="daw-search-input" class="daw-search-input" placeholder="Find your DAW…" autocomplete="off">
+                <p class="daws-search-empty" id="daw-search-empty" style="display: none;">No DAW matches your search.</p>
+            </div>
+
+            <div class="daws-grid" id="daws-grid">
                 <div class="daw-item">
                     <img src="resources/daw/logos/ableton-live.png" alt="Ableton Live" class="daw-logo">
                     <span>Ableton Live</span>
