@@ -110,3 +110,21 @@ Future<bool> launchResolvedPath(String path, bool isFolder) async {
   if (kDebugMode) print('[FileLauncher] Launch result: $launched');
   return launched;
 }
+
+/// Runs [binaryPath] directly with [projectPath] as its sole argument —
+/// used on Linux when the user has registered a launch-command override for
+/// a DAW (see Settings), bypassing `xdg-open`/the MIME-association database
+/// entirely. Detached so the DAW process outlives this app if it's closed.
+Future<bool> launchWithBinary(String binaryPath, String projectPath) async {
+  try {
+    await Process.start(
+      binaryPath,
+      [projectPath],
+      mode: ProcessStartMode.detached,
+    );
+    return true;
+  } catch (e) {
+    if (kDebugMode) print('[FileLauncher] launchWithBinary failed: $e');
+    return false;
+  }
+}

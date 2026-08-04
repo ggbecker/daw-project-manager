@@ -58,6 +58,7 @@ import 'widgets/mobile_mini_player.dart';
 import '../generated/l10n/app_localizations.dart';
 import 'session_actions.dart';
 import 'dialogs/create_project_dialog.dart';
+import 'dialogs/daw_launch_command_dialog.dart';
 import 'project_templates_page.dart';
 import '../models/pending_folder.dart';
 
@@ -6180,6 +6181,46 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       }
       return;
     }
+
+    // Linux has no reliable OS-level file-type association for most DAWs
+    // (see Settings > DAW Locations), so a registered binary override, if
+    // any, always takes priority over the OS-default-handler path below.
+    if (Platform.isLinux && project.dawType != null) {
+      final repo = await ref.read(repositoryProvider.future);
+      final binaryPath = repo.getDawLaunchCommand(project.dawType!);
+      if (binaryPath != null) {
+        if (!File(binaryPath).existsSync()) {
+          if (!mounted) return;
+          await showDawLaunchCommandDialog(
+            context,
+            dawType: project.dawType!,
+            currentPath: binaryPath,
+            pathMissing: true,
+          );
+          return;
+        }
+        final launched = await FileLauncher.launchWithBinary(
+          binaryPath,
+          project.filePath,
+        );
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              launched
+                  ? AppLocalizations.of(
+                      context,
+                    )!.launchingProject(project.displayName)
+                  : AppLocalizations.of(
+                      context,
+                    )!.failedToLaunchProject(project.displayName),
+            ),
+          ),
+        );
+        return;
+      }
+    }
+
     final success = await FileLauncher.launchProject(project.filePath);
 
     if (success) {
@@ -6194,18 +6235,25 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
           ),
         );
       }
+      return;
+    }
+
+    if (!mounted) return;
+    if (Platform.isLinux && project.dawType != null) {
+      // In-context first-run prompt: no override configured yet and the OS
+      // default handler just failed — offer to set one up right here
+      // instead of a dead-end "failed to launch" snackbar.
+      await showDawLaunchCommandDialog(context, dawType: project.dawType!);
     } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(
-                context,
-              )!.failedToLaunchProject(project.displayName),
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!.failedToLaunchProject(
+              project.displayName,
             ),
           ),
-        );
-      }
+        ),
+      );
     }
   }
 

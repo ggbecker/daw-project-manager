@@ -25,6 +25,7 @@ import '../utils/file_launcher.dart';
 import '../utils/mobile_utils.dart';
 import '../utils/phase_colors.dart';
 import 'dashboard_page.dart' show appVersion;
+import 'dialogs/daw_launch_command_dialog.dart';
 import 'google_drive_sync_page.dart' show GoogleDriveSyncSection;
 import 'metadata_extraction_info_page.dart';
 import 'notification_settings_page.dart' show WorkTimerSection;
@@ -50,6 +51,11 @@ enum SettingsSection {
   dangerZone,
   shortcuts,
   about,
+  // Linux-only (see Platform.isLinux gates on this section's _NavItem/
+  // _sectionBuilders/_searchIndex entries below) — kept last so the fixed
+  // index alignment the other sections rely on isn't disturbed when this
+  // one is absent from those lists on non-Linux platforms.
+  dawLaunchCommands,
 }
 
 /// Single desktop settings hub, Chrome-settings-style: the left nav rail
@@ -807,6 +813,14 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         _NavItem(icon: Icons.warning_amber_rounded, label: l10n.pathsSettingsDangerZoneTitle),
         _NavItem(icon: Icons.keyboard_outlined, label: l10n.keyboardShortcuts, newGroup: true),
         _NavItem(icon: Icons.info_outline, label: l10n.aboutTabLabel),
+        // Linux only — Windows/macOS already have working OS file
+        // association, so there's nothing for this section to do there.
+        if (Platform.isLinux)
+          _NavItem(
+            icon: Icons.terminal_outlined,
+            label: l10n.dawLaunchCommandsTabLabel,
+            newGroup: true,
+          ),
       ];
 
   List<Widget Function(AppLocalizations)> get _sectionBuilders => [
@@ -820,6 +834,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         _buildDangerZoneSection,
         _buildShortcutsSection,
         _buildAboutSection,
+        if (Platform.isLinux) _buildDawLaunchCommandsSection,
       ];
 
   /// Flat index of searchable setting labels, used only to power the search
@@ -869,6 +884,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         _SearchEntry(9, Icons.web, l10n.website, null),
         _SearchEntry(9, Icons.menu_book_outlined, l10n.menuDocumentation, null),
         _SearchEntry(9, Icons.bug_report_outlined, l10n.shareDiagnosticLog, null),
+        if (Platform.isLinux) ...[
+          _SearchEntry(10, Icons.terminal_outlined, l10n.dawLaunchCommandsTabLabel, l10n.dawLaunchCommandsSectionDescription),
+        ],
       ];
 
   @override
@@ -1682,6 +1700,53 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             ],
           ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildDawLaunchCommandsSection(AppLocalizations l10n) {
+    final launchCommands =
+        ref.watch(dawLaunchCommandsProvider).value ?? const <String, String>{};
+    final projects = ref.watch(allProjectsStreamProvider).value ?? const [];
+    final dawTypes =
+        <String>{
+            for (final project in projects)
+              if (project.dawType != null) project.dawType!,
+            ...launchCommands.keys,
+          }.toList()
+          ..sort();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.dawLaunchCommandsSectionDescription,
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        const SizedBox(height: 12),
+        if (dawTypes.isEmpty)
+          Text(
+            l10n.dawLaunchCommandsEmptyState,
+            style: Theme.of(context).textTheme.bodySmall,
+          )
+        else
+          Card(
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                for (final dawType in dawTypes) ...[
+                  if (dawType != dawTypes.first) const Divider(height: 1),
+                  _DawLaunchCommandTile(
+                    dawType: dawType,
+                    configuredPath: launchCommands[dawType],
+                    notConfiguredLabel: l10n.dawLaunchCommandNotConfigured,
+                    missingTooltip: l10n.dawLaunchCommandMissingTooltip,
+                    configureLabel: l10n.dawLaunchCommandConfigureButton,
+                  ),
+                ],
+              ],
+            ),
+          ),
       ],
     );
   }
@@ -2766,6 +2831,65 @@ class _MixdownDawTile extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+class _DawLaunchCommandTile extends StatelessWidget {
+  final String dawType;
+  final String? configuredPath;
+  final String notConfiguredLabel;
+  final String missingTooltip;
+  final String configureLabel;
+
+  const _DawLaunchCommandTile({
+    required this.dawType,
+    required this.configuredPath,
+    required this.notConfiguredLabel,
+    required this.missingTooltip,
+    required this.configureLabel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final logoPath = getDawLogoPath(dawType);
+    final path = configuredPath;
+    final missing = path != null && !File(path).existsSync();
+
+    return ListTile(
+      leading: logoPath != null
+          ? Image.asset(logoPath, width: 24, height: 24)
+          : const Icon(Icons.piano_outlined),
+      title: Text(dawType),
+      subtitle: Text(
+        path ?? notConfiguredLabel,
+        style: Theme.of(context).textTheme.bodySmall,
+        overflow: TextOverflow.ellipsis,
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (missing)
+            Tooltip(
+              message: missingTooltip,
+              child: Icon(
+                Icons.warning_amber_rounded,
+                color: Colors.orange.shade400,
+                size: 20,
+              ),
+            ),
+          const SizedBox(width: 8),
+          OutlinedButton(
+            onPressed: () => showDawLaunchCommandDialog(
+              context,
+              dawType: dawType,
+              currentPath: path,
+              pathMissing: missing,
+            ),
+            child: Text(configureLabel),
+          ),
+        ],
+      ),
     );
   }
 }

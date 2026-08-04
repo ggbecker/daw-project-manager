@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
+
 class DetectedDaw {
   final String name;
   final String executablePath;
@@ -16,6 +18,7 @@ class DawDetector {
   static Future<List<DetectedDaw>> detectInstalledDaws() async {
     if (Platform.isWindows) return _detectWindows();
     if (Platform.isMacOS) return _detectMacOS();
+    if (Platform.isLinux) return _detectLinux();
     return [];
   }
 
@@ -144,6 +147,155 @@ class DawDetector {
     return results;
   }
 
+  // Linux has no install-location convention to guess paths from the way
+  // Windows/macOS do above, so detection instead reads .desktop files —
+  // the one signal that reliably points at a real, launchable binary for
+  // both package-manager-installed and AppImageLauncher-integrated DAWs.
+  // Curated to DAWs that plausibly ship a Linux build/AppImage at all
+  // (unlike the full 28-DAW extension list in metadata_extractor.dart,
+  // most of which — Logic Pro, Pro Tools, Cubase, FL Studio, etc. — never
+  // have a Linux .desktop entry to find).
+  @visibleForTesting
+  static final List<LinuxDawPattern> linuxDawPatterns = [
+    LinuxDawPattern('Bitwig Studio', RegExp(r'^Bitwig Studio', caseSensitive: false)),
+    LinuxDawPattern('Reaper', RegExp(r'^REAPER', caseSensitive: false)),
+    LinuxDawPattern('Ardour', RegExp(r'^Ardour', caseSensitive: false)),
+    LinuxDawPattern('LMMS', RegExp(r'^LMMS', caseSensitive: false)),
+    LinuxDawPattern('Audacity', RegExp(r'^Audacity', caseSensitive: false)),
+    LinuxDawPattern('Qtractor', RegExp(r'^Qtractor', caseSensitive: false)),
+    LinuxDawPattern('Rosegarden', RegExp(r'^Rosegarden', caseSensitive: false)),
+    LinuxDawPattern('Renoise', RegExp(r'^Renoise', caseSensitive: false)),
+    LinuxDawPattern('Zrythm', RegExp(r'^Zrythm', caseSensitive: false)),
+    LinuxDawPattern('Reason', RegExp(r'^Reason$', caseSensitive: false)),
+    LinuxDawPattern('Studio One', RegExp(r'^Studio One', caseSensitive: false)),
+    LinuxDawPattern('Waveform', RegExp(r'^Waveform', caseSensitive: false)),
+    LinuxDawPattern('MAGDA', RegExp(r'^MAGDA', caseSensitive: false)),
+  ];
+
+  static List<String> _linuxDesktopFileDirs() {
+    final home = Platform.environment['HOME'];
+    final dirs = <String>[
+      '/usr/share/applications',
+      '/var/lib/flatpak/exports/share/applications',
+    ];
+    if (home != null && home.isNotEmpty) {
+      dirs.add('$home/.local/share/applications');
+      // Per-user Flatpak installs export desktop files here, not under
+      // ~/.var/app (that's each sandboxed app's own private data dir).
+      dirs.add('$home/.local/share/flatpak/exports/share/applications');
+    }
+    return dirs;
+  }
+
+  static Future<List<DetectedDaw>> _detectLinux() async {
+    final results = <DetectedDaw>[];
+    final seenNames = <String>{};
+
+    for (final dirPath in _linuxDesktopFileDirs()) {
+      final dir = Directory(dirPath);
+      if (!dir.existsSync()) continue;
+
+      List<FileSystemEntity> entries;
+      try {
+        entries = dir.listSync(recursive: false, followLinks: false);
+      } catch (_) {
+        continue;
+      }
+
+      for (final entry in entries) {
+        if (entry is! File || !entry.path.endsWith('.desktop')) continue;
+        String content;
+        try {
+          content = entry.readAsStringSync();
+        } catch (_) {
+          continue;
+        }
+        final detected = parseLinuxDesktopEntry(content, linuxDawPatterns);
+        if (detected == null || !seenNames.add(detected.name)) continue;
+        results.add(detected);
+      }
+    }
+
+    return results;
+  }
+}
+
+class LinuxDawPattern {
+  final String canonicalName;
+  final RegExp namePattern;
+  const LinuxDawPattern(this.canonicalName, this.namePattern);
+}
+
+/// Parses a single .desktop file's contents (INI-like `key=value` format)
+/// and returns a [DetectedDaw] if its `[Desktop Entry]` `Name=` matches one
+/// of [patterns] and it has a non-empty `Exec=`. Returns null for
+/// non-matching, hidden (`NoDisplay=true`/`Hidden=true`), or malformed
+/// entries. Pure and filesystem-free so it's directly unit-testable.
+@visibleForTesting
+DetectedDaw? parseLinuxDesktopEntry(String content, List<LinuxDawPattern> patterns) {
+  String? name;
+  String? exec;
+  var hidden = false;
+  var inDesktopEntrySection = false;
+
+  for (final rawLine in content.split('\n')) {
+    final line = rawLine.trim();
+    if (line.isEmpty || line.startsWith('#')) continue;
+    if (line.startsWith('[')) {
+      inDesktopEntrySection = line == '[Desktop Entry]';
+      continue;
+    }
+    if (!inDesktopEntrySection) continue;
+
+    final eq = line.indexOf('=');
+    if (eq <= 0) continue;
+    final key = line.substring(0, eq).trim();
+    final value = line.substring(eq + 1).trim();
+
+    switch (key) {
+      case 'Name':
+        name ??= value;
+      case 'Exec':
+        exec ??= value;
+      case 'NoDisplay':
+      case 'Hidden':
+        if (value.toLowerCase() == 'true') hidden = true;
+    }
+  }
+
+  if (hidden || name == null || exec == null || exec.isEmpty) return null;
+
+  String? matchedName;
+  for (final pattern in patterns) {
+    if (pattern.namePattern.hasMatch(name)) {
+      matchedName = pattern.canonicalName;
+      break;
+    }
+  }
+  if (matchedName == null) return null;
+
+  final binary = extractLinuxExecPath(exec);
+  if (binary.isEmpty) return null;
+
+  return DetectedDaw(name: matchedName, executablePath: binary);
+}
+
+/// Extracts the executable path from a .desktop `Exec=` value — the first
+/// (optionally quoted) token, with any trailing field-code placeholders
+/// (`%f`, `%F`, `%u`, `%U`, etc.) and arguments dropped. Doesn't handle an
+/// `env VAR=val`-prefixed `Exec=` (rare for the DAWs this targets).
+@visibleForTesting
+String extractLinuxExecPath(String execValue) {
+  final trimmed = execValue.trim();
+  if (trimmed.isEmpty) return '';
+
+  if (trimmed.startsWith('"')) {
+    final end = trimmed.indexOf('"', 1);
+    return end == -1 ? trimmed.substring(1).trim() : trimmed.substring(1, end).trim();
+  }
+
+  final spaceIdx = trimmed.indexOf(' ');
+  return (spaceIdx == -1 ? trimmed : trimmed.substring(0, spaceIdx)).trim();
 }
 
 class _WindowsCandidate {

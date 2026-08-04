@@ -411,6 +411,56 @@ void main() {
     );
   });
 
+  group('ProjectRepository.DAW launch commands', () {
+    test('getDawLaunchCommand returns null when not configured', () async {
+      final repo = await HiveTestHelper.createRepository();
+      expect(repo.getDawLaunchCommand('Zrythm'), isNull);
+    });
+
+    test('setDawLaunchCommand saves a trimmed path per DAW', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.setDawLaunchCommand('Zrythm', '  /opt/zrythm/zrythm  ');
+      expect(repo.getDawLaunchCommand('Zrythm'), '/opt/zrythm/zrythm');
+      expect(repo.getDawLaunchCommands(), {'Zrythm': '/opt/zrythm/zrythm'});
+    });
+
+    test('setDawLaunchCommand keeps entries for other DAWs independent', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.setDawLaunchCommand('Zrythm', '/opt/zrythm/zrythm');
+      await repo.setDawLaunchCommand('Ardour', '/opt/Ardour/Ardour.AppImage');
+      expect(repo.getDawLaunchCommands(), {
+        'Zrythm': '/opt/zrythm/zrythm',
+        'Ardour': '/opt/Ardour/Ardour.AppImage',
+      });
+    });
+
+    test('setDawLaunchCommand with null removes only that DAW\'s entry', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.setDawLaunchCommand('Zrythm', '/opt/zrythm/zrythm');
+      await repo.setDawLaunchCommand('Ardour', '/opt/Ardour/Ardour.AppImage');
+      await repo.setDawLaunchCommand('Zrythm', null);
+      expect(repo.getDawLaunchCommand('Zrythm'), isNull);
+      expect(repo.getDawLaunchCommands(), {
+        'Ardour': '/opt/Ardour/Ardour.AppImage',
+      });
+    });
+
+    test('setDawLaunchCommand with an empty string removes the entry', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.setDawLaunchCommand('Zrythm', '/opt/zrythm/zrythm');
+      await repo.setDawLaunchCommand('Zrythm', '   ');
+      expect(repo.getDawLaunchCommand('Zrythm'), isNull);
+      expect(repo.getDawLaunchCommands(), isEmpty);
+    });
+
+    test('removing the last entry deletes the underlying setting', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.setDawLaunchCommand('Zrythm', '/opt/zrythm/zrythm');
+      await repo.setDawLaunchCommand('Zrythm', null);
+      expect(repo.appSettingsBox.get('dawLaunchCommandsByDaw'), isNull);
+    });
+  });
+
   group('ProjectRepository.pending folders', () {
     test('getPendingFolders returns empty list when not configured', () async {
       final repo = await HiveTestHelper.createRepository();

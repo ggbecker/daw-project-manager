@@ -50,6 +50,21 @@ class FileLauncher {
   static Future<bool> launchProject(String pathOrBookmark) async =>
       launch(pathOrBookmark, isFolder: false);
 
+  /// Launch [projectPath] via a specific [binaryPath] directly, bypassing
+  /// the OS default-application handler entirely. Linux-only in practice —
+  /// see the "Launch in DAW" binary override in Settings.
+  static Future<bool> launchWithBinary(
+    String binaryPath,
+    String projectPath,
+  ) async {
+    try {
+      return await platform.launchWithBinary(binaryPath, projectPath);
+    } catch (e) {
+      if (kDebugMode) print('[FileLauncher] Error: $e');
+      return false;
+    }
+  }
+
   /// Creates a bookmark for [path] for use on macOS (sandbox).
   /// On other platforms returns [path] unchanged.
   ///
