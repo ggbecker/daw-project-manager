@@ -113,7 +113,8 @@
   "noReleasesFound": "Релизы не найдены",
   "noPlaylistsFound": "Плейлисты не найдены",
   "tryDifferentSearch": "Попробуйте другой поисковый запрос",
-  "deepScanConfirm": "Глубокое сканирование извлекает полные метаданные из файлов проекта:\n• BPM (ударов в минуту)\n• Музыкальная тональность\n• Версия DAW\n• Заметки проекта (только Reaper)\nПоддерживается: Ableton Live, Bitwig Studio, Cubase, Nuendo, FL Studio, MAGDA и Reaper.\n\nЭто медленнее обычного сканирования и может занять некоторое время. Продолжить?",
+  "deepScanConfirm": "Глубокое сканирование извлекает полные метаданные из файлов проекта:\n• BPM (ударов в минуту)\n• Музыкальная тональность\n• Версия DAW\n• Заметки проекта (если поддерживается)\n\nЭто медленнее обычного сканирования и может занять некоторое время. Продолжить?",
+  "deepScanViewSupportedDaws": "Просмотреть поддерживаемые DAW и поля",
   "deepScanOnlyUnscanned": "Сканировать только проекты без метаданных",
   "metadataExtractionTitle": "Извлечение метаданных",
   "metadataExtractionSubtitle": "Посмотрите, какие данные поддерживает каждая DAW",
@@ -225,6 +226,17 @@
   "selectAllProjects": "Выбрать все проекты",
   "switchingProfiles": "Переключение профилей...",
   "scanningProjects": "Сканирование проектов...",
+  "scanProgressLabel": "Загрузка проекта {current} из {total}…",
+  "@scanProgressLabel": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "search": "Поиск",
   "projectsTab": "Проекты",
   "releasesTab": "Релизы",
@@ -447,6 +459,23 @@
       }
     }
   },
+  "scanFailuresSnackbar": "{count} проект{plural} не удалось загрузить.",
+  "@scanFailuresSnackbar": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      }
+    }
+  },
+  "scanFailuresSnackbarAction": "Подробнее",
+  "@scanFailuresSnackbarAction": {},
+  "scanFailuresDialogTitle": "Ошибки Сканирования",
+  "@scanFailuresDialogTitle": {},
+  "scanFailuresDialogIntro": "Эти файлы не удалось прочитать во время сканирования (возможно, они были удалены, перемещены или заблокированы другой программой):",
+  "@scanFailuresDialogIntro": {},
   "projectsSelected": "{count} проект{plural} выбран{plural}",
   "@projectsSelected": {
     "placeholders": {
@@ -1871,7 +1900,7 @@
   "musicPlayerTab": "Музыкальный плеер",
   "previewAudioChangedRefreshing": "Аудио предпросмотра изменилось на диске — обновление формы волны…",
   "audioFileChangedRefreshing": "Аудиофайл изменился на диске — обновление формы волны…",
-  "autoFitAllColumns": "Автоподбор ширины всех столбцов",
+  "autoFitAllColumns": "Автоподбор столбцов",
   "uploadAutoDetectedPreviewSongs": "Загружать автоматически найденные превью-треки",
   "uploadAutoDetectedPreviewSongsSubtitle": "Включать треки, автоматически найденные сканером, а не только заданные вручную.",
   "monoGenerating": "Моно…",
@@ -1910,6 +1939,7 @@
   "noResultsForFilterHint": "Попробуйте изменить поиск или фильтры.",
   "noProjectsFound": "Проекты не найдены",
   "noProjectsFoundHint": "Добавьте корневую папку в настройках, чтобы начать.",
+  "noProjectsFoundInFoldersHint": "Попробуйте добавить другую папку с проектами DAW.",
   "queueTab": "Задачи",
   "queueSearchHint": "Поиск задач...",
   "queueNoPendingTasks": "Всё готово!",
@@ -2458,6 +2488,8 @@
   "@createProjectSchemeDate": {},
   "createProjectSchemeCustom": "Произвольное",
   "@createProjectSchemeCustom": {},
+  "createProjectSchemeRemix": "Ремикс",
+  "@createProjectSchemeRemix": {},
   "createProjectArtistName": "Имя исполнителя",
   "@createProjectArtistName": {},
   "createProjectTrackName": "Название трека",
@@ -2466,6 +2498,12 @@
   "@createProjectCustomName": {},
   "createProjectAddArtist": "Добавить исполнителя",
   "@createProjectAddArtist": {},
+  "createProjectOriginalArtist": "Оригинальный исполнитель",
+  "@createProjectOriginalArtist": {},
+  "createProjectRemixerName": "Ремиксер",
+  "@createProjectRemixerName": {},
+  "createProjectAddRemixer": "Добавить ремиксера",
+  "@createProjectAddRemixer": {},
   "createProjectSelectDaw": "Открыть в DAW",
   "@createProjectSelectDaw": {},
   "createProjectSelectDawHint": "Выберите DAW для этого проекта",

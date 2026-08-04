@@ -25,6 +25,8 @@ import '../utils/app_paths.dart';
 import '../utils/daw_logo.dart';
 import '../utils/file_launcher.dart';
 import '../utils/mobile_utils.dart';
+import '../utils/trina_grid_locale.dart';
+import 'widgets/trina_grid_menu_delegate.dart';
 import 'dialogs/create_project_dialog.dart';
 import 'widgets/desktop_title_bar.dart';
 import 'widgets/filter_dropdown.dart';
@@ -752,7 +754,6 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
         field: 'dawType',
         type: TrinaColumnType.text(),
         enableEditingMode: false,
-        enableContextMenu: false,
         width: 140,
         minWidth: 100,
         renderer: (ctx) {
@@ -782,7 +783,6 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
         field: 'bpm',
         type: TrinaColumnType.text(),
         enableEditingMode: false,
-        enableContextMenu: false,
         width: 90,
         minWidth: 80,
       ),
@@ -791,7 +791,6 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
         field: 'key',
         type: TrinaColumnType.text(),
         enableEditingMode: false,
-        enableContextMenu: false,
         width: 150,
         minWidth: 120,
         renderer: (ctx) {
@@ -859,7 +858,6 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
           compare: compareTemplateModifiedCellValues,
         ),
         enableEditingMode: false,
-        enableContextMenu: false,
         width: 200,
         minWidth: 160,
         renderer: (ctx) {
@@ -1208,6 +1206,8 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
                                   ),
                                   columns: _buildColumns(l10n, orderedIds),
                                   rows: _buildRows(filtered),
+                                  columnMenuDelegate:
+                                      const FitAllColumnsMenuDelegate(),
                                   rowColorCallback: (TrinaRowColorContext ctx) {
                                     final isActivated =
                                         _tableStateManager?.currentRow ==
@@ -1227,6 +1227,9 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
                                     );
                                   },
                                   configuration: TrinaGridConfiguration(
+                                    localeText: trinaGridLocaleTextFor(
+                                      context,
+                                    ),
                                     style: TrinaGridStyleConfig(
                                       gridBackgroundColor:
                                           activeTheme.cardColor,
@@ -1339,6 +1342,7 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
                 label: Text(l10n.deleteSelectedTemplates),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red.shade700,
+                  foregroundColor: Colors.white,
                 ),
                 onPressed: () => _deleteSelectedTemplates(selected),
               ),

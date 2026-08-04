@@ -1,12 +1,37 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hive_ce/hive.dart';
 import 'package:path/path.dart' as p;
 import 'package:daw_project_manager/models/music_project.dart';
 import 'package:daw_project_manager/models/pending_folder.dart';
+import 'package:daw_project_manager/models/profile.dart';
+import 'package:daw_project_manager/models/project_event.dart';
 import 'package:daw_project_manager/models/release.dart';
+import 'package:daw_project_manager/repository/profile_repository.dart';
+import 'package:daw_project_manager/repository/project_repository.dart';
 import 'package:daw_project_manager/services/backup_service.dart';
 import '../helpers/hive_test_helper.dart';
 import '../helpers/test_factories.dart';
+
+/// A [FileSystemEntity] whose [stat] always throws — used to simulate a file
+/// that vanishes or becomes unreadable mid-scan (deleted, locked by another
+/// program, etc.) without relying on flaky, platform-specific ways to
+/// actually break a real file on disk. Only [path] and [stat] are ever
+/// touched by the code under test; every other member routes through
+/// [noSuchMethod] since it's never called on this path.
+class _ThrowingFileSystemEntity implements FileSystemEntity {
+  @override
+  final String path;
+
+  _ThrowingFileSystemEntity(this.path);
+
+  @override
+  Future<FileStat> stat() =>
+      throw const FileSystemException('simulated stat failure');
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
 
 void main() {
   late Directory tempDir;
@@ -145,9 +170,7 @@ void main() {
   group('ProjectRepository.getByPath', () {
     test('returns project for matching path', () async {
       final repo = await HiveTestHelper.createRepository();
-      final project = TestFactories.makeProject(
-        filePath: '/music/project.als',
-      );
+      final project = TestFactories.makeProject(filePath: '/music/project.als');
       await repo.restoreProject(project);
 
       expect(repo.getByPath('/music/project.als'), isNotNull);
@@ -176,11 +199,19 @@ void main() {
   });
 
   group('ProjectRepository.custom phases', () {
-    test('getCustomPhases returns the 5 default phases when not configured', () async {
-      final repo = await HiveTestHelper.createRepository();
-      expect(repo.getCustomPhases(),
-          ['Idea', 'Arranging', 'Mixing', 'Mastering', 'Finished']);
-    });
+    test(
+      'getCustomPhases returns the 5 default phases when not configured',
+      () async {
+        final repo = await HiveTestHelper.createRepository();
+        expect(repo.getCustomPhases(), [
+          'Idea',
+          'Arranging',
+          'Mixing',
+          'Mastering',
+          'Finished',
+        ]);
+      },
+    );
 
     test('setCustomPhases / getCustomPhases round-trip', () async {
       final repo = await HiveTestHelper.createRepository();
@@ -191,8 +222,13 @@ void main() {
     test('getCustomPhases falls back to defaults on malformed JSON', () async {
       final repo = await HiveTestHelper.createRepository();
       await repo.appSettingsBox.put('test-profile_phases', 'not valid json{{');
-      expect(repo.getCustomPhases(),
-          ['Idea', 'Arranging', 'Mixing', 'Mastering', 'Finished']);
+      expect(repo.getCustomPhases(), [
+        'Idea',
+        'Arranging',
+        'Mixing',
+        'Mastering',
+        'Finished',
+      ]);
     });
 
     test('getCustomPhases returns an unmodifiable list', () async {
@@ -224,10 +260,13 @@ void main() {
   });
 
   group('ProjectRepository.finished phases', () {
-    test('getFinishedPhases defaults to {"Finished"} when not configured', () async {
-      final repo = await HiveTestHelper.createRepository();
-      expect(repo.getFinishedPhases(), {'Finished'});
-    });
+    test(
+      'getFinishedPhases defaults to {"Finished"} when not configured',
+      () async {
+        final repo = await HiveTestHelper.createRepository();
+        expect(repo.getFinishedPhases(), {'Finished'});
+      },
+    );
 
     test('setFinishedPhases / getFinishedPhases round-trip', () async {
       final repo = await HiveTestHelper.createRepository();
@@ -250,37 +289,52 @@ void main() {
   });
 
   group('ProjectRepository.custom mixdown folders', () {
-    test('getCustomMixdownFolders returns empty list when not configured', () async {
-      final repo = await HiveTestHelper.createRepository();
-      expect(repo.getCustomMixdownFolders(), isEmpty);
-    });
+    test(
+      'getCustomMixdownFolders returns empty list when not configured',
+      () async {
+        final repo = await HiveTestHelper.createRepository();
+        expect(repo.getCustomMixdownFolders(), isEmpty);
+      },
+    );
 
-    test('setCustomMixdownFolders saves trimmed, non-empty values in order', () async {
-      final repo = await HiveTestHelper.createRepository();
-      await repo.setCustomMixdownFolders(['  Exports  ', 'Mixdowns', '']);
-      expect(repo.getCustomMixdownFolders(), ['Exports', 'Mixdowns']);
-    });
+    test(
+      'setCustomMixdownFolders saves trimmed, non-empty values in order',
+      () async {
+        final repo = await HiveTestHelper.createRepository();
+        await repo.setCustomMixdownFolders(['  Exports  ', 'Mixdowns', '']);
+        expect(repo.getCustomMixdownFolders(), ['Exports', 'Mixdowns']);
+      },
+    );
 
-    test('setCustomMixdownFolders with empty list deletes the setting', () async {
-      final repo = await HiveTestHelper.createRepository();
-      await repo.setCustomMixdownFolders(['Exports']);
-      await repo.setCustomMixdownFolders([]);
-      expect(repo.getCustomMixdownFolders(), isEmpty);
-    });
+    test(
+      'setCustomMixdownFolders with empty list deletes the setting',
+      () async {
+        final repo = await HiveTestHelper.createRepository();
+        await repo.setCustomMixdownFolders(['Exports']);
+        await repo.setCustomMixdownFolders([]);
+        expect(repo.getCustomMixdownFolders(), isEmpty);
+      },
+    );
 
-    test('setCustomMixdownFolders with only blank entries deletes the setting', () async {
-      final repo = await HiveTestHelper.createRepository();
-      await repo.setCustomMixdownFolders(['Exports']);
-      await repo.setCustomMixdownFolders(['  ', '']);
-      expect(repo.getCustomMixdownFolders(), isEmpty);
-    });
+    test(
+      'setCustomMixdownFolders with only blank entries deletes the setting',
+      () async {
+        final repo = await HiveTestHelper.createRepository();
+        await repo.setCustomMixdownFolders(['Exports']);
+        await repo.setCustomMixdownFolders(['  ', '']);
+        expect(repo.getCustomMixdownFolders(), isEmpty);
+      },
+    );
 
-    test('migrates the legacy single-folder key when the new key is absent', () async {
-      final repo = await HiveTestHelper.createRepository();
-      // Simulate a DB written before the multi-folder feature was added.
-      await repo.appSettingsBox.put('customMixdownFolder', 'LegacyMixdowns');
-      expect(repo.getCustomMixdownFolders(), ['LegacyMixdowns']);
-    });
+    test(
+      'migrates the legacy single-folder key when the new key is absent',
+      () async {
+        final repo = await HiveTestHelper.createRepository();
+        // Simulate a DB written before the multi-folder feature was added.
+        await repo.appSettingsBox.put('customMixdownFolder', 'LegacyMixdowns');
+        expect(repo.getCustomMixdownFolders(), ['LegacyMixdowns']);
+      },
+    );
 
     test('new multi-folder key takes precedence over the legacy key', () async {
       final repo = await HiveTestHelper.createRepository();
@@ -291,45 +345,70 @@ void main() {
   });
 
   group('ProjectRepository.custom mixdown folders by DAW', () {
-    test('getCustomMixdownFoldersByDaw returns empty map when not configured', () async {
-      final repo = await HiveTestHelper.createRepository();
-      expect(repo.getCustomMixdownFoldersByDaw(), isEmpty);
-    });
+    test(
+      'getCustomMixdownFoldersByDaw returns empty map when not configured',
+      () async {
+        final repo = await HiveTestHelper.createRepository();
+        expect(repo.getCustomMixdownFoldersByDaw(), isEmpty);
+      },
+    );
 
-    test('setCustomMixdownFoldersByDaw saves trimmed, non-empty values per DAW', () async {
-      final repo = await HiveTestHelper.createRepository();
-      await repo.setCustomMixdownFoldersByDaw({
-        'Ableton Live': ['  Exports  ', 'Mixdowns', ''],
-        'FL Studio': ['Renders'],
-      });
-      expect(repo.getCustomMixdownFoldersByDaw(), {
-        'Ableton Live': ['Exports', 'Mixdowns'],
-        'FL Studio': ['Renders'],
-      });
-    });
+    test(
+      'setCustomMixdownFoldersByDaw saves trimmed, non-empty values per DAW',
+      () async {
+        final repo = await HiveTestHelper.createRepository();
+        await repo.setCustomMixdownFoldersByDaw({
+          'Ableton Live': ['  Exports  ', 'Mixdowns', ''],
+          'FL Studio': ['Renders'],
+        });
+        expect(repo.getCustomMixdownFoldersByDaw(), {
+          'Ableton Live': ['Exports', 'Mixdowns'],
+          'FL Studio': ['Renders'],
+        });
+      },
+    );
 
-    test('setCustomMixdownFoldersByDaw drops DAW keys left with no folders after trimming', () async {
-      final repo = await HiveTestHelper.createRepository();
-      await repo.setCustomMixdownFoldersByDaw({
-        'Ableton Live': ['Exports'],
-        'FL Studio': ['  ', ''],
-      });
-      expect(repo.getCustomMixdownFoldersByDaw(), {'Ableton Live': ['Exports']});
-    });
+    test(
+      'setCustomMixdownFoldersByDaw drops DAW keys left with no folders after trimming',
+      () async {
+        final repo = await HiveTestHelper.createRepository();
+        await repo.setCustomMixdownFoldersByDaw({
+          'Ableton Live': ['Exports'],
+          'FL Studio': ['  ', ''],
+        });
+        expect(repo.getCustomMixdownFoldersByDaw(), {
+          'Ableton Live': ['Exports'],
+        });
+      },
+    );
 
-    test('setCustomMixdownFoldersByDaw with an empty map deletes the setting', () async {
-      final repo = await HiveTestHelper.createRepository();
-      await repo.setCustomMixdownFoldersByDaw({'Ableton Live': ['Exports']});
-      await repo.setCustomMixdownFoldersByDaw({});
-      expect(repo.getCustomMixdownFoldersByDaw(), isEmpty);
-    });
+    test(
+      'setCustomMixdownFoldersByDaw with an empty map deletes the setting',
+      () async {
+        final repo = await HiveTestHelper.createRepository();
+        await repo.setCustomMixdownFoldersByDaw({
+          'Ableton Live': ['Exports'],
+        });
+        await repo.setCustomMixdownFoldersByDaw({});
+        expect(repo.getCustomMixdownFoldersByDaw(), isEmpty);
+      },
+    );
 
-    test('setCustomMixdownFoldersByDaw overwrites the previously stored map', () async {
-      final repo = await HiveTestHelper.createRepository();
-      await repo.setCustomMixdownFoldersByDaw({'Ableton Live': ['Exports']});
-      await repo.setCustomMixdownFoldersByDaw({'FL Studio': ['Renders']});
-      expect(repo.getCustomMixdownFoldersByDaw(), {'FL Studio': ['Renders']});
-    });
+    test(
+      'setCustomMixdownFoldersByDaw overwrites the previously stored map',
+      () async {
+        final repo = await HiveTestHelper.createRepository();
+        await repo.setCustomMixdownFoldersByDaw({
+          'Ableton Live': ['Exports'],
+        });
+        await repo.setCustomMixdownFoldersByDaw({
+          'FL Studio': ['Renders'],
+        });
+        expect(repo.getCustomMixdownFoldersByDaw(), {
+          'FL Studio': ['Renders'],
+        });
+      },
+    );
   });
 
   group('ProjectRepository.pending folders', () {
@@ -352,21 +431,36 @@ void main() {
       expect(saved.first.path, '/music/project');
     });
 
-    test('addPendingFolder deduplicates by path — new entry replaces old', () async {
-      final repo = await HiveTestHelper.createRepository();
-      final old = PendingFolder(id: 'pf-old', path: '/same', createdAt: DateTime(2025, 1, 1));
-      final newer = PendingFolder(id: 'pf-new', path: '/same', createdAt: DateTime(2025, 6, 1));
-      await repo.addPendingFolder(old);
-      await repo.addPendingFolder(newer);
-      final folders = repo.getPendingFolders();
-      expect(folders.length, 1);
-      expect(folders.first.id, 'pf-new');
-    });
+    test(
+      'addPendingFolder deduplicates by path — new entry replaces old',
+      () async {
+        final repo = await HiveTestHelper.createRepository();
+        final old = PendingFolder(
+          id: 'pf-old',
+          path: '/same',
+          createdAt: DateTime(2025, 1, 1),
+        );
+        final newer = PendingFolder(
+          id: 'pf-new',
+          path: '/same',
+          createdAt: DateTime(2025, 6, 1),
+        );
+        await repo.addPendingFolder(old);
+        await repo.addPendingFolder(newer);
+        final folders = repo.getPendingFolders();
+        expect(folders.length, 1);
+        expect(folders.first.id, 'pf-new');
+      },
+    );
 
     test('removePendingFolder removes by id, keeps others', () async {
       final repo = await HiveTestHelper.createRepository();
-      await repo.addPendingFolder(PendingFolder(id: 'pf-1', path: '/a', createdAt: DateTime(2025, 1, 1)));
-      await repo.addPendingFolder(PendingFolder(id: 'pf-2', path: '/b', createdAt: DateTime(2025, 1, 1)));
+      await repo.addPendingFolder(
+        PendingFolder(id: 'pf-1', path: '/a', createdAt: DateTime(2025, 1, 1)),
+      );
+      await repo.addPendingFolder(
+        PendingFolder(id: 'pf-2', path: '/b', createdAt: DateTime(2025, 1, 1)),
+      );
       await repo.removePendingFolder('pf-1');
       final folders = repo.getPendingFolders();
       expect(folders.length, 1);
@@ -375,7 +469,11 @@ void main() {
 
     test('updatePendingFolder replaces the existing entry', () async {
       final repo = await HiveTestHelper.createRepository();
-      final original = PendingFolder(id: 'pf-1', path: '/a', createdAt: DateTime(2025, 1, 1));
+      final original = PendingFolder(
+        id: 'pf-1',
+        path: '/a',
+        createdAt: DateTime(2025, 1, 1),
+      );
       await repo.addPendingFolder(original);
       final updated = original.copyWith(sessionStartedAt: DateTime(2025, 3, 1));
       await repo.updatePendingFolder(updated);
@@ -384,52 +482,67 @@ void main() {
       expect(folders.first.sessionStartedAt, DateTime(2025, 3, 1));
     });
 
-    test('resolveCompletedPendingFolders removes non-existent folders', () async {
-      final repo = await HiveTestHelper.createRepository();
-      await repo.addPendingFolder(PendingFolder(
-        id: 'pf-gone',
-        path: '/definitely/does/not/exist/on/disk',
-        createdAt: DateTime(2025, 1, 1),
-      ));
-      final removed = await repo.resolveCompletedPendingFolders();
-      expect(removed, contains('pf-gone'));
-      expect(repo.getPendingFolders(), isEmpty);
-    });
-
-    test('resolveCompletedPendingFolders removes folders that contain a DAW project file', () async {
-      final dir = await Directory.systemTemp.createTemp('resolve_done_');
-      try {
-        await File('${dir.path}/project.als').create();
+    test(
+      'resolveCompletedPendingFolders removes non-existent folders',
+      () async {
         final repo = await HiveTestHelper.createRepository();
-        await repo.addPendingFolder(PendingFolder(
-          id: 'pf-done',
-          path: dir.path,
-          createdAt: DateTime(2025, 1, 1),
-        ));
+        await repo.addPendingFolder(
+          PendingFolder(
+            id: 'pf-gone',
+            path: '/definitely/does/not/exist/on/disk',
+            createdAt: DateTime(2025, 1, 1),
+          ),
+        );
         final removed = await repo.resolveCompletedPendingFolders();
-        expect(removed, contains('pf-done'));
+        expect(removed, contains('pf-gone'));
         expect(repo.getPendingFolders(), isEmpty);
-      } finally {
-        await dir.delete(recursive: true);
-      }
-    });
+      },
+    );
 
-    test('resolveCompletedPendingFolders keeps folders that exist and have no project file', () async {
-      final dir = await Directory.systemTemp.createTemp('resolve_keep_');
-      try {
-        final repo = await HiveTestHelper.createRepository();
-        await repo.addPendingFolder(PendingFolder(
-          id: 'pf-empty',
-          path: dir.path,
-          createdAt: DateTime(2025, 1, 1),
-        ));
-        final removed = await repo.resolveCompletedPendingFolders();
-        expect(removed, isEmpty);
-        expect(repo.getPendingFolders().length, 1);
-      } finally {
-        await dir.delete(recursive: true);
-      }
-    });
+    test(
+      'resolveCompletedPendingFolders removes folders that contain a DAW project file',
+      () async {
+        final dir = await Directory.systemTemp.createTemp('resolve_done_');
+        try {
+          await File('${dir.path}/project.als').create();
+          final repo = await HiveTestHelper.createRepository();
+          await repo.addPendingFolder(
+            PendingFolder(
+              id: 'pf-done',
+              path: dir.path,
+              createdAt: DateTime(2025, 1, 1),
+            ),
+          );
+          final removed = await repo.resolveCompletedPendingFolders();
+          expect(removed, contains('pf-done'));
+          expect(repo.getPendingFolders(), isEmpty);
+        } finally {
+          await dir.delete(recursive: true);
+        }
+      },
+    );
+
+    test(
+      'resolveCompletedPendingFolders keeps folders that exist and have no project file',
+      () async {
+        final dir = await Directory.systemTemp.createTemp('resolve_keep_');
+        try {
+          final repo = await HiveTestHelper.createRepository();
+          await repo.addPendingFolder(
+            PendingFolder(
+              id: 'pf-empty',
+              path: dir.path,
+              createdAt: DateTime(2025, 1, 1),
+            ),
+          );
+          final removed = await repo.resolveCompletedPendingFolders();
+          expect(removed, isEmpty);
+          expect(repo.getPendingFolders().length, 1);
+        } finally {
+          await dir.delete(recursive: true);
+        }
+      },
+    );
   });
 
   group('ProjectRepository.watchAllProjects', () {
@@ -495,32 +608,35 @@ void main() {
       expect(saved.lastModifiedAt, DateTime(2025, 6, 10));
     });
 
-    test('a pending debounced emit does not throw if the box closes first', () async {
-      // Regression: repositoryProvider's onDispose closes a profile's boxes
-      // on every profile switch (to avoid keeping every visited profile
-      // resident in memory). If that close races ahead of the outgoing
-      // allProjectsStreamProvider subscription being cancelled, the 200ms
-      // debounce Timer here fires afterward and used to call
-      // projectsBox.values on an already-closed box — a HiveError thrown
-      // from inside a bare Timer callback, i.e. an uncaught async exception
-      // (reported in the field as "Box has already been closed" on every
-      // profile switch).
-      final repo = await HiveTestHelper.createRepository();
-      await repo.updateProject(TestFactories.makeProject(id: 'p1'));
+    test(
+      'a pending debounced emit does not throw if the box closes first',
+      () async {
+        // Regression: repositoryProvider's onDispose closes a profile's boxes
+        // on every profile switch (to avoid keeping every visited profile
+        // resident in memory). If that close races ahead of the outgoing
+        // allProjectsStreamProvider subscription being cancelled, the 200ms
+        // debounce Timer here fires afterward and used to call
+        // projectsBox.values on an already-closed box — a HiveError thrown
+        // from inside a bare Timer callback, i.e. an uncaught async exception
+        // (reported in the field as "Box has already been closed" on every
+        // profile switch).
+        final repo = await HiveTestHelper.createRepository();
+        await repo.updateProject(TestFactories.makeProject(id: 'p1'));
 
-      final sub = repo.watchAllProjects().listen((_) {});
-      await Future.delayed(Duration.zero);
+        final sub = repo.watchAllProjects().listen((_) {});
+        await Future.delayed(Duration.zero);
 
-      // Schedules the debounce timer, then closes the box before it fires —
-      // simulating the profile-switch race without needing two profiles.
-      await repo.updateProject(TestFactories.makeProject(id: 'p2'));
-      await repo.projectsBox.close();
+        // Schedules the debounce timer, then closes the box before it fires —
+        // simulating the profile-switch race without needing two profiles.
+        await repo.updateProject(TestFactories.makeProject(id: 'p2'));
+        await repo.projectsBox.close();
 
-      // If unguarded, the pending Timer fires during this wait and throws
-      // with nothing to catch it, failing this test via an uncaught error.
-      await Future.delayed(const Duration(milliseconds: 300));
-      await sub.cancel();
-    });
+        // If unguarded, the pending Timer fires during this wait and throws
+        // with nothing to catch it, failing this test via an uncaught error.
+        await Future.delayed(const Duration(milliseconds: 300));
+        await sub.cancel();
+      },
+    );
   });
 
   group('ProjectRepository.removeRoot', () {
@@ -530,9 +646,11 @@ void main() {
       final rootId = repo.getRoots().first.id;
 
       await repo.updateProject(
-          TestFactories.makeProject(id: 'p1', filePath: '/rootA/track1.als'));
+        TestFactories.makeProject(id: 'p1', filePath: '/rootA/track1.als'),
+      );
       await repo.updateProject(
-          TestFactories.makeProject(id: 'p2', filePath: '/rootA/sub/track2.als'));
+        TestFactories.makeProject(id: 'p2', filePath: '/rootA/sub/track2.als'),
+      );
 
       await repo.removeRoot(rootId);
 
@@ -546,9 +664,11 @@ void main() {
       final rootId = repo.getRoots().first.id;
 
       await repo.updateProject(
-          TestFactories.makeProject(id: 'inA', filePath: '/rootA/track.als'));
+        TestFactories.makeProject(id: 'inA', filePath: '/rootA/track.als'),
+      );
       await repo.updateProject(
-          TestFactories.makeProject(id: 'inB', filePath: '/rootB/other.als'));
+        TestFactories.makeProject(id: 'inB', filePath: '/rootB/other.als'),
+      );
 
       await repo.removeRoot(rootId);
 
@@ -562,11 +682,17 @@ void main() {
       final rootId = repo.getRoots().first.id;
 
       await repo.updateProject(
-          TestFactories.makeProject(id: 'normal', filePath: '/rootA/normal.als'));
+        TestFactories.makeProject(id: 'normal', filePath: '/rootA/normal.als'),
+      );
       await repo.updateProject(
-          TestFactories.makeProject(id: 'protected', filePath: '/rootA/protected.als'));
+        TestFactories.makeProject(
+          id: 'protected',
+          filePath: '/rootA/protected.als',
+        ),
+      );
       await repo.addRelease(
-          Release(id: 'r1', title: 'EP', trackIds: ['protected']));
+        Release(id: 'r1', title: 'EP', trackIds: ['protected']),
+      );
 
       await repo.removeRoot(rootId);
 
@@ -587,7 +713,8 @@ void main() {
     test('does nothing when root id is not found', () async {
       final repo = await HiveTestHelper.createRepository();
       await repo.updateProject(
-          TestFactories.makeProject(id: 'p1', filePath: '/rootA/track.als'));
+        TestFactories.makeProject(id: 'p1', filePath: '/rootA/track.als'),
+      );
 
       await repo.removeRoot('no-such-root-id');
 
@@ -612,9 +739,11 @@ void main() {
       final rootId = repo.getRoots().first.id;
 
       await repo.updateProject(
-          TestFactories.makeProject(id: 'p1', filePath: '/rootA/track1.als'));
+        TestFactories.makeProject(id: 'p1', filePath: '/rootA/track1.als'),
+      );
       await repo.updateProject(
-          TestFactories.makeProject(id: 'p2', filePath: '/rootA/sub/track2.als'));
+        TestFactories.makeProject(id: 'p2', filePath: '/rootA/sub/track2.als'),
+      );
 
       await repo.relocateRoot(rootId, '/rootB');
 
@@ -634,9 +763,11 @@ void main() {
       final rootId = repo.getRoots().first.id;
 
       await repo.updateProject(
-          TestFactories.makeProject(id: 'p1', filePath: '/rootA/a.als'));
+        TestFactories.makeProject(id: 'p1', filePath: '/rootA/a.als'),
+      );
       await repo.updateProject(
-          TestFactories.makeProject(id: 'p2', filePath: '/rootA/b.als'));
+        TestFactories.makeProject(id: 'p2', filePath: '/rootA/b.als'),
+      );
 
       final count = await repo.relocateRoot(rootId, '/rootB');
 
@@ -649,9 +780,11 @@ void main() {
       final rootId = repo.getRoots().first.id;
 
       await repo.updateProject(
-          TestFactories.makeProject(id: 'inA', filePath: '/rootA/track.als'));
+        TestFactories.makeProject(id: 'inA', filePath: '/rootA/track.als'),
+      );
       await repo.updateProject(
-          TestFactories.makeProject(id: 'inB', filePath: '/rootB/other.als'));
+        TestFactories.makeProject(id: 'inB', filePath: '/rootB/other.als'),
+      );
 
       await repo.relocateRoot(rootId, '/rootC');
 
@@ -662,24 +795,29 @@ void main() {
       );
     });
 
-    test('also rewrites previewSongPath when it starts with the old root', () async {
-      final repo = await HiveTestHelper.createRepository();
-      await repo.addRoot('/rootA');
-      final rootId = repo.getRoots().first.id;
+    test(
+      'also rewrites previewSongPath when it starts with the old root',
+      () async {
+        final repo = await HiveTestHelper.createRepository();
+        await repo.addRoot('/rootA');
+        final rootId = repo.getRoots().first.id;
 
-      await repo.updateProject(TestFactories.makeProject(
-        id: 'p1',
-        filePath: '/rootA/track.als',
-        previewSongPath: '/rootA/Exports/mix.mp3',
-      ));
+        await repo.updateProject(
+          TestFactories.makeProject(
+            id: 'p1',
+            filePath: '/rootA/track.als',
+            previewSongPath: '/rootA/Exports/mix.mp3',
+          ),
+        );
 
-      await repo.relocateRoot(rootId, '/rootB');
+        await repo.relocateRoot(rootId, '/rootB');
 
-      expect(
-        p.normalize(repo.getById('p1')!.previewSongPath!),
-        p.normalize('/rootB/Exports/mix.mp3'),
-      );
-    });
+        expect(
+          p.normalize(repo.getById('p1')!.previewSongPath!),
+          p.normalize('/rootB/Exports/mix.mp3'),
+        );
+      },
+    );
 
     test('returns 0 when root id is not found', () async {
       final repo = await HiveTestHelper.createRepository();
@@ -708,18 +846,23 @@ void main() {
       expect(repo.getById('b'), isNotNull);
     });
 
-    test('deletes every id given, including ones referenced by a release', () async {
-      // Unlike the old auto-prune, an explicit user-triggered delete is not
-      // expected to protect release-tracked projects — the user asked for
-      // exactly this deletion, deliberately, via the selection UI.
-      final repo = await HiveTestHelper.createRepository();
-      await repo.updateProject(TestFactories.makeProject(id: 'tracked'));
-      await repo.addRelease(Release(id: 'r1', title: 'EP', trackIds: ['tracked']));
+    test(
+      'deletes every id given, including ones referenced by a release',
+      () async {
+        // Unlike the old auto-prune, an explicit user-triggered delete is not
+        // expected to protect release-tracked projects — the user asked for
+        // exactly this deletion, deliberately, via the selection UI.
+        final repo = await HiveTestHelper.createRepository();
+        await repo.updateProject(TestFactories.makeProject(id: 'tracked'));
+        await repo.addRelease(
+          Release(id: 'r1', title: 'EP', trackIds: ['tracked']),
+        );
 
-      await repo.deleteProjectsPermanently(['tracked']);
+        await repo.deleteProjectsPermanently(['tracked']);
 
-      expect(repo.getById('tracked'), isNull);
-    });
+        expect(repo.getById('tracked'), isNull);
+      },
+    );
 
     test('is a no-op for an empty id list', () async {
       final repo = await HiveTestHelper.createRepository();
@@ -776,75 +919,79 @@ void main() {
     //      is now a NEWER date reflecting the latest DAW save.
     //   3. User generates a backup on desktop and imports it on Android.
     //   4. After the import, Android must show the NEW desktop date.
-    test('desktop backup with newer date overwrites old Android date', () async {
-      final repo = await HiveTestHelper.createRepository();
+    test(
+      'desktop backup with newer date overwrites old Android date',
+      () async {
+        final repo = await HiveTestHelper.createRepository();
 
-      // --- Step 1: Android already has the project with an OLD date ---
-      // The file was first synced to Android back in January; that is what
-      // stat.modified returned when the app scanned it.
-      final androidOldDate = DateTime(2024, 1, 10, 8, 0, 0);
+        // --- Step 1: Android already has the project with an OLD date ---
+        // The file was first synced to Android back in January; that is what
+        // stat.modified returned when the app scanned it.
+        final androidOldDate = DateTime(2024, 1, 10, 8, 0, 0);
 
-      final androidExistingProject = TestFactories.makeProject(
-        id: 'daw-project-001',
-        filePath: '/storage/emulated/0/Drive/MyBanger.als',
-        fileName: 'MyBanger.als',
-        lastModifiedAt: androidOldDate,
-        fileCreatedAt: androidOldDate,
-        status: 'Idea',
-        bpm: 120.0,
-      );
-      await repo.restoreProject(androidExistingProject);
+        final androidExistingProject = TestFactories.makeProject(
+          id: 'daw-project-001',
+          filePath: '/storage/emulated/0/Drive/MyBanger.als',
+          fileName: 'MyBanger.als',
+          lastModifiedAt: androidOldDate,
+          fileCreatedAt: androidOldDate,
+          status: 'Idea',
+          bpm: 120.0,
+        );
+        await repo.restoreProject(androidExistingProject);
 
-      // Confirm the old date is in the DB before the import.
-      expect(repo.getById('daw-project-001')!.lastModifiedAt, androidOldDate);
+        // Confirm the old date is in the DB before the import.
+        expect(repo.getById('daw-project-001')!.lastModifiedAt, androidOldDate);
 
-      // --- Step 2: desktop has a newer backup ---
-      // The project was worked on heavily; last DAW save was Nov 12 2024.
-      final desktopNewDate = DateTime(2024, 11, 12, 9, 45, 0);
+        // --- Step 2: desktop has a newer backup ---
+        // The project was worked on heavily; last DAW save was Nov 12 2024.
+        final desktopNewDate = DateTime(2024, 11, 12, 9, 45, 0);
 
-      final desktopBackupProject = TestFactories.makeProject(
-        id: 'daw-project-001',
-        filePath: '/Users/artist/Live/MyBanger.als',
-        fileName: 'MyBanger.als',
-        lastModifiedAt: desktopNewDate,
-        fileCreatedAt: DateTime(2023, 3, 1),
-        status: 'Mixing',
-        bpm: 128.0,
-        musicalKey: 'C minor',
-        notes: 'Needs vocal chop on drop',
-      );
+        final desktopBackupProject = TestFactories.makeProject(
+          id: 'daw-project-001',
+          filePath: '/Users/artist/Live/MyBanger.als',
+          fileName: 'MyBanger.als',
+          lastModifiedAt: desktopNewDate,
+          fileCreatedAt: DateTime(2023, 3, 1),
+          status: 'Mixing',
+          bpm: 128.0,
+          musicalKey: 'C minor',
+          notes: 'Needs vocal chop on drop',
+        );
 
-      final backupJson = BackupService.projectToJson(desktopBackupProject);
+        final backupJson = BackupService.projectToJson(desktopBackupProject);
 
-      // --- Step 3: user imports the desktop backup on Android ---
-      final projectFromBackup = BackupService.projectFromJson(backupJson);
-      await repo.restoreProject(projectFromBackup);
+        // --- Step 3: user imports the desktop backup on Android ---
+        final projectFromBackup = BackupService.projectFromJson(backupJson);
+        await repo.restoreProject(projectFromBackup);
 
-      // --- Step 4: verify the NEW desktop date is now stored ---
-      final saved = repo.getById('daw-project-001')!;
+        // --- Step 4: verify the NEW desktop date is now stored ---
+        final saved = repo.getById('daw-project-001')!;
 
-      expect(
-        saved.lastModifiedAt,
-        desktopNewDate,
-        reason: 'lastModifiedAt must be updated to the newer desktop DAW date.',
-      );
-      expect(
-        saved.lastModifiedAt,
-        isNot(androidOldDate),
-        reason: 'The old Android date must have been replaced by the backup.',
-      );
-      expect(
-        saved.lastModifiedAt.isAfter(androidOldDate),
-        isTrue,
-        reason: 'Stored date must be newer than the previous Android date.',
-      );
+        expect(
+          saved.lastModifiedAt,
+          desktopNewDate,
+          reason:
+              'lastModifiedAt must be updated to the newer desktop DAW date.',
+        );
+        expect(
+          saved.lastModifiedAt,
+          isNot(androidOldDate),
+          reason: 'The old Android date must have been replaced by the backup.',
+        );
+        expect(
+          saved.lastModifiedAt.isAfter(androidOldDate),
+          isTrue,
+          reason: 'Stored date must be newer than the previous Android date.',
+        );
 
-      // Other metadata from the backup must also be intact.
-      expect(saved.bpm, 128.0);
-      expect(saved.musicalKey, 'C minor');
-      expect(saved.notes, 'Needs vocal chop on drop');
-      expect(saved.status, 'Mixing');
-    });
+        // Other metadata from the backup must also be intact.
+        expect(saved.bpm, 128.0);
+        expect(saved.musicalKey, 'C minor');
+        expect(saved.notes, 'Needs vocal chop on drop');
+        expect(saved.status, 'Mixing');
+      },
+    );
   });
 
   // These exercise the "diff against known paths, upsert only new ones"
@@ -856,9 +1003,12 @@ void main() {
   group('ProjectRepository.upsertFromFileSystemEntity (watcher-style diff)', () {
     test('creates exactly one project for a newly seen file', () async {
       final repo = await HiveTestHelper.createRepository();
-      final fileDir = await Directory.systemTemp.createTemp('upsert_diff_test_');
+      final fileDir = await Directory.systemTemp.createTemp(
+        'upsert_diff_test_',
+      );
       addTearDown(() => fileDir.delete(recursive: true));
-      final file = File(p.join(fileDir.path, 'song.als'))..writeAsStringSync('data');
+      final file = File(p.join(fileDir.path, 'song.als'))
+        ..writeAsStringSync('data');
 
       expect(repo.getByPath(file.path), isNull);
 
@@ -868,27 +1018,35 @@ void main() {
       expect(repo.getByPath(file.path), isNotNull);
     });
 
-    test('re-upserting an already-known path updates in place instead of duplicating', () async {
-      final repo = await HiveTestHelper.createRepository();
-      final fileDir = await Directory.systemTemp.createTemp('upsert_diff_test_');
-      addTearDown(() => fileDir.delete(recursive: true));
-      final file = File(p.join(fileDir.path, 'song.als'))..writeAsStringSync('data');
+    test(
+      're-upserting an already-known path updates in place instead of duplicating',
+      () async {
+        final repo = await HiveTestHelper.createRepository();
+        final fileDir = await Directory.systemTemp.createTemp(
+          'upsert_diff_test_',
+        );
+        addTearDown(() => fileDir.delete(recursive: true));
+        final file = File(p.join(fileDir.path, 'song.als'))
+          ..writeAsStringSync('data');
 
-      await repo.upsertFromFileSystemEntity(file, fullMetadata: false);
-      final firstId = repo.getByPath(file.path)!.id;
+        await repo.upsertFromFileSystemEntity(file, fullMetadata: false);
+        final firstId = repo.getByPath(file.path)!.id;
 
-      file.writeAsStringSync('more data than before');
-      await repo.upsertFromFileSystemEntity(file, fullMetadata: false);
+        file.writeAsStringSync('more data than before');
+        await repo.upsertFromFileSystemEntity(file, fullMetadata: false);
 
-      expect(repo.getAllProjects().length, 1);
-      expect(repo.getByPath(file.path)!.id, firstId);
-    });
+        expect(repo.getAllProjects().length, 1);
+        expect(repo.getByPath(file.path)!.id, firstId);
+      },
+    );
   });
 
   group('ProjectRepository.upsertManyFromFileSystemEntities', () {
     test('creates one project per newly seen file', () async {
       final repo = await HiveTestHelper.createRepository();
-      final fileDir = await Directory.systemTemp.createTemp('upsert_many_test_');
+      final fileDir = await Directory.systemTemp.createTemp(
+        'upsert_many_test_',
+      );
       addTearDown(() => fileDir.delete(recursive: true));
       final files = [
         File(p.join(fileDir.path, 'a.als'))..writeAsStringSync('a'),
@@ -904,29 +1062,42 @@ void main() {
       }
     });
 
-    test('re-upserting already-known paths updates in place instead of duplicating', () async {
-      final repo = await HiveTestHelper.createRepository();
-      final fileDir = await Directory.systemTemp.createTemp('upsert_many_test_');
-      addTearDown(() => fileDir.delete(recursive: true));
-      final file = File(p.join(fileDir.path, 'song.als'))..writeAsStringSync('data');
+    test(
+      're-upserting already-known paths updates in place instead of duplicating',
+      () async {
+        final repo = await HiveTestHelper.createRepository();
+        final fileDir = await Directory.systemTemp.createTemp(
+          'upsert_many_test_',
+        );
+        addTearDown(() => fileDir.delete(recursive: true));
+        final file = File(p.join(fileDir.path, 'song.als'))
+          ..writeAsStringSync('data');
 
-      await repo.upsertManyFromFileSystemEntities([file], fullMetadata: false);
-      final firstId = repo.getByPath(file.path)!.id;
+        await repo.upsertManyFromFileSystemEntities([
+          file,
+        ], fullMetadata: false);
+        final firstId = repo.getByPath(file.path)!.id;
 
-      file.writeAsStringSync('more data than before');
-      await repo.upsertManyFromFileSystemEntities([file], fullMetadata: false);
+        file.writeAsStringSync('more data than before');
+        await repo.upsertManyFromFileSystemEntities([
+          file,
+        ], fullMetadata: false);
 
-      expect(repo.getAllProjects().length, 1);
-      expect(repo.getByPath(file.path)!.id, firstId);
-    });
+        expect(repo.getAllProjects().length, 1);
+        expect(repo.getByPath(file.path)!.id, firstId);
+      },
+    );
 
     test('flushes in chunks so a large batch does not lose entries', () async {
       final repo = await HiveTestHelper.createRepository();
-      final fileDir = await Directory.systemTemp.createTemp('upsert_many_flush_test_');
+      final fileDir = await Directory.systemTemp.createTemp(
+        'upsert_many_flush_test_',
+      );
       addTearDown(() => fileDir.delete(recursive: true));
       final files = List.generate(
         5,
-        (i) => File(p.join(fileDir.path, 'song$i.als'))..writeAsStringSync('$i'),
+        (i) =>
+            File(p.join(fileDir.path, 'song$i.als'))..writeAsStringSync('$i'),
       );
 
       // flushEvery smaller than the batch forces multiple putAll flushes.
@@ -939,21 +1110,28 @@ void main() {
       expect(repo.getAllProjects().length, 5);
     });
 
-    test('resolves fullMetadataFor per entity instead of a single flag for the whole batch', () async {
-      final repo = await HiveTestHelper.createRepository();
-      final fileDir = await Directory.systemTemp.createTemp('upsert_many_perfile_test_');
-      addTearDown(() => fileDir.delete(recursive: true));
-      final full = File(p.join(fileDir.path, 'full.rpp'))..writeAsStringSync('BPM 120');
-      final light = File(p.join(fileDir.path, 'light.rpp'))..writeAsStringSync('BPM 120');
+    test(
+      'resolves fullMetadataFor per entity instead of a single flag for the whole batch',
+      () async {
+        final repo = await HiveTestHelper.createRepository();
+        final fileDir = await Directory.systemTemp.createTemp(
+          'upsert_many_perfile_test_',
+        );
+        addTearDown(() => fileDir.delete(recursive: true));
+        final full = File(p.join(fileDir.path, 'full.rpp'))
+          ..writeAsStringSync('BPM 120');
+        final light = File(p.join(fileDir.path, 'light.rpp'))
+          ..writeAsStringSync('BPM 120');
 
-      await repo.upsertManyFromFileSystemEntities(
-        [full, light],
-        fullMetadataFor: (e) => e.path == full.path,
-      );
+        await repo.upsertManyFromFileSystemEntities([
+          full,
+          light,
+        ], fullMetadataFor: (e) => e.path == full.path);
 
-      expect(repo.getByPath(full.path)!.metadataScanned, isTrue);
-      expect(repo.getByPath(light.path)!.metadataScanned, isFalse);
-    });
+        expect(repo.getByPath(full.path)!.metadataScanned, isTrue);
+        expect(repo.getByPath(light.path)!.metadataScanned, isFalse);
+      },
+    );
 
     test('is a no-op for an empty entity list', () async {
       final repo = await HiveTestHelper.createRepository();
@@ -962,6 +1140,65 @@ void main() {
 
       expect(repo.getAllProjects(), isEmpty);
     });
+
+    test(
+      'a single failing entity does not abort the rest of the batch, and its path is reported',
+      () async {
+        // Regression coverage: a scan used to abort entirely (losing every
+        // remaining project in the batch) the moment one file threw while
+        // being processed — e.g. deleted or locked mid-scan. Failures are
+        // now caught per entity and returned by path instead.
+        final repo = await HiveTestHelper.createRepository();
+        final fileDir = await Directory.systemTemp.createTemp(
+          'upsert_many_failure_test_',
+        );
+        addTearDown(() => fileDir.delete(recursive: true));
+        final good1 = File(p.join(fileDir.path, 'good1.als'))
+          ..writeAsStringSync('a');
+        final good2 = File(p.join(fileDir.path, 'good2.als'))
+          ..writeAsStringSync('b');
+        final broken = _ThrowingFileSystemEntity(
+          p.join(fileDir.path, 'broken.als'),
+        );
+
+        final failures = await repo.upsertManyFromFileSystemEntities([
+          good1,
+          broken,
+          good2,
+        ], fullMetadata: false);
+
+        expect(failures, [broken.path]);
+        expect(repo.getAllProjects().length, 2);
+        expect(repo.getByPath(good1.path), isNotNull);
+        expect(repo.getByPath(good2.path), isNotNull);
+      },
+    );
+
+    test(
+      'onProgress reports a running count and the batch total for every entity, success or failure',
+      () async {
+        final repo = await HiveTestHelper.createRepository();
+        final fileDir = await Directory.systemTemp.createTemp(
+          'upsert_many_progress_test_',
+        );
+        addTearDown(() => fileDir.delete(recursive: true));
+        final good = File(p.join(fileDir.path, 'good.als'))
+          ..writeAsStringSync('a');
+        final broken = _ThrowingFileSystemEntity(
+          p.join(fileDir.path, 'broken.als'),
+        );
+
+        final progressCalls = <(int, int)>[];
+        await repo.upsertManyFromFileSystemEntities(
+          [good, broken],
+          fullMetadata: false,
+          onProgress: (processed, total) =>
+              progressCalls.add((processed, total)),
+        );
+
+        expect(progressCalls, [(1, 2), (2, 2)]);
+      },
+    );
   });
 
   group('ProjectRepository.watchAllProjects', () {
@@ -974,45 +1211,144 @@ void main() {
       expect(first.map((p) => p.id), ['p1']);
     });
 
-    test('collapses a burst of rapid box writes into a single emission', () async {
-      final repo = await HiveTestHelper.createRepository();
-      final emissions = <List<MusicProject>>[];
-      final sub = repo.watchAllProjects().listen(emissions.add);
-      addTearDown(sub.cancel);
+    test(
+      'collapses a burst of rapid box writes into a single emission',
+      () async {
+        final repo = await HiveTestHelper.createRepository();
+        final emissions = <List<MusicProject>>[];
+        final sub = repo.watchAllProjects().listen(emissions.add);
+        addTearDown(sub.cancel);
 
-      // Let the initial emission land, then fire many writes back-to-back —
-      // this mirrors what a scan does (one put() per discovered file).
-      await Future<void>.delayed(const Duration(milliseconds: 10));
-      emissions.clear();
-      for (var i = 0; i < 20; i++) {
-        await repo.updateProject(TestFactories.makeProject(id: 'burst-$i'));
-      }
+        // Let the initial emission land, then fire many writes back-to-back —
+        // this mirrors what a scan does (one put() per discovered file).
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        emissions.clear();
+        for (var i = 0; i < 20; i++) {
+          await repo.updateProject(TestFactories.makeProject(id: 'burst-$i'));
+        }
 
-      // Debounce window is 200ms — nothing should have emitted yet.
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-      expect(emissions, isEmpty);
+        // Debounce window is 200ms — nothing should have emitted yet.
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        expect(emissions, isEmpty);
 
-      // After the debounce window closes, exactly one emission with every write folded in.
-      await Future<void>.delayed(const Duration(milliseconds: 250));
-      expect(emissions.length, 1);
-      expect(emissions.single.length, 20);
-    });
+        // After the debounce window closes, exactly one emission with every write folded in.
+        await Future<void>.delayed(const Duration(milliseconds: 250));
+        expect(emissions.length, 1);
+        expect(emissions.single.length, 20);
+      },
+    );
   });
 
   group('ProjectRepository.closeBoxes', () {
-    test('closes the per-profile boxes so they can be reopened cleanly', () async {
+    test(
+      'closes the per-profile boxes so they can be reopened cleanly',
+      () async {
+        final repo = await HiveTestHelper.createRepository();
+        await repo.updateProject(TestFactories.makeProject(id: 'p1'));
+        expect(repo.projectsBox.isOpen, isTrue);
+
+        await repo.closeBoxes();
+
+        expect(repo.projectsBox.isOpen, isFalse);
+
+        // Reopening should see the previously-written data, proving nothing
+        // was lost or corrupted by the close.
+        final reopened = await HiveTestHelper.createRepository();
+        expect(reopened.getById('p1'), isNotNull);
+      },
+    );
+  });
+
+  group('ProjectRepository.clearAllData', () {
+    // "Clear Library" in settings_page.dart — clears the current profile's
+    // data without closing any Hive box (unlike deleteAllAppData below).
+
+    test('clears projects, roots, ignored paths and events', () async {
       final repo = await HiveTestHelper.createRepository();
-      await repo.updateProject(TestFactories.makeProject(id: 'p1'));
-      expect(repo.projectsBox.isOpen, isTrue);
+      await repo.restoreProject(TestFactories.makeProject(id: 'p1'));
+      await repo.addRoot('/music/root');
+      await repo.addIgnoredPath('/music/root/ignored');
+      await repo.addEvent(
+        ProjectEvent(
+          id: 'e1',
+          projectId: 'p1',
+          eventType: ProjectEvent.statusChange,
+          occurredAt: DateTime(2026, 1, 1),
+        ),
+      );
 
-      await repo.closeBoxes();
+      await repo.clearAllData();
 
-      expect(repo.projectsBox.isOpen, isFalse);
-
-      // Reopening should see the previously-written data, proving nothing
-      // was lost or corrupted by the close.
-      final reopened = await HiveTestHelper.createRepository();
-      expect(reopened.getById('p1'), isNotNull);
+      expect(repo.getAllProjects(), isEmpty);
+      expect(repo.getRoots(), isEmpty);
+      expect(repo.getIgnoredPaths(), isEmpty);
+      expect(repo.getAllEvents(), isEmpty);
     });
+
+    test('preserves projects referenced by a release', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.restoreProject(TestFactories.makeProject(id: 'keep'));
+      await repo.restoreProject(TestFactories.makeProject(id: 'discard'));
+      await repo.addRelease(
+        Release(id: 'r1', title: 'Release', trackIds: const ['keep']),
+      );
+
+      await repo.clearAllData();
+
+      expect(repo.getAllProjects().map((p) => p.id), ['keep']);
+    });
+  });
+
+  group('ProjectRepository.deleteAllAppData', () {
+    // "Delete All Data" in settings_page.dart — the two-confirmation
+    // "nuclear" reset. Unlike clearAllData, this closes every Hive box
+    // across every profile before clearing them (see the crash this caused
+    // in dashboard_page.dart, fixed via safeGetAllProjects). Verifying the
+    // wipe itself actually completes end-to-end here.
+
+    test(
+      "wipes every profile's data and leaves a single fresh default profile",
+      () async {
+        final profileRepo = await HiveTestHelper.createProfileRepository();
+        final profileA = await profileRepo.createProfile('A');
+        final profileB = await profileRepo.createProfile('B');
+
+        final repoA = await HiveTestHelper.createRepository(
+          profileId: profileA.id,
+        );
+        await repoA.restoreProject(TestFactories.makeProject(id: 'a1'));
+        await repoA.addRoot('/music/a');
+
+        final repoB = await HiveTestHelper.createRepository(
+          profileId: profileB.id,
+        );
+        await repoB.restoreProject(TestFactories.makeProject(id: 'b1'));
+        await repoB.addRoot('/music/b');
+
+        await ProjectRepository.deleteAllAppData();
+
+        final profiles = Hive.box<Profile>(
+          ProfileRepository.profilesBoxName,
+        ).values.toList();
+        expect(profiles, hasLength(1));
+        expect(profiles.single.name, 'Default');
+        expect(profiles.single.id, isNot(profileA.id));
+        expect(profiles.single.id, isNot(profileB.id));
+
+        final aProjects = await Hive.openBox<dynamic>(
+          '${profileA.id}_projects',
+        );
+        final bProjects = await Hive.openBox<dynamic>(
+          '${profileB.id}_projects',
+        );
+        expect(aProjects.isEmpty, isTrue);
+        expect(bProjects.isEmpty, isTrue);
+
+        final aRoots = await Hive.openBox<dynamic>('${profileA.id}_roots');
+        final bRoots = await Hive.openBox<dynamic>('${profileB.id}_roots');
+        expect(aRoots.isEmpty, isTrue);
+        expect(bRoots.isEmpty, isTrue);
+      },
+    );
   });
 }

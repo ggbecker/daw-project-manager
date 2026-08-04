@@ -253,7 +253,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get deepScanConfirm =>
-      'Глубокое сканирование извлекает полные метаданные из файлов проекта:\n• BPM (ударов в минуту)\n• Музыкальная тональность\n• Версия DAW\n• Заметки проекта (только Reaper)\nПоддерживается: Ableton Live, Bitwig Studio, Cubase, Nuendo, FL Studio, MAGDA и Reaper.\n\nЭто медленнее обычного сканирования и может занять некоторое время. Продолжить?';
+      'Глубокое сканирование извлекает полные метаданные из файлов проекта:\n• BPM (ударов в минуту)\n• Музыкальная тональность\n• Версия DAW\n• Заметки проекта (если поддерживается)\n\nЭто медленнее обычного сканирования и может занять некоторое время. Продолжить?';
+
+  @override
+  String get deepScanViewSupportedDaws =>
+      'Просмотреть поддерживаемые DAW и поля';
 
   @override
   String get deepScanOnlyUnscanned =>
@@ -439,6 +443,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get scanningProjects => 'Сканирование проектов...';
 
   @override
+  String scanProgressLabel(int current, int total) {
+    return 'Загрузка проекта $current из $total…';
+  }
+
+  @override
   String get search => 'Поиск';
 
   @override
@@ -609,6 +618,21 @@ class AppLocalizationsRu extends AppLocalizations {
   String scanComplete(String type, int count, String plural) {
     return '$type завершено: $count проект$plural добавлен$plural/обновлен$plural.';
   }
+
+  @override
+  String scanFailuresSnackbar(int count, String plural) {
+    return '$count проект$plural не удалось загрузить.';
+  }
+
+  @override
+  String get scanFailuresSnackbarAction => 'Подробнее';
+
+  @override
+  String get scanFailuresDialogTitle => 'Ошибки Сканирования';
+
+  @override
+  String get scanFailuresDialogIntro =>
+      'Эти файлы не удалось прочитать во время сканирования (возможно, они были удалены, перемещены или заблокированы другой программой):';
 
   @override
   String projectsSelected(int count, String plural) {
@@ -2743,7 +2767,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Аудиофайл изменился на диске — обновление формы волны…';
 
   @override
-  String get autoFitAllColumns => 'Автоподбор ширины всех столбцов';
+  String get autoFitAllColumns => 'Автоподбор столбцов';
 
   @override
   String get uploadAutoDetectedPreviewSongs =>
@@ -2815,6 +2839,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get noProjectsFoundHint =>
       'Добавьте корневую папку в настройках, чтобы начать.';
+
+  @override
+  String get noProjectsFoundInFoldersHint =>
+      'Попробуйте добавить другую папку с проектами DAW.';
 
   @override
   String get queueTab => 'Задачи';
@@ -3751,6 +3779,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get createProjectSchemeCustom => 'Произвольное';
 
   @override
+  String get createProjectSchemeRemix => 'Ремикс';
+
+  @override
   String get createProjectArtistName => 'Имя исполнителя';
 
   @override
@@ -3761,6 +3792,15 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get createProjectAddArtist => 'Добавить исполнителя';
+
+  @override
+  String get createProjectOriginalArtist => 'Оригинальный исполнитель';
+
+  @override
+  String get createProjectRemixerName => 'Ремиксер';
+
+  @override
+  String get createProjectAddRemixer => 'Добавить ремиксера';
 
   @override
   String get createProjectSelectDaw => 'Открыть в DAW';

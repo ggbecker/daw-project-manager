@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:hive_ce/hive.dart';
 import 'package:trina_grid/trina_grid.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/foundation.dart'
-    show kDebugMode, kIsWeb, listEquals, visibleForTesting;
+    show debugPrint, kDebugMode, kIsWeb, listEquals, visibleForTesting;
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as path; // 🚨 NOVO IMPORT
 import 'package:url_launcher/url_launcher.dart';
@@ -34,11 +35,14 @@ import '../providers/theme_provider.dart';
 import '../utils/file_launcher.dart';
 import '../utils/search_utils.dart';
 import '../utils/route_observer.dart';
+import '../utils/trina_grid_locale.dart';
+import 'widgets/trina_grid_menu_delegate.dart';
 import 'project_detail_page.dart';
 import 'releases_tab_page.dart';
 import 'release_detail_page.dart';
 import 'profile_manager_page.dart';
 import 'settings_page.dart';
+import 'metadata_extraction_info_page.dart';
 import 'playlists_page.dart';
 import 'google_drive_sync_page.dart';
 import 'statistics_page.dart';
@@ -52,7 +56,6 @@ import 'widgets/language_switcher.dart';
 import 'widgets/theme_switcher.dart';
 import 'widgets/mobile_mini_player.dart';
 import '../generated/l10n/app_localizations.dart';
-import '../main.dart' show navigatorKey;
 import 'session_actions.dart';
 import 'dialogs/create_project_dialog.dart';
 import 'project_templates_page.dart';
@@ -66,6 +69,7 @@ import '../models/scan_mode.dart';
 import '../models/scan_root.dart';
 import '../models/todo_item.dart';
 import '../providers/providers.dart';
+import '../repository/project_repository.dart';
 import '../services/google_drive_sync_service.dart' show GoogleDriveSyncService;
 import '../utils/playback_todo_utils.dart';
 import 'package:uuid/uuid.dart';
@@ -140,6 +144,15 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
   bool _scanning = false;
   bool _deepScanning = false;
   bool _extractingMetadata = false;
+  // Progress for the blocking scan overlay (see shouldBlockForOperation):
+  // how many of the projects found by the current scan have been processed
+  // so far, and how many there are in total. Both reset to 0 outside a scan.
+  int _scanProgressCurrent = 0;
+  int _scanProgressTotal = 0;
+  // Paths that failed to process during the most recently completed scan
+  // (e.g. a file deleted or locked mid-scan) — reported once the scan
+  // finishes rather than aborting the rest of the batch.
+  List<String> _lastScanFailures = const [];
   // Briefly true right after a scan finishes successfully, so the
   // corresponding button's icon can flash a checkmark — see rescanIconState/
   // deepScanIconState and _flashScanSuccess.
@@ -628,13 +641,36 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     }
   }
 
+  /// Handler for the empty-library floating action button: picks a folder,
+  /// registers it as a scan root, and scans it immediately so the projects
+  /// table populates without a separate manual "Rescan" step.
+  Future<void> _addFirstScanFolder() async {
+    final l10n = AppLocalizations.of(context)!;
+    final picked = await FilePicker.getDirectoryPath(
+      dialogTitle: l10n.selectProjectsFolder,
+    );
+    if (picked == null) return;
+
+    final repo = await ref.read(repositoryProvider.future);
+    await repo.addRoot(picked);
+    ref.invalidate(rootsWatchProvider);
+    ref.invalidate(scanRootsProvider);
+    if (!mounted) return;
+    await _scanAll();
+  }
+
   Future<void> _scanAll({
     bool fullMetadata = false,
     bool onlyUnscanned = false,
   }) async {
     if (_scanning) return;
     final repo = await ref.read(repositoryProvider.future);
-    setState(() => _scanning = true);
+    setState(() {
+      _scanning = true;
+      _scanProgressCurrent = 0;
+      _scanProgressTotal = 0;
+      _lastScanFailures = const [];
+    });
     try {
       final scanner = ScannerService();
       int foundCount = 0;
@@ -645,12 +681,19 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       // repo: that's an initial population, not a "new" discovery.
       final knownPaths = repo.getAllProjects().map((p) => p.filePath).toSet();
       final newlyDiscoveredIds = <String>[];
+      final allFailures = <String>[];
       final ignoredPaths = repo
           .getIgnoredPaths()
           .map((p) => p.path)
           .toList(growable: false);
       final scanTime = DateTime.now();
+
+      // Enumerate every root's entities up front (a cheap directory listing)
+      // so the progress overlay can show an accurate "X of Y" total before
+      // the slow part — per-file metadata extraction — begins below.
+      final entitiesByRoot = <ScanRoot, List<FileSystemEntity>>{};
       for (final root in repo.getRoots()) {
+        if (kDebugMode) debugPrint('[_scanAll] enumerating root ${root.path}...');
         final entities = <FileSystemEntity>[];
         await for (final entity in scanner.scanDirectory(
           root.path,
@@ -658,16 +701,42 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
         )) {
           entities.add(entity);
         }
+        if (kDebugMode) {
+          debugPrint('[_scanAll] root ${root.path}: found ${entities.length} project files');
+        }
+        entitiesByRoot[root] = entities;
+      }
+      final totalEntities = entitiesByRoot.values.fold<int>(
+        0,
+        (sum, list) => sum + list.length,
+      );
+      if (mounted) setState(() => _scanProgressTotal = totalEntities);
+
+      var processedBeforeThisRoot = 0;
+      for (final entry in entitiesByRoot.entries) {
+        final root = entry.key;
+        final entities = entry.value;
         if (entities.isNotEmpty) {
-          await repo.upsertManyFromFileSystemEntities(
+          final processedBeforeThisRootSnapshot = processedBeforeThisRoot;
+          final failures = await repo.upsertManyFromFileSystemEntities(
             entities,
             fullMetadataFor: (entity) =>
                 fullMetadata &&
                 (!onlyUnscanned ||
                     repo.getByPath(entity.path)?.metadataScanned != true),
+            onProgress: (processed, total) {
+              if (mounted) {
+                setState(
+                  () => _scanProgressCurrent =
+                      processedBeforeThisRootSnapshot + processed,
+                );
+              }
+            },
           );
+          allFailures.addAll(failures);
           foundCount += entities.length;
         }
+        processedBeforeThisRoot += entities.length;
         final foundPaths = entities.map((e) => e.path).toSet();
         if (knownPaths.isNotEmpty) {
           for (final path in newlyFoundPaths(foundPaths, knownPaths)) {
@@ -839,7 +908,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       // a previously auto-detected path. Runs after the full scan so all upserts
       // are committed before we read back the project list.
       final customFolders = ref.read(customMixdownFoldersProvider).value;
-      final customFoldersByDaw = ref.read(customMixdownFoldersByDawProvider).value;
+      final customFoldersByDaw = ref
+          .read(customMixdownFoldersByDawProvider)
+          .value;
       for (final project in repo.getAllProjects()) {
         if (project.previewSongPath != null ||
             project.previewSongAutoPath != null)
@@ -858,6 +929,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
 
       ref.invalidate(allProjectsStreamProvider);
 
+      if (mounted) setState(() => _lastScanFailures = allFailures);
+
       if (mounted) {
         final scanType = fullMetadata
             ? AppLocalizations.of(context)!.deepScan
@@ -870,11 +943,79 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(msg)));
+
+        // A failed file must never look like data loss with no explanation —
+        // surfaced separately (rather than folded into the success message
+        // above) since it can queue behind it without the two competing for
+        // the same line of text.
+        if (allFailures.isNotEmpty) {
+          final l10n = AppLocalizations.of(context)!;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                l10n.scanFailuresSnackbar(
+                  allFailures.length,
+                  allFailures.length == 1 ? '' : 's',
+                ),
+              ),
+              action: SnackBarAction(
+                label: l10n.scanFailuresSnackbarAction,
+                onPressed: () => _showScanFailuresDialog(allFailures),
+              ),
+            ),
+          );
+        }
       }
       _flashScanSuccess(deep: fullMetadata);
     } finally {
       if (mounted) setState(() => _scanning = false);
     }
+  }
+
+  /// Lists the file paths that failed to process during the most recent
+  /// scan (see [_scanAll] and [ProjectRepository.upsertManyFromFileSystemEntities])
+  /// — surfaced on demand via the failures SnackBar's action, rather than
+  /// dumping every path directly into the SnackBar itself.
+  void _showScanFailuresDialog(List<String> failedPaths) {
+    final l10n = AppLocalizations.of(context)!;
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.scanFailuresDialogTitle),
+        content: SizedBox(
+          width: 480,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.scanFailuresDialogIntro),
+              const SizedBox(height: 12),
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  children: [
+                    for (final path in failedPaths)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 2),
+                        child: SelectableText(
+                          path,
+                          style: Theme.of(ctx).textTheme.bodySmall,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.close),
+          ),
+        ],
+      ),
+    );
   }
 
   /// Pull-to-refresh on the mobile Projects tab. Mobile has no scan roots —
@@ -1121,6 +1262,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                     : () => Navigator.pop(ctx, true),
                 style: FilledButton.styleFrom(
                   backgroundColor: Colors.red.shade700,
+                  foregroundColor: Colors.white,
                 ),
                 child: Text(l10n.deleteMissingProjectsConfirmButton),
               ),
@@ -1226,15 +1368,28 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     final repoAsync = ref.watch(repositoryProvider);
     final roots = ref.watch(scanRootsProvider);
 
+    // repositoryProvider's .value can still point at a repo whose Hive boxes
+    // were just closed (Clear Library / Delete All Data racing this widget's
+    // rebuild against the provider actually being invalidated) — reading
+    // through safeGetAllProjects instead of calling getAllProjects() directly
+    // avoids a HiveError("Box has already been closed") crashing this build.
+    final loadedProjects = repoAsync.hasValue
+        ? safeGetAllProjects(repoAsync.value!)
+        : null;
+
+    // Defaults to true (has projects) while still loading, so the "add a
+    // scan folder" FAB below doesn't flash on before data arrives.
+    final hasAnyProjects = loadedProjects?.isNotEmpty ?? true;
+
     // Show first-launch dialog on desktop when the profile is truly blank (no
     // roots AND no projects). Profiles that have projects but no roots (e.g.
     // restored from Google Drive) are already set up and should not see this.
     if (!MobileUtils.isMobile() &&
         !_startupDialogShown &&
         !_hideStartupDialog &&
-        repoAsync.hasValue &&
+        loadedProjects != null &&
         roots.isEmpty &&
-        repoAsync.value!.getAllProjects().isEmpty) {
+        loadedProjects.isEmpty) {
       _startupDialogShown = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) showStartupDialog(context);
@@ -1486,7 +1641,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                     // Google Drive sync (hidden when left rail — shown there instead).
                                     // Not offered on Linux at all — see
                                     // GoogleDriveSyncService.isSupported.
-                                    if (!isLeftRail && GoogleDriveSyncService.isSupported)
+                                    if (!isLeftRail &&
+                                        GoogleDriveSyncService.isSupported)
                                       IconButton(
                                         icon: const Icon(Icons.cloud_outlined),
                                         tooltip: AppLocalizations.of(
@@ -1705,6 +1861,16 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                               request: playerRequest,
                             );
                           }(),
+                    floatingActionButton:
+                        (!MobileUtils.isMobile() &&
+                            _currentTab == AppTab.projects &&
+                            !hasAnyProjects)
+                        ? FloatingActionButton(
+                            onPressed: _addFirstScanFolder,
+                            tooltip: AppLocalizations.of(context)!.addFolder,
+                            child: const Icon(Icons.add),
+                          )
+                        : null,
                     body: Builder(
                       builder: (context) {
                         // Action bar: search field and filter toolbar.
@@ -2596,6 +2762,38 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                                                       context,
                                                                     )!.deepScanConfirm,
                                                                   ),
+                                                                  Align(
+                                                                    alignment:
+                                                                        Alignment
+                                                                            .centerLeft,
+                                                                    child: TextButton.icon(
+                                                                      onPressed: () => Navigator.of(context).push(
+                                                                        MaterialPageRoute(
+                                                                          builder: (_) =>
+                                                                              const MetadataExtractionInfoPage(),
+                                                                        ),
+                                                                      ),
+                                                                      icon: const Icon(
+                                                                        Icons
+                                                                            .table_chart_outlined,
+                                                                        size:
+                                                                            18,
+                                                                      ),
+                                                                      label: Text(
+                                                                        AppLocalizations.of(
+                                                                          context,
+                                                                        )!.deepScanViewSupportedDaws,
+                                                                      ),
+                                                                      style: TextButton.styleFrom(
+                                                                        padding:
+                                                                            EdgeInsets.zero,
+                                                                        minimumSize:
+                                                                            Size.zero,
+                                                                        tapTargetSize:
+                                                                            MaterialTapTargetSize.shrinkWrap,
+                                                                      ),
+                                                                    ),
+                                                                  ),
                                                                   const SizedBox(
                                                                     height: 12,
                                                                   ),
@@ -2723,9 +2921,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                                     MaterialPageRoute(
                                                       builder: (_) =>
                                                           const SettingsPage(
-                                                        initialSection:
-                                                            SettingsSection.backup,
-                                                      ),
+                                                            initialSection:
+                                                                SettingsSection
+                                                                    .backup,
+                                                          ),
                                                     ),
                                                   ),
                                             ),
@@ -3124,7 +3323,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                     // scroll between them is easy to trigger by accident while
                                     // scrolling a list, so the gesture is disabled everywhere,
                                     // not just on mobile.
-                                    physics: const NeverScrollableScrollPhysics(),
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
                                     children: [
                                       for (final tab in _currentVisibleTabs)
                                         switch (tab) {
@@ -3525,9 +3725,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                             onPressed: () =>
                                                 Navigator.of(context).push(
                                                   MaterialPageRoute(
-                                                    builder: (_) => const SettingsPage(
-                                                      initialSection: SettingsSection.backup,
-                                                    ),
+                                                    builder: (_) =>
+                                                        const SettingsPage(
+                                                          initialSection:
+                                                              SettingsSection
+                                                                  .backup,
+                                                        ),
                                                   ),
                                                 ),
                                           ),
@@ -3627,6 +3830,44 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                                               AppLocalizations.of(
                                                                 context,
                                                               )!.deepScanConfirm,
+                                                            ),
+                                                            Align(
+                                                              alignment: Alignment
+                                                                  .centerLeft,
+                                                              child: TextButton.icon(
+                                                                onPressed: () =>
+                                                                    Navigator.of(
+                                                                      context,
+                                                                    ).push(
+                                                                      MaterialPageRoute(
+                                                                        builder:
+                                                                            (
+                                                                              _,
+                                                                            ) =>
+                                                                                const MetadataExtractionInfoPage(),
+                                                                      ),
+                                                                    ),
+                                                                icon: const Icon(
+                                                                  Icons
+                                                                      .table_chart_outlined,
+                                                                  size: 18,
+                                                                ),
+                                                                label: Text(
+                                                                  AppLocalizations.of(
+                                                                    context,
+                                                                  )!.deepScanViewSupportedDaws,
+                                                                ),
+                                                                style: TextButton.styleFrom(
+                                                                  padding:
+                                                                      EdgeInsets
+                                                                          .zero,
+                                                                  minimumSize:
+                                                                      Size.zero,
+                                                                  tapTargetSize:
+                                                                      MaterialTapTargetSize
+                                                                          .shrinkWrap,
+                                                                ),
+                                                              ),
                                                             ),
                                                             const SizedBox(
                                                               height: 12,
@@ -3773,24 +4014,49 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                             padding: const EdgeInsets.all(24.0),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const CircularProgressIndicator(),
-                                const SizedBox(height: 16),
-                                Text(
-                                  isProfileSwitching
-                                      ? AppLocalizations.of(
+                              children: _deepScanning && _scanProgressTotal > 0
+                                  ? [
+                                      SizedBox(
+                                        width: 260,
+                                        child: LinearProgressIndicator(
+                                          value:
+                                              _scanProgressCurrent /
+                                              _scanProgressTotal,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        AppLocalizations.of(
                                           context,
-                                        )!.switchingProfiles
-                                      : AppLocalizations.of(
-                                          context,
-                                        )!.scanningProjects,
-                                  style: TextStyle(
-                                    color: Theme.of(
-                                      context,
-                                    ).textTheme.bodyMedium?.color,
-                                  ),
-                                ),
-                              ],
+                                        )!.scanProgressLabel(
+                                          _scanProgressCurrent,
+                                          _scanProgressTotal,
+                                        ),
+                                        style: TextStyle(
+                                          color: Theme.of(
+                                            context,
+                                          ).textTheme.bodyMedium?.color,
+                                        ),
+                                      ),
+                                    ]
+                                  : [
+                                      const CircularProgressIndicator(),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        isProfileSwitching
+                                            ? AppLocalizations.of(
+                                                context,
+                                              )!.switchingProfiles
+                                            : AppLocalizations.of(
+                                                context,
+                                              )!.scanningProjects,
+                                        style: TextStyle(
+                                          color: Theme.of(
+                                            context,
+                                          ).textTheme.bodyMedium?.color,
+                                        ),
+                                      ),
+                                    ],
                             ),
                           ),
                         ),
@@ -4076,69 +4342,176 @@ class _PlutoProjectsTableWithSelectionState
     final scanRoots = ref.watch(scanRootsProvider);
     final l10n = AppLocalizations.of(context)!;
 
+    // Filtering an empty grid makes no sense — hide the whole filter bar
+    // whenever there are no projects yet, even if scan roots are already
+    // configured (e.g. a freshly added root that hasn't found anything),
+    // rather than showing dropdowns and checkboxes with nothing to act on.
+    // Uses the raw, unfiltered project count (not the currently-displayed
+    // one) so a legitimate search filtered down to zero results doesn't
+    // also hide the filter bar that could clear it.
+    final allProjectsAsync = ref.watch(allProjectsStreamProvider);
+    final hasAnyProjects = allProjectsAsync.value?.isNotEmpty ?? false;
+
     return Column(
       children: [
         // Filter bar
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          color: Theme.of(context).cardColor,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              // Project count — all three mode variants are stacked and
-              // rendered simultaneously; only the active one is opaque.
-              // The Stack always sizes to the widest variant so the bar
-              // never shifts regardless of which mode is active.
-              Stack(
-                children: [
-                  // Mode 0: "X projects (N hidden)"
-                  Opacity(
-                    opacity: hiddenMode == 0 ? 1.0 : 0.0,
+        if (hasAnyProjects)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            color: Theme.of(context).cardColor,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                // Project count — all three mode variants are stacked and
+                // rendered simultaneously; only the active one is opaque.
+                // The Stack always sizes to the widest variant so the bar
+                // never shifts regardless of which mode is active.
+                Stack(
+                  children: [
+                    // Mode 0: "X projects (N hidden)"
+                    Opacity(
+                      opacity: hiddenMode == 0 ? 1.0 : 0.0,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            l10n.projectsCount(widget.visibleCount),
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                          if (widget.hiddenCount > 0)
+                            Text(
+                              ' ${l10n.hiddenCount(widget.hiddenCount)}',
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                        ],
+                      ),
+                    ),
+                    // Mode 1: "X projects" (show-all — visible count only)
+                    Opacity(
+                      opacity: hiddenMode == 1 ? 1.0 : 0.0,
+                      child: Text(
+                        l10n.projectsCount(widget.visibleCount),
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ),
+                    // Mode 2: "N projects hidden only"
+                    if (widget.hiddenCount > 0)
+                      Opacity(
+                        opacity: hiddenMode == 2 ? 1.0 : 0.0,
+                        child: Text(
+                          '${l10n.projectsCount(widget.hiddenCount)} ${l10n.hiddenOnly}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.orange.shade300,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(width: 8),
+                if (widget.hiddenCount > 0) ...[
+                  InkWell(
+                    onTap: () {
+                      if (hiddenMode == 1) {
+                        hiddenNotifier.setShowAll(false);
+                      } else {
+                        hiddenNotifier.setShowAll(true);
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(4),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        Checkbox(
+                          value: hiddenMode == 1,
+                          onChanged: (value) {
+                            if (value == true) {
+                              hiddenNotifier.setShowAll(true);
+                            } else {
+                              hiddenNotifier.setShowAll(false);
+                            }
+                          },
+                        ),
                         Text(
-                          l10n.projectsCount(widget.visibleCount),
+                          l10n.showHidden,
                           style: const TextStyle(fontSize: 12),
                         ),
-                        if (widget.hiddenCount > 0)
-                          Text(
-                            ' ${l10n.hiddenCount(widget.hiddenCount)}',
-                            style: const TextStyle(fontSize: 12),
-                          ),
                       ],
                     ),
                   ),
-                  // Mode 1: "X projects" (show-all — visible count only)
-                  Opacity(
-                    opacity: hiddenMode == 1 ? 1.0 : 0.0,
-                    child: Text(
-                      l10n.projectsCount(widget.visibleCount),
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                  ),
-                  // Mode 2: "N projects hidden only"
-                  if (widget.hiddenCount > 0)
-                    Opacity(
-                      opacity: hiddenMode == 2 ? 1.0 : 0.0,
-                      child: Text(
-                        '${l10n.projectsCount(widget.hiddenCount)} ${l10n.hiddenOnly}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.orange.shade300,
+                  const SizedBox(width: 8),
+                  // Stack keeps the button at the width of whichever label
+                  // is wider — the ghost (opposite label, opacity 0) pins the
+                  // layout; the Stack always takes the max of both children.
+                  Stack(
+                    children: [
+                      Opacity(
+                        opacity: 0,
+                        child: IgnorePointer(
+                          child: TextButton.icon(
+                            icon: Icon(
+                              hiddenMode == 2
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility,
+                              size: 16,
+                            ),
+                            label: Text(
+                              hiddenMode == 2
+                                  ? l10n.showOnlyHidden
+                                  : l10n.showAll,
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                            onPressed: () {},
+                            style: TextButton.styleFrom(
+                              backgroundColor: hiddenMode != 2
+                                  ? Colors.orange.shade700
+                                  : null,
+                              foregroundColor: hiddenMode != 2
+                                  ? Colors.white
+                                  : Theme.of(
+                                      context,
+                                    ).textTheme.bodyMedium?.color,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                      TextButton.icon(
+                        icon: Icon(
+                          hiddenMode == 2
+                              ? Icons.visibility
+                              : Icons.visibility_off_outlined,
+                          size: 16,
+                        ),
+                        label: Text(
+                          hiddenMode == 2 ? l10n.showAll : l10n.showOnlyHidden,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        style: TextButton.styleFrom(
+                          backgroundColor: hiddenMode == 2
+                              ? Colors.orange.shade700
+                              : null,
+                          foregroundColor: hiddenMode == 2
+                              ? Colors.white
+                              : Theme.of(context).textTheme.bodyMedium?.color,
+                        ),
+                        onPressed: () {
+                          if (hiddenMode == 2) {
+                            hiddenNotifier.setShowOnlyHidden(false);
+                          } else {
+                            hiddenNotifier.setShowOnlyHidden(true);
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 8),
                 ],
-              ),
-              const SizedBox(width: 8),
-              if (widget.hiddenCount > 0) ...[
                 InkWell(
                   onTap: () {
-                    if (hiddenMode == 1) {
-                      hiddenNotifier.setShowAll(false);
+                    if (finishedMode == 1) {
+                      finishedNotifier.setHideFinished(false);
                     } else {
-                      hiddenNotifier.setShowAll(true);
+                      finishedNotifier.setHideFinished(true);
                     }
                   },
                   borderRadius: BorderRadius.circular(4),
@@ -4146,216 +4519,124 @@ class _PlutoProjectsTableWithSelectionState
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Checkbox(
-                        value: hiddenMode == 1,
+                        value: finishedMode == 1,
                         onChanged: (value) {
                           if (value == true) {
-                            hiddenNotifier.setShowAll(true);
+                            finishedNotifier.setHideFinished(true);
                           } else {
-                            hiddenNotifier.setShowAll(false);
+                            finishedNotifier.setHideFinished(false);
                           }
                         },
                       ),
                       Text(
-                        l10n.showHidden,
+                        l10n.hideFinished,
                         style: const TextStyle(fontSize: 12),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(width: 8),
-                // Stack keeps the button at the width of whichever label
-                // is wider — the ghost (opposite label, opacity 0) pins the
-                // layout; the Stack always takes the max of both children.
-                Stack(
-                  children: [
-                    Opacity(
-                      opacity: 0,
-                      child: IgnorePointer(
-                        child: TextButton.icon(
-                          icon: Icon(
-                            hiddenMode == 2
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility,
-                            size: 16,
-                          ),
-                          label: Text(
-                            hiddenMode == 2
-                                ? l10n.showOnlyHidden
-                                : l10n.showAll,
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                          onPressed: () {},
-                          style: TextButton.styleFrom(
-                            backgroundColor: hiddenMode != 2
-                                ? Colors.orange.shade700
-                                : null,
-                            foregroundColor: hiddenMode != 2
-                                ? Colors.white
-                                : Theme.of(context).textTheme.bodyMedium?.color,
-                          ),
-                        ),
+                InkWell(
+                  onTap: () {
+                    final currentValue = ref.read(showOnlyWithDeadlineProvider);
+                    ref
+                        .read(showOnlyWithDeadlineProvider.notifier)
+                        .setShowOnlyWithDeadline(!currentValue);
+                  },
+                  borderRadius: BorderRadius.circular(4),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Checkbox(
+                        value: ref.watch(showOnlyWithDeadlineProvider),
+                        onChanged: (value) {
+                          ref
+                              .read(showOnlyWithDeadlineProvider.notifier)
+                              .setShowOnlyWithDeadline(value == true);
+                        },
                       ),
-                    ),
-                    TextButton.icon(
-                      icon: Icon(
-                        hiddenMode == 2
-                            ? Icons.visibility
-                            : Icons.visibility_off_outlined,
-                        size: 16,
-                      ),
-                      label: Text(
-                        hiddenMode == 2 ? l10n.showAll : l10n.showOnlyHidden,
+                      Text(
+                        l10n.showOnlyDeadlines,
                         style: const TextStyle(fontSize: 12),
                       ),
-                      style: TextButton.styleFrom(
-                        backgroundColor: hiddenMode == 2
-                            ? Colors.orange.shade700
-                            : null,
-                        foregroundColor: hiddenMode == 2
-                            ? Colors.white
-                            : Theme.of(context).textTheme.bodyMedium?.color,
-                      ),
-                      onPressed: () {
-                        if (hiddenMode == 2) {
-                          hiddenNotifier.setShowOnlyHidden(false);
-                        } else {
-                          hiddenNotifier.setShowOnlyHidden(true);
-                        }
-                      },
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 const SizedBox(width: 8),
-              ],
-              InkWell(
-                onTap: () {
-                  if (finishedMode == 1) {
-                    finishedNotifier.setHideFinished(false);
-                  } else {
-                    finishedNotifier.setHideFinished(true);
-                  }
-                },
-                borderRadius: BorderRadius.circular(4),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Checkbox(
-                      value: finishedMode == 1,
-                      onChanged: (value) {
-                        if (value == true) {
-                          finishedNotifier.setHideFinished(true);
-                        } else {
-                          finishedNotifier.setHideFinished(false);
-                        }
-                      },
-                    ),
-                    Text(
-                      l10n.hideFinished,
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              InkWell(
-                onTap: () {
-                  final currentValue = ref.read(showOnlyWithDeadlineProvider);
-                  ref
-                      .read(showOnlyWithDeadlineProvider.notifier)
-                      .setShowOnlyWithDeadline(!currentValue);
-                },
-                borderRadius: BorderRadius.circular(4),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Checkbox(
-                      value: ref.watch(showOnlyWithDeadlineProvider),
-                      onChanged: (value) {
-                        ref
-                            .read(showOnlyWithDeadlineProvider.notifier)
-                            .setShowOnlyWithDeadline(value == true);
-                      },
-                    ),
-                    Text(
-                      l10n.showOnlyDeadlines,
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              FilterDropdown<String>(
-                icon: Icons.filter_list,
-                value: phaseFilter,
-                hintText: l10n.filterByPhase,
-                items: [
-                  DropdownMenuItem<String>(
-                    value: null,
-                    child: Text(l10n.allPhases),
-                  ),
-                  ...customPhases.map(
-                    (phase) => DropdownMenuItem<String>(
-                      value: phase,
-                      child: Text(_translateStatus(context, phase)),
-                    ),
-                  ),
-                ],
-                onChanged: (String? value) {
-                  ref.read(phaseFilterProvider.notifier).setPhase(value);
-                },
-              ),
-              if (availableDaws.isNotEmpty) ...[
-                const SizedBox(width: 4),
                 FilterDropdown<String>(
-                  icon: Icons.piano,
-                  value: dawFilter,
-                  hintText: l10n.filterByDaw,
+                  icon: Icons.filter_list,
+                  value: phaseFilter,
+                  hintText: l10n.filterByPhase,
                   items: [
                     DropdownMenuItem<String>(
                       value: null,
-                      child: Text(l10n.allDaws),
+                      child: Text(l10n.allPhases),
                     ),
-                    ...availableDaws.map(
-                      (daw) => DropdownMenuItem<String>(
-                        value: daw,
-                        child: Text(daw),
+                    ...customPhases.map(
+                      (phase) => DropdownMenuItem<String>(
+                        value: phase,
+                        child: Text(_translateStatus(context, phase)),
                       ),
                     ),
                   ],
                   onChanged: (String? value) {
-                    ref.read(dawFilterProvider.notifier).setDaw(value);
+                    ref.read(phaseFilterProvider.notifier).setPhase(value);
+                  },
+                ),
+                if (availableDaws.isNotEmpty) ...[
+                  const SizedBox(width: 4),
+                  FilterDropdown<String>(
+                    icon: Icons.piano,
+                    value: dawFilter,
+                    hintText: l10n.filterByDaw,
+                    items: [
+                      DropdownMenuItem<String>(
+                        value: null,
+                        child: Text(l10n.allDaws),
+                      ),
+                      ...availableDaws.map(
+                        (daw) => DropdownMenuItem<String>(
+                          value: daw,
+                          child: Text(daw),
+                        ),
+                      ),
+                    ],
+                    onChanged: (String? value) {
+                      ref.read(dawFilterProvider.notifier).setDaw(value);
+                    },
+                  ),
+                ],
+                const Spacer(),
+                ValueListenableBuilder<({bool hasGroups, bool anyExpanded})>(
+                  valueListenable: _groupExpandState,
+                  builder: (context, state, _) {
+                    if (!state.hasGroups) return const SizedBox.shrink();
+                    return TextButton.icon(
+                      icon: Icon(
+                        state.anyExpanded
+                            ? Icons.unfold_less
+                            : Icons.unfold_more,
+                        size: 16,
+                      ),
+                      label: Text(
+                        state.anyExpanded
+                            ? '${l10n.collapse} All'
+                            : '${l10n.expand} All',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                      onPressed: () {
+                        if (state.anyExpanded) {
+                          _innerTableKey.currentState?._collapseAll();
+                        } else {
+                          _innerTableKey.currentState?._expandAll();
+                        }
+                      },
+                    );
                   },
                 ),
               ],
-              const Spacer(),
-              ValueListenableBuilder<({bool hasGroups, bool anyExpanded})>(
-                valueListenable: _groupExpandState,
-                builder: (context, state, _) {
-                  if (!state.hasGroups) return const SizedBox.shrink();
-                  return TextButton.icon(
-                    icon: Icon(
-                      state.anyExpanded ? Icons.unfold_less : Icons.unfold_more,
-                      size: 16,
-                    ),
-                    label: Text(
-                      state.anyExpanded
-                          ? '${l10n.collapse} All'
-                          : '${l10n.expand} All',
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    onPressed: () {
-                      if (state.anyExpanded) {
-                        _innerTableKey.currentState?._collapseAll();
-                      } else {
-                        _innerTableKey.currentState?._expandAll();
-                      }
-                    },
-                  );
-                },
-              ),
-            ],
+            ),
           ),
-        ),
         Expanded(
           child: _PlutoProjectsTable(
             key: _innerTableKey,
@@ -4626,6 +4907,7 @@ class _PlutoProjectsTableWithSelectionState
                                 ),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.red.shade700,
+                                  foregroundColor: Colors.white,
                                 ),
                                 onPressed: () {
                                   widget.onDeleteMissingProjects(
@@ -4711,6 +4993,48 @@ class _PlutoProjectsTable extends ConsumerStatefulWidget {
 /// treatment later. Switching profiles or extracting metadata both mutate
 /// state the user could otherwise interact with mid-flight, so those still
 /// block too.
+
+/// Reads all projects from [repo], returning null instead of throwing if its
+/// Hive boxes were already closed — e.g. Clear Library / Delete All Data
+/// (settings_page.dart) closing/clearing boxes while this widget is still
+/// holding the pre-invalidation repositoryProvider value. Callers should
+/// treat a null result the same as "not loaded yet".
+@visibleForTesting
+List<MusicProject>? safeGetAllProjects(ProjectRepository repo) {
+  try {
+    return repo.getAllProjects();
+  } on HiveError {
+    return null;
+  }
+}
+
+/// Why the Projects grid is showing its empty state, so the message can be
+/// tailored instead of a single generic "no projects found" covering both a
+/// fresh install and a scan root that turned up nothing.
+@visibleForTesting
+enum ProjectsEmptyStateReason {
+  /// Projects exist, but the current search/filter narrowed them to zero.
+  filteredToZero,
+
+  /// No scan roots configured yet — a genuinely fresh install.
+  noScanRootsYet,
+
+  /// At least one scan root is configured, but it hasn't found any projects
+  /// (wrong folder, DAW files not created yet, etc.) — the user has already
+  /// done the "add a folder" step, so telling them to do it again is wrong.
+  scanRootsFoundNothing,
+}
+
+@visibleForTesting
+ProjectsEmptyStateReason projectsEmptyStateReason({
+  required bool hasProjects,
+  required bool hasScanRoots,
+}) {
+  if (hasProjects) return ProjectsEmptyStateReason.filteredToZero;
+  if (hasScanRoots) return ProjectsEmptyStateReason.scanRootsFoundNothing;
+  return ProjectsEmptyStateReason.noScanRootsYet;
+}
+
 @visibleForTesting
 bool shouldBlockForOperation({
   required bool scanning,
@@ -5502,7 +5826,9 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
 
   Future<void> _playPreviewSong(MusicProject project) async {
     final customFolders = ref.read(customMixdownFoldersProvider).value;
-    final customFoldersByDaw = ref.read(customMixdownFoldersByDawProvider).value;
+    final customFoldersByDaw = ref
+        .read(customMixdownFoldersByDawProvider)
+        .value;
     var effectivePath = project.previewSongPath?.isNotEmpty == true
         ? project.previewSongPath!
         : project.previewSongAutoPath;
@@ -6164,6 +6490,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                   onPressed: () => Navigator.pop(ctx, true),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red.shade300,
+                    foregroundColor: Colors.black,
                   ),
                   child: Text(l10n.hide),
                 ),
@@ -7401,6 +7728,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
                             onPressed: () => Navigator.pop(ctx, true),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.red.shade300,
+                              foregroundColor: Colors.black,
                             ),
                             child: Text(AppLocalizations.of(context)!.hide),
                           ),
@@ -7447,6 +7775,24 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     if (widget.projects.isEmpty) {
       final allProjectsAsync = ref.watch(allProjectsStreamProvider);
       final hasProjects = (allProjectsAsync.value?.isNotEmpty) ?? false;
+      final hasScanRoots = ref.watch(scanRootsProvider).isNotEmpty;
+      final reason = projectsEmptyStateReason(
+        hasProjects: hasProjects,
+        hasScanRoots: hasScanRoots,
+      );
+      final String title;
+      final String hint;
+      switch (reason) {
+        case ProjectsEmptyStateReason.filteredToZero:
+          title = l10n.noResultsForFilter;
+          hint = l10n.noResultsForFilterHint;
+        case ProjectsEmptyStateReason.noScanRootsYet:
+          title = l10n.noProjectsFound;
+          hint = l10n.noProjectsFoundHint;
+        case ProjectsEmptyStateReason.scanRootsFoundNothing:
+          title = l10n.noProjectsFound;
+          hint = l10n.noProjectsFoundInFoldersHint;
+      }
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -7460,16 +7806,14 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             ),
             const SizedBox(height: 16),
             Text(
-              hasProjects ? l10n.noResultsForFilter : l10n.noProjectsFound,
+              title,
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
-              hasProjects
-                  ? l10n.noResultsForFilterHint
-                  : l10n.noProjectsFoundHint,
+              hint,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Theme.of(context).textTheme.bodySmall?.color,
               ),
@@ -7518,7 +7862,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
       key: ValueKey(
         'trina_grid_${l10n.localeName}_${ref.watch(themeTypeProvider).name}_${excludeFoldersFromSort}_${mergeFoldersByName}_$alwaysShowSmartFolders',
       ),
-      columnMenuDelegate: _FitAllColumnsMenuDelegate(),
+      columnMenuDelegate: const FitAllColumnsMenuDelegate(),
       columns: columns,
       rows: initialRows,
       rowColorCallback: (TrinaRowColorContext ctx) {
@@ -7618,6 +7962,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
         }
       },
       configuration: TrinaGridConfiguration(
+        localeText: trinaGridLocaleTextFor(context),
         style: TrinaGridStyleConfig(
           gridBackgroundColor: activeTheme.cardColor,
           gridBorderColor: isNeon
@@ -7940,7 +8285,9 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
     } else {
       Future.microtask(() async {
         final customFolders = ref.read(customMixdownFoldersProvider).value;
-        final customFoldersByDaw = ref.read(customMixdownFoldersByDawProvider).value;
+        final customFoldersByDaw = ref
+            .read(customMixdownFoldersByDawProvider)
+            .value;
         final file = MixdownDetectorService.findLatestMixdown(
           widget.project,
           customFolders: customFolders,
@@ -9885,7 +10232,9 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
 
   Future<void> _playPreviewSong(MusicProject project) async {
     final customFolders = ref.read(customMixdownFoldersProvider).value;
-    final customFoldersByDaw = ref.read(customMixdownFoldersByDawProvider).value;
+    final customFoldersByDaw = ref
+        .read(customMixdownFoldersByDawProvider)
+        .value;
     var effectivePath = project.previewSongPath?.isNotEmpty == true
         ? project.previewSongPath!
         : project.previewSongAutoPath;
@@ -10687,65 +11036,6 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
   }
 }
 
-/// Column menu delegate that extends the default TrinaGrid header context menu with
-/// an "Auto fit all columns" option that calls autoFitColumn on every column at once.
-class _FitAllColumnsMenuDelegate implements TrinaColumnMenuDelegate<dynamic> {
-  static const String _menuFitAll = 'fitAll';
-
-  @override
-  List<PopupMenuEntry<dynamic>> buildMenuItems({
-    required TrinaGridStateManager stateManager,
-    required TrinaColumn column,
-  }) {
-    final defaults = const TrinaColumnMenuDelegateDefault().buildMenuItems(
-      stateManager: stateManager,
-      column: column,
-    );
-    final context = navigatorKey.currentContext;
-    final label = context != null
-        ? AppLocalizations.of(context)!.autoFitAllColumns
-        : 'Auto fit all columns';
-    return [
-      ...defaults,
-      const PopupMenuDivider(),
-      PopupMenuItem<String>(
-        value: _menuFitAll,
-        child: Row(
-          children: [
-            const Icon(Icons.fit_screen, size: 16),
-            const SizedBox(width: 8),
-            Text(label),
-          ],
-        ),
-      ),
-    ];
-  }
-
-  @override
-  void onSelected({
-    required BuildContext context,
-    required TrinaGridStateManager stateManager,
-    required TrinaColumn column,
-    required bool mounted,
-    required dynamic selected,
-  }) {
-    if (selected == _menuFitAll) {
-      if (!mounted) return;
-      for (final col in stateManager.columns) {
-        stateManager.autoFitColumn(context, col);
-      }
-      stateManager.notifyResizingListeners();
-      return;
-    }
-    const TrinaColumnMenuDelegateDefault().onSelected(
-      context: context,
-      stateManager: stateManager,
-      column: column,
-      mounted: mounted,
-      selected: selected,
-    );
-  }
-}
 
 /// Shows a confirmation dialog before starting a session on a project.
 /// If another session is already active, offers to switch instead.

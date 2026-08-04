@@ -254,6 +254,7 @@ class _TodoTemplatesPageState extends ConsumerState<TodoTemplatesPage> {
             onPressed: () => Navigator.pop(dialogContext, true),
             style: FilledButton.styleFrom(
               backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
             ),
             child: Text(AppLocalizations.of(context)!.delete),
           ),

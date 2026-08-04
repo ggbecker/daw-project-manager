@@ -20,9 +20,37 @@ import '../../utils/file_launcher.dart';
 import '../project_templates_page.dart';
 import '../session_actions.dart';
 
-enum _NamingScheme { artistTrack, collab, dateTrack, custom }
+enum _NamingScheme { artistTrack, collab, dateTrack, custom, remix }
 
 enum _StartMode { emptyFolder, template }
+
+/// Builds the "remix" naming scheme's folder/file name: the original
+/// artist and track, followed by a "(Remixer[, Remixer2, ...] Remix)"
+/// suffix — e.g. "Massive Attack - Teardrop (Audio Crawler Remix)" or,
+/// with more than one remixer, "... (Audio Crawler vs M4rs Remix)".
+/// Extracted as a standalone function (rather than left inline in the
+/// dialog's private `_folderName` getter) so this naming logic can be unit
+/// tested without pumping the whole wizard widget.
+@visibleForTesting
+String buildRemixFolderName({
+  required String originalArtist,
+  required String track,
+  required List<String> remixerNames,
+  String datePrefix = '',
+}) {
+  final artist = originalArtist.trim();
+  final trackName = track.trim();
+  final remixers = remixerNames
+      .map((s) => s.trim())
+      .where((s) => s.isNotEmpty)
+      .toList();
+  final suffix = remixers.isEmpty ? '' : ' (${remixers.join(' vs ')} Remix)';
+
+  if (artist.isEmpty && trackName.isEmpty) return '';
+  if (artist.isEmpty) return '$datePrefix$trackName$suffix';
+  if (trackName.isEmpty) return '$datePrefix$artist$suffix';
+  return '$datePrefix$artist - $trackName$suffix';
+}
 
 class CreateProjectDialog extends ConsumerStatefulWidget {
   /// Pre-selects a template and jumps straight to the template flow — used
@@ -50,6 +78,12 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
   final _trackNameController = TextEditingController();
   final _customNameController = TextEditingController();
   final List<TextEditingController> _collabControllers = [];
+  // Remix scheme: one or more remixer names, distinct from
+  // _collabControllers — those are additional *primary* artists, these are
+  // the people remixing someone else's track, joined with " vs " rather
+  // than " & " (e.g. "Massive Attack - Teardrop (Audio Crawler Remix)" or
+  // "... (Audio Crawler vs M4rs Remix)").
+  final List<TextEditingController> _remixArtistControllers = [];
   bool _isFolderValid = true;
   String? _folderError;
 
@@ -79,6 +113,7 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
   void initState() {
     super.initState();
     _collabControllers.add(TextEditingController());
+    _remixArtistControllers.add(TextEditingController());
     _trackNameController.addListener(_onNameChanged);
     _primaryArtistController.addListener(_onNameChanged);
     _customNameController.addListener(_onNameChanged);
@@ -105,6 +140,9 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
     _customNameController.dispose();
     _templateSearchController.dispose();
     for (final c in _collabControllers) {
+      c.dispose();
+    }
+    for (final c in _remixArtistControllers) {
       c.dispose();
     }
     super.dispose();
@@ -156,6 +194,14 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
         final custom = _customNameController.text.trim();
         if (custom.isEmpty) return '';
         return '$datePrefix$custom';
+
+      case _NamingScheme.remix:
+        return buildRemixFolderName(
+          originalArtist: _primaryArtistController.text,
+          track: track,
+          remixerNames: _remixArtistControllers.map((c) => c.text).toList(),
+          datePrefix: datePrefix,
+        );
     }
   }
 
@@ -524,11 +570,27 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
       });
     }
 
-    // Pre-fill primary artist from profile name
-    if (_primaryArtistController.text.isEmpty && profile?.name != null) {
+    // Pre-fill primary artist from profile name — not for the remix scheme,
+    // where this field means the ORIGINAL track's artist, not the profile.
+    if (_scheme != _NamingScheme.remix &&
+        _primaryArtistController.text.isEmpty &&
+        profile?.name != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && _primaryArtistController.text.isEmpty) {
           _primaryArtistController.text = profile!.name;
+        }
+      });
+    }
+
+    // Remix scheme: the profile is doing the remixing, so it pre-fills the
+    // first remixer slot instead of the (original) artist field above.
+    if (_scheme == _NamingScheme.remix &&
+        _remixArtistControllers.isNotEmpty &&
+        _remixArtistControllers.first.text.isEmpty &&
+        profile?.name != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _remixArtistControllers.first.text.isEmpty) {
+          _remixArtistControllers.first.text = profile!.name;
         }
       });
     }
@@ -751,6 +813,14 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
                   _validateFolderName();
                 }),
               ),
+              _SchemeChip(
+                label: l10n.createProjectSchemeRemix,
+                selected: _scheme == _NamingScheme.remix,
+                onTap: () => setState(() {
+                  _scheme = _NamingScheme.remix;
+                  _validateFolderName();
+                }),
+              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -894,6 +964,68 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
               ),
               autofocus: true,
               textInputAction: TextInputAction.done,
+            ),
+          ] else if (_scheme == _NamingScheme.remix) ...[
+            TextField(
+              controller: _primaryArtistController,
+              decoration: InputDecoration(
+                labelText: l10n.createProjectOriginalArtist,
+                border: const OutlineInputBorder(),
+                isDense: true,
+              ),
+              textInputAction: TextInputAction.next,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _trackNameController,
+              decoration: InputDecoration(
+                labelText: l10n.createProjectTrackName,
+                border: const OutlineInputBorder(),
+                isDense: true,
+              ),
+              textInputAction: TextInputAction.next,
+            ),
+            const SizedBox(height: 12),
+            for (int i = 0; i < _remixArtistControllers.length; i++) ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _remixArtistControllers[i],
+                      decoration: InputDecoration(
+                        labelText: '${l10n.createProjectRemixerName} ${i + 1}',
+                        border: const OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                      onChanged: (_) => setState(() => _validateFolderName()),
+                      textInputAction: TextInputAction.next,
+                    ),
+                  ),
+                  if (_remixArtistControllers.length > 1)
+                    IconButton(
+                      icon: const Icon(Icons.remove_circle_outline, size: 20),
+                      onPressed: () => setState(() {
+                        _remixArtistControllers[i].dispose();
+                        _remixArtistControllers.removeAt(i);
+                        _validateFolderName();
+                      }),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 12),
+            ],
+            TextButton.icon(
+              icon: const Icon(Icons.add, size: 18),
+              label: Text(l10n.createProjectAddRemixer),
+              onPressed: _remixArtistControllers.length < 5
+                  ? () => setState(() {
+                      _remixArtistControllers.add(
+                        TextEditingController()..addListener(
+                          () => setState(() => _validateFolderName()),
+                        ),
+                      );
+                    })
+                  : null,
             ),
           ],
           const SizedBox(height: 20),

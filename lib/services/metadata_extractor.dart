@@ -78,6 +78,7 @@ class MetadataExtractor {
       bpm = metadata.bpm ?? bpm;
       key = metadata.key ?? key;
       dawVersion = metadata.dawVersion ?? dawVersion;
+      projectNotes = metadata.projectNotes;
     } else if (ext == '.bwproject') {
       final metadata = await _extractFromBitwigFile(filePath);
       bpm = metadata.bpm ?? bpm;
@@ -197,6 +198,8 @@ class MetadataExtractor {
       case '.mx9':
       case '.mx10':
         return 'Mixcraft';
+      case '.zpj':
+        return 'Zrythm';
       default:
         return null;
     }
@@ -1188,14 +1191,85 @@ class MetadataExtractor {
           key = filenameKey;
         }
       }
-      
-      return ProjectMetadata(bpm: bpm, key: key, dawVersion: dawVersion);
+
+      // === Extract Project Notes from the Notepad panel ===
+      final projectNotes = _extractCubaseNotes(bytes);
+
+      return ProjectMetadata(bpm: bpm, key: key, dawVersion: dawVersion, projectNotes: projectNotes);
     } catch (e) {
       // If parsing fails, return empty metadata
       return ProjectMetadata();
     }
   }
-  
+
+  /// Extracts the Project Notes (Notepad) panel text from a Cubase/Nuendo
+  /// project file.
+  ///
+  /// Cubase serializes named attributes as length-prefixed "Pascal strings":
+  /// a 4-byte big-endian length (counting the trailing null terminator),
+  /// the ASCII name, then a null terminator. The Notepad panel always
+  /// writes a `Cursor` attribute (10 bytes: a 2-byte type code plus an
+  /// 8-byte cursor-position int) — but only writes the following `Text`
+  /// attribute when the notes are non-empty; an empty notepad has no `Text`
+  /// key at all, so its absence right after `Cursor` means "no notes", not
+  /// a parse failure. When present, `Text` is followed by a 2-byte type
+  /// code (0x0008) and a 4-byte big-endian byte length, then that many raw
+  /// bytes of the note text (CRLF line breaks; Cubase sometimes pads the
+  /// end of the declared length with a stray null byte and a UTF-8 BOM).
+  ///
+  /// A project can contain many unrelated `Cursor`-bearing panels (per-part
+  /// editor state, etc.) that never have a `Text` field, so every `Cursor`
+  /// occurrence is checked in turn rather than assuming the first one is
+  /// the Notepad. Reverse-engineered against 40+ real Cubase/Nuendo project
+  /// files.
+  static String? _extractCubaseNotes(Uint8List bytes) {
+    try {
+      const cursorKey = <int>[
+        0x00, 0x00, 0x00, 0x07, // pstring length, incl. null terminator
+        0x43, 0x75, 0x72, 0x73, 0x6F, 0x72, // "Cursor"
+        0x00,
+      ];
+      const textKey = <int>[
+        0x00, 0x00, 0x00, 0x05, // pstring length, incl. null terminator
+        0x54, 0x65, 0x78, 0x74, // "Text"
+        0x00,
+      ];
+      const cursorValueLength = 10;
+
+      var searchStart = 0;
+      while (true) {
+        final cursorPos = _findPattern(bytes, cursorKey, start: searchStart);
+        if (cursorPos == null) return null;
+
+        final textKeyStart = cursorPos + cursorKey.length + cursorValueLength;
+        if (_matchesAt(bytes, textKeyStart, textKey)) {
+          final headerStart = textKeyStart + textKey.length;
+          if (headerStart + 6 > bytes.length) return null;
+
+          final length = ByteData.sublistView(bytes, headerStart + 2, headerStart + 6)
+              .getUint32(0, Endian.big);
+          final textStart = headerStart + 6;
+          if (length <= 0 || textStart + length > bytes.length) return null;
+
+          var text = utf8.decode(
+            bytes.sublist(textStart, textStart + length),
+            allowMalformed: true,
+          );
+          text = text
+              .replaceAll('﻿', '')
+              .replaceAll('\x00', '')
+              .replaceAll('\r\n', '\n')
+              .trim();
+          return text.isEmpty ? null : text;
+        }
+
+        searchStart = cursorPos + 1;
+      }
+    } catch (e) {
+      return null;
+    }
+  }
+
   /// Extracts BPM from Cubase file by searching for MusicalTempo metadata
   /// The tempo is stored as IEEE 754 64-bit double (big-endian) after the "Float" type indicator
   static double? _extractCubaseBpm(Uint8List bytes) {
@@ -1325,19 +1399,24 @@ class MetadataExtractor {
     }
   }
   
-  /// Helper to find a byte pattern in data
-  static int? _findPattern(Uint8List bytes, List<int> pattern) {
-    for (int i = 0; i <= bytes.length - pattern.length; i++) {
-      bool found = true;
-      for (int j = 0; j < pattern.length; j++) {
-        if (bytes[i + j] != pattern[j]) {
-          found = false;
-          break;
-        }
-      }
-      if (found) return i;
+  /// Helper to find a byte pattern in data, optionally starting the search
+  /// partway through (e.g. to resume after a non-matching candidate).
+  static int? _findPattern(Uint8List bytes, List<int> pattern, {int start = 0}) {
+    for (int i = start; i <= bytes.length - pattern.length; i++) {
+      if (_matchesAt(bytes, i, pattern)) return i;
     }
     return null;
+  }
+
+  /// Whether `pattern` occurs in `bytes` starting at `offset`. Safe to call
+  /// with an out-of-range or negative `offset` — returns false rather than
+  /// throwing, so callers don't need a separate bounds check first.
+  static bool _matchesAt(Uint8List bytes, int offset, List<int> pattern) {
+    if (offset < 0 || offset + pattern.length > bytes.length) return false;
+    for (int j = 0; j < pattern.length; j++) {
+      if (bytes[offset + j] != pattern[j]) return false;
+    }
+    return true;
   }
   
   /// Maps Cubase root key index to note name

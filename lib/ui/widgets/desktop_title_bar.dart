@@ -8,6 +8,13 @@ import 'package:window_manager/window_manager.dart'
 import '../../generated/l10n/app_localizations.dart';
 import '../../utils/mobile_utils.dart';
 
+/// Icon for the maximize/restore window-control button: a single square
+/// when the window can still be maximized, two overlapping squares once it
+/// already is (native Windows/Linux window-control convention).
+@visibleForTesting
+IconData windowMaximizeToggleIcon(bool isMaximized) =>
+    isMaximized ? Icons.filter_none : Icons.crop_square_sharp;
+
 /// A cross-platform desktop title bar widget.
 ///
 /// **Windows / Linux (release mode):** Renders a full custom title bar with a
@@ -42,11 +49,42 @@ class DesktopTitleBar extends StatefulWidget {
   State<DesktopTitleBar> createState() => _DesktopTitleBarState();
 }
 
-class _DesktopTitleBarState extends State<DesktopTitleBar> {
+class _DesktopTitleBarState extends State<DesktopTitleBar> with WindowListener {
   // Manual double-tap detection for the drag area — avoids placing a
   // DoubleTapGestureRecognizer over the entire bar (which would delay the
   // window-control buttons by the double-tap timeout).
   DateTime? _lastDragAreaTap;
+
+  bool _isMaximized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!kIsWeb && !MobileUtils.isMobile()) {
+      windowManager.addListener(this);
+      windowManager.isMaximized().then((maximized) {
+        if (mounted) setState(() => _isMaximized = maximized);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    if (!kIsWeb && !MobileUtils.isMobile()) {
+      windowManager.removeListener(this);
+    }
+    super.dispose();
+  }
+
+  @override
+  void onWindowMaximize() {
+    if (mounted) setState(() => _isMaximized = true);
+  }
+
+  @override
+  void onWindowUnmaximize() {
+    if (mounted) setState(() => _isMaximized = false);
+  }
 
   void _handleDragAreaTap() {
     final now = DateTime.now();
@@ -168,7 +206,10 @@ class _DesktopTitleBarState extends State<DesktopTitleBar> {
           ),
           // ── Window controls: completely outside the drag-area detector ──────
           ...widget.actions,
-          _WindowControlButtons(onToggleMaximize: _toggleMaximize),
+          _WindowControlButtons(
+            isMaximized: _isMaximized,
+            onToggleMaximize: _toggleMaximize,
+          ),
         ],
       ),
     );
@@ -177,9 +218,13 @@ class _DesktopTitleBarState extends State<DesktopTitleBar> {
 
 /// Minimize / Maximize / Close buttons for Windows and Linux only.
 class _WindowControlButtons extends StatelessWidget {
+  final bool isMaximized;
   final VoidCallback onToggleMaximize;
 
-  const _WindowControlButtons({required this.onToggleMaximize});
+  const _WindowControlButtons({
+    required this.isMaximized,
+    required this.onToggleMaximize,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -192,8 +237,11 @@ class _WindowControlButtons extends StatelessWidget {
           onPressed: () => windowManager.minimize(),
         ),
         IconButton(
-          icon: Icon(Icons.crop_square_sharp, size: 18,
-              color: Theme.of(context).textTheme.bodyMedium?.color),
+          icon: Icon(
+            windowMaximizeToggleIcon(isMaximized),
+            size: isMaximized ? 15 : 18,
+            color: Theme.of(context).textTheme.bodyMedium?.color,
+          ),
           onPressed: onToggleMaximize,
         ),
         IconButton(

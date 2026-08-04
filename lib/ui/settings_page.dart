@@ -1231,6 +1231,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                         onPressed: () => Navigator.of(ctx).pop(true),
                         style: FilledButton.styleFrom(
                           backgroundColor: Theme.of(context).colorScheme.error,
+                          foregroundColor: Theme.of(context).colorScheme.onError,
                         ),
                         child: Text(l10n.resetOnboarding),
                       ),
@@ -1936,7 +1937,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                                 ),
                                 ElevatedButton(
                                   onPressed: () => Navigator.pop(ctx, true),
-                                  style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Theme.of(context).colorScheme.error,
+                                    foregroundColor: Theme.of(context).colorScheme.onError,
+                                  ),
                                   child: Text(l10n.clear),
                                 ),
                               ],
@@ -2010,7 +2014,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                                 ),
                                 ElevatedButton(
                                   onPressed: () => Navigator.pop(ctx, true),
-                                  style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Theme.of(context).colorScheme.error,
+                                    foregroundColor: Theme.of(context).colorScheme.onError,
+                                  ),
                                   child: Text(l10n.deleteAllData),
                                 ),
                               ],
@@ -2032,7 +2039,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                                 ),
                                 ElevatedButton(
                                   onPressed: () => Navigator.pop(ctx, true),
-                                  style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Theme.of(context).colorScheme.error,
+                                    foregroundColor: Theme.of(context).colorScheme.onError,
+                                  ),
                                   child: Text(l10n.deleteEverything),
                                 ),
                               ],

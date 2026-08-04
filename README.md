@@ -60,6 +60,7 @@ Supports **macOS**, **Windows**, **Android** (closed testing).
 | Renoise | `.xrns` |
 | Rosegarden | `.rg` |
 | Samplitude / Sequoia | `.vip` |
+| Zrythm | `.zpj` |
 
 Not yet supported: Harrison Mixbus and SAWStudio/Pyramix/Zynewave Podium (no reliably documented file extension), and browser-only tools like BandLab/Soundtrap/Audiotool (no local project file to scan). Missing a DAW? Open an issue.
 

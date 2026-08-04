@@ -162,6 +162,10 @@ void main() {
       expect(await dawTypeFor('.mx10'), 'Mixcraft');
     });
 
+    test('.zpj → Zrythm', () async {
+      expect(await dawTypeFor('.zpj'), 'Zrythm');
+    });
+
     test('unknown extension → null', () async {
       expect(await dawTypeFor('.unknown'), isNull);
     });
@@ -397,6 +401,123 @@ TEMPO 120 4 4 0
 
       final metadata = await MetadataExtractor.extractMetadata(file.path);
       expect(metadata.projectNotes, 'Just a quick note');
+    });
+  });
+
+  group('MetadataExtractor — Cubase/Nuendo (.cpr/.npr) project notes', () {
+    // Cubase/Nuendo serialize named attributes as length-prefixed "Pascal
+    // strings": a 4-byte big-endian length (counting the trailing null
+    // terminator), the ASCII name, then a null terminator. The Notepad
+    // panel writes a `Cursor` attribute (11 bytes: 4-byte type marker + an
+    // 8-byte cursor position) always, and a `Text` attribute (2-byte type
+    // code 0x0008 + 4-byte big-endian byte length + raw text) only when
+    // notes are non-empty. Reverse-engineered against 40+ real project
+    // files — see the comment on MetadataExtractor._extractCubaseNotes.
+    late Directory tempDir;
+
+    setUp(() async {
+      tempDir = await Directory.systemTemp.createTemp('cpr_test_');
+    });
+
+    tearDown(() async {
+      await tempDir.delete(recursive: true);
+    });
+
+    List<int> pstring(String s) {
+      final withNull = [...utf8.encode(s), 0x00];
+      final length = withNull.length;
+      return [
+        (length >> 24) & 0xFF, (length >> 16) & 0xFF, (length >> 8) & 0xFF, length & 0xFF,
+        ...withNull,
+      ];
+    }
+
+    List<int> cursorField() => [
+          ...pstring('Cursor'),
+          0x00, 0x01, // type code (int64)
+          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 8-byte cursor position
+        ];
+
+    List<int> textField(List<int> rawTextBytes) {
+      final length = rawTextBytes.length;
+      return [
+        ...pstring('Text'),
+        0x00, 0x08, // type code
+        (length >> 24) & 0xFF, (length >> 16) & 0xFF, (length >> 8) & 0xFF, length & 0xFF,
+        ...rawTextBytes,
+      ];
+    }
+
+    Future<String> writeCprFixture(List<int> body, {String ext = '.cpr'}) async {
+      final file = File('${tempDir.path}/project$ext');
+      await file.writeAsBytes([
+        ...utf8.encode('daPN'), // Project Notes panel tag (not itself parsed)
+        ...body,
+        ...utf8.encode('trailing project data'),
+      ]);
+      return file.path;
+    }
+
+    test('extracts the Notepad Text field and normalizes CRLF to LF', () async {
+      final path = await writeCprFixture([
+        ...cursorField(),
+        ...textField(utf8.encode('Line one\r\nLine two')),
+      ]);
+
+      final metadata = await MetadataExtractor.extractMetadata(path);
+      expect(metadata.dawType, 'Cubase');
+      expect(metadata.projectNotes, 'Line one\nLine two');
+    });
+
+    test('extracts notes from a Nuendo (.npr) project the same way', () async {
+      final path = await writeCprFixture(
+        [...cursorField(), ...textField(utf8.encode('Nuendo notes'))],
+        ext: '.npr',
+      );
+
+      final metadata = await MetadataExtractor.extractMetadata(path);
+      expect(metadata.dawType, 'Nuendo');
+      expect(metadata.projectNotes, 'Nuendo notes');
+    });
+
+    test('strips a trailing null byte and UTF-8 BOM padding inside the declared text length', () async {
+      final path = await writeCprFixture([
+        ...cursorField(),
+        ...textField([...utf8.encode('Short note'), 0x00, 0xEF, 0xBB, 0xBF]),
+      ]);
+
+      final metadata = await MetadataExtractor.extractMetadata(path);
+      expect(metadata.projectNotes, 'Short note');
+    });
+
+    test('finds the Notepad Text field even when an earlier unrelated Cursor-bearing '
+        'panel has no Text of its own', () async {
+      final path = await writeCprFixture([
+        ...cursorField(), // e.g. some other panel's editor-cursor state
+        ...utf8.encode('someOtherPanelObject'),
+        ...cursorField(), // the actual Notepad panel's Cursor
+        ...textField(utf8.encode('Real notes here')),
+      ]);
+
+      final metadata = await MetadataExtractor.extractMetadata(path);
+      expect(metadata.projectNotes, 'Real notes here');
+    });
+
+    test('projectNotes is null when the Notepad panel has no Text field (empty notes)', () async {
+      final path = await writeCprFixture([
+        ...cursorField(),
+        ...utf8.encode('iCVT'), // next object Cubase writes right after an empty notepad
+      ]);
+
+      final metadata = await MetadataExtractor.extractMetadata(path);
+      expect(metadata.projectNotes, isNull);
+    });
+
+    test('projectNotes is null for a project file with no Notepad panel at all', () async {
+      final path = await writeCprFixture(utf8.encode('no notepad data in this project'));
+
+      final metadata = await MetadataExtractor.extractMetadata(path);
+      expect(metadata.projectNotes, isNull);
     });
   });
 

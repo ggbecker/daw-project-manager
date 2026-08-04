@@ -7,12 +7,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'generated/l10n/app_localizations.dart';
-import 'dart:io' show Platform, Process, ServerSocket, Socket, InternetAddress, SocketException, File, Directory, FileSystemEntity, FileSystemException, exit;
+import 'dart:io'
+    show
+        Platform,
+        Process,
+        ServerSocket,
+        Socket,
+        InternetAddress,
+        SocketException,
+        File,
+        Directory,
+        FileSystemEntity,
+        FileSystemException,
+        exit;
 import 'package:window_manager/window_manager.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 
 // NOVO: Importar providers e serviços para a lógica de auto-scan
+import 'models/music_project.dart';
 import 'providers/providers.dart';
 import 'repository/project_repository.dart';
 import 'services/scanner_service.dart';
@@ -120,9 +133,9 @@ void _runWithNavigatorContext(void Function(BuildContext context) action) {
 
 void _openProjectById(String id) {
   _runWithNavigatorContext((ctx) {
-    Navigator.of(ctx).push(
-      MaterialPageRoute(builder: (_) => ProjectDetailPage(projectId: id)),
-    );
+    Navigator.of(
+      ctx,
+    ).push(MaterialPageRoute(builder: (_) => ProjectDetailPage(projectId: id)));
   });
 }
 
@@ -147,7 +160,11 @@ Future<void> _triggerProjectScan() async {
       if (l10n == null) return;
       final msg = foundCount == 0
           ? l10n.noProjectsFoundInRoots
-          : l10n.scanComplete(l10n.rescan, foundCount, foundCount == 1 ? '' : 's');
+          : l10n.scanComplete(
+              l10n.rescan,
+              foundCount,
+              foundCount == 1 ? '' : 's',
+            );
       ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(msg)));
     });
   } catch (_) {}
@@ -188,7 +205,10 @@ Future<void> _runStartupUpdateCheck(ProviderContainer container) async {
   try {
     final box = await Hive.openBox<String>('app_settings');
     if (box.get('checkForUpdates') != 'true') return;
-    const current = String.fromEnvironment('APP_VERSION', defaultValue: '0.0.0');
+    const current = String.fromEnvironment(
+      'APP_VERSION',
+      defaultValue: '0.0.0',
+    );
     final newer = await UpdateCheckService.checkForUpdate(current);
     if (newer != null) {
       container.read(availableUpdateProvider.notifier).set(newer);
@@ -243,10 +263,12 @@ void _startAutoBackupTimer(
       // Run backup silently. Use syncDatabase (not a raw uploadDatabase) so a
       // newer backup already on Drive — e.g. uploaded from another device —
       // gets downloaded and merged first instead of being blindly overwritten.
-      final profileRepo =
-          await container.read(profileRepositoryProvider.future);
+      final profileRepo = await container.read(
+        profileRepositoryProvider.future,
+      );
       final projectRepo = await container.read(repositoryProvider.future);
-      final uploadAutoDetected = settingsBox.get('uploadAutoPreviewSongs') == 'true';
+      final uploadAutoDetected =
+          settingsBox.get('uploadAutoPreviewSongs') == 'true';
       await syncService.syncDatabase(
         projectRepo: projectRepo,
         profileRepo: profileRepo,
@@ -303,6 +325,22 @@ void _startFolderWatcher(ProviderContainer container) {
   );
 }
 
+/// Finds the project a resolved [PendingFolder] turned into, by matching
+/// its path against the folder's own path. Extracted as a standalone,
+/// dependency-free function — the surrounding folder-watcher callback
+/// touches real Hive/filesystem/Riverpod state and isn't practically unit
+/// testable, but this specific matching step is, so the two are kept
+/// separate rather than leaving it as unreachable inline logic.
+@visibleForTesting
+MusicProject? findProjectForPendingFolder(
+  List<MusicProject> projects,
+  String pendingFolderPath,
+) {
+  return projects
+      .where((p) => p.filePath.startsWith(pendingFolderPath))
+      .firstOrNull;
+}
+
 /// Runs a targeted, diff-based scan of just [rootPath] — much lighter than
 /// the full-root walk in `_runInitialScan`/`_scanAll`, since it skips any
 /// path already known to the repository (no wasted metadata re-extraction)
@@ -315,8 +353,10 @@ Future<void> _onFolderWatcherActivity(
 ) async {
   try {
     final scanner = ScannerService();
-    final ignoredPaths =
-        repo.getIgnoredPaths().map((p) => p.path).toList(growable: false);
+    final ignoredPaths = repo
+        .getIgnoredPaths()
+        .map((p) => p.path)
+        .toList(growable: false);
     final knownPaths = repo.getAllProjects().map((p) => p.filePath).toSet();
 
     // Materialize the newly-seen entities first, then persist them in one
@@ -325,15 +365,20 @@ Future<void> _onFolderWatcherActivity(
     // watchAllProjects stream now smooths over on the read side, but batching
     // here also cuts the write cost itself (see upsertManyFromFileSystemEntities).
     final newEntities = <FileSystemEntity>[];
-    await for (final entity
-        in scanner.scanDirectory(rootPath, ignoredPaths: ignoredPaths)) {
+    await for (final entity in scanner.scanDirectory(
+      rootPath,
+      ignoredPaths: ignoredPaths,
+    )) {
       if (knownPaths.contains(entity.path)) continue;
       newEntities.add(entity);
     }
 
     final newIds = <String>[];
     if (newEntities.isNotEmpty) {
-      await repo.upsertManyFromFileSystemEntities(newEntities, fullMetadata: false);
+      await repo.upsertManyFromFileSystemEntities(
+        newEntities,
+        fullMetadata: false,
+      );
       for (final entity in newEntities) {
         final saved = repo.getByPath(entity.path);
         if (saved != null) newIds.add(saved.id);
@@ -341,23 +386,44 @@ Future<void> _onFolderWatcherActivity(
     }
 
     if (newIds.isNotEmpty) {
-      container.read(recentlyDiscoveredProjectsProvider.notifier).addAll(newIds);
+      container
+          .read(recentlyDiscoveredProjectsProvider.notifier)
+          .addAll(newIds);
       container.invalidate(allProjectsStreamProvider);
     }
 
-    // Resolve pending folders that are now satisfied, but only when there's
-    // no in-flight work-timer session on them. Session-tracked entries are
-    // deliberately left alone so the interactive "end and record / continue
-    // session" dialog in DashboardPage._scanAll — the only place that ever
-    // reconciles a session — still gets a chance to run on the next manual
-    // rescan, instead of the watcher silently discarding that timer data.
+    // Resolve pending folders that are now satisfied. Session-tracked
+    // entries resolve too — the file existing means the DAW session really
+    // did start — rather than being silently left for the next manual
+    // rescan (which used to leave the "waiting for project" chip stuck
+    // until the user manually clicked Refresh/Scan, even though the
+    // project had already appeared in the list). This never pops the
+    // interactive "end and record / continue" dialog (that stays
+    // manual-only, in DashboardPage._scanAll and the pending-row Refresh
+    // action) — it always takes the equivalent of "continue": the timer
+    // keeps running under the resolved project, uninterrupted. That's safe
+    // even if a different project is currently active, since switching
+    // activeProjectProvider auto-saves the outgoing project's elapsed time
+    // as its own SessionRecord first (see WorkTimerNotifier.build's listener).
     final resolvable = repo
         .getPendingFolders()
-        .where((pf) => pf.sessionStartedAt == null)
         .where((pf) => !pf.folderExists || pf.hasProjectFile())
         .toList(growable: false);
     if (resolvable.isNotEmpty) {
       for (final pf in resolvable) {
+        final sessionStart = pf.sessionStartedAt;
+        if (sessionStart != null) {
+          final project = findProjectForPendingFolder(
+            repo.getAllProjects(),
+            pf.path,
+          );
+          if (project != null) {
+            container.read(activeProjectProvider.notifier).set(project);
+            container
+                .read(workTimerProvider.notifier)
+                .continueFrom(sessionStart);
+          }
+        }
         await repo.removePendingFolder(pf.id);
       }
       container.read(pendingFoldersDirtyProvider.notifier).bump();
@@ -374,7 +440,7 @@ class _BackIntent extends Intent {
 // Handle notification tap - navigate to project details
 Future<void> _handleNotificationTap(String projectId) async {
   if (kDebugMode) print('Handling notification tap for project: $projectId');
-  
+
   final context = navigatorKey.currentContext;
   if (context == null) {
     if (kDebugMode) print('Navigator context not available');
@@ -397,7 +463,10 @@ Future<void> _handleNotificationTap(String projectId) async {
 // Returns the number of on-disk projects found/synced — used by the "Scan
 // for Projects" quick action to show a result, since this otherwise silent
 // path (unlike the dashboard's manual rescan button) gives no feedback.
-Future<int> _runInitialScan(ProjectRepository repo, ProviderContainer container) async {
+Future<int> _runInitialScan(
+  ProjectRepository repo,
+  ProviderContainer container,
+) async {
   container.read(initialScanStateProvider.notifier).setScanning(true);
   var foundCount = 0;
   try {
@@ -405,7 +474,10 @@ Future<int> _runInitialScan(ProjectRepository repo, ProviderContainer container)
     // missing are left alone here — see deleteProjectsPermanently's doc
     // comment for why scans no longer auto-delete anything.
     final scanner = ScannerService();
-    final ignoredPaths = repo.getIgnoredPaths().map((p) => p.path).toList(growable: false);
+    final ignoredPaths = repo
+        .getIgnoredPaths()
+        .map((p) => p.path)
+        .toList(growable: false);
     final scanTime = DateTime.now();
     // Snapshot before scanning so files found while the app was last closed
     // can be flagged "New" in the UI. Skipped on a genuinely empty repo (a
@@ -415,7 +487,10 @@ Future<int> _runInitialScan(ProjectRepository repo, ProviderContainer container)
     final newlyDiscoveredIds = <String>[];
     for (final root in repo.getRoots()) {
       final entities = <FileSystemEntity>[];
-      await for (final entity in scanner.scanDirectory(root.path, ignoredPaths: ignoredPaths)) {
+      await for (final entity in scanner.scanDirectory(
+        root.path,
+        ignoredPaths: ignoredPaths,
+      )) {
         entities.add(entity);
       }
       if (entities.isNotEmpty) {
@@ -433,7 +508,9 @@ Future<int> _runInitialScan(ProjectRepository repo, ProviderContainer container)
       await repo.updateRootLastScanAt(root.id, scanTime);
     }
     if (newlyDiscoveredIds.isNotEmpty) {
-      container.read(recentlyDiscoveredProjectsProvider.notifier).addAll(newlyDiscoveredIds);
+      container
+          .read(recentlyDiscoveredProjectsProvider.notifier)
+          .addAll(newlyDiscoveredIds);
     }
 
     // 3. Mark initial scan as complete
@@ -452,7 +529,6 @@ Future<int> _runInitialScan(ProjectRepository repo, ProviderContainer container)
   }
   return foundCount;
 }
-
 
 void main(List<String> args) {
   runZonedGuarded(() => _main(args), (error, stack) {
@@ -486,7 +562,10 @@ Future<void> _main(List<String> args) async {
   // macOS is handled natively in AppDelegate.swift before Dart starts.
   if (!kIsWeb && Platform.isWindows) {
     try {
-      _singleInstanceSocket = await ServerSocket.bind(InternetAddress.loopbackIPv4, 57321);
+      _singleInstanceSocket = await ServerSocket.bind(
+        InternetAddress.loopbackIPv4,
+        57321,
+      );
       // Any connection on this port is a second launch attempt asking us to
       // surface the (possibly tray-hidden) window instead of starting fresh.
       // It may also carry the second instance's command-line args (a jump
@@ -546,22 +625,29 @@ Future<void> _main(List<String> args) async {
   if (!kIsWeb && Platform.isAndroid) {
     // Fire-and-forget: não bloqueia o runApp(). O player usa audioplayers como
     // fallback até init() completar; depois usa just_audio com notificação.
-    unawaited(JustAudioBackground.init(
-      androidNotificationChannelId: 'com.bandpassrecords.dpm.audio',
-      androidNotificationChannelName: 'DAW Project Manager',
-      androidNotificationChannelDescription: 'Controles de preview de faixas',
-      androidNotificationOngoing: false,
-      androidStopForegroundOnPause: true,
-      // Brand the media notification: app accent color and the existing
-      // monochrome status-bar icon (already used for deadline notifications).
-      notificationColor: const Color(0xFFFF6100),
-      androidNotificationIcon: 'drawable/ic_notification',
-    ).timeout(const Duration(seconds: 8)).then((_) {
-      markJabInitialized();
-      if (kDebugMode) print('[JustAudioBackground] initialized OK');
-    }).catchError((Object e) {
-      if (kDebugMode) print('[JustAudioBackground] INIT FAILED/TIMEOUT: $e');
-    }));
+    unawaited(
+      JustAudioBackground.init(
+            androidNotificationChannelId: 'com.bandpassrecords.dpm.audio',
+            androidNotificationChannelName: 'DAW Project Manager',
+            androidNotificationChannelDescription:
+                'Controles de preview de faixas',
+            androidNotificationOngoing: false,
+            androidStopForegroundOnPause: true,
+            // Brand the media notification: app accent color and the existing
+            // monochrome status-bar icon (already used for deadline notifications).
+            notificationColor: const Color(0xFFFF6100),
+            androidNotificationIcon: 'drawable/ic_notification',
+          )
+          .timeout(const Duration(seconds: 8))
+          .then((_) {
+            markJabInitialized();
+            if (kDebugMode) print('[JustAudioBackground] initialized OK');
+          })
+          .catchError((Object e) {
+            if (kDebugMode)
+              print('[JustAudioBackground] INIT FAILED/TIMEOUT: $e');
+          }),
+    );
 
     // Notificações de deadline: fire-and-forget para não bloquear o startup.
     try {
@@ -573,7 +659,7 @@ Future<void> _main(List<String> args) async {
       if (kDebugMode) print('Error initializing notification services: $e');
     }
   }
-  
+
   // Set by the OS auto-start registration (see AutoStartService), never by a
   // manual launch — so "start minimized" only ever applies at login.
   final startHidden = AutoStartService.launchedMinimized(args);
@@ -584,7 +670,10 @@ Future<void> _main(List<String> args) async {
 
     // Configurações da Janela
     const initialSize = Size(1800, 1040); // Fits comfortably on 1080p screens
-    const minimumSize = Size(800, 600); // Allow resizing to a smaller minimum size
+    const minimumSize = Size(
+      800,
+      600,
+    ); // Allow resizing to a smaller minimum size
     WindowOptions windowOptions = WindowOptions(
       size: initialSize,
       minimumSize: minimumSize,
@@ -598,7 +687,7 @@ Future<void> _main(List<String> args) async {
           ? TitleBarStyle.normal
           : TitleBarStyle.hidden,
     );
-    
+
     // Criação e exibição da janela.
     // On an auto-start launch with "start minimized" the window is simply
     // never shown — window_manager creates it hidden, so skipping show()
@@ -611,7 +700,7 @@ Future<void> _main(List<String> args) async {
       await windowManager.focus();
     });
   }
-  
+
   // Pre-open the settings box so providers can read it synchronously on first build.
   await ensureHiveInitialized();
   try {
@@ -637,10 +726,10 @@ Future<void> _main(List<String> args) async {
   try {
     // 4a. Pré-carrega o ProfileRepository primeiro
     await container.read(profileRepositoryProvider.future);
-    
+
     // 4b. Pré-carrega o ProjectRepository (que depende do ProfileRepository)
     final repo = await container.read(repositoryProvider.future);
-    
+
     // 4c. Executa o Scan Inicial em segundo plano (não aguardamos o Future)
     // O await repo... em cima garante que o Hive está pronto antes do scan.
     _runInitialScan(repo, container);
@@ -666,7 +755,8 @@ Future<void> _main(List<String> args) async {
           projects: projects,
         );
       } catch (e) {
-        if (kDebugMode) print('❌ Error scheduling notifications on startup: $e');
+        if (kDebugMode)
+          print('❌ Error scheduling notifications on startup: $e');
       }
     }
 
@@ -679,7 +769,9 @@ Future<void> _main(List<String> args) async {
     // on every startup even though nothing on Linux could ever have signed
     // in to restore, surfacing as a spurious "libsecret_error: KeyringLocked"
     // warning (and an unnecessary keyring unlock prompt on some setups).
-    if (GoogleDriveSyncService.isSupported && !kIsWeb && !MobileUtils.isMobile()) {
+    if (GoogleDriveSyncService.isSupported &&
+        !kIsWeb &&
+        !MobileUtils.isMobile()) {
       try {
         await autoBackupService.initializeCredentialsStorage();
         await autoBackupService.restoreSession();
@@ -689,16 +781,20 @@ Future<void> _main(List<String> args) async {
 
     // 4e-2. System tray icon (Windows/macOS/Linux) — lets the app keep
     // auto-backup and notifications running while the window is hidden.
-    if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
+    if (!kIsWeb &&
+        (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
       final trayInit = TrayService(container, autoBackupService).init();
       if (startHidden) {
         // Started hidden: the tray icon is the only way to reach the app, so
         // if it fails to appear the process would be invisible and
         // unkillable short of Task Manager. Show the window instead.
-        unawaited(trayInit.catchError((Object e) {
-          if (kDebugMode) print('[main] Tray init failed on hidden start: $e');
-          unawaited(_bringWindowToFront());
-        }));
+        unawaited(
+          trayInit.catchError((Object e) {
+            if (kDebugMode)
+              print('[main] Tray init failed on hidden start: $e');
+            unawaited(_bringWindowToFront());
+          }),
+        );
       } else {
         unawaited(trayInit);
       }
@@ -708,7 +804,8 @@ Future<void> _main(List<String> args) async {
     container.read(workTimerProvider);
 
     // 4g. Check for updates in background (desktop only, if enabled by user)
-    if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
+    if (!kIsWeb &&
+        (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
       _runStartupUpdateCheck(container);
     }
 
@@ -720,18 +817,17 @@ Future<void> _main(List<String> args) async {
     if (AutoStartService.isSupported) {
       unawaited(container.read(autoStartProvider.notifier).syncWithOs());
     }
-
   } catch (e) {
     // Mark as complete even on error
     container.read(initialScanStateProvider.notifier).complete();
-    if (kDebugMode) print("Failed to initialize repository or run initial scan: $e");
+    if (kDebugMode)
+      print("Failed to initialize repository or run initial scan: $e");
     // Tray setup lives inside this try, so a failure above means it never
     // ran — on a hidden start that leaves nothing to reveal the window.
     if (startHidden) {
       unawaited(_bringWindowToFront());
     }
   }
-
 
   // 5. Roda o app com o container já configurado
   runApp(
@@ -758,21 +854,38 @@ Uint8List _buildIco(Uint8List pix) {
   const int imgDataSize = sz * sz * 4 + sz * andRowBytes;
   final bd = ByteData(6 + 16 + 40 + imgDataSize);
   int p = 0;
-  bd.setUint16(p, 0, Endian.little); p += 2;
-  bd.setUint16(p, 1, Endian.little); p += 2;
-  bd.setUint16(p, 1, Endian.little); p += 2;
-  bd.setUint8(p++, sz); bd.setUint8(p++, sz);
-  bd.setUint8(p++, 0); bd.setUint8(p++, 0);
-  bd.setUint16(p, 1, Endian.little); p += 2;
-  bd.setUint16(p, 32, Endian.little); p += 2;
-  bd.setUint32(p, 40 + imgDataSize, Endian.little); p += 4;
-  bd.setUint32(p, 22, Endian.little); p += 4;
-  bd.setUint32(p, 40, Endian.little); p += 4;
-  bd.setInt32(p, sz, Endian.little); p += 4;
-  bd.setInt32(p, sz * 2, Endian.little); p += 4;
-  bd.setUint16(p, 1, Endian.little); p += 2;
-  bd.setUint16(p, 32, Endian.little); p += 2;
-  for (int k = 0; k < 6; k++) { bd.setUint32(p, 0, Endian.little); p += 4; }
+  bd.setUint16(p, 0, Endian.little);
+  p += 2;
+  bd.setUint16(p, 1, Endian.little);
+  p += 2;
+  bd.setUint16(p, 1, Endian.little);
+  p += 2;
+  bd.setUint8(p++, sz);
+  bd.setUint8(p++, sz);
+  bd.setUint8(p++, 0);
+  bd.setUint8(p++, 0);
+  bd.setUint16(p, 1, Endian.little);
+  p += 2;
+  bd.setUint16(p, 32, Endian.little);
+  p += 2;
+  bd.setUint32(p, 40 + imgDataSize, Endian.little);
+  p += 4;
+  bd.setUint32(p, 22, Endian.little);
+  p += 4;
+  bd.setUint32(p, 40, Endian.little);
+  p += 4;
+  bd.setInt32(p, sz, Endian.little);
+  p += 4;
+  bd.setInt32(p, sz * 2, Endian.little);
+  p += 4;
+  bd.setUint16(p, 1, Endian.little);
+  p += 2;
+  bd.setUint16(p, 32, Endian.little);
+  p += 2;
+  for (int k = 0; k < 6; k++) {
+    bd.setUint32(p, 0, Endian.little);
+    p += 4;
+  }
   bd.buffer.asUint8List(p, sz * sz * 4).setAll(0, pix);
   return bd.buffer.asUint8List();
 }
@@ -788,10 +901,13 @@ Uint8List _makeCircleIco(int r, int g, int b) {
       final a = d <= radius - 1.0
           ? 255
           : d <= radius
-              ? ((radius - d) * 255).round().clamp(0, 255)
-              : 0;
+          ? ((radius - d) * 255).round().clamp(0, 255)
+          : 0;
       final i = ((sz - 1 - row) * sz + col) * 4; // bottom-up DIB order
-      pix[i] = b; pix[i + 1] = g; pix[i + 2] = r; pix[i + 3] = a;
+      pix[i] = b;
+      pix[i + 1] = g;
+      pix[i + 2] = r;
+      pix[i + 3] = a;
     }
   }
   return _buildIco(pix);
@@ -802,13 +918,13 @@ Future<void> _initTaskbarOverlayIcons() async {
   try {
     final tmp = Directory.systemTemp.path;
     final playingBytes = _makeCircleIco(0x22, 0xC5, 0x5E); // #22C55E green
-    final pausedBytes  = _makeCircleIco(0xFB, 0xBF, 0x24); // #FBBF24 amber
+    final pausedBytes = _makeCircleIco(0xFB, 0xBF, 0x24); // #FBBF24 amber
     final playingPath = '$tmp\\daw_pm_session_playing.ico';
-    final pausedPath  = '$tmp\\daw_pm_session_paused.ico';
+    final pausedPath = '$tmp\\daw_pm_session_paused.ico';
     await File(playingPath).writeAsBytes(playingBytes);
     await File(pausedPath).writeAsBytes(pausedBytes);
     _taskbarIconPaths['playing'] = playingPath;
-    _taskbarIconPaths['paused']  = pausedPath;
+    _taskbarIconPaths['paused'] = pausedPath;
   } catch (_) {}
 }
 
@@ -821,14 +937,22 @@ Uint8List _makeGlyphIco(bool Function(double x, double y) inside) {
     for (int col = 0; col < sz; col++) {
       if (!inside(col + 0.5, row + 0.5)) continue;
       final i = ((sz - 1 - row) * sz + col) * 4; // bottom-up DIB order
-      pix[i] = 0xE8; pix[i + 1] = 0xE8; pix[i + 2] = 0xE8; pix[i + 3] = 255;
+      pix[i] = 0xE8;
+      pix[i + 1] = 0xE8;
+      pix[i + 2] = 0xE8;
+      pix[i + 3] = 255;
     }
   }
   return _buildIco(pix);
 }
 
 /// A single triangle pointing right (mirror the x coordinate for left).
-bool _triangle(double x, double y, {required double apexX, required double baseX}) {
+bool _triangle(
+  double x,
+  double y, {
+  required double apexX,
+  required double baseX,
+}) {
   const yTop = 4.0, yBot = 12.0, yMid = 8.0;
   final lo = apexX < baseX ? baseX : apexX;
   final hi = apexX < baseX ? apexX : baseX;
@@ -842,19 +966,16 @@ Uint8List _makePlayIco() =>
     _makeGlyphIco((x, y) => _triangle(x, y, apexX: 11.5, baseX: 5.0));
 
 Uint8List _makePauseIco() => _makeGlyphIco((x, y) {
-      if (y < 4 || y > 12) return false;
-      return (x >= 4.5 && x <= 7) || (x >= 9 && x <= 11.5);
-    });
+  if (y < 4 || y > 12) return false;
+  return (x >= 4.5 && x <= 7) || (x >= 9 && x <= 11.5);
+});
 
 /// Writes the play/pause thumbnail toolbar icon to the system temp dir at
 /// startup.
 Future<void> _initThumbnailToolbarIcons() async {
   try {
     final tmp = Directory.systemTemp.path;
-    final entries = {
-      'play': _makePlayIco(),
-      'pause': _makePauseIco(),
-    };
+    final entries = {'play': _makePlayIco(), 'pause': _makePauseIco()};
     for (final entry in entries.entries) {
       final path = '$tmp\\daw_pm_thumb_${entry.key}.ico';
       await File(path).writeAsBytes(entry.value);
@@ -897,24 +1018,28 @@ void _updateThumbnailToolbar(WidgetRef ref) {
     _taskbarChannel
         .invokeMethod('ResetThumbnailToolbar', <String, Object?>{})
         .catchError((Object e) {
-      if (kDebugMode) print('[ThumbnailToolbar] ResetThumbnailToolbar failed: $e');
-    });
+          if (kDebugMode)
+            print('[ThumbnailToolbar] ResetThumbnailToolbar failed: $e');
+        });
     return;
   }
   final isPlaying = ref.read(desktopIsPlayingProvider);
   final playPausePath = _taskbarIconPaths[isPlaying ? 'pause' : 'play'];
   if (playPausePath == null) return;
-  _taskbarChannel.invokeMethod('SetThumbnailToolbar', <String, Object?>{
-    'buttons': [
-      {
-        'icon': playPausePath,
-        'tooltip': isPlaying ? 'Pause' : 'Play',
-        'mode': 0,
-      },
-    ],
-  }).catchError((Object e) {
-    if (kDebugMode) print('[ThumbnailToolbar] SetThumbnailToolbar failed: $e');
-  });
+  _taskbarChannel
+      .invokeMethod('SetThumbnailToolbar', <String, Object?>{
+        'buttons': [
+          {
+            'icon': playPausePath,
+            'tooltip': isPlaying ? 'Pause' : 'Play',
+            'mode': 0,
+          },
+        ],
+      })
+      .catchError((Object e) {
+        if (kDebugMode)
+          print('[ThumbnailToolbar] SetThumbnailToolbar failed: $e');
+      });
 }
 
 /// Updates the Windows taskbar overlay icon to reflect session state.
@@ -939,7 +1064,8 @@ class DawProjectManagerApp extends ConsumerStatefulWidget {
   const DawProjectManagerApp({super.key});
 
   @override
-  ConsumerState<DawProjectManagerApp> createState() => _DawProjectManagerAppState();
+  ConsumerState<DawProjectManagerApp> createState() =>
+      _DawProjectManagerAppState();
 }
 
 class _DawProjectManagerAppState extends ConsumerState<DawProjectManagerApp>
@@ -948,7 +1074,7 @@ class _DawProjectManagerAppState extends ConsumerState<DawProjectManagerApp>
       !kIsWeb && (Platform.isMacOS || Platform.isWindows || Platform.isLinux);
 
   static Color _bgForTheme(AppThemeType t) => switch (t) {
-    AppThemeType.neonDark    => const Color(0xFF0A0A14),
+    AppThemeType.neonDark => const Color(0xFF0A0A14),
     AppThemeType.studioLight => const Color(0xFFF8F4EE),
     AppThemeType.classicDark => const Color(0xFF1E1F22),
   };
@@ -965,7 +1091,9 @@ class _DawProjectManagerAppState extends ConsumerState<DawProjectManagerApp>
     }
     if (!kIsWeb && Platform.isMacOS) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        windowManager.setBackgroundColor(_bgForTheme(ref.read(themeTypeProvider)));
+        windowManager.setBackgroundColor(
+          _bgForTheme(ref.read(themeTypeProvider)),
+        );
       });
     }
   }
@@ -1066,16 +1194,23 @@ class _DawProjectManagerAppState extends ConsumerState<DawProjectManagerApp>
       ref.listen(initialScanStateProvider, (_, isScanning) {
         try {
           if (isScanning) {
-            _taskbarChannel.invokeMethod('SetProgressMode', <String, Object?>{'mode': 0x1}); // indeterminate
+            _taskbarChannel.invokeMethod('SetProgressMode', <String, Object?>{
+              'mode': 0x1,
+            }); // indeterminate
           } else {
-            _taskbarChannel.invokeMethod('SetProgressMode', <String, Object?>{'mode': 0x0}); // noProgress
+            _taskbarChannel.invokeMethod('SetProgressMode', <String, Object?>{
+              'mode': 0x0,
+            }); // noProgress
           }
         } catch (_) {}
       });
       // Thumbnail toolbar: a single hover-preview play/pause button —
       // reflects the desktop preview player, not the work-session timer.
       ref.listen(desktopPlayerProvider, (_, _) => _updateThumbnailToolbar(ref));
-      ref.listen(desktopIsPlayingProvider, (_, _) => _updateThumbnailToolbar(ref));
+      ref.listen(
+        desktopIsPlayingProvider,
+        (_, _) => _updateThumbnailToolbar(ref),
+      );
     }
 
     return MaterialApp(
@@ -1105,9 +1240,11 @@ class _DawProjectManagerAppState extends ConsumerState<DawProjectManagerApp>
       builder: (context, child) => Shortcuts(
         shortcuts: const {
           // macOS: Cmd+← (standard back in macOS apps)
-          SingleActivator(LogicalKeyboardKey.arrowLeft, meta: true): _BackIntent(),
+          SingleActivator(LogicalKeyboardKey.arrowLeft, meta: true):
+              _BackIntent(),
           // Windows / Linux: Alt+← (standard back in browsers and file managers)
-          SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true): _BackIntent(),
+          SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true):
+              _BackIntent(),
         },
         child: Actions(
           actions: {

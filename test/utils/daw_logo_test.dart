@@ -40,6 +40,7 @@ void main() {
         'ACID Pro': 'acid-pro.png',
         'Mixcraft': 'mixcraft.png',
         'Rosegarden': 'rosegarden.png',
+        'Zrythm': 'zrythm.png',
       };
 
       for (final entry in expected.entries) {

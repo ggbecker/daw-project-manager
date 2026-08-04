@@ -254,7 +254,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get deepScanConfirm =>
-      'Le Scan Approfondi extrait les métadonnées complètes des fichiers de projet:\n• BPM (Battements Par Minute)\n• Tonalité Musicale\n• Version du DAW\n• Notes de Projet (Reaper uniquement)\nActuellement pris en charge : Ableton Live, Bitwig Studio, Cubase, Nuendo, FL Studio, MAGDA et Reaper.\n\nC\'est plus lent qu\'un scan régulier et peut prendre un certain temps. Continuer?';
+      'Le Scan Approfondi extrait les métadonnées complètes des fichiers de projet:\n• BPM (Battements Par Minute)\n• Tonalité Musicale\n• Version du DAW\n• Notes de Projet (si pris en charge)\n\nC\'est plus lent qu\'un scan régulier et peut prendre un certain temps. Continuer?';
+
+  @override
+  String get deepScanViewSupportedDaws =>
+      'Voir les DAW et champs pris en charge';
 
   @override
   String get deepScanOnlyUnscanned =>
@@ -441,6 +445,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get scanningProjects => 'Scan des projets...';
 
   @override
+  String scanProgressLabel(int current, int total) {
+    return 'Chargement du projet $current sur $total…';
+  }
+
+  @override
   String get search => 'Rechercher';
 
   @override
@@ -611,6 +620,21 @@ class AppLocalizationsFr extends AppLocalizations {
   String scanComplete(String type, int count, String plural) {
     return '$type terminé: $count projet$plural ajouté$plural/mis à jour$plural.';
   }
+
+  @override
+  String scanFailuresSnackbar(int count, String plural) {
+    return '$count projet$plural n\'a/n\'ont pas pu être chargé$plural.';
+  }
+
+  @override
+  String get scanFailuresSnackbarAction => 'Détails';
+
+  @override
+  String get scanFailuresDialogTitle => 'Erreurs de Scan';
+
+  @override
+  String get scanFailuresDialogIntro =>
+      'Ces fichiers n\'ont pas pu être lus pendant le scan (ils ont peut-être été supprimés, déplacés ou verrouillés par un autre programme) :';
 
   @override
   String projectsSelected(int count, String plural) {
@@ -2769,7 +2793,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le fichier audio a changé sur le disque — actualisation de la forme d\'onde…';
 
   @override
-  String get autoFitAllColumns => 'Ajuster automatiquement toutes les colonnes';
+  String get autoFitAllColumns => 'Ajuster les colonnes';
 
   @override
   String get uploadAutoDetectedPreviewSongs =>
@@ -2842,6 +2866,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get noProjectsFoundHint =>
       'Ajoutez un dossier racine dans les paramètres pour commencer.';
+
+  @override
+  String get noProjectsFoundInFoldersHint =>
+      'Essayez d\'ajouter un autre dossier contenant des projets DAW.';
 
   @override
   String get queueTab => 'Tâches';
@@ -3781,6 +3809,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get createProjectSchemeCustom => 'Personnalisé';
 
   @override
+  String get createProjectSchemeRemix => 'Remix';
+
+  @override
   String get createProjectArtistName => 'Nom de l\'artiste';
 
   @override
@@ -3791,6 +3822,15 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get createProjectAddArtist => 'Ajouter un artiste';
+
+  @override
+  String get createProjectOriginalArtist => 'Artiste original';
+
+  @override
+  String get createProjectRemixerName => 'Remixeur';
+
+  @override
+  String get createProjectAddRemixer => 'Ajouter un remixeur';
 
   @override
   String get createProjectSelectDaw => 'Ouvrir dans le DAW';

@@ -113,7 +113,8 @@
   "noReleasesFound": "Nenhum lançamento encontrado",
   "noPlaylistsFound": "Nenhuma playlist encontrada",
   "tryDifferentSearch": "Tente um termo de busca diferente",
-  "deepScanConfirm": "A Varredura Profunda extrai metadados completos dos arquivos de projeto:\n• BPM (Batidas Por Minuto)\n• Tom Musical\n• Versão do DAW\n• Notas do Projeto (somente Reaper)\nSuportado atualmente: Ableton Live, Bitwig Studio, Cubase, Nuendo, FL Studio, MAGDA e Reaper.\n\nIsso é mais lento que uma varredura comum e pode levar um tempo. Continuar?",
+  "deepScanConfirm": "A Varredura Profunda extrai metadados completos dos arquivos de projeto:\n• BPM (Batidas Por Minuto)\n• Tom Musical\n• Versão do DAW\n• Notas do Projeto (quando suportado)\n\nIsso é mais lento que uma varredura comum e pode levar um tempo. Continuar?",
+  "deepScanViewSupportedDaws": "Ver DAWs e campos suportados",
   "deepScanOnlyUnscanned": "Escanear apenas projetos sem metadados",
   "metadataExtractionTitle": "Extração de Metadados",
   "metadataExtractionSubtitle": "Veja quais dados cada DAW suporta",
@@ -225,6 +226,17 @@
   "selectAllProjects": "Selecionar todos os projetos",
   "switchingProfiles": "Alternando perfis...",
   "scanningProjects": "Escaneando projetos...",
+  "scanProgressLabel": "Carregando projeto {current} de {total}…",
+  "@scanProgressLabel": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "search": "Buscar",
   "projectsTab": "Projetos",
   "releasesTab": "Lançamentos",
@@ -447,6 +459,23 @@
       }
     }
   },
+  "scanFailuresSnackbar": "{count} projeto{plural} não pôde/puderam ser carregado{plural}.",
+  "@scanFailuresSnackbar": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      }
+    }
+  },
+  "scanFailuresSnackbarAction": "Detalhes",
+  "@scanFailuresSnackbarAction": {},
+  "scanFailuresDialogTitle": "Erros de Varredura",
+  "@scanFailuresDialogTitle": {},
+  "scanFailuresDialogIntro": "Estes arquivos não puderam ser lidos durante a varredura (podem ter sido excluídos, movidos ou bloqueados por outro programa):",
+  "@scanFailuresDialogIntro": {},
   "projectsSelected": "{count} projeto{plural} selecionado{plural}",
   "@projectsSelected": {
     "placeholders": {
@@ -1895,7 +1924,7 @@
   "musicPlayerTab": "Reprodutor de Música",
   "previewAudioChangedRefreshing": "O áudio de pré-visualização mudou no disco — atualizando a forma de onda…",
   "audioFileChangedRefreshing": "O arquivo de áudio mudou no disco — atualizando a forma de onda…",
-  "autoFitAllColumns": "Ajustar automaticamente todas as colunas",
+  "autoFitAllColumns": "Redimensionar colunas",
   "uploadAutoDetectedPreviewSongs": "Enviar músicas de pré-visualização detectadas automaticamente",
   "uploadAutoDetectedPreviewSongsSubtitle": "Incluir músicas encontradas automaticamente pelo scanner, não apenas as definidas manualmente.",
   "monoGenerating": "Mono…",
@@ -1934,6 +1963,7 @@
   "noResultsForFilterHint": "Tente ajustar a pesquisa ou os filtros.",
   "noProjectsFound": "Nenhum projeto encontrado",
   "noProjectsFoundHint": "Adicione uma pasta raiz nas configurações para começar.",
+  "noProjectsFoundInFoldersHint": "Tente adicionar outra pasta que contenha projetos de DAW.",
   "queueTab": "Tarefas",
   "queueSearchHint": "Buscar tarefas...",
   "queueNoPendingTasks": "Tudo em dia!",
@@ -2482,6 +2512,8 @@
   "@createProjectSchemeDate": {},
   "createProjectSchemeCustom": "Personalizado",
   "@createProjectSchemeCustom": {},
+  "createProjectSchemeRemix": "Remix",
+  "@createProjectSchemeRemix": {},
   "createProjectArtistName": "Nome do artista",
   "@createProjectArtistName": {},
   "createProjectTrackName": "Nome da faixa",
@@ -2490,6 +2522,12 @@
   "@createProjectCustomName": {},
   "createProjectAddArtist": "Adicionar artista",
   "@createProjectAddArtist": {},
+  "createProjectOriginalArtist": "Artista Original",
+  "@createProjectOriginalArtist": {},
+  "createProjectRemixerName": "Remixer",
+  "@createProjectRemixerName": {},
+  "createProjectAddRemixer": "Adicionar remixer",
+  "@createProjectAddRemixer": {},
   "createProjectSelectDaw": "Abrir no DAW",
   "@createProjectSelectDaw": {},
   "createProjectSelectDawHint": "Escolha qual DAW abrir para trabalhar neste projeto",
