@@ -3116,12 +3116,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                                                 Icons.search,
                                                               ),
                                                           suffixIcon: isLeftRail
-                                                              ? (ref.watch(
-                                                                          sessionModeProvider,
-                                                                        ) &&
-                                                                        _searchController
-                                                                            .text
-                                                                            .isNotEmpty
+                                                              ? (_searchController
+                                                                        .text
+                                                                        .isNotEmpty
                                                                     ? IconButton(
                                                                         icon: const Icon(
                                                                           Icons
