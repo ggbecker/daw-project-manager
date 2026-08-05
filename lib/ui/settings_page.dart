@@ -2365,9 +2365,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             ),
           ),
         ),
-        // Hidden on Linux: Flathub owns update delivery there, and the
-        // GitHub-release-page link this points to isn't the right place to
-        // send a Flatpak user anyway — see UpdateCheckService.isSupported.
+        // Hidden on Linux, except when running as the AppImage build (which
+        // gets a real self-update instead of a GitHub-release-page link) —
+        // see UpdateCheckService.isSupported.
         if (UpdateCheckService.isSupported) ...[
           const SizedBox(height: 12),
           Card(

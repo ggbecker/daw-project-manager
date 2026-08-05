@@ -3539,6 +3539,46 @@ class AppLocalizationsEn extends AppLocalizations {
       'Download the latest release from GitHub and replace the current app.';
 
   @override
+  String get updateAppImageSourceLabel => 'AppImage';
+
+  @override
+  String get updateAppImageInstructions => 'Update in place and restart.';
+
+  @override
+  String get updateNowButtonLabel => 'Update Now';
+
+  @override
+  String get appImageUpdateFetching => 'Looking for the update…';
+
+  @override
+  String get appImageUpdateDownloading => 'Downloading update…';
+
+  @override
+  String appImageUpdateDownloadingProgress(int percent) {
+    return 'Downloading update… $percent%';
+  }
+
+  @override
+  String get appImageUpdateVerifying => 'Verifying and installing…';
+
+  @override
+  String get appImageUpdateReadyTitle => 'Update Ready';
+
+  @override
+  String appImageUpdateReadyMessage(String version) {
+    return 'Updated to v$version. Restart now to finish.';
+  }
+
+  @override
+  String get appImageUpdateRestartNow => 'Restart Now';
+
+  @override
+  String get appImageUpdateFailedTitle => 'Update Failed';
+
+  @override
+  String get appImageUpdateRetry => 'Retry';
+
+  @override
   String get resetOnboarding => 'Reset onboarding';
 
   @override

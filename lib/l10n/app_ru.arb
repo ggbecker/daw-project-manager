@@ -2365,6 +2365,38 @@
   "@updateWindowsInstructions": {},
   "updateMacInstructions": "Скачайте последнюю версию с GitHub и замените текущее приложение.",
   "@updateMacInstructions": {},
+  "updateAppImageSourceLabel": "AppImage",
+  "@updateAppImageSourceLabel": {},
+  "updateAppImageInstructions": "Обновление происходит на месте с последующим перезапуском.",
+  "@updateAppImageInstructions": {},
+  "updateNowButtonLabel": "Обновить сейчас",
+  "@updateNowButtonLabel": {},
+  "appImageUpdateFetching": "Поиск обновления…",
+  "@appImageUpdateFetching": {},
+  "appImageUpdateDownloading": "Загрузка обновления…",
+  "@appImageUpdateDownloading": {},
+  "appImageUpdateDownloadingProgress": "Загрузка обновления… {percent}%",
+  "@appImageUpdateDownloadingProgress": {
+    "placeholders": {
+      "percent": {"type": "int"}
+    }
+  },
+  "appImageUpdateVerifying": "Проверка и установка…",
+  "@appImageUpdateVerifying": {},
+  "appImageUpdateReadyTitle": "Обновление готово",
+  "@appImageUpdateReadyTitle": {},
+  "appImageUpdateReadyMessage": "Обновлено до версии {version}. Перезапустите сейчас, чтобы завершить.",
+  "@appImageUpdateReadyMessage": {
+    "placeholders": {
+      "version": {"type": "String"}
+    }
+  },
+  "appImageUpdateRestartNow": "Перезапустить сейчас",
+  "@appImageUpdateRestartNow": {},
+  "appImageUpdateFailedTitle": "Не удалось обновить",
+  "@appImageUpdateFailedTitle": {},
+  "appImageUpdateRetry": "Повторить",
+  "@appImageUpdateRetry": {},
   "resetOnboarding": "Сбросить обучение",
   "@resetOnboarding": {},
   "onboardingWelcomeTitle": "Добро пожаловать в DAW Project Manager",

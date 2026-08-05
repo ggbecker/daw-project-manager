@@ -2365,6 +2365,38 @@
   "@updateWindowsInstructions": {},
   "updateMacInstructions": "从 GitHub 下载最新版本并替换当前应用。",
   "@updateMacInstructions": {},
+  "updateAppImageSourceLabel": "AppImage",
+  "@updateAppImageSourceLabel": {},
+  "updateAppImageInstructions": "原地更新并重启。",
+  "@updateAppImageInstructions": {},
+  "updateNowButtonLabel": "立即更新",
+  "@updateNowButtonLabel": {},
+  "appImageUpdateFetching": "正在查找更新…",
+  "@appImageUpdateFetching": {},
+  "appImageUpdateDownloading": "正在下载更新…",
+  "@appImageUpdateDownloading": {},
+  "appImageUpdateDownloadingProgress": "正在下载更新… {percent}%",
+  "@appImageUpdateDownloadingProgress": {
+    "placeholders": {
+      "percent": {"type": "int"}
+    }
+  },
+  "appImageUpdateVerifying": "正在验证并安装…",
+  "@appImageUpdateVerifying": {},
+  "appImageUpdateReadyTitle": "更新已就绪",
+  "@appImageUpdateReadyTitle": {},
+  "appImageUpdateReadyMessage": "已更新到 v{version}。请立即重启以完成更新。",
+  "@appImageUpdateReadyMessage": {
+    "placeholders": {
+      "version": {"type": "String"}
+    }
+  },
+  "appImageUpdateRestartNow": "立即重启",
+  "@appImageUpdateRestartNow": {},
+  "appImageUpdateFailedTitle": "更新失败",
+  "@appImageUpdateFailedTitle": {},
+  "appImageUpdateRetry": "重试",
+  "@appImageUpdateRetry": {},
   "resetOnboarding": "重置引导设置",
   "@resetOnboarding": {},
   "onboardingWelcomeTitle": "欢迎使用 DAW Project Manager",

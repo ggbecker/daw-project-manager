@@ -5963,6 +5963,78 @@ abstract class AppLocalizations {
   /// **'Download the latest release from GitHub and replace the current app.'**
   String get updateMacInstructions;
 
+  /// No description provided for @updateAppImageSourceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'AppImage'**
+  String get updateAppImageSourceLabel;
+
+  /// No description provided for @updateAppImageInstructions.
+  ///
+  /// In en, this message translates to:
+  /// **'Update in place and restart.'**
+  String get updateAppImageInstructions;
+
+  /// No description provided for @updateNowButtonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Now'**
+  String get updateNowButtonLabel;
+
+  /// No description provided for @appImageUpdateFetching.
+  ///
+  /// In en, this message translates to:
+  /// **'Looking for the update…'**
+  String get appImageUpdateFetching;
+
+  /// No description provided for @appImageUpdateDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading update…'**
+  String get appImageUpdateDownloading;
+
+  /// No description provided for @appImageUpdateDownloadingProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading update… {percent}%'**
+  String appImageUpdateDownloadingProgress(int percent);
+
+  /// No description provided for @appImageUpdateVerifying.
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying and installing…'**
+  String get appImageUpdateVerifying;
+
+  /// No description provided for @appImageUpdateReadyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Ready'**
+  String get appImageUpdateReadyTitle;
+
+  /// No description provided for @appImageUpdateReadyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated to v{version}. Restart now to finish.'**
+  String appImageUpdateReadyMessage(String version);
+
+  /// No description provided for @appImageUpdateRestartNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Restart Now'**
+  String get appImageUpdateRestartNow;
+
+  /// No description provided for @appImageUpdateFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Failed'**
+  String get appImageUpdateFailedTitle;
+
+  /// No description provided for @appImageUpdateRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get appImageUpdateRetry;
+
   /// No description provided for @resetOnboarding.
   ///
   /// In en, this message translates to:

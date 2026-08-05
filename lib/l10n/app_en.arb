@@ -3520,6 +3520,38 @@
   "@updateWindowsInstructions": {},
   "updateMacInstructions": "Download the latest release from GitHub and replace the current app.",
   "@updateMacInstructions": {},
+  "updateAppImageSourceLabel": "AppImage",
+  "@updateAppImageSourceLabel": {},
+  "updateAppImageInstructions": "Update in place and restart.",
+  "@updateAppImageInstructions": {},
+  "updateNowButtonLabel": "Update Now",
+  "@updateNowButtonLabel": {},
+  "appImageUpdateFetching": "Looking for the update…",
+  "@appImageUpdateFetching": {},
+  "appImageUpdateDownloading": "Downloading update…",
+  "@appImageUpdateDownloading": {},
+  "appImageUpdateDownloadingProgress": "Downloading update… {percent}%",
+  "@appImageUpdateDownloadingProgress": {
+    "placeholders": {
+      "percent": {"type": "int"}
+    }
+  },
+  "appImageUpdateVerifying": "Verifying and installing…",
+  "@appImageUpdateVerifying": {},
+  "appImageUpdateReadyTitle": "Update Ready",
+  "@appImageUpdateReadyTitle": {},
+  "appImageUpdateReadyMessage": "Updated to v{version}. Restart now to finish.",
+  "@appImageUpdateReadyMessage": {
+    "placeholders": {
+      "version": {"type": "String"}
+    }
+  },
+  "appImageUpdateRestartNow": "Restart Now",
+  "@appImageUpdateRestartNow": {},
+  "appImageUpdateFailedTitle": "Update Failed",
+  "@appImageUpdateFailedTitle": {},
+  "appImageUpdateRetry": "Retry",
+  "@appImageUpdateRetry": {},
   "resetOnboarding": "Reset onboarding",
   "@resetOnboarding": {},
   "onboardingWelcomeTitle": "Welcome to DAW Project Manager",

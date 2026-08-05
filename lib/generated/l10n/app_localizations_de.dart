@@ -3559,6 +3559,47 @@ class AppLocalizationsDe extends AppLocalizations {
       'Lade die neueste Version von GitHub herunter und ersetze die aktuelle App.';
 
   @override
+  String get updateAppImageSourceLabel => 'AppImage';
+
+  @override
+  String get updateAppImageInstructions =>
+      'Direkt aktualisieren und neu starten.';
+
+  @override
+  String get updateNowButtonLabel => 'Jetzt aktualisieren';
+
+  @override
+  String get appImageUpdateFetching => 'Suche nach Update…';
+
+  @override
+  String get appImageUpdateDownloading => 'Update wird heruntergeladen…';
+
+  @override
+  String appImageUpdateDownloadingProgress(int percent) {
+    return 'Update wird heruntergeladen… $percent%';
+  }
+
+  @override
+  String get appImageUpdateVerifying => 'Wird überprüft und installiert…';
+
+  @override
+  String get appImageUpdateReadyTitle => 'Update bereit';
+
+  @override
+  String appImageUpdateReadyMessage(String version) {
+    return 'Auf v$version aktualisiert. Jetzt neu starten, um den Vorgang abzuschließen.';
+  }
+
+  @override
+  String get appImageUpdateRestartNow => 'Jetzt neu starten';
+
+  @override
+  String get appImageUpdateFailedTitle => 'Update fehlgeschlagen';
+
+  @override
+  String get appImageUpdateRetry => 'Erneut versuchen';
+
+  @override
   String get resetOnboarding => 'Einrichtung zurücksetzen';
 
   @override
