@@ -2360,6 +2360,38 @@
   "@updateWindowsInstructions": {},
   "updateMacInstructions": "Lade die neueste Version von GitHub herunter und ersetze die aktuelle App.",
   "@updateMacInstructions": {},
+  "updateAppImageSourceLabel": "AppImage",
+  "@updateAppImageSourceLabel": {},
+  "updateAppImageInstructions": "Direkt aktualisieren und neu starten.",
+  "@updateAppImageInstructions": {},
+  "updateNowButtonLabel": "Jetzt aktualisieren",
+  "@updateNowButtonLabel": {},
+  "appImageUpdateFetching": "Suche nach Update…",
+  "@appImageUpdateFetching": {},
+  "appImageUpdateDownloading": "Update wird heruntergeladen…",
+  "@appImageUpdateDownloading": {},
+  "appImageUpdateDownloadingProgress": "Update wird heruntergeladen… {percent}%",
+  "@appImageUpdateDownloadingProgress": {
+    "placeholders": {
+      "percent": {"type": "int"}
+    }
+  },
+  "appImageUpdateVerifying": "Wird überprüft und installiert…",
+  "@appImageUpdateVerifying": {},
+  "appImageUpdateReadyTitle": "Update bereit",
+  "@appImageUpdateReadyTitle": {},
+  "appImageUpdateReadyMessage": "Auf v{version} aktualisiert. Jetzt neu starten, um den Vorgang abzuschließen.",
+  "@appImageUpdateReadyMessage": {
+    "placeholders": {
+      "version": {"type": "String"}
+    }
+  },
+  "appImageUpdateRestartNow": "Jetzt neu starten",
+  "@appImageUpdateRestartNow": {},
+  "appImageUpdateFailedTitle": "Update fehlgeschlagen",
+  "@appImageUpdateFailedTitle": {},
+  "appImageUpdateRetry": "Erneut versuchen",
+  "@appImageUpdateRetry": {},
   "resetOnboarding": "Einrichtung zurücksetzen",
   "@resetOnboarding": {},
   "onboardingWelcomeTitle": "Willkommen bei DAW Project Manager",

@@ -33,7 +33,7 @@ class _OnboardingWizardPageState extends ConsumerState<OnboardingWizardPage> {
   // launch-at-login concept (mobile).
   bool get _showStartup => AutoStartService.isSupported;
 
-  // Update checks are skipped entirely on Linux — see
+  // Update checks are skipped on Linux, except for the AppImage build — see
   // UpdateCheckService.isSupported for why.
   bool get _showUpdates => UpdateCheckService.isSupported;
 

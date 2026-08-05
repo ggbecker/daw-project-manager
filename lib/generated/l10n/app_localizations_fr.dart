@@ -3567,6 +3567,47 @@ class AppLocalizationsFr extends AppLocalizations {
       'Téléchargez la dernière version depuis GitHub et remplacez l\'application.';
 
   @override
+  String get updateAppImageSourceLabel => 'AppImage';
+
+  @override
+  String get updateAppImageInstructions =>
+      'Mise à jour sur place, puis redémarrage.';
+
+  @override
+  String get updateNowButtonLabel => 'Mettre à jour maintenant';
+
+  @override
+  String get appImageUpdateFetching => 'Recherche de la mise à jour…';
+
+  @override
+  String get appImageUpdateDownloading => 'Téléchargement de la mise à jour…';
+
+  @override
+  String appImageUpdateDownloadingProgress(int percent) {
+    return 'Téléchargement de la mise à jour… $percent %';
+  }
+
+  @override
+  String get appImageUpdateVerifying => 'Vérification et installation…';
+
+  @override
+  String get appImageUpdateReadyTitle => 'Mise à jour prête';
+
+  @override
+  String appImageUpdateReadyMessage(String version) {
+    return 'Mis à jour vers la version $version. Redémarrez maintenant pour terminer.';
+  }
+
+  @override
+  String get appImageUpdateRestartNow => 'Redémarrer maintenant';
+
+  @override
+  String get appImageUpdateFailedTitle => 'Échec de la mise à jour';
+
+  @override
+  String get appImageUpdateRetry => 'Réessayer';
+
+  @override
   String get resetOnboarding => 'Réinitialiser l\'intégration';
 
   @override

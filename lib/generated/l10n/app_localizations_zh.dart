@@ -3427,6 +3427,46 @@ class AppLocalizationsZh extends AppLocalizations {
   String get updateMacInstructions => '从 GitHub 下载最新版本并替换当前应用。';
 
   @override
+  String get updateAppImageSourceLabel => 'AppImage';
+
+  @override
+  String get updateAppImageInstructions => '原地更新并重启。';
+
+  @override
+  String get updateNowButtonLabel => '立即更新';
+
+  @override
+  String get appImageUpdateFetching => '正在查找更新…';
+
+  @override
+  String get appImageUpdateDownloading => '正在下载更新…';
+
+  @override
+  String appImageUpdateDownloadingProgress(int percent) {
+    return '正在下载更新… $percent%';
+  }
+
+  @override
+  String get appImageUpdateVerifying => '正在验证并安装…';
+
+  @override
+  String get appImageUpdateReadyTitle => '更新已就绪';
+
+  @override
+  String appImageUpdateReadyMessage(String version) {
+    return '已更新到 v$version。请立即重启以完成更新。';
+  }
+
+  @override
+  String get appImageUpdateRestartNow => '立即重启';
+
+  @override
+  String get appImageUpdateFailedTitle => '更新失败';
+
+  @override
+  String get appImageUpdateRetry => '重试';
+
+  @override
   String get resetOnboarding => '重置引导设置';
 
   @override

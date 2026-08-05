@@ -2384,6 +2384,38 @@
   "@updateWindowsInstructions": {},
   "updateMacInstructions": "Baixe a versão mais recente do GitHub e substitua o app atual.",
   "@updateMacInstructions": {},
+  "updateAppImageSourceLabel": "AppImage",
+  "@updateAppImageSourceLabel": {},
+  "updateAppImageInstructions": "Atualiza no local e reinicia.",
+  "@updateAppImageInstructions": {},
+  "updateNowButtonLabel": "Atualizar agora",
+  "@updateNowButtonLabel": {},
+  "appImageUpdateFetching": "Procurando atualização…",
+  "@appImageUpdateFetching": {},
+  "appImageUpdateDownloading": "Baixando atualização…",
+  "@appImageUpdateDownloading": {},
+  "appImageUpdateDownloadingProgress": "Baixando atualização… {percent}%",
+  "@appImageUpdateDownloadingProgress": {
+    "placeholders": {
+      "percent": {"type": "int"}
+    }
+  },
+  "appImageUpdateVerifying": "Verificando e instalando…",
+  "@appImageUpdateVerifying": {},
+  "appImageUpdateReadyTitle": "Atualização pronta",
+  "@appImageUpdateReadyTitle": {},
+  "appImageUpdateReadyMessage": "Atualizado para a versão {version}. Reinicie agora para concluir.",
+  "@appImageUpdateReadyMessage": {
+    "placeholders": {
+      "version": {"type": "String"}
+    }
+  },
+  "appImageUpdateRestartNow": "Reiniciar agora",
+  "@appImageUpdateRestartNow": {},
+  "appImageUpdateFailedTitle": "Falha na atualização",
+  "@appImageUpdateFailedTitle": {},
+  "appImageUpdateRetry": "Tentar novamente",
+  "@appImageUpdateRetry": {},
   "resetOnboarding": "Redefinir integração inicial",
   "@resetOnboarding": {},
   "onboardingWelcomeTitle": "Bem-vindo ao DAW Project Manager",

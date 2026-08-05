@@ -3461,6 +3461,46 @@ class AppLocalizationsJa extends AppLocalizations {
       'GitHub から最新バージョンをダウンロードして現在のアプリと置き換えてください。';
 
   @override
+  String get updateAppImageSourceLabel => 'AppImage';
+
+  @override
+  String get updateAppImageInstructions => 'その場で更新して再起動します。';
+
+  @override
+  String get updateNowButtonLabel => '今すぐ更新';
+
+  @override
+  String get appImageUpdateFetching => '更新を確認しています…';
+
+  @override
+  String get appImageUpdateDownloading => '更新をダウンロード中…';
+
+  @override
+  String appImageUpdateDownloadingProgress(int percent) {
+    return '更新をダウンロード中… $percent%';
+  }
+
+  @override
+  String get appImageUpdateVerifying => '検証してインストールしています…';
+
+  @override
+  String get appImageUpdateReadyTitle => '更新の準備完了';
+
+  @override
+  String appImageUpdateReadyMessage(String version) {
+    return 'v$version に更新しました。完了するには今すぐ再起動してください。';
+  }
+
+  @override
+  String get appImageUpdateRestartNow => '今すぐ再起動';
+
+  @override
+  String get appImageUpdateFailedTitle => '更新に失敗しました';
+
+  @override
+  String get appImageUpdateRetry => '再試行';
+
+  @override
   String get resetOnboarding => '初期設定をリセット';
 
   @override

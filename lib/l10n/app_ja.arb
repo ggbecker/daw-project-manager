@@ -2360,6 +2360,38 @@
   "@updateWindowsInstructions": {},
   "updateMacInstructions": "GitHub から最新バージョンをダウンロードして現在のアプリと置き換えてください。",
   "@updateMacInstructions": {},
+  "updateAppImageSourceLabel": "AppImage",
+  "@updateAppImageSourceLabel": {},
+  "updateAppImageInstructions": "その場で更新して再起動します。",
+  "@updateAppImageInstructions": {},
+  "updateNowButtonLabel": "今すぐ更新",
+  "@updateNowButtonLabel": {},
+  "appImageUpdateFetching": "更新を確認しています…",
+  "@appImageUpdateFetching": {},
+  "appImageUpdateDownloading": "更新をダウンロード中…",
+  "@appImageUpdateDownloading": {},
+  "appImageUpdateDownloadingProgress": "更新をダウンロード中… {percent}%",
+  "@appImageUpdateDownloadingProgress": {
+    "placeholders": {
+      "percent": {"type": "int"}
+    }
+  },
+  "appImageUpdateVerifying": "検証してインストールしています…",
+  "@appImageUpdateVerifying": {},
+  "appImageUpdateReadyTitle": "更新の準備完了",
+  "@appImageUpdateReadyTitle": {},
+  "appImageUpdateReadyMessage": "v{version} に更新しました。完了するには今すぐ再起動してください。",
+  "@appImageUpdateReadyMessage": {
+    "placeholders": {
+      "version": {"type": "String"}
+    }
+  },
+  "appImageUpdateRestartNow": "今すぐ再起動",
+  "@appImageUpdateRestartNow": {},
+  "appImageUpdateFailedTitle": "更新に失敗しました",
+  "@appImageUpdateFailedTitle": {},
+  "appImageUpdateRetry": "再試行",
+  "@appImageUpdateRetry": {},
   "resetOnboarding": "初期設定をリセット",
   "@resetOnboarding": {},
   "onboardingWelcomeTitle": "DAW Project Managerへようこそ",

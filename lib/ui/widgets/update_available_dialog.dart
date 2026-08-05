@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../generated/l10n/app_localizations.dart';
+import '../../services/appimage_update_service.dart';
+import 'appimage_self_update_dialog.dart';
 
 const String _kWindowsStoreId =
     String.fromEnvironment('WINDOWS_STORE_ID', defaultValue: '9n8hxzd3hwx7');
@@ -79,6 +81,9 @@ class UpdateAvailableDialog extends StatelessWidget {
     final theme = Theme.of(context);
     final isWindows = !kIsDesktopOverride && Platform.isWindows;
     final isMacOS = !kIsDesktopOverride && Platform.isMacOS;
+    final isAppImage = !kIsDesktopOverride &&
+        Platform.isLinux &&
+        AppImageUpdateService.isRunningAsAppImage;
 
     return AlertDialog(
       backgroundColor: theme.cardColor,
@@ -148,13 +153,19 @@ class UpdateAvailableDialog extends StatelessWidget {
                       Icon(
                         isWindows
                             ? Icons.store
-                            : Icons.code,
+                            : isAppImage
+                                ? Icons.system_update_alt
+                                : Icons.code,
                         size: 16,
                         color: theme.colorScheme.primary,
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        isWindows ? 'Microsoft Store' : 'GitHub Releases',
+                        isWindows
+                            ? 'Microsoft Store'
+                            : isAppImage
+                                ? l10n.updateAppImageSourceLabel
+                                : 'GitHub Releases',
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
                           color: theme.colorScheme.primary,
@@ -167,7 +178,9 @@ class UpdateAvailableDialog extends StatelessWidget {
                   Text(
                     isWindows
                         ? l10n.updateWindowsInstructions
-                        : l10n.updateMacInstructions,
+                        : isAppImage
+                            ? l10n.updateAppImageInstructions
+                            : l10n.updateMacInstructions,
                     style: theme.textTheme.bodySmall,
                   ),
                   const SizedBox(height: 14),
@@ -179,6 +192,21 @@ class UpdateAvailableDialog extends StatelessWidget {
                         icon: const Icon(Icons.store, size: 18),
                         label: Text(l10n.getOnMicrosoftStore),
                         onPressed: () => _openMsStoreApp(context),
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    )
+                  else if (isAppImage)
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        icon: const Icon(Icons.system_update_alt, size: 18),
+                        label: Text(l10n.updateNowButtonLabel),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          AppImageSelfUpdateDialog.show(context, version);
+                        },
                         style: FilledButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),

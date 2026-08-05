@@ -3541,6 +3541,47 @@ class AppLocalizationsRu extends AppLocalizations {
       'Скачайте последнюю версию с GitHub и замените текущее приложение.';
 
   @override
+  String get updateAppImageSourceLabel => 'AppImage';
+
+  @override
+  String get updateAppImageInstructions =>
+      'Обновление происходит на месте с последующим перезапуском.';
+
+  @override
+  String get updateNowButtonLabel => 'Обновить сейчас';
+
+  @override
+  String get appImageUpdateFetching => 'Поиск обновления…';
+
+  @override
+  String get appImageUpdateDownloading => 'Загрузка обновления…';
+
+  @override
+  String appImageUpdateDownloadingProgress(int percent) {
+    return 'Загрузка обновления… $percent%';
+  }
+
+  @override
+  String get appImageUpdateVerifying => 'Проверка и установка…';
+
+  @override
+  String get appImageUpdateReadyTitle => 'Обновление готово';
+
+  @override
+  String appImageUpdateReadyMessage(String version) {
+    return 'Обновлено до версии $version. Перезапустите сейчас, чтобы завершить.';
+  }
+
+  @override
+  String get appImageUpdateRestartNow => 'Перезапустить сейчас';
+
+  @override
+  String get appImageUpdateFailedTitle => 'Не удалось обновить';
+
+  @override
+  String get appImageUpdateRetry => 'Повторить';
+
+  @override
   String get resetOnboarding => 'Сбросить обучение';
 
   @override
