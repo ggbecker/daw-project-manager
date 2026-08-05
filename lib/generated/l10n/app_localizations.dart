@@ -5069,6 +5069,12 @@ abstract class AppLocalizations {
   /// **'Save'**
   String get dawLaunchCommandDialogSaveButton;
 
+  /// No description provided for @dawLaunchCommandDialogSaveAndLaunchButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Save & Launch'**
+  String get dawLaunchCommandDialogSaveAndLaunchButton;
+
   /// No description provided for @dawLaunchCommandDialogInvalidPath.
   ///
   /// In en, this message translates to:

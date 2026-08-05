@@ -3027,6 +3027,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get dawLaunchCommandDialogSaveButton => 'Save';
 
   @override
+  String get dawLaunchCommandDialogSaveAndLaunchButton => 'Save & Launch';
+
+  @override
   String get dawLaunchCommandDialogInvalidPath => 'This file doesn\'t exist';
 
   @override

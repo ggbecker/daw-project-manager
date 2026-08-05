@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../generated/l10n/app_localizations.dart';
+import '../../models/music_project.dart';
 import '../../providers/providers.dart';
 import '../../services/daw_detector.dart';
+import '../../utils/file_launcher.dart';
 
 /// Shows the Linux "configure a launch command for this DAW" dialog. The
 /// dialog persists the change (or removal) itself via
@@ -17,11 +19,16 @@ import '../../services/daw_detector.dart';
 /// Used both from Settings (edit/add an entry) and in-context, the first
 /// time "Launch in DAW" fails for a DAW with no override configured yet, or
 /// when a previously-configured binary no longer exists ([pathMissing]).
+/// When [project] is given (the in-context cases — Settings has no specific
+/// project to launch), the primary button reads "Save & Launch" and, once
+/// the path is saved, immediately launches [project] with it instead of
+/// making the user close the dialog and retry "Launch in DAW" themselves.
 Future<void> showDawLaunchCommandDialog(
   BuildContext context, {
   required String dawType,
   String? currentPath,
   bool pathMissing = false,
+  MusicProject? project,
 }) {
   return showDialog<void>(
     context: context,
@@ -29,6 +36,7 @@ Future<void> showDawLaunchCommandDialog(
       dawType: dawType,
       currentPath: currentPath,
       pathMissing: pathMissing,
+      project: project,
     ),
   );
 }
@@ -37,12 +45,14 @@ class DawLaunchCommandDialog extends ConsumerStatefulWidget {
   final String dawType;
   final String? currentPath;
   final bool pathMissing;
+  final MusicProject? project;
 
   const DawLaunchCommandDialog({
     super.key,
     required this.dawType,
     this.currentPath,
     this.pathMissing = false,
+    this.project,
   });
 
   @override
@@ -108,7 +118,29 @@ class _DawLaunchCommandDialogState
     await repo.setDawLaunchCommand(widget.dawType, path);
     ref.invalidate(dawLaunchCommandsProvider);
     if (!mounted) return;
+
+    final project = widget.project;
+    if (project == null) {
+      Navigator.of(context).pop();
+      return;
+    }
+
+    // Save & Launch: grab the messenger before popping — the dialog's own
+    // context is gone right after, but the underlying page's is still valid
+    // to show the result snackbar on.
+    final messenger = ScaffoldMessenger.of(context);
+    final launched = await FileLauncher.launchWithBinary(path, project.filePath);
+    if (!mounted) return;
     Navigator.of(context).pop();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          launched
+              ? l10n.launchingProject(project.displayName)
+              : l10n.failedToLaunchProject(project.displayName),
+        ),
+      ),
+    );
   }
 
   Future<void> _remove() async {
@@ -229,7 +261,7 @@ class _DawLaunchCommandDialogState
               const SizedBox(height: 8),
             ],
             Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Expanded(
                   child: TextField(
@@ -268,7 +300,11 @@ class _DawLaunchCommandDialogState
         ),
         ElevatedButton(
           onPressed: _busy ? null : _save,
-          child: Text(l10n.dawLaunchCommandDialogSaveButton),
+          child: Text(
+            widget.project != null
+                ? l10n.dawLaunchCommandDialogSaveAndLaunchButton
+                : l10n.dawLaunchCommandDialogSaveButton,
+          ),
         ),
       ],
     );

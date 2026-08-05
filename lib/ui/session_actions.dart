@@ -46,7 +46,11 @@ Future<void> launchProjectInDaw(
       // Go straight to the configure-a-binary prompt instead of silently
       // doing nothing.
       if (!context.mounted) return;
-      await showDawLaunchCommandDialog(context, dawType: project.dawType!);
+      await showDawLaunchCommandDialog(
+        context,
+        dawType: project.dawType!,
+        project: project,
+      );
       return;
     }
     if (!File(binaryPath).existsSync()) {
@@ -56,6 +60,7 @@ Future<void> launchProjectInDaw(
         dawType: project.dawType!,
         currentPath: binaryPath,
         pathMissing: true,
+        project: project,
       );
       return;
     }

@@ -2056,6 +2056,7 @@
   "dawLaunchCommandDialogManualHint": "/path/to/executable",
   "dawLaunchCommandDialogBrowseButton": "Browse…",
   "dawLaunchCommandDialogSaveButton": "Save",
+  "dawLaunchCommandDialogSaveAndLaunchButton": "Save & Launch",
   "dawLaunchCommandDialogInvalidPath": "This file doesn't exist",
   "dawLaunchCommandRemoveConfirmTitle": "Remove launch command?",
   "dawLaunchCommandRemoveConfirmMessage": "Remove the configured launch command for {dawType}? Launching a {dawType} project will fall back to the system default (which may not work).",
