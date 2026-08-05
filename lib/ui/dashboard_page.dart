@@ -1681,7 +1681,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                         )!.notificationSettings,
                                       ),
                                     // Google Drive sync (hidden when left rail — shown there instead).
-                                    // Not offered on Linux at all — see
+                                    // Not offered inside Flatpak — see
                                     // GoogleDriveSyncService.isSupported.
                                     if (!isLeftRail &&
                                         GoogleDriveSyncService.isSupported)
@@ -2953,7 +2953,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                         ),
                                         const SizedBox(width: 8),
                                         // Google Drive sync (hidden when left rail — shown there instead).
-                                        // Not offered on Linux at all — see
+                                        // Not offered inside Flatpak — see
                                         // GoogleDriveSyncService.isSupported.
                                         if (!MobileUtils.isMobile() &&
                                             !isLeftRail &&
@@ -3757,8 +3757,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                               ),
                                         ),
                                         const SizedBox(height: 8),
-                                        // Google Drive sync — not offered on
-                                        // Linux at all, see
+                                        // Google Drive sync — not offered
+                                        // inside Flatpak, see
                                         // GoogleDriveSyncService.isSupported.
                                         if (GoogleDriveSyncService.isSupported)
                                           RailAction(

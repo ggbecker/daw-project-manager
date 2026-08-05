@@ -1181,7 +1181,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             ),
           ),
         ),
-        // Google Drive Sync — not offered on Linux at all (see
+        // Google Drive Sync — not offered inside Flatpak (see
         // GoogleDriveSyncService.isSupported for why: the desktop OAuth flow
         // needs a client secret that can't be shipped in the open Flatpak
         // build). A separate quick-access shortcut to the same content

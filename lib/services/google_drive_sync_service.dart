@@ -41,21 +41,40 @@ class UploadCancelledException implements Exception {
 class GoogleDriveSyncService {
   /// Whether Drive sync can be offered on this platform at all.
   ///
-  /// False on Linux only. The desktop OAuth flow (see
-  /// signInDesktopWithLoopback below) requires a client secret — Google's
-  /// token endpoint rejects the exchange without one for this app's "Desktop
-  /// app" OAuth client type, even with PKCE (verified against a live Google
-  /// sign-in attempt; see the PKCE-removal revert in git history for the
-  /// investigation). That's fine for Windows/macOS builds, which never
-  /// distribute the secret outside this repo's own CI. It's not something we
-  /// can accept for Linux, since the only realistic Linux distribution
-  /// channel is Flathub, whose build sandbox has no secret-injection
-  /// mechanism at all — the file would have to be committed in the open in
-  /// the public Flathub submission repo. Rather than ship a secret that
-  /// broadly, Drive sync is simply not offered on Linux; see
+  /// False only inside a Flatpak sandbox — not on Linux generally. The
+  /// desktop OAuth flow (see signInDesktopWithLoopback below) requires a
+  /// client secret — Google's token endpoint rejects the exchange without
+  /// one for this app's "Desktop app" OAuth client type, even with PKCE
+  /// (verified against a live Google sign-in attempt; see the
+  /// PKCE-removal revert in git history for the investigation). That's fine
+  /// for Windows/macOS/the Linux tarball/AppImage, which all get the real
+  /// secret injected from this repo's own private CI (see `build_linux` in
+  /// release.yml) — none of them ever distribute the secret outside that
+  /// trusted pipeline. It's specifically Flathub that can't have it: its
+  /// build sandbox has no secret-injection mechanism at all, so the file
+  /// would have to be committed in the open in the public Flathub submission
+  /// repo. Rather than ship a secret that broadly, Drive sync is disabled
+  /// only when actually running inside the Flatpak sandbox, detected via the
+  /// `/.flatpak-info` marker file every Flatpak app has at runtime — see
   /// flatpak/README.md and CLAUDE.md for the rest of that story, and
-  /// BackupService for the local-file backup/restore Linux uses instead.
-  static bool get isSupported => !Platform.isLinux;
+  /// BackupService for the local-file backup/restore Flatpak uses instead.
+  static bool get isSupported => !_isFlatpakSandbox;
+
+  static bool get _isFlatpakSandbox => isFlatpakSandboxFor(
+        isLinux: Platform.isLinux,
+        flatpakInfoExists: Platform.isLinux && File('/.flatpak-info').existsSync(),
+      );
+
+  /// Pure predicate behind [_isFlatpakSandbox], split out so the actual
+  /// decision logic is unit-testable without needing to run inside a real
+  /// Flatpak sandbox (mirrors looksLikeFlatpakPortalPath in
+  /// settings_page.dart, the existing precedent for this kind of check).
+  @visibleForTesting
+  static bool isFlatpakSandboxFor({
+    required bool isLinux,
+    required bool flatpakInfoExists,
+  }) =>
+      isLinux && flatpakInfoExists;
 
   static const String _appDataFolderName = 'DAW Project Manager';
   static const String _databaseFileName = 'database_backup.json';

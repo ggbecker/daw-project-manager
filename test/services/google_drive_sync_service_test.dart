@@ -64,16 +64,53 @@ void main() {
   });
 
   group('GoogleDriveSyncService.isSupported', () {
+    // isSupported is now false only inside an actual Flatpak sandbox (see
+    // isFlatpakSandboxFor below for that logic in isolation). No runner in
+    // this project's CI — including unit_tests on ubuntu-latest — is ever
+    // inside a Flatpak sandbox, so isSupported is true everywhere this test
+    // suite runs, same as Windows/macOS.
+    test('is true outside a Flatpak sandbox', () {
+      expect(GoogleDriveSyncService.isSupported, isTrue);
+    });
+  });
+
+  group('GoogleDriveSyncService.isFlatpakSandboxFor', () {
     // Drive sync's desktop OAuth flow requires a client secret, which
     // Flathub's build sandbox has no way to keep out of the public
     // submission repo (see flatpak/README.md and CLAUDE.md) — so it's not
-    // offered on Linux at all. Asserted relative to Platform.isLinux rather
-    // than a fixed expectation, so this is a genuine check in both places it
-    // matters: passes on a Windows/macOS dev machine, and — since the
-    // unit_tests CI job runs on ubuntu-latest — actually exercises the
-    // isFalse branch for real in CI.
-    test('is false only on Linux', () {
-      expect(GoogleDriveSyncService.isSupported, Platform.isLinux ? isFalse : isTrue);
+    // offered inside Flatpak specifically, detected via the /.flatpak-info
+    // marker file every Flatpak app has at runtime. Extracted as a pure
+    // function (mirrors looksLikeFlatpakPortalPath in settings_page.dart)
+    // so this actual decision logic is testable without needing to run
+    // inside a real sandbox.
+    test('true when on Linux and the Flatpak marker file exists', () {
+      expect(
+        GoogleDriveSyncService.isFlatpakSandboxFor(
+          isLinux: true,
+          flatpakInfoExists: true,
+        ),
+        isTrue,
+      );
+    });
+
+    test('false on Linux without the Flatpak marker file (tarball/AppImage)', () {
+      expect(
+        GoogleDriveSyncService.isFlatpakSandboxFor(
+          isLinux: true,
+          flatpakInfoExists: false,
+        ),
+        isFalse,
+      );
+    });
+
+    test('false off Linux regardless of the marker file', () {
+      expect(
+        GoogleDriveSyncService.isFlatpakSandboxFor(
+          isLinux: false,
+          flatpakInfoExists: true,
+        ),
+        isFalse,
+      );
     });
   });
 

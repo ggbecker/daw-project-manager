@@ -36,8 +36,8 @@ class BackupService {
 
       // Globally-scoped user data (not per-profile). Drive sync has always
       // included these; a local backup that omitted them meant anyone without
-      // Drive — notably Linux, where Drive sync is unavailable — had no way to
-      // back up their templates or phase customization at all.
+      // Drive — notably Flatpak, where Drive sync is unavailable — had no way
+      // to back up their templates or phase customization at all.
       final templates = await _readGlobalTemplates();
       final projectTemplates = await _readGlobalProjectTemplates();
       final templateRoots = await _readGlobalTemplateRoots();
