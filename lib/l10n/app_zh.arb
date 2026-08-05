@@ -1462,6 +1462,10 @@
   "@sourceFileNotFoundOnThisMachine": {
     "description": "Tooltip shown when the project source file does not exist on the current machine"
   },
+  "metadataExtractionNotSupportedForDaw": "此 DAW 不支持元数据提取",
+  "@metadataExtractionNotSupportedForDaw": {
+    "description": "Tooltip shown when the Extract Metadata action is disabled because this project's DAW has no metadata extraction implemented"
+  },
   "sourceFileNotFoundMetadataOnly": "在此设备上找不到源文件 — 仅元数据模式。您仍然可以编辑和导出元数据。",
   "@sourceFileNotFoundMetadataOnly": {
     "description": "Banner shown in project detail when the source file is missing; user can still edit metadata"

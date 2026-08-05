@@ -2304,6 +2304,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Fichier source introuvable sur cette machine';
 
   @override
+  String get metadataExtractionNotSupportedForDaw =>
+      'L\'extraction des métadonnées n\'est pas prise en charge pour ce DAW';
+
+  @override
   String get sourceFileNotFoundMetadataOnly =>
       'Fichier source introuvable sur cette machine — mode métadonnées uniquement. Vous pouvez toujours modifier et exporter les métadonnées.';
 

@@ -3815,6 +3815,12 @@ abstract class AppLocalizations {
   /// **'Source file not found on this machine'**
   String get sourceFileNotFoundOnThisMachine;
 
+  /// Tooltip shown when the Extract Metadata action is disabled because this project's DAW has no metadata extraction implemented
+  ///
+  /// In en, this message translates to:
+  /// **'Metadata extraction is not supported for this DAW'**
+  String get metadataExtractionNotSupportedForDaw;
+
   /// Banner shown in project detail when the source file is missing; user can still edit metadata
   ///
   /// In en, this message translates to:

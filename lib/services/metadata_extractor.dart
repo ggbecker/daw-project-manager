@@ -40,6 +40,27 @@ class ProjectMetadata {
 }
 
 class MetadataExtractor {
+  /// Extensions for which [extractMetadata] actually parses the project
+  /// file for BPM/key/version instead of just returning nulls.
+  static const _fullExtractionExtensions = {
+    '.als',
+    '.alp',
+    '.cpr',
+    '.npr',
+    '.bwproject',
+    '.rpp',
+    '.mgd',
+    '.flp',
+  };
+
+  /// Whether [extractMetadata] has a real implementation for this project's
+  /// DAW, as opposed to just returning nulls. Used to disable "Extract
+  /// Metadata" UI for DAWs we can't yet parse.
+  static bool supportsFullExtraction(String filePath) {
+    final ext = p.extension(filePath).toLowerCase();
+    return _fullExtractionExtensions.contains(ext);
+  }
+
   /// Extracts lightweight metadata (DAW type only) - fast, no file parsing
   static Future<ProjectMetadata> extractLightweightMetadata(String filePath) async {
     final ext = p.extension(filePath).toLowerCase();

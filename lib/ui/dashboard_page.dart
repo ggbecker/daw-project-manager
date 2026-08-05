@@ -20,6 +20,7 @@ import 'package:file_picker/file_picker.dart';
 
 import '../services/scanner_service.dart';
 import '../services/audio_analysis_service.dart';
+import '../services/metadata_extractor.dart';
 import '../services/mixdown_detector_service.dart';
 import 'widgets/shortcuts_help_dialog.dart';
 import 'widgets/waveform_widget.dart';
@@ -4775,19 +4776,31 @@ class _PlutoProjectsTableWithSelectionState
                       const SizedBox(width: 8),
                       Builder(
                         builder: (context) {
-                          final anyFileFound = widget.projects
-                              .where((p) => _selectedProjectIds.contains(p.id))
-                              .any(
-                                (p) =>
-                                    File(p.filePath).existsSync() ||
-                                    Directory(p.filePath).existsSync(),
-                              );
+                          final selectedProjects = widget.projects
+                              .where((p) => _selectedProjectIds.contains(p.id));
+                          final anyFileFound = selectedProjects.any(
+                            (p) =>
+                                File(p.filePath).existsSync() ||
+                                Directory(p.filePath).existsSync(),
+                          );
+                          final anySupported = selectedProjects.any(
+                            (p) =>
+                                (File(p.filePath).existsSync() ||
+                                    Directory(p.filePath).existsSync()) &&
+                                MetadataExtractor.supportsFullExtraction(
+                                  p.filePath,
+                                ),
+                          );
                           return Tooltip(
-                            message: anyFileFound
-                                ? ''
-                                : AppLocalizations.of(
+                            message: !anyFileFound
+                                ? AppLocalizations.of(
                                     context,
-                                  )!.sourceFileNotFoundOnThisMachine,
+                                  )!.sourceFileNotFoundOnThisMachine
+                                : !anySupported
+                                    ? AppLocalizations.of(
+                                        context,
+                                      )!.metadataExtractionNotSupportedForDaw
+                                    : '',
                             child: ElevatedButton.icon(
                               icon: const Icon(Icons.search),
                               label: Text(
@@ -4798,7 +4811,7 @@ class _PlutoProjectsTableWithSelectionState
                                   context,
                                 ).colorScheme.primary,
                               ),
-                              onPressed: widget.isAnyOperation || !anyFileFound
+                              onPressed: widget.isAnyOperation || !anySupported
                                   ? null
                                   : () async {
                                       widget.onExtractingMetadataChanged(true);
@@ -4810,6 +4823,14 @@ class _PlutoProjectsTableWithSelectionState
 
                                       for (final projectId
                                           in _selectedProjectIds) {
+                                        final project = widget.projects
+                                            .firstWhere((p) => p.id == projectId);
+                                        if (!MetadataExtractor
+                                            .supportsFullExtraction(
+                                              project.filePath,
+                                            )) {
+                                          continue;
+                                        }
                                         try {
                                           await repo
                                               .extractFullMetadataForProject(
@@ -6338,6 +6359,8 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     final sessionMode = ref.read(sessionModeProvider);
     final isSubscribed =
         sessionMode && ref.read(activeProjectProvider)?.id == project.id;
+    final extractionSupported =
+        MetadataExtractor.supportsFullExtraction(project.filePath);
 
     final result = await showMenu<String>(
       context: context,
@@ -6423,12 +6446,18 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
             Directory(project.filePath).existsSync())
           PopupMenuItem<String>(
             value: 'extractMetadata',
-            child: Row(
-              children: [
-                const Icon(Icons.search, size: 20),
-                const SizedBox(width: 8),
-                Text(l10n.extractMetadata),
-              ],
+            enabled: extractionSupported,
+            child: Tooltip(
+              message: extractionSupported
+                  ? ''
+                  : l10n.metadataExtractionNotSupportedForDaw,
+              child: Row(
+                children: [
+                  const Icon(Icons.search, size: 20),
+                  const SizedBox(width: 8),
+                  Text(l10n.extractMetadata),
+                ],
+              ),
             ),
           ),
         PopupMenuItem<String>(

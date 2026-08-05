@@ -1486,6 +1486,10 @@
   "@sourceFileNotFoundOnThisMachine": {
     "description": "Tooltip shown when the project source file does not exist on the current machine"
   },
+  "metadataExtractionNotSupportedForDaw": "A extração de metadados não é suportada para este DAW",
+  "@metadataExtractionNotSupportedForDaw": {
+    "description": "Tooltip shown when the Extract Metadata action is disabled because this project's DAW has no metadata extraction implemented"
+  },
   "sourceFileNotFoundMetadataOnly": "Arquivo fonte não encontrado nesta máquina — modo somente metadados. Você ainda pode editar e exportar metadados.",
   "@sourceFileNotFoundMetadataOnly": {
     "description": "Banner shown in project detail when the source file is missing; user can still edit metadata"
