@@ -45,14 +45,18 @@ bool looksLikeFlatpakPortalPath(String path) =>
     Platform.isLinux && RegExp(r'^/run/user/\d+/doc/').hasMatch(path);
 
 /// Identifies a SettingsPage tab for deep-linking (e.g. the dashboard's
-/// Google Drive quick-access shortcut opening straight to [backup]). Order
-/// here has no bearing on nav order — that's set independently in
-/// _SettingsPageState._navItems/_sectionBuilders — this just needs to stay
-/// in sync with that list's members.
+/// Google Drive quick-access shortcut opening straight to [backup]). Member
+/// declaration order here is purely cosmetic — actual nav/rendering order
+/// comes from _SettingsPageState._sectionOrder(), which resolves an
+/// [initialSection] to a live position by identity, so it stays correct
+/// even when a platform-conditional section (like [dawLaunchCommands]) is
+/// absent from the list or reordered within it.
 enum SettingsSection {
   general,
   appearance,
   projectFolders,
+  // Linux-only — see Platform.isLinux gate in _sectionOrder().
+  dawLaunchCommands,
   mixdownFolders,
   phases,
   workSessions,
@@ -60,11 +64,6 @@ enum SettingsSection {
   dangerZone,
   shortcuts,
   about,
-  // Linux-only (see Platform.isLinux gates on this section's _NavItem/
-  // _sectionBuilders/_searchIndex entries below) — kept last so the fixed
-  // index alignment the other sections rely on isn't disturbed when this
-  // one is absent from those lists on non-Linux platforms.
-  dawLaunchCommands,
 }
 
 /// Single desktop settings hub, Chrome-settings-style: the left nav rail
@@ -88,7 +87,13 @@ class SettingsPage extends ConsumerStatefulWidget {
 class _SettingsPageState extends ConsumerState<SettingsPage> {
   final _searchController = TextEditingController();
 
-  late int _activeSection = widget.initialSection.index;
+  // Resolved by identity, not by widget.initialSection.index directly — see
+  // _sectionOrder() for why the enum's declaration order can't be trusted
+  // as a position.
+  late int _activeSection = () {
+    final idx = _sectionOrder().indexOf(widget.initialSection);
+    return idx < 0 ? 0 : idx;
+  }();
 
   bool _busy = false;
   bool _checkingUpdate = false;
@@ -846,95 +851,141 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   // Build
   // ---------------------------------------------------------------------
 
-  // Order: everyday workspace settings first, then data/danger-zone, then
-  // reference material (shortcuts/about) last. newGroup draws a divider in
-  // the nav rail immediately above that item, visually separating the three
-  // categories without needing text headers.
-  List<_NavItem> _navItems(AppLocalizations l10n) => [
-        _NavItem(icon: Icons.tune_outlined, label: l10n.general),
-        _NavItem(icon: Icons.palette_outlined, label: l10n.appearanceTabLabel),
-        _NavItem(icon: Icons.folder_outlined, label: l10n.roots),
-        _NavItem(icon: Icons.audio_file_outlined, label: l10n.mixdownFoldersTabLabel),
-        _NavItem(icon: Icons.timeline_outlined, label: l10n.phases),
-        _NavItem(icon: Icons.bookmark_outlined, label: l10n.workSessionsTabLabel),
-        _NavItem(icon: Icons.backup_outlined, label: l10n.backupTabLabel, newGroup: true),
-        _NavItem(icon: Icons.warning_amber_rounded, label: l10n.pathsSettingsDangerZoneTitle),
-        _NavItem(icon: Icons.keyboard_outlined, label: l10n.keyboardShortcuts, newGroup: true),
-        _NavItem(icon: Icons.info_outline, label: l10n.aboutTabLabel),
+  // Single source of truth for nav/rendering order. Doesn't need
+  // AppLocalizations — just identifiers — so it's also safe to call from
+  // _activeSection's initializer, before the widget tree (and l10n) exists.
+  // Everyday workspace settings first, then data/danger-zone, then
+  // reference material (shortcuts/about) last; DAW Locations sits with the
+  // other "where things live on disk" settings right after Project Folders.
+  // newGroup (below, in _navItemFor) draws a divider in the nav rail
+  // immediately above an item, visually separating loose categories without
+  // needing text headers.
+  List<SettingsSection> _sectionOrder() => [
+        SettingsSection.general,
+        SettingsSection.appearance,
+        SettingsSection.projectFolders,
         // Linux only — Windows/macOS already have working OS file
         // association, so there's nothing for this section to do there.
-        if (Platform.isLinux)
-          _NavItem(
-            icon: Icons.terminal_outlined,
-            label: l10n.dawLaunchCommandsTabLabel,
-            newGroup: true,
-          ),
+        if (Platform.isLinux) SettingsSection.dawLaunchCommands,
+        SettingsSection.mixdownFolders,
+        SettingsSection.phases,
+        SettingsSection.workSessions,
+        SettingsSection.backup,
+        SettingsSection.dangerZone,
+        SettingsSection.shortcuts,
+        SettingsSection.about,
       ];
 
-  List<Widget Function(AppLocalizations)> get _sectionBuilders => [
-        _buildGeneralSection,
-        _buildAppearanceSection,
-        _buildProjectFoldersSection,
-        _buildMixdownFoldersSection,
-        _buildPhasesSection,
-        _buildWorkSessionsSection,
-        _buildBackupSection,
-        _buildDangerZoneSection,
-        _buildShortcutsSection,
-        _buildAboutSection,
-        if (Platform.isLinux) _buildDawLaunchCommandsSection,
-      ];
+  _NavItem _navItemFor(SettingsSection id, AppLocalizations l10n) {
+    switch (id) {
+      case SettingsSection.general:
+        return _NavItem(icon: Icons.tune_outlined, label: l10n.general);
+      case SettingsSection.appearance:
+        return _NavItem(icon: Icons.palette_outlined, label: l10n.appearanceTabLabel);
+      case SettingsSection.projectFolders:
+        return _NavItem(icon: Icons.folder_outlined, label: l10n.roots);
+      case SettingsSection.dawLaunchCommands:
+        return _NavItem(icon: Icons.terminal_outlined, label: l10n.dawLaunchCommandsTabLabel);
+      case SettingsSection.mixdownFolders:
+        return _NavItem(icon: Icons.audio_file_outlined, label: l10n.mixdownFoldersTabLabel);
+      case SettingsSection.phases:
+        return _NavItem(icon: Icons.timeline_outlined, label: l10n.phases);
+      case SettingsSection.workSessions:
+        return _NavItem(icon: Icons.bookmark_outlined, label: l10n.workSessionsTabLabel);
+      case SettingsSection.backup:
+        return _NavItem(icon: Icons.backup_outlined, label: l10n.backupTabLabel, newGroup: true);
+      case SettingsSection.dangerZone:
+        return _NavItem(icon: Icons.warning_amber_rounded, label: l10n.pathsSettingsDangerZoneTitle);
+      case SettingsSection.shortcuts:
+        return _NavItem(icon: Icons.keyboard_outlined, label: l10n.keyboardShortcuts, newGroup: true);
+      case SettingsSection.about:
+        return _NavItem(icon: Icons.info_outline, label: l10n.aboutTabLabel);
+    }
+  }
+
+  List<_NavItem> _navItems(AppLocalizations l10n) =>
+      _sectionOrder().map((id) => _navItemFor(id, l10n)).toList();
+
+  Widget Function(AppLocalizations) _builderFor(SettingsSection id) {
+    switch (id) {
+      case SettingsSection.general:
+        return _buildGeneralSection;
+      case SettingsSection.appearance:
+        return _buildAppearanceSection;
+      case SettingsSection.projectFolders:
+        return _buildProjectFoldersSection;
+      case SettingsSection.dawLaunchCommands:
+        return _buildDawLaunchCommandsSection;
+      case SettingsSection.mixdownFolders:
+        return _buildMixdownFoldersSection;
+      case SettingsSection.phases:
+        return _buildPhasesSection;
+      case SettingsSection.workSessions:
+        return _buildWorkSessionsSection;
+      case SettingsSection.backup:
+        return _buildBackupSection;
+      case SettingsSection.dangerZone:
+        return _buildDangerZoneSection;
+      case SettingsSection.shortcuts:
+        return _buildShortcutsSection;
+      case SettingsSection.about:
+        return _buildAboutSection;
+    }
+  }
+
+  List<Widget Function(AppLocalizations)> get _sectionBuilders =>
+      _sectionOrder().map(_builderFor).toList();
 
   /// Flat index of searchable setting labels, used only to power the search
   /// box's cross-section results — not tied to the live widgets themselves.
   List<_SearchEntry> _searchIndex(AppLocalizations l10n) => [
-        _SearchEntry(0, Icons.tune_outlined, l10n.general, null),
-        _SearchEntry(0, Icons.lightbulb_outline, l10n.showSuggestions, l10n.showSuggestionsDescription),
-        _SearchEntry(0, Icons.palette_outlined, l10n.lastModifiedColors, l10n.lastModifiedColorsDescription),
-        _SearchEntry(0, Icons.dock_outlined, l10n.closeToTray, l10n.closeToTrayDescription),
-        _SearchEntry(0, Icons.power_settings_new, l10n.autoStart, l10n.autoStartDescription),
-        _SearchEntry(0, Icons.minimize, l10n.startMinimized, l10n.startMinimizedDescription),
-        _SearchEntry(0, Icons.language, l10n.language, l10n.languageSettingDescription),
-        _SearchEntry(0, Icons.table_chart_outlined, l10n.metadataExtractionTitle, l10n.metadataExtractionSubtitle),
-        _SearchEntry(0, Icons.restart_alt, l10n.resetOnboarding, null),
-        _SearchEntry(1, Icons.palette_outlined, l10n.theme, l10n.themeSettingDescription),
-        _SearchEntry(1, Icons.tab_outlined, l10n.customizeTabs, l10n.customizeTabsDescription),
-        _SearchEntry(1, Icons.view_sidebar_outlined, l10n.tabPosition, null),
-        _SearchEntry(2, Icons.folder_outlined, l10n.projectFoldersSectionTitle, l10n.projectFoldersSectionSubtitle),
-        _SearchEntry(2, Icons.view_agenda_outlined, l10n.scanModeSectionTitle, l10n.scanModeSectionDescription),
-        _SearchEntry(2, Icons.sort, l10n.excludeSmartFoldersFromSort, l10n.excludeSmartFoldersFromSortDescription),
-        _SearchEntry(2, Icons.merge, l10n.mergeSmartFoldersByName, l10n.mergeSmartFoldersByNameDescription),
-        _SearchEntry(2, Icons.visibility_outlined, l10n.alwaysShowSmartFolders, l10n.alwaysShowSmartFoldersDescription),
-        _SearchEntry(2, Icons.block, l10n.excludedFoldersSectionTitle, l10n.excludedFoldersSectionSubtitle),
-        _SearchEntry(2, Icons.description_outlined, l10n.exportAllProjectsInfo, l10n.exportAllProjectsInfoSubtitle),
-        _SearchEntry(3, Icons.audio_file_outlined, l10n.mixdownFoldersTabLabel, l10n.mixdownFoldersSectionDescription),
-        _SearchEntry(3, Icons.folder_open, l10n.previewMixdownFolderTitle, l10n.previewMixdownFolderSubtitle),
-        for (final dawKey in MixdownDetectorService.dawFolders.keys)
-          _SearchEntry(3, Icons.piano_outlined, dawKey, MixdownDetectorService.dawFolders[dawKey]!.join(', ')),
-        _SearchEntry(4, Icons.timeline_outlined, l10n.phases, l10n.phasesDescription),
-        _SearchEntry(4, Icons.add, l10n.addPhase, null),
-        _SearchEntry(4, Icons.restart_alt, l10n.resetToDefaults, null),
-        _SearchEntry(5, Icons.bookmark_outlined, l10n.sessionMode, l10n.sessionModeDescription),
-        _SearchEntry(5, Icons.timer_outlined, l10n.workTimerSection, l10n.workTimerSectionDesc),
-        _SearchEntry(6, Icons.backup_outlined, l10n.localBackup, null),
-        _SearchEntry(6, Icons.upload_file, l10n.exportBackup, null),
-        _SearchEntry(6, Icons.download, l10n.importBackup, null),
-        if (GoogleDriveSyncService.isSupported)
-          _SearchEntry(6, Icons.cloud_outlined, l10n.googleDriveSync, null),
-        _SearchEntry(7, Icons.warning_amber_rounded, l10n.pathsSettingsDangerZoneTitle, l10n.pathsSettingsDangerZoneSubtitle),
-        _SearchEntry(7, Icons.delete_forever, l10n.clearLibrary, l10n.clearLibraryMessage),
-        _SearchEntry(7, Icons.delete_sweep_rounded, l10n.deleteAllData, l10n.deleteAllDataSubtitle),
-        _SearchEntry(8, Icons.keyboard_outlined, l10n.keyboardShortcuts, null),
-        _SearchEntry(9, Icons.info_outline, l10n.aboutTabLabel, l10n.appDescription),
-        if (UpdateCheckService.isSupported)
-          _SearchEntry(9, Icons.system_update_alt_outlined, l10n.checkForUpdates, l10n.checkForUpdatesDescription),
-        _SearchEntry(9, Icons.favorite, l10n.donate, null),
-        _SearchEntry(9, Icons.web, l10n.website, null),
-        _SearchEntry(9, Icons.menu_book_outlined, l10n.menuDocumentation, null),
-        _SearchEntry(9, Icons.bug_report_outlined, l10n.shareDiagnosticLog, null),
+        _SearchEntry(SettingsSection.general, Icons.tune_outlined, l10n.general, null),
+        _SearchEntry(SettingsSection.general, Icons.lightbulb_outline, l10n.showSuggestions, l10n.showSuggestionsDescription),
+        _SearchEntry(SettingsSection.general, Icons.palette_outlined, l10n.lastModifiedColors, l10n.lastModifiedColorsDescription),
+        _SearchEntry(SettingsSection.general, Icons.dock_outlined, l10n.closeToTray, l10n.closeToTrayDescription),
+        _SearchEntry(SettingsSection.general, Icons.power_settings_new, l10n.autoStart, l10n.autoStartDescription),
+        _SearchEntry(SettingsSection.general, Icons.minimize, l10n.startMinimized, l10n.startMinimizedDescription),
+        _SearchEntry(SettingsSection.general, Icons.language, l10n.language, l10n.languageSettingDescription),
+        _SearchEntry(SettingsSection.general, Icons.table_chart_outlined, l10n.metadataExtractionTitle, l10n.metadataExtractionSubtitle),
+        _SearchEntry(SettingsSection.general, Icons.restart_alt, l10n.resetOnboarding, null),
+        _SearchEntry(SettingsSection.appearance, Icons.palette_outlined, l10n.theme, l10n.themeSettingDescription),
+        _SearchEntry(SettingsSection.appearance, Icons.tab_outlined, l10n.customizeTabs, l10n.customizeTabsDescription),
+        _SearchEntry(SettingsSection.appearance, Icons.view_sidebar_outlined, l10n.tabPosition, null),
+        _SearchEntry(SettingsSection.projectFolders, Icons.folder_outlined, l10n.projectFoldersSectionTitle, l10n.projectFoldersSectionSubtitle),
+        _SearchEntry(SettingsSection.projectFolders, Icons.view_agenda_outlined, l10n.scanModeSectionTitle, l10n.scanModeSectionDescription),
+        _SearchEntry(SettingsSection.projectFolders, Icons.sort, l10n.excludeSmartFoldersFromSort, l10n.excludeSmartFoldersFromSortDescription),
+        _SearchEntry(SettingsSection.projectFolders, Icons.merge, l10n.mergeSmartFoldersByName, l10n.mergeSmartFoldersByNameDescription),
+        _SearchEntry(SettingsSection.projectFolders, Icons.visibility_outlined, l10n.alwaysShowSmartFolders, l10n.alwaysShowSmartFoldersDescription),
+        _SearchEntry(SettingsSection.projectFolders, Icons.block, l10n.excludedFoldersSectionTitle, l10n.excludedFoldersSectionSubtitle),
+        _SearchEntry(SettingsSection.projectFolders, Icons.description_outlined, l10n.exportAllProjectsInfo, l10n.exportAllProjectsInfoSubtitle),
         if (Platform.isLinux) ...[
-          _SearchEntry(10, Icons.terminal_outlined, l10n.dawLaunchCommandsTabLabel, l10n.dawLaunchCommandsSectionDescription),
+          _SearchEntry(SettingsSection.dawLaunchCommands, Icons.terminal_outlined, l10n.dawLaunchCommandsTabLabel, l10n.dawLaunchCommandsSectionDescription),
         ],
+        _SearchEntry(SettingsSection.mixdownFolders, Icons.audio_file_outlined, l10n.mixdownFoldersTabLabel, l10n.mixdownFoldersSectionDescription),
+        _SearchEntry(SettingsSection.mixdownFolders, Icons.folder_open, l10n.previewMixdownFolderTitle, l10n.previewMixdownFolderSubtitle),
+        for (final dawKey in MixdownDetectorService.dawFolders.keys)
+          _SearchEntry(SettingsSection.mixdownFolders, Icons.piano_outlined, dawKey, MixdownDetectorService.dawFolders[dawKey]!.join(', ')),
+        _SearchEntry(SettingsSection.phases, Icons.timeline_outlined, l10n.phases, l10n.phasesDescription),
+        _SearchEntry(SettingsSection.phases, Icons.add, l10n.addPhase, null),
+        _SearchEntry(SettingsSection.phases, Icons.restart_alt, l10n.resetToDefaults, null),
+        _SearchEntry(SettingsSection.workSessions, Icons.bookmark_outlined, l10n.sessionMode, l10n.sessionModeDescription),
+        _SearchEntry(SettingsSection.workSessions, Icons.timer_outlined, l10n.workTimerSection, l10n.workTimerSectionDesc),
+        _SearchEntry(SettingsSection.backup, Icons.backup_outlined, l10n.localBackup, null),
+        _SearchEntry(SettingsSection.backup, Icons.upload_file, l10n.exportBackup, null),
+        _SearchEntry(SettingsSection.backup, Icons.download, l10n.importBackup, null),
+        if (GoogleDriveSyncService.isSupported)
+          _SearchEntry(SettingsSection.backup, Icons.cloud_outlined, l10n.googleDriveSync, null),
+        _SearchEntry(SettingsSection.dangerZone, Icons.warning_amber_rounded, l10n.pathsSettingsDangerZoneTitle, l10n.pathsSettingsDangerZoneSubtitle),
+        _SearchEntry(SettingsSection.dangerZone, Icons.delete_forever, l10n.clearLibrary, l10n.clearLibraryMessage),
+        _SearchEntry(SettingsSection.dangerZone, Icons.delete_sweep_rounded, l10n.deleteAllData, l10n.deleteAllDataSubtitle),
+        _SearchEntry(SettingsSection.shortcuts, Icons.keyboard_outlined, l10n.keyboardShortcuts, null),
+        _SearchEntry(SettingsSection.about, Icons.info_outline, l10n.aboutTabLabel, l10n.appDescription),
+        if (UpdateCheckService.isSupported)
+          _SearchEntry(SettingsSection.about, Icons.system_update_alt_outlined, l10n.checkForUpdates, l10n.checkForUpdatesDescription),
+        _SearchEntry(SettingsSection.about, Icons.favorite, l10n.donate, null),
+        _SearchEntry(SettingsSection.about, Icons.web, l10n.website, null),
+        _SearchEntry(SettingsSection.about, Icons.menu_book_outlined, l10n.menuDocumentation, null),
+        _SearchEntry(SettingsSection.about, Icons.bug_report_outlined, l10n.shareDiagnosticLog, null),
       ];
 
   @override
@@ -995,9 +1046,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       );
     }
 
-    final bySection = <int, List<_SearchEntry>>{};
+    final order = _sectionOrder();
+    final bySection = <SettingsSection, List<_SearchEntry>>{};
     for (final entry in matches) {
-      bySection.putIfAbsent(entry.sectionIndex, () => []).add(entry);
+      bySection.putIfAbsent(entry.section, () => []).add(entry);
     }
 
     final highlightStyle = TextStyle(
@@ -1007,16 +1059,16 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
     return ListView(
       children: [
-        for (final sectionIndex in bySection.keys) ...[
+        for (final section in bySection.keys) ...[
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Row(
               children: [
-                Icon(navItems[sectionIndex].icon, size: 16,
+                Icon(navItems[order.indexOf(section)].icon, size: 16,
                     color: Theme.of(context).colorScheme.onSurfaceVariant),
                 const SizedBox(width: 8),
                 Text(
-                  navItems[sectionIndex].label,
+                  navItems[order.indexOf(section)].label,
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -1028,7 +1080,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             clipBehavior: Clip.antiAlias,
             child: Column(
               children: [
-                for (final entry in bySection[sectionIndex]!) ...[
+                for (final entry in bySection[section]!) ...[
                   ListTile(
                     leading: Icon(entry.icon),
                     title: Text.rich(TextSpan(
@@ -1050,9 +1102,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                             ),
                           )),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () => _selectSection(sectionIndex),
+                    onTap: () => _selectSection(order.indexOf(section)),
                   ),
-                  if (entry != bySection[sectionIndex]!.last) const Divider(height: 1),
+                  if (entry != bySection[section]!.last) const Divider(height: 1),
                 ],
               ],
             ),
@@ -2651,12 +2703,12 @@ class _NavItem {
 /// One searchable setting, indexed only for the search box's flattened
 /// cross-section results — not connected to the live widget tree.
 class _SearchEntry {
-  final int sectionIndex;
+  final SettingsSection section;
   final IconData icon;
   final String title;
   final String? subtitle;
 
-  const _SearchEntry(this.sectionIndex, this.icon, this.title, this.subtitle);
+  const _SearchEntry(this.section, this.icon, this.title, this.subtitle);
 }
 
 class _SettingsNavRail extends StatelessWidget {

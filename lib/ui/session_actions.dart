@@ -38,61 +38,56 @@ Future<void> launchProjectInDaw(
   if (Platform.isLinux && project.dawType != null) {
     final repo = await ref.read(repositoryProvider.future);
     final binaryPath = repo.getDawLaunchCommand(project.dawType!);
-    if (binaryPath != null) {
-      if (!File(binaryPath).existsSync()) {
-        if (!context.mounted) return;
-        await showDawLaunchCommandDialog(
-          context,
-          dawType: project.dawType!,
-          currentPath: binaryPath,
-          pathMissing: true,
-        );
-        return;
-      }
-      final launched = await FileLauncher.launchWithBinary(
-        binaryPath,
-        project.filePath,
-      );
+    if (binaryPath == null) {
+      // No override configured yet: on Linux there's no reliable OS-level
+      // file association to fall back on for most DAWs (see the class doc
+      // above), and xdg-open reports success even when nothing actually
+      // opens — so there's no "it failed, ask now" signal to wait for.
+      // Go straight to the configure-a-binary prompt instead of silently
+      // doing nothing.
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            launched
-                ? AppLocalizations.of(context)!.launchingProject(project.displayName)
-                : AppLocalizations.of(context)!.failedToLaunchProject(project.displayName),
-          ),
-        ),
+      await showDawLaunchCommandDialog(context, dawType: project.dawType!);
+      return;
+    }
+    if (!File(binaryPath).existsSync()) {
+      if (!context.mounted) return;
+      await showDawLaunchCommandDialog(
+        context,
+        dawType: project.dawType!,
+        currentPath: binaryPath,
+        pathMissing: true,
       );
       return;
     }
+    final launched = await FileLauncher.launchWithBinary(
+      binaryPath,
+      project.filePath,
+    );
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          launched
+              ? AppLocalizations.of(context)!.launchingProject(project.displayName)
+              : AppLocalizations.of(context)!.failedToLaunchProject(project.displayName),
+        ),
+      ),
+    );
+    return;
   }
 
   final success = await FileLauncher.launchProject(project.filePath);
 
-  if (success) {
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.launchingProject(project.displayName)),
-        ),
-      );
-    }
-    return;
-  }
-
   if (!context.mounted) return;
-  if (Platform.isLinux && project.dawType != null) {
-    // In-context first-run prompt: no override configured yet and the OS
-    // default handler just failed — offer to set one up right here instead
-    // of a dead-end "failed to launch" snackbar.
-    await showDawLaunchCommandDialog(context, dawType: project.dawType!);
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(AppLocalizations.of(context)!.failedToLaunchProject(project.displayName)),
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(
+        success
+            ? AppLocalizations.of(context)!.launchingProject(project.displayName)
+            : AppLocalizations.of(context)!.failedToLaunchProject(project.displayName),
       ),
-    );
-  }
+    ),
+  );
 }
 
 /// Shows a confirmation dialog before ending the active session.
