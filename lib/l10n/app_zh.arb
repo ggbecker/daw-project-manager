@@ -86,6 +86,8 @@
   },
   "removeExcludedFolderMessageNoPath": "该文件夹将不再被排除。",
   "desktopOnlyPathsSettings": "此页面仅在桌面应用中可用。",
+  "renameProjectFolderTitle": "Display Name",
+  "flatpakPortalPathExplanation": "This path is a sandboxed location, not the real folder location — Flatpak doesn't share that with the app. Use the name above to identify it instead.",
   "removeProjectFolderTitle": "移除项目文件夹？",
   "removeProjectFolderMessage": "确定要移除「{path}」吗？这也会移除该文件夹中未包含在发布中的所有项目。",
   "@removeProjectFolderMessage": {
@@ -459,6 +461,7 @@
       }
     }
   },
+  "scanCancelled": "Scan cancelled.",
   "scanFailuresSnackbar": "{count}个项目{plural}加载失败。",
   "@scanFailuresSnackbar": {
     "placeholders": {
@@ -2017,6 +2020,54 @@
   "mixdownFoldersSectionDescription": "控制应用程序在哪个文件夹中查找项目导出/缩混的音频，当未手动设置预览曲目时会使用它。展开下方的DAW可查看默认检查的文件夹名称，如果你的设置使用不同的名称，也可以自行添加。",
   "mixdownFoldersDefaultsLabel": "默认检查的文件夹：",
   "mixdownFoldersCustomLabel": "你为此DAW添加的文件夹：",
+  "dawLaunchCommandsTabLabel": "DAW Locations",
+  "dawLaunchCommandsSectionDescription": "Linux has no reliable file-type association for most DAWs, so \"Launch in DAW\" needs to be told exactly which program to run for each one you use. Configure it once per DAW below — the app will use it for every project of that type from then on.",
+  "dawLaunchCommandNotConfigured": "Not configured",
+  "dawLaunchCommandMissingTooltip": "This location no longer exists",
+  "dawLaunchCommandConfigureButton": "Configure",
+  "dawLaunchCommandDialogTitle": "Launch command for {dawType}",
+  "@dawLaunchCommandDialogTitle": {
+    "placeholders": {
+      "dawType": {
+        "type": "String"
+      }
+    }
+  },
+  "dawLaunchCommandDialogBody": "Point this at the {dawType} executable (or AppImage). The app will run it directly with the project file as its only argument.",
+  "@dawLaunchCommandDialogBody": {
+    "placeholders": {
+      "dawType": {
+        "type": "String"
+      }
+    }
+  },
+  "dawLaunchCommandDialogMissingBanner": "The previously configured location for {dawType} no longer exists:\n{path}",
+  "@dawLaunchCommandDialogMissingBanner": {
+    "placeholders": {
+      "dawType": {
+        "type": "String"
+      },
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "dawLaunchCommandDialogDetectedHeading": "Detected on this system",
+  "dawLaunchCommandDialogManualHint": "/path/to/executable",
+  "dawLaunchCommandDialogBrowseButton": "Browse…",
+  "dawLaunchCommandDialogSaveButton": "Save",
+  "dawLaunchCommandDialogSaveAndLaunchButton": "Save & Launch",
+  "dawLaunchCommandDialogInvalidPath": "This file doesn't exist",
+  "dawLaunchCommandRemoveConfirmTitle": "Remove launch command?",
+  "dawLaunchCommandRemoveConfirmMessage": "Remove the configured launch command for {dawType}? Launching a {dawType} project will fall back to the system default (which may not work).",
+  "@dawLaunchCommandRemoveConfirmMessage": {
+    "placeholders": {
+      "dawType": {
+        "type": "String"
+      }
+    }
+  },
+  "dawLaunchCommandsEmptyState": "DAWs will appear here once you scan projects for them.",
   "dawInfoLabel": "DAW：{daw}",
   "@dawInfoLabel": {
     "placeholders": {

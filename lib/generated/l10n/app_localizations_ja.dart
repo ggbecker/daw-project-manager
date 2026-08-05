@@ -186,6 +186,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get desktopOnlyPathsSettings => 'このページはデスクトップアプリでのみ利用できます。';
 
   @override
+  String get renameProjectFolderTitle => 'Display Name';
+
+  @override
+  String get flatpakPortalPathExplanation =>
+      'This path is a sandboxed location, not the real folder location — Flatpak doesn\'t share that with the app. Use the name above to identify it instead.';
+
+  @override
   String get removeProjectFolderTitle => 'プロジェクトフォルダーを削除しますか？';
 
   @override
@@ -609,6 +616,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String scanComplete(String type, int count, String plural) {
     return '$type完了: $countプロジェクト$pluralを追加/更新しました。';
   }
+
+  @override
+  String get scanCancelled => 'Scan cancelled.';
 
   @override
   String scanFailuresSnackbar(int count, String plural) {
@@ -2892,6 +2902,67 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get mixdownFoldersCustomLabel => 'このDAW用に追加したフォルダ:';
+
+  @override
+  String get dawLaunchCommandsTabLabel => 'DAW Locations';
+
+  @override
+  String get dawLaunchCommandsSectionDescription =>
+      'Linux has no reliable file-type association for most DAWs, so \"Launch in DAW\" needs to be told exactly which program to run for each one you use. Configure it once per DAW below — the app will use it for every project of that type from then on.';
+
+  @override
+  String get dawLaunchCommandNotConfigured => 'Not configured';
+
+  @override
+  String get dawLaunchCommandMissingTooltip => 'This location no longer exists';
+
+  @override
+  String get dawLaunchCommandConfigureButton => 'Configure';
+
+  @override
+  String dawLaunchCommandDialogTitle(String dawType) {
+    return 'Launch command for $dawType';
+  }
+
+  @override
+  String dawLaunchCommandDialogBody(String dawType) {
+    return 'Point this at the $dawType executable (or AppImage). The app will run it directly with the project file as its only argument.';
+  }
+
+  @override
+  String dawLaunchCommandDialogMissingBanner(String dawType, String path) {
+    return 'The previously configured location for $dawType no longer exists:\n$path';
+  }
+
+  @override
+  String get dawLaunchCommandDialogDetectedHeading => 'Detected on this system';
+
+  @override
+  String get dawLaunchCommandDialogManualHint => '/path/to/executable';
+
+  @override
+  String get dawLaunchCommandDialogBrowseButton => 'Browse…';
+
+  @override
+  String get dawLaunchCommandDialogSaveButton => 'Save';
+
+  @override
+  String get dawLaunchCommandDialogSaveAndLaunchButton => 'Save & Launch';
+
+  @override
+  String get dawLaunchCommandDialogInvalidPath => 'This file doesn\'t exist';
+
+  @override
+  String get dawLaunchCommandRemoveConfirmTitle => 'Remove launch command?';
+
+  @override
+  String dawLaunchCommandRemoveConfirmMessage(String dawType) {
+    return 'Remove the configured launch command for $dawType? Launching a $dawType project will fall back to the system default (which may not work).';
+  }
+
+  @override
+  String get dawLaunchCommandsEmptyState =>
+      'DAWs will appear here once you scan projects for them.';
 
   @override
   String dawInfoLabel(String daw) {

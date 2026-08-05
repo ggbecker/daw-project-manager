@@ -442,6 +442,18 @@ abstract class AppLocalizations {
   /// **'This page is available only on the desktop app.'**
   String get desktopOnlyPathsSettings;
 
+  /// No description provided for @renameProjectFolderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Display Name'**
+  String get renameProjectFolderTitle;
+
+  /// No description provided for @flatpakPortalPathExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'This path is a sandboxed location, not the real folder location — Flatpak doesn\'t share that with the app. Use the name above to identify it instead.'**
+  String get flatpakPortalPathExplanation;
+
   /// No description provided for @removeProjectFolderTitle.
   ///
   /// In en, this message translates to:
@@ -1150,6 +1162,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{type} complete: {count} project{plural} added/updated.'**
   String scanComplete(String type, int count, String plural);
+
+  /// No description provided for @scanCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan cancelled.'**
+  String get scanCancelled;
 
   /// No description provided for @scanFailuresSnackbar.
   ///
@@ -4978,6 +4996,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your additions for this DAW:'**
   String get mixdownFoldersCustomLabel;
+
+  /// No description provided for @dawLaunchCommandsTabLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'DAW Locations'**
+  String get dawLaunchCommandsTabLabel;
+
+  /// No description provided for @dawLaunchCommandsSectionDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Linux has no reliable file-type association for most DAWs, so \"Launch in DAW\" needs to be told exactly which program to run for each one you use. Configure it once per DAW below — the app will use it for every project of that type from then on.'**
+  String get dawLaunchCommandsSectionDescription;
+
+  /// No description provided for @dawLaunchCommandNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'Not configured'**
+  String get dawLaunchCommandNotConfigured;
+
+  /// No description provided for @dawLaunchCommandMissingTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'This location no longer exists'**
+  String get dawLaunchCommandMissingTooltip;
+
+  /// No description provided for @dawLaunchCommandConfigureButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure'**
+  String get dawLaunchCommandConfigureButton;
+
+  /// No description provided for @dawLaunchCommandDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Launch command for {dawType}'**
+  String dawLaunchCommandDialogTitle(String dawType);
+
+  /// No description provided for @dawLaunchCommandDialogBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Point this at the {dawType} executable (or AppImage). The app will run it directly with the project file as its only argument.'**
+  String dawLaunchCommandDialogBody(String dawType);
+
+  /// No description provided for @dawLaunchCommandDialogMissingBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'The previously configured location for {dawType} no longer exists:\n{path}'**
+  String dawLaunchCommandDialogMissingBanner(String dawType, String path);
+
+  /// No description provided for @dawLaunchCommandDialogDetectedHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Detected on this system'**
+  String get dawLaunchCommandDialogDetectedHeading;
+
+  /// No description provided for @dawLaunchCommandDialogManualHint.
+  ///
+  /// In en, this message translates to:
+  /// **'/path/to/executable'**
+  String get dawLaunchCommandDialogManualHint;
+
+  /// No description provided for @dawLaunchCommandDialogBrowseButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse…'**
+  String get dawLaunchCommandDialogBrowseButton;
+
+  /// No description provided for @dawLaunchCommandDialogSaveButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get dawLaunchCommandDialogSaveButton;
+
+  /// No description provided for @dawLaunchCommandDialogSaveAndLaunchButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Save & Launch'**
+  String get dawLaunchCommandDialogSaveAndLaunchButton;
+
+  /// No description provided for @dawLaunchCommandDialogInvalidPath.
+  ///
+  /// In en, this message translates to:
+  /// **'This file doesn\'t exist'**
+  String get dawLaunchCommandDialogInvalidPath;
+
+  /// No description provided for @dawLaunchCommandRemoveConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove launch command?'**
+  String get dawLaunchCommandRemoveConfirmTitle;
+
+  /// No description provided for @dawLaunchCommandRemoveConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the configured launch command for {dawType}? Launching a {dawType} project will fall back to the system default (which may not work).'**
+  String dawLaunchCommandRemoveConfirmMessage(String dawType);
+
+  /// No description provided for @dawLaunchCommandsEmptyState.
+  ///
+  /// In en, this message translates to:
+  /// **'DAWs will appear here once you scan projects for them.'**
+  String get dawLaunchCommandsEmptyState;
 
   /// No description provided for @dawInfoLabel.
   ///

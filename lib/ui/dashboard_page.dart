@@ -143,6 +143,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     with TickerProviderStateMixin, RouteAware {
   bool _scanning = false;
   bool _deepScanning = false;
+  // Set by _cancelScan(); checked at safe break points inside _scanAll's
+  // enumeration and upsert loops so an unexpectedly huge/hung scan (see the
+  // Linux Flatpak document-portal caveat around scanner_service.dart) can
+  // actually be stopped instead of running to whatever completion it finds.
+  bool _scanCancelRequested = false;
   bool _extractingMetadata = false;
   // Progress for the blocking scan overlay (see shouldBlockForOperation):
   // how many of the projects found by the current scan have been processed
@@ -659,6 +664,13 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     await _scanAll();
   }
 
+  /// Requests that an in-progress [_scanAll] stop at its next safe check
+  /// point instead of running to completion. No-op if no scan is running.
+  void _cancelScan() {
+    if (!_scanning) return;
+    setState(() => _scanCancelRequested = true);
+  }
+
   Future<void> _scanAll({
     bool fullMetadata = false,
     bool onlyUnscanned = false,
@@ -667,6 +679,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     final repo = await ref.read(repositoryProvider.future);
     setState(() {
       _scanning = true;
+      _scanCancelRequested = false;
       _scanProgressCurrent = 0;
       _scanProgressTotal = 0;
       _lastScanFailures = const [];
@@ -693,12 +706,17 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       // the slow part — per-file metadata extraction — begins below.
       final entitiesByRoot = <ScanRoot, List<FileSystemEntity>>{};
       for (final root in repo.getRoots()) {
+        if (_scanCancelRequested) break;
         if (kDebugMode) debugPrint('[_scanAll] enumerating root ${root.path}...');
         final entities = <FileSystemEntity>[];
         await for (final entity in scanner.scanDirectory(
           root.path,
           ignoredPaths: ignoredPaths,
         )) {
+          // Checked per-entity, not just per-root, since a single root's
+          // enumeration is exactly what can run away indefinitely (see the
+          // Linux Flatpak document-portal caveat in scanner_service.dart).
+          if (_scanCancelRequested) break;
           entities.add(entity);
         }
         if (kDebugMode) {
@@ -706,6 +724,16 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
         }
         entitiesByRoot[root] = entities;
       }
+
+      if (_scanCancelRequested) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context)!.scanCancelled)),
+          );
+        }
+        return;
+      }
+
       final totalEntities = entitiesByRoot.values.fold<int>(
         0,
         (sum, list) => sum + list.length,
@@ -714,6 +742,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
 
       var processedBeforeThisRoot = 0;
       for (final entry in entitiesByRoot.entries) {
+        if (_scanCancelRequested) break;
         final root = entry.key;
         final entities = entry.value;
         if (entities.isNotEmpty) {
@@ -746,6 +775,19 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
         }
         await repo.updateRootLastScanAt(root.id, scanTime);
       }
+
+      if (_scanCancelRequested) {
+        // Partial results already upserted above are kept — cancelling
+        // doesn't roll those back, it just stops finding/processing more.
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context)!.scanCancelled)),
+          );
+          ref.invalidate(allProjectsStreamProvider);
+        }
+        return;
+      }
+
       if (newlyDiscoveredIds.isNotEmpty) {
         ref
             .read(recentlyDiscoveredProjectsProvider.notifier)
@@ -1639,7 +1681,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                         )!.notificationSettings,
                                       ),
                                     // Google Drive sync (hidden when left rail — shown there instead).
-                                    // Not offered on Linux at all — see
+                                    // Not offered inside Flatpak — see
                                     // GoogleDriveSyncService.isSupported.
                                     if (!isLeftRail &&
                                         GoogleDriveSyncService.isSupported)
@@ -2690,7 +2732,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                             ],
                                             if (!isLeftRail)
                                               ElevatedButton.icon(
-                                                onPressed: isAnyOperation
+                                                onPressed:
+                                                    (_scanning && !_deepScanning)
+                                                    ? _cancelScan
+                                                    : isAnyOperation
                                                     ? null
                                                     : () async {
                                                         await _scanAll();
@@ -2719,7 +2764,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                                     const Icon(Icons.refresh),
                                                 },
                                                 label: Text(
-                                                  (isScanning && !_deepScanning)
+                                                  (_scanning && !_deepScanning)
+                                                      ? AppLocalizations.of(
+                                                          context,
+                                                        )!.cancel
+                                                      : (isScanning &&
+                                                            !_deepScanning)
                                                       ? AppLocalizations.of(
                                                           context,
                                                         )!.scanning
@@ -2903,7 +2953,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                         ),
                                         const SizedBox(width: 8),
                                         // Google Drive sync (hidden when left rail — shown there instead).
-                                        // Not offered on Linux at all — see
+                                        // Not offered inside Flatpak — see
                                         // GoogleDriveSyncService.isSupported.
                                         if (!MobileUtils.isMobile() &&
                                             !isLeftRail &&
@@ -3066,12 +3116,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                                                 Icons.search,
                                                               ),
                                                           suffixIcon: isLeftRail
-                                                              ? (ref.watch(
-                                                                          sessionModeProvider,
-                                                                        ) &&
-                                                                        _searchController
-                                                                            .text
-                                                                            .isNotEmpty
+                                                              ? (_searchController
+                                                                        .text
+                                                                        .isNotEmpty
                                                                     ? IconButton(
                                                                         icon: const Icon(
                                                                           Icons
@@ -3710,8 +3757,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                               ),
                                         ),
                                         const SizedBox(height: 8),
-                                        // Google Drive sync — not offered on
-                                        // Linux at all, see
+                                        // Google Drive sync — not offered
+                                        // inside Flatpak, see
                                         // GoogleDriveSyncService.isSupported.
                                         if (GoogleDriveSyncService.isSupported)
                                           RailAction(
@@ -3760,7 +3807,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                               Icons.refresh,
                                             ),
                                           },
-                                          label: (isScanning && !_deepScanning)
+                                          label: (_scanning && !_deepScanning)
+                                              ? AppLocalizations.of(
+                                                  context,
+                                                )!.cancel
+                                              : (isScanning && !_deepScanning)
                                               ? AppLocalizations.of(
                                                   context,
                                                 )!.scanning
@@ -3768,7 +3819,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                                   context,
                                                 )!.rescan,
                                           showLabel: !railCollapsed,
-                                          onPressed: isAnyOperation
+                                          onPressed: (_scanning && !_deepScanning)
+                                              ? _cancelScan
+                                              : isAnyOperation
                                               ? null
                                               : () => _scanAll(),
                                         ),
@@ -4014,49 +4067,66 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                             padding: const EdgeInsets.all(24.0),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
-                              children: _deepScanning && _scanProgressTotal > 0
-                                  ? [
-                                      SizedBox(
-                                        width: 260,
-                                        child: LinearProgressIndicator(
-                                          value:
-                                              _scanProgressCurrent /
-                                              _scanProgressTotal,
+                              children: [
+                                ...(_deepScanning && _scanProgressTotal > 0
+                                    ? [
+                                        SizedBox(
+                                          width: 260,
+                                          child: LinearProgressIndicator(
+                                            value:
+                                                _scanProgressCurrent /
+                                                _scanProgressTotal,
+                                          ),
                                         ),
-                                      ),
-                                      const SizedBox(height: 16),
-                                      Text(
-                                        AppLocalizations.of(
-                                          context,
-                                        )!.scanProgressLabel(
-                                          _scanProgressCurrent,
-                                          _scanProgressTotal,
-                                        ),
-                                        style: TextStyle(
-                                          color: Theme.of(
+                                        const SizedBox(height: 16),
+                                        Text(
+                                          AppLocalizations.of(
                                             context,
-                                          ).textTheme.bodyMedium?.color,
+                                          )!.scanProgressLabel(
+                                            _scanProgressCurrent,
+                                            _scanProgressTotal,
+                                          ),
+                                          style: TextStyle(
+                                            color: Theme.of(
+                                              context,
+                                            ).textTheme.bodyMedium?.color,
+                                          ),
                                         ),
-                                      ),
-                                    ]
-                                  : [
-                                      const CircularProgressIndicator(),
-                                      const SizedBox(height: 16),
-                                      Text(
-                                        isProfileSwitching
-                                            ? AppLocalizations.of(
-                                                context,
-                                              )!.switchingProfiles
-                                            : AppLocalizations.of(
-                                                context,
-                                              )!.scanningProjects,
-                                        style: TextStyle(
-                                          color: Theme.of(
-                                            context,
-                                          ).textTheme.bodyMedium?.color,
+                                      ]
+                                    : [
+                                        const CircularProgressIndicator(),
+                                        const SizedBox(height: 16),
+                                        Text(
+                                          isProfileSwitching
+                                              ? AppLocalizations.of(
+                                                  context,
+                                                )!.switchingProfiles
+                                              : AppLocalizations.of(
+                                                  context,
+                                                )!.scanningProjects,
+                                          style: TextStyle(
+                                            color: Theme.of(
+                                              context,
+                                            ).textTheme.bodyMedium?.color,
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                      ]),
+                                // Deep scan's enumeration phase goes through
+                                // the same scanner.scanDirectory() call as a
+                                // regular scan, so it's vulnerable to the
+                                // same runaway-hang case — and unlike a
+                                // regular scan, this overlay blocks the UI,
+                                // so a way out matters even more here.
+                                if (_deepScanning) ...[
+                                  const SizedBox(height: 16),
+                                  TextButton(
+                                    onPressed: _cancelScan,
+                                    child: Text(
+                                      AppLocalizations.of(context)!.cancel,
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
                           ),
                         ),
@@ -5443,7 +5513,8 @@ List<TrinaRow> groupRowsToExpand(
   ];
 }
 
-class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
+class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable>
+    with RouteAwareDropTargetState<_PlutoProjectsTable> {
   TrinaGridStateManager? stateManager;
   bool _isRebuildingRows = false;
   // Set to true when the theme changes so onLoaded can schedule a _rebuildRows()
@@ -6168,45 +6239,11 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   );
 
   Future<void> _launchProject(MusicProject project) async {
+    // In session mode, tapping/launching a row toggles the session instead
+    // of launching — see the session-mode branches elsewhere that call
+    // confirmStartSession/confirmEndSession for that path.
     if (ref.read(sessionModeProvider)) return;
-    final exists =
-        File(project.filePath).existsSync() ||
-        Directory(project.filePath).existsSync();
-    if (!exists) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.fileMissing)),
-        );
-      }
-      return;
-    }
-    final success = await FileLauncher.launchProject(project.filePath);
-
-    if (success) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(
-                context,
-              )!.launchingProject(project.displayName),
-            ),
-          ),
-        );
-      }
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(
-                context,
-              )!.failedToLaunchProject(project.displayName),
-            ),
-          ),
-        );
-      }
-    }
+    await launchProjectInDaw(context, ref, project);
   }
 
   Future<void> _viewProjectDetails(MusicProject project) async {
@@ -8050,6 +8087,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     );
 
     final dropTarget = DropTarget(
+      enable: dropTargetEnabled,
       onDragUpdated: (detail) => _updateDragTarget(detail.localPosition),
       onDragExited: (_) => setState(() {
         _dragOverRowTop = null;
@@ -11041,32 +11079,10 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
 /// If another session is already active, offers to switch instead.
 Future<void> _launchSuggestionProject(
   BuildContext context,
+  WidgetRef ref,
   MusicProject project,
 ) async {
-  final exists =
-      File(project.filePath).existsSync() ||
-      Directory(project.filePath).existsSync();
-  if (!exists) {
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.fileMissing)),
-      );
-    }
-    return;
-  }
-  final success = await FileLauncher.launchProject(project.filePath);
-  if (context.mounted) {
-    final l10n = AppLocalizations.of(context)!;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          success
-              ? l10n.launchingProject(project.displayName)
-              : l10n.failedToLaunchProject(project.displayName),
-        ),
-      ),
-    );
-  }
+  await launchProjectInDaw(context, ref, project);
 }
 
 // ── Session idle suggestions ────────────────────────────────────────────────
@@ -11450,7 +11466,7 @@ class _SessionIdleSuggestionsState
               borderRadius: BorderRadius.circular(10),
               onTap: () => sessionMode
                   ? confirmStartSession(context, ref, s.project)
-                  : _launchSuggestionProject(context, s.project),
+                  : _launchSuggestionProject(context, ref, s.project),
               child: Padding(
                 padding: const EdgeInsets.all(3),
                 child: Icon(
@@ -11617,7 +11633,7 @@ class _SuggestionsPanelBar extends ConsumerWidget {
                             if (sessionMode) {
                               confirmStartSession(context, ref, s.project);
                             } else {
-                              _launchSuggestionProject(context, s.project);
+                              _launchSuggestionProject(context, ref, s.project);
                             }
                           },
                           child: Padding(
@@ -11931,24 +11947,7 @@ class _ActiveProjectChipState extends ConsumerState<_ActiveProjectChip>
                   padding: const EdgeInsets.all(6),
                   constraints: const BoxConstraints(),
                   color: Colors.white70,
-                  onPressed: () async {
-                    final exists =
-                        File(project.filePath).existsSync() ||
-                        Directory(project.filePath).existsSync();
-                    if (!exists) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              AppLocalizations.of(context)!.fileMissing,
-                            ),
-                          ),
-                        );
-                      }
-                      return;
-                    }
-                    await FileLauncher.launchProject(project.filePath);
-                  },
+                  onPressed: () => launchProjectInDaw(context, ref, project),
                 ),
               ),
               const SizedBox(width: 4),

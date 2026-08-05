@@ -588,13 +588,20 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      # lib/config/oauth_config.dart is required to compile (it's a plain
-      # Dart import, not conditional on platform), but its contents don't
-      # matter here: Google Drive sync isn't offered on Linux at all — see
-      # GoogleDriveSyncService.isSupported — so no real OAuth values, and no
-      # GitHub secrets, are needed for this build at all.
-      - name: Generate placeholder OAuth config (Drive sync isn't offered on Linux)
-        run: cp lib/config/oauth_config.dart.template lib/config/oauth_config.dart
+      # This job produces both the plain tarball and the AppImage (see the
+      # AppImage step below, which reuses this build's bundle). Neither goes
+      # through Flathub's public build sandbox, so — unlike build_flatpak —
+      # this can safely use the same real secret Windows/macOS already get
+      # from repo-private GitHub secrets. See GoogleDriveSyncService.isSupported
+      # for why Drive sync is still refused specifically inside Flatpak.
+      - name: Inject OAuth Credentials (Linux)
+        run: |
+          chmod +x scripts/inject_oauth_config.sh
+          ./scripts/inject_oauth_config.sh -d "${{ secrets.DESKTOP_CLIENT_ID }}" -s "${{ secrets.DESKTOP_CLIENT_SECRET }}" -a "${{ secrets.ANDROID_WEB_CLIENT_ID }}"
+        env:
+          DESKTOP_CLIENT_ID: ${{ secrets.DESKTOP_CLIENT_ID }}
+          DESKTOP_CLIENT_SECRET: ${{ secrets.DESKTOP_CLIENT_SECRET }}
+          ANDROID_WEB_CLIENT_ID: ${{ secrets.ANDROID_WEB_CLIENT_ID }}
 
       - name: Generate Hive Adapters
         run: dart run build_runner build --delete-conflicting-outputs

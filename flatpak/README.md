@@ -106,12 +106,12 @@ flatpak-builder --run build com.bandpassrecords.dpm.yml daw_project_manager
 ```
 
 No OAuth credentials to set up for this build at all — Google Drive sync
-isn't offered on Linux (see `GoogleDriveSyncService.isSupported` in
-`lib/services/google_drive_sync_service.dart`), so the manifest's
+isn't offered inside a Flatpak sandbox (see `GoogleDriveSyncService.isSupported`
+in `lib/services/google_drive_sync_service.dart`), so the manifest's
 build-commands generate a placeholder `lib/config/oauth_config.dart` straight
-from the committed template. See "Why Drive sync is Linux-only-unavailable"
-below for the reasoning, and `lib/services/backup_service.dart` for the
-local-file backup/restore Linux uses instead.
+from the committed template. See "Why Google Drive sync isn't offered in
+Flatpak" below for the reasoning, and `lib/services/backup_service.dart` for
+the local-file backup/restore Flatpak uses instead.
 
 Things that can only be verified this way (not from Windows, not by reading
 the code):
@@ -127,22 +127,25 @@ the code):
   worth confirming dropping a project folder onto the window still works
   sandboxed.
 
-## Why Google Drive sync isn't offered on Linux
+## Why Google Drive sync isn't offered in Flatpak
 
 The desktop OAuth flow needs a client secret — confirmed against a live
 Google sign-in attempt, Google's token endpoint rejects the exchange without
 one for this app's "Desktop app" OAuth client type, even with PKCE (Google's
 docs list `client_secret` as "not applicable" only for Android/iOS/Chrome-app
-client types, not Desktop). That's fine for Windows/macOS, which never
-distribute the secret outside this repo's own CI. It's not something to
-accept for Linux, since the only realistic distribution channel is Flathub,
-and Flathub's build sandbox has no secret-injection mechanism at all — the
-file would have to be committed in the open in the public Flathub submission
-repo. Rather than ship a secret that broadly, `GoogleDriveSyncService.isSupported`
-is `false` on Linux and every UI entry point (dashboard, profile page, the
-startup dialog, the tray menu) is gated on it. `BackupService`'s local JSON
-export/import covers the same user data instead (extended in lockstep with
-this decision — see its own history for what that covers).
+client types, not Desktop). That's fine for Windows/macOS and the plain
+Linux tarball/AppImage, none of which ever distribute the secret outside
+this repo's own CI (`build_linux` injects it the same way the other
+platforms do — see `lib/config/README.md`). It's not something to accept for
+Flathub specifically, since its build sandbox has no secret-injection
+mechanism at all — the file would have to be committed in the open in the
+public Flathub submission repo. Rather than ship a secret that broadly,
+`GoogleDriveSyncService.isSupported` is `false` only when actually running
+inside the Flatpak sandbox (detected via the `/.flatpak-info` marker file),
+and every UI entry point (dashboard, profile page, the startup dialog, the
+tray menu) is gated on it. `BackupService`'s local JSON export/import covers
+the same user data instead for Flatpak users (extended in lockstep with this
+decision — see its own history for what that covers).
 
 ## Submitting to Flathub
 
@@ -156,10 +159,11 @@ this decision — see its own history for what that covers).
      references.
 
    That's it — no OAuth config file to worry about. Google Drive sync isn't
-   offered on Linux at all (see "Why Google Drive sync isn't offered on
-   Linux" above), so the manifest's build-commands generate a placeholder
-   `oauth_config.dart` from the already-public template at build time; there
-   was never anything here that needed to stay out of a public artifact.
+   offered inside Flatpak at all (see "Why Google Drive sync isn't offered
+   in Flatpak" above), so the manifest's build-commands generate a
+   placeholder `oauth_config.dart` from the already-public template at build
+   time; there was never anything here that needed to stay out of a public
+   artifact.
 
    Download it from a run **on the actual release tag** you're submitting
    (not a PR run) — that's what makes the manifest's `commit:` match a real,
@@ -199,10 +203,13 @@ this decision — see its own history for what that covers).
 6. Their CI builds it and a human reviewer checks the `finish-args` — be
    ready to justify the D-Bus `--talk-name`s above if asked; the comments
    already in the manifest cover the reasoning for each. There's no
-   `--share=network` to justify — both things that would have needed it
-   (Drive sync, the GitHub-releases update check) are switched off on
-   Linux instead of granted the permission; see
-   `GoogleDriveSyncService.isSupported`/`UpdateCheckService.isSupported`.
+   `--share=network` to justify — both things that would have needed it are
+   switched off instead of granted the permission: Drive sync specifically
+   inside the Flatpak sandbox (`GoogleDriveSyncService.isSupported`) and the
+   GitHub-releases update check on Linux generally
+   (`UpdateCheckService.isSupported`, unrelated to the secret-injection story
+   above — it's a network-sandboxing choice, not something the tarball/AppImage
+   builds have reopened).
 
 Per-release maintenance of the Flathub manifest:
 

@@ -36,13 +36,14 @@ class BackupService {
 
       // Globally-scoped user data (not per-profile). Drive sync has always
       // included these; a local backup that omitted them meant anyone without
-      // Drive — notably Linux, where Drive sync is unavailable — had no way to
-      // back up their templates or phase customization at all.
+      // Drive — notably Flatpak, where Drive sync is unavailable — had no way
+      // to back up their templates or phase customization at all.
       final templates = await _readGlobalTemplates();
       final projectTemplates = await _readGlobalProjectTemplates();
       final templateRoots = await _readGlobalTemplateRoots();
       final customMixdownFolders = await _readCustomMixdownFolders();
       final customMixdownFoldersByDaw = await _readCustomMixdownFoldersByDaw();
+      final dawLaunchCommands = await _readDawLaunchCommands();
       // Unlike Drive (which stores a byProfile map for every profile), a local
       // backup covers a single profile, so only that profile's phase settings
       // are relevant here.
@@ -66,6 +67,7 @@ class BackupService {
         'templateRoots': templateRoots.map(_templateRootToJson).toList(),
         'customMixdownFolders': customMixdownFolders,
         'customMixdownFoldersByDaw': customMixdownFoldersByDaw,
+        'dawLaunchCommands': dawLaunchCommands,
         'phaseSettings': phaseSettings,
       };
 
@@ -234,6 +236,12 @@ class BackupService {
               ) ??
           const <String, List<String>>{};
 
+      final importedDawLaunchCommands =
+          (backupData['dawLaunchCommands'] as Map?)?.map(
+                (key, value) => MapEntry(key as String, value.toString()),
+              ) ??
+          const <String, String>{};
+
       final importedPhaseSettings =
           (backupData['phaseSettings'] as Map?)?.cast<String, dynamic>() ?? const <String, dynamic>{};
 
@@ -315,6 +323,7 @@ class BackupService {
       await _writeGlobalTemplateRoots(importedTemplateRoots, importMode);
       await _writeCustomMixdownFolders(importedCustomMixdownFolders);
       await _writeCustomMixdownFoldersByDaw(importedCustomMixdownFoldersByDaw);
+      await _writeDawLaunchCommands(importedDawLaunchCommands);
       await _writePhaseSettings(targetProfileId, importedPhaseSettings);
 
       // Restore profile photo if embedded in backup
@@ -369,6 +378,7 @@ class BackupService {
   static const String _templateRootsBoxName = 'templateRoots';
   static const String _customMixdownFoldersKey = 'customMixdownFolders';
   static const String _customMixdownFoldersByDawKey = 'customMixdownFoldersByDaw';
+  static const String _dawLaunchCommandsByDawKey = 'dawLaunchCommandsByDaw';
 
   static Future<List<TodoTemplate>> _readGlobalTemplates() async {
     try {
@@ -418,6 +428,26 @@ class BackupService {
           key as String,
           (value as List).map((f) => f.toString()).toList(),
         ),
+      );
+    } catch (_) {
+      return const {};
+    }
+  }
+
+  /// Linux-only "Launch in DAW" binary overrides, keyed by DAW display name.
+  /// Global (device-local), not per-profile — see
+  /// ProjectRepository.getDawLaunchCommands. Deliberately NOT included in
+  /// Google Drive sync (google_drive_sync_service.dart): these are raw
+  /// filesystem paths specific to this machine, and Drive sync isn't offered
+  /// on Linux — the only platform where this setting is ever non-empty —
+  /// anyway.
+  static Future<Map<String, String>> _readDawLaunchCommands() async {
+    try {
+      final box = await Hive.openBox<String>(_appSettingsBoxName);
+      final raw = box.get(_dawLaunchCommandsByDawKey);
+      if (raw == null) return const {};
+      return (jsonDecode(raw) as Map).map(
+        (key, value) => MapEntry(key as String, value.toString()),
       );
     } catch (_) {
       return const {};
@@ -544,6 +574,31 @@ class BackupService {
     } catch (_) {}
   }
 
+  /// Fills in any DAW from [commands] not already configured locally — a
+  /// single-value-per-DAW setting has no natural "union" the way a list of
+  /// folder names does, so an existing local override always wins over
+  /// whatever a backup says, rather than silently replacing a value the
+  /// user may have already fixed since that backup was taken.
+  static Future<void> _writeDawLaunchCommands(
+    Map<String, String> commands,
+  ) async {
+    if (commands.isEmpty) return;
+    try {
+      final box = await Hive.openBox<String>(_appSettingsBoxName);
+      final existingRaw = box.get(_dawLaunchCommandsByDawKey);
+      final merged = <String, String>{
+        if (existingRaw != null)
+          ...(jsonDecode(existingRaw) as Map).map(
+            (key, value) => MapEntry(key as String, value.toString()),
+          ),
+      };
+      for (final entry in commands.entries) {
+        merged.putIfAbsent(entry.key, () => entry.value);
+      }
+      await box.put(_dawLaunchCommandsByDawKey, jsonEncode(merged));
+    } catch (_) {}
+  }
+
   static Future<void> _writePhaseSettings(
     String profileId,
     Map<String, dynamic> settings,
@@ -600,6 +655,13 @@ class BackupService {
   @visibleForTesting
   static Future<void> writeCustomMixdownFoldersByDawForTest(Map<String, List<String>> foldersByDaw) =>
       _writeCustomMixdownFoldersByDaw(foldersByDaw);
+
+  @visibleForTesting
+  static Future<Map<String, String>> readDawLaunchCommandsForTest() =>
+      _readDawLaunchCommands();
+  @visibleForTesting
+  static Future<void> writeDawLaunchCommandsForTest(Map<String, String> commands) =>
+      _writeDawLaunchCommands(commands);
 
   @visibleForTesting
   static Future<Map<String, dynamic>> readPhaseSettingsForTest(String profileId) =>

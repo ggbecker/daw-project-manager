@@ -762,13 +762,17 @@ Future<void> _main(List<String> args) async {
 
     // 4e. Start auto-backup timer (desktop: try to restore session silently)
     final autoBackupService = GoogleDriveSyncService();
-    // Drive sync isn't offered on Linux at all (see GoogleDriveSyncService.
+    // Drive sync isn't offered inside Flatpak (see GoogleDriveSyncService.
     // isSupported) — restoreSession() reads saved credentials via
     // FlutterSecureStorage on non-macOS desktop, which touches libsecret/the
     // OS keyring on Linux. Without this gate that happened unconditionally
-    // on every startup even though nothing on Linux could ever have signed
-    // in to restore, surfacing as a spurious "libsecret_error: KeyringLocked"
-    // warning (and an unnecessary keyring unlock prompt on some setups).
+    // on every startup even inside Flatpak, where nothing could ever have
+    // signed in to restore, surfacing as a spurious "libsecret_error:
+    // KeyringLocked" warning (and an unnecessary keyring unlock prompt on
+    // some setups). Outside Flatpak this now genuinely runs — the same
+    // possible warning/prompt can happen there too on a Linux desktop with
+    // no keyring daemon running, but restoreSession() already fails silently
+    // (try/catch below) rather than crashing, so it's just a cosmetic risk.
     if (GoogleDriveSyncService.isSupported &&
         !kIsWeb &&
         !MobileUtils.isMobile()) {

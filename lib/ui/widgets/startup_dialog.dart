@@ -113,7 +113,7 @@ class _StartupDialogState extends ConsumerState<_StartupDialog> {
               subtitle: l10n.startupAddFolderSubtitle,
               onTap: _busy ? null : _addFolder,
             ),
-            // Not offered on Linux at all — see GoogleDriveSyncService.isSupported.
+            // Not offered inside Flatpak — see GoogleDriveSyncService.isSupported.
             if (GoogleDriveSyncService.isSupported) ...[
               const SizedBox(height: 12),
               _OptionCard(

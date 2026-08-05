@@ -25,6 +25,7 @@ import '../repository/project_repository.dart';
 import '../utils/daw_logo.dart';
 import '../utils/mobile_utils.dart';
 import '../utils/file_launcher.dart';
+import '../utils/route_observer.dart';
 import '../generated/l10n/app_localizations.dart';
 import 'session_actions.dart';
 import '../services/audio_analysis_service.dart';
@@ -551,14 +552,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                   sourceFileExists: sourceFileExists,
                   onOpenFolder: () => _openProjectFolder(updatedProject.filePath),
                   onRename: () => _renameProjectFile(updatedProject),
-                  onOpenInDaw: () async {
-                    final success = await FileLauncher.launchProject(updatedProject.filePath);
-                    if (!success && mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(AppLocalizations.of(context)!.failedToLaunchProject(updatedProject.displayName))),
-                      );
-                    }
-                  },
+                  onOpenInDaw: () => launchProjectInDaw(context, ref, updatedProject),
                   onStats: () => Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => ProjectStatisticsPage(projectId: updatedProject.id)),
@@ -1360,7 +1354,8 @@ class _TogglePlayPauseIntent extends Intent {
 
 enum _FileNotFoundAction { selectNew, remove }
 
-class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
+class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer>
+    with RouteAwareDropTargetState<_PreviewSongPlayer> {
   AudioPlayer _audioPlayer = AudioPlayer();
   AudioPlayer? _warmPlayer; // pre-loaded with the alternate source (mono↔stereo)
   int _playerGen = 0;       // incremented on each swap; stale listeners self-cancel
@@ -2320,6 +2315,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer> {
       });
     }
     return DropTarget(
+      enable: dropTargetEnabled,
       onDragDone: (detail) async {
         setState(() {
           _isDraggingOver = false;

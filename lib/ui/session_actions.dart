@@ -1,9 +1,99 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../generated/l10n/app_localizations.dart';
 import '../models/music_project.dart';
 import '../providers/providers.dart';
+import '../utils/file_launcher.dart';
+import 'dialogs/daw_launch_command_dialog.dart';
+
+/// Launches [project] in its DAW, preferring a Linux-only registered binary
+/// override for its DAW type (see Settings > DAW Locations) over the OS
+/// default file-type handler, which has no reliable association for most
+/// DAWs there. Shared by every "launch in DAW" entry point in the app (the
+/// main projects grid, the active-session chip, the idle-session
+/// suggestions, project/release detail pages) so the override — and its
+/// missing-binary remediation / first-run configure prompt — behaves
+/// identically everywhere instead of only from wherever it was implemented
+/// first.
+Future<void> launchProjectInDaw(
+  BuildContext context,
+  WidgetRef ref,
+  MusicProject project,
+) async {
+  final exists =
+      File(project.filePath).existsSync() ||
+      Directory(project.filePath).existsSync();
+  if (!exists) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.fileMissing)),
+      );
+    }
+    return;
+  }
+
+  if (Platform.isLinux && project.dawType != null) {
+    final repo = await ref.read(repositoryProvider.future);
+    final binaryPath = repo.getDawLaunchCommand(project.dawType!);
+    if (binaryPath == null) {
+      // No override configured yet: on Linux there's no reliable OS-level
+      // file association to fall back on for most DAWs (see the class doc
+      // above), and xdg-open reports success even when nothing actually
+      // opens — so there's no "it failed, ask now" signal to wait for.
+      // Go straight to the configure-a-binary prompt instead of silently
+      // doing nothing.
+      if (!context.mounted) return;
+      await showDawLaunchCommandDialog(
+        context,
+        dawType: project.dawType!,
+        project: project,
+      );
+      return;
+    }
+    if (!File(binaryPath).existsSync()) {
+      if (!context.mounted) return;
+      await showDawLaunchCommandDialog(
+        context,
+        dawType: project.dawType!,
+        currentPath: binaryPath,
+        pathMissing: true,
+        project: project,
+      );
+      return;
+    }
+    final launched = await FileLauncher.launchWithBinary(
+      binaryPath,
+      project.filePath,
+    );
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          launched
+              ? AppLocalizations.of(context)!.launchingProject(project.displayName)
+              : AppLocalizations.of(context)!.failedToLaunchProject(project.displayName),
+        ),
+      ),
+    );
+    return;
+  }
+
+  final success = await FileLauncher.launchProject(project.filePath);
+
+  if (!context.mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(
+        success
+            ? AppLocalizations.of(context)!.launchingProject(project.displayName)
+            : AppLocalizations.of(context)!.failedToLaunchProject(project.displayName),
+      ),
+    ),
+  );
+}
 
 /// Shows a confirmation dialog before ending the active session.
 /// Displays the project name and elapsed session time so the user can review

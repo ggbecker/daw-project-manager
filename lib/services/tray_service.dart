@@ -84,10 +84,10 @@ class TrayService with TrayListener {
 
     final items = <MenuItem>[
       MenuItem(key: 'show', label: l10n.trayShowWindow),
-      // Drive backup status/action — not offered on Linux at all, see
+      // Drive backup status/action — not offered inside Flatpak, see
       // GoogleDriveSyncService.isSupported. Omitted rather than shown
       // permanently disabled, since there's no way it could ever become
-      // available on this platform.
+      // available in that sandbox.
       if (GoogleDriveSyncService.isSupported) ...[
         MenuItem.separator(),
         MenuItem(

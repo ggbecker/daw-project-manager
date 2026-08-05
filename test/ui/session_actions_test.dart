@@ -50,6 +50,14 @@ Future<void> _pumpHost(WidgetTester tester) async {
                     onPressed: () => confirmEndSession(context, ref),
                     child: const Text('end'),
                   ),
+                  TextButton(
+                    onPressed: () => launchProjectInDaw(
+                      context,
+                      ref,
+                      TestFactories.makeProject(id: 'missing'),
+                    ),
+                    child: const Text('launch missing'),
+                  ),
                 ],
               );
             },
@@ -126,6 +134,20 @@ void main() {
 
       expect(find.text('active: p1'), findsOneWidget);
     });
+  });
+
+  group('launchProjectInDaw', () {
+    testWidgets(
+      'project file does not exist — shows "File missing" and never touches the DAW-launch path',
+      (tester) async {
+        await _pumpHost(tester);
+
+        await tester.tap(find.text('launch missing'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('File missing.'), findsOneWidget);
+      },
+    );
   });
 
   group('confirmEndSession', () {

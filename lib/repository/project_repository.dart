@@ -40,6 +40,7 @@ class ProjectRepository {
   static const _keyCustomMixdownFolder = 'customMixdownFolder';
   static const _keyCustomMixdownFolders = 'customMixdownFolders';
   static const _keyCustomMixdownFoldersByDaw = 'customMixdownFoldersByDaw';
+  static const _keyDawLaunchCommandsByDaw = 'dawLaunchCommandsByDaw';
 
   ProjectRepository({
     required this.profileId,
@@ -132,6 +133,46 @@ class ProjectRepository {
       await appSettingsBox.put(
         _keyCustomMixdownFoldersByDaw,
         jsonEncode(cleaned),
+      );
+    }
+  }
+
+  // Linux-only "Launch in DAW" binary override, keyed by the same DAW
+  // display-name strings MetadataExtractor produces (project.dawType) —
+  // global (device-local), not per-profile: it describes what's physically
+  // installed on this machine, not anything about a music profile's
+  // identity. Windows/macOS don't need this (OS file association already
+  // works there), so nothing reads these keys on those platforms.
+  String? getDawLaunchCommand(String dawType) =>
+      getDawLaunchCommands()[dawType];
+
+  Map<String, String> getDawLaunchCommands() {
+    final raw = appSettingsBox.get(_keyDawLaunchCommandsByDaw);
+    if (raw == null) return const {};
+    try {
+      final decoded = jsonDecode(raw) as Map;
+      return Map.unmodifiable(decoded.cast<String, String>());
+    } catch (_) {
+      return const {};
+    }
+  }
+
+  /// Sets (or, if [binaryPath] is null/empty, removes) the launch-command
+  /// override for [dawType].
+  Future<void> setDawLaunchCommand(String dawType, String? binaryPath) async {
+    final cleanedPath = binaryPath?.trim() ?? '';
+    final current = Map<String, String>.from(getDawLaunchCommands());
+    if (cleanedPath.isEmpty) {
+      current.remove(dawType);
+    } else {
+      current[dawType] = cleanedPath;
+    }
+    if (current.isEmpty) {
+      await appSettingsBox.delete(_keyDawLaunchCommandsByDaw);
+    } else {
+      await appSettingsBox.put(
+        _keyDawLaunchCommandsByDaw,
+        jsonEncode(current),
       );
     }
   }
@@ -372,7 +413,33 @@ class ProjectRepository {
     final id = _uuid.v4();
     await rootsBox.put(
       id,
-      ScanRoot(id: id, path: path, addedAt: DateTime.now()),
+      ScanRoot(
+        id: id,
+        path: path,
+        addedAt: DateTime.now(),
+        // Auto-derived friendly label — see ScanRoot.displayName's doc for
+        // why this is needed on Linux/Flatpak (the stored path itself may
+        // be a sandboxed document-portal path, not the real location).
+        // User-editable afterward via setRootDisplayName.
+        displayName: p.basename(path),
+      ),
+    );
+  }
+
+  /// Sets (or, if [displayName] is null/blank, clears back to the
+  /// auto-derived folder-name default) the user-facing label for root
+  /// [id]. No-op if the root doesn't exist.
+  Future<void> setRootDisplayName(String id, String? displayName) async {
+    final root = rootsBox.get(id);
+    if (root == null) return;
+    final trimmed = displayName?.trim();
+    await rootsBox.put(
+      id,
+      root.copyWith(
+        displayName: (trimmed == null || trimmed.isEmpty)
+            ? p.basename(root.path)
+            : trimmed,
+      ),
     );
   }
 

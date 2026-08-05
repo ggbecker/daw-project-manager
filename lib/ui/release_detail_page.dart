@@ -19,6 +19,7 @@ import '../models/release_file.dart';
 import '../models/music_project.dart';
 import '../providers/providers.dart';
 import '../utils/app_paths.dart';
+import '../utils/route_observer.dart';
 import '../utils/mobile_utils.dart';
 import '../utils/file_launcher.dart';
 import '../generated/l10n/app_localizations.dart';
@@ -36,7 +37,8 @@ class ReleaseDetailPage extends ConsumerStatefulWidget {
   ConsumerState<ReleaseDetailPage> createState() => _ReleaseDetailPageState();
 }
 
-class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
+class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage>
+    with RouteAwareDropTargetState<ReleaseDetailPage> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   String? _artworkImagePath;
@@ -713,6 +715,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
     final primaryColor = Theme.of(context).colorScheme.primary;
 
     return DropTarget(
+      enable: dropTargetEnabled,
       onDragDone: (detail) async {
         setState(() => _isDraggingArtwork = false);
         final paths = detail.files.map((f) => f.path).where((p) => p.isNotEmpty).toList();
@@ -1083,6 +1086,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
     return Flexible(
       flex: 1,
       child: DropTarget(
+        enable: dropTargetEnabled,
         onDragDone: (detail) async {
           setState(() => _isDraggingFiles = false);
           final paths = detail.files.map((f) => f.path).where((p) => p.isNotEmpty).toList();
@@ -1232,30 +1236,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
   }
 
   Future<void> _handleLaunchInDaw(BuildContext context, MusicProject project) async {
-    final exists = File(project.filePath).existsSync() || Directory(project.filePath).existsSync();
-    if (!exists) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.fileMissing)),
-        );
-      }
-      return;
-    }
-    final success = await FileLauncher.launchProject(project.filePath);
-    
-    if (success) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.launchingProject(project.displayName))),
-        );
-      }
-    } else {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.failedToLaunchProject(project.displayName))),
-        );
-      }
-    }
+    await launchProjectInDaw(context, ref, project);
   }
 
   Future<void> _handleOpenFolder(BuildContext context, MusicProject project, String folderPath) async {
@@ -1666,22 +1647,9 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
                                                 ? () => isSubscribed
                                                     ? confirmEndSession(context, ref)
                                                     : confirmStartSession(context, ref, project)
-                                                : (fileExists ? () async {
-                                              final success = await FileLauncher.launchProject(project.filePath);
-                                              if (success) {
-                                                if (context.mounted) {
-                                                  ScaffoldMessenger.of(context).showSnackBar(
-                                                    SnackBar(content: Text(AppLocalizations.of(context)!.launchingProject(project.displayName))),
-                                                  );
-                                                }
-                                              } else {
-                                                if (context.mounted) {
-                                                  ScaffoldMessenger.of(context).showSnackBar(
-                                                    SnackBar(content: Text(AppLocalizations.of(context)!.failedToLaunchProject(project.displayName))),
-                                                  );
-                                                }
-                                              }
-                                            } : null),
+                                                : (fileExists
+                                                    ? () => launchProjectInDaw(context, ref, project)
+                                                    : null),
                                           ),
                                         // Separator - only if Launch button is shown
                                         if (!isMobile)

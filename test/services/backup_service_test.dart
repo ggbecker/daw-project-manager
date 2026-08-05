@@ -536,6 +536,57 @@ void main() {
       expect(read, {'Ableton Live': ['Bounces']});
     });
 
+    test('DAW launch commands: round-trips a written map', () async {
+      await BackupService.writeDawLaunchCommandsForTest({
+        'Zrythm': '/opt/zrythm/zrythm',
+      });
+      final read = await BackupService.readDawLaunchCommandsForTest();
+
+      expect(read, {'Zrythm': '/opt/zrythm/zrythm'});
+    });
+
+    test(
+      'DAW launch commands: an existing local entry wins over a conflicting backup value',
+      () async {
+        await BackupService.writeDawLaunchCommandsForTest({
+          'Zrythm': '/opt/zrythm/zrythm',
+        });
+        // Simulates importing an older backup after the user already fixed
+        // the path locally — the fix must not be clobbered.
+        await BackupService.writeDawLaunchCommandsForTest({
+          'Zrythm': '/stale/path/zrythm',
+        });
+        final read = await BackupService.readDawLaunchCommandsForTest();
+
+        expect(read, {'Zrythm': '/opt/zrythm/zrythm'});
+      },
+    );
+
+    test('DAW launch commands: fills in a DAW not already configured', () async {
+      await BackupService.writeDawLaunchCommandsForTest({
+        'Zrythm': '/opt/zrythm/zrythm',
+      });
+      await BackupService.writeDawLaunchCommandsForTest({
+        'Ardour': '/opt/Ardour/Ardour.AppImage',
+      });
+      final read = await BackupService.readDawLaunchCommandsForTest();
+
+      expect(read, {
+        'Zrythm': '/opt/zrythm/zrythm',
+        'Ardour': '/opt/Ardour/Ardour.AppImage',
+      });
+    });
+
+    test('DAW launch commands: writing an empty map is a no-op', () async {
+      await BackupService.writeDawLaunchCommandsForTest({
+        'Zrythm': '/opt/zrythm/zrythm',
+      });
+      await BackupService.writeDawLaunchCommandsForTest({});
+      final read = await BackupService.readDawLaunchCommandsForTest();
+
+      expect(read, {'Zrythm': '/opt/zrythm/zrythm'});
+    });
+
     test('phase settings: write then read round-trips phases, colors, and finished phases', () async {
       final settings = {
         'phases': ['Idea', 'Mixing', 'Mastered'],
@@ -566,6 +617,7 @@ void main() {
       expect(await BackupService.readGlobalTemplateRootsForTest(), isEmpty);
       expect(await BackupService.readCustomMixdownFoldersForTest(), isEmpty);
       expect(await BackupService.readCustomMixdownFoldersByDawForTest(), isEmpty);
+      expect(await BackupService.readDawLaunchCommandsForTest(), isEmpty);
       expect(await BackupService.readPhaseSettingsForTest('no-such-profile'), isEmpty);
     });
   });
