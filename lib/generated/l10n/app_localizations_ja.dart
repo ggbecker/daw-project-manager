@@ -186,6 +186,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get desktopOnlyPathsSettings => 'このページはデスクトップアプリでのみ利用できます。';
 
   @override
+  String get renameProjectFolderTitle => 'Display Name';
+
+  @override
+  String get flatpakPortalPathExplanation =>
+      'This path is a sandboxed location, not the real folder location — Flatpak doesn\'t share that with the app. Use the name above to identify it instead.';
+
+  @override
   String get removeProjectFolderTitle => 'プロジェクトフォルダーを削除しますか？';
 
   @override
@@ -609,6 +616,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String scanComplete(String type, int count, String plural) {
     return '$type完了: $countプロジェクト$pluralを追加/更新しました。';
   }
+
+  @override
+  String get scanCancelled => 'Scan cancelled.';
 
   @override
   String scanFailuresSnackbar(int count, String plural) {

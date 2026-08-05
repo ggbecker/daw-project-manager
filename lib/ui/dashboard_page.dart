@@ -144,6 +144,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     with TickerProviderStateMixin, RouteAware {
   bool _scanning = false;
   bool _deepScanning = false;
+  // Set by _cancelScan(); checked at safe break points inside _scanAll's
+  // enumeration and upsert loops so an unexpectedly huge/hung scan (see the
+  // Linux Flatpak document-portal caveat around scanner_service.dart) can
+  // actually be stopped instead of running to whatever completion it finds.
+  bool _scanCancelRequested = false;
   bool _extractingMetadata = false;
   // Progress for the blocking scan overlay (see shouldBlockForOperation):
   // how many of the projects found by the current scan have been processed
@@ -660,6 +665,13 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     await _scanAll();
   }
 
+  /// Requests that an in-progress [_scanAll] stop at its next safe check
+  /// point instead of running to completion. No-op if no scan is running.
+  void _cancelScan() {
+    if (!_scanning) return;
+    setState(() => _scanCancelRequested = true);
+  }
+
   Future<void> _scanAll({
     bool fullMetadata = false,
     bool onlyUnscanned = false,
@@ -668,6 +680,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     final repo = await ref.read(repositoryProvider.future);
     setState(() {
       _scanning = true;
+      _scanCancelRequested = false;
       _scanProgressCurrent = 0;
       _scanProgressTotal = 0;
       _lastScanFailures = const [];
@@ -694,12 +707,17 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       // the slow part — per-file metadata extraction — begins below.
       final entitiesByRoot = <ScanRoot, List<FileSystemEntity>>{};
       for (final root in repo.getRoots()) {
+        if (_scanCancelRequested) break;
         if (kDebugMode) debugPrint('[_scanAll] enumerating root ${root.path}...');
         final entities = <FileSystemEntity>[];
         await for (final entity in scanner.scanDirectory(
           root.path,
           ignoredPaths: ignoredPaths,
         )) {
+          // Checked per-entity, not just per-root, since a single root's
+          // enumeration is exactly what can run away indefinitely (see the
+          // Linux Flatpak document-portal caveat in scanner_service.dart).
+          if (_scanCancelRequested) break;
           entities.add(entity);
         }
         if (kDebugMode) {
@@ -707,6 +725,16 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
         }
         entitiesByRoot[root] = entities;
       }
+
+      if (_scanCancelRequested) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context)!.scanCancelled)),
+          );
+        }
+        return;
+      }
+
       final totalEntities = entitiesByRoot.values.fold<int>(
         0,
         (sum, list) => sum + list.length,
@@ -715,6 +743,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
 
       var processedBeforeThisRoot = 0;
       for (final entry in entitiesByRoot.entries) {
+        if (_scanCancelRequested) break;
         final root = entry.key;
         final entities = entry.value;
         if (entities.isNotEmpty) {
@@ -747,6 +776,19 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
         }
         await repo.updateRootLastScanAt(root.id, scanTime);
       }
+
+      if (_scanCancelRequested) {
+        // Partial results already upserted above are kept — cancelling
+        // doesn't roll those back, it just stops finding/processing more.
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context)!.scanCancelled)),
+          );
+          ref.invalidate(allProjectsStreamProvider);
+        }
+        return;
+      }
+
       if (newlyDiscoveredIds.isNotEmpty) {
         ref
             .read(recentlyDiscoveredProjectsProvider.notifier)
@@ -2691,7 +2733,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                             ],
                                             if (!isLeftRail)
                                               ElevatedButton.icon(
-                                                onPressed: isAnyOperation
+                                                onPressed:
+                                                    (_scanning && !_deepScanning)
+                                                    ? _cancelScan
+                                                    : isAnyOperation
                                                     ? null
                                                     : () async {
                                                         await _scanAll();
@@ -2720,7 +2765,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                                     const Icon(Icons.refresh),
                                                 },
                                                 label: Text(
-                                                  (isScanning && !_deepScanning)
+                                                  (_scanning && !_deepScanning)
+                                                      ? AppLocalizations.of(
+                                                          context,
+                                                        )!.cancel
+                                                      : (isScanning &&
+                                                            !_deepScanning)
                                                       ? AppLocalizations.of(
                                                           context,
                                                         )!.scanning
@@ -3761,7 +3811,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                               Icons.refresh,
                                             ),
                                           },
-                                          label: (isScanning && !_deepScanning)
+                                          label: (_scanning && !_deepScanning)
+                                              ? AppLocalizations.of(
+                                                  context,
+                                                )!.cancel
+                                              : (isScanning && !_deepScanning)
                                               ? AppLocalizations.of(
                                                   context,
                                                 )!.scanning
@@ -3769,7 +3823,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                                                   context,
                                                 )!.rescan,
                                           showLabel: !railCollapsed,
-                                          onPressed: isAnyOperation
+                                          onPressed: (_scanning && !_deepScanning)
+                                              ? _cancelScan
+                                              : isAnyOperation
                                               ? null
                                               : () => _scanAll(),
                                         ),
@@ -4015,49 +4071,66 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                             padding: const EdgeInsets.all(24.0),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
-                              children: _deepScanning && _scanProgressTotal > 0
-                                  ? [
-                                      SizedBox(
-                                        width: 260,
-                                        child: LinearProgressIndicator(
-                                          value:
-                                              _scanProgressCurrent /
-                                              _scanProgressTotal,
+                              children: [
+                                ...(_deepScanning && _scanProgressTotal > 0
+                                    ? [
+                                        SizedBox(
+                                          width: 260,
+                                          child: LinearProgressIndicator(
+                                            value:
+                                                _scanProgressCurrent /
+                                                _scanProgressTotal,
+                                          ),
                                         ),
-                                      ),
-                                      const SizedBox(height: 16),
-                                      Text(
-                                        AppLocalizations.of(
-                                          context,
-                                        )!.scanProgressLabel(
-                                          _scanProgressCurrent,
-                                          _scanProgressTotal,
-                                        ),
-                                        style: TextStyle(
-                                          color: Theme.of(
+                                        const SizedBox(height: 16),
+                                        Text(
+                                          AppLocalizations.of(
                                             context,
-                                          ).textTheme.bodyMedium?.color,
+                                          )!.scanProgressLabel(
+                                            _scanProgressCurrent,
+                                            _scanProgressTotal,
+                                          ),
+                                          style: TextStyle(
+                                            color: Theme.of(
+                                              context,
+                                            ).textTheme.bodyMedium?.color,
+                                          ),
                                         ),
-                                      ),
-                                    ]
-                                  : [
-                                      const CircularProgressIndicator(),
-                                      const SizedBox(height: 16),
-                                      Text(
-                                        isProfileSwitching
-                                            ? AppLocalizations.of(
-                                                context,
-                                              )!.switchingProfiles
-                                            : AppLocalizations.of(
-                                                context,
-                                              )!.scanningProjects,
-                                        style: TextStyle(
-                                          color: Theme.of(
-                                            context,
-                                          ).textTheme.bodyMedium?.color,
+                                      ]
+                                    : [
+                                        const CircularProgressIndicator(),
+                                        const SizedBox(height: 16),
+                                        Text(
+                                          isProfileSwitching
+                                              ? AppLocalizations.of(
+                                                  context,
+                                                )!.switchingProfiles
+                                              : AppLocalizations.of(
+                                                  context,
+                                                )!.scanningProjects,
+                                          style: TextStyle(
+                                            color: Theme.of(
+                                              context,
+                                            ).textTheme.bodyMedium?.color,
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                      ]),
+                                // Deep scan's enumeration phase goes through
+                                // the same scanner.scanDirectory() call as a
+                                // regular scan, so it's vulnerable to the
+                                // same runaway-hang case — and unlike a
+                                // regular scan, this overlay blocks the UI,
+                                // so a way out matters even more here.
+                                if (_deepScanning) ...[
+                                  const SizedBox(height: 16),
+                                  TextButton(
+                                    onPressed: _cancelScan,
+                                    child: Text(
+                                      AppLocalizations.of(context)!.cancel,
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
                           ),
                         ),

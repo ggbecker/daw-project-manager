@@ -86,6 +86,8 @@
   },
   "removeExcludedFolderMessageNoPath": "Esta pasta não será mais excluída.",
   "desktopOnlyPathsSettings": "Esta página está disponível apenas no app desktop.",
+  "renameProjectFolderTitle": "Display Name",
+  "flatpakPortalPathExplanation": "This path is a sandboxed location, not the real folder location — Flatpak doesn't share that with the app. Use the name above to identify it instead.",
   "removeProjectFolderTitle": "Remover pasta de projetos?",
   "removeProjectFolderMessage": "Tem certeza de que deseja remover \"{path}\"? Isso também removerá todos os projetos desta pasta que não estão em lançamentos.",
   "@removeProjectFolderMessage": {
@@ -459,6 +461,7 @@
       }
     }
   },
+  "scanCancelled": "Scan cancelled.",
   "scanFailuresSnackbar": "{count} projeto{plural} não pôde/puderam ser carregado{plural}.",
   "@scanFailuresSnackbar": {
     "placeholders": {

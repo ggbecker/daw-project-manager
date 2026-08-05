@@ -413,7 +413,33 @@ class ProjectRepository {
     final id = _uuid.v4();
     await rootsBox.put(
       id,
-      ScanRoot(id: id, path: path, addedAt: DateTime.now()),
+      ScanRoot(
+        id: id,
+        path: path,
+        addedAt: DateTime.now(),
+        // Auto-derived friendly label — see ScanRoot.displayName's doc for
+        // why this is needed on Linux/Flatpak (the stored path itself may
+        // be a sandboxed document-portal path, not the real location).
+        // User-editable afterward via setRootDisplayName.
+        displayName: p.basename(path),
+      ),
+    );
+  }
+
+  /// Sets (or, if [displayName] is null/blank, clears back to the
+  /// auto-derived folder-name default) the user-facing label for root
+  /// [id]. No-op if the root doesn't exist.
+  Future<void> setRootDisplayName(String id, String? displayName) async {
+    final root = rootsBox.get(id);
+    if (root == null) return;
+    final trimmed = displayName?.trim();
+    await rootsBox.put(
+      id,
+      root.copyWith(
+        displayName: (trimmed == null || trimmed.isEmpty)
+            ? p.basename(root.path)
+            : trimmed,
+      ),
     );
   }
 

@@ -182,6 +182,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get desktopOnlyPathsSettings => '此页面仅在桌面应用中可用。';
 
   @override
+  String get renameProjectFolderTitle => 'Display Name';
+
+  @override
+  String get flatpakPortalPathExplanation =>
+      'This path is a sandboxed location, not the real folder location — Flatpak doesn\'t share that with the app. Use the name above to identify it instead.';
+
+  @override
   String get removeProjectFolderTitle => '移除项目文件夹？';
 
   @override
@@ -605,6 +612,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String scanComplete(String type, int count, String plural) {
     return '$type完成: $count个项目$plural已添加/更新。';
   }
+
+  @override
+  String get scanCancelled => 'Scan cancelled.';
 
   @override
   String scanFailuresSnackbar(int count, String plural) {

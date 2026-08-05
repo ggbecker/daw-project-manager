@@ -190,6 +190,13 @@ class AppLocalizationsIt extends AppLocalizations {
       'Questa pagina è disponibile solo nell’app desktop.';
 
   @override
+  String get renameProjectFolderTitle => 'Display Name';
+
+  @override
+  String get flatpakPortalPathExplanation =>
+      'This path is a sandboxed location, not the real folder location — Flatpak doesn\'t share that with the app. Use the name above to identify it instead.';
+
+  @override
   String get removeProjectFolderTitle => 'Rimuovere la cartella di progetti?';
 
   @override
@@ -617,6 +624,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String scanComplete(String type, int count, String plural) {
     return '$type completata: $count progetto$plural aggiunto$plural/aggiornato$plural.';
   }
+
+  @override
+  String get scanCancelled => 'Scan cancelled.';
 
   @override
   String scanFailuresSnackbar(int count, String plural) {

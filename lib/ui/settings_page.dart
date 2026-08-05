@@ -35,6 +35,15 @@ import 'widgets/language_switcher.dart' show LanguageSwitcher;
 import 'widgets/shortcuts_help_dialog.dart';
 import 'widgets/update_available_dialog.dart';
 
+/// A Flatpak document-portal path, e.g.
+/// `/run/user/1000/doc/98127/projects` — the portal never exposes the real
+/// filesystem location to a sandboxed app without broader permissions this
+/// app deliberately doesn't request, so [ScanRoot.path] itself is one of
+/// these rather than something meaningful to show.
+@visibleForTesting
+bool looksLikeFlatpakPortalPath(String path) =>
+    Platform.isLinux && RegExp(r'^/run/user/\d+/doc/').hasMatch(path);
+
 /// Identifies a SettingsPage tab for deep-linking (e.g. the dashboard's
 /// Google Drive quick-access shortcut opening straight to [backup]). Order
 /// here has no bearing on nav order — that's set independently in
@@ -540,6 +549,45 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  Future<void> _renameProjectFolder(String folderId, String currentName) async {
+    if (_busy) return;
+    final l10n = AppLocalizations.of(context)!;
+    final controller = TextEditingController(text: currentName);
+
+    final newName = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Theme.of(ctx).cardColor,
+        title: Text(l10n.renameProjectFolderTitle),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: InputDecoration(
+            border: const OutlineInputBorder(),
+            isDense: true,
+          ),
+          onSubmitted: (value) => Navigator.pop(ctx, value),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, controller.text),
+            child: Text(l10n.renameButton),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (newName == null || !mounted) return;
+
+    final repo = await ref.read(repositoryProvider.future);
+    await repo.setRootDisplayName(folderId, newName);
+    ref.invalidate(scanRootsProvider);
   }
 
   Future<void> _removeProjectFolder(String folderId) async {
@@ -1278,6 +1326,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   Widget _buildProjectFoldersSection(AppLocalizations l10n) {
     final projectFolders = ref.watch(scanRootsProvider);
     final excludedFolders = ref.watch(ignoredPathsProvider);
+    final dateFormat = ref.watch(dateFormatProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1325,16 +1374,43 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   )
                 else
                   ...projectFolders.map((f) {
+                    final isPortalPath = looksLikeFlatpakPortalPath(f.path);
                     return ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: const Icon(Icons.folder),
-                      title: Text(f.path),
-                      subtitle: f.lastScanAt == null
-                          ? Text(l10n.notScannedYet)
-                          : Text(l10n.lastScan(f.lastScanAt.toString())),
+                      title: Text(f.effectiveDisplayName),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            f.path,
+                            style: Theme.of(context).textTheme.bodySmall,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            f.lastScanAt == null
+                                ? l10n.notScannedYet
+                                : l10n.lastScan(dateFormat.format(f.lastScanAt!)),
+                          ),
+                          if (isPortalPath)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                l10n.flatpakPortalPathExplanation,
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(fontStyle: FontStyle.italic),
+                              ),
+                            ),
+                        ],
+                      ),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          IconButton(
+                            tooltip: l10n.renameButton,
+                            onPressed: _busy ? null : () => _renameProjectFolder(f.id, f.effectiveDisplayName),
+                            icon: const Icon(Icons.edit_outlined),
+                          ),
                           IconButton(
                             tooltip: l10n.openFolder,
                             onPressed: () => FileLauncher.openFolder(f.path),

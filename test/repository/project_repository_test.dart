@@ -411,6 +411,64 @@ void main() {
     );
   });
 
+  group('ProjectRepository.scan root display names', () {
+    test('addRoot auto-fills displayName from the folder\'s own name', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.addRoot('/home/artist/Music/Projects');
+
+      final root = repo.getRoots().single;
+      expect(root.displayName, 'Projects');
+    });
+
+    test('setRootDisplayName sets a custom label', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.addRoot('/home/artist/Music/Projects');
+      final root = repo.getRoots().single;
+
+      await repo.setRootDisplayName(root.id, 'My LMMS Projects');
+
+      expect(repo.getRoots().single.displayName, 'My LMMS Projects');
+    });
+
+    test('setRootDisplayName trims whitespace', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.addRoot('/home/artist/Music/Projects');
+      final root = repo.getRoots().single;
+
+      await repo.setRootDisplayName(root.id, '  My Projects  ');
+
+      expect(repo.getRoots().single.displayName, 'My Projects');
+    });
+
+    test('setRootDisplayName with null reverts to the auto-derived folder name', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.addRoot('/home/artist/Music/Projects');
+      final root = repo.getRoots().single;
+      await repo.setRootDisplayName(root.id, 'Custom name');
+
+      await repo.setRootDisplayName(root.id, null);
+
+      expect(repo.getRoots().single.displayName, 'Projects');
+    });
+
+    test('setRootDisplayName with a blank string reverts to the auto-derived folder name', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.addRoot('/home/artist/Music/Projects');
+      final root = repo.getRoots().single;
+      await repo.setRootDisplayName(root.id, 'Custom name');
+
+      await repo.setRootDisplayName(root.id, '   ');
+
+      expect(repo.getRoots().single.displayName, 'Projects');
+    });
+
+    test('setRootDisplayName is a no-op for an unknown root id', () async {
+      final repo = await HiveTestHelper.createRepository();
+      // Should not throw.
+      await repo.setRootDisplayName('does-not-exist', 'Whatever');
+    });
+  });
+
   group('ProjectRepository.DAW launch commands', () {
     test('getDawLaunchCommand returns null when not configured', () async {
       final repo = await HiveTestHelper.createRepository();

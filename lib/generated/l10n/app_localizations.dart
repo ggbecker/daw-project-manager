@@ -442,6 +442,18 @@ abstract class AppLocalizations {
   /// **'This page is available only on the desktop app.'**
   String get desktopOnlyPathsSettings;
 
+  /// No description provided for @renameProjectFolderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Display Name'**
+  String get renameProjectFolderTitle;
+
+  /// No description provided for @flatpakPortalPathExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'This path is a sandboxed location, not the real folder location — Flatpak doesn\'t share that with the app. Use the name above to identify it instead.'**
+  String get flatpakPortalPathExplanation;
+
   /// No description provided for @removeProjectFolderTitle.
   ///
   /// In en, this message translates to:
@@ -1150,6 +1162,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{type} complete: {count} project{plural} added/updated.'**
   String scanComplete(String type, int count, String plural);
+
+  /// No description provided for @scanCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan cancelled.'**
+  String get scanCancelled;
 
   /// No description provided for @scanFailuresSnackbar.
   ///

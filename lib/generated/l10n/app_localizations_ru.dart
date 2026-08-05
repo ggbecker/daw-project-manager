@@ -190,6 +190,13 @@ class AppLocalizationsRu extends AppLocalizations {
       'Эта страница доступна только в настольном приложении.';
 
   @override
+  String get renameProjectFolderTitle => 'Display Name';
+
+  @override
+  String get flatpakPortalPathExplanation =>
+      'This path is a sandboxed location, not the real folder location — Flatpak doesn\'t share that with the app. Use the name above to identify it instead.';
+
+  @override
   String get removeProjectFolderTitle => 'Удалить папку проектов?';
 
   @override
@@ -618,6 +625,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String scanComplete(String type, int count, String plural) {
     return '$type завершено: $count проект$plural добавлен$plural/обновлен$plural.';
   }
+
+  @override
+  String get scanCancelled => 'Scan cancelled.';
 
   @override
   String scanFailuresSnackbar(int count, String plural) {

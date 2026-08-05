@@ -86,6 +86,8 @@
   },
   "removeExcludedFolderMessageNoPath": "该文件夹将不再被排除。",
   "desktopOnlyPathsSettings": "此页面仅在桌面应用中可用。",
+  "renameProjectFolderTitle": "Display Name",
+  "flatpakPortalPathExplanation": "This path is a sandboxed location, not the real folder location — Flatpak doesn't share that with the app. Use the name above to identify it instead.",
   "removeProjectFolderTitle": "移除项目文件夹？",
   "removeProjectFolderMessage": "确定要移除「{path}」吗？这也会移除该文件夹中未包含在发布中的所有项目。",
   "@removeProjectFolderMessage": {
@@ -459,6 +461,7 @@
       }
     }
   },
+  "scanCancelled": "Scan cancelled.",
   "scanFailuresSnackbar": "{count}个项目{plural}加载失败。",
   "@scanFailuresSnackbar": {
     "placeholders": {
