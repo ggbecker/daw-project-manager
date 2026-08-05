@@ -551,14 +551,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                   sourceFileExists: sourceFileExists,
                   onOpenFolder: () => _openProjectFolder(updatedProject.filePath),
                   onRename: () => _renameProjectFile(updatedProject),
-                  onOpenInDaw: () async {
-                    final success = await FileLauncher.launchProject(updatedProject.filePath);
-                    if (!success && mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(AppLocalizations.of(context)!.failedToLaunchProject(updatedProject.displayName))),
-                      );
-                    }
-                  },
+                  onOpenInDaw: () => launchProjectInDaw(context, ref, updatedProject),
                   onStats: () => Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => ProjectStatisticsPage(projectId: updatedProject.id)),

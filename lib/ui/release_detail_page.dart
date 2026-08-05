@@ -1232,30 +1232,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
   }
 
   Future<void> _handleLaunchInDaw(BuildContext context, MusicProject project) async {
-    final exists = File(project.filePath).existsSync() || Directory(project.filePath).existsSync();
-    if (!exists) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.fileMissing)),
-        );
-      }
-      return;
-    }
-    final success = await FileLauncher.launchProject(project.filePath);
-    
-    if (success) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.launchingProject(project.displayName))),
-        );
-      }
-    } else {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.failedToLaunchProject(project.displayName))),
-        );
-      }
-    }
+    await launchProjectInDaw(context, ref, project);
   }
 
   Future<void> _handleOpenFolder(BuildContext context, MusicProject project, String folderPath) async {
@@ -1666,22 +1643,9 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage> {
                                                 ? () => isSubscribed
                                                     ? confirmEndSession(context, ref)
                                                     : confirmStartSession(context, ref, project)
-                                                : (fileExists ? () async {
-                                              final success = await FileLauncher.launchProject(project.filePath);
-                                              if (success) {
-                                                if (context.mounted) {
-                                                  ScaffoldMessenger.of(context).showSnackBar(
-                                                    SnackBar(content: Text(AppLocalizations.of(context)!.launchingProject(project.displayName))),
-                                                  );
-                                                }
-                                              } else {
-                                                if (context.mounted) {
-                                                  ScaffoldMessenger.of(context).showSnackBar(
-                                                    SnackBar(content: Text(AppLocalizations.of(context)!.failedToLaunchProject(project.displayName))),
-                                                  );
-                                                }
-                                              }
-                                            } : null),
+                                                : (fileExists
+                                                    ? () => launchProjectInDaw(context, ref, project)
+                                                    : null),
                                           ),
                                         // Separator - only if Launch button is shown
                                         if (!isMobile)

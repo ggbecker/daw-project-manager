@@ -1,9 +1,99 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../generated/l10n/app_localizations.dart';
 import '../models/music_project.dart';
 import '../providers/providers.dart';
+import '../utils/file_launcher.dart';
+import 'dialogs/daw_launch_command_dialog.dart';
+
+/// Launches [project] in its DAW, preferring a Linux-only registered binary
+/// override for its DAW type (see Settings > DAW Locations) over the OS
+/// default file-type handler, which has no reliable association for most
+/// DAWs there. Shared by every "launch in DAW" entry point in the app (the
+/// main projects grid, the active-session chip, the idle-session
+/// suggestions, project/release detail pages) so the override — and its
+/// missing-binary remediation / first-run configure prompt — behaves
+/// identically everywhere instead of only from wherever it was implemented
+/// first.
+Future<void> launchProjectInDaw(
+  BuildContext context,
+  WidgetRef ref,
+  MusicProject project,
+) async {
+  final exists =
+      File(project.filePath).existsSync() ||
+      Directory(project.filePath).existsSync();
+  if (!exists) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.fileMissing)),
+      );
+    }
+    return;
+  }
+
+  if (Platform.isLinux && project.dawType != null) {
+    final repo = await ref.read(repositoryProvider.future);
+    final binaryPath = repo.getDawLaunchCommand(project.dawType!);
+    if (binaryPath != null) {
+      if (!File(binaryPath).existsSync()) {
+        if (!context.mounted) return;
+        await showDawLaunchCommandDialog(
+          context,
+          dawType: project.dawType!,
+          currentPath: binaryPath,
+          pathMissing: true,
+        );
+        return;
+      }
+      final launched = await FileLauncher.launchWithBinary(
+        binaryPath,
+        project.filePath,
+      );
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            launched
+                ? AppLocalizations.of(context)!.launchingProject(project.displayName)
+                : AppLocalizations.of(context)!.failedToLaunchProject(project.displayName),
+          ),
+        ),
+      );
+      return;
+    }
+  }
+
+  final success = await FileLauncher.launchProject(project.filePath);
+
+  if (success) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.launchingProject(project.displayName)),
+        ),
+      );
+    }
+    return;
+  }
+
+  if (!context.mounted) return;
+  if (Platform.isLinux && project.dawType != null) {
+    // In-context first-run prompt: no override configured yet and the OS
+    // default handler just failed — offer to set one up right here instead
+    // of a dead-end "failed to launch" snackbar.
+    await showDawLaunchCommandDialog(context, dawType: project.dawType!);
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(AppLocalizations.of(context)!.failedToLaunchProject(project.displayName)),
+      ),
+    );
+  }
+}
 
 /// Shows a confirmation dialog before ending the active session.
 /// Displays the project name and elapsed session time so the user can review

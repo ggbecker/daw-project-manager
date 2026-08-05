@@ -58,7 +58,6 @@ import 'widgets/mobile_mini_player.dart';
 import '../generated/l10n/app_localizations.dart';
 import 'session_actions.dart';
 import 'dialogs/create_project_dialog.dart';
-import 'dialogs/daw_launch_command_dialog.dart';
 import 'project_templates_page.dart';
 import '../models/pending_folder.dart';
 
@@ -6242,92 +6241,11 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
   );
 
   Future<void> _launchProject(MusicProject project) async {
+    // In session mode, tapping/launching a row toggles the session instead
+    // of launching — see the session-mode branches elsewhere that call
+    // confirmStartSession/confirmEndSession for that path.
     if (ref.read(sessionModeProvider)) return;
-    final exists =
-        File(project.filePath).existsSync() ||
-        Directory(project.filePath).existsSync();
-    if (!exists) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.fileMissing)),
-        );
-      }
-      return;
-    }
-
-    // Linux has no reliable OS-level file-type association for most DAWs
-    // (see Settings > DAW Locations), so a registered binary override, if
-    // any, always takes priority over the OS-default-handler path below.
-    if (Platform.isLinux && project.dawType != null) {
-      final repo = await ref.read(repositoryProvider.future);
-      final binaryPath = repo.getDawLaunchCommand(project.dawType!);
-      if (binaryPath != null) {
-        if (!File(binaryPath).existsSync()) {
-          if (!mounted) return;
-          await showDawLaunchCommandDialog(
-            context,
-            dawType: project.dawType!,
-            currentPath: binaryPath,
-            pathMissing: true,
-          );
-          return;
-        }
-        final launched = await FileLauncher.launchWithBinary(
-          binaryPath,
-          project.filePath,
-        );
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              launched
-                  ? AppLocalizations.of(
-                      context,
-                    )!.launchingProject(project.displayName)
-                  : AppLocalizations.of(
-                      context,
-                    )!.failedToLaunchProject(project.displayName),
-            ),
-          ),
-        );
-        return;
-      }
-    }
-
-    final success = await FileLauncher.launchProject(project.filePath);
-
-    if (success) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(
-                context,
-              )!.launchingProject(project.displayName),
-            ),
-          ),
-        );
-      }
-      return;
-    }
-
-    if (!mounted) return;
-    if (Platform.isLinux && project.dawType != null) {
-      // In-context first-run prompt: no override configured yet and the OS
-      // default handler just failed — offer to set one up right here
-      // instead of a dead-end "failed to launch" snackbar.
-      await showDawLaunchCommandDialog(context, dawType: project.dawType!);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalizations.of(context)!.failedToLaunchProject(
-              project.displayName,
-            ),
-          ),
-        ),
-      );
-    }
+    await launchProjectInDaw(context, ref, project);
   }
 
   Future<void> _viewProjectDetails(MusicProject project) async {
@@ -11162,32 +11080,10 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
 /// If another session is already active, offers to switch instead.
 Future<void> _launchSuggestionProject(
   BuildContext context,
+  WidgetRef ref,
   MusicProject project,
 ) async {
-  final exists =
-      File(project.filePath).existsSync() ||
-      Directory(project.filePath).existsSync();
-  if (!exists) {
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.fileMissing)),
-      );
-    }
-    return;
-  }
-  final success = await FileLauncher.launchProject(project.filePath);
-  if (context.mounted) {
-    final l10n = AppLocalizations.of(context)!;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          success
-              ? l10n.launchingProject(project.displayName)
-              : l10n.failedToLaunchProject(project.displayName),
-        ),
-      ),
-    );
-  }
+  await launchProjectInDaw(context, ref, project);
 }
 
 // ── Session idle suggestions ────────────────────────────────────────────────
@@ -11571,7 +11467,7 @@ class _SessionIdleSuggestionsState
               borderRadius: BorderRadius.circular(10),
               onTap: () => sessionMode
                   ? confirmStartSession(context, ref, s.project)
-                  : _launchSuggestionProject(context, s.project),
+                  : _launchSuggestionProject(context, ref, s.project),
               child: Padding(
                 padding: const EdgeInsets.all(3),
                 child: Icon(
@@ -11738,7 +11634,7 @@ class _SuggestionsPanelBar extends ConsumerWidget {
                             if (sessionMode) {
                               confirmStartSession(context, ref, s.project);
                             } else {
-                              _launchSuggestionProject(context, s.project);
+                              _launchSuggestionProject(context, ref, s.project);
                             }
                           },
                           child: Padding(
@@ -12052,24 +11948,7 @@ class _ActiveProjectChipState extends ConsumerState<_ActiveProjectChip>
                   padding: const EdgeInsets.all(6),
                   constraints: const BoxConstraints(),
                   color: Colors.white70,
-                  onPressed: () async {
-                    final exists =
-                        File(project.filePath).existsSync() ||
-                        Directory(project.filePath).existsSync();
-                    if (!exists) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              AppLocalizations.of(context)!.fileMissing,
-                            ),
-                          ),
-                        );
-                      }
-                      return;
-                    }
-                    await FileLauncher.launchProject(project.filePath);
-                  },
+                  onPressed: () => launchProjectInDaw(context, ref, project),
                 ),
               ),
               const SizedBox(width: 4),
