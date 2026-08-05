@@ -5513,7 +5513,8 @@ List<TrinaRow> groupRowsToExpand(
   ];
 }
 
-class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
+class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable>
+    with RouteAwareDropTargetState<_PlutoProjectsTable> {
   TrinaGridStateManager? stateManager;
   bool _isRebuildingRows = false;
   // Set to true when the theme changes so onLoaded can schedule a _rebuildRows()
@@ -8086,6 +8087,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable> {
     );
 
     final dropTarget = DropTarget(
+      enable: dropTargetEnabled,
       onDragUpdated: (detail) => _updateDragTarget(detail.localPosition),
       onDragExited: (_) => setState(() {
         _dragOverRowTop = null;
