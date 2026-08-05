@@ -29,6 +29,7 @@ import '../utils/route_observer.dart';
 import '../generated/l10n/app_localizations.dart';
 import 'session_actions.dart';
 import '../services/audio_analysis_service.dart';
+import '../services/metadata_extractor.dart';
 import '../services/mixdown_detector_service.dart';
 import '../services/project_text_export_service.dart';
 import 'widgets/conversion_progress_dialog.dart';
@@ -534,6 +535,8 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
         final isMobile = MobileUtils.isMobile();
         final sourceFileExists = File(updatedProject.filePath).existsSync() ||
             Directory(updatedProject.filePath).existsSync();
+        final extractionSupported =
+            MetadataExtractor.supportsFullExtraction(updatedProject.filePath);
         return Stack(
           children: [
             Column(
@@ -795,11 +798,13 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                       ],
                                       const SizedBox(width: 8),
                                       Tooltip(
-                                        message: sourceFileExists
-                                            ? ''
-                                            : AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine,
+                                        message: !sourceFileExists
+                                            ? AppLocalizations.of(context)!.sourceFileNotFoundOnThisMachine
+                                            : !extractionSupported
+                                                ? AppLocalizations.of(context)!.metadataExtractionNotSupportedForDaw
+                                                : '',
                                         child: ElevatedButton.icon(
-                                        onPressed: _extractingMetadata || !sourceFileExists
+                                        onPressed: _extractingMetadata || !sourceFileExists || !extractionSupported
                                             ? null
                                             : () async {
                                                 setState(

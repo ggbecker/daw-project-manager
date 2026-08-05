@@ -2305,6 +2305,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Archivo fuente no encontrado en esta máquina';
 
   @override
+  String get metadataExtractionNotSupportedForDaw =>
+      'La extracción de metadatos no es compatible con este DAW';
+
+  @override
   String get sourceFileNotFoundMetadataOnly =>
       'Archivo fuente no encontrado en esta máquina — modo solo metadatos. Aún puedes editar y exportar metadatos.';
 

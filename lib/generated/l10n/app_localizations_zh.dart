@@ -2217,6 +2217,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sourceFileNotFoundOnThisMachine => '在此设备上找不到源文件';
 
   @override
+  String get metadataExtractionNotSupportedForDaw => '此 DAW 不支持元数据提取';
+
+  @override
   String get sourceFileNotFoundMetadataOnly =>
       '在此设备上找不到源文件 — 仅元数据模式。您仍然可以编辑和导出元数据。';
 

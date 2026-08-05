@@ -2303,6 +2303,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Quelldatei nicht auf diesem Gerät gefunden';
 
   @override
+  String get metadataExtractionNotSupportedForDaw =>
+      'Metadatenextraktion wird für diese DAW nicht unterstützt';
+
+  @override
   String get sourceFileNotFoundMetadataOnly =>
       'Quelldatei nicht auf diesem Gerät gefunden — nur Metadaten-Modus. Sie können Metadaten weiterhin bearbeiten und exportieren.';
 

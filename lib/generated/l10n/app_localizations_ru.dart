@@ -2291,6 +2291,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Исходный файл не найден на этом устройстве';
 
   @override
+  String get metadataExtractionNotSupportedForDaw =>
+      'Извлечение метаданных не поддерживается для этой DAW';
+
+  @override
   String get sourceFileNotFoundMetadataOnly =>
       'Исходный файл не найден на этом устройстве — режим только метаданных. Вы всё равно можете редактировать и экспортировать метаданные.';
 

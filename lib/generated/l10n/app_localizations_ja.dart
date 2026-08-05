@@ -2239,6 +2239,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get sourceFileNotFoundOnThisMachine => 'このマシンにソースファイルが見つかりません';
 
   @override
+  String get metadataExtractionNotSupportedForDaw =>
+      'このDAWではメタデータの抽出はサポートされていません';
+
+  @override
   String get sourceFileNotFoundMetadataOnly =>
       'このマシンにソースファイルが見つかりません — メタデータのみモード。メタデータの編集とエクスポートは引き続き可能です。';
 

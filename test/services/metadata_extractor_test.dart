@@ -838,4 +838,22 @@ TEMPO 120 4 4 0
       expect(metadata.dawVersion, isNull);
     });
   });
+
+  group('MetadataExtractor.supportsFullExtraction', () {
+    for (final ext in ['.als', '.alp', '.cpr', '.npr', '.bwproject', '.rpp', '.mgd', '.flp']) {
+      test('$ext is supported', () {
+        expect(MetadataExtractor.supportsFullExtraction('/fake/project$ext'), isTrue);
+      });
+    }
+
+    for (final ext in ['.logicx', '.ptx', '.pts', '.song', '.cwp', '.ardour', '.band', '.aup3']) {
+      test('$ext is not supported', () {
+        expect(MetadataExtractor.supportsFullExtraction('/fake/project$ext'), isFalse);
+      });
+    }
+
+    test('extension check is case-insensitive', () {
+      expect(MetadataExtractor.supportsFullExtraction('/fake/Project.RPP'), isTrue);
+    });
+  });
 }
