@@ -3560,7 +3560,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get workTimerSection => '工作会话提醒';
 
   @override
-  String get workTimerSectionDesc => '在订阅项目上工作时获取通知';
+  String get workTimerSectionDesc => '在工作会话处于活动状态时定期获取通知';
+
+  @override
+  String get workTimerRequiresSessionMode => '请先在上方启用会话模式以使用工作会话提醒';
 
   @override
   String get workTimerEnabled => '启用工作会话提醒';
@@ -3575,6 +3578,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String workTimerNotifBody(String time) {
     return '您已工作 $time';
   }
+
+  @override
+  String get sendTestNotification => '发送测试通知';
+
+  @override
+  String get testNotificationTitle => '测试通知';
+
+  @override
+  String get testNotificationBody => '这是来自 DAW Project Manager 的测试通知。';
 
   @override
   String get general => '常规';

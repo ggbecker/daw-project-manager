@@ -3684,7 +3684,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get workTimerSectionDesc =>
-      'Receba notificações enquanto trabalha em um projeto inscrito';
+      'Receba notificações periodicamente enquanto tiver uma sessão de trabalho ativa';
+
+  @override
+  String get workTimerRequiresSessionMode =>
+      'Ative o Modo sessão acima para usar os lembretes de sessão de trabalho';
 
   @override
   String get workTimerEnabled => 'Ativar lembretes de sessão de trabalho';
@@ -3699,6 +3703,16 @@ class AppLocalizationsPt extends AppLocalizations {
   String workTimerNotifBody(String time) {
     return 'Você está trabalhando há $time';
   }
+
+  @override
+  String get sendTestNotification => 'Enviar notificação de teste';
+
+  @override
+  String get testNotificationTitle => 'Notificação de teste';
+
+  @override
+  String get testNotificationBody =>
+      'Esta é uma notificação de teste do DAW Project Manager.';
 
   @override
   String get general => 'Geral';

@@ -638,12 +638,37 @@ class _WorkTimerSectionState extends ConsumerState<WorkTimerSection> {
     }
   }
 
+  Future<void> _sendTestNotification() async {
+    try {
+      await DeadlineNotificationService().showWorkTimerNotification(
+        l10n.testNotificationTitle,
+        l10n.testNotificationBody,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.notificationTestSent)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.notificationTestError(e.toString())),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final sessionModeOn = ref.watch(sessionModeProvider);
     final enabled = ref.watch(workTimerNotifEnabledProvider);
     final interval = ref.watch(workTimerNotifIntervalProvider);
     final isCustom = !_intervalSeconds.contains(interval);
     final dropdownValue = isCustom ? _customSentinel : interval;
+    final controlsEnabled = sessionModeOn && enabled;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -653,53 +678,73 @@ class _WorkTimerSectionState extends ConsumerState<WorkTimerSection> {
           leading: const Icon(Icons.timer_outlined),
           title: Text(l10n.workTimerSection,
               style: const TextStyle(fontWeight: FontWeight.w600)),
-          subtitle: Text(l10n.workTimerSectionDesc),
-        ),
-        SwitchListTile(
-          contentPadding: EdgeInsets.zero,
-          title: Text(l10n.workTimerEnabled),
-          value: enabled,
-          onChanged: (v) =>
-              ref.read(workTimerNotifEnabledProvider.notifier).set(v),
+          subtitle: Text(
+            sessionModeOn ? l10n.workTimerSectionDesc : l10n.workTimerRequiresSessionMode,
+          ),
         ),
         AnimatedOpacity(
           duration: const Duration(milliseconds: 200),
-          opacity: enabled ? 1.0 : 0.4,
-          child: ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(l10n.workTimerIntervalLabel),
-            trailing: DropdownButton<int>(
-              value: dropdownValue,
-              underline: const SizedBox.shrink(),
-              selectedItemBuilder: (_) => [
-                ..._intervalSeconds.map(
-                  (s) => Align(alignment: Alignment.centerLeft, child: Text(_label(s))),
+          opacity: sessionModeOn ? 1.0 : 0.4,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.workTimerEnabled),
+                value: enabled,
+                onChanged: sessionModeOn
+                    ? (v) => ref.read(workTimerNotifEnabledProvider.notifier).set(v)
+                    : null,
+              ),
+              AnimatedOpacity(
+                duration: const Duration(milliseconds: 200),
+                opacity: controlsEnabled ? 1.0 : 0.4,
+                child: ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(l10n.workTimerIntervalLabel),
+                  trailing: DropdownButton<int>(
+                    value: dropdownValue,
+                    underline: const SizedBox.shrink(),
+                    selectedItemBuilder: (_) => [
+                      ..._intervalSeconds.map(
+                        (s) => Align(alignment: Alignment.centerLeft, child: Text(_label(s))),
+                      ),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(isCustom ? _label(interval) : l10n.customInterval),
+                      ),
+                    ],
+                    items: [
+                      ..._intervalSeconds.map((s) => DropdownMenuItem(
+                            value: s,
+                            child: Text(_label(s)),
+                          )),
+                      DropdownMenuItem(
+                        value: _customSentinel,
+                        child: Text(l10n.customInterval),
+                      ),
+                    ],
+                    onChanged: controlsEnabled
+                        ? (v) {
+                            if (v == _customSentinel) {
+                              _showCustomDialog(interval);
+                            } else if (v != null) {
+                              ref.read(workTimerNotifIntervalProvider.notifier).set(v);
+                            }
+                          }
+                        : null,
+                  ),
                 ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(isCustom ? _label(interval) : l10n.customInterval),
-                ),
-              ],
-              items: [
-                ..._intervalSeconds.map((s) => DropdownMenuItem(
-                      value: s,
-                      child: Text(_label(s)),
-                    )),
-                DropdownMenuItem(
-                  value: _customSentinel,
-                  child: Text(l10n.customInterval),
-                ),
-              ],
-              onChanged: enabled
-                  ? (v) {
-                      if (v == _customSentinel) {
-                        _showCustomDialog(interval);
-                      } else if (v != null) {
-                        ref.read(workTimerNotifIntervalProvider.notifier).set(v);
-                      }
-                    }
-                  : null,
-            ),
+              ),
+            ],
+          ),
+        ),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            onPressed: _sendTestNotification,
+            icon: const Icon(Icons.notifications_active_outlined, size: 16),
+            label: Text(l10n.sendTestNotification),
           ),
         ),
       ],

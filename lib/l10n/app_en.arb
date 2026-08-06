@@ -3614,8 +3614,10 @@
   "@resume": {},
   "workTimerSection": "Work Session Reminders",
   "@workTimerSection": {},
-  "workTimerSectionDesc": "Get notified while working on a subscribed project",
+  "workTimerSectionDesc": "Get notified periodically while you have an active work session",
   "@workTimerSectionDesc": {},
+  "workTimerRequiresSessionMode": "Enable Session Mode above to use work session reminders",
+  "@workTimerRequiresSessionMode": {},
   "workTimerEnabled": "Enable work session reminders",
   "@workTimerEnabled": {},
   "workTimerIntervalLabel": "Notify every",
@@ -3625,6 +3627,18 @@
   "workTimerNotifBody": "You have been working for {time}",
   "@workTimerNotifBody": {
     "placeholders": { "time": { "type": "String" } }
+  },
+  "sendTestNotification": "Send Test Notification",
+  "@sendTestNotification": {
+    "description": "Button that fires a test notification through the OS notification pipeline, to verify delivery works on this build/distribution"
+  },
+  "testNotificationTitle": "Test Notification",
+  "@testNotificationTitle": {
+    "description": "Title of the notification fired by the Send Test Notification button"
+  },
+  "testNotificationBody": "This is a test notification from DAW Project Manager.",
+  "@testNotificationBody": {
+    "description": "Body of the notification fired by the Send Test Notification button"
   },
   "general": "General",
   "@general": {},

@@ -3685,7 +3685,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get workTimerSectionDesc =>
-      'Получайте уведомления во время работы над подписанным проектом';
+      'Получайте периодические уведомления, пока рабочая сессия активна';
+
+  @override
+  String get workTimerRequiresSessionMode =>
+      'Включите режим сессии выше, чтобы использовать напоминания о рабочей сессии';
 
   @override
   String get workTimerEnabled => 'Включить напоминания о рабочей сессии';
@@ -3700,6 +3704,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String workTimerNotifBody(String time) {
     return 'Вы работаете уже $time';
   }
+
+  @override
+  String get sendTestNotification => 'Отправить тестовое уведомление';
+
+  @override
+  String get testNotificationTitle => 'Тестовое уведомление';
+
+  @override
+  String get testNotificationBody =>
+      'Это тестовое уведомление от DAW Project Manager.';
 
   @override
   String get general => 'Общие';
