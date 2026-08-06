@@ -2421,7 +2421,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                             )
                           : const Icon(Icons.refresh, size: 16),
                       label: Text(l10n.checkNow),
-                      style: TextButton.styleFrom(padding: EdgeInsets.zero),
                     ),
                   ),
                 ],
