@@ -12,7 +12,6 @@ import '../utils/mobile_utils.dart';
 import '../generated/l10n/app_localizations.dart';
 import 'profile_edit_page.dart';
 import '../services/crash_logger.dart';
-import 'package:share_plus/share_plus.dart';
 import 'widgets/theme_switcher.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'widgets/language_switcher.dart';
@@ -237,7 +236,12 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
       }
       return;
     }
-    await Share.shareXFiles(files.map((f) => XFile(f.path)).toList());
+    final shared = await CrashLogger.shareOrRevealLogFiles(files);
+    if (!shared && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.shareDiagnosticLogFolderOpened)),
+      );
+    }
   }
 
 

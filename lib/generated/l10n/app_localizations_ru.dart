@@ -2000,6 +2000,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get shareDiagnosticLogEmpty => 'Журнал диагностики пока отсутствует';
 
   @override
+  String get shareDiagnosticLogFolderOpened =>
+      'Общий доступ здесь недоступен — вместо этого открыта папка с журналом, чтобы вы могли прикрепить файл вручную.';
+
+  @override
   String get supportTheProject => 'Поддержать проект';
 
   @override

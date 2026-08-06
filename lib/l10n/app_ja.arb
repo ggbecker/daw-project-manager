@@ -1347,6 +1347,7 @@
   "support": "サポート",
   "shareDiagnosticLog": "診断ログを共有",
   "shareDiagnosticLogEmpty": "診断ログはまだありません",
+  "shareDiagnosticLogFolderOpened": "この環境では共有を利用できません。代わりにログフォルダーを開いたので、ファイルを手動で添付してください。",
   "supportTheProject": "プロジェクトをサポート",
   "couldNotOpenBrowser": "ブラウザを開けませんでした。次のURLにアクセスしてください: {url}",
   "@couldNotOpenBrowser": {

@@ -2013,6 +2013,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Aucun journal de diagnostic pour l\'instant';
 
   @override
+  String get shareDiagnosticLogFolderOpened =>
+      'Le partage n\'est pas disponible ici. Le dossier des journaux a été ouvert pour que vous puissiez joindre le fichier manuellement.';
+
+  @override
   String get supportTheProject => 'Soutenez le projet';
 
   @override

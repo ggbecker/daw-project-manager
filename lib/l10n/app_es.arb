@@ -1347,6 +1347,7 @@
   "support": "Apoyar",
   "shareDiagnosticLog": "Compartir Registro de Diagnóstico",
   "shareDiagnosticLogEmpty": "Aún no hay registro de diagnóstico",
+  "shareDiagnosticLogFolderOpened": "Compartir no está disponible aquí. Se abrió la carpeta del registro para que puedas adjuntar el archivo manualmente.",
   "supportTheProject": "Apoya el proyecto",
   "couldNotOpenBrowser": "No se pudo abrir el navegador. Por favor, visite: {url}",
   "@couldNotOpenBrowser": {

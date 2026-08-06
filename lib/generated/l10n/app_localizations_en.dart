@@ -1995,6 +1995,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shareDiagnosticLogEmpty => 'No diagnostic log yet';
 
   @override
+  String get shareDiagnosticLogFolderOpened =>
+      'Sharing isn\'t available here — opened the log folder instead so you can attach the file manually.';
+
+  @override
   String get supportTheProject => 'Support the project';
 
   @override

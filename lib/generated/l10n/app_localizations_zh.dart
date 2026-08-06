@@ -1936,6 +1936,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get shareDiagnosticLogEmpty => '暂无诊断日志';
 
   @override
+  String get shareDiagnosticLogFolderOpened =>
+      '此环境不支持分享——已改为打开日志文件夹，您可以手动附加该文件。';
+
+  @override
   String get supportTheProject => '支持项目';
 
   @override

@@ -43,24 +43,4 @@ void main() {
       );
     }, testOn: 'windows || mac-os');
   });
-
-  group('shareDiagnosticLogVisible', () {
-    test('is hidden in release builds', () {
-      expect(shareDiagnosticLogVisible(releaseMode: true), isFalse);
-    });
-
-    test('is shown outside release builds', () {
-      expect(shareDiagnosticLogVisible(releaseMode: false), isTrue);
-    });
-
-    // The default parameter binds to kReleaseMode, which is always false
-    // under `flutter test` (a debug/JIT run) — this locks in that the
-    // parameter really does default to the real compile-time constant
-    // rather than a hardcoded value, mirroring isRunningAsAppImage's
-    // "assert relative to the real platform/env" test in
-    // appimage_update_service_test.dart.
-    test('defaults to kReleaseMode', () {
-      expect(shareDiagnosticLogVisible(), isTrue);
-    });
-  });
 }

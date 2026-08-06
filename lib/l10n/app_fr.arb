@@ -1347,6 +1347,7 @@
   "support": "Soutenir",
   "shareDiagnosticLog": "Partager le journal de diagnostic",
   "shareDiagnosticLogEmpty": "Aucun journal de diagnostic pour l'instant",
+  "shareDiagnosticLogFolderOpened": "Le partage n'est pas disponible ici. Le dossier des journaux a été ouvert pour que vous puissiez joindre le fichier manuellement.",
   "supportTheProject": "Soutenez le projet",
   "couldNotOpenBrowser": "Impossible d'ouvrir le navigateur. Veuillez visiter: {url}",
   "@couldNotOpenBrowser": {

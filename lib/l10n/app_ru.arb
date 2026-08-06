@@ -1347,6 +1347,7 @@
   "support": "Поддержать",
   "shareDiagnosticLog": "Поделиться журналом диагностики",
   "shareDiagnosticLogEmpty": "Журнал диагностики пока отсутствует",
+  "shareDiagnosticLogFolderOpened": "Общий доступ здесь недоступен — вместо этого открыта папка с журналом, чтобы вы могли прикрепить файл вручную.",
   "supportTheProject": "Поддержать проект",
   "couldNotOpenBrowser": "Не удалось открыть браузер. Пожалуйста, посетите: {url}",
   "@couldNotOpenBrowser": {

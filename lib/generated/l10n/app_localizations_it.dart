@@ -2002,6 +2002,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get shareDiagnosticLogEmpty => 'Nessun registro diagnostico ancora';
 
   @override
+  String get shareDiagnosticLogFolderOpened =>
+      'La condivisione non è disponibile qui. È stata aperta la cartella dei log per allegare il file manualmente.';
+
+  @override
   String get supportTheProject => 'Sostieni il progetto';
 
   @override

@@ -2116,6 +2116,7 @@
   "support": "Support",
   "shareDiagnosticLog": "Share Diagnostic Log",
   "shareDiagnosticLogEmpty": "No diagnostic log yet",
+  "shareDiagnosticLogFolderOpened": "Sharing isn't available here — opened the log folder instead so you can attach the file manually.",
   "supportTheProject": "Support the project",
   "couldNotOpenBrowser": "Could not open browser. Please visit: {url}",
   "@couldNotOpenBrowser": {

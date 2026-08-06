@@ -2004,6 +2004,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get shareDiagnosticLogEmpty => 'Noch kein Diagnoseprotokoll vorhanden';
 
   @override
+  String get shareDiagnosticLogFolderOpened =>
+      'Teilen ist hier nicht verfügbar. Der Protokollordner wurde stattdessen geöffnet, damit Sie die Datei manuell anhängen können.';
+
+  @override
   String get supportTheProject => 'Unterstütze das Projekt';
 
   @override

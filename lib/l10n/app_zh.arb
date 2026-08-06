@@ -1347,6 +1347,7 @@
   "support": "支持",
   "shareDiagnosticLog": "分享诊断日志",
   "shareDiagnosticLogEmpty": "暂无诊断日志",
+  "shareDiagnosticLogFolderOpened": "此环境不支持分享——已改为打开日志文件夹，您可以手动附加该文件。",
   "supportTheProject": "支持项目",
   "couldNotOpenBrowser": "无法打开浏览器。请访问: {url}",
   "@couldNotOpenBrowser": {

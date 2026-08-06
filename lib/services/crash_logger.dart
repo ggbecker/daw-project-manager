@@ -3,7 +3,9 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart' show AppLifecycleState;
 import 'package:path/path.dart' as p;
+import 'package:share_plus/share_plus.dart';
 import '../utils/app_paths.dart';
+import '../utils/file_launcher.dart';
 
 /// Captures uncaught Dart errors and app lifecycle transitions to a small
 /// rotating log file on disk, so a crash that happens while the app is
@@ -99,6 +101,44 @@ class CrashLogger {
     }
     return existing;
   }
+
+  /// Shares [files] via the OS share sheet, falling back to just opening
+  /// their containing folder in the system file manager when the share
+  /// sheet isn't actually available. Two known cases hit that fallback:
+  /// - **Linux**: share_plus has no file-sharing implementation there at
+  ///   all — `SharePlusLinuxPlugin.share` unconditionally throws
+  ///   `UnimplementedError` for any call that includes files, every time.
+  /// - **Windows**: file sharing goes through the `DataTransferManager`
+  ///   API, which only responds when the app is MSIX-packaged (see
+  ///   `DragToShareButton`'s doc comment) — an unpackaged build silently
+  ///   gets back `ShareResultStatus.unavailable` with no share sheet ever
+  ///   shown.
+  /// Returns true if the OS share sheet was actually shown, false if it
+  /// fell back to opening the folder instead. [files] must be non-empty.
+  static Future<bool> shareOrRevealLogFiles(List<File> files) async {
+    assert(files.isNotEmpty);
+    ShareResultStatus? status;
+    try {
+      status = (await Share.shareXFiles(files.map((f) => XFile(f.path)).toList())).status;
+    } catch (_) {
+      // share_plus on Linux throws rather than returning a status — treated
+      // the same as an unavailable share sheet below.
+    }
+    if (!shareSheetUnavailable(status)) return true;
+    await FileLauncher.openFolder(p.dirname(files.first.path));
+    return false;
+  }
+
+  /// Whether [shareOrRevealLogFiles] should fall back to the folder-reveal
+  /// path, given the [ShareResultStatus] it got back (or null if the share
+  /// call threw, e.g. share_plus's unconditional `UnimplementedError` on
+  /// Linux). Split out as a pure function — exposed for testing — because
+  /// `Share.shareXFiles` itself hits a real platform channel and
+  /// `FileLauncher.openFolder`'s fallback spawns a real OS process, neither
+  /// of which should run during `flutter test`.
+  @visibleForTesting
+  static bool shareSheetUnavailable(ShareResultStatus? status) =>
+      status == null || status == ShareResultStatus.unavailable;
 
   /// Installs global handlers so uncaught framework errors (build/layout/paint)
   /// and errors escaping the root zone are written to disk instead of only

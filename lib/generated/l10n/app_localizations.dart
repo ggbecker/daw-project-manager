@@ -3311,6 +3311,12 @@ abstract class AppLocalizations {
   /// **'No diagnostic log yet'**
   String get shareDiagnosticLogEmpty;
 
+  /// No description provided for @shareDiagnosticLogFolderOpened.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing isn\'t available here — opened the log folder instead so you can attach the file manually.'**
+  String get shareDiagnosticLogFolderOpened;
+
   /// No description provided for @supportTheProject.
   ///
   /// In en, this message translates to:

@@ -1347,6 +1347,7 @@
   "support": "Unterstützen",
   "shareDiagnosticLog": "Diagnoseprotokoll teilen",
   "shareDiagnosticLogEmpty": "Noch kein Diagnoseprotokoll vorhanden",
+  "shareDiagnosticLogFolderOpened": "Teilen ist hier nicht verfügbar. Der Protokollordner wurde stattdessen geöffnet, damit Sie die Datei manuell anhängen können.",
   "supportTheProject": "Unterstütze das Projekt",
   "couldNotOpenBrowser": "Browser konnte nicht geöffnet werden. Bitte besuchen Sie: {url}",
   "@couldNotOpenBrowser": {

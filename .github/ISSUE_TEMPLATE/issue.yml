@@ -101,7 +101,9 @@ body:
       label: Diagnostic Log
       description: >
         For bugs: in the app, go to Settings → About → Share Diagnostic Log,
-        then paste the relevant portion here, or attach the file to this issue.
+        then paste the relevant portion here or attach the file — or, if you
+        hit an error dialog with a "Copy Error Details" button (e.g. the
+        update dialog), paste that instead.
     validations:
       required: false
 

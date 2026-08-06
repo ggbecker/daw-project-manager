@@ -1958,6 +1958,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get shareDiagnosticLogEmpty => '診断ログはまだありません';
 
   @override
+  String get shareDiagnosticLogFolderOpened =>
+      'この環境では共有を利用できません。代わりにログフォルダーを開いたので、ファイルを手動で添付してください。';
+
+  @override
   String get supportTheProject => 'プロジェクトをサポート';
 
   @override

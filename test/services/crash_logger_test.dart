@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
+import 'package:share_plus/share_plus.dart';
 
 import 'package:daw_project_manager/services/crash_logger.dart';
 
@@ -82,6 +83,32 @@ void main() {
       await CrashLogger.appendToFile(file, ' more\n', maxBytes: 1000);
 
       expect(await file.readAsString(), 'short more\n');
+    });
+  });
+
+  group('CrashLogger.shareSheetUnavailable', () {
+    // shareOrRevealLogFiles itself isn't unit-tested end to end: it calls a
+    // real platform channel (Share.shareXFiles) and, on the fallback path, a
+    // real FileLauncher.openFolder that spawns an OS process — neither
+    // belongs in `flutter test`. What's covered here is the pure decision
+    // extracted from it: which ShareResultStatus values should trigger the
+    // folder-reveal fallback for Linux (share_plus has no file-sharing
+    // implementation there and throws every time — modeled as `null`
+    // status) and unpackaged Windows (returns `.unavailable`).
+    test('treats a null status (the share call threw) as unavailable', () {
+      expect(CrashLogger.shareSheetUnavailable(null), isTrue);
+    });
+
+    test('treats ShareResultStatus.unavailable as unavailable', () {
+      expect(CrashLogger.shareSheetUnavailable(ShareResultStatus.unavailable), isTrue);
+    });
+
+    test('treats ShareResultStatus.success as available', () {
+      expect(CrashLogger.shareSheetUnavailable(ShareResultStatus.success), isFalse);
+    });
+
+    test('treats ShareResultStatus.dismissed as available (share sheet did show)', () {
+      expect(CrashLogger.shareSheetUnavailable(ShareResultStatus.dismissed), isFalse);
     });
   });
 }
