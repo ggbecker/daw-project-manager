@@ -1,0 +1,122 @@
+name: Report an Issue
+description: Report a bug or suggest an improvement
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to open an issue! Please fill out the sections below as completely as you can.
+
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type
+      options:
+        - Bug report
+        - Feature request
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What went wrong, or what would you like to see?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: For bugs — what did you do, step by step?
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. See error
+    validations:
+      required: false
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+    validations:
+      required: false
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+    validations:
+      required: false
+
+  - type: input
+    id: app-version
+    attributes:
+      label: App Version
+      description: Found in Settings → About
+      placeholder: e.g. 2.7.1
+    validations:
+      required: false
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      options:
+        - Windows
+        - macOS
+        - Linux (tarball)
+        - Linux (AppImage)
+        - Linux (Flatpak)
+        - Android
+        - iOS
+        - Not applicable
+    validations:
+      required: false
+
+  - type: dropdown
+    id: daw
+    attributes:
+      label: DAW (if relevant)
+      options:
+        - Not applicable
+        - Ableton Live
+        - Bitwig Studio
+        - Cubase / Nuendo
+        - FL Studio
+        - Logic Pro
+        - Pro Tools
+        - Reaper
+        - Studio One
+        - Other (mention in description)
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Diagnostic Log
+      description: >
+        For bugs: in the app, go to Settings → About → Share Diagnostic Log,
+        then paste the relevant portion here, or attach the file to this issue.
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Screenshots, project files, mockups, or anything else that might help.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and this hasn't been reported yet
+          required: true
