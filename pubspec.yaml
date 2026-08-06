@@ -117,6 +117,7 @@ flutter:
   assets:
     - app_icon.png
     - app_icon.ico
+    - LICENSE
     - resources/daw/logos/
     - resources/tools/ffmpeg.exe
 

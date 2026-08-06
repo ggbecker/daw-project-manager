@@ -2539,6 +2539,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get website => 'ウェブサイト';
 
   @override
+  String get license => 'ライセンス';
+
+  @override
+  String get reportIssue => '問題を報告';
+
+  @override
   String get switchToClassicDark => 'Classic Dark に切り替え';
 
   @override
@@ -3589,7 +3595,11 @@ class AppLocalizationsJa extends AppLocalizations {
   String get workTimerSection => '作業セッションリマインダー';
 
   @override
-  String get workTimerSectionDesc => '購読中のプロジェクトの作業中に通知を受け取る';
+  String get workTimerSectionDesc => '作業セッションがアクティブな間、定期的に通知を受け取る';
+
+  @override
+  String get workTimerRequiresSessionMode =>
+      '作業セッションリマインダーを使用するには、上のセッションモードを有効にしてください';
 
   @override
   String get workTimerEnabled => '作業セッションリマインダーを有効にする';
@@ -3604,6 +3614,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String workTimerNotifBody(String time) {
     return '$time間作業しています';
   }
+
+  @override
+  String get sendTestNotification => 'テスト通知を送信';
+
+  @override
+  String get testNotificationTitle => 'テスト通知';
+
+  @override
+  String get testNotificationBody => 'これはDAW Project Managerからのテスト通知です。';
 
   @override
   String get general => '一般';
@@ -3625,7 +3644,8 @@ class AppLocalizationsJa extends AppLocalizations {
   String get sessionMode => 'セッションモード';
 
   @override
-  String get sessionModeDescription => '起動前にプロジェクトを購読して、作業時間を追跡し、ツールバーから管理します';
+  String get sessionModeDescription =>
+      'プロジェクトでセッションを開始して、作業時間を記録し、ツールバーから管理します';
 
   @override
   String get workSessionsTabLabel => '作業セッション';
@@ -3637,7 +3657,8 @@ class AppLocalizationsJa extends AppLocalizations {
   String get normalModeDescription => '起動時にプロジェクトが直接DAWで開きます。';
 
   @override
-  String get sessionModeCardDescription => 'まず有効にすると、ツールバーから作業時間を記録できます。';
+  String get sessionModeCardDescription =>
+      'セッションを開始すると、プロジェクトでの作業内容と時間を記録できます。';
 
   @override
   String get startSession => 'セッション開始';

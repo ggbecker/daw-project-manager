@@ -1842,6 +1842,14 @@
   "@website": {
     "description": "Button label for the website button in the About dialog"
   },
+  "license": "Licença",
+  "@license": {
+    "description": "Button label for the license button in the About dialog"
+  },
+  "reportIssue": "Relatar um Problema",
+  "@reportIssue": {
+    "description": "Button label for the report-an-issue button in the About dialog, links to the GitHub issue tracker"
+  },
   "switchToClassicDark": "Mudar para Classic Dark",
   "@switchToClassicDark": {
     "description": "Theme switcher label to switch to classic dark theme"
@@ -2475,8 +2483,16 @@
   "@resume": {},
   "workTimerSection": "Lembretes de sessão de trabalho",
   "@workTimerSection": {},
-  "workTimerSectionDesc": "Receba notificações enquanto trabalha em um projeto inscrito",
+  "workTimerSectionDesc": "Receba notificações periodicamente enquanto tiver uma sessão de trabalho ativa",
   "@workTimerSectionDesc": {},
+  "workTimerRequiresSessionMode": "Ative o Modo sessão acima para usar os lembretes de sessão de trabalho",
+  "@workTimerRequiresSessionMode": {},
+  "sendTestNotification": "Enviar notificação de teste",
+  "@sendTestNotification": {},
+  "testNotificationTitle": "Notificação de teste",
+  "@testNotificationTitle": {},
+  "testNotificationBody": "Esta é uma notificação de teste do DAW Project Manager.",
+  "@testNotificationBody": {},
   "workTimerEnabled": "Ativar lembretes de sessão de trabalho",
   "@workTimerEnabled": {},
   "workTimerIntervalLabel": "Notificar a cada",
@@ -2499,11 +2515,11 @@
   "@lastModifiedColorsDescription": {},
   "sessionMode": "Modo sessão",
   "@sessionMode": {},
-  "sessionModeDescription": "Inscreva-se em um projeto antes de lançá-lo para rastrear o tempo de trabalho e gerenciá-lo pela barra de ferramentas",
+  "sessionModeDescription": "Inicie uma sessão em um projeto para rastrear seu tempo de trabalho e gerenciá-lo pela barra de ferramentas",
   "workSessionsTabLabel": "Sessões de Trabalho",
   "normalMode": "Modo Normal",
   "normalModeDescription": "Os projetos abrem diretamente em seu DAW ao serem iniciados.",
-  "sessionModeCardDescription": "Ative primeiro para rastrear o tempo de trabalho pela barra de ferramentas.",
+  "sessionModeCardDescription": "Inicie uma sessão para rastrear sua atividade e tempo no projeto.",
   "@sessionModeDescription": {},
   "startSession": "Iniciar sessão",
   "@startSession": {},

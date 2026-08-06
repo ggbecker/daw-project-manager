@@ -1818,6 +1818,14 @@
   "@website": {
     "description": "Button label for the website button in the About dialog"
   },
+  "license": "Licenza",
+  "@license": {
+    "description": "Button label for the license button in the About dialog"
+  },
+  "reportIssue": "Segnala un problema",
+  "@reportIssue": {
+    "description": "Button label for the report-an-issue button in the About dialog, links to the GitHub issue tracker"
+  },
   "switchToClassicDark": "Passa a Classic Dark",
   "@switchToClassicDark": {
     "description": "Theme switcher label to switch to classic dark theme"
@@ -2451,8 +2459,16 @@
   "@resume": {},
   "workTimerSection": "Promemoria sessione di lavoro",
   "@workTimerSection": {},
-  "workTimerSectionDesc": "Ricevi notifiche mentre lavori su un progetto sottoscritto",
+  "workTimerSectionDesc": "Ricevi notifiche periodiche mentre hai una sessione di lavoro attiva",
   "@workTimerSectionDesc": {},
+  "workTimerRequiresSessionMode": "Abilita la Modalità Sessione sopra per usare i promemoria sessione di lavoro",
+  "@workTimerRequiresSessionMode": {},
+  "sendTestNotification": "Invia notifica di prova",
+  "@sendTestNotification": {},
+  "testNotificationTitle": "Notifica di prova",
+  "@testNotificationTitle": {},
+  "testNotificationBody": "Questa è una notifica di prova da DAW Project Manager.",
+  "@testNotificationBody": {},
   "workTimerEnabled": "Abilita promemoria sessione di lavoro",
   "@workTimerEnabled": {},
   "workTimerIntervalLabel": "Notifica ogni",
@@ -2475,11 +2491,11 @@
   "@lastModifiedColorsDescription": {},
   "sessionMode": "Modalità sessione",
   "@sessionMode": {},
-  "sessionModeDescription": "Iscriviti a un progetto prima di lanciarlo per monitorare il tempo di lavoro e gestirlo dalla barra degli strumenti",
+  "sessionModeDescription": "Avvia una sessione su un progetto per monitorare il tempo di lavoro e gestirlo dalla barra degli strumenti",
   "workSessionsTabLabel": "Sessioni di Lavoro",
   "normalMode": "Modalità Normale",
   "normalModeDescription": "I progetti si aprono direttamente nella loro DAW all'avvio.",
-  "sessionModeCardDescription": "Attivalo prima per tracciare il tempo di lavoro dalla barra degli strumenti.",
+  "sessionModeCardDescription": "Avvia una sessione per monitorare la tua attività e il tempo sul progetto.",
   "@sessionModeDescription": {},
   "startSession": "Avvia sessione",
   "@startSession": {},

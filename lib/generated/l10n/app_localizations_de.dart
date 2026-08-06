@@ -2604,6 +2604,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get website => 'Website';
 
   @override
+  String get license => 'Lizenz';
+
+  @override
+  String get reportIssue => 'Problem melden';
+
+  @override
   String get switchToClassicDark => 'Zu Classic Dark wechseln';
 
   @override
@@ -3690,7 +3696,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get workTimerSectionDesc =>
-      'Benachrichtigt werden, während Sie an einem abonnierten Projekt arbeiten';
+      'Erhalten Sie regelmäßig Benachrichtigungen, während eine Arbeitssitzung aktiv ist';
+
+  @override
+  String get workTimerRequiresSessionMode =>
+      'Aktivieren Sie oben den Sitzungsmodus, um Arbeitssitzungs-Erinnerungen zu nutzen';
 
   @override
   String get workTimerEnabled => 'Arbeitssitzungs-Erinnerungen aktivieren';
@@ -3705,6 +3715,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String workTimerNotifBody(String time) {
     return 'Du arbeitest seit $time';
   }
+
+  @override
+  String get sendTestNotification => 'Testbenachrichtigung senden';
+
+  @override
+  String get testNotificationTitle => 'Testbenachrichtigung';
+
+  @override
+  String get testNotificationBody =>
+      'Dies ist eine Testbenachrichtigung von DAW Project Manager.';
 
   @override
   String get general => 'Allgemein';
@@ -3727,7 +3747,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get sessionModeDescription =>
-      'Projekt abonnieren vor dem Start, um Arbeitszeit zu verfolgen und über die Symbolleiste zu verwalten';
+      'Starten Sie eine Sitzung für ein Projekt, um Ihre Arbeitszeit zu verfolgen und über die Symbolleiste zu verwalten';
 
   @override
   String get workSessionsTabLabel => 'Arbeitssitzungen';
@@ -3741,7 +3761,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get sessionModeCardDescription =>
-      'Zuerst aktivieren, um die Arbeitszeit über die Symbolleiste zu erfassen.';
+      'Starten Sie eine Sitzung, um Ihre Aktivität und Zeit am Projekt zu verfolgen.';
 
   @override
   String get startSession => 'Sitzung starten';

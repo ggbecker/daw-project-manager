@@ -2606,6 +2606,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get website => 'Sitio Web';
 
   @override
+  String get license => 'Licencia';
+
+  @override
+  String get reportIssue => 'Reportar un problema';
+
+  @override
   String get switchToClassicDark => 'Cambiar a Classic Dark';
 
   @override
@@ -3693,7 +3699,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get workTimerSectionDesc =>
-      'Recibe notificaciones mientras trabajas en un proyecto suscrito';
+      'Recibe notificaciones periódicamente mientras tienes una sesión de trabajo activa';
+
+  @override
+  String get workTimerRequiresSessionMode =>
+      'Activa el Modo Sesión arriba para usar los recordatorios de sesión de trabajo';
 
   @override
   String get workTimerEnabled => 'Activar recordatorios de sesión de trabajo';
@@ -3708,6 +3718,16 @@ class AppLocalizationsEs extends AppLocalizations {
   String workTimerNotifBody(String time) {
     return 'Llevas trabajando $time';
   }
+
+  @override
+  String get sendTestNotification => 'Enviar notificación de prueba';
+
+  @override
+  String get testNotificationTitle => 'Notificación de prueba';
+
+  @override
+  String get testNotificationBody =>
+      'Esta es una notificación de prueba de DAW Project Manager.';
 
   @override
   String get general => 'General';
@@ -3730,7 +3750,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get sessionModeDescription =>
-      'Suscríbete a un proyecto antes de lanzarlo para rastrear el tiempo de trabajo y gestionarlo desde la barra de herramientas';
+      'Inicia una sesión en un proyecto para registrar tu tiempo de trabajo y gestionarlo desde la barra de herramientas';
 
   @override
   String get workSessionsTabLabel => 'Sesiones de Trabajo';
@@ -3744,7 +3764,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get sessionModeCardDescription =>
-      'Actívalo primero para registrar el tiempo de trabajo desde la barra de herramientas.';
+      'Inicia una sesión para registrar tu actividad y tiempo en el proyecto.';
 
   @override
   String get startSession => 'Iniciar sesión';

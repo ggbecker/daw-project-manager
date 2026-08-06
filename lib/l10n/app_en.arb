@@ -2879,6 +2879,14 @@
   "@website": {
     "description": "Button label for the website button in the About dialog"
   },
+  "license": "License",
+  "@license": {
+    "description": "Button label for the license button in the About dialog"
+  },
+  "reportIssue": "Report an Issue",
+  "@reportIssue": {
+    "description": "Button label for the report-an-issue button in the About dialog, links to the GitHub issue tracker"
+  },
   "switchToClassicDark": "Switch to Classic Dark",
   "@switchToClassicDark": {
     "description": "Theme switcher label to switch to classic dark theme"
@@ -3606,8 +3614,10 @@
   "@resume": {},
   "workTimerSection": "Work Session Reminders",
   "@workTimerSection": {},
-  "workTimerSectionDesc": "Get notified while working on a subscribed project",
+  "workTimerSectionDesc": "Get notified periodically while you have an active work session",
   "@workTimerSectionDesc": {},
+  "workTimerRequiresSessionMode": "Enable Session Mode above to use work session reminders",
+  "@workTimerRequiresSessionMode": {},
   "workTimerEnabled": "Enable work session reminders",
   "@workTimerEnabled": {},
   "workTimerIntervalLabel": "Notify every",
@@ -3617,6 +3627,18 @@
   "workTimerNotifBody": "You have been working for {time}",
   "@workTimerNotifBody": {
     "placeholders": { "time": { "type": "String" } }
+  },
+  "sendTestNotification": "Send Test Notification",
+  "@sendTestNotification": {
+    "description": "Button that fires a test notification through the OS notification pipeline, to verify delivery works on this build/distribution"
+  },
+  "testNotificationTitle": "Test Notification",
+  "@testNotificationTitle": {
+    "description": "Title of the notification fired by the Send Test Notification button"
+  },
+  "testNotificationBody": "This is a test notification from DAW Project Manager.",
+  "@testNotificationBody": {
+    "description": "Body of the notification fired by the Send Test Notification button"
   },
   "general": "General",
   "@general": {},
@@ -3630,12 +3652,12 @@
   "@lastModifiedColorsDescription": {},
   "sessionMode": "Session mode",
   "@sessionMode": {},
-  "sessionModeDescription": "Subscribe to a project before launching, to track work time and manage it from the toolbar",
+  "sessionModeDescription": "Start a session on a project to track your work time and manage it from the toolbar",
   "@sessionModeDescription": {},
   "workSessionsTabLabel": "Work Sessions",
   "normalMode": "Normal Mode",
   "normalModeDescription": "Projects open directly in their DAW when launched.",
-  "sessionModeCardDescription": "Subscribe first to track work time from the toolbar.",
+  "sessionModeCardDescription": "Start a session to track your activity and time on the project.",
   "startSession": "Start Session",
   "@startSession": {},
   "endSession": "End session",

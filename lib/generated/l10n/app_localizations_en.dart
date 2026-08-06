@@ -2586,6 +2586,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get website => 'Website';
 
   @override
+  String get license => 'License';
+
+  @override
+  String get reportIssue => 'Report an Issue';
+
+  @override
   String get switchToClassicDark => 'Switch to Classic Dark';
 
   @override
@@ -3667,7 +3673,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get workTimerSectionDesc =>
-      'Get notified while working on a subscribed project';
+      'Get notified periodically while you have an active work session';
+
+  @override
+  String get workTimerRequiresSessionMode =>
+      'Enable Session Mode above to use work session reminders';
 
   @override
   String get workTimerEnabled => 'Enable work session reminders';
@@ -3682,6 +3692,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String workTimerNotifBody(String time) {
     return 'You have been working for $time';
   }
+
+  @override
+  String get sendTestNotification => 'Send Test Notification';
+
+  @override
+  String get testNotificationTitle => 'Test Notification';
+
+  @override
+  String get testNotificationBody =>
+      'This is a test notification from DAW Project Manager.';
 
   @override
   String get general => 'General';
@@ -3704,7 +3724,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sessionModeDescription =>
-      'Subscribe to a project before launching, to track work time and manage it from the toolbar';
+      'Start a session on a project to track your work time and manage it from the toolbar';
 
   @override
   String get workSessionsTabLabel => 'Work Sessions';
@@ -3718,7 +3738,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sessionModeCardDescription =>
-      'Subscribe first to track work time from the toolbar.';
+      'Start a session to track your activity and time on the project.';
 
   @override
   String get startSession => 'Start Session';

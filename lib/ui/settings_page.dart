@@ -32,6 +32,7 @@ import 'notification_settings_page.dart' show WorkTimerSection;
 import 'onboarding_wizard_page.dart';
 import 'widgets/desktop_title_bar.dart';
 import 'widgets/language_switcher.dart' show LanguageSwitcher;
+import 'widgets/license_dialog.dart';
 import 'widgets/shortcuts_help_dialog.dart';
 import 'widgets/update_available_dialog.dart';
 
@@ -985,6 +986,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         _SearchEntry(SettingsSection.about, Icons.favorite, l10n.donate, null),
         _SearchEntry(SettingsSection.about, Icons.web, l10n.website, null),
         _SearchEntry(SettingsSection.about, Icons.menu_book_outlined, l10n.menuDocumentation, null),
+        _SearchEntry(SettingsSection.about, Icons.gavel_outlined, l10n.license, null),
+        _SearchEntry(SettingsSection.about, Icons.bug_report_outlined, l10n.reportIssue, null),
         _SearchEntry(SettingsSection.about, Icons.bug_report_outlined, l10n.shareDiagnosticLog, null),
       ];
 
@@ -2046,31 +2049,20 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 const SizedBox(height: 4),
                 Text(l10n.sessionModeDescription, style: Theme.of(context).textTheme.bodySmall),
                 const SizedBox(height: 12),
-                IntrinsicHeight(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(
-                        child: _SessionModeCard(
-                          label: l10n.normalMode,
-                          description: l10n.normalModeDescription,
-                          preview: const _NormalModePreview(),
-                          selected: !sessionMode,
-                          onTap: () => ref.read(sessionModeProvider.notifier).set(false),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _SessionModeCard(
-                          label: l10n.sessionMode,
-                          description: l10n.sessionModeCardDescription,
-                          preview: const _SessionModePreview(),
-                          selected: sessionMode,
-                          onTap: () => ref.read(sessionModeProvider.notifier).set(true),
-                        ),
-                      ),
-                    ],
-                  ),
+                _SessionModeOption(
+                  icon: Icons.open_in_new,
+                  label: l10n.normalMode,
+                  description: l10n.normalModeDescription,
+                  selected: !sessionMode,
+                  onTap: () => ref.read(sessionModeProvider.notifier).set(false),
+                ),
+                const SizedBox(height: 8),
+                _SessionModeOption(
+                  icon: Icons.bookmark_add_outlined,
+                  label: l10n.sessionMode,
+                  description: l10n.sessionModeCardDescription,
+                  selected: sessionMode,
+                  onTap: () => ref.read(sessionModeProvider.notifier).set(true),
                 ),
               ],
             ),
@@ -2359,6 +2351,19 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                       icon: const Icon(Icons.menu_book_outlined, size: 16),
                       label: Text(l10n.menuDocumentation),
                     ),
+                    OutlinedButton.icon(
+                      onPressed: () => showLicenseDialog(context),
+                      icon: const Icon(Icons.gavel_outlined, size: 16),
+                      label: Text(l10n.license),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: () => launchUrl(
+                        Uri.parse('https://github.com/bandpassrecords/daw-project-manager/issues/new'),
+                        mode: LaunchMode.externalApplication,
+                      ),
+                      icon: const Icon(Icons.bug_report_outlined, size: 16),
+                      label: Text(l10n.reportIssue),
+                    ),
                   ],
                 ),
               ],
@@ -2421,7 +2426,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                             )
                           : const Icon(Icons.refresh, size: 16),
                       label: Text(l10n.checkNow),
-                      style: TextButton.styleFrom(padding: EdgeInsets.zero),
                     ),
                   ),
                 ],
@@ -3243,7 +3247,6 @@ class _PreviewRow extends StatelessWidget {
   final bool indent;
   final bool bold;
   final bool last;
-  final Widget? trailing;
 
   const _PreviewRow({
     required this.icon,
@@ -3251,7 +3254,6 @@ class _PreviewRow extends StatelessWidget {
     this.indent = false,
     this.bold = false,
     this.last = false,
-    this.trailing,
   });
 
   @override
@@ -3280,7 +3282,6 @@ class _PreviewRow extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          if (trailing != null) trailing!,
         ],
       ),
     );
@@ -3288,21 +3289,21 @@ class _PreviewRow extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Session mode selector — Normal vs Session mode, same visual language as
-// the scan mode selector above.
+// Session mode selector — Normal vs Session mode, stacked as plain
+// icon + label + description rows (no mockup preview — see history for why).
 // ---------------------------------------------------------------------------
 
-class _SessionModeCard extends StatelessWidget {
+class _SessionModeOption extends StatelessWidget {
+  final IconData icon;
   final String label;
   final String description;
-  final Widget preview;
   final bool selected;
   final VoidCallback onTap;
 
-  const _SessionModeCard({
+  const _SessionModeOption({
+    required this.icon,
     required this.label,
     required this.description,
-    required this.preview,
     required this.selected,
     required this.onTap,
   });
@@ -3315,110 +3316,59 @@ class _SessionModeCard extends StatelessWidget {
         ? colorScheme.primaryContainer.withValues(alpha: 0.25)
         : colorScheme.surfaceContainerHighest.withValues(alpha: 0.4);
 
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: borderColor, width: selected ? 2 : 1),
-        ),
-        padding: const EdgeInsets.all(10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                if (selected)
-                  Icon(Icons.radio_button_checked, size: 14, color: colorScheme.primary)
-                else
-                  Icon(Icons.radio_button_unchecked, size: 14, color: colorScheme.outline),
-                const SizedBox(width: 5),
-                Expanded(
-                  child: Text(
-                    label,
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-                      color: selected ? colorScheme.primary : null,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            preview,
-            const SizedBox(height: 6),
-            Text(
-              description,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-                fontSize: 10,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: borderColor, width: selected ? 2 : 1),
+          ),
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                selected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                size: 18,
+                color: selected ? colorScheme.primary : colorScheme.outline,
               ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// Normal mode preview — opening a project launches its DAW directly.
-class _NormalModePreview extends StatelessWidget {
-  const _NormalModePreview();
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final launchIcon = Icon(Icons.open_in_new, size: 11, color: cs.onSurface.withValues(alpha: 0.5));
-    return _PreviewFrame(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _PreviewRow(icon: Icons.music_note, label: 'Song Alpha', trailing: launchIcon),
-          _PreviewRow(icon: Icons.music_note, label: 'Remix Final', trailing: launchIcon),
-        ],
-      ),
-    );
-  }
-}
-
-// Session mode preview — one project subscribed & tracking time, one not.
-class _SessionModePreview extends StatelessWidget {
-  const _SessionModePreview();
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final trackingColor = Colors.green.shade400;
-    return _PreviewFrame(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _PreviewRow(
-            icon: Icons.music_note,
-            label: 'Song Alpha',
-            bold: true,
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.bookmark, size: 11, color: trackingColor),
-                const SizedBox(width: 3),
-                Text(
-                  '42:10',
-                  style: TextStyle(fontSize: 9, color: trackingColor, fontFamily: 'monospace'),
+              const SizedBox(width: 10),
+              Icon(
+                icon,
+                size: 18,
+                color: selected ? colorScheme.primary : colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: selected ? colorScheme.primary : null,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      description,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          _PreviewRow(
-            icon: Icons.music_note,
-            label: 'Remix Final',
-            trailing: Icon(Icons.bookmark_add_outlined, size: 11, color: cs.onSurface.withValues(alpha: 0.4)),
-          ),
-        ],
+        ),
       ),
     );
   }

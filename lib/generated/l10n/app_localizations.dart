@@ -4337,6 +4337,18 @@ abstract class AppLocalizations {
   /// **'Website'**
   String get website;
 
+  /// Button label for the license button in the About dialog
+  ///
+  /// In en, this message translates to:
+  /// **'License'**
+  String get license;
+
+  /// Button label for the report-an-issue button in the About dialog, links to the GitHub issue tracker
+  ///
+  /// In en, this message translates to:
+  /// **'Report an Issue'**
+  String get reportIssue;
+
   /// Theme switcher label to switch to classic dark theme
   ///
   /// In en, this message translates to:
@@ -6200,8 +6212,14 @@ abstract class AppLocalizations {
   /// No description provided for @workTimerSectionDesc.
   ///
   /// In en, this message translates to:
-  /// **'Get notified while working on a subscribed project'**
+  /// **'Get notified periodically while you have an active work session'**
   String get workTimerSectionDesc;
+
+  /// No description provided for @workTimerRequiresSessionMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Session Mode above to use work session reminders'**
+  String get workTimerRequiresSessionMode;
 
   /// No description provided for @workTimerEnabled.
   ///
@@ -6226,6 +6244,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You have been working for {time}'**
   String workTimerNotifBody(String time);
+
+  /// Button that fires a test notification through the OS notification pipeline, to verify delivery works on this build/distribution
+  ///
+  /// In en, this message translates to:
+  /// **'Send Test Notification'**
+  String get sendTestNotification;
+
+  /// Title of the notification fired by the Send Test Notification button
+  ///
+  /// In en, this message translates to:
+  /// **'Test Notification'**
+  String get testNotificationTitle;
+
+  /// Body of the notification fired by the Send Test Notification button
+  ///
+  /// In en, this message translates to:
+  /// **'This is a test notification from DAW Project Manager.'**
+  String get testNotificationBody;
 
   /// No description provided for @general.
   ///
@@ -6266,7 +6302,7 @@ abstract class AppLocalizations {
   /// No description provided for @sessionModeDescription.
   ///
   /// In en, this message translates to:
-  /// **'Subscribe to a project before launching, to track work time and manage it from the toolbar'**
+  /// **'Start a session on a project to track your work time and manage it from the toolbar'**
   String get sessionModeDescription;
 
   /// No description provided for @workSessionsTabLabel.
@@ -6290,7 +6326,7 @@ abstract class AppLocalizations {
   /// No description provided for @sessionModeCardDescription.
   ///
   /// In en, this message translates to:
-  /// **'Subscribe first to track work time from the toolbar.'**
+  /// **'Start a session to track your activity and time on the project.'**
   String get sessionModeCardDescription;
 
   /// No description provided for @startSession.

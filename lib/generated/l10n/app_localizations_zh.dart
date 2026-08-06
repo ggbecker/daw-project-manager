@@ -2511,6 +2511,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get website => '网站';
 
   @override
+  String get license => '许可证';
+
+  @override
+  String get reportIssue => '报告问题';
+
+  @override
   String get switchToClassicDark => '切换到 Classic Dark';
 
   @override
@@ -3554,7 +3560,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get workTimerSection => '工作会话提醒';
 
   @override
-  String get workTimerSectionDesc => '在订阅项目上工作时获取通知';
+  String get workTimerSectionDesc => '在工作会话处于活动状态时定期获取通知';
+
+  @override
+  String get workTimerRequiresSessionMode => '请先在上方启用会话模式以使用工作会话提醒';
 
   @override
   String get workTimerEnabled => '启用工作会话提醒';
@@ -3569,6 +3578,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String workTimerNotifBody(String time) {
     return '您已工作 $time';
   }
+
+  @override
+  String get sendTestNotification => '发送测试通知';
+
+  @override
+  String get testNotificationTitle => '测试通知';
+
+  @override
+  String get testNotificationBody => '这是来自 DAW Project Manager 的测试通知。';
 
   @override
   String get general => '常规';
@@ -3590,7 +3608,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sessionMode => '会话模式';
 
   @override
-  String get sessionModeDescription => '启动前订阅项目，以跟踪工作时间并从工具栏管理';
+  String get sessionModeDescription => '为项目开始一个会话，以跟踪工作时间并从工具栏进行管理';
 
   @override
   String get workSessionsTabLabel => '工作会话';
@@ -3602,7 +3620,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get normalModeDescription => '启动时项目会直接在其DAW中打开。';
 
   @override
-  String get sessionModeCardDescription => '先启用此模式，即可通过工具栏跟踪工作时间。';
+  String get sessionModeCardDescription => '开始一个会话以跟踪您在项目上的活动和时间。';
 
   @override
   String get startSession => '开始会话';

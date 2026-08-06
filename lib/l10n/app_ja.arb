@@ -1818,6 +1818,14 @@
   "@website": {
     "description": "Button label for the website button in the About dialog"
   },
+  "license": "ライセンス",
+  "@license": {
+    "description": "Button label for the license button in the About dialog"
+  },
+  "reportIssue": "問題を報告",
+  "@reportIssue": {
+    "description": "Button label for the report-an-issue button in the About dialog, links to the GitHub issue tracker"
+  },
   "switchToClassicDark": "Classic Dark に切り替え",
   "@switchToClassicDark": {
     "description": "Theme switcher label to switch to classic dark theme"
@@ -2451,8 +2459,16 @@
   "@resume": {},
   "workTimerSection": "作業セッションリマインダー",
   "@workTimerSection": {},
-  "workTimerSectionDesc": "購読中のプロジェクトの作業中に通知を受け取る",
+  "workTimerSectionDesc": "作業セッションがアクティブな間、定期的に通知を受け取る",
   "@workTimerSectionDesc": {},
+  "workTimerRequiresSessionMode": "作業セッションリマインダーを使用するには、上のセッションモードを有効にしてください",
+  "@workTimerRequiresSessionMode": {},
+  "sendTestNotification": "テスト通知を送信",
+  "@sendTestNotification": {},
+  "testNotificationTitle": "テスト通知",
+  "@testNotificationTitle": {},
+  "testNotificationBody": "これはDAW Project Managerからのテスト通知です。",
+  "@testNotificationBody": {},
   "workTimerEnabled": "作業セッションリマインダーを有効にする",
   "@workTimerEnabled": {},
   "workTimerIntervalLabel": "次の間隔で通知",
@@ -2475,11 +2491,11 @@
   "@lastModifiedColorsDescription": {},
   "sessionMode": "セッションモード",
   "@sessionMode": {},
-  "sessionModeDescription": "起動前にプロジェクトを購読して、作業時間を追跡し、ツールバーから管理します",
+  "sessionModeDescription": "プロジェクトでセッションを開始して、作業時間を記録し、ツールバーから管理します",
   "workSessionsTabLabel": "作業セッション",
   "normalMode": "通常モード",
   "normalModeDescription": "起動時にプロジェクトが直接DAWで開きます。",
-  "sessionModeCardDescription": "まず有効にすると、ツールバーから作業時間を記録できます。",
+  "sessionModeCardDescription": "セッションを開始すると、プロジェクトでの作業内容と時間を記録できます。",
   "@sessionModeDescription": {},
   "startSession": "セッション開始",
   "@startSession": {},

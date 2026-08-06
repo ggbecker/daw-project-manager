@@ -1818,6 +1818,14 @@
   "@website": {
     "description": "Button label for the website button in the About dialog"
   },
+  "license": "Лицензия",
+  "@license": {
+    "description": "Button label for the license button in the About dialog"
+  },
+  "reportIssue": "Сообщить о проблеме",
+  "@reportIssue": {
+    "description": "Button label for the report-an-issue button in the About dialog, links to the GitHub issue tracker"
+  },
   "switchToClassicDark": "Переключить на Classic Dark",
   "@switchToClassicDark": {
     "description": "Theme switcher label to switch to classic dark theme"
@@ -2451,8 +2459,16 @@
   "@resume": {},
   "workTimerSection": "Напоминания о рабочей сессии",
   "@workTimerSection": {},
-  "workTimerSectionDesc": "Получайте уведомления во время работы над подписанным проектом",
+  "workTimerSectionDesc": "Получайте периодические уведомления, пока рабочая сессия активна",
   "@workTimerSectionDesc": {},
+  "workTimerRequiresSessionMode": "Включите режим сессии выше, чтобы использовать напоминания о рабочей сессии",
+  "@workTimerRequiresSessionMode": {},
+  "sendTestNotification": "Отправить тестовое уведомление",
+  "@sendTestNotification": {},
+  "testNotificationTitle": "Тестовое уведомление",
+  "@testNotificationTitle": {},
+  "testNotificationBody": "Это тестовое уведомление от DAW Project Manager.",
+  "@testNotificationBody": {},
   "workTimerEnabled": "Включить напоминания о рабочей сессии",
   "@workTimerEnabled": {},
   "workTimerIntervalLabel": "Уведомлять каждые",
@@ -2475,11 +2491,11 @@
   "@lastModifiedColorsDescription": {},
   "sessionMode": "Режим сессии",
   "@sessionMode": {},
-  "sessionModeDescription": "Подпишитесь на проект перед запуском, чтобы отслеживать рабочее время и управлять им с панели инструментов",
+  "sessionModeDescription": "Начните сессию для проекта, чтобы отслеживать рабочее время и управлять им с панели инструментов",
   "workSessionsTabLabel": "Рабочие сессии",
   "normalMode": "Обычный режим",
   "normalModeDescription": "Проекты открываются напрямую в своей DAW при запуске.",
-  "sessionModeCardDescription": "Сначала включите, чтобы отслеживать рабочее время через панель инструментов.",
+  "sessionModeCardDescription": "Начните сессию, чтобы отслеживать вашу активность и время работы над проектом.",
   "@sessionModeDescription": {},
   "startSession": "Начать сессию",
   "@startSession": {},

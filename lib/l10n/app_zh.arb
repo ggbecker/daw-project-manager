@@ -1818,6 +1818,14 @@
   "@website": {
     "description": "Button label for the website button in the About dialog"
   },
+  "license": "许可证",
+  "@license": {
+    "description": "Button label for the license button in the About dialog"
+  },
+  "reportIssue": "报告问题",
+  "@reportIssue": {
+    "description": "Button label for the report-an-issue button in the About dialog, links to the GitHub issue tracker"
+  },
   "switchToClassicDark": "切换到 Classic Dark",
   "@switchToClassicDark": {
     "description": "Theme switcher label to switch to classic dark theme"
@@ -2451,8 +2459,16 @@
   "@resume": {},
   "workTimerSection": "工作会话提醒",
   "@workTimerSection": {},
-  "workTimerSectionDesc": "在订阅项目上工作时获取通知",
+  "workTimerSectionDesc": "在工作会话处于活动状态时定期获取通知",
   "@workTimerSectionDesc": {},
+  "workTimerRequiresSessionMode": "请先在上方启用会话模式以使用工作会话提醒",
+  "@workTimerRequiresSessionMode": {},
+  "sendTestNotification": "发送测试通知",
+  "@sendTestNotification": {},
+  "testNotificationTitle": "测试通知",
+  "@testNotificationTitle": {},
+  "testNotificationBody": "这是来自 DAW Project Manager 的测试通知。",
+  "@testNotificationBody": {},
   "workTimerEnabled": "启用工作会话提醒",
   "@workTimerEnabled": {},
   "workTimerIntervalLabel": "每隔通知",
@@ -2475,11 +2491,11 @@
   "@lastModifiedColorsDescription": {},
   "sessionMode": "会话模式",
   "@sessionMode": {},
-  "sessionModeDescription": "启动前订阅项目，以跟踪工作时间并从工具栏管理",
+  "sessionModeDescription": "为项目开始一个会话，以跟踪工作时间并从工具栏进行管理",
   "workSessionsTabLabel": "工作会话",
   "normalMode": "普通模式",
   "normalModeDescription": "启动时项目会直接在其DAW中打开。",
-  "sessionModeCardDescription": "先启用此模式，即可通过工具栏跟踪工作时间。",
+  "sessionModeCardDescription": "开始一个会话以跟踪您在项目上的活动和时间。",
   "@sessionModeDescription": {},
   "startSession": "开始会话",
   "@startSession": {},

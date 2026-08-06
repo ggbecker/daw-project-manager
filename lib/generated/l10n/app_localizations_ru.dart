@@ -2592,6 +2592,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get website => 'Сайт';
 
   @override
+  String get license => 'Лицензия';
+
+  @override
+  String get reportIssue => 'Сообщить о проблеме';
+
+  @override
   String get switchToClassicDark => 'Переключить на Classic Dark';
 
   @override
@@ -3679,7 +3685,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get workTimerSectionDesc =>
-      'Получайте уведомления во время работы над подписанным проектом';
+      'Получайте периодические уведомления, пока рабочая сессия активна';
+
+  @override
+  String get workTimerRequiresSessionMode =>
+      'Включите режим сессии выше, чтобы использовать напоминания о рабочей сессии';
 
   @override
   String get workTimerEnabled => 'Включить напоминания о рабочей сессии';
@@ -3694,6 +3704,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String workTimerNotifBody(String time) {
     return 'Вы работаете уже $time';
   }
+
+  @override
+  String get sendTestNotification => 'Отправить тестовое уведомление';
+
+  @override
+  String get testNotificationTitle => 'Тестовое уведомление';
+
+  @override
+  String get testNotificationBody =>
+      'Это тестовое уведомление от DAW Project Manager.';
 
   @override
   String get general => 'Общие';
@@ -3716,7 +3736,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get sessionModeDescription =>
-      'Подпишитесь на проект перед запуском, чтобы отслеживать рабочее время и управлять им с панели инструментов';
+      'Начните сессию для проекта, чтобы отслеживать рабочее время и управлять им с панели инструментов';
 
   @override
   String get workSessionsTabLabel => 'Рабочие сессии';
@@ -3730,7 +3750,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get sessionModeCardDescription =>
-      'Сначала включите, чтобы отслеживать рабочее время через панель инструментов.';
+      'Начните сессию, чтобы отслеживать вашу активность и время работы над проектом.';
 
   @override
   String get startSession => 'Начать сессию';
