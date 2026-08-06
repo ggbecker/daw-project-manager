@@ -1995,6 +1995,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shareDiagnosticLogEmpty => 'No diagnostic log yet';
 
   @override
+  String get shareDiagnosticLogFolderOpened =>
+      'Sharing isn\'t available here — opened the log folder instead so you can attach the file manually.';
+
+  @override
+  String get enableDiagnosticLogging => 'Enable Diagnostic Logging';
+
+  @override
+  String get enableDiagnosticLoggingDescription =>
+      'Keeps a small log of crashes and errors on this device, so you can share it if something goes wrong. Off by default.';
+
+  @override
+  String get clearDiagnosticLog => 'Clear Diagnostic Log';
+
+  @override
+  String get clearDiagnosticLogConfirmTitle => 'Clear Diagnostic Log?';
+
+  @override
+  String get clearDiagnosticLogConfirmMessage =>
+      'This will permanently delete the diagnostic log file. This can\'t be undone.';
+
+  @override
+  String get diagnosticLogCleared => 'Diagnostic log cleared';
+
+  @override
   String get supportTheProject => 'Support the project';
 
   @override
@@ -3585,6 +3609,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appImageUpdateRetry => 'Retry';
 
   @override
+  String get appImageUpdateErrorMessage =>
+      'Something went wrong while updating. You can try again, or check the error details below.';
+
+  @override
+  String get appImageUpdateErrorDetailsLabel => 'Error Details';
+
+  @override
+  String get appImageUpdateCopyErrorDetails => 'Copy Error Details';
+
+  @override
+  String get appImageUpdateErrorDetailsCopied => 'Error details copied';
+
+  @override
   String get resetOnboarding => 'Reset onboarding';
 
   @override
@@ -3775,6 +3812,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get scanModeSectionDescription =>
       'Controls how projects in each folder are displayed in the table — as a plain flat list or grouped by subfolder.';
+
+  @override
+  String get smartFolderOptionsSectionTitle => 'Smart Folder Options';
+
+  @override
+  String get smartFolderOptionsSectionDescription =>
+      'Fine-tune how smart-folder groups behave in the Projects table.';
 
   @override
   String get excludeSmartFoldersFromSort => 'Keep smart folders out of sorting';

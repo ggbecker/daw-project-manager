@@ -2013,6 +2013,32 @@ class AppLocalizationsFr extends AppLocalizations {
       'Aucun journal de diagnostic pour l\'instant';
 
   @override
+  String get shareDiagnosticLogFolderOpened =>
+      'Le partage n\'est pas disponible ici. Le dossier des journaux a été ouvert pour que vous puissiez joindre le fichier manuellement.';
+
+  @override
+  String get enableDiagnosticLogging =>
+      'Activer la journalisation de diagnostic';
+
+  @override
+  String get enableDiagnosticLoggingDescription =>
+      'Conserve un petit journal des plantages et des erreurs sur cet appareil, afin que vous puissiez le partager en cas de problème. Désactivé par défaut.';
+
+  @override
+  String get clearDiagnosticLog => 'Effacer le journal de diagnostic';
+
+  @override
+  String get clearDiagnosticLogConfirmTitle =>
+      'Effacer le journal de diagnostic ?';
+
+  @override
+  String get clearDiagnosticLogConfirmMessage =>
+      'Cela supprimera définitivement le fichier journal de diagnostic. Cette action est irréversible.';
+
+  @override
+  String get diagnosticLogCleared => 'Journal de diagnostic effacé';
+
+  @override
   String get supportTheProject => 'Soutenez le projet';
 
   @override
@@ -3621,6 +3647,20 @@ class AppLocalizationsFr extends AppLocalizations {
   String get appImageUpdateRetry => 'Réessayer';
 
   @override
+  String get appImageUpdateErrorMessage =>
+      'Une erreur s\'est produite pendant la mise à jour. Vous pouvez réessayer ou consulter les détails de l\'erreur ci-dessous.';
+
+  @override
+  String get appImageUpdateErrorDetailsLabel => 'Détails de l\'erreur';
+
+  @override
+  String get appImageUpdateCopyErrorDetails =>
+      'Copier les détails de l\'erreur';
+
+  @override
+  String get appImageUpdateErrorDetailsCopied => 'Détails de l\'erreur copiés';
+
+  @override
   String get resetOnboarding => 'Réinitialiser l\'intégration';
 
   @override
@@ -3814,6 +3854,14 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get scanModeSectionDescription =>
       'Contrôle comment les projets de chaque dossier sont affichés dans le tableau — sous forme de liste simple ou regroupés par sous-dossier.';
+
+  @override
+  String get smartFolderOptionsSectionTitle =>
+      'Options des dossiers intelligents';
+
+  @override
+  String get smartFolderOptionsSectionDescription =>
+      'Ajustez le comportement des groupes de dossiers intelligents dans le tableau des projets.';
 
   @override
   String get excludeSmartFoldersFromSort =>

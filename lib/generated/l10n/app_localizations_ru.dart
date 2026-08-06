@@ -2000,6 +2000,30 @@ class AppLocalizationsRu extends AppLocalizations {
   String get shareDiagnosticLogEmpty => 'Журнал диагностики пока отсутствует';
 
   @override
+  String get shareDiagnosticLogFolderOpened =>
+      'Общий доступ здесь недоступен — вместо этого открыта папка с журналом, чтобы вы могли прикрепить файл вручную.';
+
+  @override
+  String get enableDiagnosticLogging => 'Включить журнал диагностики';
+
+  @override
+  String get enableDiagnosticLoggingDescription =>
+      'Ведёт небольшой журнал сбоев и ошибок на этом устройстве, которым вы можете поделиться, если что-то пойдёт не так. По умолчанию отключено.';
+
+  @override
+  String get clearDiagnosticLog => 'Очистить журнал диагностики';
+
+  @override
+  String get clearDiagnosticLogConfirmTitle => 'Очистить журнал диагностики?';
+
+  @override
+  String get clearDiagnosticLogConfirmMessage =>
+      'Файл журнала диагностики будет удалён без возможности восстановления.';
+
+  @override
+  String get diagnosticLogCleared => 'Журнал диагностики очищен';
+
+  @override
   String get supportTheProject => 'Поддержать проект';
 
   @override
@@ -3595,6 +3619,20 @@ class AppLocalizationsRu extends AppLocalizations {
   String get appImageUpdateRetry => 'Повторить';
 
   @override
+  String get appImageUpdateErrorMessage =>
+      'Во время обновления произошла ошибка. Вы можете повторить попытку или просмотреть подробности ошибки ниже.';
+
+  @override
+  String get appImageUpdateErrorDetailsLabel => 'Подробности ошибки';
+
+  @override
+  String get appImageUpdateCopyErrorDetails => 'Скопировать подробности ошибки';
+
+  @override
+  String get appImageUpdateErrorDetailsCopied =>
+      'Подробности ошибки скопированы';
+
+  @override
   String get resetOnboarding => 'Сбросить обучение';
 
   @override
@@ -3786,6 +3824,13 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get scanModeSectionDescription =>
       'Управляет отображением проектов в каждой папке в таблице — в виде обычного плоского списка или сгруппированных по подпапке.';
+
+  @override
+  String get smartFolderOptionsSectionTitle => 'Параметры умных папок';
+
+  @override
+  String get smartFolderOptionsSectionDescription =>
+      'Настройте поведение групп умных папок в таблице проектов.';
 
   @override
   String get excludeSmartFoldersFromSort =>

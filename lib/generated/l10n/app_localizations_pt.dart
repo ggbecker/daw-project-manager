@@ -1995,6 +1995,31 @@ class AppLocalizationsPt extends AppLocalizations {
   String get shareDiagnosticLogEmpty => 'Ainda não há log de diagnóstico';
 
   @override
+  String get shareDiagnosticLogFolderOpened =>
+      'O compartilhamento não está disponível aqui. A pasta de logs foi aberta para que você possa anexar o arquivo manualmente.';
+
+  @override
+  String get enableDiagnosticLogging => 'Ativar Registro de Diagnóstico';
+
+  @override
+  String get enableDiagnosticLoggingDescription =>
+      'Mantém um pequeno registro de falhas e erros neste dispositivo, para que você possa compartilhá-lo se algo der errado. Desativado por padrão.';
+
+  @override
+  String get clearDiagnosticLog => 'Limpar Registro de Diagnóstico';
+
+  @override
+  String get clearDiagnosticLogConfirmTitle =>
+      'Limpar registro de diagnóstico?';
+
+  @override
+  String get clearDiagnosticLogConfirmMessage =>
+      'Isso excluirá permanentemente o arquivo de registro de diagnóstico. Essa ação não pode ser desfeita.';
+
+  @override
+  String get diagnosticLogCleared => 'Registro de diagnóstico limpo';
+
+  @override
   String get supportTheProject => 'Apoie o projeto';
 
   @override
@@ -3594,6 +3619,19 @@ class AppLocalizationsPt extends AppLocalizations {
   String get appImageUpdateRetry => 'Tentar novamente';
 
   @override
+  String get appImageUpdateErrorMessage =>
+      'Ocorreu um erro durante a atualização. Você pode tentar novamente ou verificar os detalhes do erro abaixo.';
+
+  @override
+  String get appImageUpdateErrorDetailsLabel => 'Detalhes do Erro';
+
+  @override
+  String get appImageUpdateCopyErrorDetails => 'Copiar Detalhes do Erro';
+
+  @override
+  String get appImageUpdateErrorDetailsCopied => 'Detalhes do erro copiados';
+
+  @override
   String get resetOnboarding => 'Redefinir integração inicial';
 
   @override
@@ -3785,6 +3823,13 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get scanModeSectionDescription =>
       'Controla como os projetos em cada pasta são exibidos na tabela — como uma lista simples ou agrupados por subpasta.';
+
+  @override
+  String get smartFolderOptionsSectionTitle => 'Opções de Pastas Inteligentes';
+
+  @override
+  String get smartFolderOptionsSectionDescription =>
+      'Ajuste como os grupos de pastas inteligentes se comportam na tabela de projetos.';
 
   @override
   String get excludeSmartFoldersFromSort =>

@@ -1,8 +1,38 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
+
+/// Thrown by [AppImageUpdateService.applyUpdate] when [UpdateCancelToken.cancel]
+/// was called mid-update. Callers should treat this as "the user backed out",
+/// not as a failure — the partially downloaded file has already been cleaned
+/// up by the time this is thrown.
+class UpdateCancelledException implements Exception {
+  const UpdateCancelledException();
+
+  @override
+  String toString() => 'Update cancelled.';
+}
+
+/// Lets a caller ask an in-progress [AppImageUpdateService.applyUpdate] to
+/// stop. One token is good for one update attempt — create a fresh one per
+/// [AppImageUpdateService.applyUpdate] call.
+class UpdateCancelToken {
+  final Completer<void> _completer = Completer<void>();
+
+  bool get isCancelled => _completer.isCompleted;
+
+  /// Future that completes the moment [cancel] is called. `applyUpdate`
+  /// races this against the network stream so a cancel takes effect
+  /// immediately instead of waiting for the current chunk/step to finish.
+  Future<void> get whenCancelled => _completer.future;
+
+  void cancel() {
+    if (!_completer.isCompleted) _completer.complete();
+  }
+}
 
 /// GitHub repo to fetch release assets from. Kept as its own private consts
 /// (rather than importing UpdateCheckService's) to match this codebase's
@@ -41,7 +71,15 @@ class AppImageReleaseAssets {
 class AppImageUpdateService {
   final http.Client _client;
 
-  AppImageUpdateService({http.Client? client}) : _client = client ?? http.Client();
+  /// Overrides [currentAppImagePath] for this instance only — the `APPIMAGE`
+  /// env var can't be set from within a test process, so this is the seam
+  /// tests use to point [applyUpdate] at a throwaway file instead. Always
+  /// null in production, where the env var is the only source of truth.
+  final String? _currentAppImagePathOverride;
+
+  AppImageUpdateService({http.Client? client, String? currentAppImagePathOverride})
+      : _client = client ?? http.Client(),
+        _currentAppImagePathOverride = currentAppImagePathOverride;
 
   /// Absolute path of the currently running AppImage file, from the
   /// `APPIMAGE` env var that appimagetool-built AppImages set at launch.
@@ -103,26 +141,44 @@ class AppImageUpdateService {
     return match?.group(1)?.toLowerCase();
   }
 
+  /// Decides whether a progress update should actually be delivered to
+  /// [onProgress], given how much progress has been made and how long it's
+  /// been since the last delivered update. [applyUpdate] calls this once
+  /// per network chunk — there can be thousands of those for a ~100MB
+  /// AppImage — and callers like [AppImageSelfUpdateDialog] rebuild UI on
+  /// every delivered update, so delivering on every single chunk would
+  /// stall the stream's read loop behind UI work on the same isolate.
+  /// [lastReported] is null before the first update has been delivered.
+  static bool shouldReportProgress({
+    required double? lastReported,
+    required double current,
+    required Duration sinceLastReport,
+  }) {
+    if (lastReported == null || current >= 1.0) return true;
+    return current - lastReported >= 0.01 || sinceLastReport >= const Duration(milliseconds: 100);
+  }
+
   /// Downloads, verifies, and installs [assets] over the currently running
   /// AppImage. Reports progress in `[0, 1]` via [onProgress] (null total
-  /// size reports null, meaning "indeterminate"). Throws on any failure —
-  /// the original AppImage is left untouched until the new one is verified.
+  /// size reports null, meaning "indeterminate"), throttled via
+  /// [shouldReportProgress] so large downloads don't fire a UI update per
+  /// network chunk.
+  ///
+  /// If [cancelToken] is cancelled at any point, the in-flight download is
+  /// interrupted and this throws [UpdateCancelledException]. On *any*
+  /// failure — cancellation, a network error, a checksum mismatch, whatever
+  /// — the partially-downloaded `.update` file is deleted before the error
+  /// propagates, so a failed or cancelled attempt never leaves stray files
+  /// next to the running AppImage. The original AppImage itself is only
+  /// ever touched by the final rename, once the download is verified.
   Future<void> applyUpdate(
     AppImageReleaseAssets assets, {
     void Function(double? progress)? onProgress,
+    UpdateCancelToken? cancelToken,
   }) async {
-    final currentPath = currentAppImagePath;
+    final currentPath = _currentAppImagePathOverride ?? currentAppImagePath;
     if (currentPath == null) {
       throw StateError('Not running as an AppImage.');
-    }
-
-    final checksumResponse = await _client.get(assets.checksumUrl).timeout(const Duration(seconds: 15));
-    if (checksumResponse.statusCode != 200) {
-      throw StateError('Failed to download checksum (HTTP ${checksumResponse.statusCode}).');
-    }
-    final expectedHash = parseSha256(checksumResponse.body);
-    if (expectedHash == null) {
-      throw StateError('Could not parse checksum file.');
     }
 
     // Downloaded into the same directory as the running AppImage (not a
@@ -131,10 +187,59 @@ class AppImageUpdateService {
     // fail outright instead of atomically swapping the file.
     final downloadPath = '$currentPath.update';
     final downloadFile = File(downloadPath);
-    final sink = downloadFile.openWrite();
 
     try {
-      final request = http.Request('GET', assets.appImageUrl);
+      if (cancelToken?.isCancelled ?? false) throw const UpdateCancelledException();
+
+      final checksumResponse = await _client.get(assets.checksumUrl).timeout(const Duration(seconds: 15));
+      if (checksumResponse.statusCode != 200) {
+        throw StateError('Failed to download checksum (HTTP ${checksumResponse.statusCode}).');
+      }
+      final expectedHash = parseSha256(checksumResponse.body);
+      if (expectedHash == null) {
+        throw StateError('Could not parse checksum file.');
+      }
+
+      await _downloadToFile(
+        assets.appImageUrl,
+        downloadFile,
+        onProgress: onProgress,
+        cancelToken: cancelToken,
+      );
+      if (cancelToken?.isCancelled ?? false) throw const UpdateCancelledException();
+
+      final actualHash = sha256.convert(await downloadFile.readAsBytes()).toString();
+      if (actualHash != expectedHash) {
+        throw StateError('Checksum mismatch: downloaded update did not match published sha256.');
+      }
+
+      if (Platform.isLinux) {
+        final chmod = await Process.run('chmod', ['+x', downloadPath]);
+        if (chmod.exitCode != 0) {
+          throw StateError('Failed to make the downloaded update executable: ${chmod.stderr}');
+        }
+      }
+
+      await downloadFile.rename(currentPath);
+    } catch (_) {
+      if (await downloadFile.exists()) await downloadFile.delete();
+      rethrow;
+    }
+  }
+
+  /// Streams [url] into [destination], throttling [onProgress] via
+  /// [shouldReportProgress]. Uses `stream.listen` rather than `await for` so
+  /// [cancelToken] can interrupt the subscription immediately instead of
+  /// waiting for the next chunk to arrive.
+  Future<void> _downloadToFile(
+    Uri url,
+    File destination, {
+    void Function(double? progress)? onProgress,
+    UpdateCancelToken? cancelToken,
+  }) async {
+    final sink = destination.openWrite();
+    try {
+      final request = http.Request('GET', url);
       final streamedResponse = await _client.send(request).timeout(const Duration(seconds: 30));
       if (streamedResponse.statusCode != 200) {
         throw StateError('Failed to download update (HTTP ${streamedResponse.statusCode}).');
@@ -142,30 +247,46 @@ class AppImageUpdateService {
       final total = streamedResponse.contentLength;
       var received = 0;
       onProgress?.call(total == null ? null : 0);
-      await for (final chunk in streamedResponse.stream) {
-        sink.add(chunk);
-        received += chunk.length;
-        if (total != null && total > 0) onProgress?.call(received / total);
-      }
+      double? lastReported = total == null ? null : 0;
+      final stopwatch = Stopwatch()..start();
+
+      final completer = Completer<void>();
+      late final StreamSubscription<List<int>> subscription;
+      subscription = streamedResponse.stream.listen(
+        (chunk) {
+          sink.add(chunk);
+          received += chunk.length;
+          if (total != null && total > 0) {
+            final progress = received / total;
+            if (shouldReportProgress(
+              lastReported: lastReported,
+              current: progress,
+              sinceLastReport: stopwatch.elapsed,
+            )) {
+              onProgress?.call(progress);
+              lastReported = progress;
+              stopwatch.reset();
+            }
+          }
+        },
+        onDone: () {
+          if (!completer.isCompleted) completer.complete();
+        },
+        onError: (Object error, StackTrace stackTrace) {
+          if (!completer.isCompleted) completer.completeError(error, stackTrace);
+        },
+        cancelOnError: true,
+      );
+
+      unawaited(cancelToken?.whenCancelled.then((_) {
+        subscription.cancel();
+        if (!completer.isCompleted) completer.completeError(const UpdateCancelledException());
+      }));
+
+      await completer.future;
     } finally {
       await sink.close();
     }
-
-    final actualHash = sha256.convert(await downloadFile.readAsBytes()).toString();
-    if (actualHash != expectedHash) {
-      await downloadFile.delete();
-      throw StateError('Checksum mismatch: downloaded update did not match published sha256.');
-    }
-
-    if (Platform.isLinux) {
-      final chmod = await Process.run('chmod', ['+x', downloadPath]);
-      if (chmod.exitCode != 0) {
-        await downloadFile.delete();
-        throw StateError('Failed to make the downloaded update executable: ${chmod.stderr}');
-      }
-    }
-
-    await downloadFile.rename(currentPath);
   }
 
   /// Launches the (now-updated) AppImage as a new detached process. Callers

@@ -12,7 +12,6 @@ import '../utils/mobile_utils.dart';
 import '../generated/l10n/app_localizations.dart';
 import 'profile_edit_page.dart';
 import '../services/crash_logger.dart';
-import 'package:share_plus/share_plus.dart';
 import 'widgets/theme_switcher.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'widgets/language_switcher.dart';
@@ -237,9 +236,44 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
       }
       return;
     }
-    await Share.shareXFiles(files.map((f) => XFile(f.path)).toList());
+    final shared = await CrashLogger.shareOrRevealLogFiles(files);
+    if (!shared && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.shareDiagnosticLogFolderOpened)),
+      );
+    }
   }
 
+  Future<void> _clearDiagnosticLog() async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Theme.of(context).cardColor,
+        title: Text(l10n.clearDiagnosticLogConfirmTitle),
+        content: Text(l10n.clearDiagnosticLogConfirmMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: Text(l10n.delete),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+
+    await CrashLogger.clearLogs();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.diagnosticLogCleared)),
+      );
+    }
+  }
 
   /// Creates (or refreshes) a dedicated demo profile with a large, varied
   /// catalog of fake projects/releases/playlists for promotional
@@ -551,8 +585,8 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
                               ],
                             ),
                             const SizedBox(height: 16),
-                            // Share diagnostic log — helps debug crashes that
-                            // only happen after the app has been backgrounded
+                            // Diagnostic log — helps debug crashes that only
+                            // happen after the app has been backgrounded
                             Row(
                               children: [
                                 const Icon(Icons.bug_report_outlined, size: 24),
@@ -563,10 +597,35 @@ class _ProfileManagerPageState extends ConsumerState<ProfileManagerPage> {
                                     style: const TextStyle(fontSize: 16),
                                   ),
                                 ),
-                                TextButton.icon(
-                                  icon: const Icon(Icons.ios_share, size: 18),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            SwitchListTile(
+                              value: ref.watch(diagnosticLoggingEnabledProvider),
+                              onChanged: (v) =>
+                                  ref.read(diagnosticLoggingEnabledProvider.notifier).toggle(),
+                              title: Text(AppLocalizations.of(context)!.enableDiagnosticLogging),
+                              subtitle: Text(
+                                AppLocalizations.of(context)!.enableDiagnosticLoggingDescription,
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                              contentPadding: EdgeInsets.zero,
+                              dense: true,
+                            ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                OutlinedButton.icon(
+                                  icon: const Icon(Icons.ios_share, size: 16),
                                   label: Text(AppLocalizations.of(context)!.shareDiagnosticLog),
                                   onPressed: _shareDiagnosticLog,
+                                ),
+                                OutlinedButton.icon(
+                                  icon: const Icon(Icons.delete_outline, size: 16),
+                                  label: Text(AppLocalizations.of(context)!.clearDiagnosticLog),
+                                  onPressed: _clearDiagnosticLog,
                                 ),
                               ],
                             ),

@@ -1936,6 +1936,29 @@ class AppLocalizationsZh extends AppLocalizations {
   String get shareDiagnosticLogEmpty => '暂无诊断日志';
 
   @override
+  String get shareDiagnosticLogFolderOpened =>
+      '此环境不支持分享——已改为打开日志文件夹，您可以手动附加该文件。';
+
+  @override
+  String get enableDiagnosticLogging => '启用诊断日志';
+
+  @override
+  String get enableDiagnosticLoggingDescription =>
+      '在此设备上保留崩溃和错误的简要日志，以便在出现问题时分享。默认关闭。';
+
+  @override
+  String get clearDiagnosticLog => '清除诊断日志';
+
+  @override
+  String get clearDiagnosticLogConfirmTitle => '清除诊断日志？';
+
+  @override
+  String get clearDiagnosticLogConfirmMessage => '这将永久删除诊断日志文件，且无法撤销。';
+
+  @override
+  String get diagnosticLogCleared => '诊断日志已清除';
+
+  @override
   String get supportTheProject => '支持项目';
 
   @override
@@ -3479,6 +3502,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appImageUpdateRetry => '重试';
 
   @override
+  String get appImageUpdateErrorMessage => '更新时出错。您可以重试，或查看下方的错误详情。';
+
+  @override
+  String get appImageUpdateErrorDetailsLabel => '错误详情';
+
+  @override
+  String get appImageUpdateCopyErrorDetails => '复制错误详情';
+
+  @override
+  String get appImageUpdateErrorDetailsCopied => '错误详情已复制';
+
+  @override
   String get resetOnboarding => '重置引导设置';
 
   @override
@@ -3656,6 +3691,12 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get scanModeSectionDescription =>
       '控制每个文件夹中的项目在表格中的显示方式——作为简单的平铺列表或按子文件夹分组。';
+
+  @override
+  String get smartFolderOptionsSectionTitle => '智能文件夹选项';
+
+  @override
+  String get smartFolderOptionsSectionDescription => '微调智能文件夹分组在项目表格中的行为。';
 
   @override
   String get excludeSmartFoldersFromSort => '排序时排除智能文件夹';

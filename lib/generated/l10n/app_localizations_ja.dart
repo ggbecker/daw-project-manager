@@ -1958,6 +1958,30 @@ class AppLocalizationsJa extends AppLocalizations {
   String get shareDiagnosticLogEmpty => '診断ログはまだありません';
 
   @override
+  String get shareDiagnosticLogFolderOpened =>
+      'この環境では共有を利用できません。代わりにログフォルダーを開いたので、ファイルを手動で添付してください。';
+
+  @override
+  String get enableDiagnosticLogging => '診断ログを有効にする';
+
+  @override
+  String get enableDiagnosticLoggingDescription =>
+      'このデバイス上にクラッシュやエラーの小さなログを保持し、問題が発生した場合に共有できるようにします。デフォルトではオフです。';
+
+  @override
+  String get clearDiagnosticLog => '診断ログを消去';
+
+  @override
+  String get clearDiagnosticLogConfirmTitle => '診断ログを消去しますか？';
+
+  @override
+  String get clearDiagnosticLogConfirmMessage =>
+      '診断ログファイルは完全に削除されます。この操作は元に戻せません。';
+
+  @override
+  String get diagnosticLogCleared => '診断ログを消去しました';
+
+  @override
   String get supportTheProject => 'プロジェクトをサポート';
 
   @override
@@ -3514,6 +3538,19 @@ class AppLocalizationsJa extends AppLocalizations {
   String get appImageUpdateRetry => '再試行';
 
   @override
+  String get appImageUpdateErrorMessage =>
+      '更新中にエラーが発生しました。もう一度お試しいただくか、下のエラー詳細をご確認ください。';
+
+  @override
+  String get appImageUpdateErrorDetailsLabel => 'エラーの詳細';
+
+  @override
+  String get appImageUpdateCopyErrorDetails => 'エラー詳細をコピー';
+
+  @override
+  String get appImageUpdateErrorDetailsCopied => 'エラー詳細をコピーしました';
+
+  @override
   String get resetOnboarding => '初期設定をリセット';
 
   @override
@@ -3694,6 +3731,13 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get scanModeSectionDescription =>
       '各フォルダー内のプロジェクトをテーブルに表示する方法を制御します — 単純なフラットリストまたはサブフォルダーでグループ化。';
+
+  @override
+  String get smartFolderOptionsSectionTitle => 'スマートフォルダーのオプション';
+
+  @override
+  String get smartFolderOptionsSectionDescription =>
+      'プロジェクトテーブルでのスマートフォルダーグループの動作を調整します。';
 
   @override
   String get excludeSmartFoldersFromSort => 'スマートフォルダを並べ替えの対象外にする';

@@ -2004,6 +2004,30 @@ class AppLocalizationsDe extends AppLocalizations {
   String get shareDiagnosticLogEmpty => 'Noch kein Diagnoseprotokoll vorhanden';
 
   @override
+  String get shareDiagnosticLogFolderOpened =>
+      'Teilen ist hier nicht verfügbar. Der Protokollordner wurde stattdessen geöffnet, damit Sie die Datei manuell anhängen können.';
+
+  @override
+  String get enableDiagnosticLogging => 'Diagnoseprotokollierung aktivieren';
+
+  @override
+  String get enableDiagnosticLoggingDescription =>
+      'Führt auf diesem Gerät ein kleines Protokoll von Abstürzen und Fehlern, das Sie bei Problemen weitergeben können. Standardmäßig deaktiviert.';
+
+  @override
+  String get clearDiagnosticLog => 'Diagnoseprotokoll löschen';
+
+  @override
+  String get clearDiagnosticLogConfirmTitle => 'Diagnoseprotokoll löschen?';
+
+  @override
+  String get clearDiagnosticLogConfirmMessage =>
+      'Dadurch wird die Diagnoseprotokolldatei dauerhaft gelöscht. Dies kann nicht rückgängig gemacht werden.';
+
+  @override
+  String get diagnosticLogCleared => 'Diagnoseprotokoll gelöscht';
+
+  @override
   String get supportTheProject => 'Unterstütze das Projekt';
 
   @override
@@ -3606,6 +3630,19 @@ class AppLocalizationsDe extends AppLocalizations {
   String get appImageUpdateRetry => 'Erneut versuchen';
 
   @override
+  String get appImageUpdateErrorMessage =>
+      'Beim Aktualisieren ist ein Fehler aufgetreten. Sie können es erneut versuchen oder die Fehlerdetails unten prüfen.';
+
+  @override
+  String get appImageUpdateErrorDetailsLabel => 'Fehlerdetails';
+
+  @override
+  String get appImageUpdateCopyErrorDetails => 'Fehlerdetails kopieren';
+
+  @override
+  String get appImageUpdateErrorDetailsCopied => 'Fehlerdetails kopiert';
+
+  @override
   String get resetOnboarding => 'Einrichtung zurücksetzen';
 
   @override
@@ -3797,6 +3834,13 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get scanModeSectionDescription =>
       'Steuert, wie Projekte in jedem Ordner in der Tabelle angezeigt werden — als einfache Liste oder nach Unterordner gruppiert.';
+
+  @override
+  String get smartFolderOptionsSectionTitle => 'Smart-Ordner-Optionen';
+
+  @override
+  String get smartFolderOptionsSectionDescription =>
+      'Feinabstimmung, wie sich Smart-Ordner-Gruppen in der Projekttabelle verhalten.';
 
   @override
   String get excludeSmartFoldersFromSort =>

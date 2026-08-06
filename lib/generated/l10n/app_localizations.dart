@@ -3311,6 +3311,48 @@ abstract class AppLocalizations {
   /// **'No diagnostic log yet'**
   String get shareDiagnosticLogEmpty;
 
+  /// No description provided for @shareDiagnosticLogFolderOpened.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing isn\'t available here — opened the log folder instead so you can attach the file manually.'**
+  String get shareDiagnosticLogFolderOpened;
+
+  /// No description provided for @enableDiagnosticLogging.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Diagnostic Logging'**
+  String get enableDiagnosticLogging;
+
+  /// No description provided for @enableDiagnosticLoggingDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Keeps a small log of crashes and errors on this device, so you can share it if something goes wrong. Off by default.'**
+  String get enableDiagnosticLoggingDescription;
+
+  /// No description provided for @clearDiagnosticLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Diagnostic Log'**
+  String get clearDiagnosticLog;
+
+  /// No description provided for @clearDiagnosticLogConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Diagnostic Log?'**
+  String get clearDiagnosticLogConfirmTitle;
+
+  /// No description provided for @clearDiagnosticLogConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This will permanently delete the diagnostic log file. This can\'t be undone.'**
+  String get clearDiagnosticLogConfirmMessage;
+
+  /// No description provided for @diagnosticLogCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Diagnostic log cleared'**
+  String get diagnosticLogCleared;
+
   /// No description provided for @supportTheProject.
   ///
   /// In en, this message translates to:
@@ -6047,6 +6089,30 @@ abstract class AppLocalizations {
   /// **'Retry'**
   String get appImageUpdateRetry;
 
+  /// No description provided for @appImageUpdateErrorMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong while updating. You can try again, or check the error details below.'**
+  String get appImageUpdateErrorMessage;
+
+  /// No description provided for @appImageUpdateErrorDetailsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Error Details'**
+  String get appImageUpdateErrorDetailsLabel;
+
+  /// No description provided for @appImageUpdateCopyErrorDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Error Details'**
+  String get appImageUpdateCopyErrorDetails;
+
+  /// No description provided for @appImageUpdateErrorDetailsCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Error details copied'**
+  String get appImageUpdateErrorDetailsCopied;
+
   /// No description provided for @resetOnboarding.
   ///
   /// In en, this message translates to:
@@ -6388,6 +6454,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Controls how projects in each folder are displayed in the table — as a plain flat list or grouped by subfolder.'**
   String get scanModeSectionDescription;
+
+  /// No description provided for @smartFolderOptionsSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart Folder Options'**
+  String get smartFolderOptionsSectionTitle;
+
+  /// No description provided for @smartFolderOptionsSectionDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Fine-tune how smart-folder groups behave in the Projects table.'**
+  String get smartFolderOptionsSectionDescription;
 
   /// No description provided for @excludeSmartFoldersFromSort.
   ///

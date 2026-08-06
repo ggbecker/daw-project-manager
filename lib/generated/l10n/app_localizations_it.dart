@@ -2002,6 +2002,31 @@ class AppLocalizationsIt extends AppLocalizations {
   String get shareDiagnosticLogEmpty => 'Nessun registro diagnostico ancora';
 
   @override
+  String get shareDiagnosticLogFolderOpened =>
+      'La condivisione non è disponibile qui. È stata aperta la cartella dei log per allegare il file manualmente.';
+
+  @override
+  String get enableDiagnosticLogging => 'Attiva registrazione diagnostica';
+
+  @override
+  String get enableDiagnosticLoggingDescription =>
+      'Mantiene un piccolo registro di arresti anomali ed errori su questo dispositivo, così puoi condividerlo in caso di problemi. Disattivato per impostazione predefinita.';
+
+  @override
+  String get clearDiagnosticLog => 'Cancella registro diagnostico';
+
+  @override
+  String get clearDiagnosticLogConfirmTitle =>
+      'Cancellare il registro diagnostico?';
+
+  @override
+  String get clearDiagnosticLogConfirmMessage =>
+      'Questa azione eliminerà definitivamente il file di registro diagnostico e non può essere annullata.';
+
+  @override
+  String get diagnosticLogCleared => 'Registro diagnostico cancellato';
+
+  @override
   String get supportTheProject => 'Sostieni il progetto';
 
   @override
@@ -3600,6 +3625,19 @@ class AppLocalizationsIt extends AppLocalizations {
   String get appImageUpdateRetry => 'Riprova';
 
   @override
+  String get appImageUpdateErrorMessage =>
+      'Si è verificato un errore durante l\'aggiornamento. Puoi riprovare oppure controllare i dettagli dell\'errore qui sotto.';
+
+  @override
+  String get appImageUpdateErrorDetailsLabel => 'Dettagli errore';
+
+  @override
+  String get appImageUpdateCopyErrorDetails => 'Copia dettagli errore';
+
+  @override
+  String get appImageUpdateErrorDetailsCopied => 'Dettagli errore copiati';
+
+  @override
   String get resetOnboarding => 'Reimposta configurazione iniziale';
 
   @override
@@ -3792,6 +3830,13 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get scanModeSectionDescription =>
       'Controlla come i progetti in ogni cartella vengono visualizzati nella tabella — come un elenco semplice o raggruppati per sottocartella.';
+
+  @override
+  String get smartFolderOptionsSectionTitle => 'Opzioni cartelle intelligenti';
+
+  @override
+  String get smartFolderOptionsSectionDescription =>
+      'Regola il comportamento dei gruppi di cartelle intelligenti nella tabella dei progetti.';
 
   @override
   String get excludeSmartFoldersFromSort =>
