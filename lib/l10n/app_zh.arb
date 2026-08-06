@@ -2526,6 +2526,8 @@
   "@scanModeSectionTitle": {},
   "scanModeSectionDescription": "控制每个文件夹中的项目在表格中的显示方式——作为简单的平铺列表或按子文件夹分组。",
   "@scanModeSectionDescription": {},
+  "smartFolderOptionsSectionTitle": "智能文件夹选项",
+  "smartFolderOptionsSectionDescription": "微调智能文件夹分组在项目表格中的行为。",
   "excludeSmartFoldersFromSort": "排序时排除智能文件夹",
   "@excludeSmartFoldersFromSort": {},
   "excludeSmartFoldersFromSortDescription": "按列对项目表排序时，智能文件夹分组会保持原位，不随排序移动——只有分组内的项目（以及未分组的项目）会重新排序。实验性功能，默认关闭。",

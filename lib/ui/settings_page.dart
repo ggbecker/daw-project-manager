@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../generated/l10n/app_localizations.dart';
 import '../models/scan_mode.dart';
+import '../models/scan_root.dart';
 import '../providers/providers.dart';
 import '../providers/theme_provider.dart';
 import '../repository/project_repository.dart';
@@ -635,6 +636,60 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  Future<void> _updateScanMode(ScanRoot root, ScanMode newMode) async {
+    final newDepth = newMode == ScanMode.smartFolder ? 1 : 0;
+    if (newDepth == root.scanDepth) return;
+    setState(() => _busy = true);
+    try {
+      final repo = await ref.read(repositoryProvider.future);
+      await repo.updateRootScanDepth(root.id, newDepth);
+      ref.invalidate(scanRootsProvider);
+      ref.invalidate(allProjectsStreamProvider);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  void _showScanModeInfo(BuildContext context, AppLocalizations l10n) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Theme.of(ctx).cardColor,
+        title: Text(l10n.scanModeSectionTitle),
+        content: SizedBox(
+          width: 340,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(l10n.scanModeSectionDescription),
+                const SizedBox(height: 16),
+                Text(l10n.scanModeFlat, style: Theme.of(ctx).textTheme.titleSmall),
+                const SizedBox(height: 2),
+                Text(l10n.scanModeFlatDescription, style: Theme.of(ctx).textTheme.bodySmall),
+                const SizedBox(height: 6),
+                const _FlatModePreview(),
+                const SizedBox(height: 16),
+                Text(l10n.scanModeSmartFolder, style: Theme.of(ctx).textTheme.titleSmall),
+                const SizedBox(height: 2),
+                Text(l10n.scanModeSmartFolderDescription, style: Theme.of(ctx).textTheme.bodySmall),
+                const SizedBox(height: 6),
+                const _SmartFolderModePreview(),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.close),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _addExcludedFolder() async {
@@ -1401,7 +1456,20 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(l10n.projectFoldersSectionTitle, style: Theme.of(context).textTheme.titleMedium),
+                          Row(
+                            children: [
+                              Text(l10n.projectFoldersSectionTitle, style: Theme.of(context).textTheme.titleMedium),
+                              const SizedBox(width: 2),
+                              IconButton(
+                                tooltip: l10n.scanModeSectionTitle,
+                                icon: const Icon(Icons.info_outline, size: 18),
+                                visualDensity: VisualDensity.compact,
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                                onPressed: () => _showScanModeInfo(context, l10n),
+                              ),
+                            ],
+                          ),
                           const SizedBox(height: 2),
                           Text(
                             l10n.projectFoldersSectionSubtitle,
@@ -1455,6 +1523,41 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                                     ?.copyWith(fontStyle: FontStyle.italic),
                               ),
                             ),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  l10n.scanModeLabel,
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(fontWeight: FontWeight.w600),
+                                ),
+                                const SizedBox(width: 8),
+                                SegmentedButton<ScanMode>(
+                                  segments: [
+                                    ButtonSegment(
+                                      value: ScanMode.flat,
+                                      label: Text(l10n.scanModeFlat),
+                                    ),
+                                    ButtonSegment(
+                                      value: ScanMode.smartFolder,
+                                      label: Text(l10n.scanModeSmartFolder),
+                                    ),
+                                  ],
+                                  selected: {f.scanMode},
+                                  showSelectedIcon: false,
+                                  style: const ButtonStyle(
+                                    visualDensity: VisualDensity.compact,
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  onSelectionChanged: _busy
+                                      ? null
+                                      : (selection) => _updateScanMode(f, selection.first),
+                                ),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
                       trailing: Row(
@@ -1491,7 +1594,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
         const SizedBox(height: 12),
 
-        // Scan Mode card — one selector per folder
+        // Smart Folder behavior card — global toggles only; per-folder scan
+        // mode itself is now set inline on each folder row above.
         if (projectFolders.isNotEmpty)
           Card(
             clipBehavior: Clip.antiAlias,
@@ -1508,11 +1612,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(l10n.scanModeSectionTitle,
+                            Text(l10n.smartFolderOptionsSectionTitle,
                                 style: Theme.of(context).textTheme.titleMedium),
                             const SizedBox(height: 2),
                             Text(
-                              l10n.scanModeSectionDescription,
+                              l10n.smartFolderOptionsSectionDescription,
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ],
@@ -1520,55 +1624,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  for (final entry in projectFolders.asMap().entries) ...[
-                    if (projectFolders.length > 1) ...[
-                      if (entry.key > 0) const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          const Icon(Icons.folder, size: 14),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              entry.value.path,
-                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          IconButton(
-                            tooltip: l10n.openFolder,
-                            onPressed: () => FileLauncher.openFolder(entry.value.path),
-                            icon: const Icon(Icons.folder_open_outlined),
-                            iconSize: 16,
-                            visualDensity: VisualDensity.compact,
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                    ],
-                    _ScanModeSelector(
-                      currentMode: entry.value.scanMode,
-                      disabled: _busy,
-                      onChanged: (newMode) async {
-                        final newDepth = newMode == ScanMode.smartFolder ? 1 : 0;
-                        if (newDepth == entry.value.scanDepth) return;
-                        setState(() => _busy = true);
-                        try {
-                          final repo = await ref.read(repositoryProvider.future);
-                          await repo.updateRootScanDepth(entry.value.id, newDepth);
-                          ref.invalidate(scanRootsProvider);
-                          ref.invalidate(allProjectsStreamProvider);
-                        } finally {
-                          if (mounted) setState(() => _busy = false);
-                        }
-                      },
-                    ),
-                  ],
-                  const Divider(height: 24),
+                  const SizedBox(height: 8),
                   SwitchListTile(
                     value: ref.watch(excludeSmartFoldersFromSortProvider),
                     onChanged: (v) => ref.read(excludeSmartFoldersFromSortProvider.notifier).set(v),
@@ -3030,161 +3086,11 @@ class _DawLaunchCommandTile extends StatelessWidget {
   }
 }
 
+
 // ---------------------------------------------------------------------------
-// Scan mode selector — two side-by-side cards with visual previews
+// Scan mode preview mockups — shown once in the shared "Scan Mode" info
+// dialog (see _showScanModeInfo) rather than duplicated per folder.
 // ---------------------------------------------------------------------------
-
-class _ScanModeSelector extends StatelessWidget {
-  final ScanMode currentMode;
-  final bool disabled;
-  final ValueChanged<ScanMode> onChanged;
-
-  const _ScanModeSelector({
-    required this.currentMode,
-    required this.disabled,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(Icons.view_agenda_outlined, size: 14, color: cs.primary),
-            const SizedBox(width: 6),
-            Text(
-              l10n.scanModeLabel,
-              style: tt.labelMedium?.copyWith(color: cs.primary, fontWeight: FontWeight.w600),
-            ),
-          ],
-        ),
-        const SizedBox(height: 2),
-        Text(
-          currentMode == ScanMode.flat
-              ? l10n.scanModeFlatDescription
-              : l10n.scanModeSmartFolderDescription,
-          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant, fontSize: 11),
-        ),
-        const SizedBox(height: 8),
-        IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: _ScanModeCard(
-                  mode: ScanMode.flat,
-                  label: l10n.scanModeFlat,
-                  description: l10n.scanModeFlatDescription,
-                  preview: const _FlatModePreview(),
-                  selected: currentMode == ScanMode.flat,
-                  disabled: disabled,
-                  onTap: () => onChanged(ScanMode.flat),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _ScanModeCard(
-                  mode: ScanMode.smartFolder,
-                  label: l10n.scanModeSmartFolder,
-                  description: l10n.scanModeSmartFolderDescription,
-                  preview: const _SmartFolderModePreview(),
-                  selected: currentMode == ScanMode.smartFolder,
-                  disabled: disabled,
-                  onTap: () => onChanged(ScanMode.smartFolder),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ScanModeCard extends StatelessWidget {
-  final ScanMode mode;
-  final String label;
-  final String description;
-  final Widget preview;
-  final bool selected;
-  final bool disabled;
-  final VoidCallback onTap;
-
-  const _ScanModeCard({
-    required this.mode,
-    required this.label,
-    required this.description,
-    required this.preview,
-    required this.selected,
-    required this.disabled,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final borderColor = selected ? colorScheme.primary : colorScheme.outlineVariant;
-    final bgColor = selected
-        ? colorScheme.primaryContainer.withValues(alpha: 0.25)
-        : colorScheme.surfaceContainerHighest.withValues(alpha: 0.4);
-
-    return GestureDetector(
-      onTap: disabled ? null : onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: borderColor,
-            width: selected ? 2 : 1,
-          ),
-        ),
-        padding: const EdgeInsets.all(10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                if (selected)
-                  Icon(Icons.radio_button_checked, size: 14, color: colorScheme.primary)
-                else
-                  Icon(Icons.radio_button_unchecked, size: 14, color: colorScheme.outline),
-                const SizedBox(width: 5),
-                Expanded(
-                  child: Text(
-                    label,
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-                      color: selected ? colorScheme.primary : null,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            preview,
-            const SizedBox(height: 6),
-            Text(
-              description,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-                fontSize: 10,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 // Flat mode preview — simple rows, no grouping
 class _FlatModePreview extends StatelessWidget {

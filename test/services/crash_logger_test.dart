@@ -111,4 +111,35 @@ void main() {
       expect(CrashLogger.shareSheetUnavailable(ShareResultStatus.dismissed), isFalse);
     });
   });
+
+  group('CrashLogger.nativeFileShareSheetSupported', () {
+    // Windows was initially assumed to just return .unavailable cleanly for
+    // an unpackaged build (per DragToShareButton's doc comment), but manual
+    // testing showed the DataTransferManager flyout actually opens and then
+    // fails inside its own UI ("Try that again, we couldn't show all the
+    // ways you could share") — there's no ShareResultStatus for that, so the
+    // native call is skipped outright on Windows rather than attempted and
+    // inspected afterward. Linux was already known-unusable (share_plus
+    // throws unconditionally there).
+    test('is false on Linux', () {
+      expect(
+        CrashLogger.nativeFileShareSheetSupported(isWindows: false, isLinux: true),
+        isFalse,
+      );
+    });
+
+    test('is false on Windows', () {
+      expect(
+        CrashLogger.nativeFileShareSheetSupported(isWindows: true, isLinux: false),
+        isFalse,
+      );
+    });
+
+    test('is true elsewhere (macOS, mobile)', () {
+      expect(
+        CrashLogger.nativeFileShareSheetSupported(isWindows: false, isLinux: false),
+        isTrue,
+      );
+    });
+  });
 }

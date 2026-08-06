@@ -2526,6 +2526,8 @@
   "@scanModeSectionTitle": {},
   "scanModeSectionDescription": "各フォルダー内のプロジェクトをテーブルに表示する方法を制御します — 単純なフラットリストまたはサブフォルダーでグループ化。",
   "@scanModeSectionDescription": {},
+  "smartFolderOptionsSectionTitle": "スマートフォルダーのオプション",
+  "smartFolderOptionsSectionDescription": "プロジェクトテーブルでのスマートフォルダーグループの動作を調整します。",
   "excludeSmartFoldersFromSort": "スマートフォルダを並べ替えの対象外にする",
   "@excludeSmartFoldersFromSort": {},
   "excludeSmartFoldersFromSortDescription": "プロジェクト一覧を列で並べ替えても、スマートフォルダのグループは移動せずその位置にとどまります。並べ替えられるのはグループ内のプロジェクト（およびグループ化されていないプロジェクト）のみです。実験的機能のため、初期設定ではオフです。",

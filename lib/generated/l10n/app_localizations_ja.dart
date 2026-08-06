@@ -3713,6 +3713,13 @@ class AppLocalizationsJa extends AppLocalizations {
       '各フォルダー内のプロジェクトをテーブルに表示する方法を制御します — 単純なフラットリストまたはサブフォルダーでグループ化。';
 
   @override
+  String get smartFolderOptionsSectionTitle => 'スマートフォルダーのオプション';
+
+  @override
+  String get smartFolderOptionsSectionDescription =>
+      'プロジェクトテーブルでのスマートフォルダーグループの動作を調整します。';
+
+  @override
   String get excludeSmartFoldersFromSort => 'スマートフォルダを並べ替えの対象外にする';
 
   @override

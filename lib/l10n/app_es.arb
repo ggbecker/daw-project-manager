@@ -2526,6 +2526,8 @@
   "@scanModeSectionTitle": {},
   "scanModeSectionDescription": "Controla cómo se muestran los proyectos de cada carpeta en la tabla: como una lista plana o agrupados por subcarpeta.",
   "@scanModeSectionDescription": {},
+  "smartFolderOptionsSectionTitle": "Opciones de carpetas inteligentes",
+  "smartFolderOptionsSectionDescription": "Ajusta cómo se comportan los grupos de carpetas inteligentes en la tabla de proyectos.",
   "excludeSmartFoldersFromSort": "Mantener las carpetas inteligentes fuera del orden",
   "@excludeSmartFoldersFromSort": {},
   "excludeSmartFoldersFromSortDescription": "Al ordenar la tabla de proyectos por una columna, los grupos de carpetas inteligentes permanecen en su lugar en vez de moverse con el orden — solo se reordenan los proyectos que contienen (y los proyectos sin agrupar). Experimental: desactivado de forma predeterminada.",

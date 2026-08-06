@@ -3794,6 +3794,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Controls how projects in each folder are displayed in the table — as a plain flat list or grouped by subfolder.';
 
   @override
+  String get smartFolderOptionsSectionTitle => 'Smart Folder Options';
+
+  @override
+  String get smartFolderOptionsSectionDescription =>
+      'Fine-tune how smart-folder groups behave in the Projects table.';
+
+  @override
   String get excludeSmartFoldersFromSort => 'Keep smart folders out of sorting';
 
   @override

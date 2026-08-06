@@ -2526,6 +2526,8 @@
   "@scanModeSectionTitle": {},
   "scanModeSectionDescription": "Steuert, wie Projekte in jedem Ordner in der Tabelle angezeigt werden — als einfache Liste oder nach Unterordner gruppiert.",
   "@scanModeSectionDescription": {},
+  "smartFolderOptionsSectionTitle": "Smart-Ordner-Optionen",
+  "smartFolderOptionsSectionDescription": "Feinabstimmung, wie sich Smart-Ordner-Gruppen in der Projekttabelle verhalten.",
   "excludeSmartFoldersFromSort": "Smart-Ordner von der Sortierung ausschließen",
   "@excludeSmartFoldersFromSort": {},
   "excludeSmartFoldersFromSortDescription": "Wenn du die Projekttabelle nach einer Spalte sortierst, bleiben Smart-Ordner-Gruppen an ihrem Platz, statt mit der Sortierung zu wandern — nur die Projekte darin (und nicht gruppierte Projekte) werden neu geordnet. Experimentell: standardmäßig deaktiviert.",

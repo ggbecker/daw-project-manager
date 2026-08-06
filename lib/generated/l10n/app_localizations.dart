@@ -6419,6 +6419,18 @@ abstract class AppLocalizations {
   /// **'Controls how projects in each folder are displayed in the table — as a plain flat list or grouped by subfolder.'**
   String get scanModeSectionDescription;
 
+  /// No description provided for @smartFolderOptionsSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart Folder Options'**
+  String get smartFolderOptionsSectionTitle;
+
+  /// No description provided for @smartFolderOptionsSectionDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Fine-tune how smart-folder groups behave in the Projects table.'**
+  String get smartFolderOptionsSectionDescription;
+
   /// No description provided for @excludeSmartFoldersFromSort.
   ///
   /// In en, this message translates to:

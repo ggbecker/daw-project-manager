@@ -3820,6 +3820,14 @@ class AppLocalizationsEs extends AppLocalizations {
       'Controla cómo se muestran los proyectos de cada carpeta en la tabla: como una lista plana o agrupados por subcarpeta.';
 
   @override
+  String get smartFolderOptionsSectionTitle =>
+      'Opciones de carpetas inteligentes';
+
+  @override
+  String get smartFolderOptionsSectionDescription =>
+      'Ajusta cómo se comportan los grupos de carpetas inteligentes en la tabla de proyectos.';
+
+  @override
   String get excludeSmartFoldersFromSort =>
       'Mantener las carpetas inteligentes fuera del orden';
 

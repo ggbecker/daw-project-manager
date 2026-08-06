@@ -2550,6 +2550,8 @@
   "@scanModeSectionTitle": {},
   "scanModeSectionDescription": "Controla como os projetos em cada pasta são exibidos na tabela — como uma lista simples ou agrupados por subpasta.",
   "@scanModeSectionDescription": {},
+  "smartFolderOptionsSectionTitle": "Opções de Pastas Inteligentes",
+  "smartFolderOptionsSectionDescription": "Ajuste como os grupos de pastas inteligentes se comportam na tabela de projetos.",
   "excludeSmartFoldersFromSort": "Manter as pastas inteligentes fora da ordenação",
   "@excludeSmartFoldersFromSort": {},
   "excludeSmartFoldersFromSortDescription": "Ao ordenar a tabela de projetos por uma coluna, os grupos de pastas inteligentes permanecem no lugar em vez de se mover com a ordenação — apenas os projetos dentro deles (e os projetos não agrupados) são reordenados. Experimental: desativado por padrão.",

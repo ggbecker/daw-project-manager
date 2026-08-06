@@ -2526,6 +2526,8 @@
   "@scanModeSectionTitle": {},
   "scanModeSectionDescription": "Controlla come i progetti in ogni cartella vengono visualizzati nella tabella — come un elenco semplice o raggruppati per sottocartella.",
   "@scanModeSectionDescription": {},
+  "smartFolderOptionsSectionTitle": "Opzioni cartelle intelligenti",
+  "smartFolderOptionsSectionDescription": "Regola il comportamento dei gruppi di cartelle intelligenti nella tabella dei progetti.",
   "excludeSmartFoldersFromSort": "Escludi le cartelle smart dall'ordinamento",
   "@excludeSmartFoldersFromSort": {},
   "excludeSmartFoldersFromSortDescription": "Quando ordini la tabella dei progetti per colonna, i gruppi di cartelle smart restano al loro posto invece di spostarsi con l'ordinamento — vengono riordinati solo i progetti al loro interno (e quelli non raggruppati). Sperimentale: disattivato per impostazione predefinita.",

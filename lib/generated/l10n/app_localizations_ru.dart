@@ -3806,6 +3806,13 @@ class AppLocalizationsRu extends AppLocalizations {
       'Управляет отображением проектов в каждой папке в таблице — в виде обычного плоского списка или сгруппированных по подпапке.';
 
   @override
+  String get smartFolderOptionsSectionTitle => 'Параметры умных папок';
+
+  @override
+  String get smartFolderOptionsSectionDescription =>
+      'Настройте поведение групп умных папок в таблице проектов.';
+
+  @override
   String get excludeSmartFoldersFromSort =>
       'Не учитывать умные папки при сортировке';
 

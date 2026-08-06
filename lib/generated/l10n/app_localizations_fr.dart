@@ -3834,6 +3834,14 @@ class AppLocalizationsFr extends AppLocalizations {
       'Contrôle comment les projets de chaque dossier sont affichés dans le tableau — sous forme de liste simple ou regroupés par sous-dossier.';
 
   @override
+  String get smartFolderOptionsSectionTitle =>
+      'Options des dossiers intelligents';
+
+  @override
+  String get smartFolderOptionsSectionDescription =>
+      'Ajustez le comportement des groupes de dossiers intelligents dans le tableau des projets.';
+
+  @override
   String get excludeSmartFoldersFromSort =>
       'Exclure les dossiers intelligents du tri';
 

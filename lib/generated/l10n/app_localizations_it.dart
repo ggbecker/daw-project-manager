@@ -3811,6 +3811,13 @@ class AppLocalizationsIt extends AppLocalizations {
       'Controlla come i progetti in ogni cartella vengono visualizzati nella tabella — come un elenco semplice o raggruppati per sottocartella.';
 
   @override
+  String get smartFolderOptionsSectionTitle => 'Opzioni cartelle intelligenti';
+
+  @override
+  String get smartFolderOptionsSectionDescription =>
+      'Regola il comportamento dei gruppi di cartelle intelligenti nella tabella dei progetti.';
+
+  @override
   String get excludeSmartFoldersFromSort =>
       'Escludi le cartelle smart dall\'ordinamento';
 

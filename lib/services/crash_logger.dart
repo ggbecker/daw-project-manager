@@ -104,38 +104,54 @@ class CrashLogger {
 
   /// Shares [files] via the OS share sheet, falling back to just opening
   /// their containing folder in the system file manager when the share
-  /// sheet isn't actually available. Two known cases hit that fallback:
+  /// sheet isn't actually usable. Two known cases skip the native share
+  /// attempt entirely (see [nativeFileShareSheetSupported]):
   /// - **Linux**: share_plus has no file-sharing implementation there at
   ///   all — `SharePlusLinuxPlugin.share` unconditionally throws
   ///   `UnimplementedError` for any call that includes files, every time.
-  /// - **Windows**: file sharing goes through the `DataTransferManager`
-  ///   API, which only responds when the app is MSIX-packaged (see
-  ///   `DragToShareButton`'s doc comment) — an unpackaged build silently
-  ///   gets back `ShareResultStatus.unavailable` with no share sheet ever
-  ///   shown.
+  /// - **Windows**: the `DataTransferManager` share flyout does open for an
+  ///   unpackaged build, but fails inside its own UI ("Try that again, we
+  ///   couldn't show all the ways you could share") instead of cleanly
+  ///   returning `ShareResultStatus.unavailable` — confirmed by hand, not
+  ///   just inferred from `DragToShareButton`'s doc comment, which
+  ///   undersold how broken this actually is. Since there's no reliable
+  ///   signal to detect that failure from Dart, the native call is never
+  ///   attempted on Windows at all.
+  /// A thrown exception or `ShareResultStatus.unavailable` on any other
+  /// platform falls back the same way, as a safety net.
   /// Returns true if the OS share sheet was actually shown, false if it
   /// fell back to opening the folder instead. [files] must be non-empty.
   static Future<bool> shareOrRevealLogFiles(List<File> files) async {
     assert(files.isNotEmpty);
     ShareResultStatus? status;
-    try {
-      status = (await Share.shareXFiles(files.map((f) => XFile(f.path)).toList())).status;
-    } catch (_) {
-      // share_plus on Linux throws rather than returning a status — treated
-      // the same as an unavailable share sheet below.
+    if (nativeFileShareSheetSupported(isWindows: Platform.isWindows, isLinux: Platform.isLinux)) {
+      try {
+        status = (await Share.shareXFiles(files.map((f) => XFile(f.path)).toList())).status;
+      } catch (_) {
+        // Falls through to the folder-reveal fallback below.
+      }
     }
     if (!shareSheetUnavailable(status)) return true;
     await FileLauncher.openFolder(p.dirname(files.first.path));
     return false;
   }
 
+  /// Whether it's even worth attempting [Share.shareXFiles] for files on
+  /// this platform — false for Linux and Windows (see
+  /// [shareOrRevealLogFiles]'s doc comment for why both are unusable in
+  /// practice). Split out as a pure function — exposed for testing — since
+  /// `Platform.isWindows`/`Platform.isLinux` aren't compile-time constants
+  /// and can't be used as default parameter values.
+  @visibleForTesting
+  static bool nativeFileShareSheetSupported({required bool isWindows, required bool isLinux}) =>
+      !isWindows && !isLinux;
+
   /// Whether [shareOrRevealLogFiles] should fall back to the folder-reveal
-  /// path, given the [ShareResultStatus] it got back (or null if the share
-  /// call threw, e.g. share_plus's unconditional `UnimplementedError` on
-  /// Linux). Split out as a pure function — exposed for testing — because
-  /// `Share.shareXFiles` itself hits a real platform channel and
-  /// `FileLauncher.openFolder`'s fallback spawns a real OS process, neither
-  /// of which should run during `flutter test`.
+  /// path, given the [ShareResultStatus] it got back (null if the share
+  /// call was skipped or threw). Split out as a pure function — exposed for
+  /// testing — because `Share.shareXFiles` itself hits a real platform
+  /// channel and `FileLauncher.openFolder`'s fallback spawns a real OS
+  /// process, neither of which should run during `flutter test`.
   @visibleForTesting
   static bool shareSheetUnavailable(ShareResultStatus? status) =>
       status == null || status == ShareResultStatus.unavailable;

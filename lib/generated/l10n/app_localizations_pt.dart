@@ -3804,6 +3804,13 @@ class AppLocalizationsPt extends AppLocalizations {
       'Controla como os projetos em cada pasta são exibidos na tabela — como uma lista simples ou agrupados por subpasta.';
 
   @override
+  String get smartFolderOptionsSectionTitle => 'Opções de Pastas Inteligentes';
+
+  @override
+  String get smartFolderOptionsSectionDescription =>
+      'Ajuste como os grupos de pastas inteligentes se comportam na tabela de projetos.';
+
+  @override
   String get excludeSmartFoldersFromSort =>
       'Manter as pastas inteligentes fora da ordenação';
 

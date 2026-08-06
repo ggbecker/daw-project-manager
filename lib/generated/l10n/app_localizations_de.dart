@@ -3816,6 +3816,13 @@ class AppLocalizationsDe extends AppLocalizations {
       'Steuert, wie Projekte in jedem Ordner in der Tabelle angezeigt werden — als einfache Liste oder nach Unterordner gruppiert.';
 
   @override
+  String get smartFolderOptionsSectionTitle => 'Smart-Ordner-Optionen';
+
+  @override
+  String get smartFolderOptionsSectionDescription =>
+      'Feinabstimmung, wie sich Smart-Ordner-Gruppen in der Projekttabelle verhalten.';
+
+  @override
   String get excludeSmartFoldersFromSort =>
       'Smart-Ordner von der Sortierung ausschließen';
 

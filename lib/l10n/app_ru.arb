@@ -2526,6 +2526,8 @@
   "@scanModeSectionTitle": {},
   "scanModeSectionDescription": "Управляет отображением проектов в каждой папке в таблице — в виде обычного плоского списка или сгруппированных по подпапке.",
   "@scanModeSectionDescription": {},
+  "smartFolderOptionsSectionTitle": "Параметры умных папок",
+  "smartFolderOptionsSectionDescription": "Настройте поведение групп умных папок в таблице проектов.",
   "excludeSmartFoldersFromSort": "Не учитывать умные папки при сортировке",
   "@excludeSmartFoldersFromSort": {},
   "excludeSmartFoldersFromSortDescription": "При сортировке таблицы проектов по столбцу группы умных папок остаются на месте, а не перемещаются вместе с сортировкой — переупорядочиваются только проекты внутри них (и любые несгруппированные проекты). Экспериментальная функция: по умолчанию отключена.",

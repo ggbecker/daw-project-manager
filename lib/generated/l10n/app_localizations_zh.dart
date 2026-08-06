@@ -3674,6 +3674,12 @@ class AppLocalizationsZh extends AppLocalizations {
       '控制每个文件夹中的项目在表格中的显示方式——作为简单的平铺列表或按子文件夹分组。';
 
   @override
+  String get smartFolderOptionsSectionTitle => '智能文件夹选项';
+
+  @override
+  String get smartFolderOptionsSectionDescription => '微调智能文件夹分组在项目表格中的行为。';
+
+  @override
   String get excludeSmartFoldersFromSort => '排序时排除智能文件夹';
 
   @override
