@@ -2358,7 +2358,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     ),
                     OutlinedButton.icon(
                       onPressed: () => launchUrl(
-                        Uri.parse('https://github.com/bandpassrecords/daw-project-manager/issues/new'),
+                        Uri.parse('https://github.com/bandpassrecords/daw-project-manager/issues/new?template=issue.yml'),
                         mode: LaunchMode.externalApplication,
                       ),
                       icon: const Icon(Icons.bug_report_outlined, size: 16),
