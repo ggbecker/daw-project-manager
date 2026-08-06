@@ -2617,6 +2617,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get website => 'Site Web';
 
   @override
+  String get license => 'Licence';
+
+  @override
+  String get reportIssue => 'Signaler un problème';
+
+  @override
   String get switchToClassicDark => 'Passer à Classic Dark';
 
   @override

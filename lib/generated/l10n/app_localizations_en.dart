@@ -2586,6 +2586,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get website => 'Website';
 
   @override
+  String get license => 'License';
+
+  @override
+  String get reportIssue => 'Report an Issue';
+
+  @override
   String get switchToClassicDark => 'Switch to Classic Dark';
 
   @override

@@ -2599,6 +2599,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get website => 'Sito web';
 
   @override
+  String get license => 'Licenza';
+
+  @override
+  String get reportIssue => 'Segnala un problema';
+
+  @override
   String get switchToClassicDark => 'Passa a Classic Dark';
 
   @override

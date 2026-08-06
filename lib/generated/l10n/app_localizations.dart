@@ -4337,6 +4337,18 @@ abstract class AppLocalizations {
   /// **'Website'**
   String get website;
 
+  /// Button label for the license button in the About dialog
+  ///
+  /// In en, this message translates to:
+  /// **'License'**
+  String get license;
+
+  /// Button label for the report-an-issue button in the About dialog, links to the GitHub issue tracker
+  ///
+  /// In en, this message translates to:
+  /// **'Report an Issue'**
+  String get reportIssue;
+
   /// Theme switcher label to switch to classic dark theme
   ///
   /// In en, this message translates to:

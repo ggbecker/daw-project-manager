@@ -2539,6 +2539,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get website => 'ウェブサイト';
 
   @override
+  String get license => 'ライセンス';
+
+  @override
+  String get reportIssue => '問題を報告';
+
+  @override
   String get switchToClassicDark => 'Classic Dark に切り替え';
 
   @override

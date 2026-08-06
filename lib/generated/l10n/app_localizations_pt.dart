@@ -2592,6 +2592,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get website => 'Site';
 
   @override
+  String get license => 'Licença';
+
+  @override
+  String get reportIssue => 'Relatar um Problema';
+
+  @override
   String get switchToClassicDark => 'Mudar para Classic Dark';
 
   @override

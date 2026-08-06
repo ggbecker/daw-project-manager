@@ -2592,6 +2592,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get website => 'Сайт';
 
   @override
+  String get license => 'Лицензия';
+
+  @override
+  String get reportIssue => 'Сообщить о проблеме';
+
+  @override
   String get switchToClassicDark => 'Переключить на Classic Dark';
 
   @override

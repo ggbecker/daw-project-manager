@@ -2511,6 +2511,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get website => '网站';
 
   @override
+  String get license => '许可证';
+
+  @override
+  String get reportIssue => '报告问题';
+
+  @override
   String get switchToClassicDark => '切换到 Classic Dark';
 
   @override

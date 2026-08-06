@@ -2606,6 +2606,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get website => 'Sitio Web';
 
   @override
+  String get license => 'Licencia';
+
+  @override
+  String get reportIssue => 'Reportar un problema';
+
+  @override
   String get switchToClassicDark => 'Cambiar a Classic Dark';
 
   @override

@@ -32,6 +32,7 @@ import 'notification_settings_page.dart' show WorkTimerSection;
 import 'onboarding_wizard_page.dart';
 import 'widgets/desktop_title_bar.dart';
 import 'widgets/language_switcher.dart' show LanguageSwitcher;
+import 'widgets/license_dialog.dart';
 import 'widgets/shortcuts_help_dialog.dart';
 import 'widgets/update_available_dialog.dart';
 
@@ -985,6 +986,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         _SearchEntry(SettingsSection.about, Icons.favorite, l10n.donate, null),
         _SearchEntry(SettingsSection.about, Icons.web, l10n.website, null),
         _SearchEntry(SettingsSection.about, Icons.menu_book_outlined, l10n.menuDocumentation, null),
+        _SearchEntry(SettingsSection.about, Icons.gavel_outlined, l10n.license, null),
+        _SearchEntry(SettingsSection.about, Icons.bug_report_outlined, l10n.reportIssue, null),
         _SearchEntry(SettingsSection.about, Icons.bug_report_outlined, l10n.shareDiagnosticLog, null),
       ];
 
@@ -2358,6 +2361,19 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                       ),
                       icon: const Icon(Icons.menu_book_outlined, size: 16),
                       label: Text(l10n.menuDocumentation),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: () => showLicenseDialog(context),
+                      icon: const Icon(Icons.gavel_outlined, size: 16),
+                      label: Text(l10n.license),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: () => launchUrl(
+                        Uri.parse('https://github.com/bandpassrecords/daw-project-manager/issues/new'),
+                        mode: LaunchMode.externalApplication,
+                      ),
+                      icon: const Icon(Icons.bug_report_outlined, size: 16),
+                      label: Text(l10n.reportIssue),
                     ),
                   ],
                 ),

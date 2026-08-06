@@ -2604,6 +2604,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get website => 'Website';
 
   @override
+  String get license => 'Lizenz';
+
+  @override
+  String get reportIssue => 'Problem melden';
+
+  @override
   String get switchToClassicDark => 'Zu Classic Dark wechseln';
 
   @override
