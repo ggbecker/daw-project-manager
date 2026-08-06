@@ -3608,7 +3608,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sessionMode => '会话模式';
 
   @override
-  String get sessionModeDescription => '启动前订阅项目，以跟踪工作时间并从工具栏管理';
+  String get sessionModeDescription => '为项目开始一个会话，以跟踪工作时间并从工具栏进行管理';
 
   @override
   String get workSessionsTabLabel => '工作会话';
@@ -3620,7 +3620,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get normalModeDescription => '启动时项目会直接在其DAW中打开。';
 
   @override
-  String get sessionModeCardDescription => '先启用此模式，即可通过工具栏跟踪工作时间。';
+  String get sessionModeCardDescription => '开始一个会话以跟踪您在项目上的活动和时间。';
 
   @override
   String get startSession => '开始会话';

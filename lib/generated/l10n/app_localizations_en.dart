@@ -3724,7 +3724,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sessionModeDescription =>
-      'Subscribe to a project before launching, to track work time and manage it from the toolbar';
+      'Start a session on a project to track your work time and manage it from the toolbar';
 
   @override
   String get workSessionsTabLabel => 'Work Sessions';
@@ -3738,7 +3738,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sessionModeCardDescription =>
-      'Subscribe first to track work time from the toolbar.';
+      'Start a session to track your activity and time on the project.';
 
   @override
   String get startSession => 'Start Session';

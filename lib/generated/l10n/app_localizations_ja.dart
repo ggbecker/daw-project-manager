@@ -3644,7 +3644,8 @@ class AppLocalizationsJa extends AppLocalizations {
   String get sessionMode => 'セッションモード';
 
   @override
-  String get sessionModeDescription => '起動前にプロジェクトを購読して、作業時間を追跡し、ツールバーから管理します';
+  String get sessionModeDescription =>
+      'プロジェクトでセッションを開始して、作業時間を記録し、ツールバーから管理します';
 
   @override
   String get workSessionsTabLabel => '作業セッション';
@@ -3656,7 +3657,8 @@ class AppLocalizationsJa extends AppLocalizations {
   String get normalModeDescription => '起動時にプロジェクトが直接DAWで開きます。';
 
   @override
-  String get sessionModeCardDescription => 'まず有効にすると、ツールバーから作業時間を記録できます。';
+  String get sessionModeCardDescription =>
+      'セッションを開始すると、プロジェクトでの作業内容と時間を記録できます。';
 
   @override
   String get startSession => 'セッション開始';

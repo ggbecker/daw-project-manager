@@ -3735,7 +3735,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get sessionModeDescription =>
-      'Inscreva-se em um projeto antes de lançá-lo para rastrear o tempo de trabalho e gerenciá-lo pela barra de ferramentas';
+      'Inicie uma sessão em um projeto para rastrear seu tempo de trabalho e gerenciá-lo pela barra de ferramentas';
 
   @override
   String get workSessionsTabLabel => 'Sessões de Trabalho';
@@ -3749,7 +3749,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get sessionModeCardDescription =>
-      'Ative primeiro para rastrear o tempo de trabalho pela barra de ferramentas.';
+      'Inicie uma sessão para rastrear sua atividade e tempo no projeto.';
 
   @override
   String get startSession => 'Iniciar sessão';

@@ -6302,7 +6302,7 @@ abstract class AppLocalizations {
   /// No description provided for @sessionModeDescription.
   ///
   /// In en, this message translates to:
-  /// **'Subscribe to a project before launching, to track work time and manage it from the toolbar'**
+  /// **'Start a session on a project to track your work time and manage it from the toolbar'**
   String get sessionModeDescription;
 
   /// No description provided for @workSessionsTabLabel.
@@ -6326,7 +6326,7 @@ abstract class AppLocalizations {
   /// No description provided for @sessionModeCardDescription.
   ///
   /// In en, this message translates to:
-  /// **'Subscribe first to track work time from the toolbar.'**
+  /// **'Start a session to track your activity and time on the project.'**
   String get sessionModeCardDescription;
 
   /// No description provided for @startSession.

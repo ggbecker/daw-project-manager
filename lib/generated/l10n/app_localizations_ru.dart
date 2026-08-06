@@ -3736,7 +3736,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get sessionModeDescription =>
-      'Подпишитесь на проект перед запуском, чтобы отслеживать рабочее время и управлять им с панели инструментов';
+      'Начните сессию для проекта, чтобы отслеживать рабочее время и управлять им с панели инструментов';
 
   @override
   String get workSessionsTabLabel => 'Рабочие сессии';
@@ -3750,7 +3750,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get sessionModeCardDescription =>
-      'Сначала включите, чтобы отслеживать рабочее время через панель инструментов.';
+      'Начните сессию, чтобы отслеживать вашу активность и время работы над проектом.';
 
   @override
   String get startSession => 'Начать сессию';

@@ -3747,7 +3747,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get sessionModeDescription =>
-      'Projekt abonnieren vor dem Start, um Arbeitszeit zu verfolgen und über die Symbolleiste zu verwalten';
+      'Starten Sie eine Sitzung für ein Projekt, um Ihre Arbeitszeit zu verfolgen und über die Symbolleiste zu verwalten';
 
   @override
   String get workSessionsTabLabel => 'Arbeitssitzungen';
@@ -3761,7 +3761,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get sessionModeCardDescription =>
-      'Zuerst aktivieren, um die Arbeitszeit über die Symbolleiste zu erfassen.';
+      'Starten Sie eine Sitzung, um Ihre Aktivität und Zeit am Projekt zu verfolgen.';
 
   @override
   String get startSession => 'Sitzung starten';
