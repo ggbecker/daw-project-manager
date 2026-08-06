@@ -113,33 +113,47 @@ void main() {
   });
 
   group('CrashLogger.nativeFileShareSheetSupported', () {
-    // Windows was initially assumed to just return .unavailable cleanly for
-    // an unpackaged build (per DragToShareButton's doc comment), but manual
-    // testing showed the DataTransferManager flyout actually opens and then
-    // fails inside its own UI ("Try that again, we couldn't show all the
-    // ways you could share") — there's no ShareResultStatus for that, so the
-    // native call is skipped outright on Windows rather than attempted and
-    // inspected afterward. Linux was already known-unusable (share_plus
-    // throws unconditionally there).
-    test('is false on Linux', () {
-      expect(
-        CrashLogger.nativeFileShareSheetSupported(isWindows: false, isLinux: true),
-        isFalse,
-      );
+    // Native sharing turned out unusable on every desktop platform: Linux
+    // (share_plus throws unconditionally there), Windows (the
+    // DataTransferManager flyout opens but fails inside its own UI for an
+    // unpackaged build, with no ShareResultStatus to detect that from Dart),
+    // and macOS wasn't worth keeping a separate code path alive for. Desktop
+    // now always just opens the log folder; only mobile still attempts the
+    // native share sheet, since there's no folder-reveal equivalent there.
+    test('is false on desktop', () {
+      expect(CrashLogger.nativeFileShareSheetSupported(isMobile: false), isFalse);
     });
 
-    test('is false on Windows', () {
-      expect(
-        CrashLogger.nativeFileShareSheetSupported(isWindows: true, isLinux: false),
-        isFalse,
-      );
+    test('is true on mobile', () {
+      expect(CrashLogger.nativeFileShareSheetSupported(isMobile: true), isTrue);
+    });
+  });
+
+  // isEnabled/setEnabled are a pure in-memory flag, safe to exercise
+  // directly. log() and clearLogs() are NOT covered here — both ultimately
+  // call _resolveFile(), which calls getLocalAppDataPath() → the real
+  // %LOCALAPPDATA%/application support directory, with no test-safe
+  // override (unlike Hive, which tests redirect via
+  // HiveTestHelper.setUp()'s explicit Hive.init(tempDir)). Calling them
+  // directly here would write to or delete a real user's actual crash log
+  // during `flutter test` — the same restraint the appendToFile tests above
+  // already take by operating on an explicit temp-dir File instead.
+  group('CrashLogger.isEnabled / setEnabled', () {
+    tearDown(() => CrashLogger.setEnabled(false)); // restore the default for other tests
+
+    test('defaults to disabled (opt-in, not opt-out)', () {
+      expect(CrashLogger.isEnabled, isFalse);
     });
 
-    test('is true elsewhere (macOS, mobile)', () {
-      expect(
-        CrashLogger.nativeFileShareSheetSupported(isWindows: false, isLinux: false),
-        isTrue,
-      );
+    test('setEnabled(true) is reflected by isEnabled', () {
+      CrashLogger.setEnabled(true);
+      expect(CrashLogger.isEnabled, isTrue);
+    });
+
+    test('setEnabled(false) after true disables it again', () {
+      CrashLogger.setEnabled(true);
+      CrashLogger.setEnabled(false);
+      expect(CrashLogger.isEnabled, isFalse);
     });
   });
 }

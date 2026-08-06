@@ -1940,6 +1940,25 @@ class AppLocalizationsZh extends AppLocalizations {
       '此环境不支持分享——已改为打开日志文件夹，您可以手动附加该文件。';
 
   @override
+  String get enableDiagnosticLogging => '启用诊断日志';
+
+  @override
+  String get enableDiagnosticLoggingDescription =>
+      '在此设备上保留崩溃和错误的简要日志，以便在出现问题时分享。默认关闭。';
+
+  @override
+  String get clearDiagnosticLog => '清除诊断日志';
+
+  @override
+  String get clearDiagnosticLogConfirmTitle => '清除诊断日志？';
+
+  @override
+  String get clearDiagnosticLogConfirmMessage => '这将永久删除诊断日志文件，且无法撤销。';
+
+  @override
+  String get diagnosticLogCleared => '诊断日志已清除';
+
+  @override
   String get supportTheProject => '支持项目';
 
   @override

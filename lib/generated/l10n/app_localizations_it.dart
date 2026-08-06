@@ -2006,6 +2006,27 @@ class AppLocalizationsIt extends AppLocalizations {
       'La condivisione non è disponibile qui. È stata aperta la cartella dei log per allegare il file manualmente.';
 
   @override
+  String get enableDiagnosticLogging => 'Attiva registrazione diagnostica';
+
+  @override
+  String get enableDiagnosticLoggingDescription =>
+      'Mantiene un piccolo registro di arresti anomali ed errori su questo dispositivo, così puoi condividerlo in caso di problemi. Disattivato per impostazione predefinita.';
+
+  @override
+  String get clearDiagnosticLog => 'Cancella registro diagnostico';
+
+  @override
+  String get clearDiagnosticLogConfirmTitle =>
+      'Cancellare il registro diagnostico?';
+
+  @override
+  String get clearDiagnosticLogConfirmMessage =>
+      'Questa azione eliminerà definitivamente il file di registro diagnostico e non può essere annullata.';
+
+  @override
+  String get diagnosticLogCleared => 'Registro diagnostico cancellato';
+
+  @override
   String get supportTheProject => 'Sostieni il progetto';
 
   @override

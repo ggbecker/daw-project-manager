@@ -2004,6 +2004,26 @@ class AppLocalizationsRu extends AppLocalizations {
       'Общий доступ здесь недоступен — вместо этого открыта папка с журналом, чтобы вы могли прикрепить файл вручную.';
 
   @override
+  String get enableDiagnosticLogging => 'Включить журнал диагностики';
+
+  @override
+  String get enableDiagnosticLoggingDescription =>
+      'Ведёт небольшой журнал сбоев и ошибок на этом устройстве, которым вы можете поделиться, если что-то пойдёт не так. По умолчанию отключено.';
+
+  @override
+  String get clearDiagnosticLog => 'Очистить журнал диагностики';
+
+  @override
+  String get clearDiagnosticLogConfirmTitle => 'Очистить журнал диагностики?';
+
+  @override
+  String get clearDiagnosticLogConfirmMessage =>
+      'Файл журнала диагностики будет удалён без возможности восстановления.';
+
+  @override
+  String get diagnosticLogCleared => 'Журнал диагностики очищен';
+
+  @override
   String get supportTheProject => 'Поддержать проект';
 
   @override

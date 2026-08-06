@@ -2349,6 +2349,37 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     }
   }
 
+  Future<void> _clearDiagnosticLog() async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Theme.of(ctx).cardColor,
+        title: Text(l10n.clearDiagnosticLogConfirmTitle),
+        content: Text(l10n.clearDiagnosticLogConfirmMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: Text(l10n.delete),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+
+    await CrashLogger.clearLogs();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.diagnosticLogCleared)),
+      );
+    }
+  }
+
   Widget _buildAboutSection(AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2508,10 +2539,34 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     Expanded(
                       child: Text(l10n.shareDiagnosticLog, style: Theme.of(context).textTheme.titleMedium),
                     ),
-                    TextButton.icon(
-                      icon: const Icon(Icons.ios_share, size: 18),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                SwitchListTile(
+                  value: ref.watch(diagnosticLoggingEnabledProvider),
+                  onChanged: (v) => ref.read(diagnosticLoggingEnabledProvider.notifier).toggle(),
+                  title: Text(l10n.enableDiagnosticLogging),
+                  subtitle: Text(
+                    l10n.enableDiagnosticLoggingDescription,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    OutlinedButton.icon(
+                      icon: const Icon(Icons.ios_share, size: 16),
                       label: Text(l10n.shareDiagnosticLog),
                       onPressed: _shareDiagnosticLog,
+                    ),
+                    OutlinedButton.icon(
+                      icon: const Icon(Icons.delete_outline, size: 16),
+                      label: Text(l10n.clearDiagnosticLog),
+                      onPressed: _clearDiagnosticLog,
                     ),
                   ],
                 ),

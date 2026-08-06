@@ -1348,6 +1348,12 @@
   "shareDiagnosticLog": "診断ログを共有",
   "shareDiagnosticLogEmpty": "診断ログはまだありません",
   "shareDiagnosticLogFolderOpened": "この環境では共有を利用できません。代わりにログフォルダーを開いたので、ファイルを手動で添付してください。",
+  "enableDiagnosticLogging": "診断ログを有効にする",
+  "enableDiagnosticLoggingDescription": "このデバイス上にクラッシュやエラーの小さなログを保持し、問題が発生した場合に共有できるようにします。デフォルトではオフです。",
+  "clearDiagnosticLog": "診断ログを消去",
+  "clearDiagnosticLogConfirmTitle": "診断ログを消去しますか？",
+  "clearDiagnosticLogConfirmMessage": "診断ログファイルは完全に削除されます。この操作は元に戻せません。",
+  "diagnosticLogCleared": "診断ログを消去しました",
   "supportTheProject": "プロジェクトをサポート",
   "couldNotOpenBrowser": "ブラウザを開けませんでした。次のURLにアクセスしてください: {url}",
   "@couldNotOpenBrowser": {

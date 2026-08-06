@@ -1348,6 +1348,12 @@
   "shareDiagnosticLog": "分享诊断日志",
   "shareDiagnosticLogEmpty": "暂无诊断日志",
   "shareDiagnosticLogFolderOpened": "此环境不支持分享——已改为打开日志文件夹，您可以手动附加该文件。",
+  "enableDiagnosticLogging": "启用诊断日志",
+  "enableDiagnosticLoggingDescription": "在此设备上保留崩溃和错误的简要日志，以便在出现问题时分享。默认关闭。",
+  "clearDiagnosticLog": "清除诊断日志",
+  "clearDiagnosticLogConfirmTitle": "清除诊断日志？",
+  "clearDiagnosticLogConfirmMessage": "这将永久删除诊断日志文件，且无法撤销。",
+  "diagnosticLogCleared": "诊断日志已清除",
   "supportTheProject": "支持项目",
   "couldNotOpenBrowser": "无法打开浏览器。请访问: {url}",
   "@couldNotOpenBrowser": {

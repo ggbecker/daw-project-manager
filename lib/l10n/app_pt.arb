@@ -1348,6 +1348,12 @@
   "shareDiagnosticLog": "Compartilhar Log de Diagnóstico",
   "shareDiagnosticLogEmpty": "Ainda não há log de diagnóstico",
   "shareDiagnosticLogFolderOpened": "O compartilhamento não está disponível aqui. A pasta de logs foi aberta para que você possa anexar o arquivo manualmente.",
+  "enableDiagnosticLogging": "Ativar Registro de Diagnóstico",
+  "enableDiagnosticLoggingDescription": "Mantém um pequeno registro de falhas e erros neste dispositivo, para que você possa compartilhá-lo se algo der errado. Desativado por padrão.",
+  "clearDiagnosticLog": "Limpar Registro de Diagnóstico",
+  "clearDiagnosticLogConfirmTitle": "Limpar registro de diagnóstico?",
+  "clearDiagnosticLogConfirmMessage": "Isso excluirá permanentemente o arquivo de registro de diagnóstico. Essa ação não pode ser desfeita.",
+  "diagnosticLogCleared": "Registro de diagnóstico limpo",
   "supportTheProject": "Apoie o projeto",
   "couldNotOpenBrowser": "Não foi possível abrir o navegador. Por favor, visite: {url}",
   "@couldNotOpenBrowser": {

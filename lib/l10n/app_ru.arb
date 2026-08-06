@@ -1348,6 +1348,12 @@
   "shareDiagnosticLog": "Поделиться журналом диагностики",
   "shareDiagnosticLogEmpty": "Журнал диагностики пока отсутствует",
   "shareDiagnosticLogFolderOpened": "Общий доступ здесь недоступен — вместо этого открыта папка с журналом, чтобы вы могли прикрепить файл вручную.",
+  "enableDiagnosticLogging": "Включить журнал диагностики",
+  "enableDiagnosticLoggingDescription": "Ведёт небольшой журнал сбоев и ошибок на этом устройстве, которым вы можете поделиться, если что-то пойдёт не так. По умолчанию отключено.",
+  "clearDiagnosticLog": "Очистить журнал диагностики",
+  "clearDiagnosticLogConfirmTitle": "Очистить журнал диагностики?",
+  "clearDiagnosticLogConfirmMessage": "Файл журнала диагностики будет удалён без возможности восстановления.",
+  "diagnosticLogCleared": "Журнал диагностики очищен",
   "supportTheProject": "Поддержать проект",
   "couldNotOpenBrowser": "Не удалось открыть браузер. Пожалуйста, посетите: {url}",
   "@couldNotOpenBrowser": {

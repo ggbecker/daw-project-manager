@@ -2008,6 +2008,26 @@ class AppLocalizationsDe extends AppLocalizations {
       'Teilen ist hier nicht verfügbar. Der Protokollordner wurde stattdessen geöffnet, damit Sie die Datei manuell anhängen können.';
 
   @override
+  String get enableDiagnosticLogging => 'Diagnoseprotokollierung aktivieren';
+
+  @override
+  String get enableDiagnosticLoggingDescription =>
+      'Führt auf diesem Gerät ein kleines Protokoll von Abstürzen und Fehlern, das Sie bei Problemen weitergeben können. Standardmäßig deaktiviert.';
+
+  @override
+  String get clearDiagnosticLog => 'Diagnoseprotokoll löschen';
+
+  @override
+  String get clearDiagnosticLogConfirmTitle => 'Diagnoseprotokoll löschen?';
+
+  @override
+  String get clearDiagnosticLogConfirmMessage =>
+      'Dadurch wird die Diagnoseprotokolldatei dauerhaft gelöscht. Dies kann nicht rückgängig gemacht werden.';
+
+  @override
+  String get diagnosticLogCleared => 'Diagnoseprotokoll gelöscht';
+
+  @override
   String get supportTheProject => 'Unterstütze das Projekt';
 
   @override

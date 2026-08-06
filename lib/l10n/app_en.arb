@@ -2117,6 +2117,12 @@
   "shareDiagnosticLog": "Share Diagnostic Log",
   "shareDiagnosticLogEmpty": "No diagnostic log yet",
   "shareDiagnosticLogFolderOpened": "Sharing isn't available here — opened the log folder instead so you can attach the file manually.",
+  "enableDiagnosticLogging": "Enable Diagnostic Logging",
+  "enableDiagnosticLoggingDescription": "Keeps a small log of crashes and errors on this device, so you can share it if something goes wrong. Off by default.",
+  "clearDiagnosticLog": "Clear Diagnostic Log",
+  "clearDiagnosticLogConfirmTitle": "Clear Diagnostic Log?",
+  "clearDiagnosticLogConfirmMessage": "This will permanently delete the diagnostic log file. This can't be undone.",
+  "diagnosticLogCleared": "Diagnostic log cleared",
   "supportTheProject": "Support the project",
   "couldNotOpenBrowser": "Could not open browser. Please visit: {url}",
   "@couldNotOpenBrowser": {

@@ -1999,6 +1999,27 @@ class AppLocalizationsPt extends AppLocalizations {
       'O compartilhamento não está disponível aqui. A pasta de logs foi aberta para que você possa anexar o arquivo manualmente.';
 
   @override
+  String get enableDiagnosticLogging => 'Ativar Registro de Diagnóstico';
+
+  @override
+  String get enableDiagnosticLoggingDescription =>
+      'Mantém um pequeno registro de falhas e erros neste dispositivo, para que você possa compartilhá-lo se algo der errado. Desativado por padrão.';
+
+  @override
+  String get clearDiagnosticLog => 'Limpar Registro de Diagnóstico';
+
+  @override
+  String get clearDiagnosticLogConfirmTitle =>
+      'Limpar registro de diagnóstico?';
+
+  @override
+  String get clearDiagnosticLogConfirmMessage =>
+      'Isso excluirá permanentemente o arquivo de registro de diagnóstico. Essa ação não pode ser desfeita.';
+
+  @override
+  String get diagnosticLogCleared => 'Registro de diagnóstico limpo';
+
+  @override
   String get supportTheProject => 'Apoie o projeto';
 
   @override

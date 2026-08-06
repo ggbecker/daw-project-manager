@@ -1962,6 +1962,26 @@ class AppLocalizationsJa extends AppLocalizations {
       'この環境では共有を利用できません。代わりにログフォルダーを開いたので、ファイルを手動で添付してください。';
 
   @override
+  String get enableDiagnosticLogging => '診断ログを有効にする';
+
+  @override
+  String get enableDiagnosticLoggingDescription =>
+      'このデバイス上にクラッシュやエラーの小さなログを保持し、問題が発生した場合に共有できるようにします。デフォルトではオフです。';
+
+  @override
+  String get clearDiagnosticLog => '診断ログを消去';
+
+  @override
+  String get clearDiagnosticLogConfirmTitle => '診断ログを消去しますか？';
+
+  @override
+  String get clearDiagnosticLogConfirmMessage =>
+      '診断ログファイルは完全に削除されます。この操作は元に戻せません。';
+
+  @override
+  String get diagnosticLogCleared => '診断ログを消去しました';
+
+  @override
   String get supportTheProject => 'プロジェクトをサポート';
 
   @override

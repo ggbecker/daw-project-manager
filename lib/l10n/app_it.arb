@@ -1348,6 +1348,12 @@
   "shareDiagnosticLog": "Condividi registro diagnostico",
   "shareDiagnosticLogEmpty": "Nessun registro diagnostico ancora",
   "shareDiagnosticLogFolderOpened": "La condivisione non è disponibile qui. È stata aperta la cartella dei log per allegare il file manualmente.",
+  "enableDiagnosticLogging": "Attiva registrazione diagnostica",
+  "enableDiagnosticLoggingDescription": "Mantiene un piccolo registro di arresti anomali ed errori su questo dispositivo, così puoi condividerlo in caso di problemi. Disattivato per impostazione predefinita.",
+  "clearDiagnosticLog": "Cancella registro diagnostico",
+  "clearDiagnosticLogConfirmTitle": "Cancellare il registro diagnostico?",
+  "clearDiagnosticLogConfirmMessage": "Questa azione eliminerà definitivamente il file di registro diagnostico e non può essere annullata.",
+  "diagnosticLogCleared": "Registro diagnostico cancellato",
   "supportTheProject": "Sostieni il progetto",
   "couldNotOpenBrowser": "Impossibile aprire il browser. Si prega di visitare: {url}",
   "@couldNotOpenBrowser": {

@@ -42,6 +42,7 @@ import '../models/auto_backup_interval.dart';
 import '../models/pending_folder.dart';
 import '../services/metadata_extractor.dart';
 import '../services/auto_start_service.dart';
+import '../services/crash_logger.dart';
 
 // Profile Repository Provider
 final profileRepositoryProvider = FutureProvider<ProfileRepository>((
@@ -1199,6 +1200,50 @@ class CheckForUpdatesNotifier extends Notifier<bool> {
 
 final checkForUpdatesProvider = NotifierProvider<CheckForUpdatesNotifier, bool>(
   CheckForUpdatesNotifier.new,
+);
+
+// ---------------------------------------------------------------------------
+// Diagnostic Logging Setting
+// ---------------------------------------------------------------------------
+
+/// Device-local (not synced) toggle for whether CrashLogger records
+/// anything at all. Defaults off — opt-in, not opt-out. Every load/toggle
+/// pushes the resolved value into [CrashLogger.setEnabled], since
+/// CrashLogger itself can't read a provider (it's wired into global error
+/// handlers that can fire before any ProviderScope exists).
+class DiagnosticLoggingEnabledNotifier extends Notifier<bool> {
+  static const _key = 'diagnosticLoggingEnabled';
+
+  @override
+  bool build() {
+    SchedulerBinding.instance.addPostFrameCallback((_) => _load());
+    return false;
+  }
+
+  Future<void> _load() async {
+    try {
+      await ensureHiveInitialized();
+      final box = await Hive.openBox<String>('app_settings');
+      final saved = box.get(_key);
+      if (saved != null) state = saved == 'true';
+    } catch (_) {}
+    CrashLogger.setEnabled(state);
+  }
+
+  Future<void> toggle() async {
+    state = !state;
+    CrashLogger.setEnabled(state);
+    try {
+      await ensureHiveInitialized();
+      final box = await Hive.openBox<String>('app_settings');
+      await box.put(_key, state.toString());
+    } catch (_) {}
+  }
+}
+
+final diagnosticLoggingEnabledProvider =
+    NotifierProvider<DiagnosticLoggingEnabledNotifier, bool>(
+  DiagnosticLoggingEnabledNotifier.new,
 );
 
 /// Holds the latest available version string when a newer release is found; null otherwise.

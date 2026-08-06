@@ -3317,6 +3317,42 @@ abstract class AppLocalizations {
   /// **'Sharing isn\'t available here — opened the log folder instead so you can attach the file manually.'**
   String get shareDiagnosticLogFolderOpened;
 
+  /// No description provided for @enableDiagnosticLogging.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Diagnostic Logging'**
+  String get enableDiagnosticLogging;
+
+  /// No description provided for @enableDiagnosticLoggingDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Keeps a small log of crashes and errors on this device, so you can share it if something goes wrong. Off by default.'**
+  String get enableDiagnosticLoggingDescription;
+
+  /// No description provided for @clearDiagnosticLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Diagnostic Log'**
+  String get clearDiagnosticLog;
+
+  /// No description provided for @clearDiagnosticLogConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Diagnostic Log?'**
+  String get clearDiagnosticLogConfirmTitle;
+
+  /// No description provided for @clearDiagnosticLogConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This will permanently delete the diagnostic log file. This can\'t be undone.'**
+  String get clearDiagnosticLogConfirmMessage;
+
+  /// No description provided for @diagnosticLogCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Diagnostic log cleared'**
+  String get diagnosticLogCleared;
+
   /// No description provided for @supportTheProject.
   ///
   /// In en, this message translates to:

@@ -2013,6 +2013,27 @@ class AppLocalizationsEs extends AppLocalizations {
       'Compartir no está disponible aquí. Se abrió la carpeta del registro para que puedas adjuntar el archivo manualmente.';
 
   @override
+  String get enableDiagnosticLogging => 'Activar registro de diagnóstico';
+
+  @override
+  String get enableDiagnosticLoggingDescription =>
+      'Mantiene un pequeño registro de fallos y errores en este dispositivo, para que puedas compartirlo si algo sale mal. Desactivado de forma predeterminada.';
+
+  @override
+  String get clearDiagnosticLog => 'Borrar registro de diagnóstico';
+
+  @override
+  String get clearDiagnosticLogConfirmTitle =>
+      '¿Borrar registro de diagnóstico?';
+
+  @override
+  String get clearDiagnosticLogConfirmMessage =>
+      'Esto eliminará permanentemente el archivo de registro de diagnóstico. Esta acción no se puede deshacer.';
+
+  @override
+  String get diagnosticLogCleared => 'Registro de diagnóstico borrado';
+
+  @override
   String get supportTheProject => 'Apoya el proyecto';
 
   @override

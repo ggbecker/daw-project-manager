@@ -1348,6 +1348,12 @@
   "shareDiagnosticLog": "Partager le journal de diagnostic",
   "shareDiagnosticLogEmpty": "Aucun journal de diagnostic pour l'instant",
   "shareDiagnosticLogFolderOpened": "Le partage n'est pas disponible ici. Le dossier des journaux a été ouvert pour que vous puissiez joindre le fichier manuellement.",
+  "enableDiagnosticLogging": "Activer la journalisation de diagnostic",
+  "enableDiagnosticLoggingDescription": "Conserve un petit journal des plantages et des erreurs sur cet appareil, afin que vous puissiez le partager en cas de problème. Désactivé par défaut.",
+  "clearDiagnosticLog": "Effacer le journal de diagnostic",
+  "clearDiagnosticLogConfirmTitle": "Effacer le journal de diagnostic ?",
+  "clearDiagnosticLogConfirmMessage": "Cela supprimera définitivement le fichier journal de diagnostic. Cette action est irréversible.",
+  "diagnosticLogCleared": "Journal de diagnostic effacé",
   "supportTheProject": "Soutenez le projet",
   "couldNotOpenBrowser": "Impossible d'ouvrir le navigateur. Veuillez visiter: {url}",
   "@couldNotOpenBrowser": {

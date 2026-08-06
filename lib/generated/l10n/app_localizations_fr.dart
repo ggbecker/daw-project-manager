@@ -2017,6 +2017,28 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le partage n\'est pas disponible ici. Le dossier des journaux a été ouvert pour que vous puissiez joindre le fichier manuellement.';
 
   @override
+  String get enableDiagnosticLogging =>
+      'Activer la journalisation de diagnostic';
+
+  @override
+  String get enableDiagnosticLoggingDescription =>
+      'Conserve un petit journal des plantages et des erreurs sur cet appareil, afin que vous puissiez le partager en cas de problème. Désactivé par défaut.';
+
+  @override
+  String get clearDiagnosticLog => 'Effacer le journal de diagnostic';
+
+  @override
+  String get clearDiagnosticLogConfirmTitle =>
+      'Effacer le journal de diagnostic ?';
+
+  @override
+  String get clearDiagnosticLogConfirmMessage =>
+      'Cela supprimera définitivement le fichier journal de diagnostic. Cette action est irréversible.';
+
+  @override
+  String get diagnosticLogCleared => 'Journal de diagnostic effacé';
+
+  @override
   String get supportTheProject => 'Soutenez le projet';
 
   @override

@@ -1999,6 +1999,26 @@ class AppLocalizationsEn extends AppLocalizations {
       'Sharing isn\'t available here — opened the log folder instead so you can attach the file manually.';
 
   @override
+  String get enableDiagnosticLogging => 'Enable Diagnostic Logging';
+
+  @override
+  String get enableDiagnosticLoggingDescription =>
+      'Keeps a small log of crashes and errors on this device, so you can share it if something goes wrong. Off by default.';
+
+  @override
+  String get clearDiagnosticLog => 'Clear Diagnostic Log';
+
+  @override
+  String get clearDiagnosticLogConfirmTitle => 'Clear Diagnostic Log?';
+
+  @override
+  String get clearDiagnosticLogConfirmMessage =>
+      'This will permanently delete the diagnostic log file. This can\'t be undone.';
+
+  @override
+  String get diagnosticLogCleared => 'Diagnostic log cleared';
+
+  @override
   String get supportTheProject => 'Support the project';
 
   @override
