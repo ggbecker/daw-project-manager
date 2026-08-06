@@ -3621,6 +3621,20 @@ class AppLocalizationsFr extends AppLocalizations {
   String get appImageUpdateRetry => 'Réessayer';
 
   @override
+  String get appImageUpdateErrorMessage =>
+      'Une erreur s\'est produite pendant la mise à jour. Vous pouvez réessayer ou consulter les détails de l\'erreur ci-dessous.';
+
+  @override
+  String get appImageUpdateErrorDetailsLabel => 'Détails de l\'erreur';
+
+  @override
+  String get appImageUpdateCopyErrorDetails =>
+      'Copier les détails de l\'erreur';
+
+  @override
+  String get appImageUpdateErrorDetailsCopied => 'Détails de l\'erreur copiés';
+
+  @override
   String get resetOnboarding => 'Réinitialiser l\'intégration';
 
   @override

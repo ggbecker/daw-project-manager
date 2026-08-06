@@ -3479,6 +3479,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appImageUpdateRetry => '重试';
 
   @override
+  String get appImageUpdateErrorMessage => '更新时出错。您可以重试，或查看下方的错误详情。';
+
+  @override
+  String get appImageUpdateErrorDetailsLabel => '错误详情';
+
+  @override
+  String get appImageUpdateCopyErrorDetails => '复制错误详情';
+
+  @override
+  String get appImageUpdateErrorDetailsCopied => '错误详情已复制';
+
+  @override
   String get resetOnboarding => '重置引导设置';
 
   @override

@@ -3514,6 +3514,19 @@ class AppLocalizationsJa extends AppLocalizations {
   String get appImageUpdateRetry => '再試行';
 
   @override
+  String get appImageUpdateErrorMessage =>
+      '更新中にエラーが発生しました。もう一度お試しいただくか、下のエラー詳細をご確認ください。';
+
+  @override
+  String get appImageUpdateErrorDetailsLabel => 'エラーの詳細';
+
+  @override
+  String get appImageUpdateCopyErrorDetails => 'エラー詳細をコピー';
+
+  @override
+  String get appImageUpdateErrorDetailsCopied => 'エラー詳細をコピーしました';
+
+  @override
   String get resetOnboarding => '初期設定をリセット';
 
   @override

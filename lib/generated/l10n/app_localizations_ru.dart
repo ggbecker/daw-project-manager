@@ -3595,6 +3595,20 @@ class AppLocalizationsRu extends AppLocalizations {
   String get appImageUpdateRetry => 'Повторить';
 
   @override
+  String get appImageUpdateErrorMessage =>
+      'Во время обновления произошла ошибка. Вы можете повторить попытку или просмотреть подробности ошибки ниже.';
+
+  @override
+  String get appImageUpdateErrorDetailsLabel => 'Подробности ошибки';
+
+  @override
+  String get appImageUpdateCopyErrorDetails => 'Скопировать подробности ошибки';
+
+  @override
+  String get appImageUpdateErrorDetailsCopied =>
+      'Подробности ошибки скопированы';
+
+  @override
   String get resetOnboarding => 'Сбросить обучение';
 
   @override

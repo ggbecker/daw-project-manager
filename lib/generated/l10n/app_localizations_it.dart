@@ -3600,6 +3600,19 @@ class AppLocalizationsIt extends AppLocalizations {
   String get appImageUpdateRetry => 'Riprova';
 
   @override
+  String get appImageUpdateErrorMessage =>
+      'Si è verificato un errore durante l\'aggiornamento. Puoi riprovare oppure controllare i dettagli dell\'errore qui sotto.';
+
+  @override
+  String get appImageUpdateErrorDetailsLabel => 'Dettagli errore';
+
+  @override
+  String get appImageUpdateCopyErrorDetails => 'Copia dettagli errore';
+
+  @override
+  String get appImageUpdateErrorDetailsCopied => 'Dettagli errore copiati';
+
+  @override
   String get resetOnboarding => 'Reimposta configurazione iniziale';
 
   @override

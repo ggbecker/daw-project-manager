@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as p;
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
@@ -44,6 +45,12 @@ import 'widgets/update_available_dialog.dart';
 @visibleForTesting
 bool looksLikeFlatpakPortalPath(String path) =>
     Platform.isLinux && RegExp(r'^/run/user/\d+/doc/').hasMatch(path);
+
+/// Whether the "Share Diagnostic Log" settings entry should be shown.
+/// Hidden in release builds — it's a debugging aid for development/testing,
+/// not something end users need surfaced in the shipped app.
+@visibleForTesting
+bool shareDiagnosticLogVisible({bool releaseMode = kReleaseMode}) => !releaseMode;
 
 /// Identifies a SettingsPage tab for deep-linking (e.g. the dashboard's
 /// Google Drive quick-access shortcut opening straight to [backup]). Member
@@ -988,7 +995,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         _SearchEntry(SettingsSection.about, Icons.menu_book_outlined, l10n.menuDocumentation, null),
         _SearchEntry(SettingsSection.about, Icons.gavel_outlined, l10n.license, null),
         _SearchEntry(SettingsSection.about, Icons.bug_report_outlined, l10n.reportIssue, null),
-        _SearchEntry(SettingsSection.about, Icons.bug_report_outlined, l10n.shareDiagnosticLog, null),
+        if (shareDiagnosticLogVisible())
+          _SearchEntry(SettingsSection.about, Icons.bug_report_outlined, l10n.shareDiagnosticLog, null),
       ];
 
   @override
@@ -2433,6 +2441,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             ),
           ),
         ],
+        if (shareDiagnosticLogVisible()) ...[
         const SizedBox(height: 12),
         Card(
           clipBehavior: Clip.antiAlias,
@@ -2459,6 +2468,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             ),
           ),
         ),
+        ],
       ],
     );
   }

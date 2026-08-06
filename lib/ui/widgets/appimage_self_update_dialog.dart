@@ -1,11 +1,13 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../generated/l10n/app_localizations.dart';
 import '../../services/appimage_update_service.dart';
 
-enum _Stage { fetching, downloading, verifying, ready, error }
+enum _Stage { fetching, downloading, verifying, cancelling, ready, error }
 
 /// Drives the actual AppImage self-update (fetch release assets, download,
 /// verify, replace, offer a restart) after the user picks "Update Now" in
@@ -31,7 +33,8 @@ class AppImageSelfUpdateDialog extends StatefulWidget {
 class _AppImageSelfUpdateDialogState extends State<AppImageSelfUpdateDialog> {
   _Stage _stage = _Stage.fetching;
   double? _progress;
-  String? _errorMessage;
+  String? _errorDetails;
+  UpdateCancelToken? _cancelToken;
 
   @override
   void initState() {
@@ -43,11 +46,14 @@ class _AppImageSelfUpdateDialogState extends State<AppImageSelfUpdateDialog> {
     setState(() {
       _stage = _Stage.fetching;
       _progress = null;
-      _errorMessage = null;
+      _errorDetails = null;
     });
+    final cancelToken = UpdateCancelToken();
+    _cancelToken = cancelToken;
     final service = AppImageUpdateService();
     try {
       final assets = await service.fetchReleaseAssets(widget.version);
+      if (cancelToken.isCancelled) throw const UpdateCancelledException();
       if (assets == null) {
         throw StateError('No AppImage asset found for v${widget.version}.');
       }
@@ -55,6 +61,7 @@ class _AppImageSelfUpdateDialogState extends State<AppImageSelfUpdateDialog> {
       setState(() => _stage = _Stage.downloading);
       await service.applyUpdate(
         assets,
+        cancelToken: cancelToken,
         onProgress: (progress) {
           if (!mounted) return;
           setState(() {
@@ -65,21 +72,56 @@ class _AppImageSelfUpdateDialogState extends State<AppImageSelfUpdateDialog> {
       );
       if (!mounted) return;
       setState(() => _stage = _Stage.ready);
-    } catch (e) {
+    } on UpdateCancelledException {
+      // Cleanup already happened inside applyUpdate before this was thrown —
+      // just close the dialog, this isn't a failure the user needs to see.
+      if (mounted) Navigator.of(context).pop();
+    } catch (e, stackTrace) {
       if (!mounted) return;
       setState(() {
         _stage = _Stage.error;
-        _errorMessage = e.toString();
+        _errorDetails = '$e\n\n$stackTrace';
       });
     } finally {
       service.close();
     }
   }
 
+  void _cancel() {
+    if (_stage == _Stage.cancelling) return;
+    setState(() => _stage = _Stage.cancelling);
+    _cancelToken?.cancel();
+  }
+
   Future<void> _restartNow() async {
     final service = AppImageUpdateService();
     await service.relaunch();
     exit(0);
+  }
+
+  Future<void> _copyErrorDetails(AppLocalizations l10n) async {
+    await Clipboard.setData(ClipboardData(text: _errorDetails ?? ''));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(l10n.appImageUpdateErrorDetailsCopied),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  Future<void> _openNewIssue() async {
+    final uri = Uri(
+      scheme: 'https',
+      host: 'github.com',
+      path: '/bandpassrecords/daw-project-manager/issues/new',
+      queryParameters: {
+        'template': 'issue.yml',
+        'type': 'Bug report',
+        'actual': 'The in-app AppImage update failed with:\n\n${_errorDetails ?? ''}',
+      },
+    );
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   @override
@@ -111,6 +153,7 @@ class _AppImageSelfUpdateDialogState extends State<AppImageSelfUpdateDialog> {
       case _Stage.fetching:
       case _Stage.downloading:
       case _Stage.verifying:
+      case _Stage.cancelling:
         return l10n.updateNowButtonLabel;
     }
   }
@@ -129,6 +172,8 @@ class _AppImageSelfUpdateDialogState extends State<AppImageSelfUpdateDialog> {
         );
       case _Stage.verifying:
         return _ProgressRow(label: l10n.appImageUpdateVerifying, progress: null);
+      case _Stage.cancelling:
+        return _ProgressRow(label: l10n.cancelling, progress: null);
       case _Stage.ready:
         return Row(
           children: [
@@ -138,15 +183,65 @@ class _AppImageSelfUpdateDialogState extends State<AppImageSelfUpdateDialog> {
           ],
         );
       case _Stage.error:
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(Icons.error_outline, color: theme.colorScheme.error),
-            const SizedBox(width: 12),
-            Expanded(child: Text(_errorMessage ?? '')),
-          ],
-        );
+        return _buildErrorBody(context, l10n, theme);
     }
+  }
+
+  Widget _buildErrorBody(BuildContext context, AppLocalizations l10n, ThemeData theme) {
+    final details = _errorDetails;
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.error_outline, color: theme.colorScheme.error),
+              const SizedBox(width: 12),
+              Expanded(child: Text(l10n.appImageUpdateErrorMessage)),
+            ],
+          ),
+          if (details != null) ...[
+            const SizedBox(height: 4),
+            Theme(
+              data: theme.copyWith(dividerColor: Colors.transparent),
+              child: ExpansionTile(
+                tilePadding: EdgeInsets.zero,
+                childrenPadding: EdgeInsets.zero,
+                title: Text(l10n.appImageUpdateErrorDetailsLabel, style: theme.textTheme.bodyMedium),
+                children: [
+                  Container(
+                    width: double.infinity,
+                    constraints: const BoxConstraints(maxHeight: 160),
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: SingleChildScrollView(
+                      child: SelectableText(
+                        details,
+                        style: theme.textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      onPressed: () => _copyErrorDetails(l10n),
+                      icon: const Icon(Icons.copy_outlined, size: 16),
+                      label: Text(l10n.appImageUpdateCopyErrorDetails),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 
   List<Widget> _buildActions(BuildContext context, AppLocalizations l10n) {
@@ -154,6 +249,13 @@ class _AppImageSelfUpdateDialogState extends State<AppImageSelfUpdateDialog> {
       case _Stage.fetching:
       case _Stage.downloading:
       case _Stage.verifying:
+        return [
+          TextButton(
+            onPressed: _cancel,
+            child: Text(l10n.cancel),
+          ),
+        ];
+      case _Stage.cancelling:
         return const [];
       case _Stage.ready:
         return [
@@ -171,6 +273,11 @@ class _AppImageSelfUpdateDialogState extends State<AppImageSelfUpdateDialog> {
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: Text(l10n.close),
+          ),
+          OutlinedButton.icon(
+            onPressed: _openNewIssue,
+            icon: const Icon(Icons.bug_report_outlined, size: 16),
+            label: Text(l10n.reportIssue),
           ),
           FilledButton(
             onPressed: _run,

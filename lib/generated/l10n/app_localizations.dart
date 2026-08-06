@@ -6047,6 +6047,30 @@ abstract class AppLocalizations {
   /// **'Retry'**
   String get appImageUpdateRetry;
 
+  /// No description provided for @appImageUpdateErrorMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong while updating. You can try again, or check the error details below.'**
+  String get appImageUpdateErrorMessage;
+
+  /// No description provided for @appImageUpdateErrorDetailsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Error Details'**
+  String get appImageUpdateErrorDetailsLabel;
+
+  /// No description provided for @appImageUpdateCopyErrorDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Error Details'**
+  String get appImageUpdateCopyErrorDetails;
+
+  /// No description provided for @appImageUpdateErrorDetailsCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Error details copied'**
+  String get appImageUpdateErrorDetailsCopied;
+
   /// No description provided for @resetOnboarding.
   ///
   /// In en, this message translates to:

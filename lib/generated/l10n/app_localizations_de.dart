@@ -3606,6 +3606,19 @@ class AppLocalizationsDe extends AppLocalizations {
   String get appImageUpdateRetry => 'Erneut versuchen';
 
   @override
+  String get appImageUpdateErrorMessage =>
+      'Beim Aktualisieren ist ein Fehler aufgetreten. Sie können es erneut versuchen oder die Fehlerdetails unten prüfen.';
+
+  @override
+  String get appImageUpdateErrorDetailsLabel => 'Fehlerdetails';
+
+  @override
+  String get appImageUpdateCopyErrorDetails => 'Fehlerdetails kopieren';
+
+  @override
+  String get appImageUpdateErrorDetailsCopied => 'Fehlerdetails kopiert';
+
+  @override
   String get resetOnboarding => 'Einrichtung zurücksetzen';
 
   @override
