@@ -58,6 +58,12 @@
       this one for each shipped version instead of overwriting it, so the
       changelog accumulates.
     -->
+    <release version="2.7.3" date="2026-08-07">
+      <description>
+        <p>See the GitHub release notes for details.</p>
+      </description>
+      <url>https://github.com/bandpassrecords/daw-project-manager/releases/tag/v2.7.3</url>
+    </release>
     <release version="2.7.2" date="2026-08-06">
       <description>
         <p>See the GitHub release notes for details.</p>
