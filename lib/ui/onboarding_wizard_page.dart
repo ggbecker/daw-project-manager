@@ -625,7 +625,7 @@ class _PhasesPageState extends ConsumerState<_PhasesPage> {
           ),
           const SizedBox(height: 16),
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
                 child: TextField(

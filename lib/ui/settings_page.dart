@@ -2052,7 +2052,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             const SizedBox(height: 16),
             // Add phase row
             Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Expanded(
                   child: TextField(
