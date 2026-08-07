@@ -125,12 +125,43 @@ function setupDawSearch() {
     });
 }
 
+// Open any app screenshot full-size in a lightbox on click; close via the
+// close button, clicking the backdrop, or Escape.
+function setupLightbox() {
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightbox-img');
+    const closeBtn = document.getElementById('lightbox-close');
+    if (!lightbox || !lightboxImg || !closeBtn) return;
+
+    function closeLightbox() {
+        lightbox.classList.remove('active');
+        lightboxImg.src = '';
+    }
+
+    document.querySelectorAll('img.app-screenshot').forEach(img => {
+        img.addEventListener('click', () => {
+            lightboxImg.src = img.src;
+            lightboxImg.alt = img.alt;
+            lightbox.classList.add('active');
+        });
+    });
+
+    closeBtn.addEventListener('click', closeLightbox);
+    lightbox.addEventListener('click', (e) => {
+        if (e.target === lightbox) closeLightbox();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeLightbox();
+    });
+}
+
 // Observe feature cards and other elements
 document.addEventListener('DOMContentLoaded', () => {
     // Show appropriate download card
     showDownloadCard();
 
     setupDawSearch();
+    setupLightbox();
 
     const animatedElements = document.querySelectorAll('.feature-row, .daw-item, .download-card');
 
