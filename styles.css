@@ -204,26 +204,56 @@ body {
     background: var(--bg-card);
 }
 
-.hero-badges {
-    display: flex;
-    gap: 0.75rem;
-    justify-content: center;
-    flex-wrap: wrap;
+.hero-plats {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
+    margin-bottom: 3rem;
 }
 
-.badge {
+/* Hero / feature screenshot frames */
+.hero-visual {
+    margin-top: 1rem;
+}
+
+.app-window {
     background: var(--bg-card);
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    font-size: 0.875rem;
-    color: var(--text-secondary);
     border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.hero-visual .app-window {
+    max-width: 980px;
+    margin: 0 auto;
+    box-shadow: 0 30px 60px -20px var(--shadow);
+}
+
+.app-screenshot {
+    display: block;
+    width: 100%;
 }
 
 /* Features Section */
 .features {
     padding: 6rem 0;
     background: var(--bg-dark);
+}
+
+.section-head {
+    max-width: 560px;
+    margin: 0 auto 4rem;
+    text-align: center;
+}
+
+.section-eyebrow {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.9rem;
 }
 
 .section-title {
@@ -241,52 +271,294 @@ body {
     margin-bottom: 3rem;
 }
 
-.features-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-    margin-top: 3rem;
-}
-
-.feature-card {
-    background: var(--bg-card);
-    padding: 2rem;
-    border-radius: 12px;
-    border: 1px solid var(--border-color);
-    transition: all 0.3s ease;
-}
-
-.feature-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 30px var(--shadow);
-    border-color: var(--primary-color);
-}
-
-.feature-icon {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-}
-
-.feature-card h3 {
-    font-size: 1.5rem;
+.section-head .section-title,
+.section-head .section-subtitle {
     margin-bottom: 0.75rem;
+}
+
+/* Alternating feature rows */
+.feature-rows {
+    display: flex;
+    flex-direction: column;
+}
+
+.feature-row {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 4.5rem;
+    align-items: center;
+    padding: 3.2rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.feature-row:last-child {
+    border-bottom: none;
+}
+
+.feature-row.reverse {
+    grid-template-columns: 1fr 1.15fr;
+}
+
+.feature-row.reverse .feature-visual {
+    order: 2;
+}
+
+.feature-row.reverse .feature-copy {
+    order: 1;
+}
+
+.feature-kicker {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.7rem;
+}
+
+.feature-copy h3 {
+    font-size: 1.55rem;
+    font-weight: 700;
+    margin-bottom: 0.7rem;
+    letter-spacing: -0.01em;
     color: var(--text-primary);
 }
 
-.feature-card p {
+.feature-copy p {
     color: var(--text-secondary);
+    font-size: 0.98rem;
+    max-width: 42ch;
     line-height: 1.7;
+}
+
+/* Placeholder screenshot mockups — replace each .placeholder-visual's markup
+   with an <img> once the real screenshot/clip listed in the row's HTML
+   comment has been captured. */
+.placeholder-visual {
+    padding: 1.6rem;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.55rem;
+}
+
+.fake-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0.2rem;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.82rem;
+}
+
+.fake-row:last-child {
+    border-bottom: none;
+}
+
+.fake-label {
+    color: var(--text-secondary);
+    min-width: 110px;
+}
+
+.fake-value {
+    color: var(--text-muted);
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 0.75rem;
+    margin-left: auto;
+}
+
+.mock-check {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    border: 1.5px solid var(--text-muted);
+    flex-shrink: 0;
+}
+
+.mock-check.done {
+    background: var(--accent);
+    border-color: var(--accent);
+    position: relative;
+}
+
+.mock-check.done::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 4px;
+    height: 8px;
+    border: solid var(--bg-darker);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.mock-strike {
+    text-decoration: line-through;
+    color: var(--text-muted) !important;
+}
+
+.mock-daw-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.9rem;
+}
+
+.mock-daw-grid img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: contain;
+    background: var(--bg-darker);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.6rem;
+}
+
+.mock-meta {
+    gap: 0;
+}
+
+.mock-meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.7rem 0.2rem;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.9rem;
+}
+
+.mock-meta-row:last-child {
+    border-bottom: none;
+}
+
+.mock-meta-label {
+    color: var(--text-muted);
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.mock-meta-value {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.mock-sync {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--bg-darker);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.mock-cloud {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    background: rgba(74, 158, 255, 0.14);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.mock-sync-text b {
+    display: block;
+    font-size: 0.88rem;
+    color: var(--text-primary);
+}
+
+.mock-sync-text span {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+
+.mock-phases {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.mock-phase-pill {
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.mock-phase-pill.active {
+    background: rgba(74, 158, 255, 0.14);
+    border-color: rgba(74, 158, 255, 0.35);
+    color: var(--accent);
+}
+
+/* Closing line under the feature rows */
+.section-more {
+    text-align: center;
+    color: var(--text-secondary);
+    margin-top: 3rem;
+    font-size: 1rem;
+}
+
+.section-more a,
+.feature-link {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.section-more a:hover,
+.feature-link:hover {
+    text-decoration: underline;
+}
+
+/* Metadata-extraction legend + per-DAW badge, shown in the Supported DAWs grid */
+.daws-legend {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    margin-top: 1.25rem;
+}
+
+.daw-meta-badge {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+    background: rgba(74, 158, 255, 0.12);
+    border: 1px solid rgba(74, 158, 255, 0.3);
+    padding: 0.1rem 0.45rem;
+    border-radius: 4px;
+    vertical-align: middle;
 }
 
 /* Supported DAWs Section */
 .daws {
-    padding: 6rem 0;
+    padding: 3.5rem 0;
     background: var(--bg-darker);
+}
+
+.daws .section-title {
+    font-size: 1.6rem;
+}
+
+.daws .section-subtitle {
+    font-size: 0.95rem;
+    margin-bottom: 0;
 }
 
 .daws-search {
     max-width: 420px;
-    margin: 2rem auto 0;
+    margin: 1.25rem auto 0;
     text-align: center;
 }
 
@@ -319,23 +591,24 @@ body {
 
 .daws-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
-    margin-top: 3rem;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.85rem;
+    margin-top: 1.5rem;
 }
 
 .daw-item {
     background: var(--bg-card);
-    padding: 1.5rem;
+    padding: 0.85rem 0.5rem;
     border-radius: 8px;
     text-align: center;
     border: 1px solid var(--border-color);
     transition: all 0.3s ease;
     font-weight: 500;
+    font-size: 0.85rem;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem;
 }
 
 .daw-item:hover {
@@ -345,8 +618,8 @@ body {
 }
 
 .daw-logo {
-    width: 80px;
-    height: 80px;
+    width: 40px;
+    height: 40px;
     object-fit: contain;
     filter: brightness(0.9);
     transition: filter 0.3s ease;
@@ -354,6 +627,98 @@ body {
 
 .daw-item:hover .daw-logo {
     filter: brightness(1);
+}
+
+/* Metadata Extraction Support table */
+.metadata-extraction {
+    margin-top: 3.5rem;
+    padding-top: 3rem;
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+}
+
+.metadata-extraction-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.6rem;
+}
+
+.metadata-extraction-subtitle {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    max-width: 560px;
+    margin: 0 auto 2rem;
+}
+
+.metadata-table-wrap {
+    max-width: 640px;
+    margin: 0 auto;
+    overflow-x: auto;
+}
+
+.metadata-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.metadata-table th,
+.metadata-table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.metadata-table th {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.metadata-table th:not(:first-child),
+.metadata-table td:not(:first-child) {
+    text-align: center;
+}
+
+.metadata-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.metadata-daw {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.metadata-daw-logo {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+}
+
+.metadata-yes {
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.metadata-no {
+    color: var(--text-muted);
+}
+
+.metadata-table-footnote {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    margin-top: 1rem;
 }
 
 /* Download Section */
@@ -409,6 +774,19 @@ body {
     margin-bottom: 1.5rem;
 }
 
+.download-note {
+    margin-top: 1rem;
+    margin-bottom: 0;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+}
+
+.download-note strong {
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
 .other-platform-link {
     margin-top: 1rem;
     padding-top: 1rem;
@@ -450,6 +828,41 @@ body {
 
 .download-info a:hover {
     text-decoration: underline;
+}
+
+/* Android Testing Section */
+.android-testing {
+    padding: 4rem 0;
+    background: var(--bg-darker);
+}
+
+.android-testing-card {
+    max-width: 560px;
+    margin: 0 auto;
+    text-align: center;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 3rem 2.5rem;
+}
+
+.android-testing-icon {
+    width: 56px;
+    height: auto;
+    margin-bottom: 1.25rem;
+}
+
+.android-testing-card h2 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+}
+
+.android-testing-card p {
+    color: var(--text-secondary);
+    margin-bottom: 1.75rem;
+    line-height: 1.7;
 }
 
 /* Footer */
@@ -502,6 +915,19 @@ body {
     font-size: 0.875rem;
 }
 
+.footer-attribution {
+    margin-top: 0.5rem;
+    font-size: 0.78rem;
+}
+
+.footer-attribution a {
+    color: var(--text-muted);
+}
+
+.footer-attribution a:hover {
+    color: var(--text-secondary);
+}
+
 /* Smooth Scrolling */
 html {
     scroll-behavior: smooth;
@@ -526,16 +952,34 @@ html {
         font-size: 0.9rem;
     }
     
-    .features-grid,
     .download-cards {
         grid-template-columns: 1fr;
     }
-    
+
+    .feature-row,
+    .feature-row.reverse {
+        grid-template-columns: 1fr;
+        gap: 1.75rem;
+    }
+
+    .feature-row.reverse .feature-visual,
+    .feature-row.reverse .feature-copy {
+        order: initial;
+    }
+
+    .feature-copy p {
+        max-width: none;
+    }
+
+    .mock-daw-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
     .hero-buttons {
         flex-direction: column;
         align-items: stretch;
     }
-    
+
     .btn {
         width: 100%;
         text-align: center;

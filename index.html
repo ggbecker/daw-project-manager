@@ -49,19 +49,17 @@
         <div class="container">
             <div class="hero-content">
                 <h1 class="hero-title">Your Music Projects,<br>Finally Under Control</h1>
-                <p class="hero-subtitle">Scan your drives, track metadata, manage releases, and monitor tasks across every project — all from one place. Built for producers who work across multiple DAWs.</p>
+                <p class="hero-subtitle">Scan your drives, track every project, and keep your creative workflow in order — across every DAW you use.</p>
                 <div class="hero-buttons">
                     <a href="#download" class="btn btn-primary">Download Free</a>
                     <a href="#features" class="btn btn-secondary">Explore Features</a>
                 </div>
-                <div class="hero-badges">
-                    <span class="badge">macOS</span>
-                    <span class="badge">Windows</span>
-                    <span class="badge">Linux</span>
-                    <span class="badge">Android</span>
-                    <span class="badge">iOS</span>
-                    <span class="badge">Free &amp; Open Source</span>
-                    <span class="badge">28 DAWs Supported</span>
+                <p class="hero-plats">macOS · Windows · Linux · Android — free &amp; open source</p>
+
+                <div class="hero-visual">
+                    <div class="app-window">
+                        <img src="resources/screenshots/dashboard/dashboard-overview.png" alt="DAW Project Manager dashboard showing a table of projects across several DAWs, phases, and BPMs" class="app-screenshot">
+                    </div>
                 </div>
             </div>
         </div>
@@ -70,114 +68,156 @@
     <!-- Features Section -->
     <section id="features" class="features">
         <div class="container">
-            <h2 class="section-title">Everything Your Library Needs</h2>
-            <p class="section-subtitle">A complete toolkit for managing your music production projects</p>
+            <div class="section-head">
+                <h2 class="section-title">Project Management</h2>
+                <p class="section-subtitle">Manage your DAW projects from a single application. No more folders. Never lose track of a project.</p>
+            </div>
 
-            <div class="features-grid">
+            <div class="feature-rows">
 
-                <div class="feature-card">
-                    <div class="feature-icon">⚡</div>
-                    <h3>Smart Scanning</h3>
-                    <p>Two-phase scanning: instant detection of DAW type and file path, then optional deep extraction of BPM, key, and version on demand. No waiting around for large libraries.</p>
+                <!-- logo collage built from existing resources/daw/logos assets — swap individual logos or add more as needed -->
+                <div class="feature-row">
+                    <div class="feature-visual">
+                        <div class="app-window">
+                            <div class="app-body placeholder-visual mock-daw-grid">
+                                <img src="resources/daw/logos/ableton-live.png" alt="Ableton Live">
+                                <img src="resources/daw/logos/fl-studio.png" alt="FL Studio">
+                                <img src="resources/daw/logos/logic-pro.png" alt="Logic Pro">
+                                <img src="resources/daw/logos/cubase.png" alt="Cubase">
+                                <img src="resources/daw/logos/pro-tools.png" alt="Pro Tools">
+                                <img src="resources/daw/logos/reaper.png" alt="Reaper">
+                                <img src="resources/daw/logos/bitwig-studio.png" alt="Bitwig Studio">
+                                <img src="resources/daw/logos/studio-one.png" alt="Studio One">
+                                <img src="resources/daw/logos/ardour.png" alt="Ardour">
+                                <img src="resources/daw/logos/garageband.png" alt="GarageBand">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feature-copy">
+                        <div class="feature-kicker">Compatibility</div>
+                        <h3>We got you covered</h3>
+                        <p>Works with any publicly available DAW — <a href="#daws" class="feature-link">check the full list here</a>.</p>
+                    </div>
                 </div>
 
-                <div class="feature-card">
-                    <div class="feature-icon">🎛️</div>
-                    <h3>Rich Project Metadata</h3>
-                    <p>Edit display names, BPM, musical key, phase, notes, and tags per project. Change the production phase right from the table with a dropdown — no need to open each project.</p>
+                <!-- swap .placeholder-visual for a real metadata-panel screenshot once one is captured (not yet in resources/screenshots/) -->
+                <div class="feature-row reverse">
+                    <div class="feature-visual">
+                        <div class="app-window">
+                            <div class="app-body placeholder-visual mock-meta">
+                                <div class="mock-meta-row"><span class="mock-meta-label">BPM</span><span class="mock-meta-value">124</span></div>
+                                <div class="mock-meta-row"><span class="mock-meta-label">Key</span><span class="mock-meta-value">A Minor</span></div>
+                                <div class="mock-meta-row"><span class="mock-meta-label">DAW Version</span><span class="mock-meta-value">Reaper 7.30</span></div>
+                                <div class="mock-meta-row"><span class="mock-meta-label">Project Notes</span><span class="mock-meta-value">Found</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feature-copy">
+                        <div class="feature-kicker">Metadata</div>
+                        <h3>Advanced Metadata Extraction</h3>
+                        <p>DAW version, BPM, musical key, and project notes — extracted automatically for every project, no manual tagging. <a href="#metadata-extraction" class="feature-link">See which DAWs are supported</a>; the list keeps growing.</p>
+                    </div>
                 </div>
 
-                <div class="feature-card">
-                    <div class="feature-icon">✅</div>
-                    <h3>Task Queue</h3>
-                    <p>See all unfinished todos across every project in one unified view. Grouped by project and sorted by pending count. Check off tasks without ever leaving the queue.</p>
+                <!-- swap .placeholder-visual for resources/screenshots/project-detail/project-detail-preview-player.png once captured -->
+                <div class="feature-row">
+                    <div class="feature-visual">
+                        <div class="app-window">
+                            <div class="app-body placeholder-visual">
+                                <div class="mock-sync">
+                                    <div class="mock-cloud">🎵</div>
+                                    <div class="mock-sync-text"><b>Corridor_mixdown_v3.wav</b><span>found automatically — ready to preview</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feature-copy">
+                        <div class="feature-kicker">Preview</div>
+                        <h3>Finds Your Mixdowns Automatically</h3>
+                        <p>Export a mix from your DAW and DAW Project Manager finds the file on its own, making it playable for preview right inside the app.</p>
+                    </div>
                 </div>
 
-                <div class="feature-card">
-                    <div class="feature-icon">🎵</div>
-                    <h3>Preview Player</h3>
-                    <p>Play preview songs directly in the app with full seek controls. Arrow keys = ±5s, Ctrl+arrow = ±30s. Play and review your work without switching windows.</p>
+                <!-- swap .placeholder-visual for resources/screenshots/google-drive-sync/drive-upload-progress.png, or a short clip of the progress bar moving -->
+                <div class="feature-row reverse">
+                    <div class="feature-visual">
+                        <div class="app-window">
+                            <div class="app-body placeholder-visual">
+                                <div class="mock-sync">
+                                    <div class="mock-cloud">☁️</div>
+                                    <div class="mock-sync-text"><b>Synced to your own Google Drive</b><span>last synced 12 minutes ago</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feature-copy">
+                        <div class="feature-kicker">Privacy</div>
+                        <h3>Offline First</h3>
+                        <p>Everything lives on your machine. You can optionally sync your project metadata to your own Google Drive — your project files are never sent to the cloud.</p>
+                    </div>
                 </div>
 
-                <div class="feature-card">
-                    <div class="feature-icon">📦</div>
-                    <h3>Release Management</h3>
-                    <p>Group projects into releases with artwork, description, and release date. Attach stems, mixes, and other files. Navigate your catalogue with a sortable table view.</p>
+                <!-- swap .placeholder-visual for resources/screenshots/task-queue/task-queue-overview.png once captured -->
+                <div class="feature-row">
+                    <div class="feature-visual">
+                        <div class="app-window">
+                            <div class="app-body placeholder-visual">
+                                <div class="fake-row"><span class="mock-check"></span><span class="fake-label">Midnight Static</span><span class="fake-value">mix vocals</span></div>
+                                <div class="fake-row"><span class="mock-check done"></span><span class="fake-label mock-strike">Low Tide</span><span class="fake-value mock-strike">bounce stems</span></div>
+                                <div class="fake-row"><span class="mock-check"></span><span class="fake-label">Corridor</span><span class="fake-value">automate filter</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feature-copy">
+                        <div class="feature-kicker">Tasks</div>
+                        <h3>TODO Lists</h3>
+                        <p>Keep a checklist per project, then see every unfinished task across your whole library in one unified queue — check things off without ever leaving it.</p>
+                    </div>
                 </div>
 
-                <div class="feature-card">
-                    <div class="feature-icon">⌨️</div>
-                    <h3>Keyboard-First</h3>
-                    <p>Full keyboard navigation in the project table. <kbd>P</kbd> preview, <kbd>O</kbd> open in DAW, <kbd>D</kbd> details, <kbd>F</kbd> open folder. Cmd/Alt+← to go back. Everything reachable without a mouse.</p>
+                <!-- swap .placeholder-visual for resources/screenshots/settings/settings-phases-customize.png once captured -->
+                <div class="feature-row reverse">
+                    <div class="feature-visual">
+                        <div class="app-window">
+                            <div class="app-body placeholder-visual">
+                                <div class="mock-phases">
+                                    <span class="mock-phase-pill">Idea</span>
+                                    <span class="mock-phase-pill active">Arranging</span>
+                                    <span class="mock-phase-pill">Mixing</span>
+                                    <span class="mock-phase-pill">Mastering</span>
+                                    <span class="mock-phase-pill">Released</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feature-copy">
+                        <div class="feature-kicker">Workflow</div>
+                        <h3>Phases</h3>
+                        <p>Rename, reorder, and color your own production phases instead of a fixed pipeline. Mark one as "finished," and every change is logged to the project timeline.</p>
+                    </div>
                 </div>
 
-                <div class="feature-card">
-                    <div class="feature-icon">🔍</div>
-                    <h3>Fuzzy Search</h3>
-                    <p>Search works the way you think. Type scattered characters and still find what you're looking for. Consistent fuzzy matching across projects, releases, tasks, and playlists.</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">📊</div>
-                    <h3>Statistics</h3>
-                    <p>Charts and summaries of your entire library — production phases, DAW breakdown, activity over time. See the big picture of your creative output at a glance.</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">👤</div>
-                    <h3>Multiple Profiles</h3>
-                    <p>Switch between producer profiles instantly. Each profile has its own scan roots, projects, and settings — perfect for studios, collaborators, or separating personal and client work.</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">☁️</div>
-                    <h3>Google Drive Sync</h3>
-                    <p>Back up and restore your project database to Google Drive. Keep your metadata safe and accessible across machines without syncing raw project files. Optional auto-backup runs on a schedule — every 30 minutes, hourly, every 6 hours, or daily.</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">🎚️</div>
-                    <h3>Customizable Phases</h3>
-                    <p>Rename, reorder, and color your own production phases instead of a fixed pipeline. Mark any phase as a "finished" state, and every change is logged to the project timeline.</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">🧩</div>
-                    <h3>Project &amp; Todo Templates</h3>
-                    <p>Save any existing project as a reusable template — BPM, key, DAW, and starter files included — and spin up new projects pre-filled from it. Pair with reusable todo checklists for repeatable workflows.</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">🎼</div>
-                    <h3>Music Player</h3>
-                    <p>Browse and play preview songs across your whole library, not just one project at a time — a full queue-based player on desktop with a Camelot-wheel key-compatible auto-queue, and a "Now Playing" screen on mobile.</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">🎧</div>
-                    <h3>Playlists <span class="badge-inline">Mobile</span></h3>
-                    <p>On Android and iOS, create ordered playlists from your preview songs and listen to your library in sequence — great for reviewing work on the go.</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">🖥️</div>
-                    <h3>Background &amp; Tray Mode <span class="badge-inline">Desktop</span></h3>
-                    <p>Close the window and the app keeps running — a tray icon on Windows or a menu-bar icon on macOS gives you one-click backups and work-session controls without keeping the main window open.</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">📤</div>
-                    <h3>Smart Sharing</h3>
-                    <p>Share a preview song straight to the OS share sheet. WAV, AIFF, and FLAC files are automatically transcoded — to AAC on macOS, to MP3 on Windows via a bundled ffmpeg — so they open in any app on the other end.</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">🌍</div>
-                    <h3>9 Languages</h3>
-                    <p>Fully localized in English, Portuguese, Spanish, French, Italian, German, Russian, Japanese, and Chinese. Switch language any time from the app settings.</p>
+                <!-- swap .placeholder-visual for resources/screenshots/templates/project-template-create-from.png once captured -->
+                <div class="feature-row">
+                    <div class="feature-visual">
+                        <div class="app-window">
+                            <div class="app-body placeholder-visual mock-meta">
+                                <div class="mock-meta-row"><span class="mock-meta-label">Name</span><span class="mock-meta-value">Midnight Static</span></div>
+                                <div class="mock-meta-row"><span class="mock-meta-label">Template</span><span class="mock-meta-value">Deep House Starter</span></div>
+                                <div class="mock-meta-row"><span class="mock-meta-label">DAW</span><span class="mock-meta-value">Ableton Live</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feature-copy">
+                        <div class="feature-kicker">Templates</div>
+                        <h3>Create New Projects, Right From the App</h3>
+                        <p>Skip the folder shuffle — start a new project directly from DAW Project Manager, using a template with your BPM, key, DAW, and starter files already filled in.</p>
+                    </div>
                 </div>
 
             </div>
+
+            <p class="section-more">And much more — see the full walkthrough in the <a href="docs.html">documentation</a>.</p>
         </div>
     </section>
 
@@ -196,143 +236,186 @@
                 <div class="daw-item">
                     <img src="resources/daw/logos/ableton-live.png" alt="Ableton Live" class="daw-logo">
                     <span>Ableton Live</span>
-                    <span class="daw-ext">.als</span>
                 </div>
                 <div class="daw-item">
                     <img src="resources/daw/logos/bitwig-studio.png" alt="Bitwig Studio" class="daw-logo">
                     <span>Bitwig Studio</span>
-                    <span class="daw-ext">.bwproject</span>
                 </div>
                 <div class="daw-item">
                     <img src="resources/daw/logos/cakewalk.png" alt="Cakewalk / Sonar" class="daw-logo">
                     <span>Cakewalk / Sonar</span>
-                    <span class="daw-ext">.cwp</span>
                 </div>
                 <div class="daw-item">
                     <img src="resources/daw/logos/cubase.png" alt="Cubase" class="daw-logo">
                     <span>Cubase</span>
-                    <span class="daw-ext">.cpr</span>
                 </div>
                 <div class="daw-item">
                     <img src="resources/daw/logos/fl-studio.png" alt="FL Studio" class="daw-logo">
                     <span>FL Studio</span>
-                    <span class="daw-ext">.flp</span>
                 </div>
                 <div class="daw-item">
                     <img src="resources/daw/logos/logic-pro.png" alt="Logic Pro" class="daw-logo">
                     <span>Logic Pro</span>
-                    <span class="daw-ext">.logicx</span>
                 </div>
                 <div class="daw-item">
                     <img src="resources/daw/logos/magda.png" alt="MAGDA" class="daw-logo">
                     <span>MAGDA</span>
-                    <span class="daw-ext">.mgd</span>
                 </div>
                 <div class="daw-item">
                     <img src="resources/daw/logos/maschine.png" alt="Maschine" class="daw-logo">
                     <span>Maschine</span>
-                    <span class="daw-ext">.maschine</span>
                 </div>
                 <div class="daw-item">
                     <img src="resources/daw/logos/nuendo.png" alt="Nuendo" class="daw-logo">
                     <span>Nuendo</span>
-                    <span class="daw-ext">.npr</span>
                 </div>
                 <div class="daw-item">
                     <img src="resources/daw/logos/pro-tools.png" alt="Pro Tools" class="daw-logo">
                     <span>Pro Tools</span>
-                    <span class="daw-ext">.ptx</span>
                 </div>
                 <div class="daw-item">
                     <img src="resources/daw/logos/reaper.png" alt="Reaper" class="daw-logo">
                     <span>Reaper</span>
-                    <span class="daw-ext">.rpp</span>
                 </div>
                 <div class="daw-item">
                     <img src="resources/daw/logos/studio-one.png" alt="Studio One" class="daw-logo">
                     <span>Studio One</span>
-                    <span class="daw-ext">.song</span>
                 </div>
                 <div class="daw-item">
                     <img src="resources/daw/logos/tracktion-waveform.png" alt="Tracktion Waveform" class="daw-logo">
                     <span>Tracktion Waveform</span>
-                    <span class="daw-ext">.tracktionedit</span>
                 </div>
                 <div class="daw-item">
                     <img src="resources/daw/logos/luna.png" alt="Universal Audio LUNA" class="daw-logo">
                     <span>Universal Audio LUNA</span>
-                    <span class="daw-ext">.luna</span>
                 </div>
                 <div class="daw-item">
                     <img src="resources/daw/logos/ardour.png" alt="Ardour" class="daw-logo">
                     <span>Ardour</span>
-                    <span class="daw-ext">.ardour</span>
                 </div>
                 <div class="daw-item">
                     <img src="resources/daw/logos/garageband.png" alt="GarageBand" class="daw-logo">
                     <span>GarageBand</span>
-                    <span class="daw-ext">.band</span>
                 </div>
                 <div class="daw-item">
                     <img src="resources/daw/logos/renoise.png" alt="Renoise" class="daw-logo">
                     <span>Renoise</span>
-                    <span class="daw-ext">.xrns</span>
                 </div>
                 <div class="daw-item">
                     <img src="resources/daw/logos/lmms.png" alt="LMMS" class="daw-logo">
                     <span>LMMS</span>
-                    <span class="daw-ext">.mmp, .mmpz</span>
                 </div>
                 <div class="daw-item">
                     <img src="resources/daw/logos/audacity.png" alt="Audacity" class="daw-logo">
                     <span>Audacity</span>
-                    <span class="daw-ext">.aup3</span>
                 </div>
                 <div class="daw-item">
                     <img src="resources/daw/logos/qtractor.png" alt="Qtractor" class="daw-logo">
                     <span>Qtractor</span>
-                    <span class="daw-ext">.qtr</span>
                 </div>
                 <div class="daw-item">
                     <img src="resources/daw/logos/reason.png" alt="Reason" class="daw-logo">
                     <span>Reason</span>
-                    <span class="daw-ext">.reason, .rns</span>
                 </div>
                 <div class="daw-item">
                     <img src="resources/daw/logos/digital-performer.png" alt="Digital Performer" class="daw-logo">
                     <span>Digital Performer</span>
-                    <span class="daw-ext">.dpproj</span>
                 </div>
                 <div class="daw-item">
                     <img src="resources/daw/logos/adobe-audition.png" alt="Adobe Audition" class="daw-logo">
                     <span>Adobe Audition</span>
-                    <span class="daw-ext">.sesx</span>
                 </div>
                 <div class="daw-item">
                     <img src="resources/daw/logos/samplitude-sequoia.png" alt="Samplitude / Sequoia" class="daw-logo">
                     <span>Samplitude / Sequoia</span>
-                    <span class="daw-ext">.vip</span>
                 </div>
                 <div class="daw-item">
                     <img src="resources/daw/logos/acid-pro.png" alt="ACID Pro" class="daw-logo">
                     <span>ACID Pro</span>
-                    <span class="daw-ext">.acd</span>
                 </div>
                 <div class="daw-item">
                     <img src="resources/daw/logos/mixcraft.png" alt="Mixcraft" class="daw-logo">
                     <span>Mixcraft</span>
-                    <span class="daw-ext">.mx8, .mx9, .mx10</span>
                 </div>
                 <div class="daw-item">
                     <img src="resources/daw/logos/rosegarden.png" alt="Rosegarden" class="daw-logo">
                     <span>Rosegarden</span>
-                    <span class="daw-ext">.rg</span>
                 </div>
                 <div class="daw-item">
                     <img src="resources/daw/logos/zrythm.png" alt="Zrythm" class="daw-logo">
                     <span>Zrythm</span>
-                    <span class="daw-ext">.zpj</span>
                 </div>
+            </div>
+
+            <div id="metadata-extraction" class="metadata-extraction">
+                <h3 class="metadata-extraction-title">Metadata Extraction Support</h3>
+                <p class="metadata-extraction-subtitle">These DAWs get automatic BPM, key, version, and (where supported) project notes extraction straight from the project file — the list keeps growing.</p>
+
+                <div class="metadata-table-wrap">
+                    <table class="metadata-table">
+                        <thead>
+                            <tr>
+                                <th>DAW</th>
+                                <th>BPM</th>
+                                <th>Key</th>
+                                <th>Version</th>
+                                <th>Project Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="metadata-daw"><img src="resources/daw/logos/ableton-live.png" alt="" class="metadata-daw-logo">Ableton Live</td>
+                                <td class="metadata-yes">✓</td>
+                                <td class="metadata-yes">✓</td>
+                                <td class="metadata-yes">✓</td>
+                                <td class="metadata-no">—</td>
+                            </tr>
+                            <tr>
+                                <td class="metadata-daw"><img src="resources/daw/logos/bitwig-studio.png" alt="" class="metadata-daw-logo">Bitwig Studio</td>
+                                <td class="metadata-yes">✓</td>
+                                <td class="metadata-yes">✓*</td>
+                                <td class="metadata-yes">✓</td>
+                                <td class="metadata-no">—</td>
+                            </tr>
+                            <tr>
+                                <td class="metadata-daw"><img src="resources/daw/logos/cubase.png" alt="" class="metadata-daw-logo">Cubase</td>
+                                <td class="metadata-yes">✓</td>
+                                <td class="metadata-yes">✓</td>
+                                <td class="metadata-yes">✓</td>
+                                <td class="metadata-yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td class="metadata-daw"><img src="resources/daw/logos/fl-studio.png" alt="" class="metadata-daw-logo">FL Studio</td>
+                                <td class="metadata-yes">✓</td>
+                                <td class="metadata-no">—</td>
+                                <td class="metadata-yes">✓</td>
+                                <td class="metadata-no">—</td>
+                            </tr>
+                            <tr>
+                                <td class="metadata-daw"><img src="resources/daw/logos/magda.png" alt="" class="metadata-daw-logo">MAGDA</td>
+                                <td class="metadata-yes">✓</td>
+                                <td class="metadata-yes">✓</td>
+                                <td class="metadata-yes">✓</td>
+                                <td class="metadata-no">—</td>
+                            </tr>
+                            <tr>
+                                <td class="metadata-daw"><img src="resources/daw/logos/nuendo.png" alt="" class="metadata-daw-logo">Nuendo</td>
+                                <td class="metadata-yes">✓</td>
+                                <td class="metadata-yes">✓</td>
+                                <td class="metadata-yes">✓</td>
+                                <td class="metadata-yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td class="metadata-daw"><img src="resources/daw/logos/reaper.png" alt="" class="metadata-daw-logo">Reaper</td>
+                                <td class="metadata-yes">✓</td>
+                                <td class="metadata-yes">✓</td>
+                                <td class="metadata-yes">✓</td>
+                                <td class="metadata-yes">✓</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="metadata-table-footnote">* Key detection requires Bitwig Studio 6 or later.</p>
             </div>
         </div>
     </section>
@@ -372,6 +455,7 @@
                     <a href="https://github.com/bandpassrecords/daw-project-manager/releases/download/v2.7.3/DAW_Project_Manager_macOS_v2.7.3.dmg" class="btn btn-primary" target="_blank" rel="noopener noreferrer">
                         Download for macOS
                     </a>
+                    <p class="download-note">Not notarized by Apple yet — after opening the app, go to <strong>System Settings → Privacy &amp; Security</strong> and click <strong>Open Anyway</strong> to run it.</p>
                     <div class="other-platform-link" id="macos-other-platform" style="display: none;">
                         <a href="https://apps.microsoft.com/detail/9n8hxzd3hwx7" class="btn-link" target="_blank" rel="noopener noreferrer">
                             Download for Windows instead
@@ -408,6 +492,20 @@
         </div>
     </section>
 
+    <!-- Android Testing Section -->
+    <section id="android-testing" class="android-testing">
+        <div class="container">
+            <div class="android-testing-card">
+                <img src="resources/os/android-head.png" alt="Android" class="android-testing-icon">
+                <h2>Android — Join the Test</h2>
+                <p>DAW Project Manager for Android is currently in testing. Join the Google Group to get access and find instructions for downloading the testing app.</p>
+                <a href="https://groups.google.com/g/daw-project-manager-android-testers" class="btn btn-primary" target="_blank" rel="noopener noreferrer">
+                    Join Now
+                </a>
+            </div>
+        </div>
+    </section>
+
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
@@ -440,6 +538,7 @@
 
             <div class="footer-bottom">
                 <p>&copy; 2026 DAW Project Manager by BandPass Records. Open source software.</p>
+                <p class="footer-attribution">The Android robot is reproduced or modified from work created and shared by Google and used according to terms described in the <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener noreferrer">Creative Commons 3.0 Attribution License</a>.</p>
             </div>
         </div>
     </footer>

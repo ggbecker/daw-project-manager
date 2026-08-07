@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     setupDawSearch();
 
-    const animatedElements = document.querySelectorAll('.feature-card, .daw-item, .download-card');
+    const animatedElements = document.querySelectorAll('.feature-row, .daw-item, .download-card');
 
     animatedElements.forEach(el => {
         el.style.opacity = '0';
