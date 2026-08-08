@@ -56,6 +56,29 @@ Instructions for AI assistants working on this codebase.
 
 ---
 
+## UI conventions
+
+### Launching a project in its DAW always goes through `launchProjectInDaw`
+- Use `launchProjectInDaw(context, ref, project)` from `lib/ui/session_actions.dart` for every "open/launch in DAW" button — never call `FileLauncher.launchProject`/`launchWithBinary` directly from UI code.
+- Why: this is the one place that knows about the Linux binary-override system (`ProjectRepository.getDawLaunchCommand`), its missing-binary remediation, and the first-run "configure a launch command" prompt (`showDawLaunchCommandDialog`). A direct `FileLauncher` call bypasses all of that silently on Linux.
+
+### Destructive confirm-dialog buttons need an explicit `foregroundColor`
+- Any `ElevatedButton`/`FilledButton` styled with a hardcoded red `backgroundColor` (delete/remove/reset confirmations) must also set `foregroundColor` — Flutter does not derive readable text contrast from an arbitrary `backgroundColor` on its own, and the default has been wrong before.
+- Pairing used throughout the app: `Colors.red` / `Colors.red.shade700` → `foregroundColor: Colors.white`; `Colors.red.shade300` (lighter, used for less-destructive actions like "Hide" or "Remove") → `foregroundColor: Colors.black`.
+
+### A `Row` pairing a text field with a button needs `CrossAxisAlignment.center`
+- `Row(children: [Expanded(child: TextField(...)), button])` defaults to `CrossAxisAlignment.start`, which top-aligns the button against the field's full decorated height (label + border) instead of visually centering it — looks broken, especially once the field grows (e.g. an `errorText`).
+- Always set `crossAxisAlignment: CrossAxisAlignment.center` on this shape of `Row`. This has been the same one-line bug fixed independently in multiple dialogs — grep for `CrossAxisAlignment.start` near a `TextField` before assuming a new field+button row is fine as-is.
+
+### A DAW logo shown as a field's `prefixIcon` needs explicit sizing
+- `Image.asset(getDawLogoPath(dawType), ...)` renders at the source PNG's native size if unconstrained — oversized and breaking the field's layout when used as an `InputDecoration.prefixIcon`.
+- Always pass `width: 16, height: 16, fit: BoxFit.contain`, with an `errorBuilder` falling back to `Icon(Icons.piano, color: color)` for DAWs with no logo asset. See `_buildDawPrefixIcon` in `lib/ui/project_detail_page.dart` for the canonical implementation to mirror.
+
+### A grid row's "open full detail page" action uses `Icons.assignment` + `tooltipViewDetails`
+- Every `TrinaGrid` actions column that navigates to a dedicated detail page (not an inline edit dialog) uses `Icon(Icons.assignment)` with `tooltip: l10n.tooltipViewDetails`, matching `dashboard_page.dart`'s project rows. Keep new detail-page entry points (grid action icon, row double-tap) consistent with this rather than inventing a new icon/label per page.
+
+---
+
 ## Common tasks
 
 ### Adding a new DAW
