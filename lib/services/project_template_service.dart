@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:path/path.dart' as p;
 
 import '../models/project_template.dart';
+import '../utils/folder_copy_utils.dart';
 import 'scanner_service.dart';
 
 /// A single recognized DAW project file found by
@@ -241,7 +242,7 @@ class ProjectTemplateService {
     // already exists") with no way for the user to tell it apart from a
     // real project.
     try {
-      await _copyDirectory(
+      await copyDirectoryRecursive(
         sourceDir,
         Directory(destinationFolderPath),
         excludedPaths: excludedPaths,
@@ -267,27 +268,6 @@ class ProjectTemplateService {
         }
       }
       rethrow;
-    }
-  }
-
-  static Future<void> _copyDirectory(
-    Directory source,
-    Directory destination, {
-    Set<String> excludedPaths = const {},
-  }) async {
-    await destination.create(recursive: true);
-    await for (final entity in source.list(recursive: false)) {
-      if (excludedPaths.contains(entity.path)) continue;
-      final newPath = p.join(destination.path, p.basename(entity.path));
-      if (entity is Directory) {
-        await _copyDirectory(
-          entity,
-          Directory(newPath),
-          excludedPaths: excludedPaths,
-        );
-      } else if (entity is File) {
-        await entity.copy(newPath);
-      }
     }
   }
 }

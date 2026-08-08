@@ -5115,6 +5115,8 @@ class GoogleDriveSyncService {
       'bpm': template.bpm,
       'musicalKey': template.musicalKey,
       'dawVersion': template.dawVersion,
+      'notes': template.notes,
+      'projectNotes': template.projectNotes,
     };
   }
 
@@ -5129,6 +5131,8 @@ class GoogleDriveSyncService {
       bpm: (data['bpm'] as num?)?.toDouble(),
       musicalKey: data['musicalKey'] as String?,
       dawVersion: data['dawVersion'] as String?,
+      notes: data['notes'] as String?,
+      projectNotes: data['projectNotes'] as String?,
     );
   }
 

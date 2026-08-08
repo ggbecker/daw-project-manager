@@ -48,6 +48,18 @@ class ProjectTemplate extends HiveObject {
   @HiveField(8)
   final String? dawVersion;
 
+  /// Free-text notes the user can attach to a template — e.g. reminders
+  /// about its intended purpose or setup quirks. Editable (same as
+  /// `MusicProject.notes`).
+  @HiveField(9)
+  final String? notes;
+
+  /// Notes read straight out of the DAW project file itself (e.g. Reaper's
+  /// Title/Author/Notes tab) when the format supports it — read-only, same
+  /// as `MusicProject.projectNotes`. Distinct from [notes] above.
+  @HiveField(10)
+  final String? projectNotes;
+
   ProjectTemplate({
     required this.id,
     required this.name,
@@ -58,6 +70,8 @@ class ProjectTemplate extends HiveObject {
     this.bpm,
     this.musicalKey,
     this.dawVersion,
+    this.notes,
+    this.projectNotes,
   });
 
   ProjectTemplate copyWith({
@@ -72,6 +86,9 @@ class ProjectTemplate extends HiveObject {
     String? musicalKey,
     bool clearMusicalKey = false,
     String? dawVersion,
+    String? notes,
+    bool clearNotes = false,
+    String? projectNotes,
   }) {
     return ProjectTemplate(
       id: id ?? this.id,
@@ -83,6 +100,8 @@ class ProjectTemplate extends HiveObject {
       bpm: clearBpm ? null : (bpm ?? this.bpm),
       musicalKey: clearMusicalKey ? null : (musicalKey ?? this.musicalKey),
       dawVersion: dawVersion ?? this.dawVersion,
+      notes: clearNotes ? null : (notes ?? this.notes),
+      projectNotes: projectNotes ?? this.projectNotes,
     );
   }
 }

@@ -818,6 +818,24 @@
       "plural": { "type": "String" }
     }
   },
+  "templateDetailTitle": "Template",
+  "templateNotFound": "Template not found",
+  "saveAsTemplate": "Save as Template",
+  "newTemplateNameLabel": "Template name",
+  "savedAsTemplate": "Saved as template",
+  "duplicateTemplate": "Duplicate",
+  "templateDuplicated": "Template duplicated",
+  "fileInfo": "File Info",
+  "fileSize": "File Size",
+  "filePath": "Path",
+  "fileModified": "Last Modified",
+  "projectsFromThisTemplate": "Projects Created From This Template ({count})",
+  "@projectsFromThisTemplate": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "noProjectsFromThisTemplate": "No projects created from this template yet",
   "importTodos": "Importa Attività da File",
   "noTodosInFile": "Nessuna attività trovata nel file",
   "todosImported": "{count} attività importata/e con successo",

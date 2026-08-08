@@ -1084,6 +1084,48 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get templateDetailTitle => 'Template';
+
+  @override
+  String get templateNotFound => 'Template not found';
+
+  @override
+  String get saveAsTemplate => 'Save as Template';
+
+  @override
+  String get newTemplateNameLabel => 'Template name';
+
+  @override
+  String get savedAsTemplate => 'Saved as template';
+
+  @override
+  String get duplicateTemplate => 'Duplicate';
+
+  @override
+  String get templateDuplicated => 'Template duplicated';
+
+  @override
+  String get fileInfo => 'File Info';
+
+  @override
+  String get fileSize => 'File Size';
+
+  @override
+  String get filePath => 'Path';
+
+  @override
+  String get fileModified => 'Last Modified';
+
+  @override
+  String projectsFromThisTemplate(int count) {
+    return 'Projects Created From This Template ($count)';
+  }
+
+  @override
+  String get noProjectsFromThisTemplate =>
+      'No projects created from this template yet';
+
+  @override
   String get importTodos => 'Importar Tareas desde Archivo';
 
   @override

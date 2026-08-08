@@ -1,4 +1,5 @@
 import 'package:daw_project_manager/models/music_project.dart';
+import 'package:daw_project_manager/models/project_template.dart';
 import 'package:daw_project_manager/models/todo_item.dart';
 
 /// Factory helpers for creating consistent test fixtures.
@@ -98,6 +99,34 @@ class TestFactories {
       fileExtension: '.als',
       createdAt: DateTime(2025, 1, 1),
       updatedAt: DateTime(2025, 1, 1),
+    );
+  }
+
+  static ProjectTemplate makeProjectTemplate({
+    String id = 'template-1',
+    String name = 'Song Template',
+    String sourceFolderPath = '/Users/artist/Templates/Song Template',
+    String mainFileRelativePath = 'Song Template.als',
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    double? bpm,
+    String? musicalKey,
+    String? dawVersion,
+    String? notes,
+    String? projectNotes,
+  }) {
+    return ProjectTemplate(
+      id: id,
+      name: name,
+      sourceFolderPath: sourceFolderPath,
+      mainFileRelativePath: mainFileRelativePath,
+      createdAt: createdAt ?? DateTime(2025, 1, 1),
+      updatedAt: updatedAt ?? DateTime(2025, 1, 2),
+      bpm: bpm,
+      musicalKey: musicalKey,
+      dawVersion: dawVersion,
+      notes: notes,
+      projectNotes: projectNotes,
     );
   }
 }
