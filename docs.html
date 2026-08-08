@@ -572,6 +572,7 @@
                 <ul class="sidebar-nav">
                     <li><a href="#installation">Installation</a></li>
                     <li><a href="#first-launch">First Launch</a></li>
+                    <li class="sub-item"><a href="#session-mode">Session Mode</a></li>
                     <li><a href="#adding-folders">Adding Folders</a></li>
                     <li><a href="#scanning">Scanning</a></li>
                 </ul>
@@ -622,6 +623,9 @@
                 <p class="sidebar-section-title">Reference</p>
                 <ul class="sidebar-nav">
                     <li><a href="#settings">Settings</a></li>
+                    <li class="sub-item"><a href="#daw-launch-commands">DAW Launch Commands</a></li>
+                    <li class="sub-item"><a href="#mixdown-folders">Mixdown Folders</a></li>
+                    <li class="sub-item"><a href="#about">About</a></li>
                     <li><a href="#keyboard-shortcuts">Keyboard Shortcuts</a></li>
                     <li><a href="#supported-daws">Supported DAWs</a></li>
                     <li><a href="#metadata-extraction">Metadata Extraction</a></li>
@@ -666,7 +670,10 @@
                 </ol>
 
                 <div class="callout callout-info">
-                    <strong>Note:</strong> <a href="#google-drive-sync">Google Drive sync</a> isn't offered on Linux — the desktop OAuth flow needs a client secret that can't be safely shipped in an open sideloadable build. A local backup/restore option is available instead under <strong>Settings</strong>.
+                    <strong>Note:</strong> <a href="#google-drive-sync">Google Drive sync</a> works on the AppImage and tarball builds, the same as on Windows/macOS. It's only unavailable inside the <strong>Flatpak</strong> build specifically, since Flathub's sandboxed build pipeline has no way to safely inject the required OAuth client secret. A local backup/restore option is available instead under <strong>Settings</strong> for Flatpak users.
+                </div>
+                <div class="callout callout-info">
+                    <strong>Tip:</strong> The AppImage build can update itself in place — go to <strong>Settings → About → Check for Updates</strong>. This isn't available for the Flatpak build or the plain tarball; update those manually from the <a href="https://github.com/bandpassrecords/daw-project-manager/releases" style="color:var(--accent);">Releases page</a>.
                 </div>
 
                 <h4>Android</h4>
@@ -698,7 +705,7 @@
                 </ol>
                 <p>Every step you set here can be changed later — none of it is permanent. Add more scan folders any time from Settings.</p>
 
-                <h4>Session Mode</h4>
+                <h4 id="session-mode">Session Mode</h4>
                 <p>Session Mode is an opt-in guardrail around your work timer. When it's on, starting, switching, or ending a work session on a project requires an explicit confirmation, and the app shows elapsed time for the current session. It's aimed at producers who want to be deliberate about context-switching between projects rather than losing track of where their time went. Toggle it any time from Settings — it isn't limited to the onboarding wizard.</p>
 
                 <!-- Adding Folders -->
@@ -717,6 +724,9 @@
                 <div class="callout callout-warning">
                     <strong>Note:</strong> Ignored Paths let you exclude specific subfolders (e.g. template or sample folders) from the scan. Add them under Settings → Ignored Paths.
                 </div>
+
+                <h4>Scan Mode: Flat vs. Smart Folder</h4>
+                <p>Each scan root has its own scan mode, set from Settings: <strong>Flat</strong> treats every project file the scanner finds as its own project, however deep it's nested. <strong>Smart Folder</strong> is for a root organised as one subfolder per song (each containing that song's project file plus its samples, renders, and stems) — the app treats each subfolder as a single project unit instead of scanning arbitrarily deep, which keeps close-together files from a shared sample pool from being misread as separate projects.</p>
 
                 <!-- Scanning -->
                 <h3 id="scanning">Scanning</h3>
@@ -1043,7 +1053,7 @@
                 </ol>
 
                 <h4>Auto-Detection</h4>
-                <p>If your DAW exports to a subfolder named something like <code style="color:var(--accent); font-family:monospace;">Mixdown</code>, <code style="color:var(--accent); font-family:monospace;">Bounces</code>, or <code style="color:var(--accent); font-family:monospace;">Exports</code>, the app scans for the newest <code style="font-family:monospace;">.wav</code>, <code style="font-family:monospace;">.mp3</code>, or <code style="font-family:monospace;">.aiff</code> in that folder and automatically sets it as the preview. The scan skips the file if it is already up to date (checked by modification timestamp), avoiding unnecessary re-downloads.</p>
+                <p>If your DAW exports to a subfolder named something like <code style="color:var(--accent); font-family:monospace;">Mixdown</code>, <code style="color:var(--accent); font-family:monospace;">Bounces</code>, or <code style="color:var(--accent); font-family:monospace;">Exports</code>, the app scans for the newest <code style="font-family:monospace;">.wav</code>, <code style="font-family:monospace;">.mp3</code>, or <code style="font-family:monospace;">.aiff</code> in that folder and automatically sets it as the preview. The scan skips the file if it is already up to date (checked by modification timestamp), avoiding unnecessary re-downloads. The folder names it checks are configurable — both globally and per DAW — under <a href="#mixdown-folders">Settings → Mixdown Folders</a>.</p>
 
                 <h4>Preview Player Controls</h4>
                 <ul>
@@ -1130,7 +1140,7 @@
                 </div>
 
                 <h3>Adding Todos from the Task Queue</h3>
-                <p>You can also open a project's todo list directly from the Task Queue by tapping its name — this takes you to the Project Detail page with the todos section pre-expanded. Add or edit todos there and navigate back with <kbd>Cmd</kbd>+<kbd>[</kbd> or <kbd>Alt</kbd>+<kbd>←</kbd>.</p>
+                <p>You can also open a project's todo list directly from the Task Queue by tapping its name — this takes you to the Project Detail page with the todos section pre-expanded. Add or edit todos there and navigate back with <kbd>Cmd</kbd>+<kbd>←</kbd> (macOS) or <kbd>Alt</kbd>+<kbd>←</kbd> (Windows/Linux).</p>
             </div>
 
             <!-- ================================================================
@@ -1344,6 +1354,12 @@
                 <div class="code-block">/Users/you/Music/Projects/_Templates
 /Users/you/Music/Samples</div>
 
+                <h3 id="daw-launch-commands">DAW Launch Commands <span class="badge-inline">Linux</span></h3>
+                <p>Linux has no reliable file-type association for most DAWs, so <em>Open in DAW</em> needs to be told exactly which program to run for each one you use. The first time it can't figure that out on its own, or any time from Settings, configure the binary to launch once per DAW — the app uses it for every project of that type from then on.</p>
+
+                <h3 id="mixdown-folders">Mixdown Folders</h3>
+                <p>Controls which folder the app looks in for a project's exported/bounced audio when <a href="#preview-songs">auto-detecting a preview song</a>. Expand a DAW to see the folder names it already checks by default (e.g. <code style="font-family:monospace;">Mixdown</code>, <code style="font-family:monospace;">Bounces</code>, <code style="font-family:monospace;">Exports</code>), and add your own on top — both globally and per DAW, if a particular one uses a different export folder name in your setup.</p>
+
                 <h3>Language</h3>
                 <p>DAW Project Manager is fully localised in 9 languages. Change the language at any time — no restart required.</p>
                 <ul>
@@ -1373,7 +1389,16 @@
                 <p>On Android, the app can send local notifications for approaching deadlines. Configure how many days in advance you want to be reminded. Requires notification permission to be granted.</p>
 
                 <h3>Work Session Reminders</h3>
-                <p>On all platforms, while a work session is active the app can send a periodic reminder so you don't lose track of time. Choose an interval — 15, 30, 45, 60, 90, or 120 minutes, or a custom value.</p>
+                <p>Requires <a href="#session-mode"><strong>Session Mode</strong></a> to be turned on. While it's on and a work session is active, the app can send a periodic reminder so you don't lose track of time — choose an interval of 15, 30, 45, 60, 90, or 120 minutes, or set a custom value. A <strong>Test Notification</strong> button lets you confirm your OS notification permissions are working before you rely on it.</p>
+
+                <h3 id="about">About</h3>
+                <p>Shows the installed app version, plus:</p>
+                <ul>
+                    <li><strong>License</strong> — view the app's open-source license in-app.</li>
+                    <li><strong>Report an Issue</strong> — opens a structured GitHub issue template pre-filled for bug reports.</li>
+                    <li><strong>Check for Updates</strong> — manually checks for a newer release. On the Linux AppImage build specifically, this can download and apply the update in place; other platforms link out to the download.</li>
+                    <li><strong>Share Diagnostic Log</strong> — opens the folder containing the app's diagnostic log file, for attaching to a bug report.</li>
+                </ul>
 
                 <h3>Clear Library</h3>
                 <p>Removes all projects from the current profile's database. Scan roots and settings are preserved. Running a rescan after clearing will re-populate projects from disk.</p>
@@ -1387,7 +1412,7 @@
             ================================================================ -->
             <div class="docs-section" id="keyboard-shortcuts">
                 <h2>Keyboard Shortcuts</h2>
-                <p>DAW Project Manager is designed for keyboard-first use. On macOS, shortcuts use <kbd>Cmd</kbd>. On Windows, use <kbd>Ctrl</kbd> in place of <kbd>Cmd</kbd>. Press <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>/</kbd> inside the app to open the in-app keyboard shortcut cheatsheet.</p>
+                <p>DAW Project Manager is designed for keyboard-first use. On macOS, shortcuts use <kbd>Cmd</kbd>. On Windows, use <kbd>Ctrl</kbd> in place of <kbd>Cmd</kbd>. On macOS, press <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>/</kbd> inside the app to open the in-app keyboard shortcut cheatsheet; on Windows/Linux, click the keyboard icon in the toolbar, or open it from Settings → Keyboard Shortcuts.</p>
 
                 <h3>Global Shortcuts</h3>
                 <div class="docs-table-wrap">
@@ -1428,12 +1453,12 @@
                                 <td>Open project folder in Finder/Explorer (desktop, when a row is selected)</td>
                             </tr>
                             <tr>
-                                <td><kbd>Cmd</kbd>+<kbd>[</kbd> or <kbd>Alt</kbd>+<kbd>←</kbd></td>
+                                <td><kbd>Cmd</kbd>+<kbd>←</kbd> (macOS) or <kbd>Alt</kbd>+<kbd>←</kbd> (Windows/Linux)</td>
                                 <td>Go back to previous screen</td>
                             </tr>
                             <tr>
-                                <td><kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>/</kbd></td>
-                                <td>Open keyboard shortcuts cheatsheet</td>
+                                <td><kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>/</kbd> (macOS only)</td>
+                                <td>Open keyboard shortcuts cheatsheet — on Windows/Linux, use the keyboard icon in the toolbar instead</td>
                             </tr>
                         </tbody>
                     </table>
@@ -1541,7 +1566,7 @@
                             <tr>
                                 <td>Cubase</td>
                                 <td><code class="daw-ext">.cpr</code></td>
-                                <td>BPM, key, and version extracted during deep scan.</td>
+                                <td>BPM, key, version, and project notes (from the Notepad panel) extracted during deep scan.</td>
                             </tr>
                             <tr>
                                 <td>FL Studio</td>
@@ -1566,7 +1591,7 @@
                             <tr>
                                 <td>Nuendo</td>
                                 <td><code class="daw-ext">.npr</code></td>
-                                <td>BPM, key, and version extracted during deep scan.</td>
+                                <td>BPM, key, version, and project notes (from the Notepad panel) extracted during deep scan.</td>
                             </tr>
                             <tr>
                                 <td>Pro Tools</td>
@@ -1576,7 +1601,7 @@
                             <tr>
                                 <td>Reaper</td>
                                 <td><code class="daw-ext">.rpp</code></td>
-                                <td>BPM, key, version, and project notes extracted during deep scan — the only DAW with automatic notes extraction. Plain-text format.</td>
+                                <td>BPM, key, version, and project notes extracted during deep scan. Plain-text format.</td>
                             </tr>
                             <tr>
                                 <td>Studio One</td>
@@ -1659,7 +1684,7 @@
                         <tbody>
                             <tr><td>Ableton Live</td><td>✓</td><td>✓</td><td>✓</td><td></td></tr>
                             <tr><td>Bitwig Studio</td><td>✓</td><td>✓</td><td>✓</td><td></td></tr>
-                            <tr><td>Cubase / Nuendo</td><td>✓</td><td>✓</td><td>✓</td><td></td></tr>
+                            <tr><td>Cubase / Nuendo</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
                             <tr><td>FL Studio</td><td>✓</td><td></td><td>✓</td><td></td></tr>
                             <tr><td>MAGDA</td><td>✓</td><td>✓</td><td>✓</td><td></td></tr>
                             <tr><td>Reaper</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
