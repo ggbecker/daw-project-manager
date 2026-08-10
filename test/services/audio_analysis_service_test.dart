@@ -56,9 +56,11 @@ void main() {
   });
 
   group('AudioAnalysisService.convertForSharing', () {
-    // macOS takes the afconvert branch, which has no runner seam — these
-    // assertions are about the ffmpeg branch every other platform uses.
-    final onFfmpegPlatform = !Platform.isMacOS;
+    // These assertions cover the ffmpeg branch (Windows/Linux). macOS takes
+    // the afconvert branch and Android the MediaCodec channel, neither of
+    // which goes through ffmpegRunnerOverride.
+    final onFfmpegPlatform =
+        !Platform.isMacOS && !Platform.isAndroid && !Platform.isIOS;
 
     late Directory tempDir;
     late File input;
@@ -71,6 +73,7 @@ void main() {
 
     tearDown(() async {
       AudioAnalysisService.ffmpegRunnerOverride = null;
+      AudioAnalysisService.androidConverterOverride = null;
       if (await tempDir.exists()) await tempDir.delete(recursive: true);
     });
 
@@ -172,6 +175,108 @@ void main() {
 
       expect(out, isNotNull);
       expect(p.dirname(out!.path), nested);
+    });
+  });
+
+  // Android is the one platform that cannot shell out to ffmpeg, so it goes
+  // through a MediaCodec platform channel instead. convertForSharing() only
+  // routes there when Platform.isAndroid, which no test host satisfies —
+  // hence calling convertWithAndroidCodec directly.
+  group('AudioAnalysisService.convertWithAndroidCodec', () {
+    late Directory tempDir;
+    late File input;
+
+    setUp(() async {
+      tempDir = await Directory.systemTemp.createTemp('android_convert_test_');
+      input = File(p.join(tempDir.path, 'My Track.wav'));
+      await input.writeAsBytes(List<int>.filled(64, 0));
+    });
+
+    tearDown(() async {
+      AudioAnalysisService.androidConverterOverride = null;
+      if (await tempDir.exists()) await tempDir.delete(recursive: true);
+    });
+
+    test('produces an .m4a, since Android ships no MP3 encoder', () async {
+      String? seenInput;
+      String? seenOutput;
+      AudioAnalysisService.androidConverterOverride = (i, o) async {
+        seenInput = i;
+        seenOutput = o;
+        await File(o).writeAsString('fake aac');
+      };
+
+      final out = await AudioAnalysisService.convertWithAndroidCodec(
+        input.path,
+        tempDir.path,
+      );
+
+      expect(out, isNotNull);
+      expect(p.basename(out!.path), 'My Track.m4a');
+      expect(seenInput, input.path);
+      expect(seenOutput, out.path);
+    });
+
+    test('returns null when the native transcode throws', () async {
+      // MediaExtractor cannot open AIFF, so this is a real input case, not
+      // just defensive coding.
+      AudioAnalysisService.androidConverterOverride =
+          (_, _) async => throw Exception('MediaExtractor: setDataSource failed');
+
+      expect(
+        await AudioAnalysisService.convertWithAndroidCodec(
+          input.path,
+          tempDir.path,
+        ),
+        isNull,
+      );
+    });
+
+    test('treats a zero-byte result as a failure', () async {
+      AudioAnalysisService.androidConverterOverride =
+          (_, o) async => File(o).create();
+
+      expect(
+        await AudioAnalysisService.convertWithAndroidCodec(
+          input.path,
+          tempDir.path,
+        ),
+        isNull,
+      );
+    });
+
+    test('returns null when the native side writes nothing at all', () async {
+      AudioAnalysisService.androidConverterOverride = (_, _) async {};
+
+      expect(
+        await AudioAnalysisService.convertWithAndroidCodec(
+          input.path,
+          tempDir.path,
+        ),
+        isNull,
+      );
+    });
+
+    test('never writes the output over its own input', () async {
+      // An .m4a source staged in the share cache would otherwise resolve to
+      // the identical path, and the muxer truncates before writing.
+      final m4aInput = File(p.join(tempDir.path, 'Bounce.m4a'));
+      await m4aInput.writeAsString('original audio');
+
+      String? seenOutput;
+      AudioAnalysisService.androidConverterOverride = (_, o) async {
+        seenOutput = o;
+        await File(o).writeAsString('converted');
+      };
+
+      final out = await AudioAnalysisService.convertWithAndroidCodec(
+        m4aInput.path,
+        tempDir.path,
+      );
+
+      expect(seenOutput, isNot(m4aInput.path));
+      expect(out, isNotNull);
+      expect(await m4aInput.readAsString(), 'original audio');
     });
   });
 }

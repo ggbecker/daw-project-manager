@@ -2013,7 +2013,13 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer>
 
         // Share the file (default behavior)
         final result = await Share.shareXFiles(
-          [XFile(shareFile.path, name: shareFileName)],
+          [
+            XFile(
+              shareFile.path,
+              name: shareFileName,
+              mimeType: shareMimeTypeForFileName(shareFileName),
+            ),
+          ],
           text: shareText,
         );
         if (kDebugMode) {

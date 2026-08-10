@@ -283,7 +283,13 @@ class _MobilePlayerPageState extends ConsumerState<MobilePlayerPage> {
       }
       if (!mounted) return;
       await SharePlus.instance.share(ShareParams(
-        files: [XFile(shareFile.path, name: shareFileName)],
+        files: [
+          XFile(
+            shareFile.path,
+            name: shareFileName,
+            mimeType: shareMimeTypeForFileName(shareFileName),
+          ),
+        ],
         text: AppLocalizations.of(context)!.sharePreviewSongText(project.displayName),
       ));
     } catch (e) {

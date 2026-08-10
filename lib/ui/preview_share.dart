@@ -18,6 +18,38 @@ String? effectivePreviewPathFor(MusicProject project) =>
     ? project.previewSongPath
     : project.previewSongAutoPath;
 
+/// MIME type to declare for a shared audio file.
+///
+/// Android's share sheet passes this straight to the receiving app, and some
+/// apps route on the declared type rather than sniffing the bytes — an
+/// attachment typed `application/octet-stream` can be rejected as "unsupported"
+/// even when its contents are perfectly playable. share_plus only guesses from
+/// the extension when this is omitted, so state it.
+String shareMimeTypeForFileName(String fileName) {
+  switch (p.extension(fileName).toLowerCase()) {
+    case '.mp3':
+      return 'audio/mpeg';
+    // AAC in an MP4 container — what afconvert produces on macOS and what
+    // Android's MediaMuxer produces via AudioShareConverter.
+    case '.m4a':
+    case '.mp4':
+      return 'audio/mp4';
+    case '.aac':
+      return 'audio/aac';
+    case '.wav':
+      return 'audio/wav';
+    case '.flac':
+      return 'audio/flac';
+    case '.ogg':
+      return 'audio/ogg';
+    case '.aif':
+    case '.aiff':
+      return 'audio/aiff';
+    default:
+      return 'audio/*';
+  }
+}
+
 /// Copies [file] into the app's cache directory under [shareFileName], ready
 /// to hand to the share sheet, and returns it. Returns null when the result
 /// would be an empty file.
@@ -115,7 +147,13 @@ Future<void> shareProjectPreview(
       }
       await SharePlus.instance.share(
         ShareParams(
-          files: [XFile(shareFile.path, name: shareFileName)],
+          files: [
+            XFile(
+              shareFile.path,
+              name: shareFileName,
+              mimeType: shareMimeTypeForFileName(shareFileName),
+            ),
+          ],
           text: shareText,
         ),
       );

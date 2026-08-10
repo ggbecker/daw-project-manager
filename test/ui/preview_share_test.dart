@@ -58,6 +58,34 @@ void main() {
     });
   });
 
+  group('shareMimeTypeForFileName', () {
+    // Android hands the declared type straight to the receiving app, and some
+    // apps route on it instead of sniffing the bytes — a mistyped attachment
+    // reads as "unsupported" even when the audio is fine.
+    test('types the two formats the converters actually emit', () {
+      // Windows/Linux produce MP3; Android and macOS produce AAC in MP4.
+      expect(shareMimeTypeForFileName('Track.mp3'), 'audio/mpeg');
+      expect(shareMimeTypeForFileName('Track.m4a'), 'audio/mp4');
+    });
+
+    test('types the unconverted formats a share can still fall back to', () {
+      expect(shareMimeTypeForFileName('Track.wav'), 'audio/wav');
+      expect(shareMimeTypeForFileName('Track.flac'), 'audio/flac');
+      expect(shareMimeTypeForFileName('Track.aiff'), 'audio/aiff');
+      expect(shareMimeTypeForFileName('Track.ogg'), 'audio/ogg');
+      expect(shareMimeTypeForFileName('Track.aac'), 'audio/aac');
+    });
+
+    test('is case-insensitive', () {
+      expect(shareMimeTypeForFileName('TRACK.M4A'), 'audio/mp4');
+    });
+
+    test('falls back to a generic audio type, never octet-stream', () {
+      expect(shareMimeTypeForFileName('Track.weird'), 'audio/*');
+      expect(shareMimeTypeForFileName('Track'), 'audio/*');
+    });
+  });
+
   group('stageFileForMobileShare', () {
     late Directory cacheDir;
     late Directory sourceDir;

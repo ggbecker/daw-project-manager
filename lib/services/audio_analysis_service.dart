@@ -2,9 +2,8 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:math';
 import 'dart:typed_data';
-import 'package:ffmpeg_kit_flutter_new_audio/ffmpeg_kit.dart';
-import 'package:ffmpeg_kit_flutter_new_audio/return_code.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart' show MethodChannel;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -185,31 +184,13 @@ class AudioAnalysisService {
   /// Runs ffmpeg with [args] and reports whether it succeeded.
   ///
   /// Test seam: production leaves this null, which selects the real runner
-  /// for the current platform (a bundled/PATH binary on desktop, the
-  /// in-process ffmpeg-kit library on mobile). Reset to null in `tearDown`.
+  /// (a bundled or PATH binary). Reset to null in `tearDown`.
   @visibleForTesting
   static Future<bool> Function(List<String> args)? ffmpegRunnerOverride;
-
-  /// Whether ffmpeg has to run in-process rather than as a subprocess.
-  /// Android and iOS forbid spawning arbitrary executables, which is why
-  /// [Process.run] silently failed there and WAV bounces went out unconverted
-  /// (and were then dropped by the receiving app, leaving only the text).
-  static bool get _usesInProcessFfmpeg => Platform.isAndroid || Platform.isIOS;
 
   static Future<bool> _runFfmpeg(List<String> args) async {
     final override = ffmpegRunnerOverride;
     if (override != null) return override(args);
-
-    if (_usesInProcessFfmpeg) {
-      final session = await FFmpegKit.executeWithArguments(args);
-      final returnCode = await session.getReturnCode();
-      if (ReturnCode.isSuccess(returnCode)) return true;
-      debugPrint(
-        '[ShareConvert] ffmpeg-kit failed (${returnCode?.getValue()}): '
-        '${await session.getOutput()}',
-      );
-      return false;
-    }
 
     final result = await Process.run(await _resolveFfmpegCommand(), args);
     if (result.exitCode == 0) return true;
@@ -217,15 +198,78 @@ class AudioAnalysisService {
     return false;
   }
 
+  /// Platform channel backed by `AudioShareConverter` in
+  /// android/app/src/main/kotlin/.../MainActivity.kt.
+  static const MethodChannel _androidConvertChannel = MethodChannel(
+    'com.bandpassrecords.dpm/audio_convert',
+  );
+
+  /// Test seam for the Android transcode. Production leaves this null and
+  /// goes over [_androidConvertChannel]. Reset to null in `tearDown`.
+  @visibleForTesting
+  static Future<void> Function(String input, String output)?
+      androidConverterOverride;
+
+  /// Transcodes to AAC/`.m4a` using Android's own MediaCodec, since Android
+  /// cannot spawn an ffmpeg subprocess (`Process.run` there failed silently,
+  /// which is why WAV bounces went out unconverted and got dropped by the
+  /// receiving app, leaving only the message text).
+  ///
+  /// AAC rather than MP3 because Android ships no MP3 *encoder*. That matches
+  /// the macOS branch below, which produces `.m4a` for the same reason, so
+  /// `.m4a` is a format this app already sends.
+  ///
+  /// Visible for testing because [convertForSharing] only routes here when
+  /// `Platform.isAndroid`, which no test host satisfies.
+  @visibleForTesting
+  static Future<File?> convertWithAndroidCodec(
+    String inputPath,
+    String outputDir,
+  ) async {
+    final base = p.basenameWithoutExtension(inputPath);
+    var outPath = p.join(outputDir, '$base.m4a');
+    if (p.equals(outPath, inputPath)) {
+      outPath = p.join(outputDir, '${base}_share.m4a');
+    }
+
+    try {
+      final override = androidConverterOverride;
+      if (override != null) {
+        await override(inputPath, outPath);
+      } else {
+        await _androidConvertChannel.invokeMethod<String>('toM4a', {
+          'input': inputPath,
+          'output': outPath,
+        });
+      }
+    } catch (e) {
+      // MediaExtractor cannot open AIFF, so that input legitimately lands
+      // here; the caller falls back to sharing the original file.
+      debugPrint('[ShareConvert] Android transcode failed: $e');
+      return null;
+    }
+
+    final out = File(outPath);
+    if (await out.exists() && await out.length() > 0) return out;
+    debugPrint('[ShareConvert] Android transcode produced nothing at $outPath');
+    return null;
+  }
+
   /// Converts [inputPath] to a messaging-app-compatible file inside
-  /// [outputDir], choosing the tool/format that needs no extra install on
-  /// the current OS:
+  /// [outputDir], using whatever encoder the current OS already has — no
+  /// platform gets a new redistributable for this:
   /// - macOS: AAC/M4A via `afconvert`, which ships with every Mac (Apple's
   ///   frameworks have never included an MP3 encoder).
+  /// - Android: AAC/M4A via MediaCodec over a platform channel, for the same
+  ///   reason — Android ships an MP3 decoder but no encoder.
   /// - Windows: MP3 via the ffmpeg binary bundled with the app, falling
   ///   back to PATH for dev builds without it.
-  /// - Android/iOS: MP3 via the bundled ffmpeg-kit library, in-process.
-  /// - Other platforms: MP3 via ffmpeg on PATH (soft dependency).
+  /// - Linux: MP3 via ffmpeg on PATH (soft dependency).
+  ///
+  /// iOS has no implementation and returns null: it isn't built by CI and
+  /// has no shipping target, so wiring up AVAssetExportSession would be
+  /// untestable code. It falls through to sharing the original file, which
+  /// is what every platform did before any of this existed.
   ///
   /// Returns the converted file, or null if conversion wasn't possible —
   /// callers should fall back to sharing the original file rather than
@@ -233,6 +277,11 @@ class AudioAnalysisService {
   static Future<File?> convertForSharing(String inputPath, String outputDir) async {
     final base = p.basenameWithoutExtension(inputPath);
     Directory(outputDir).createSync(recursive: true);
+
+    if (Platform.isAndroid) {
+      return convertWithAndroidCodec(inputPath, outputDir);
+    }
+    if (Platform.isIOS) return null;
 
     if (Platform.isMacOS) {
       final outPath = p.join(outputDir, '$base.m4a');
