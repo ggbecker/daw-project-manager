@@ -72,6 +72,24 @@ dependencies:
   oauth2: ^2.0.3
   crypto: ^3.0.5
   share_plus: ^12.0.2
+  # Android/iOS-only ffmpeg, used by AudioAnalysisService.convertForSharing to
+  # turn a WAV bounce into an MP3 before sharing (WhatsApp silently drops WAV
+  # attachments). Desktop shells out to ffmpeg instead — Process.run can't
+  # work on Android, which is why sharing a WAV there used to send only the
+  # accompanying text.
+  #
+  # The "_audio" variant is the smallest one that ships LAME (libmp3lame);
+  # the full package pulls in video codecs this app has no use for.
+  # LGPL-3.0, no GPL components.
+  #
+  # CAUTION: this plugin also declares windows/linux/macos. Their CMakeLists
+  # download a ~19 MB prebuilt ffmpeg bundle from GitHub at *configure* time
+  # and hard-fail (FATAL_ERROR) if that download doesn't work, so a desktop
+  # build now needs network access at build time. That is a problem for the
+  # network-isolated Flathub build specifically — see flatpak/README.md and
+  # the FFMPEGKIT_LOCAL_DIR escape hatch in the plugin's CMakeLists.
+  # AudioAnalysisService only ever calls into it on Android/iOS.
+  ffmpeg_kit_flutter_new_audio: ^2.5.2
   flutter_secure_storage: ^10.0.0
   flutter_local_notifications: ^22.0.0
   timezone: ^0.11.0
@@ -97,6 +115,12 @@ dev_dependencies:
   # regular dependency) pulls this in transitively too, but the test
   # imports it directly so it should be listed, not just riding along.
   dbus: ^0.7.14
+  # test/ui/preview_share_test.dart swaps PathProviderPlatform.instance for a
+  # fake so getTemporaryDirectory() resolves to a real temp folder off-device.
+  # Both ride along transitively via path_provider, but the test imports them
+  # directly so they belong here.
+  path_provider_platform_interface: ^2.1.2
+  plugin_platform_interface: ^2.1.8
 
 dependency_overrides:
   yaml: ^3.0.0

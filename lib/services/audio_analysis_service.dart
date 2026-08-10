@@ -2,6 +2,8 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:math';
 import 'dart:typed_data';
+import 'package:ffmpeg_kit_flutter_new_audio/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter_new_audio/return_code.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -169,6 +171,47 @@ class AudioAnalysisService {
     return 'ffmpeg';
   }
 
+  /// The ffmpeg arguments used for every MP3 conversion, whatever runs them.
+  /// `-qscale:a 2` is VBR ≈190 kbps — transparent enough for a bounce someone
+  /// will listen to on a phone, small enough to actually send.
+  static List<String> mp3ConversionArgs(String inputPath, String outputPath) =>
+      ['-y', '-i', inputPath, '-codec:a', 'libmp3lame', '-qscale:a', '2', outputPath];
+
+  /// Runs ffmpeg with [args] and reports whether it succeeded.
+  ///
+  /// Test seam: production leaves this null, which selects the real runner
+  /// for the current platform (a bundled/PATH binary on desktop, the
+  /// in-process ffmpeg-kit library on mobile). Reset to null in `tearDown`.
+  @visibleForTesting
+  static Future<bool> Function(List<String> args)? ffmpegRunnerOverride;
+
+  /// Whether ffmpeg has to run in-process rather than as a subprocess.
+  /// Android and iOS forbid spawning arbitrary executables, which is why
+  /// [Process.run] silently failed there and WAV bounces went out unconverted
+  /// (and were then dropped by the receiving app, leaving only the text).
+  static bool get _usesInProcessFfmpeg => Platform.isAndroid || Platform.isIOS;
+
+  static Future<bool> _runFfmpeg(List<String> args) async {
+    final override = ffmpegRunnerOverride;
+    if (override != null) return override(args);
+
+    if (_usesInProcessFfmpeg) {
+      final session = await FFmpegKit.executeWithArguments(args);
+      final returnCode = await session.getReturnCode();
+      if (ReturnCode.isSuccess(returnCode)) return true;
+      debugPrint(
+        '[ShareConvert] ffmpeg-kit failed (${returnCode?.getValue()}): '
+        '${await session.getOutput()}',
+      );
+      return false;
+    }
+
+    final result = await Process.run(await _resolveFfmpegCommand(), args);
+    if (result.exitCode == 0) return true;
+    debugPrint('[ShareConvert] ffmpeg failed (${result.exitCode}): ${result.stderr}');
+    return false;
+  }
+
   /// Converts [inputPath] to a messaging-app-compatible file inside
   /// [outputDir], choosing the tool/format that needs no extra install on
   /// the current OS:
@@ -176,6 +219,7 @@ class AudioAnalysisService {
   ///   frameworks have never included an MP3 encoder).
   /// - Windows: MP3 via the ffmpeg binary bundled with the app, falling
   ///   back to PATH for dev builds without it.
+  /// - Android/iOS: MP3 via the bundled ffmpeg-kit library, in-process.
   /// - Other platforms: MP3 via ffmpeg on PATH (soft dependency).
   ///
   /// Returns the converted file, or null if conversion wasn't possible —
@@ -199,14 +243,23 @@ class AudioAnalysisService {
       return null;
     }
 
-    final outPath = p.join(outputDir, '$base.mp3');
+    // Never write the output over the input: on mobile the caller's temp
+    // directory is also where the source may already live, and ffmpeg
+    // truncates its output file before reading.
+    var outPath = p.join(outputDir, '$base.mp3');
+    if (p.equals(outPath, inputPath)) {
+      outPath = p.join(outputDir, '${base}_share.mp3');
+    }
+
     try {
-      final ffmpeg = await _resolveFfmpegCommand();
-      final result = await Process.run(ffmpeg, [
-        '-y', '-i', inputPath, '-codec:a', 'libmp3lame', '-qscale:a', '2', outPath,
-      ]);
-      if (result.exitCode == 0) return File(outPath);
-      debugPrint('[ShareConvert] ffmpeg failed (${result.exitCode}): ${result.stderr}');
+      if (await _runFfmpeg(mp3ConversionArgs(inputPath, outPath))) {
+        final out = File(outPath);
+        // ffmpeg can exit 0 having written nothing useful (an unsupported
+        // input it decided to skip). An empty attachment is worse than an
+        // unconverted one, so treat it as a failure.
+        if (await out.exists() && await out.length() > 0) return out;
+        debugPrint('[ShareConvert] ffmpeg produced no usable output at $outPath');
+      }
     } catch (e) {
       debugPrint('[ShareConvert] ffmpeg not available: $e');
     }
