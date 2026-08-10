@@ -13,9 +13,9 @@ so end users never need to install anything themselves — see
 it under `flutter: assets:` in `pubspec.yaml` is what it used to do, and that
 shipped this 97 MB Windows executable inside the Android APK, the macOS
 `.app` and the Linux tarball/Flatpak — Flutter's asset list has no
-per-platform filter. Every other platform has its own encoder (ffmpeg-kit on
-Android/iOS, `afconvert` on macOS, `ffmpeg` on `PATH` on Linux), so please
-don't add it back to the asset list.
+per-platform filter. Every other platform has its own encoder (MediaCodec on
+Android, `afconvert` on macOS, `ffmpeg` on `PATH` on Linux), so please don't
+add it back to the asset list.
 
 - Source: https://www.gyan.dev/ffmpeg/builds/ (the build linked from
   ffmpeg.org's own Windows download page) — `ffmpeg-release-essentials.zip`.

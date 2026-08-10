@@ -122,8 +122,8 @@ install(FILES "${AOT_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_DATA_DIR}"
 # because that list has no per-platform filter: as an asset, this 97 MB
 # Windows executable was copied into the Android APK, the macOS .app and the
 # Linux tarball/Flatpak, none of which can run it. Every other platform has
-# its own encoder (ffmpeg-kit on Android/iOS, afconvert on macOS, ffmpeg on
-# PATH on Linux), so this belongs to the Windows bundle alone.
+# its own encoder (MediaCodec on Android, afconvert on macOS, ffmpeg on PATH
+# on Linux), so this belongs to the Windows bundle alone.
 #
 # Lands in <bundle>/tools/ next to the .exe; keep in sync with
 # AudioAnalysisService._bundledFfmpegPath. The msix package is built from this
