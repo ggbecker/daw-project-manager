@@ -156,9 +156,14 @@ class AudioAnalysisService {
   /// so end users never need to install anything themselves. Resolved the
   /// same way tray_manager/windows_taskbar resolve bundled assets: relative
   /// to the built executable, not the source tree.
+  ///
+  /// `<bundle>/tools/`, populated by the install() rule in
+  /// windows/CMakeLists.txt — not a Flutter asset, because that would ship
+  /// this 97 MB Windows binary to Android, macOS and Linux too. Keep the two
+  /// in sync.
   static String get _bundledFfmpegPath => p.joinAll([
         p.dirname(Platform.resolvedExecutable),
-        'data', 'flutter_assets', 'resources', 'tools', 'ffmpeg.exe',
+        'tools', 'ffmpeg.exe',
       ]);
 
   /// Resolves which ffmpeg binary to invoke: the bundled Windows build if

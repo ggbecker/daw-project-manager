@@ -143,7 +143,11 @@ flutter:
     - app_icon.ico
     - LICENSE
     - resources/daw/logos/
-    - resources/tools/ffmpeg.exe
+    # resources/tools/ffmpeg.exe is deliberately NOT listed here. Flutter's
+    # asset list has no per-platform filter, so declaring it shipped a 97 MB
+    # Windows binary inside the Android APK, the macOS .app and the Linux
+    # tarball/Flatpak, none of which can execute it. It is installed next to
+    # the .exe by windows/CMakeLists.txt instead — Windows builds only.
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
