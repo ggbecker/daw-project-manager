@@ -622,7 +622,11 @@ Future<void> _main(List<String> args) async {
       if (kDebugMode) print('Desktop notification init failed: $e');
     }
   }
-  if (!kIsWeb && Platform.isAndroid) {
+  // Background audio: both mobile platforms. The android* parameters below
+  // are simply ignored on iOS, where the equivalent capability comes from the
+  // UIBackgroundModes "audio" entry in ios/Runner/Info.plist — without that
+  // key iOS suspends playback the moment the app leaves the foreground.
+  if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
     // Fire-and-forget: não bloqueia o runApp(). O player usa audioplayers como
     // fallback até init() completar; depois usa just_audio com notificação.
     unawaited(
@@ -649,6 +653,15 @@ Future<void> _main(List<String> args) async {
           }),
     );
 
+  }
+
+  // Deadline notifications are Android-only for now: DeadlineNotificationService
+  // and NotificationBackgroundService both bail out on any other platform, and
+  // the background rescheduling half is built on Android WorkManager with no
+  // iOS counterpart. Kept as its own gate rather than folded into the block
+  // above so enabling background audio on iOS didn't silently switch on a
+  // half-implemented notification stack too.
+  if (!kIsWeb && Platform.isAndroid) {
     // Notificações de deadline: fire-and-forget para não bloquear o startup.
     try {
       final notificationService = DeadlineNotificationService();
