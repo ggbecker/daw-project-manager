@@ -1769,6 +1769,55 @@ final startMinimizedProvider =
 });
 
 // ---------------------------------------------------------------------------
+// Name date stripping
+// ---------------------------------------------------------------------------
+
+/// Whether project names hide the date stamps some DAWs bake into file names
+/// (Cubase writes `2026-08-02 - Massive Attack - Teardrop.cpr`).
+///
+/// Device-local display preference — deliberately not Drive-synced and not in
+/// `backup_service`, same as theme and layout settings.
+///
+/// The value is mirrored into [MusicProject.stripDatesFromNames] rather than
+/// read through this provider at the point of use: `displayName` is a plain
+/// model getter called from ~100 widgets that have no `Ref` to hand. This
+/// notifier is that static's only writer.
+class NameDateStrippingNotifier extends Notifier<bool> {
+  static const _key = 'stripDatesFromNames';
+
+  @override
+  bool build() {
+    var value = false;
+    try {
+      value = Hive.box<String>('settings').get(_key) == 'true';
+    } catch (e) {
+      if (kDebugMode) print('Failed to load stripDatesFromNames: $e');
+    }
+    MusicProject.stripDatesFromNames = value;
+    return value;
+  }
+
+  Future<void> set(bool value) async {
+    if (value == state) return;
+    state = value;
+    MusicProject.stripDatesFromNames = value;
+    try {
+      final box = Hive.isBoxOpen('settings')
+          ? Hive.box<String>('settings')
+          : await Hive.openBox<String>('settings');
+      await box.put(_key, value.toString());
+    } catch (e) {
+      if (kDebugMode) print('Failed to save stripDatesFromNames: $e');
+    }
+  }
+}
+
+final nameDateStrippingProvider =
+    NotifierProvider<NameDateStrippingNotifier, bool>(() {
+  return NameDateStrippingNotifier();
+});
+
+// ---------------------------------------------------------------------------
 // Tab Visibility
 // ---------------------------------------------------------------------------
 

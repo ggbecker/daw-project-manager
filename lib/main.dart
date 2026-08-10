@@ -807,6 +807,13 @@ Future<void> _main(List<String> args) async {
     // 4f. Bootstrap work timer (starts listening to activeProjectProvider).
     container.read(workTimerProvider);
 
+    // 4f-2. Bootstrap the name date-stripping preference. Reading it is what
+    // mirrors the stored value into MusicProject.stripDatesFromNames, and
+    // MusicProject.displayName has no way to reach the provider itself — so
+    // without this eager read the first frame would render unstripped names
+    // until something else happened to touch the provider.
+    container.read(nameDateStrippingProvider);
+
     // 4g. Check for updates in background (desktop only, if enabled by user)
     if (!kIsWeb &&
         (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {

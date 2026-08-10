@@ -1,5 +1,6 @@
 import 'package:hive_ce/hive.dart';
 import 'package:path/path.dart' as p;
+import '../utils/name_date_parser.dart';
 import 'todo_item.dart';
 
 /// Converts a musical key (e.g. `'C#m'`, `'G#/Ab Major'`) to Camelot Wheel
@@ -252,9 +253,25 @@ class MusicProject {
     this.sourceTemplateId,
   });
 
-  String get displayName => (customDisplayName != null && customDisplayName!.trim().isNotEmpty)
+  /// Whether [displayName] hides date stamps DAWs bake into file names (see
+  /// `lib/utils/name_date_parser.dart`). Off by default; mirrored here from
+  /// `nameDateStrippingProvider` because [displayName] is read from roughly a
+  /// hundred call sites — grid cells, mobile list, search, text export,
+  /// playlists, releases — and none of them have a `Ref` to consult.
+  ///
+  /// The provider is the single writer; tests set it directly and must reset
+  /// it in `tearDown`.
+  static bool stripDatesFromNames = false;
+
+  /// A user-set [customDisplayName] is never date-stripped: the user typed
+  /// that name themselves, so any date in it is there on purpose.
+  String get displayName =>
+      (customDisplayName != null && customDisplayName!.trim().isNotEmpty)
       ? customDisplayName!.trim()
-      : p.basenameWithoutExtension(fileName);
+      : _maybeStripDate(p.basenameWithoutExtension(fileName));
+
+  static String _maybeStripDate(String name) =>
+      stripDatesFromNames ? stripNameDate(name) : name;
 
   static final _uuidPreviewRe = RegExp(
     r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}_preview\.',
@@ -268,15 +285,22 @@ class MusicProject {
   /// Prefers the stored original filename; falls back to the sanitized project
   /// display name + extension when the stored name is absent or UUID-based.
   /// Returns null when no preview path is available or it is a Drive reference.
+  ///
+  /// Date stamps are stripped here regardless of [stripDatesFromNames]: that
+  /// flag is about what this app shows on screen, whereas this name is what
+  /// the recipient sees in WhatsApp, and a bounce dated eight months ago
+  /// reads as a stale file to them no matter how it's displayed locally.
   String? get previewShareFileName {
     final effectivePath = previewSongPath;
     if (effectivePath == null || effectivePath.isEmpty || effectivePath.startsWith('drive://')) return null;
     final stored = previewSongFileName;
     if (stored != null && stored.isNotEmpty && !_uuidPreviewRe.hasMatch(stored)) {
-      return stored;
+      return stripNameDateKeepingExtension(stored);
     }
     final ext = p.extension(effectivePath);
-    return '${_sanitizeForFileName(displayName)}$ext';
+    // displayName may already be stripped; stripNameDate is idempotent, and
+    // running it here covers the flag-off case.
+    return '${stripNameDate(_sanitizeForFileName(displayName))}$ext';
   }
 
   /// Returns the project age based on file creation date
