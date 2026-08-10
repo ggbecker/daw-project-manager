@@ -11,8 +11,9 @@
 #include "flutter/generated_plugin_registrant.h"
 #include "jump_list.h"
 
-FlutterWindow::FlutterWindow(const flutter::DartProject& project)
-    : project_(project) {}
+FlutterWindow::FlutterWindow(const flutter::DartProject& project,
+                             bool show_on_first_frame)
+    : project_(project), show_on_first_frame_(show_on_first_frame) {}
 
 FlutterWindow::~FlutterWindow() {}
 
@@ -82,9 +83,16 @@ bool FlutterWindow::OnCreate() {
   dock_channel_ = channel;
   // ────────────────────────────────────────────────────────────────────────
 
-  flutter_controller_->engine()->SetNextFrameCallback([&]() {
-    this->Show();
-  });
+  // Win32Window::Create() does not pass WS_VISIBLE, so the window stays
+  // hidden until something calls Show(). Skipping this call is therefore all
+  // that "start minimized to tray" needs on Windows — and it has to be
+  // skipped here, because Dart's windowManager.show() is already conditional
+  // but this unconditional Show() was overriding it.
+  if (show_on_first_frame_) {
+    flutter_controller_->engine()->SetNextFrameCallback([&]() {
+      this->Show();
+    });
+  }
 
   flutter_controller_->ForceRedraw();
 
