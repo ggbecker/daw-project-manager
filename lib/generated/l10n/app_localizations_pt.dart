@@ -4245,4 +4245,31 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get playbackModeShuffle => 'Aleatório';
+
+  @override
+  String get hideDatesInNames => 'Ocultar datas nos nomes dos projetos';
+
+  @override
+  String get hideDatesInNamesDescription =>
+      'Algumas DAWs colocam a data de criação no início do nome do arquivo do projeto (por exemplo \"2026-08-02 - Minha Faixa\"). Oculte-a para mostrar apenas o título. Os arquivos nunca são renomeados.';
+
+  @override
+  String get findPreviewAutomatically => 'Localizar automaticamente';
+
+  @override
+  String get noPreviewSongFoundAutomatically =>
+      'Nenhuma música de prévia encontrada nas pastas de mixagem deste projeto.';
+
+  @override
+  String get selectProjects => 'Selecionar';
+
+  @override
+  String sharePreviewSongText(String name) {
+    return 'Música de prévia: $name';
+  }
+
+  @override
+  String sharePreviewSongZipText(String name) {
+    return 'Música de prévia (ZIP): $name';
+  }
 }

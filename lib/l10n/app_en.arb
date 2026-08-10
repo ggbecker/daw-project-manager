@@ -3966,5 +3966,25 @@
   "playbackModeRepeat": "Repeat",
   "@playbackModeRepeat": { "description": "Playback mode: loop the entire queue" },
   "playbackModeShuffle": "Shuffle",
-  "@playbackModeShuffle": { "description": "Playback mode: random order" }
+  "@playbackModeShuffle": { "description": "Playback mode: random order" },
+  "hideDatesInNames": "Hide dates in project names",
+  "@hideDatesInNames": { "description": "Appearance setting: strip date stamps from displayed project names" },
+  "hideDatesInNamesDescription": "Some DAWs prefix project files with the date they were created (for example \"2026-08-02 - My Track\"). Hide it so only the title is shown. The files themselves are never renamed.",
+  "@hideDatesInNamesDescription": { "description": "Explanation of the hide-dates-in-names appearance setting" },
+  "findPreviewAutomatically": "Find automatically",
+  "@findPreviewAutomatically": { "description": "Button in the missing preview song dialog: clear the dead reference and re-run mixdown detection" },
+  "noPreviewSongFoundAutomatically": "No preview song found in this project's mixdown folders.",
+  "@noPreviewSongFoundAutomatically": { "description": "Snackbar shown when automatic preview detection finds nothing" },
+  "selectProjects": "Select",
+  "@selectProjects": { "description": "Mobile long-press action sheet entry: enter multi-select mode" },
+  "sharePreviewSongText": "Preview song: {name}",
+  "@sharePreviewSongText": {
+    "description": "Message body accompanying a shared preview song file",
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "sharePreviewSongZipText": "Preview song (ZIP): {name}",
+  "@sharePreviewSongZipText": {
+    "description": "Message body accompanying a shared preview song zipped for transport",
+    "placeholders": { "name": { "type": "String" } }
+  }
 }

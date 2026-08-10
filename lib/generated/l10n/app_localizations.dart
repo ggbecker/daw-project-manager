@@ -7174,6 +7174,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Shuffle'**
   String get playbackModeShuffle;
+
+  /// Appearance setting: strip date stamps from displayed project names
+  ///
+  /// In en, this message translates to:
+  /// **'Hide dates in project names'**
+  String get hideDatesInNames;
+
+  /// Explanation of the hide-dates-in-names appearance setting
+  ///
+  /// In en, this message translates to:
+  /// **'Some DAWs prefix project files with the date they were created (for example \"2026-08-02 - My Track\"). Hide it so only the title is shown. The files themselves are never renamed.'**
+  String get hideDatesInNamesDescription;
+
+  /// Button in the missing preview song dialog: clear the dead reference and re-run mixdown detection
+  ///
+  /// In en, this message translates to:
+  /// **'Find automatically'**
+  String get findPreviewAutomatically;
+
+  /// Snackbar shown when automatic preview detection finds nothing
+  ///
+  /// In en, this message translates to:
+  /// **'No preview song found in this project\'s mixdown folders.'**
+  String get noPreviewSongFoundAutomatically;
+
+  /// Mobile long-press action sheet entry: enter multi-select mode
+  ///
+  /// In en, this message translates to:
+  /// **'Select'**
+  String get selectProjects;
+
+  /// Message body accompanying a shared preview song file
+  ///
+  /// In en, this message translates to:
+  /// **'Preview song: {name}'**
+  String sharePreviewSongText(String name);
+
+  /// Message body accompanying a shared preview song zipped for transport
+  ///
+  /// In en, this message translates to:
+  /// **'Preview song (ZIP): {name}'**
+  String sharePreviewSongZipText(String name);
 }
 
 class _AppLocalizationsDelegate

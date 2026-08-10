@@ -4253,4 +4253,31 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get playbackModeShuffle => 'Casuale';
+
+  @override
+  String get hideDatesInNames => 'Nascondi le date nei nomi dei progetti';
+
+  @override
+  String get hideDatesInNamesDescription =>
+      'Alcune DAW antepongono ai file di progetto la data di creazione (ad esempio \"2026-08-02 - Il Mio Brano\"). Nascondila per mostrare solo il titolo. I file non vengono mai rinominati.';
+
+  @override
+  String get findPreviewAutomatically => 'Trova automaticamente';
+
+  @override
+  String get noPreviewSongFoundAutomatically =>
+      'Nessun brano di anteprima trovato nelle cartelle di mixdown di questo progetto.';
+
+  @override
+  String get selectProjects => 'Seleziona';
+
+  @override
+  String sharePreviewSongText(String name) {
+    return 'Brano di anteprima: $name';
+  }
+
+  @override
+  String sharePreviewSongZipText(String name) {
+    return 'Brano di anteprima (ZIP): $name';
+  }
 }

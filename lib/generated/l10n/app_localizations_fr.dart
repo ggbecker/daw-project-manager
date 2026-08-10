@@ -4279,4 +4279,31 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get playbackModeShuffle => 'Aléatoire';
+
+  @override
+  String get hideDatesInNames => 'Masquer les dates dans les noms de projet';
+
+  @override
+  String get hideDatesInNamesDescription =>
+      'Certaines STAN préfixent les fichiers de projet avec leur date de création (par exemple « 2026-08-02 - Mon Morceau »). Masquez-la pour n\'afficher que le titre. Les fichiers ne sont jamais renommés.';
+
+  @override
+  String get findPreviewAutomatically => 'Rechercher automatiquement';
+
+  @override
+  String get noPreviewSongFoundAutomatically =>
+      'Aucune chanson d\'aperçu trouvée dans les dossiers de mixage de ce projet.';
+
+  @override
+  String get selectProjects => 'Sélectionner';
+
+  @override
+  String sharePreviewSongText(String name) {
+    return 'Chanson d\'aperçu : $name';
+  }
+
+  @override
+  String sharePreviewSongZipText(String name) {
+    return 'Chanson d\'aperçu (ZIP) : $name';
+  }
 }
