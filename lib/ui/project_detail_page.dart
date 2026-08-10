@@ -28,8 +28,11 @@ import '../utils/file_launcher.dart';
 import '../utils/route_observer.dart';
 import '../generated/l10n/app_localizations.dart';
 import 'session_actions.dart';
+import 'preview_share.dart';
+import 'dialogs/preview_song_not_found_dialog.dart';
 import '../services/audio_analysis_service.dart';
 import '../services/metadata_extractor.dart';
+import '../services/metadata_sidecar_service.dart';
 import '../services/mixdown_detector_service.dart';
 import '../services/project_text_export_service.dart';
 import 'widgets/conversion_progress_dialog.dart';
@@ -167,14 +170,16 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
     final newNotes = notesText.isEmpty ? null : notesText;
     final newStatus = _selectedPhase ?? project.status;
     final statusChanged = project.status != newStatus;
+    final bpmText = _bpmCtrl.text.trim();
+    final keyText = _keyCtrl.text.trim();
 
     final updated = project.copyWith(
       customDisplayName: newCustomDisplayName,
       clearCustomDisplayName: newCustomDisplayName == null,
-      bpm: _bpmCtrl.text.trim().isEmpty ? null : double.tryParse(_bpmCtrl.text.trim()),
-      clearBpm: _bpmCtrl.text.trim().isEmpty,
-      musicalKey: _keyCtrl.text.trim().isEmpty ? null : _keyCtrl.text.trim(),
-      clearMusicalKey: _keyCtrl.text.trim().isEmpty,
+      bpm: bpmText.isEmpty ? null : double.tryParse(bpmText),
+      clearBpm: bpmText.isEmpty,
+      musicalKey: keyText.isEmpty ? null : keyText,
+      clearMusicalKey: keyText.isEmpty,
       notes: newNotes,
       clearNotes: newNotes == null,
       status: newStatus,
@@ -183,11 +188,51 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
 
     await repo.updateProject(updated);
     await _recordSaveEvents(repo, project, updated, newStatus, statusChanged);
+    await _writeMetadataSidecars(
+      updated,
+      bpmChanged: _lastSavedBpm != bpmText,
+      keyChanged: _lastSavedKey != keyText,
+    );
 
     _lastSavedName = newCustomDisplayName ?? project.fileName;
-    _lastSavedBpm = _bpmCtrl.text.trim();
-    _lastSavedKey = _keyCtrl.text.trim();
+    _lastSavedBpm = bpmText;
+    _lastSavedKey = keyText;
     _lastSavedNotes = newNotes ?? '';
+  }
+
+  /// Mirrors BPM and key into the `bpm.txt` / `key.txt` files next to the
+  /// project, which [MetadataExtractor] reads back on scan. This used to hang
+  /// off the dashboard grid's inline cell editor; that editor is gone, and
+  /// this page is now the only place either value can be changed.
+  ///
+  /// Only writes on an actual change: [_doAutoSave] runs on a debounce after
+  /// every keystroke in any field, and rewriting two files each time would
+  /// churn the project folder (and any folder watcher pointed at it).
+  Future<void> _writeMetadataSidecars(
+    MusicProject project, {
+    required bool bpmChanged,
+    required bool keyChanged,
+  }) async {
+    // _lastSavedBpm/_lastSavedKey are null until the first save, at which
+    // point "changed" is true but the value is whatever was loaded from the
+    // project — writing it back out is harmless and self-healing.
+    try {
+      if (bpmChanged) await MetadataSidecarService.writeBpm(project, project.bpm);
+      if (keyChanged) {
+        await MetadataSidecarService.writeKey(project, project.musicalKey);
+      }
+    } catch (e) {
+      // A read-only or missing project folder must not break autosave — the
+      // Hive write above already succeeded, and the sidecar is a convenience.
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!.failedToWriteBpmFile(e.toString()),
+          ),
+        ),
+      );
+    }
   }
 
   Future<void> _clearDawInfo() async {
@@ -1357,8 +1402,6 @@ class _TogglePlayPauseIntent extends Intent {
   const _TogglePlayPauseIntent();
 }
 
-enum _FileNotFoundAction { selectNew, remove }
-
 class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer>
     with RouteAwareDropTargetState<_PreviewSongPlayer> {
   AudioPlayer _audioPlayer = AudioPlayer();
@@ -1722,40 +1765,44 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer>
           if (!await file.exists()) {
             if (!mounted) return;
             final l10n = AppLocalizations.of(context)!;
-            final action = await showDialog<_FileNotFoundAction>(
-              context: context,
-              builder: (ctx) => AlertDialog(
-                title: Text(l10n.previewSongFileNotFound),
-                content: Text(l10n.previewSongFileNotFoundMessage),
-                actions: [
-                  TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
-                  OutlinedButton(
-                    onPressed: () => Navigator.pop(ctx, _FileNotFoundAction.remove),
-                    child: Text(l10n.removePreviewSong),
-                  ),
-                  FilledButton(
-                    onPressed: () => Navigator.pop(ctx, _FileNotFoundAction.selectNew),
-                    child: Text(l10n.selectNewFile),
-                  ),
-                ],
-              ),
-            );
-            if (!mounted) return;
-            if (action == _FileNotFoundAction.remove) {
-              await widget.onSongRemoved();
-            } else if (action == _FileNotFoundAction.selectNew) {
-              final result = await FilePicker.pickFiles(
-                type: FileType.custom,
-                allowedExtensions: const ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'],
-                dialogTitle: l10n.selectPreviewSong,
-              );
-              if (!mounted) return;
-              if (result != null && result.files.single.path != null) {
-                final newPath = result.files.single.path!;
+            final messenger = ScaffoldMessenger.of(context);
+            // Shares the dialog with the dashboard's copies, but applies the
+            // outcome through this page's own callbacks — they carry
+            // detail-page-only concerns (leaving the Drive upload hash intact,
+            // the "preview song added" snackbar) that a shared writer would
+            // have to reimplement.
+            final action = await showPreviewSongNotFoundDialog(context);
+            if (!mounted || action == null) return;
+            switch (action) {
+              case PreviewNotFoundAction.remove:
+                await widget.onSongRemoved();
+              case PreviewNotFoundAction.autoFind:
+                final found =
+                    await clearAndAutoFindPreview(ref, widget.project);
+                if (!mounted) return;
+                if (found == null) {
+                  messenger.showSnackBar(
+                    SnackBar(
+                      content: Text(l10n.noPreviewSongFoundAutomatically),
+                    ),
+                  );
+                  return;
+                }
+                setState(() => _replacedPreviewPath = found);
+                await _playOnCurrentPlatform(found);
+              case PreviewNotFoundAction.selectNew:
+                final result = await FilePicker.pickFiles(
+                  type: FileType.custom,
+                  allowedExtensions: previewAudioExtensions,
+                  dialogTitle: l10n.selectPreviewSong,
+                );
+                if (!mounted) return;
+                final newPath = result?.files.single.path;
+                if (newPath == null) return;
                 setState(() => _replacedPreviewPath = newPath);
                 await widget.onSongChanged(newPath);
-                await _audioPlayer.play(DeviceFileSource(newPath));
-              }
+                if (!mounted) return;
+                await _playOnCurrentPlatform(newPath);
             }
             return;
           }
@@ -1940,24 +1987,34 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer>
         }
       }
 
+      if (!mounted) return;
+      final shareText = AppLocalizations.of(
+        context,
+      )!.sharePreviewSongText(widget.project.displayName);
+
       // On mobile, copy to cache directory with original name for sharing
       if (MobileUtils.isMobile()) {
-        final cacheDir = await getTemporaryDirectory();
-        final shareFile = File(p.join(cacheDir.path, shareFileName));
-        if (kDebugMode) {
-          debugPrint('[preview_share] cacheDir=${cacheDir.path} shareFile=${shareFile.path}');
+        final shareFile = await stageFileForMobileShare(fileToShare, shareFileName);
+        if (shareFile == null) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  AppLocalizations.of(context)!.failedToSharePreviewSong(shareFileName),
+                ),
+              ),
+            );
+          }
+          return;
         }
-
-        // Copy file to cache with original name
-        await fileToShare.copy(shareFile.path);
         if (kDebugMode) {
-          debugPrint('[preview_share] copied to cache OK, invoking share sheet...');
+          debugPrint('[preview_share] staged at ${shareFile.path}, invoking share sheet...');
         }
 
         // Share the file (default behavior)
         final result = await Share.shareXFiles(
           [XFile(shareFile.path, name: shareFileName)],
-          text: 'Preview song: ${widget.project.displayName}',
+          text: shareText,
         );
         if (kDebugMode) {
           debugPrint('[preview_share] Share.shareXFiles returned (user completed/dismissed share sheet)');
@@ -1970,7 +2027,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer>
         }
         final result = await Share.shareXFiles(
           [XFile(fileToShare.path)],
-          text: 'Preview song: ${widget.project.displayName}',
+          text: shareText,
         );
         if (kDebugMode) {
           debugPrint('[preview_share] ShareResult: status=${result.status} raw=${result.raw}');
@@ -2069,9 +2126,12 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer>
         debugPrint('[preview_share_zip] invoking share sheet...');
       }
 
+      if (!mounted) return;
       final result = await Share.shareXFiles(
         [XFile(zipFile.path, name: p.basename(zipFile.path), mimeType: 'application/zip')],
-        text: 'Preview song (ZIP): ${widget.project.displayName}',
+        text: AppLocalizations.of(
+          context,
+        )!.sharePreviewSongZipText(widget.project.displayName),
       );
       if (kDebugMode) {
         debugPrint('[preview_share_zip] Share.shareXFiles returned (user completed/dismissed share sheet)');
