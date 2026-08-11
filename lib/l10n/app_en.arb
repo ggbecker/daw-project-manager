@@ -3113,7 +3113,7 @@
     }
   },
 
-  "appTitleWithVersion": "DAW Project Manager v{version}",
+  "appTitleWithVersion": "DAW Project Manager {version}",
   "@appTitleWithVersion": {
     "placeholders": {
       "version": { "type": "String" }

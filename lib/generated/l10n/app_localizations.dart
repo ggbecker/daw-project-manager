@@ -4904,7 +4904,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitleWithVersion.
   ///
   /// In en, this message translates to:
-  /// **'DAW Project Manager v{version}'**
+  /// **'DAW Project Manager {version}'**
   String appTitleWithVersion(String version);
 
   /// No description provided for @versionLabel.
