@@ -114,3 +114,22 @@ install(DIRECTORY "${PROJECT_BUILD_DIR}/${FLUTTER_ASSET_DIR_NAME}"
 install(FILES "${AOT_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_DATA_DIR}"
   CONFIGURATIONS Profile;Release
   COMPONENT Runtime)
+
+# Bundled ffmpeg, used by AudioAnalysisService.convertForSharing to transcode
+# WAV/AIFF/FLAC preview songs before sharing.
+#
+# Installed here rather than declared under `flutter: assets:` in pubspec.yaml
+# because that list has no per-platform filter: as an asset, this 97 MB
+# Windows executable was copied into the Android APK, the macOS .app and the
+# Linux tarball/Flatpak, none of which can run it. Every other platform has
+# its own encoder (MediaCodec on Android, afconvert on macOS, ffmpeg on PATH
+# on Linux), so this belongs to the Windows bundle alone.
+#
+# Lands in <bundle>/tools/ next to the .exe; keep in sync with
+# AudioAnalysisService._bundledFfmpegPath. The msix package is built from this
+# same bundle directory, so the packaged build picks it up unchanged.
+install(FILES
+  "${CMAKE_CURRENT_SOURCE_DIR}/../resources/tools/ffmpeg.exe"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../resources/tools/FFMPEG_LICENSE.txt"
+  DESTINATION "${CMAKE_INSTALL_PREFIX}/tools"
+  COMPONENT Runtime)

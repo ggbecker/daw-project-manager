@@ -1978,7 +1978,7 @@
       }
     }
   },
-  "appTitleWithVersion": "DAW Project Manager v{version}",
+  "appTitleWithVersion": "DAW Project Manager {version}",
   "@appTitleWithVersion": {
     "placeholders": {
       "version": {
@@ -2755,5 +2755,25 @@
   "playbackModeRepeat": "リピート",
   "@playbackModeRepeat": { "description": "Playback mode: loop the entire queue" },
   "playbackModeShuffle": "シャッフル",
-  "@playbackModeShuffle": { "description": "Playback mode: random order" }
+  "@playbackModeShuffle": { "description": "Playback mode: random order" },
+  "hideDatesInNames": "プロジェクト名の日付を非表示",
+  "@hideDatesInNames": { "description": "Appearance setting: strip date stamps from displayed project names" },
+  "hideDatesInNamesDescription": "一部のDAWはプロジェクトファイル名の先頭に作成日を付けます（例:「2026-08-02 - My Track」）。これを非表示にしてタイトルだけを表示します。ファイル自体の名前は変更されません。",
+  "@hideDatesInNamesDescription": { "description": "Explanation of the hide-dates-in-names appearance setting" },
+  "findPreviewAutomatically": "自動的に探す",
+  "@findPreviewAutomatically": { "description": "Button in the missing preview song dialog: clear the dead reference and re-run mixdown detection" },
+  "noPreviewSongFoundAutomatically": "このプロジェクトのミックスダウンフォルダにプレビュー曲が見つかりませんでした。",
+  "@noPreviewSongFoundAutomatically": { "description": "Snackbar shown when automatic preview detection finds nothing" },
+  "selectProjects": "選択",
+  "@selectProjects": { "description": "Mobile long-press action sheet entry: enter multi-select mode" },
+  "sharePreviewSongText": "プレビュー曲: {name}",
+  "@sharePreviewSongText": {
+    "description": "Message body accompanying a shared preview song file",
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "sharePreviewSongZipText": "プレビュー曲 (ZIP): {name}",
+  "@sharePreviewSongZipText": {
+    "description": "Message body accompanying a shared preview song zipped for transport",
+    "placeholders": { "name": { "type": "String" } }
+  }
 }

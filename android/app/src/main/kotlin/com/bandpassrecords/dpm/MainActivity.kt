@@ -2,10 +2,13 @@ package com.bandpassrecords.dpm
 
 import android.os.Bundle
 import com.ryanheise.audioservice.AudioServiceActivity
+import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.MethodChannel
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.concurrent.Executors
 
 /// Android-only: catches native (JVM-level) uncaught exceptions that never
 /// reach Dart — e.g. a crash inside a plugin's Kotlin/Java code — and writes
@@ -17,9 +20,57 @@ import java.util.Locale
 /// where path_provider's getApplicationSupportDirectory() resolves on
 /// Android, so it sits alongside crash_log.txt written by lib/services/crash_logger.dart.
 class MainActivity : AudioServiceActivity() {
+    /// Single worker for audio transcoding: the MediaCodec loop in
+    /// AudioShareConverter is synchronous and can run for seconds on a long
+    /// bounce, so it must never touch the platform channel's main thread.
+    private val conversionExecutor = Executors.newSingleThreadExecutor()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installNativeCrashLogger()
         super.onCreate(savedInstanceState)
+    }
+
+    override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
+        super.configureFlutterEngine(flutterEngine)
+        registerAudioConvertChannel(flutterEngine)
+    }
+
+    override fun onDestroy() {
+        conversionExecutor.shutdown()
+        super.onDestroy()
+    }
+
+    /// Backs AudioAnalysisService.convertForSharing on Android — see the
+    /// channel name in lib/services/audio_analysis_service.dart.
+    private fun registerAudioConvertChannel(flutterEngine: FlutterEngine) {
+        val channel = MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            "com.bandpassrecords.dpm/audio_convert",
+        )
+        channel.setMethodCallHandler { call, result ->
+            if (call.method != "toM4a") {
+                result.notImplemented()
+                return@setMethodCallHandler
+            }
+            val input = call.argument<String>("input")
+            val output = call.argument<String>("output")
+            if (input == null || output == null) {
+                result.error("bad_args", "input and output are required", null)
+                return@setMethodCallHandler
+            }
+            conversionExecutor.execute {
+                try {
+                    AudioShareConverter.convertToM4a(input, output)
+                    // MethodChannel replies must be delivered on the main
+                    // thread; this handler is already off it.
+                    runOnUiThread { result.success(output) }
+                } catch (e: Throwable) {
+                    runOnUiThread {
+                        result.error("convert_failed", e.message, null)
+                    }
+                }
+            }
+        }
     }
 
     private fun installNativeCrashLogger() {

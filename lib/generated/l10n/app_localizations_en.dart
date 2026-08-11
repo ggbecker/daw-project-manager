@@ -2907,7 +2907,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String appTitleWithVersion(String version) {
-    return 'DAW Project Manager v$version';
+    return 'DAW Project Manager $version';
   }
 
   @override
@@ -4232,4 +4232,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get playbackModeShuffle => 'Shuffle';
+
+  @override
+  String get hideDatesInNames => 'Hide dates in project names';
+
+  @override
+  String get hideDatesInNamesDescription =>
+      'Some DAWs prefix project files with the date they were created (for example \"2026-08-02 - My Track\"). Hide it so only the title is shown. The files themselves are never renamed.';
+
+  @override
+  String get findPreviewAutomatically => 'Find automatically';
+
+  @override
+  String get noPreviewSongFoundAutomatically =>
+      'No preview song found in this project\'s mixdown folders.';
+
+  @override
+  String get selectProjects => 'Select';
+
+  @override
+  String sharePreviewSongText(String name) {
+    return 'Preview song: $name';
+  }
+
+  @override
+  String sharePreviewSongZipText(String name) {
+    return 'Preview song (ZIP): $name';
+  }
 }

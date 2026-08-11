@@ -33,6 +33,44 @@ void main() {
     });
   });
 
+  group('MusicProject.displayName — date stripping', () {
+    // The flag is process-global static state (see the doc comment on it);
+    // every test here must leave it back at the default.
+    tearDown(() => MusicProject.stripDatesFromNames = false);
+
+    test('keeps the date in the file name while the flag is off', () {
+      final p = TestFactories.makeProject(
+        fileName: '2026-08-02 - Teardrop.cpr',
+        customDisplayName: null,
+      );
+      expect(p.displayName, '2026-08-02 - Teardrop');
+    });
+
+    test('strips the date from the file name while the flag is on', () {
+      MusicProject.stripDatesFromNames = true;
+      final p = TestFactories.makeProject(
+        fileName: '2026-08-02 - Teardrop.cpr',
+        customDisplayName: null,
+      );
+      expect(p.displayName, 'Teardrop');
+    });
+
+    test('never strips a date the user typed into customDisplayName', () {
+      MusicProject.stripDatesFromNames = true;
+      final p = TestFactories.makeProject(
+        fileName: '2026-08-02 - Teardrop.cpr',
+        customDisplayName: '2026-08-02 - My Chosen Name',
+      );
+      expect(p.displayName, '2026-08-02 - My Chosen Name');
+    });
+
+    test('leaves a dateless file name alone with the flag on', () {
+      MusicProject.stripDatesFromNames = true;
+      final p = TestFactories.makeProject(customDisplayName: null);
+      expect(p.displayName, 'MyProject');
+    });
+  });
+
   group('MusicProject.projectAge', () {
     test('uses fileCreatedAt when set', () {
       final created = DateTime.now().subtract(const Duration(days: 30));
@@ -593,6 +631,51 @@ void main() {
         p.previewShareFileName,
         '550e8400-e29b-41d4-a716-446655440000_finalmaster.wav',
       );
+    });
+
+    // The share filename is what the recipient sees in WhatsApp, so it drops
+    // the date regardless of the display-only stripDatesFromNames preference.
+    group('date stripping is unconditional', () {
+      tearDown(() => MusicProject.stripDatesFromNames = false);
+
+      test('strips the date from a stored previewSongFileName', () {
+        final p = TestFactories.makeProject(
+          previewSongPath: localPath,
+          previewSongFileName: '2026-08-02 - My Demo Mix.wav',
+        );
+        expect(p.previewShareFileName, 'My Demo Mix.wav');
+      });
+
+      test('strips a trailing date while keeping the extension', () {
+        final p = TestFactories.makeProject(
+          previewSongPath: localPath,
+          previewSongFileName: 'My Demo Mix_20260802_1430.wav',
+        );
+        expect(p.previewShareFileName, 'My Demo Mix.wav');
+      });
+
+      test('strips the date from the displayName fallback with the flag off', () {
+        final p = TestFactories.makeProject(
+          customDisplayName: null,
+          fileName: '2026-08-02 - Teardrop.cpr',
+          previewSongPath: localPath,
+          previewSongFileName: null,
+        );
+        expect(MusicProject.stripDatesFromNames, isFalse);
+        expect(p.displayName, '2026-08-02 - Teardrop');
+        expect(p.previewShareFileName, 'Teardrop.wav');
+      });
+
+      test('gives the same result with the flag on', () {
+        MusicProject.stripDatesFromNames = true;
+        final p = TestFactories.makeProject(
+          customDisplayName: null,
+          fileName: '2026-08-02 - Teardrop.cpr',
+          previewSongPath: localPath,
+          previewSongFileName: null,
+        );
+        expect(p.previewShareFileName, 'Teardrop.wav');
+      });
     });
   });
 

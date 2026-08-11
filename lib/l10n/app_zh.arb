@@ -1978,7 +1978,7 @@
       }
     }
   },
-  "appTitleWithVersion": "DAW Project Manager v{version}",
+  "appTitleWithVersion": "DAW Project Manager {version}",
   "@appTitleWithVersion": {
     "placeholders": {
       "version": {
@@ -2755,5 +2755,25 @@
   "playbackModeRepeat": "循环",
   "@playbackModeRepeat": { "description": "Playback mode: loop the entire queue" },
   "playbackModeShuffle": "随机播放",
-  "@playbackModeShuffle": { "description": "Playback mode: random order" }
+  "@playbackModeShuffle": { "description": "Playback mode: random order" },
+  "hideDatesInNames": "隐藏项目名称中的日期",
+  "@hideDatesInNames": { "description": "Appearance setting: strip date stamps from displayed project names" },
+  "hideDatesInNamesDescription": "某些 DAW 会在项目文件名前加上创建日期（例如“2026-08-02 - My Track”）。隐藏它即可只显示标题。文件本身不会被重命名。",
+  "@hideDatesInNamesDescription": { "description": "Explanation of the hide-dates-in-names appearance setting" },
+  "findPreviewAutomatically": "自动查找",
+  "@findPreviewAutomatically": { "description": "Button in the missing preview song dialog: clear the dead reference and re-run mixdown detection" },
+  "noPreviewSongFoundAutomatically": "在此项目的混音文件夹中未找到预览歌曲。",
+  "@noPreviewSongFoundAutomatically": { "description": "Snackbar shown when automatic preview detection finds nothing" },
+  "selectProjects": "选择",
+  "@selectProjects": { "description": "Mobile long-press action sheet entry: enter multi-select mode" },
+  "sharePreviewSongText": "预览歌曲：{name}",
+  "@sharePreviewSongText": {
+    "description": "Message body accompanying a shared preview song file",
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "sharePreviewSongZipText": "预览歌曲（ZIP）：{name}",
+  "@sharePreviewSongZipText": {
+    "description": "Message body accompanying a shared preview song zipped for transport",
+    "placeholders": { "name": { "type": "String" } }
+  }
 }

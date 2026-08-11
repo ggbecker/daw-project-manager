@@ -1978,7 +1978,7 @@
       }
     }
   },
-  "appTitleWithVersion": "DAW Project Manager v{version}",
+  "appTitleWithVersion": "DAW Project Manager {version}",
   "@appTitleWithVersion": {
     "placeholders": {
       "version": {
@@ -2755,5 +2755,25 @@
   "playbackModeRepeat": "Wiederholen",
   "@playbackModeRepeat": { "description": "Playback mode: loop the entire queue" },
   "playbackModeShuffle": "Zufallswiedergabe",
-  "@playbackModeShuffle": { "description": "Playback mode: random order" }
+  "@playbackModeShuffle": { "description": "Playback mode: random order" },
+  "hideDatesInNames": "Datumsangaben in Projektnamen ausblenden",
+  "@hideDatesInNames": { "description": "Appearance setting: strip date stamps from displayed project names" },
+  "hideDatesInNamesDescription": "Manche DAWs stellen Projektdateien das Erstellungsdatum voran (zum Beispiel „2026-08-02 - Mein Track“). Blenden Sie es aus, um nur den Titel zu zeigen. Die Dateien selbst werden nie umbenannt.",
+  "@hideDatesInNamesDescription": { "description": "Explanation of the hide-dates-in-names appearance setting" },
+  "findPreviewAutomatically": "Automatisch suchen",
+  "@findPreviewAutomatically": { "description": "Button in the missing preview song dialog: clear the dead reference and re-run mixdown detection" },
+  "noPreviewSongFoundAutomatically": "In den Mixdown-Ordnern dieses Projekts wurde kein Vorschaulied gefunden.",
+  "@noPreviewSongFoundAutomatically": { "description": "Snackbar shown when automatic preview detection finds nothing" },
+  "selectProjects": "Auswählen",
+  "@selectProjects": { "description": "Mobile long-press action sheet entry: enter multi-select mode" },
+  "sharePreviewSongText": "Vorschaulied: {name}",
+  "@sharePreviewSongText": {
+    "description": "Message body accompanying a shared preview song file",
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "sharePreviewSongZipText": "Vorschaulied (ZIP): {name}",
+  "@sharePreviewSongZipText": {
+    "description": "Message body accompanying a shared preview song zipped for transport",
+    "placeholders": { "name": { "type": "String" } }
+  }
 }

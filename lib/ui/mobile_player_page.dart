@@ -11,6 +11,7 @@ import '../models/todo_item.dart';
 import '../providers/providers.dart';
 import '../generated/l10n/app_localizations.dart';
 import '../services/audio_analysis_service.dart';
+import 'preview_share.dart';
 import 'project_detail_page.dart';
 import 'widgets/conversion_progress_dialog.dart';
 
@@ -267,12 +268,29 @@ class _MobilePlayerPageState extends ConsumerState<MobilePlayerPage> {
         }
       }
 
-      final cacheDir = await getTemporaryDirectory();
-      final shareFile = File(p.join(cacheDir.path, shareFileName));
-      await fileToShare.copy(shareFile.path);
+      final shareFile = await stageFileForMobileShare(fileToShare, shareFileName);
+      if (shareFile == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                AppLocalizations.of(context)!.failedToSharePreviewSong(shareFileName),
+              ),
+            ),
+          );
+        }
+        return;
+      }
+      if (!mounted) return;
       await SharePlus.instance.share(ShareParams(
-        files: [XFile(shareFile.path, name: shareFileName)],
-        text: 'Preview song: ${project.displayName}',
+        files: [
+          XFile(
+            shareFile.path,
+            name: shareFileName,
+            mimeType: shareMimeTypeForFileName(shareFileName),
+          ),
+        ],
+        text: AppLocalizations.of(context)!.sharePreviewSongText(project.displayName),
       ));
     } catch (e) {
       if (mounted) {
@@ -310,8 +328,19 @@ class _MobilePlayerPageState extends ConsumerState<MobilePlayerPage> {
         originalFileName = '$originalFileName${p.extension(songPath)}';
       }
       final cacheDir = await getTemporaryDirectory();
-      final shareFile = File(p.join(cacheDir.path, originalFileName));
-      await sourceFile.copy(shareFile.path);
+      final shareFile = await stageFileForMobileShare(sourceFile, originalFileName);
+      if (shareFile == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                AppLocalizations.of(context)!.failedToSharePreviewSongAsZip(originalFileName),
+              ),
+            ),
+          );
+        }
+        return;
+      }
 
       final zipBase = p.basenameWithoutExtension(originalFileName);
       var zipPath = p.join(cacheDir.path, '$zipBase.zip');
@@ -325,9 +354,10 @@ class _MobilePlayerPageState extends ConsumerState<MobilePlayerPage> {
       await encoder.addFile(shareFile);
       encoder.close();
 
+      if (!mounted) return;
       await SharePlus.instance.share(ShareParams(
         files: [XFile(zipFile.path, name: p.basename(zipFile.path), mimeType: 'application/zip')],
-        text: 'Preview song (ZIP): ${project.displayName}',
+        text: AppLocalizations.of(context)!.sharePreviewSongZipText(project.displayName),
       ));
     } catch (e) {
       if (mounted) {

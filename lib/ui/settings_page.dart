@@ -1006,6 +1006,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         _SearchEntry(SettingsSection.appearance, Icons.palette_outlined, l10n.theme, l10n.themeSettingDescription),
         _SearchEntry(SettingsSection.appearance, Icons.tab_outlined, l10n.customizeTabs, l10n.customizeTabsDescription),
         _SearchEntry(SettingsSection.appearance, Icons.view_sidebar_outlined, l10n.tabPosition, null),
+        _SearchEntry(SettingsSection.appearance, Icons.event_busy_outlined, l10n.hideDatesInNames, l10n.hideDatesInNamesDescription),
         _SearchEntry(SettingsSection.projectFolders, Icons.folder_outlined, l10n.projectFoldersSectionTitle, l10n.projectFoldersSectionSubtitle),
         _SearchEntry(SettingsSection.projectFolders, Icons.view_agenda_outlined, l10n.scanModeSectionTitle, l10n.scanModeSectionDescription),
         _SearchEntry(SettingsSection.projectFolders, Icons.sort, l10n.excludeSmartFoldersFromSort, l10n.excludeSmartFoldersFromSortDescription),
@@ -2582,6 +2583,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     final visibleSet = ref.watch(visibleTabsProvider);
     final tabPos = ref.watch(tabPositionProvider);
     final themeType = ref.watch(themeTypeProvider);
+    final hideDatesInNames = ref.watch(nameDateStrippingProvider);
     final allTabs = VisibleTabsNotifier.canonicalOrder
         .where((t) => t != AppTab.playlists) // playlists is mobile-only
         .toList();
@@ -2686,6 +2688,38 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     controlAffinity: ListTileControlAffinity.trailing,
                     contentPadding: EdgeInsets.zero,
                   ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Card(
+          clipBehavior: Clip.antiAlias,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.event_busy_outlined),
+                    const SizedBox(width: 10),
+                    Text(l10n.hideDatesInNames,
+                        style: Theme.of(context).textTheme.titleMedium),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(l10n.hideDatesInNamesDescription,
+                    style: Theme.of(context).textTheme.bodySmall),
+                const SizedBox(height: 8),
+                SwitchListTile(
+                  value: hideDatesInNames,
+                  onChanged: (v) =>
+                      ref.read(nameDateStrippingProvider.notifier).set(v),
+                  title: Text(l10n.hideDatesInNames),
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                ),
               ],
             ),
           ),

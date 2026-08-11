@@ -2819,7 +2819,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String appTitleWithVersion(String version) {
-    return 'DAW Project Manager v$version';
+    return 'DAW Project Manager $version';
   }
 
   @override
@@ -4089,4 +4089,30 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get playbackModeShuffle => '随机播放';
+
+  @override
+  String get hideDatesInNames => '隐藏项目名称中的日期';
+
+  @override
+  String get hideDatesInNamesDescription =>
+      '某些 DAW 会在项目文件名前加上创建日期（例如“2026-08-02 - My Track”）。隐藏它即可只显示标题。文件本身不会被重命名。';
+
+  @override
+  String get findPreviewAutomatically => '自动查找';
+
+  @override
+  String get noPreviewSongFoundAutomatically => '在此项目的混音文件夹中未找到预览歌曲。';
+
+  @override
+  String get selectProjects => '选择';
+
+  @override
+  String sharePreviewSongText(String name) {
+    return '预览歌曲：$name';
+  }
+
+  @override
+  String sharePreviewSongZipText(String name) {
+    return '预览歌曲（ZIP）：$name';
+  }
 }

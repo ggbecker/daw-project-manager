@@ -59,6 +59,8 @@ import 'widgets/mobile_mini_player.dart';
 import '../generated/l10n/app_localizations.dart';
 import 'session_actions.dart';
 import 'dialogs/create_project_dialog.dart';
+import 'dialogs/preview_song_not_found_dialog.dart';
+import 'preview_share.dart';
 import 'project_templates_page.dart';
 import '../models/pending_folder.dart';
 
@@ -5023,7 +5025,6 @@ class _PlutoProjectsTableWithSelectionState
   }
 }
 
-enum _FileNotFoundAction { selectNew, remove }
 
 class _PlutoProjectsTable extends ConsumerStatefulWidget {
   final List<MusicProject> projects;
@@ -6043,66 +6044,13 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable>
     final file = File(effectivePath);
     if (!await file.exists()) {
       if (!mounted) return;
-      final l10n = AppLocalizations.of(context)!;
-      final action = await showDialog<_FileNotFoundAction>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: Text(l10n.previewSongFileNotFound),
-          content: Text(l10n.previewSongFileNotFoundMessage),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(l10n.cancel),
-            ),
-            OutlinedButton(
-              onPressed: () => Navigator.pop(ctx, _FileNotFoundAction.remove),
-              child: Text(l10n.removePreviewSong),
-            ),
-            FilledButton(
-              onPressed: () =>
-                  Navigator.pop(ctx, _FileNotFoundAction.selectNew),
-              child: Text(l10n.selectNewFile),
-            ),
-          ],
-        ),
-      );
-      if (!mounted) return;
-      if (action == _FileNotFoundAction.remove) {
-        final repo = await ref.read(repositoryProvider.future);
-        final isAuto = project.previewSongPath?.isNotEmpty != true;
-        final updated = isAuto
-            ? project.copyWith(clearPreviewSongAutoPath: true)
-            : project.copyWith(
-                clearPreviewSongPath: true,
-                clearPreviewSongFileName: true,
-              );
-        await repo.updateProject(updated);
-        return;
-      } else if (action == _FileNotFoundAction.selectNew) {
-        final result = await FilePicker.pickFiles(
-          type: FileType.custom,
-          allowedExtensions: const ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'],
-          dialogTitle: l10n.selectPreviewSong,
-        );
-        if (!mounted) return;
-        if (result != null && result.files.single.path != null) {
-          final newPath = result.files.single.path!;
-          final repo = await ref.read(repositoryProvider.future);
-          final isAuto = project.previewSongPath?.isNotEmpty != true;
-          final updated = isAuto
-              ? project.copyWith(previewSongAutoPath: newPath)
-              : project.copyWith(
-                  previewSongPath: newPath,
-                  previewSongFileName: path.basename(newPath),
-                );
-          await repo.updateProject(updated);
-          effectivePath = newPath;
-        } else {
-          return;
-        }
-      } else {
-        return;
-      }
+      final recovered = await recoverMissingPreviewSong(context, ref, project);
+      if (!mounted || recovered == null) return;
+      // Adopt the persisted project, not the stale one this method was called
+      // with — everything below (the newer-export check, the object handed to
+      // the player) has to agree with what the grid row will refresh to.
+      project = recovered.project;
+      effectivePath = recovered.path;
     }
 
     // Check for a newer audio file in the same folder as the current preview,
@@ -6149,14 +6097,17 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable>
               )
             : project.copyWith(previewSongAutoPath: newer.path);
         await repo.updateProject(updated);
+        project = updated;
         effectivePath = newer.path;
       } else {
         // "Keep Current" — remember the user rejected this specific file so
         // we don't ask again unless an even newer file appears.
-        await repo.updateProject(
-          project.copyWith(ignoredNewerSongPath: newer.path),
-        );
+        project = project.copyWith(ignoredNewerSongPath: newer.path);
+        await repo.updateProject(project);
       }
+      // Refresh the grid row's cached MusicProject; without it the row's play
+      // button keeps advertising the old export until the next scan.
+      ref.invalidate(allProjectsStreamProvider);
     }
 
     if (!mounted) return;
@@ -6180,58 +6131,6 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable>
           );
     } else {
       ref.read(desktopPlayerProvider.notifier).play(playProject, effectivePath);
-    }
-  }
-
-  Future<void> _writeBpmToFile(MusicProject project, double? bpm) async {
-    try {
-      final projectDir = File(project.filePath).parent;
-      final bpmFile = File(path.join(projectDir.path, 'bpm.txt'));
-
-      if (bpm != null) {
-        await bpmFile.writeAsString(bpm.toStringAsFixed(2));
-      } else {
-        // Delete file if BPM is cleared
-        if (await bpmFile.exists()) {
-          await bpmFile.delete();
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)!.failedToWriteBpmFile(e.toString()),
-            ),
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _writeKeyToFile(MusicProject project, String? key) async {
-    try {
-      final projectDir = File(project.filePath).parent;
-      final keyFile = File(path.join(projectDir.path, 'key.txt'));
-
-      if (key != null && key.isNotEmpty) {
-        await keyFile.writeAsString(key);
-      } else {
-        // Delete file if key is cleared
-        if (await keyFile.exists()) {
-          await keyFile.delete();
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)!.failedToWriteKeyFile(e.toString()),
-            ),
-          ),
-        );
-      }
     }
   }
 
@@ -6687,96 +6586,14 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable>
           }
           break;
         case 'share':
-          await _shareProjectPreview(project);
+          if (mounted) await shareProjectPreview(context, project);
           break;
       }
     }
   }
 
   String? _effectivePreviewPathFor(MusicProject project) =>
-      project.previewSongPath?.isNotEmpty == true
-      ? project.previewSongPath
-      : project.previewSongAutoPath;
-
-  Future<void> _shareProjectPreview(MusicProject project) async {
-    final l10n = AppLocalizations.of(context)!;
-    final effectivePath = _effectivePreviewPathFor(project);
-    if (effectivePath == null || effectivePath.isEmpty) return;
-    if (effectivePath.startsWith('drive://')) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.previewSongNotAvailableDownloadFirst)),
-        );
-      }
-      return;
-    }
-
-    try {
-      final sourceFile = File(effectivePath);
-      if (!await sourceFile.exists()) {
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.previewSongFileNotFound)));
-        }
-        return;
-      }
-
-      String originalFileName =
-          project.previewShareFileName ?? path.basename(effectivePath);
-      if (!originalFileName.contains('.')) {
-        originalFileName = '$originalFileName${path.extension(effectivePath)}';
-      }
-
-      // WhatsApp (confirmed via manual testing) rejects WAV/AIFF/FLAC as a
-      // direct audio attachment with no error shown to us — convert to a
-      // compatible format first so the shared file is actually accepted.
-      var fileToShare = sourceFile;
-      var shareFileName = originalFileName;
-      if (AudioAnalysisService.needsConversionForSharing(effectivePath) &&
-          mounted) {
-        final converted = await convertForSharingWithProgress(
-          context,
-          effectivePath,
-        );
-        if (converted != null) {
-          fileToShare = converted;
-          shareFileName = path.basename(converted.path);
-        } else if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.mp3ConversionFailed)));
-        }
-      }
-
-      if (MobileUtils.isMobile()) {
-        final cacheDir = await getTemporaryDirectory();
-        final shareFile = File(path.join(cacheDir.path, shareFileName));
-        await fileToShare.copy(shareFile.path);
-        await Share.shareXFiles([
-          XFile(shareFile.path, name: shareFileName),
-        ], text: 'Preview song: ${project.displayName}');
-      } else {
-        final result = await Share.shareXFiles([
-          XFile(fileToShare.path),
-        ], text: 'Preview song: ${project.displayName}');
-        // Unpackaged Windows builds have no working share sheet
-        // (DataTransferManager needs MSIX) — without this the click does
-        // nothing visible at all.
-        if (result.status == ShareResultStatus.unavailable && mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.shareSheetUnavailable)));
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.failedToSharePreviewSong(e.toString()))),
-        );
-      }
-    }
-  }
+      effectivePreviewPathFor(project);
 
   TrinaRow _projectToRow(MusicProject p) {
     final dawDisplay = p.dawType != null
@@ -7339,7 +7156,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable>
         type: TrinaColumnType.text(),
         width: 80,
         minWidth: 70,
-        enableEditingMode: true,
+        enableEditingMode: false,
         renderer: (rendererContext) {
           final project =
               rendererContext.row.cells['data']?.value as MusicProject?;
@@ -7358,7 +7175,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable>
         type: TrinaColumnType.text(),
         width: 160,
         minWidth: 140,
-        enableEditingMode: true,
+        enableEditingMode: false,
         renderer: (rendererContext) {
           final project =
               rendererContext.row.cells['data']?.value as MusicProject?;
@@ -7926,7 +7743,10 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable>
 
     final grid = TrinaGrid(
       key: ValueKey(
-        'trina_grid_${l10n.localeName}_${ref.watch(themeTypeProvider).name}_${excludeFoldersFromSort}_${mergeFoldersByName}_$alwaysShowSmartFolders',
+        // nameDateStripping is in the key because displayName is cached into
+        // TrinaCell values at row-build time — notifyListeners() alone would
+        // leave the old, date-prefixed names on screen until the next scan.
+        'trina_grid_${l10n.localeName}_${ref.watch(themeTypeProvider).name}_${excludeFoldersFromSort}_${mergeFoldersByName}_${alwaysShowSmartFolders}_${ref.watch(nameDateStrippingProvider)}',
       ),
       columnMenuDelegate: const FitAllColumnsMenuDelegate(),
       columns: columns,
@@ -7951,6 +7771,13 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable>
       },
       onLoaded: (TrinaGridOnLoadedEvent event) {
         stateManager = event.stateManager;
+        // TrinaGrid defaults to cell selection, so dragging across the table
+        // paints a range and leaves cells outlined. Nothing here acts on a
+        // selected range — bulk actions go through the checkbox column — so
+        // turn it off entirely. `currentCell` still tracks the last tapped
+        // cell, which is what the row highlight and the single-key shortcuts
+        // (P/O/D/F/S, Enter) navigate from.
+        stateManager!.setSelectingMode(TrinaGridSelectingMode.none);
         stateManager!.setRowGroup(
           excludeFoldersFromSort
               ? _GroupOrderStableRowGroupDelegate(
@@ -7998,35 +7825,12 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable>
           _showContextMenu(context, project, event.offset);
         }
       },
-      onChanged: (TrinaGridOnChangedEvent event) async {
-        final project = event.row.cells['data']?.value as MusicProject?;
-        if (project == null) return;
-
-        final field = event.column.field;
-        final newValue = event.value?.toString().trim() ?? '';
-
-        if (field == 'bpm') {
-          final bpm = newValue.isEmpty ? null : double.tryParse(newValue);
-
-          // Write to bpm.txt file
-          await _writeBpmToFile(project, bpm);
-
-          // Update project in repository
-          final repo = await ref.read(repositoryProvider.future);
-          final updated = project.copyWith(bpm: bpm);
-          await repo.updateProject(updated);
-        } else if (field == 'key') {
-          final key = newValue.isEmpty ? null : newValue;
-
-          // Write to key.txt file
-          await _writeKeyToFile(project, key);
-
-          // Update project in repository
-          final repo = await ref.read(repositoryProvider.future);
-          final updated = project.copyWith(musicalKey: key);
-          await repo.updateProject(updated);
-        }
-      },
+      // The dashboard is a read-only view: BPM and key are edited on the
+      // project detail page, which is also where the bpm.txt / key.txt
+      // sidecars are written (MetadataSidecarService). Inline editing here
+      // also meant an in-cell TextField with its own border, which is what
+      // made cells look randomly "selected".
+      mode: TrinaGridMode.readOnly,
       configuration: TrinaGridConfiguration(
         localeText: trinaGridLocaleTextFor(context),
         style: TrinaGridStyleConfig(
@@ -9140,28 +8944,45 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
         }
       }
 
+      if (!mounted) return;
+      final shareText = AppLocalizations.of(
+        context,
+      )!.sharePreviewSongText(widget.project.displayName);
+
       // On mobile, copy to cache directory with original name for sharing
       if (MobileUtils.isMobile()) {
-        final cacheDir = await getTemporaryDirectory();
-        final shareFile = File(path.join(cacheDir.path, shareFileName));
-        if (kDebugMode) {
-          debugPrint(
-            '[preview_share] cacheDir=${cacheDir.path} shareFile=${shareFile.path}',
-          );
+        final shareFile = await stageFileForMobileShare(
+          fileToShare,
+          shareFileName,
+        );
+        if (shareFile == null) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  AppLocalizations.of(
+                    context,
+                  )!.failedToSharePreviewSong(shareFileName),
+                ),
+              ),
+            );
+          }
+          return;
         }
-
-        // Copy file to cache with original name
-        await fileToShare.copy(shareFile.path);
         if (kDebugMode) {
           debugPrint(
-            '[preview_share] copied to cache OK, invoking share sheet...',
+            '[preview_share] staged at ${shareFile.path}, invoking share sheet...',
           );
         }
 
         // Share the file (default behavior)
         final result = await Share.shareXFiles([
-          XFile(shareFile.path, name: shareFileName),
-        ], text: 'Preview song: ${widget.project.displayName}');
+          XFile(
+            shareFile.path,
+            name: shareFileName,
+            mimeType: shareMimeTypeForFileName(shareFileName),
+          ),
+        ], text: shareText);
         if (kDebugMode) {
           debugPrint(
             '[preview_share] Share.shareXFiles returned (user completed/dismissed share sheet)',
@@ -9179,7 +9000,7 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
         }
         final result = await Share.shareXFiles([
           XFile(fileToShare.path),
-        ], text: 'Preview song: ${widget.project.displayName}');
+        ], text: shareText);
         if (kDebugMode) {
           debugPrint(
             '[preview_share] ShareResult: status=${result.status} raw=${result.raw}',
@@ -9218,6 +9039,7 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
   }
 
   Future<void> _sharePreviewSongAsZip() async {
+    final l10n = AppLocalizations.of(context)!;
     if (!MobileUtils.isMobile()) return;
 
     final effectivePath = _effectivePreviewPath;
@@ -9312,7 +9134,7 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
           name: path.basename(zipFile.path),
           mimeType: 'application/zip',
         ),
-      ], text: 'Preview song (ZIP): ${widget.project.displayName}');
+      ], text: l10n.sharePreviewSongZipText(widget.project.displayName));
       if (kDebugMode) {
         debugPrint(
           '[preview_share_zip] Share.shareXFiles returned (user completed/dismissed share sheet)',
@@ -10297,6 +10119,77 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
     });
   }
 
+  /// Long-press menu for a row in the mobile list — the phone's answer to the
+  /// desktop grid's right-click menu.
+  ///
+  /// Long-press used to go straight into multi-select; that's still reachable
+  /// from here as one entry among several, which is what makes room for Share
+  /// (and for whatever per-project action comes next) without spending the
+  /// row's only remaining gesture on it.
+  Future<void> _showMobileProjectActions(MusicProject project) async {
+    final l10n = AppLocalizations.of(context)!;
+    final hasPreview = effectivePreviewPathFor(project)?.isNotEmpty == true;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              title: Text(
+                project.displayName,
+                style: Theme.of(sheetContext).textTheme.titleMedium,
+                overflow: TextOverflow.ellipsis,
+              ),
+              subtitle: Text(project.status),
+            ),
+            const Divider(height: 1),
+            if (hasPreview) ...[
+              ListTile(
+                leading: const Icon(Icons.play_arrow),
+                title: Text(l10n.playPreview),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _playPreviewSong(project);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.share),
+                title: Text(l10n.sharePreviewSong),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  shareProjectPreview(context, project);
+                },
+              ),
+            ],
+            ListTile(
+              leading: const Icon(Icons.assignment),
+              title: Text(l10n.tooltipViewDetails),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ProjectDetailPage(projectId: project.id),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.checklist),
+              title: Text(l10n.selectProjects),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _enterSelectionMode(project.id);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _playPreviewSong(MusicProject project) async {
     final customFolders = ref.read(customMixdownFoldersProvider).value;
     final customFoldersByDaw = ref
@@ -10424,66 +10317,13 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
     final file = File(effectivePath);
     if (!await file.exists()) {
       if (!mounted) return;
-      final l10n = AppLocalizations.of(context)!;
-      final action = await showDialog<_FileNotFoundAction>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: Text(l10n.previewSongFileNotFound),
-          content: Text(l10n.previewSongFileNotFoundMessage),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(l10n.cancel),
-            ),
-            OutlinedButton(
-              onPressed: () => Navigator.pop(ctx, _FileNotFoundAction.remove),
-              child: Text(l10n.removePreviewSong),
-            ),
-            FilledButton(
-              onPressed: () =>
-                  Navigator.pop(ctx, _FileNotFoundAction.selectNew),
-              child: Text(l10n.selectNewFile),
-            ),
-          ],
-        ),
-      );
-      if (!mounted) return;
-      if (action == _FileNotFoundAction.remove) {
-        final repo = await ref.read(repositoryProvider.future);
-        final isAuto = project.previewSongPath?.isNotEmpty != true;
-        final updated = isAuto
-            ? project.copyWith(clearPreviewSongAutoPath: true)
-            : project.copyWith(
-                clearPreviewSongPath: true,
-                clearPreviewSongFileName: true,
-              );
-        await repo.updateProject(updated);
-        return;
-      } else if (action == _FileNotFoundAction.selectNew) {
-        final result = await FilePicker.pickFiles(
-          type: FileType.custom,
-          allowedExtensions: const ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'],
-          dialogTitle: l10n.selectPreviewSong,
-        );
-        if (!mounted) return;
-        if (result != null && result.files.single.path != null) {
-          final newPath = result.files.single.path!;
-          final repo = await ref.read(repositoryProvider.future);
-          final isAuto = project.previewSongPath?.isNotEmpty != true;
-          final updated = isAuto
-              ? project.copyWith(previewSongAutoPath: newPath)
-              : project.copyWith(
-                  previewSongPath: newPath,
-                  previewSongFileName: path.basename(newPath),
-                );
-          await repo.updateProject(updated);
-          effectivePath = newPath;
-        } else {
-          return;
-        }
-      } else {
-        return;
-      }
+      final recovered = await recoverMissingPreviewSong(context, ref, project);
+      if (!mounted || recovered == null) return;
+      // Adopt the persisted project, not the stale one this method was called
+      // with — everything below (the newer-export check, the object handed to
+      // the player) has to agree with what the grid row will refresh to.
+      project = recovered.project;
+      effectivePath = recovered.path;
     }
 
     // Check for a newer audio file in the same folder as the current preview,
@@ -10530,14 +10370,17 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
               )
             : project.copyWith(previewSongAutoPath: newer.path);
         await repo.updateProject(updated);
+        project = updated;
         effectivePath = newer.path;
       } else {
         // "Keep Current" — remember the user rejected this specific file so
         // we don't ask again unless an even newer file appears.
-        await repo.updateProject(
-          project.copyWith(ignoredNewerSongPath: newer.path),
-        );
+        project = project.copyWith(ignoredNewerSongPath: newer.path);
+        await repo.updateProject(project);
       }
+      // Refresh the grid row's cached MusicProject; without it the row's play
+      // button keeps advertising the old export until the next scan.
+      ref.invalidate(allProjectsStreamProvider);
     }
 
     if (!mounted) return;
@@ -10972,11 +10815,13 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                       }
                     },
                     onLongPress: () {
-                      // Long press enters selection mode and selects the item
-                      if (!_isSelectionMode) {
-                        _enterSelectionMode(project.id);
-                      } else {
+                      // Already selecting: keep long-press as a plain toggle,
+                      // so building a selection stays one gesture per row
+                      // instead of a sheet each time.
+                      if (_isSelectionMode) {
                         _toggleProjectSelection(project.id);
+                      } else {
+                        _showMobileProjectActions(project);
                       }
                     },
                   ),

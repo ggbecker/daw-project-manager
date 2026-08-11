@@ -1978,7 +1978,7 @@
       }
     }
   },
-  "appTitleWithVersion": "DAW Project Manager v{version}",
+  "appTitleWithVersion": "DAW Project Manager {version}",
   "@appTitleWithVersion": {
     "placeholders": {
       "version": {
@@ -2755,5 +2755,25 @@
   "playbackModeRepeat": "Повтор",
   "@playbackModeRepeat": { "description": "Playback mode: loop the entire queue" },
   "playbackModeShuffle": "Перемешать",
-  "@playbackModeShuffle": { "description": "Playback mode: random order" }
+  "@playbackModeShuffle": { "description": "Playback mode: random order" },
+  "hideDatesInNames": "Скрывать даты в названиях проектов",
+  "@hideDatesInNames": { "description": "Appearance setting: strip date stamps from displayed project names" },
+  "hideDatesInNamesDescription": "Некоторые DAW добавляют дату создания в начало имени файла проекта (например, «2026-08-02 - Мой трек»). Скройте её, чтобы отображался только заголовок. Сами файлы не переименовываются.",
+  "@hideDatesInNamesDescription": { "description": "Explanation of the hide-dates-in-names appearance setting" },
+  "findPreviewAutomatically": "Найти автоматически",
+  "@findPreviewAutomatically": { "description": "Button in the missing preview song dialog: clear the dead reference and re-run mixdown detection" },
+  "noPreviewSongFoundAutomatically": "В папках сведения этого проекта не найдено превью.",
+  "@noPreviewSongFoundAutomatically": { "description": "Snackbar shown when automatic preview detection finds nothing" },
+  "selectProjects": "Выбрать",
+  "@selectProjects": { "description": "Mobile long-press action sheet entry: enter multi-select mode" },
+  "sharePreviewSongText": "Превью: {name}",
+  "@sharePreviewSongText": {
+    "description": "Message body accompanying a shared preview song file",
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "sharePreviewSongZipText": "Превью (ZIP): {name}",
+  "@sharePreviewSongZipText": {
+    "description": "Message body accompanying a shared preview song zipped for transport",
+    "placeholders": { "name": { "type": "String" } }
+  }
 }
