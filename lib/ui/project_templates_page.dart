@@ -852,8 +852,8 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
         enableContextMenu: false,
         enableSorting: false,
         enableColumnDrag: false,
-        width: 230,
-        minWidth: 230,
+        width: 270,
+        minWidth: 270,
         renderer: (ctx) {
           final template = ctx.row.cells['data']!.value as ProjectTemplate;
           final fullPath = p.join(
@@ -869,6 +869,14 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
           return Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              IconButton(
+                icon: const Icon(Icons.folder_open, size: 18),
+                tooltip: l10n.openFolder,
+                visualDensity: VisualDensity.compact,
+                onPressed: sourceExists
+                    ? () => FileLauncher.openFolder(template.sourceFolderPath)
+                    : null,
+              ),
               IconButton(
                 icon: const Icon(Icons.add_circle_outline, size: 18),
                 tooltip: l10n.useTemplate,
