@@ -102,13 +102,16 @@ final customMixdownFoldersProvider = FutureProvider<List<String>>((ref) async {
   return repo.getCustomMixdownFolders();
 });
 
-final customMixdownFoldersByDawProvider = FutureProvider<Map<String, List<String>>>((ref) async {
-  final repo = await ref.watch(repositoryProvider.future);
-  return repo.getCustomMixdownFoldersByDaw();
-});
+final customMixdownFoldersByDawProvider =
+    FutureProvider<Map<String, List<String>>>((ref) async {
+      final repo = await ref.watch(repositoryProvider.future);
+      return repo.getCustomMixdownFoldersByDaw();
+    });
 
 // Linux-only "Launch in DAW" binary overrides, keyed by DAW display name.
-final dawLaunchCommandsProvider = FutureProvider<Map<String, String>>((ref) async {
+final dawLaunchCommandsProvider = FutureProvider<Map<String, String>>((
+  ref,
+) async {
   final repo = await ref.watch(repositoryProvider.future);
   return repo.getDawLaunchCommands();
 });
@@ -406,7 +409,9 @@ final projectsProvider = Provider<List<MusicProject>>((ref) {
 
             // File not present locally → metadata-only from backup / different machine.
             // Always show so the user can inspect / edit metadata.
-            final fileExistsLocally = fileExistenceCache.exists(project.filePath);
+            final fileExistsLocally = fileExistenceCache.exists(
+              project.filePath,
+            );
             if (!fileExistsLocally) return true;
 
             // File exists locally: only show if it's under an active scan root.
@@ -1243,8 +1248,8 @@ class DiagnosticLoggingEnabledNotifier extends Notifier<bool> {
 
 final diagnosticLoggingEnabledProvider =
     NotifierProvider<DiagnosticLoggingEnabledNotifier, bool>(
-  DiagnosticLoggingEnabledNotifier.new,
-);
+      DiagnosticLoggingEnabledNotifier.new,
+    );
 
 /// Holds the latest available version string when a newer release is found; null otherwise.
 class AvailableUpdateNotifier extends Notifier<String?> {
@@ -1481,6 +1486,37 @@ class ProjectTemplatesNotifier extends Notifier<void> {
     final box = await Hive.openBox<ProjectTemplate>('projectTemplates');
     await box.delete(id);
   }
+
+  /// Re-extracts bpm/key/DAW version/project notes from the template's main
+  /// file on disk and merges them into the stored template — same shape as
+  /// [ProjectRepository.extractFullMetadataForProject], but for a
+  /// [ProjectTemplate] instead of a [MusicProject]. Existing values are
+  /// preserved for anything extraction doesn't find.
+  Future<void> extractMetadataForTemplate(String templateId) async {
+    await ensureHiveInitialized();
+    final box = await Hive.openBox<ProjectTemplate>('projectTemplates');
+    final template = box.get(templateId);
+    if (template == null) return;
+
+    try {
+      final mainFilePath = p.join(
+        template.sourceFolderPath,
+        template.mainFileRelativePath,
+      );
+      final extracted = await MetadataExtractor.extractMetadata(mainFilePath);
+      final updated = template.copyWith(
+        bpm: extracted.bpm ?? template.bpm,
+        musicalKey: extracted.key ?? template.musicalKey,
+        dawVersion: extracted.dawVersion ?? template.dawVersion,
+        projectNotes: extracted.projectNotes ?? template.projectNotes,
+        updatedAt: DateTime.now(),
+      );
+      await box.put(templateId, updated);
+    } catch (_) {
+      // If extraction fails, silently continue — mirrors
+      // ProjectRepository.extractFullMetadataForProject.
+    }
+  }
 }
 
 final projectTemplatesNotifierProvider =
@@ -1679,8 +1715,9 @@ class AutoStartNotifier extends Notifier<bool> {
   /// [set] anyway.
   Future<bool> reapply() async {
     if (!AutoStartService.isSupported || !state) return true;
-    final ok =
-        await AutoStartService.reapply(minimized: ref.read(startMinimizedProvider));
+    final ok = await AutoStartService.reapply(
+      minimized: ref.read(startMinimizedProvider),
+    );
     if (!ok) {
       // reapply() unregisters before re-registering, so a failure partway
       // through leaves the app genuinely not registered. Reflect that rather
@@ -1763,10 +1800,11 @@ class StartMinimizedNotifier extends Notifier<bool> {
   }
 }
 
-final startMinimizedProvider =
-    NotifierProvider<StartMinimizedNotifier, bool>(() {
-  return StartMinimizedNotifier();
-});
+final startMinimizedProvider = NotifierProvider<StartMinimizedNotifier, bool>(
+  () {
+    return StartMinimizedNotifier();
+  },
+);
 
 // ---------------------------------------------------------------------------
 // Tab Visibility

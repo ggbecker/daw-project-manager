@@ -484,10 +484,14 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
                               IconButton(
                                 icon: const Icon(Icons.folder_open_outlined),
                                 tooltip: l10n.openFolder,
-                                onPressed: () => FileLauncher.openFolder(root.path),
+                                onPressed: () =>
+                                    FileLauncher.openFolder(root.path),
                               ),
                               IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red),
+                                icon: const Icon(
+                                  Icons.delete,
+                                  color: Colors.red,
+                                ),
                                 tooltip: l10n.remove,
                                 onPressed: () => _removeTemplateRoot(root),
                               ),
@@ -578,6 +582,35 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
       context: context,
       builder: (_) => DuplicateTemplateDialog(template: template),
     );
+  }
+
+  // Ids of templates currently re-extracting metadata — tracked here (rather
+  // than per-row widget state, which TrinaGrid rows don't have) so the
+  // actions column can show a per-row spinner and disable just that row's
+  // button while the extraction it triggered is in flight.
+  final Set<String> _extractingTemplateIds = {};
+
+  Future<void> _extractMetadata(ProjectTemplate template) async {
+    final l10n = AppLocalizations.of(context)!;
+    setState(() => _extractingTemplateIds.add(template.id));
+    try {
+      await ref
+          .read(projectTemplatesNotifierProvider.notifier)
+          .extractMetadataForTemplate(template.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.metadataExtractedSuccessfully)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.failedToExtractMetadata(e.toString()))),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _extractingTemplateIds.remove(template.id));
+    }
   }
 
   /// [orderedIds] is the current filtered/visible row order — needed by the
@@ -819,8 +852,8 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
         enableContextMenu: false,
         enableSorting: false,
         enableColumnDrag: false,
-        width: 190,
-        minWidth: 190,
+        width: 230,
+        minWidth: 230,
         renderer: (ctx) {
           final template = ctx.row.cells['data']!.value as ProjectTemplate;
           final fullPath = p.join(
@@ -828,6 +861,10 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
             template.mainFileRelativePath,
           );
           final sourceExists = File(fullPath).existsSync();
+          final extractionSupported = MetadataExtractor.supportsFullExtraction(
+            fullPath,
+          );
+          final isExtracting = _extractingTemplateIds.contains(template.id);
           final l10n = AppLocalizations.of(context)!;
           return Row(
             mainAxisSize: MainAxisSize.min,
@@ -848,7 +885,23 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
                 icon: const Icon(Icons.copy_outlined, size: 18),
                 tooltip: l10n.duplicateTemplate,
                 visualDensity: VisualDensity.compact,
-                onPressed: sourceExists ? () => _duplicateTemplate(template) : null,
+                onPressed: sourceExists
+                    ? () => _duplicateTemplate(template)
+                    : null,
+              ),
+              IconButton(
+                icon: isExtracting
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.search, size: 18),
+                tooltip: l10n.extract,
+                visualDensity: VisualDensity.compact,
+                onPressed: sourceExists && extractionSupported && !isExtracting
+                    ? () => _extractMetadata(template)
+                    : null,
               ),
               IconButton(
                 icon: const Icon(Icons.delete, size: 18, color: Colors.red),
@@ -1168,16 +1221,18 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
                                       _onTableStateManagerChanged,
                                     );
                                   },
-                                  onRowDoubleTap: (TrinaGridOnRowDoubleTapEvent event) async {
-                                    final template = event.row.cells['data']?.value
-                                        as ProjectTemplate?;
-                                    if (template == null) return;
-                                    await _viewTemplateDetails(template);
-                                  },
+                                  onRowDoubleTap:
+                                      (
+                                        TrinaGridOnRowDoubleTapEvent event,
+                                      ) async {
+                                        final template =
+                                            event.row.cells['data']?.value
+                                                as ProjectTemplate?;
+                                        if (template == null) return;
+                                        await _viewTemplateDetails(template);
+                                      },
                                   configuration: TrinaGridConfiguration(
-                                    localeText: trinaGridLocaleTextFor(
-                                      context,
-                                    ),
+                                    localeText: trinaGridLocaleTextFor(context),
                                     style: TrinaGridStyleConfig(
                                       gridBackgroundColor:
                                           activeTheme.cardColor,
