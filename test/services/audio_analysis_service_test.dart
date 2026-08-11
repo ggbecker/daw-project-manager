@@ -57,7 +57,7 @@ void main() {
 
   group('AudioAnalysisService.convertForSharing', () {
     // These assertions cover the ffmpeg branch (Windows/Linux). macOS takes
-    // the afconvert branch and Android the MediaCodec channel, neither of
+    // the afconvert branch and Android/iOS the native channel, neither of
     // which goes through ffmpegRunnerOverride.
     final onFfmpegPlatform =
         !Platform.isMacOS && !Platform.isAndroid && !Platform.isIOS;
@@ -73,7 +73,7 @@ void main() {
 
     tearDown(() async {
       AudioAnalysisService.ffmpegRunnerOverride = null;
-      AudioAnalysisService.androidConverterOverride = null;
+      AudioAnalysisService.mobileConverterOverride = null;
       if (await tempDir.exists()) await tempDir.delete(recursive: true);
     });
 
@@ -178,35 +178,36 @@ void main() {
     });
   });
 
-  // Android is the one platform that cannot shell out to ffmpeg, so it goes
-  // through a MediaCodec platform channel instead. convertForSharing() only
-  // routes there when Platform.isAndroid, which no test host satisfies —
-  // hence calling convertWithAndroidCodec directly.
-  group('AudioAnalysisService.convertWithAndroidCodec', () {
+  // Neither mobile platform can shell out to ffmpeg, so both go through a
+  // native platform channel instead — MediaCodec on Android,
+  // AVAssetExportSession on iOS, one channel and one Dart path for both.
+  // convertForSharing() only routes there on Android/iOS, which no test host
+  // satisfies, hence calling convertWithMobileCodec directly.
+  group('AudioAnalysisService.convertWithMobileCodec', () {
     late Directory tempDir;
     late File input;
 
     setUp(() async {
-      tempDir = await Directory.systemTemp.createTemp('android_convert_test_');
+      tempDir = await Directory.systemTemp.createTemp('mobile_convert_test_');
       input = File(p.join(tempDir.path, 'My Track.wav'));
       await input.writeAsBytes(List<int>.filled(64, 0));
     });
 
     tearDown(() async {
-      AudioAnalysisService.androidConverterOverride = null;
+      AudioAnalysisService.mobileConverterOverride = null;
       if (await tempDir.exists()) await tempDir.delete(recursive: true);
     });
 
-    test('produces an .m4a, since Android ships no MP3 encoder', () async {
+    test('produces an .m4a, since neither mobile OS has an MP3 encoder', () async {
       String? seenInput;
       String? seenOutput;
-      AudioAnalysisService.androidConverterOverride = (i, o) async {
+      AudioAnalysisService.mobileConverterOverride = (i, o) async {
         seenInput = i;
         seenOutput = o;
         await File(o).writeAsString('fake aac');
       };
 
-      final out = await AudioAnalysisService.convertWithAndroidCodec(
+      final out = await AudioAnalysisService.convertWithMobileCodec(
         input.path,
         tempDir.path,
       );
@@ -220,11 +221,11 @@ void main() {
     test('returns null when the native transcode throws', () async {
       // MediaExtractor cannot open AIFF, so this is a real input case, not
       // just defensive coding.
-      AudioAnalysisService.androidConverterOverride =
+      AudioAnalysisService.mobileConverterOverride =
           (_, _) async => throw Exception('MediaExtractor: setDataSource failed');
 
       expect(
-        await AudioAnalysisService.convertWithAndroidCodec(
+        await AudioAnalysisService.convertWithMobileCodec(
           input.path,
           tempDir.path,
         ),
@@ -233,11 +234,11 @@ void main() {
     });
 
     test('treats a zero-byte result as a failure', () async {
-      AudioAnalysisService.androidConverterOverride =
+      AudioAnalysisService.mobileConverterOverride =
           (_, o) async => File(o).create();
 
       expect(
-        await AudioAnalysisService.convertWithAndroidCodec(
+        await AudioAnalysisService.convertWithMobileCodec(
           input.path,
           tempDir.path,
         ),
@@ -246,10 +247,10 @@ void main() {
     });
 
     test('returns null when the native side writes nothing at all', () async {
-      AudioAnalysisService.androidConverterOverride = (_, _) async {};
+      AudioAnalysisService.mobileConverterOverride = (_, _) async {};
 
       expect(
-        await AudioAnalysisService.convertWithAndroidCodec(
+        await AudioAnalysisService.convertWithMobileCodec(
           input.path,
           tempDir.path,
         ),
@@ -264,12 +265,12 @@ void main() {
       await m4aInput.writeAsString('original audio');
 
       String? seenOutput;
-      AudioAnalysisService.androidConverterOverride = (_, o) async {
+      AudioAnalysisService.mobileConverterOverride = (_, o) async {
         seenOutput = o;
         await File(o).writeAsString('converted');
       };
 
-      final out = await AudioAnalysisService.convertWithAndroidCodec(
+      final out = await AudioAnalysisService.convertWithMobileCodec(
         m4aInput.path,
         tempDir.path,
       );

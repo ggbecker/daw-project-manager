@@ -1,4 +1,4 @@
-name: Flutter CI/CD (Windows, macOS, Linux & Android)
+name: Flutter CI/CD (Windows, macOS, Linux, Android & iOS)
 
 # PERMISSÃO: Necessária para que a ação 'upload-release-asset' funcione.
 permissions:
@@ -1180,6 +1180,69 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Note" >> $GITHUB_STEP_SUMMARY
           echo "This is an unsigned debug build for PR validation. Release builds with signing are only created for tagged releases." >> $GITHUB_STEP_SUMMARY
+
+  # Compile-only iOS job. It deliberately does NOT produce a shippable
+  # artifact: that needs an Apple Developer Program membership, a distribution
+  # certificate and a provisioning profile, none of which this repo has. What
+  # it does buy is the thing nobody can check from a Windows or Linux machine —
+  # that ios/Runner/*.swift still compiles, that CocoaPods can resolve every
+  # plugin at the deployment target in ios/Podfile, and that Info.plist is
+  # well-formed. Those are exactly the ways the iOS build rots unnoticed.
+  #
+  # Note this runs on a macOS runner, which bills at 10x the Linux rate on
+  # GitHub-hosted minutes. If that matters, narrow the `if` below to only run
+  # when ios/, pubspec.yaml or lib/services/audio_analysis_service.dart change.
+  build-ios:
+    name: Build iOS (compile check, unsigned)
+    needs: unit_tests
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'pull_request'
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter ${{ env.FLUTTER_BASE_VERSION }} (Stable)
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_BASE_VERSION }}
+          channel: 'stable'
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Precache Flutter Artifacts
+        run: flutter precache --ios
+
+      # oauth_config.dart is a plain (non-conditional) import, so it must exist
+      # for the app to compile at all. Same injection as the Android job; on a
+      # fork PR the secrets resolve empty, which still compiles.
+      - name: Inject OAuth Credentials
+        run: |
+          chmod +x scripts/inject_oauth_config.sh
+          ./scripts/inject_oauth_config.sh \
+            -d "${{ secrets.DESKTOP_CLIENT_ID }}" \
+            -s "${{ secrets.DESKTOP_CLIENT_SECRET }}" \
+            -a "${{ secrets.ANDROID_WEB_CLIENT_ID }}"
+
+      - name: Generate Hive Adapters
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Generate Localizations
+        run: flutter gen-l10n
+
+      - name: Build iOS (no code signing)
+        run: flutter build ios --release --no-codesign
+
+      - name: iOS build summary
+        if: always()
+        run: |
+          echo "## iOS Build" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Compile check only — unsigned, no .ipa produced." >> $GITHUB_STEP_SUMMARY
+          echo "Shipping to TestFlight/the App Store needs an Apple Developer" >> $GITHUB_STEP_SUMMARY
+          echo "Program membership, a distribution certificate and a" >> $GITHUB_STEP_SUMMARY
+          echo "provisioning profile added as repository secrets." >> $GITHUB_STEP_SUMMARY
 
   # Update the macOS and Linux download links on the gh-pages website after every tag release
   update-gh-pages:
