@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:daw_project_manager/services/backup_service.dart';
+import 'package:daw_project_manager/models/part_template.dart';
+import 'package:daw_project_manager/models/project_part.dart';
 import 'package:daw_project_manager/models/project_template.dart';
 import 'package:daw_project_manager/models/template_root.dart';
 import 'package:daw_project_manager/models/todo_template.dart';
@@ -277,6 +279,41 @@ void main() {
         reason: 'lastModifiedAt must not be bumped to now during round-trip',
       );
     });
+
+    test('preserves the parts list, including status and performer', () {
+      final original = TestFactories.makeProject(parts: [
+        TestFactories.makePart(
+          id: 'p1',
+          name: 'Drums',
+          performer: 'Alex',
+          status: PartTakeStatus.finalTake,
+          notes: 'keeper',
+        ),
+        TestFactories.makePart(id: 'p2', name: 'Bass', performer: null),
+      ]);
+
+      final restored =
+          BackupService.projectFromJson(BackupService.projectToJson(original));
+
+      expect(restored.parts, original.parts);
+    });
+
+    test('a project with no parts round-trips to an empty list', () {
+      final restored = BackupService.projectFromJson(
+        BackupService.projectToJson(TestFactories.makeProject()),
+      );
+
+      expect(restored.parts, isEmpty);
+    });
+
+    test('a pre-1.2 backup with no parts key still imports', () {
+      // Older backup files simply don't have the key; that must read as
+      // "no parts", not blow up the whole import.
+      final json = BackupService.projectToJson(TestFactories.makeProject())
+        ..remove('parts');
+
+      expect(BackupService.projectFromJson(json).parts, isEmpty);
+    });
   });
 
   // Backup version 1.1 added these — previously, a local backup had no way to
@@ -470,6 +507,43 @@ void main() {
       final read = await BackupService.readGlobalTemplatesForTest();
 
       expect(read.map((t) => t.id).toSet(), {'tt-2'});
+    });
+
+    test('part templates: write then read round-trips including nested parts', () async {
+      final template = PartTemplate(
+        id: 'part-tpl-1',
+        name: 'Band Lineup',
+        items: const [
+          ProjectPart(id: 'i1', name: 'Drums', performer: 'Alex'),
+          ProjectPart(id: 'i2', name: 'Bass'),
+        ],
+        createdAt: DateTime(2024, 1, 1),
+        updatedAt: DateTime(2024, 1, 1),
+      );
+
+      await BackupService.writeGlobalPartTemplatesForTest([template], ImportMode.merge);
+      final read = await BackupService.readGlobalPartTemplatesForTest();
+
+      expect(read, hasLength(1));
+      expect(read.single.name, 'Band Lineup');
+      expect(read.single.items.map((i) => i.name), ['Drums', 'Bass']);
+      expect(read.single.items.first.performer, 'Alex');
+    });
+
+    test('part templates: replace mode clears entries from a previous write first', () async {
+      PartTemplate make(String id) => PartTemplate(
+            id: id,
+            name: id,
+            items: const [],
+            createdAt: DateTime(2024, 1, 1),
+            updatedAt: DateTime(2024, 1, 1),
+          );
+
+      await BackupService.writeGlobalPartTemplatesForTest([make('a')], ImportMode.merge);
+      await BackupService.writeGlobalPartTemplatesForTest([make('b')], ImportMode.replace);
+      final read = await BackupService.readGlobalPartTemplatesForTest();
+
+      expect(read.map((t) => t.id).toSet(), {'b'});
     });
 
     test('project templates: write then read round-trips', () async {

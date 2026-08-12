@@ -1,4 +1,5 @@
 import 'package:daw_project_manager/models/music_project.dart';
+import 'package:daw_project_manager/models/project_part.dart';
 import 'package:daw_project_manager/models/project_template.dart';
 import 'package:daw_project_manager/models/todo_item.dart';
 
@@ -23,6 +24,7 @@ class TestFactories {
     String? musicalKey,
     String? notes,
     List<TodoItem>? todos,
+    List<ProjectPart>? parts,
     DateTime? deadline,
     bool hidden = false,
     String? previewSongPath,
@@ -61,6 +63,7 @@ class TestFactories {
       musicalKey: musicalKey,
       notes: notes,
       todos: todos ?? const [],
+      parts: parts ?? const [],
       deadline: deadline,
       hidden: hidden,
       previewSongPath: previewSongPath,
@@ -93,6 +96,22 @@ class TestFactories {
       text: text,
       completed: completed,
       createdAt: createdAt ?? DateTime(2025, 1, 10),
+    );
+  }
+
+  static ProjectPart makePart({
+    String id = 'part-1',
+    String name = 'Drums',
+    String? performer = 'Alex',
+    PartTakeStatus status = PartTakeStatus.needed,
+    String? notes,
+  }) {
+    return ProjectPart(
+      id: id,
+      name: name,
+      performer: performer,
+      status: status,
+      notes: notes,
     );
   }
 

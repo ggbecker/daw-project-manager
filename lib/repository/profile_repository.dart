@@ -3,6 +3,7 @@ import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:uuid/uuid.dart';
 import '../models/profile.dart';
 import '../models/music_project.dart';
+import '../models/project_part.dart';
 import '../models/scan_root.dart';
 import '../models/release.dart';
 import '../utils/app_paths.dart';
@@ -96,7 +97,12 @@ class ProfileRepository {
       if (!Hive.isAdapterRegistered(3)) {
         Hive.registerAdapter(ReleaseAdapter());
       }
-      
+      // ProjectPart is nested inside MusicProject, so its adapter has to be in
+      // place before the projects box below is opened and read.
+      if (!Hive.isAdapterRegistered(14)) {
+        Hive.registerAdapter(ProjectPartAdapter());
+      }
+
       // Check if old boxes exist and have data
       try {
         final oldProjectsBox = await Hive.openBox<MusicProject>('projects');

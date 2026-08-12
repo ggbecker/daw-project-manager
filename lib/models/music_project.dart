@@ -1,6 +1,7 @@
 import 'package:hive_ce/hive.dart';
 import 'package:path/path.dart' as p;
 import '../utils/name_date_parser.dart';
+import 'project_part.dart';
 import 'todo_item.dart';
 
 /// Converts a musical key (e.g. `'C#m'`, `'G#/Ab Major'`) to Camelot Wheel
@@ -218,11 +219,10 @@ class MusicProject {
   @HiveField(31)
   final String? sourceTemplateId; // ProjectTemplate.id this project was created from, if any (dangling if the template was later deleted)
 
-  // Version stacking (#94). Index 32 is deliberately skipped: it is claimed by
-  // the parts feature on the project-manage branch, and two branches taking the
-  // same Hive index is a silent corruption bug — nothing fails at merge time,
-  // existing boxes just start misreading. Leaving the gap lets either land
-  // first.
+  @HiveField(32)
+  final List<ProjectPart> parts; // Instruments/roles the song needs, who plays them and how far along each take is
+
+  // Version stacking (#94).
 
   @HiveField(33)
   /// True when this row is a *stack* rather than a scanned file: a virtual
@@ -287,6 +287,7 @@ class MusicProject {
     this.ignoredNewerSongPath,
     this.projectNotes,
     this.sourceTemplateId,
+    this.parts = const [],
     this.isVirtual = false,
     this.memberProjectIds = const [],
     this.defaultLaunchMemberId,
@@ -554,6 +555,7 @@ class MusicProject {
     String? projectNotes,
     String? sourceTemplateId,
     bool clearSourceTemplateId = false,
+    List<ProjectPart>? parts,
     bool? isVirtual,
     List<String>? memberProjectIds,
     String? defaultLaunchMemberId,
@@ -594,6 +596,7 @@ class MusicProject {
       ignoredNewerSongPath: clearIgnoredNewerSongPath ? null : (ignoredNewerSongPath ?? this.ignoredNewerSongPath),
       projectNotes: projectNotes ?? this.projectNotes,
       sourceTemplateId: clearSourceTemplateId ? null : (sourceTemplateId ?? this.sourceTemplateId),
+      parts: parts ?? this.parts,
       isVirtual: isVirtual ?? this.isVirtual,
       memberProjectIds: memberProjectIds ?? this.memberProjectIds,
       defaultLaunchMemberId: clearDefaultLaunchMemberId
@@ -602,6 +605,12 @@ class MusicProject {
       stackId: clearStackId ? null : (stackId ?? this.stackId),
     );
   }
+
+  /// Recording progress across [parts]: how many are on their final take.
+  int get partsDoneCount => ProjectPart.doneCount(parts);
+
+  /// Everyone credited on this song, in part order, without duplicates.
+  List<String> get performers => ProjectPart.performers(parts);
 }
 
 class MusicProjectAdapter extends TypeAdapter<MusicProject> {
@@ -655,8 +664,9 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
       ignoredNewerSongPath: fields.containsKey(29) ? fields[29] as String? : null,
       projectNotes: fields.containsKey(30) ? fields[30] as String? : null,
       sourceTemplateId: fields.containsKey(31) ? fields[31] as String? : null,
-      // 32 is claimed by the parts feature on another branch — see the field
-      // declarations. Version stacking starts at 33.
+      parts: fields.containsKey(32) && fields[32] != null
+          ? (fields[32] as List).cast<ProjectPart>()
+          : const [],
       isVirtual: fields.containsKey(33) ? (fields[33] as bool? ?? false) : false,
       memberProjectIds: fields.containsKey(34)
           ? ((fields[34] as List?)?.cast<String>() ?? const <String>[])
@@ -669,7 +679,7 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
   @override
   void write(BinaryWriter writer, MusicProject obj) {
     writer
-      ..writeByte(36) // 36 fields written: 0-31 plus 33-36 (32 is skipped)
+      ..writeByte(37) // 37 fields (0-36)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -734,7 +744,8 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
       ..write(obj.projectNotes)
       ..writeByte(31)
       ..write(obj.sourceTemplateId)
-      // 32 skipped — claimed by the parts feature on another branch.
+      ..writeByte(32)
+      ..write(obj.parts)
       ..writeByte(33)
       ..write(obj.isVirtual)
       ..writeByte(34)

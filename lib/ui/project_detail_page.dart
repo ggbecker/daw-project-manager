@@ -40,6 +40,7 @@ import 'widgets/conversion_progress_dialog.dart';
 import 'widgets/desktop_title_bar.dart';
 import 'widgets/project_detail_header.dart';
 import 'widgets/resizable_text_field.dart';
+import 'widgets/parts_list_widget.dart';
 import 'widgets/todo_list_widget.dart';
 import 'widgets/waveform_widget.dart';
 import 'project_statistics_page.dart';
@@ -1164,6 +1165,24 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                       ),
                                     ),
                                   );
+                                }
+                              },
+                            ),
+
+                            const SizedBox(height: 24),
+                            // Instruments & Parts — what the song needs, who
+                            // plays it, and how far each take has got.
+                            PartsListWidget(
+                              project: updatedProject,
+                              onPartsChanged: (updatedParts) async {
+                                await repo.updateProject(
+                                  updatedProject.copyWith(
+                                    parts: updatedParts,
+                                    updatedAt: DateTime.now(),
+                                  ),
+                                );
+                                if (mounted) {
+                                  ref.invalidate(allProjectsStreamProvider);
                                 }
                               },
                             ),

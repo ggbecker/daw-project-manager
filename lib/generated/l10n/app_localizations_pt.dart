@@ -4361,4 +4361,212 @@ class AppLocalizationsPt extends AppLocalizations {
   String sharePreviewSongZipText(String name) {
     return 'Música de prévia (ZIP): $name';
   }
+
+  @override
+  String get songParts => 'Instrumentos e Partes';
+
+  @override
+  String partsProgress(int done, int total) {
+    return '$done de $total takes finais';
+  }
+
+  @override
+  String get noPartsYet => 'Nenhuma parte registrada ainda';
+
+  @override
+  String get noPartsYetHint =>
+      'Liste os instrumentos que a música precisa, quem toca cada um e em que ponto está cada take.';
+
+  @override
+  String get addPart => 'Adicionar parte';
+
+  @override
+  String get addPartHint => 'ex.: Bateria, Vocal principal, Baixo';
+
+  @override
+  String get partNameLabel => 'Parte';
+
+  @override
+  String get partNameRequired => 'O nome da parte é obrigatório';
+
+  @override
+  String get partPerformerLabel => 'Músico';
+
+  @override
+  String get partPerformerHint => 'Quem toca';
+
+  @override
+  String get partNotesLabel => 'Notas da parte';
+
+  @override
+  String get partStatusLabel => 'Status do take';
+
+  @override
+  String get partStatusNeeded => 'Necessária';
+
+  @override
+  String get partStatusRecording => 'Gravando';
+
+  @override
+  String get partStatusEarlyTake => 'Take inicial';
+
+  @override
+  String get partStatusFinalTake => 'Take final';
+
+  @override
+  String get editPart => 'Editar parte';
+
+  @override
+  String get deletePart => 'Excluir parte';
+
+  @override
+  String get partsUnassignedPerformer => 'Sem responsável';
+
+  @override
+  String get partTemplates => 'Templates de Partes';
+
+  @override
+  String get importPartsFromTemplate => 'Importar partes de um template';
+
+  @override
+  String get managePartTemplates => 'Gerenciar templates de partes';
+
+  @override
+  String get selectPartTemplate => 'Selecione um template de partes';
+
+  @override
+  String get noPartTemplatesAvailable => 'Nenhum template de partes disponível';
+
+  @override
+  String get noPartTemplatesYet => 'Nenhum template de partes ainda';
+
+  @override
+  String get createFirstPartTemplate =>
+      'Crie um para reutilizar a mesma formação em várias músicas';
+
+  @override
+  String get createPartTemplate => 'Criar template de partes';
+
+  @override
+  String get editPartTemplate => 'Editar template de partes';
+
+  @override
+  String get deletePartTemplate => 'Excluir template de partes';
+
+  @override
+  String deletePartTemplateConfirm(String name) {
+    return 'Tem certeza de que deseja excluir o template de partes \"$name\"?';
+  }
+
+  @override
+  String get partTemplateCreated => 'Template de partes criado';
+
+  @override
+  String get partTemplateUpdated => 'Template de partes atualizado';
+
+  @override
+  String get partTemplateDeleted => 'Template de partes excluído';
+
+  @override
+  String get partTemplateItems => 'Partes (uma por linha)';
+
+  @override
+  String get partTemplateItemsHint =>
+      'Bateria — Alex\nBaixo — Sam\nVocal principal';
+
+  @override
+  String get partTemplateItemsHelp =>
+      'Uma parte por linha. Informe o músico após um travéssão: Bateria — Alex';
+
+  @override
+  String get partTemplateItemsRequired => 'Adicione pelo menos uma parte';
+
+  @override
+  String get partTemplateNameAndItemsRequired =>
+      'É necessário um nome e pelo menos uma parte';
+
+  @override
+  String partTemplateItemCount(int count) {
+    return '$count parte(s)';
+  }
+
+  @override
+  String partTemplateImported(String name, int count) {
+    return 'Template de partes \"$name\" importado ($count partes)';
+  }
+
+  @override
+  String get errorLoadingPartTemplates =>
+      'Erro ao carregar os templates de partes';
+
+  @override
+  String get exportPartsCsv => 'Exportar partes como CSV';
+
+  @override
+  String get exportAllPartsCsv =>
+      'Exportar as partes de todas as músicas como CSV';
+
+  @override
+  String get exportAllPartsCsvSubtitle =>
+      'Uma linha de planilha por parte, de todos os projetos — para compartilhar o progresso com colaboradores';
+
+  @override
+  String get noPartsToExport => 'Nenhuma parte para exportar';
+
+  @override
+  String partsCsvExported(int count) {
+    return '$count partes exportadas';
+  }
+
+  @override
+  String get projectExportPartsLabel => 'Partes:';
+
+  @override
+  String get csvHeaderProject => 'Projeto';
+
+  @override
+  String get csvHeaderPart => 'Parte';
+
+  @override
+  String get csvHeaderPerformer => 'Músico';
+
+  @override
+  String get csvHeaderStatus => 'Status';
+
+  @override
+  String get csvHeaderNotes => 'Notas';
+
+  @override
+  String get exportPartsXlsx => 'Exportar partes como Excel (.xlsx)';
+
+  @override
+  String get exportAllPartsXlsx =>
+      'Exportar as partes de todas as músicas como Excel (.xlsx)';
+
+  @override
+  String get exportAllPartsXlsxSubtitle =>
+      'A mesma planilha do CSV, com cabeçalho fixo, filtros nas colunas e status de take coloridos';
+
+  @override
+  String get importPartsFromSpreadsheet => 'Importar partes de uma planilha';
+
+  @override
+  String get partsImportPickerTitle => 'Selecione um arquivo CSV ou Excel';
+
+  @override
+  String partsImported(int added, int updated) {
+    return '$added partes adicionadas, $updated atualizadas';
+  }
+
+  @override
+  String get partsImportNothingFound =>
+      'Nenhuma parte encontrada nesse arquivo';
+
+  @override
+  String partsImportFailed(String error) {
+    return 'Não foi possível ler essa planilha: $error';
+  }
+
+  @override
+  String get partsMoreActions => 'Mais ações de partes';
 }

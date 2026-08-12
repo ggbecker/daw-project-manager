@@ -4363,4 +4363,209 @@ class AppLocalizationsRu extends AppLocalizations {
   String sharePreviewSongZipText(String name) {
     return 'Превью (ZIP): $name';
   }
+
+  @override
+  String get songParts => 'Инструменты и партии';
+
+  @override
+  String partsProgress(int done, int total) {
+    return '$done из $total финальных дублей';
+  }
+
+  @override
+  String get noPartsYet => 'Партии пока не добавлены';
+
+  @override
+  String get noPartsYetHint =>
+      'Перечислите инструменты, которые нужны треку, кто их играет и на какой стадии каждый дубль.';
+
+  @override
+  String get addPart => 'Добавить партию';
+
+  @override
+  String get addPartHint => 'например: Барабаны, Ведущий вокал, Бас';
+
+  @override
+  String get partNameLabel => 'Партия';
+
+  @override
+  String get partNameRequired => 'Укажите название партии';
+
+  @override
+  String get partPerformerLabel => 'Исполнитель';
+
+  @override
+  String get partPerformerHint => 'Кто играет';
+
+  @override
+  String get partNotesLabel => 'Заметки к партии';
+
+  @override
+  String get partStatusLabel => 'Статус дубля';
+
+  @override
+  String get partStatusNeeded => 'Нужно записать';
+
+  @override
+  String get partStatusRecording => 'Записывается';
+
+  @override
+  String get partStatusEarlyTake => 'Черновой дубль';
+
+  @override
+  String get partStatusFinalTake => 'Финальный дубль';
+
+  @override
+  String get editPart => 'Изменить партию';
+
+  @override
+  String get deletePart => 'Удалить партию';
+
+  @override
+  String get partsUnassignedPerformer => 'Не назначен';
+
+  @override
+  String get partTemplates => 'Шаблоны партий';
+
+  @override
+  String get importPartsFromTemplate => 'Импортировать партии из шаблона';
+
+  @override
+  String get managePartTemplates => 'Управление шаблонами партий';
+
+  @override
+  String get selectPartTemplate => 'Выберите шаблон партий';
+
+  @override
+  String get noPartTemplatesAvailable => 'Нет доступных шаблонов партий';
+
+  @override
+  String get noPartTemplatesYet => 'Шаблонов партий пока нет';
+
+  @override
+  String get createFirstPartTemplate =>
+      'Создайте шаблон, чтобы переиспользовать один и тот же состав в разных треках';
+
+  @override
+  String get createPartTemplate => 'Создать шаблон партий';
+
+  @override
+  String get editPartTemplate => 'Изменить шаблон партий';
+
+  @override
+  String get deletePartTemplate => 'Удалить шаблон партий';
+
+  @override
+  String deletePartTemplateConfirm(String name) {
+    return 'Удалить шаблон партий «$name»?';
+  }
+
+  @override
+  String get partTemplateCreated => 'Шаблон партий создан';
+
+  @override
+  String get partTemplateUpdated => 'Шаблон партий обновлён';
+
+  @override
+  String get partTemplateDeleted => 'Шаблон партий удалён';
+
+  @override
+  String get partTemplateItems => 'Партии (по одной в строке)';
+
+  @override
+  String get partTemplateItemsHint =>
+      'Барабаны — Алекс\nБас — Сэм\nВедущий вокал';
+
+  @override
+  String get partTemplateItemsHelp =>
+      'По одной партии в строке. Исполнителя укажите после тире: Барабаны — Алекс';
+
+  @override
+  String get partTemplateItemsRequired => 'Добавьте хотя бы одну партию';
+
+  @override
+  String get partTemplateNameAndItemsRequired =>
+      'Нужны название и хотя бы одна партия';
+
+  @override
+  String partTemplateItemCount(int count) {
+    return 'Партий: $count';
+  }
+
+  @override
+  String partTemplateImported(String name, int count) {
+    return 'Шаблон партий «$name» импортирован ($count партий)';
+  }
+
+  @override
+  String get errorLoadingPartTemplates => 'Ошибка загрузки шаблонов партий';
+
+  @override
+  String get exportPartsCsv => 'Экспортировать партии в CSV';
+
+  @override
+  String get exportAllPartsCsv => 'Экспортировать партии всех треков в CSV';
+
+  @override
+  String get exportAllPartsCsvSubtitle =>
+      'Одна строка таблицы на каждую партию по всем проектам — чтобы делиться прогрессом с соавторами';
+
+  @override
+  String get noPartsToExport => 'Нет партий для экспорта';
+
+  @override
+  String partsCsvExported(int count) {
+    return 'Экспортировано партий: $count';
+  }
+
+  @override
+  String get projectExportPartsLabel => 'Партии:';
+
+  @override
+  String get csvHeaderProject => 'Проект';
+
+  @override
+  String get csvHeaderPart => 'Партия';
+
+  @override
+  String get csvHeaderPerformer => 'Исполнитель';
+
+  @override
+  String get csvHeaderStatus => 'Статус';
+
+  @override
+  String get csvHeaderNotes => 'Заметки';
+
+  @override
+  String get exportPartsXlsx => 'Экспортировать партии в Excel (.xlsx)';
+
+  @override
+  String get exportAllPartsXlsx =>
+      'Экспортировать партии всех треков в Excel (.xlsx)';
+
+  @override
+  String get exportAllPartsXlsxSubtitle =>
+      'Та же таблица, что и CSV, но с закреплённой шапкой, фильтрами и цветными статусами дублей';
+
+  @override
+  String get importPartsFromSpreadsheet => 'Импортировать партии из таблицы';
+
+  @override
+  String get partsImportPickerTitle => 'Выберите файл CSV или Excel';
+
+  @override
+  String partsImported(int added, int updated) {
+    return 'Добавлено партий: $added, обновлено: $updated';
+  }
+
+  @override
+  String get partsImportNothingFound => 'В этом файле не найдено партий';
+
+  @override
+  String partsImportFailed(String error) {
+    return 'Не удалось прочитать эту таблицу: $error';
+  }
+
+  @override
+  String get partsMoreActions => 'Другие действия с партиями';
 }

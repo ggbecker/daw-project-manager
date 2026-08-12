@@ -4246,4 +4246,203 @@ class AppLocalizationsJa extends AppLocalizations {
   String sharePreviewSongZipText(String name) {
     return 'プレビュー曲 (ZIP): $name';
   }
+
+  @override
+  String get songParts => '楽器とパート';
+
+  @override
+  String partsProgress(int done, int total) {
+    return '$total 件中 $done 件が最終テイク';
+  }
+
+  @override
+  String get noPartsYet => 'パートはまだ登録されていません';
+
+  @override
+  String get noPartsYetHint => '曲に必要な楽器、担当者、各テイクの進み具合を記録しましょう。';
+
+  @override
+  String get addPart => 'パートを追加';
+
+  @override
+  String get addPartHint => '例: ドラム、リードボーカル、ベース';
+
+  @override
+  String get partNameLabel => 'パート';
+
+  @override
+  String get partNameRequired => 'パート名を入力してください';
+
+  @override
+  String get partPerformerLabel => '担当者';
+
+  @override
+  String get partPerformerHint => '演奏する人';
+
+  @override
+  String get partNotesLabel => 'パートのメモ';
+
+  @override
+  String get partStatusLabel => 'テイクの状態';
+
+  @override
+  String get partStatusNeeded => '未着手';
+
+  @override
+  String get partStatusRecording => '録音中';
+
+  @override
+  String get partStatusEarlyTake => '仮テイク';
+
+  @override
+  String get partStatusFinalTake => '最終テイク';
+
+  @override
+  String get editPart => 'パートを編集';
+
+  @override
+  String get deletePart => 'パートを削除';
+
+  @override
+  String get partsUnassignedPerformer => '未割り当て';
+
+  @override
+  String get partTemplates => 'パートテンプレート';
+
+  @override
+  String get importPartsFromTemplate => 'テンプレートからパートを読み込む';
+
+  @override
+  String get managePartTemplates => 'パートテンプレートを管理';
+
+  @override
+  String get selectPartTemplate => 'パートテンプレートを選択';
+
+  @override
+  String get noPartTemplatesAvailable => '利用できるパートテンプレートがありません';
+
+  @override
+  String get noPartTemplatesYet => 'パートテンプレートがまだありません';
+
+  @override
+  String get createFirstPartTemplate => '同じ編成を曲ごとに使い回すテンプレートを作成しましょう';
+
+  @override
+  String get createPartTemplate => 'パートテンプレートを作成';
+
+  @override
+  String get editPartTemplate => 'パートテンプレートを編集';
+
+  @override
+  String get deletePartTemplate => 'パートテンプレートを削除';
+
+  @override
+  String deletePartTemplateConfirm(String name) {
+    return 'パートテンプレート「$name」を削除しますか？';
+  }
+
+  @override
+  String get partTemplateCreated => 'パートテンプレートを作成しました';
+
+  @override
+  String get partTemplateUpdated => 'パートテンプレートを更新しました';
+
+  @override
+  String get partTemplateDeleted => 'パートテンプレートを削除しました';
+
+  @override
+  String get partTemplateItems => 'パート（1行に1つ）';
+
+  @override
+  String get partTemplateItemsHint => 'ドラム — Alex\nベース — Sam\nリードボーカル';
+
+  @override
+  String get partTemplateItemsHelp => '1行に1パート。ダッシュのあとに担当者を書けます: ドラム — Alex';
+
+  @override
+  String get partTemplateItemsRequired => 'パートを1つ以上追加してください';
+
+  @override
+  String get partTemplateNameAndItemsRequired => '名前とパートが1つ以上必要です';
+
+  @override
+  String partTemplateItemCount(int count) {
+    return '$count パート';
+  }
+
+  @override
+  String partTemplateImported(String name, int count) {
+    return 'パートテンプレート「$name」を読み込みました（$count パート）';
+  }
+
+  @override
+  String get errorLoadingPartTemplates => 'パートテンプレートの読み込みに失敗しました';
+
+  @override
+  String get exportPartsCsv => 'パートをCSVで書き出す';
+
+  @override
+  String get exportAllPartsCsv => 'すべての曲のパートをCSVで書き出す';
+
+  @override
+  String get exportAllPartsCsvSubtitle =>
+      '全プロジェクトのパートを1行ずつ表計算形式で書き出し、進捗を共有できます';
+
+  @override
+  String get noPartsToExport => '書き出すパートがありません';
+
+  @override
+  String partsCsvExported(int count) {
+    return '$count 件のパートを書き出しました';
+  }
+
+  @override
+  String get projectExportPartsLabel => 'パート:';
+
+  @override
+  String get csvHeaderProject => 'プロジェクト';
+
+  @override
+  String get csvHeaderPart => 'パート';
+
+  @override
+  String get csvHeaderPerformer => '担当者';
+
+  @override
+  String get csvHeaderStatus => '状態';
+
+  @override
+  String get csvHeaderNotes => 'メモ';
+
+  @override
+  String get exportPartsXlsx => 'パートをExcel (.xlsx) で書き出す';
+
+  @override
+  String get exportAllPartsXlsx => 'すべての曲のパートをExcel (.xlsx) で書き出す';
+
+  @override
+  String get exportAllPartsXlsxSubtitle =>
+      'CSVと同じ表に、見出し行の固定・フィルター・テイク状態の色分けを加えたものです';
+
+  @override
+  String get importPartsFromSpreadsheet => 'スプレッドシートからパートを読み込む';
+
+  @override
+  String get partsImportPickerTitle => 'CSVまたはExcelファイルを選択';
+
+  @override
+  String partsImported(int added, int updated) {
+    return '$added 件を追加、$updated 件を更新しました';
+  }
+
+  @override
+  String get partsImportNothingFound => 'そのファイルにパートが見つかりませんでした';
+
+  @override
+  String partsImportFailed(String error) {
+    return 'そのスプレッドシートを読み込めませんでした: $error';
+  }
+
+  @override
+  String get partsMoreActions => 'パートのその他の操作';
 }

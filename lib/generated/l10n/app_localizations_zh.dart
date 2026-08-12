@@ -4199,4 +4199,201 @@ class AppLocalizationsZh extends AppLocalizations {
   String sharePreviewSongZipText(String name) {
     return '预览歌曲（ZIP）：$name';
   }
+
+  @override
+  String get songParts => '乐器与声部';
+
+  @override
+  String partsProgress(int done, int total) {
+    return '$total 个中有 $done 个已完成终版';
+  }
+
+  @override
+  String get noPartsYet => '尚未记录任何声部';
+
+  @override
+  String get noPartsYetHint => '列出这首歌需要的乐器、由谁演奏，以及每条录音的进度。';
+
+  @override
+  String get addPart => '添加声部';
+
+  @override
+  String get addPartHint => '例如：鼓、主唱、贝斯';
+
+  @override
+  String get partNameLabel => '声部';
+
+  @override
+  String get partNameRequired => '请填写声部名称';
+
+  @override
+  String get partPerformerLabel => '演奏者';
+
+  @override
+  String get partPerformerHint => '由谁演奏';
+
+  @override
+  String get partNotesLabel => '声部备注';
+
+  @override
+  String get partStatusLabel => '录音状态';
+
+  @override
+  String get partStatusNeeded => '待录制';
+
+  @override
+  String get partStatusRecording => '录制中';
+
+  @override
+  String get partStatusEarlyTake => '初版录音';
+
+  @override
+  String get partStatusFinalTake => '终版录音';
+
+  @override
+  String get editPart => '编辑声部';
+
+  @override
+  String get deletePart => '删除声部';
+
+  @override
+  String get partsUnassignedPerformer => '未指派';
+
+  @override
+  String get partTemplates => '声部模板';
+
+  @override
+  String get importPartsFromTemplate => '从模板导入声部';
+
+  @override
+  String get managePartTemplates => '管理声部模板';
+
+  @override
+  String get selectPartTemplate => '选择声部模板';
+
+  @override
+  String get noPartTemplatesAvailable => '没有可用的声部模板';
+
+  @override
+  String get noPartTemplatesYet => '还没有声部模板';
+
+  @override
+  String get createFirstPartTemplate => '创建一个模板，在多首歌曲中复用同一套编制';
+
+  @override
+  String get createPartTemplate => '创建声部模板';
+
+  @override
+  String get editPartTemplate => '编辑声部模板';
+
+  @override
+  String get deletePartTemplate => '删除声部模板';
+
+  @override
+  String deletePartTemplateConfirm(String name) {
+    return '确定要删除声部模板“$name”吗？';
+  }
+
+  @override
+  String get partTemplateCreated => '已创建声部模板';
+
+  @override
+  String get partTemplateUpdated => '已更新声部模板';
+
+  @override
+  String get partTemplateDeleted => '已删除声部模板';
+
+  @override
+  String get partTemplateItems => '声部（每行一个）';
+
+  @override
+  String get partTemplateItemsHint => '鼓 — Alex\n贝斯 — Sam\n主唱';
+
+  @override
+  String get partTemplateItemsHelp => '每行一个声部。在破折号后写上演奏者：鼓 — Alex';
+
+  @override
+  String get partTemplateItemsRequired => '请至少添加一个声部';
+
+  @override
+  String get partTemplateNameAndItemsRequired => '需要填写名称并至少添加一个声部';
+
+  @override
+  String partTemplateItemCount(int count) {
+    return '$count 个声部';
+  }
+
+  @override
+  String partTemplateImported(String name, int count) {
+    return '已导入声部模板“$name”（$count 个声部）';
+  }
+
+  @override
+  String get errorLoadingPartTemplates => '加载声部模板出错';
+
+  @override
+  String get exportPartsCsv => '将声部导出为 CSV';
+
+  @override
+  String get exportAllPartsCsv => '将所有歌曲的声部导出为 CSV';
+
+  @override
+  String get exportAllPartsCsvSubtitle => '所有项目的每个声部各占一行，便于与合作者分享进度';
+
+  @override
+  String get noPartsToExport => '没有可导出的声部';
+
+  @override
+  String partsCsvExported(int count) {
+    return '已导出 $count 个声部';
+  }
+
+  @override
+  String get projectExportPartsLabel => '声部：';
+
+  @override
+  String get csvHeaderProject => '项目';
+
+  @override
+  String get csvHeaderPart => '声部';
+
+  @override
+  String get csvHeaderPerformer => '演奏者';
+
+  @override
+  String get csvHeaderStatus => '状态';
+
+  @override
+  String get csvHeaderNotes => '备注';
+
+  @override
+  String get exportPartsXlsx => '将声部导出为 Excel (.xlsx)';
+
+  @override
+  String get exportAllPartsXlsx => '将所有歌曲的声部导出为 Excel (.xlsx)';
+
+  @override
+  String get exportAllPartsXlsxSubtitle => '与 CSV 相同的表格，另加冻结表头、列筛选器和彩色录音状态';
+
+  @override
+  String get importPartsFromSpreadsheet => '从电子表格导入声部';
+
+  @override
+  String get partsImportPickerTitle => '选择 CSV 或 Excel 文件';
+
+  @override
+  String partsImported(int added, int updated) {
+    return '新增 $added 个声部，更新 $updated 个';
+  }
+
+  @override
+  String get partsImportNothingFound => '该文件中没有找到声部';
+
+  @override
+  String partsImportFailed(String error) {
+    return '无法读取该电子表格：$error';
+  }
+
+  @override
+  String get partsMoreActions => '更多声部操作';
 }

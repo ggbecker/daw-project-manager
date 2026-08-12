@@ -11,7 +11,9 @@ import '../models/ignored_path.dart';
 import '../models/music_project.dart';
 import '../models/playlist.dart';
 import '../models/profile.dart';
+import '../models/part_template.dart';
 import '../models/project_event.dart';
+import '../models/project_part.dart';
 import '../models/project_template.dart';
 import '../models/release.dart';
 import '../models/release_file.dart';
@@ -118,6 +120,18 @@ class DemoDataService {
     'Layer additional percussion', 'Sidechain the bass',
   ];
 
+  // Instrument/performer pairs for the per-song parts list. Cycled through so
+  // each demo project shows a plausible lineup at a different stage.
+  static const _partPool = [
+    ('Drums', 'Alex Rivera'),
+    ('Bass', 'Sam Okafor'),
+    ('Rhythm Guitar', 'Jules Martin'),
+    ('Lead Vocals', 'Nina Costa'),
+    ('Backing Vocals', 'Nina Costa'),
+    ('Synth Pads', 'Alex Rivera'),
+    ('Percussion', 'Jules Martin'),
+  ];
+
   static const _releaseTitles = [
     'Night Drive EP', 'Neon Collection', 'Afterglow Sessions',
     'Golden Hour Vol. 1', 'Deep Water Remixes',
@@ -143,6 +157,11 @@ class DemoDataService {
   static const _todoTemplateSpecs = [
     ('Demo — Mixing Checklist', ['Check phase alignment', 'Sidechain the bass', 'Clean up low end', 'Reference against 2 commercial tracks']),
     ('Demo — Pre-Release Checklist', ['Master track', 'Export stems', 'Design cover art', 'Write track description', 'Upload to distributor']),
+  ];
+
+  static const _partTemplateSpecs = [
+    ('Demo — Band Lineup', 'Drums — Alex Rivera\nBass — Sam Okafor\nRhythm Guitar — Jules Martin\nLead Vocals — Nina Costa'),
+    ('Demo — Electronic Track', 'Kick & Drums\nBassline\nSynth Pads\nLead Synth\nVocal Chops'),
   ];
 
   // Extensions that are actually directories ("package bundles") on disk
@@ -248,6 +267,31 @@ class DemoDataService {
         );
       });
 
+      // Parts progress tracks the project's phase: an Idea has nothing
+      // recorded, a Finished track has every part on its final take.
+      final numParts = 3 + (i % 3);
+      final parts = List.generate(numParts, (k) {
+        final (instrument, performer) = _partPool[(i + k) % _partPool.length];
+        final PartTakeStatus status;
+        if (statusIndex >= _statuses.length - 1) {
+          status = PartTakeStatus.finalTake;
+        } else if (k < statusIndex) {
+          status = PartTakeStatus.finalTake;
+        } else if (k == statusIndex) {
+          status = PartTakeStatus.earlyTake;
+        } else if (k == statusIndex + 1) {
+          status = PartTakeStatus.recording;
+        } else {
+          status = PartTakeStatus.needed;
+        }
+        return ProjectPart(
+          id: _uuid.v4(),
+          name: instrument,
+          performer: performer,
+          status: status,
+        );
+      });
+
       DateTime? deadline;
       if (i % 5 == 0) {
         deadline = now.subtract(Duration(days: 5 + i)); // overdue
@@ -284,6 +328,7 @@ class DemoDataService {
         dawType: daw.dawType,
         dawVersion: daw.dawVersion,
         todos: todos,
+        parts: parts,
         hidden: hidden,
         fileCreatedAt: createdAt,
         deadline: deadline,
@@ -511,6 +556,19 @@ class DemoDataService {
       ));
     }
 
+    final partBox = await Hive.openBox<PartTemplate>('partTemplates');
+    for (final spec in _partTemplateSpecs) {
+      final (name, itemsText) = spec;
+      final id = 'demo-part-template-${_slug(name)}';
+      await partBox.put(id, PartTemplate(
+        id: id,
+        name: name,
+        items: PartTemplate.parseItems(itemsText),
+        createdAt: now,
+        updatedAt: now,
+      ));
+    }
+
     final templatesDir = Directory(path.join(demoFilesPath, '_templates'));
     final projectBox = await Hive.openBox<ProjectTemplate>('projectTemplates');
     for (final spec in _projectTemplateSpecs) {
@@ -609,6 +667,10 @@ class DemoDataService {
     final todoBox = await Hive.openBox<TodoTemplate>('todoTemplates');
     for (final spec in _todoTemplateSpecs) {
       await todoBox.delete('demo-todo-template-${_slug(spec.$1)}');
+    }
+    final partTemplateBox = await Hive.openBox<PartTemplate>('partTemplates');
+    for (final spec in _partTemplateSpecs) {
+      await partTemplateBox.delete('demo-part-template-${_slug(spec.$1)}');
     }
     final projectTemplateBox = await Hive.openBox<ProjectTemplate>('projectTemplates');
     for (final spec in _projectTemplateSpecs) {

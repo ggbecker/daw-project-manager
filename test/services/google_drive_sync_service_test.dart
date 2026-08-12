@@ -9,7 +9,9 @@ import 'package:googleapis_auth/auth_io.dart' as auth_io;
 import 'package:hive_ce/hive.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
+import 'package:daw_project_manager/models/part_template.dart';
 import 'package:daw_project_manager/models/profile.dart';
+import 'package:daw_project_manager/models/project_part.dart';
 import 'package:daw_project_manager/models/todo_template.dart';
 import 'package:daw_project_manager/repository/profile_repository.dart';
 import 'package:daw_project_manager/repository/project_repository.dart';
@@ -179,6 +181,61 @@ void main() {
 
     tearDown(() async {
       await HiveTestHelper.tearDown(tempDir);
+    });
+
+    test('restores part templates from a backup with none stored locally', () async {
+      final remote = PartTemplate(
+        id: 'pt-1',
+        name: 'Band Lineup',
+        items: PartTemplate.parseItems('Drums — Alex\nBass — Sam'),
+        createdAt: DateTime(2026, 1, 1),
+        updatedAt: DateTime(2026, 1, 1),
+      );
+
+      final service = GoogleDriveSyncService();
+      await service.mergeData(
+        remoteData: {
+          'partTemplates': [remote.toJson()],
+        },
+        projectRepo: projectRepo,
+        profileRepo: profileRepo,
+      );
+
+      final box = await Hive.openBox<PartTemplate>('partTemplates');
+      expect(box.get('pt-1')?.items.map((i) => i.name), ['Drums', 'Bass']);
+    });
+
+    test('does not clobber a part template edited locally since the backup', () async {
+      final box = await Hive.openBox<PartTemplate>('partTemplates');
+      await box.put(
+        'pt-1',
+        PartTemplate(
+          id: 'pt-1',
+          name: 'Renamed locally',
+          items: const [],
+          createdAt: DateTime(2026, 1, 1),
+          updatedAt: DateTime(2026, 6, 1),
+        ),
+      );
+
+      final service = GoogleDriveSyncService();
+      await service.mergeData(
+        remoteData: {
+          'partTemplates': [
+            PartTemplate(
+              id: 'pt-1',
+              name: 'Stale remote name',
+              items: const [],
+              createdAt: DateTime(2026, 1, 1),
+              updatedAt: DateTime(2026, 3, 1),
+            ).toJson(),
+          ],
+        },
+        projectRepo: projectRepo,
+        profileRepo: profileRepo,
+      );
+
+      expect(box.get('pt-1')?.name, 'Renamed locally');
     });
 
     test('restores custom mixdown folders from a backup with no local folders', () async {
@@ -571,6 +628,34 @@ void main() {
 
       expect(restored.sourceTemplateId, isNull);
     });
+
+    test('preserves the parts list', () {
+      final service = GoogleDriveSyncService();
+      final original = TestFactories.makeProject(parts: [
+        TestFactories.makePart(
+          id: 'p1',
+          name: 'Lead Vocals',
+          performer: 'Nina',
+          status: PartTakeStatus.earlyTake,
+          notes: 'double-track the chorus',
+        ),
+        TestFactories.makePart(id: 'p2', name: 'Bass', performer: null),
+      ]);
+
+      final restored = service.deserializeProjectForTest(
+        service.serializeProjectForTest(original),
+      );
+
+      expect(restored.parts, original.parts);
+    });
+
+    test('a backup written before parts existed deserializes to an empty list', () {
+      final service = GoogleDriveSyncService();
+      final data = service.serializeProjectForTest(TestFactories.makeProject())
+        ..remove('parts');
+
+      expect(service.deserializeProjectForTest(data).parts, isEmpty);
+    });
   });
 
   group('GoogleDriveSyncService.mergeData - project conflict resolution', () {
@@ -609,6 +694,7 @@ void main() {
       String? previewSongAutoPath,
       String? parentProjectId,
       String? ignoredNewerSongPath,
+      List<Map<String, dynamic>>? parts,
     }) {
       return {
         'id': id,
@@ -624,6 +710,7 @@ void main() {
         'previewSongAutoPath': previewSongAutoPath,
         'parentProjectId': parentProjectId,
         'ignoredNewerSongPath': ignoredNewerSongPath,
+        'parts': parts,
       };
     }
 
@@ -683,6 +770,82 @@ void main() {
 
       final merged = projectRepo.projectsBox.get('p2');
       expect(merged!.notes, 'Fresh remote note');
+    });
+
+    test('takes a newer remote parts list over the local one', () async {
+      final local = TestFactories.makeProject(
+        id: 'p-parts',
+        updatedAt: DateTime(2025, 6, 1, 8, 0),
+        parts: [TestFactories.makePart(id: 'p1', name: 'Drums', performer: 'Alex')],
+      );
+      await projectRepo.projectsBox.put(local.id, local);
+
+      final service = GoogleDriveSyncService();
+      await service.mergeData(
+        remoteData: {
+          'projects': [
+            remoteProjectMap(
+              id: 'p-parts',
+              updatedAt: DateTime(2025, 6, 1, 12, 0),
+              parts: [
+                TestFactories.makePart(
+                  id: 'p1',
+                  name: 'Drums',
+                  performer: 'Alex',
+                  status: PartTakeStatus.finalTake,
+                ).toJson(),
+                TestFactories.makePart(id: 'p2', name: 'Bass', performer: 'Sam')
+                    .toJson(),
+              ],
+            ),
+          ],
+        },
+        projectRepo: projectRepo,
+        profileRepo: profileRepo,
+        downloadPreviewSongs: false,
+      );
+
+      final merged = projectRepo.projectsBox.get('p-parts')!;
+      expect(merged.parts.map((p) => p.name), ['Drums', 'Bass']);
+      expect(merged.parts.first.status, PartTakeStatus.finalTake);
+    });
+
+    test('keeps a locally edited parts list when local is newer', () async {
+      final local = TestFactories.makeProject(
+        id: 'p-parts-local',
+        updatedAt: DateTime(2025, 6, 1, 12, 0),
+        parts: [
+          TestFactories.makePart(
+            id: 'p1',
+            name: 'Drums',
+            performer: 'Alex',
+            status: PartTakeStatus.finalTake,
+          ),
+        ],
+      );
+      await projectRepo.projectsBox.put(local.id, local);
+
+      final service = GoogleDriveSyncService();
+      await service.mergeData(
+        remoteData: {
+          'projects': [
+            remoteProjectMap(
+              id: 'p-parts-local',
+              updatedAt: DateTime(2025, 6, 1, 10, 0),
+              parts: [
+                TestFactories.makePart(id: 'p1', name: 'Drums', performer: 'Alex')
+                    .toJson(),
+              ],
+            ),
+          ],
+        },
+        projectRepo: projectRepo,
+        profileRepo: profileRepo,
+        downloadPreviewSongs: false,
+      );
+
+      final merged = projectRepo.projectsBox.get('p-parts-local')!;
+      expect(merged.parts.single.status, PartTakeStatus.finalTake);
     });
 
     test('restores previewSongAutoPath, parentProjectId, and ignoredNewerSongPath for a brand-new project from remote', () async {
