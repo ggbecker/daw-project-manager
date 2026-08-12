@@ -4396,4 +4396,56 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get partsMoreActions => '更多声部操作';
+
+  @override
+  String partsPageTitle(String name) {
+    return '$name — 声部';
+  }
+
+  @override
+  String get manageParts => '管理声部';
+
+  @override
+  String partsMoreCount(int count) {
+    return '还有 $count 个';
+  }
+
+  @override
+  String get searchParts => '搜索声部';
+
+  @override
+  String get allStatuses => '所有状态';
+
+  @override
+  String get allPerformers => '所有演奏者';
+
+  @override
+  String partsSelectedCount(int count) {
+    return '已选 $count 个';
+  }
+
+  @override
+  String get setPartStatus => '设置状态';
+
+  @override
+  String get assignPartPerformer => '指派演奏者';
+
+  @override
+  String get deleteSelectedParts => '删除所选';
+
+  @override
+  String deleteSelectedPartsConfirm(int count) {
+    return '要从这首歌中删除 $count 个声部吗？';
+  }
+
+  @override
+  String partsDeleted(int count) {
+    return '已删除 $count 个声部';
+  }
+
+  @override
+  String get noPartsMatchFilters => '没有声部符合这些筛选条件';
+
+  @override
+  String get reorderNeedsUnfilteredList => '清除搜索、筛选和排序后即可拖动调整声部顺序';
 }

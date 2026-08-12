@@ -7744,6 +7744,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'More part actions'**
   String get partsMoreActions;
+
+  /// Title bar of the full-page parts workspace for one project
+  ///
+  /// In en, this message translates to:
+  /// **'{name} — Parts'**
+  String partsPageTitle(String name);
+
+  /// Button on the project detail summary card that opens the parts workspace
+  ///
+  /// In en, this message translates to:
+  /// **'Manage parts'**
+  String get manageParts;
+
+  /// Shown on the summary card when it lists only the first few parts
+  ///
+  /// In en, this message translates to:
+  /// **'+{count} more'**
+  String partsMoreCount(int count);
+
+  /// Placeholder of the parts workspace search field
+  ///
+  /// In en, this message translates to:
+  /// **'Search parts'**
+  String get searchParts;
+
+  /// Take-status filter entry that applies no filtering
+  ///
+  /// In en, this message translates to:
+  /// **'All statuses'**
+  String get allStatuses;
+
+  /// Performer filter entry that applies no filtering
+  ///
+  /// In en, this message translates to:
+  /// **'All performers'**
+  String get allPerformers;
+
+  /// How many parts are currently multi-selected
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String partsSelectedCount(int count);
+
+  /// Bulk action: set the take status of every selected part
+  ///
+  /// In en, this message translates to:
+  /// **'Set status'**
+  String get setPartStatus;
+
+  /// Bulk action: assign one performer to every selected part
+  ///
+  /// In en, this message translates to:
+  /// **'Assign performer'**
+  String get assignPartPerformer;
+
+  /// Bulk action: delete every selected part
+  ///
+  /// In en, this message translates to:
+  /// **'Delete selected'**
+  String get deleteSelectedParts;
+
+  /// Confirmation body before deleting the selected parts
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {count} parts from this song?'**
+  String deleteSelectedPartsConfirm(int count);
+
+  /// Snackbar reporting how many parts were deleted
+  ///
+  /// In en, this message translates to:
+  /// **'{count} parts deleted'**
+  String partsDeleted(int count);
+
+  /// Empty state when search or filters hide every part
+  ///
+  /// In en, this message translates to:
+  /// **'No parts match these filters'**
+  String get noPartsMatchFilters;
+
+  /// Explains that drag-reordering needs the unfiltered, unsorted list
+  ///
+  /// In en, this message translates to:
+  /// **'Clear the search, filters and sorting to drag parts into order'**
+  String get reorderNeedsUnfilteredList;
 }
 
 class _AppLocalizationsDelegate

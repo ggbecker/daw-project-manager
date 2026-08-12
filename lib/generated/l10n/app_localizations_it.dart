@@ -4576,4 +4576,57 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get partsMoreActions => 'Altre azioni sulle parti';
+
+  @override
+  String partsPageTitle(String name) {
+    return '$name — Parti';
+  }
+
+  @override
+  String get manageParts => 'Gestisci le parti';
+
+  @override
+  String partsMoreCount(int count) {
+    return '+$count altre';
+  }
+
+  @override
+  String get searchParts => 'Cerca parti';
+
+  @override
+  String get allStatuses => 'Tutti gli stati';
+
+  @override
+  String get allPerformers => 'Tutti gli esecutori';
+
+  @override
+  String partsSelectedCount(int count) {
+    return '$count selezionate';
+  }
+
+  @override
+  String get setPartStatus => 'Imposta stato';
+
+  @override
+  String get assignPartPerformer => 'Assegna esecutore';
+
+  @override
+  String get deleteSelectedParts => 'Elimina selezionate';
+
+  @override
+  String deleteSelectedPartsConfirm(int count) {
+    return 'Eliminare $count parti da questo brano?';
+  }
+
+  @override
+  String partsDeleted(int count) {
+    return '$count parti eliminate';
+  }
+
+  @override
+  String get noPartsMatchFilters => 'Nessuna parte corrisponde a questi filtri';
+
+  @override
+  String get reorderNeedsUnfilteredList =>
+      'Azzera ricerca, filtri e ordinamento per trascinare le parti';
 }

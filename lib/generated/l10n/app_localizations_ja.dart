@@ -4445,4 +4445,57 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get partsMoreActions => 'パートのその他の操作';
+
+  @override
+  String partsPageTitle(String name) {
+    return '$name — パート';
+  }
+
+  @override
+  String get manageParts => 'パートを管理';
+
+  @override
+  String partsMoreCount(int count) {
+    return '他 $count 件';
+  }
+
+  @override
+  String get searchParts => 'パートを検索';
+
+  @override
+  String get allStatuses => 'すべての状態';
+
+  @override
+  String get allPerformers => 'すべての担当者';
+
+  @override
+  String partsSelectedCount(int count) {
+    return '$count 件を選択中';
+  }
+
+  @override
+  String get setPartStatus => '状態を設定';
+
+  @override
+  String get assignPartPerformer => '担当者を割り当て';
+
+  @override
+  String get deleteSelectedParts => '選択を削除';
+
+  @override
+  String deleteSelectedPartsConfirm(int count) {
+    return 'この曲から $count 件のパートを削除しますか？';
+  }
+
+  @override
+  String partsDeleted(int count) {
+    return '$count 件のパートを削除しました';
+  }
+
+  @override
+  String get noPartsMatchFilters => 'この条件に合うパートはありません';
+
+  @override
+  String get reorderNeedsUnfilteredList =>
+      '検索・絞り込み・並べ替えを解除するとパートをドラッグで並べ替えられます';
 }

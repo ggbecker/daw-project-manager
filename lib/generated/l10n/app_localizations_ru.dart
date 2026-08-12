@@ -4568,4 +4568,57 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get partsMoreActions => 'Другие действия с партиями';
+
+  @override
+  String partsPageTitle(String name) {
+    return '$name — партии';
+  }
+
+  @override
+  String get manageParts => 'Управление партиями';
+
+  @override
+  String partsMoreCount(int count) {
+    return 'ещё $count';
+  }
+
+  @override
+  String get searchParts => 'Поиск по партиям';
+
+  @override
+  String get allStatuses => 'Все статусы';
+
+  @override
+  String get allPerformers => 'Все исполнители';
+
+  @override
+  String partsSelectedCount(int count) {
+    return 'Выбрано: $count';
+  }
+
+  @override
+  String get setPartStatus => 'Задать статус';
+
+  @override
+  String get assignPartPerformer => 'Назначить исполнителя';
+
+  @override
+  String get deleteSelectedParts => 'Удалить выбранные';
+
+  @override
+  String deleteSelectedPartsConfirm(int count) {
+    return 'Удалить партий из этого трека: $count?';
+  }
+
+  @override
+  String partsDeleted(int count) {
+    return 'Удалено партий: $count';
+  }
+
+  @override
+  String get noPartsMatchFilters => 'Нет партий, подходящих под эти фильтры';
+
+  @override
+  String get reorderNeedsUnfilteredList =>
+      'Сбросьте поиск, фильтры и сортировку, чтобы менять порядок партий';
 }

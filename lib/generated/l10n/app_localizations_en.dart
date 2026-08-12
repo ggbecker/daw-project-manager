@@ -4551,4 +4551,57 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get partsMoreActions => 'More part actions';
+
+  @override
+  String partsPageTitle(String name) {
+    return '$name — Parts';
+  }
+
+  @override
+  String get manageParts => 'Manage parts';
+
+  @override
+  String partsMoreCount(int count) {
+    return '+$count more';
+  }
+
+  @override
+  String get searchParts => 'Search parts';
+
+  @override
+  String get allStatuses => 'All statuses';
+
+  @override
+  String get allPerformers => 'All performers';
+
+  @override
+  String partsSelectedCount(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get setPartStatus => 'Set status';
+
+  @override
+  String get assignPartPerformer => 'Assign performer';
+
+  @override
+  String get deleteSelectedParts => 'Delete selected';
+
+  @override
+  String deleteSelectedPartsConfirm(int count) {
+    return 'Delete $count parts from this song?';
+  }
+
+  @override
+  String partsDeleted(int count) {
+    return '$count parts deleted';
+  }
+
+  @override
+  String get noPartsMatchFilters => 'No parts match these filters';
+
+  @override
+  String get reorderNeedsUnfilteredList =>
+      'Clear the search, filters and sorting to drag parts into order';
 }

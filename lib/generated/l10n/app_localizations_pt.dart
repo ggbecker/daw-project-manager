@@ -4569,4 +4569,57 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get partsMoreActions => 'Mais ações de partes';
+
+  @override
+  String partsPageTitle(String name) {
+    return '$name — Partes';
+  }
+
+  @override
+  String get manageParts => 'Gerenciar partes';
+
+  @override
+  String partsMoreCount(int count) {
+    return '+$count a mais';
+  }
+
+  @override
+  String get searchParts => 'Buscar partes';
+
+  @override
+  String get allStatuses => 'Todos os status';
+
+  @override
+  String get allPerformers => 'Todos os músicos';
+
+  @override
+  String partsSelectedCount(int count) {
+    return '$count selecionadas';
+  }
+
+  @override
+  String get setPartStatus => 'Definir status';
+
+  @override
+  String get assignPartPerformer => 'Atribuir músico';
+
+  @override
+  String get deleteSelectedParts => 'Excluir selecionadas';
+
+  @override
+  String deleteSelectedPartsConfirm(int count) {
+    return 'Excluir $count partes desta música?';
+  }
+
+  @override
+  String partsDeleted(int count) {
+    return '$count partes excluídas';
+  }
+
+  @override
+  String get noPartsMatchFilters => 'Nenhuma parte corresponde a esses filtros';
+
+  @override
+  String get reorderNeedsUnfilteredList =>
+      'Limpe a busca, os filtros e a ordenação para arrastar as partes';
 }
