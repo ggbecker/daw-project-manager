@@ -48,8 +48,21 @@ Future<void> maybePickAppDataLibrary() async {
   );
 
   await completer.future;
-  // Let the choice paint before startup continues and replaces this app.
-  await Future<void>.delayed(const Duration(milliseconds: 16));
+
+  // Tear the picker down and wait for the frame to finish before startup
+  // continues.
+  //
+  // Startup ends in its own runApp() with another MaterialApp at this same
+  // root, and Flutter *updates* one MaterialApp into the other rather than
+  // rebuilding it — which reparents keyed subtrees instead of unmounting
+  // them, and trips "A GlobalKey can only be specified on one widget at a
+  // time" against the app's root navigatorKey. Swapping to a plain widget
+  // first unmounts this tree, so the real app attaches to a clean root.
+  //
+  // The colour matches the launch background so the gap between the two apps
+  // is not a white flash.
+  runApp(const ColoredBox(color: Color(0xFF1E1F22)));
+  await WidgetsBinding.instance.endOfFrame;
 }
 
 class _DevLibraryPickerApp extends StatelessWidget {
