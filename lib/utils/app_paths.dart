@@ -24,8 +24,37 @@ const String _dataDirOverride = String.fromEnvironment('DPM_DATA_DIR');
 /// Debug and profile builds get their own directory by default: running from
 /// the IDE against the installed app's data is how a newly added Hive type
 /// ends up in a box the released build cannot read.
-String get appDataDirName =>
+String get appDataDirName => _runtimeDirName ??
     resolveAppDataDirName(override: _dataDirOverride, isRelease: kReleaseMode);
+
+/// Set by the startup library picker in dev builds. Null until chosen.
+String? _runtimeDirName;
+
+/// Whether this build may ask which library to open at startup.
+///
+/// Never in a release build, and never when [_dataDirOverride] pinned it: a
+/// pull-request build handed to a tester must not offer them the library of
+/// the stable app they already have installed, which is the whole point of
+/// pinning it.
+bool get canPickAppDataDir => !kReleaseMode && _dataDirOverride.isEmpty;
+
+/// Points this run at [dirName]. Must be called before anything resolves a
+/// path — everything downstream (Hive boxes, preview songs, artwork) is
+/// derived from it and several are opened during startup.
+void selectAppDataDir(String dirName) {
+  if (!canPickAppDataDir) {
+    throw StateError(
+      'The app-data directory is fixed in this build and cannot be chosen at '
+      'runtime.',
+    );
+  }
+  _runtimeDirName =
+      resolveAppDataDirName(override: dirName, isRelease: kReleaseMode);
+}
+
+/// Test-only: drop a runtime selection made by an earlier test.
+@visibleForTesting
+void resetSelectedAppDataDir() => _runtimeDirName = null;
 
 /// Whether this build is pointed somewhere other than the real library, and
 /// so will look empty on first run. Worth surfacing in the UI.
