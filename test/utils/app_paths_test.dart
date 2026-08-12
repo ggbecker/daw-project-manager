@@ -51,4 +51,69 @@ void main() {
       );
     },
   );
+
+  // A build that writes a Hive type the installed release does not know about
+  // leaves that release unable to read its own boxes ("Cannot read, unknown
+  // typeId"). Pull-request builds are shipped to testers as real installers,
+  // so build mode alone cannot keep them off the stable app's library — CI
+  // passes an explicit directory name instead.
+  group('resolveAppDataDirName', () {
+    test('a release build with no override uses the real library', () {
+      expect(
+        resolveAppDataDirName(override: '', isRelease: true),
+        defaultAppDataDirName,
+      );
+    });
+
+    test('a non-release build with no override is isolated', () {
+      expect(
+        resolveAppDataDirName(override: '', isRelease: false),
+        '${defaultAppDataDirName}_dev',
+      );
+    });
+
+    test('an override wins even in a release build', () {
+      // This is the pull-request case: --release, but must not touch the
+      // tester's real library.
+      expect(
+        resolveAppDataDirName(
+          override: 'daw_project_manager_pr123',
+          isRelease: true,
+        ),
+        'daw_project_manager_pr123',
+      );
+    });
+
+    test('a blank or whitespace override falls through to build mode', () {
+      expect(resolveAppDataDirName(override: '   ', isRelease: true),
+          defaultAppDataDirName);
+      expect(resolveAppDataDirName(override: '', isRelease: false),
+          '${defaultAppDataDirName}_dev');
+    });
+
+    test('path separators and traversal are stripped out', () {
+      // The value becomes a path segment under the app-data root, so it must
+      // not be able to escape it.
+      expect(
+        resolveAppDataDirName(override: '../../Windows', isRelease: true),
+        'Windows',
+      );
+      expect(
+        resolveAppDataDirName(override: 'a/b\\c', isRelease: true),
+        'abc',
+      );
+    });
+
+    test('an override of only separators falls back rather than resolving to '
+        'the app-data root itself', () {
+      expect(
+        resolveAppDataDirName(override: '../..', isRelease: true),
+        defaultAppDataDirName,
+      );
+      expect(
+        resolveAppDataDirName(override: '/', isRelease: true),
+        defaultAppDataDirName,
+      );
+    });
+  });
 }

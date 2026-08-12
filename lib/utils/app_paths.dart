@@ -5,6 +5,52 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'mobile_utils.dart';
 
+/// The directory name a shipping release stores its library under.
+const String defaultAppDataDirName = 'daw_project_manager';
+
+/// Compile-time override of the app-data directory name, set with
+/// `--dart-define=DPM_DATA_DIR=…`.
+///
+/// CI passes this for pull-request builds so a build handed to a tester can
+/// never write into the library of the stable app they already have
+/// installed. Compile-time rather than an environment variable so it behaves
+/// the same however the app is launched, and cannot be inherited by accident.
+const String _dataDirOverride = String.fromEnvironment('DPM_DATA_DIR');
+
+/// Everything the app stores on disk — Hive boxes, preview songs, release
+/// artwork, profile photos, crash logs — hangs off this one name, so changing
+/// it moves the whole library in one step.
+///
+/// Debug and profile builds get their own directory by default: running from
+/// the IDE against the installed app's data is how a newly added Hive type
+/// ends up in a box the released build cannot read.
+String get appDataDirName =>
+    resolveAppDataDirName(override: _dataDirOverride, isRelease: kReleaseMode);
+
+/// Whether this build is pointed somewhere other than the real library, and
+/// so will look empty on first run. Worth surfacing in the UI.
+bool get isUsingIsolatedAppData => appDataDirName != defaultAppDataDirName;
+
+/// Resolution order: explicit override, then build mode.
+///
+/// The override is reduced to safe filename characters — it ends up as a path
+/// segment, and `..` or a separator in it would escape the app-data root.
+@visibleForTesting
+String resolveAppDataDirName({
+  required String override,
+  required bool isRelease,
+}) {
+  final sanitized = override
+      // Anything that could act as a separator is dropped outright…
+      .replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '')
+      // …and leading dots go too, so what is left of a traversal attempt is a
+      // plain name rather than '..' or '....'.
+      .replaceAll(RegExp(r'^\.+'), '')
+      .trim();
+  if (sanitized.isNotEmpty) return sanitized;
+  return isRelease ? defaultAppDataDirName : '${defaultAppDataDirName}_dev';
+}
+
 /// Static flag to track if Hive has been initialized
 bool _hiveInitialized = false;
 
@@ -45,27 +91,37 @@ Future<void> ensureHiveInitialized() async {
 }
 
 /// Gets the LocalAppData directory path for the application.
-/// On Windows, this returns %LocalAppData%\daw_project_manager
-/// On other platforms, it returns the application support directory.
+/// On Windows, this returns %LocalAppData%\[appDataDirName]
+/// On other platforms, it returns the application support directory — with
+/// [appDataDirName] appended when this build is isolated, since the support
+/// directory itself is fixed by the OS bundle id.
 Future<String> getLocalAppDataPath() async {
   if (Platform.isWindows) {
     // On Windows, use LOCALAPPDATA environment variable
     final localAppData = Platform.environment['LOCALAPPDATA'];
     if (localAppData != null) {
-      final appDir = Directory(path.join(localAppData, 'daw_project_manager'));
+      final appDir = Directory(path.join(localAppData, appDataDirName));
       if (!await appDir.exists()) {
         await appDir.create(recursive: true);
       }
       return appDir.path;
     }
     // Fallback to application support directory if LOCALAPPDATA is not available
-    final appSupportDir = await getApplicationSupportDirectory();
-    return appSupportDir.path;
+    return _appSupportPath();
   } else {
     // On other platforms, use application support directory
-    final appSupportDir = await getApplicationSupportDirectory();
-    return appSupportDir.path;
+    return _appSupportPath();
   }
+}
+
+Future<String> _appSupportPath() async {
+  final appSupportDir = await getApplicationSupportDirectory();
+  if (!isUsingIsolatedAppData) return appSupportDir.path;
+  final scoped = Directory(path.join(appSupportDir.path, appDataDirName));
+  if (!await scoped.exists()) {
+    await scoped.create(recursive: true);
+  }
+  return scoped.path;
 }
 
 /// Gets the path for release files storage
