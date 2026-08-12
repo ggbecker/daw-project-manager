@@ -65,6 +65,104 @@ Future<void> maybePickAppDataLibrary() async {
   await WidgetsBinding.instance.endOfFrame;
 }
 
+/// Settings entry that shows which library this build opened and clears a
+/// remembered choice, so changing it never requires hunting down a file.
+///
+/// Callers gate this on [canPickAppDataDir]; it is never built in a release
+/// or pull-request build, which cannot choose a library in the first place.
+/// Not localized, for the same reason as the picker above.
+class DevLibraryCard extends StatefulWidget {
+  const DevLibraryCard({super.key});
+
+  @override
+  State<DevLibraryCard> createState() => _DevLibraryCardState();
+}
+
+class _DevLibraryCardState extends State<DevLibraryCard> {
+  Directory? _root;
+  String? _remembered;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final root = await DevLibraryService.resolveRoot();
+    if (!mounted) return;
+    setState(() {
+      _root = root;
+      _remembered = DevLibraryService.readSelection(root);
+    });
+  }
+
+  void _forget() {
+    final root = _root;
+    if (root == null) return;
+    DevLibraryService.writeSelection(root, null);
+    setState(() => _remembered = null);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('The library picker will ask again on next launch.'),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.science_outlined),
+                const SizedBox(width: 10),
+                Text('Development build',
+                    style: theme.textTheme.titleMedium),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Library in use: $appDataDirName',
+                          style: theme.textTheme.bodyMedium),
+                      const SizedBox(height: 2),
+                      Text(
+                        _remembered == null
+                            ? 'Chosen at launch. This section is not present in '
+                                'release builds.'
+                            : 'Remembered, so the picker is skipped at launch.',
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                FilledButton.tonalIcon(
+                  onPressed: _remembered == null ? null : _forget,
+                  icon: const Icon(Icons.restart_alt, size: 18),
+                  label: const Text('Ask again next launch'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _DevLibraryPickerApp extends StatelessWidget {
   final Directory root;
   final List<DevLibrary> libraries;
@@ -152,9 +250,9 @@ class _DevLibraryPickerPageState extends State<_DevLibraryPickerPage> {
                   contentPadding: EdgeInsets.zero,
                   title: const Text('Remember this choice'),
                   subtitle: Text(
-                    'Stored in ${DevLibraryService.selectionFileName}. '
-                    'Delete that file, or run with '
-                    '--dart-define=DPM_DATA_DIR=<name>, to change it.',
+                    'Skips this screen on future launches — worth it, since '
+                    'a hot restart re-runs startup. Undo it any time from '
+                    'Settings → General → Development build.',
                     style: theme.textTheme.bodySmall,
                   ),
                 ),
