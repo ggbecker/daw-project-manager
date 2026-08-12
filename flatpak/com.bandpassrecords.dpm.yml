@@ -120,10 +120,19 @@ modules:
       # `flutter build linux` names the bundle directory after the *host*
       # architecture (build/linux/x64/... on x86_64, build/linux/arm64/... on
       # aarch64)
+      # Only the launcher belongs in /app/bin — it's on PATH and is for
+      # executables. The Flutter bundle's data/ and lib/ are not executables,
+      # so the whole bundle goes to /app/<app-id> and the binary is symlinked
+      # back. Exec=daw_project_manager in the .desktop file still resolves via
+      # PATH, and the embedder still finds data/ and lib/ because it locates
+      # them relative to the *resolved* /proc/self/exe — which follows the
+      # symlink into /app/com.bandpassrecords.dpm.
       - BUNDLE=$(echo build/linux/*/release/bundle);
-        install -Dm755 "$BUNDLE/daw_project_manager" /app/bin/daw_project_manager;
-        cp -r "$BUNDLE/data" /app/bin/data;
-        cp -r "$BUNDLE/lib" /app/bin/lib
+        install -Dm755 "$BUNDLE/daw_project_manager" /app/com.bandpassrecords.dpm/daw_project_manager;
+        cp -r "$BUNDLE/data" /app/com.bandpassrecords.dpm/data;
+        cp -r "$BUNDLE/lib" /app/com.bandpassrecords.dpm/lib;
+        install -d /app/bin;
+        ln -s /app/com.bandpassrecords.dpm/daw_project_manager /app/bin/daw_project_manager
       - install -Dm644 flatpak/com.bandpassrecords.dpm.desktop /app/share/applications/com.bandpassrecords.dpm.desktop
       - install -Dm644 flatpak/com.bandpassrecords.dpm.metainfo.xml /app/share/metainfo/com.bandpassrecords.dpm.metainfo.xml
       - install -Dm644 flatpak/icons/com.bandpassrecords.dpm_128.png /app/share/icons/hicolor/128x128/apps/com.bandpassrecords.dpm.png
