@@ -398,15 +398,77 @@ void main() {
       expect(parts().map((p) => p.name), ['Synth Pads', 'Drums', 'Bass']);
     });
 
-    testWidgets('importing with no templates saved says so', (tester) async {
-      await pumpView(tester, projectWithParts(const []));
-
+    Future<void> openTemplatePicker(WidgetTester tester) async {
       await tester.tap(find.byTooltip('More part actions'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Import parts from template'));
-      await tester.pump();
+      await tester.pumpAndSettle();
+    }
 
-      expect(find.text('No part templates available'), findsOneWidget);
+    testWidgets('with no templates the picker offers to create one',
+        (tester) async {
+      await pumpView(tester, projectWithParts(const []));
+
+      await openTemplatePicker(tester);
+
+      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(find.text('No part templates yet'), findsOneWidget);
+      expect(find.widgetWithText(FilledButton, 'Create part template'),
+          findsOneWidget);
+    });
+
+    // Regression: this used to be a SnackBar carrying a SnackBarAction. Such a
+    // bar never auto-dismisses, so it sat on screen indefinitely, and its
+    // action held this State's context — tapping Create after navigating away
+    // threw "This widget has been unmounted".
+    testWidgets('nothing is left pinned on screen after the picker closes',
+        (tester) async {
+      await pumpView(tester, projectWithParts(const []));
+
+      await openTemplatePicker(tester);
+      await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(find.byType(SnackBar), findsNothing);
+
+      await tester.pump(const Duration(seconds: 10));
+      await tester.pumpAndSettle();
+      expect(find.byType(SnackBar), findsNothing);
+    });
+
+    testWidgets('a still-loading template list is not reported as empty',
+        (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('en')],
+          home: Scaffold(
+            body: ProjectPartsView(
+              project: projectWithParts(const []),
+              templatesLoading: true,
+              onPartsChanged: (_) async {},
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Fixed pumps, not pumpAndSettle: the dialog this opens holds a spinner,
+      // and an indefinite animation never settles.
+      await tester.tap(find.byTooltip('More part actions'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Import parts from template'));
+      for (var i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 30));
+      }
+
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.text('No part templates yet'), findsNothing);
     });
   });
 }

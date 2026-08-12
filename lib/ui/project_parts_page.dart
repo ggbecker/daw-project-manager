@@ -60,8 +60,8 @@ class ProjectPartsPage extends ConsumerWidget {
         .value
         ?.where((p) => p.id == projectId)
         .firstOrNull;
-    final templates =
-        ref.watch(partTemplatesProvider).value ?? const <PartTemplate>[];
+    final templatesAsync = ref.watch(partTemplatesProvider);
+    final templates = templatesAsync.value ?? const <PartTemplate>[];
     final isMobile = MobileUtils.isMobile();
     final title = project == null
         ? l10n.songParts
@@ -87,6 +87,7 @@ class ProjectPartsPage extends ConsumerWidget {
               child: ProjectPartsView(
                 project: project,
                 templates: templates,
+                templatesLoading: templatesAsync.isLoading,
                 onPartsChanged: (parts) async {
                   final repo = await ref.read(repositoryProvider.future);
                   await repo.updateProject(
@@ -110,6 +111,11 @@ class ProjectPartsPage extends ConsumerWidget {
 class ProjectPartsView extends StatefulWidget {
   final MusicProject project;
   final List<PartTemplate> templates;
+
+  /// True while the templates are still being read. Distinct from an empty
+  /// [templates] list: "still loading" must not be reported to the user as
+  /// "you have no templates".
+  final bool templatesLoading;
   final Future<void> Function(List<ProjectPart>) onPartsChanged;
 
   const ProjectPartsView({
@@ -117,6 +123,7 @@ class ProjectPartsView extends StatefulWidget {
     required this.project,
     required this.onPartsChanged,
     this.templates = const [],
+    this.templatesLoading = false,
   });
 
   @override
@@ -322,30 +329,20 @@ class _ProjectPartsViewState extends State<ProjectPartsView> {
     await _save(project, reordered);
   }
 
+  /// Opens the template picker.
+  ///
+  /// "You have no templates" is shown *inside* the picker rather than as a
+  /// snackbar with a Create action. A SnackBar carrying a SnackBarAction does
+  /// not auto-dismiss, so that bar sat on screen indefinitely, and its action
+  /// closed over this State's context — tapping Create after navigating away
+  /// threw "This widget has been unmounted". A dialog has neither problem.
   Future<void> _importFromTemplate(
     MusicProject project,
     List<PartTemplate> templates,
   ) async {
     final l10n = AppLocalizations.of(context)!;
-    if (templates.isEmpty) {
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.noPartTemplatesAvailable),
-          duration: const Duration(seconds: 4),
-          action: SnackBarAction(
-            label: l10n.create,
-            onPressed: () {
-              ScaffoldMessenger.of(context).hideCurrentSnackBar();
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const PartTemplatesPage()),
-              );
-            },
-          ),
-        ),
-      );
-      return;
-    }
+    // Captured before the await so nothing reaches through a stale context.
+    final navigator = Navigator.of(context);
 
     final selected = await showDialog<PartTemplate>(
       context: context,
@@ -353,21 +350,36 @@ class _ProjectPartsViewState extends State<ProjectPartsView> {
         backgroundColor: Theme.of(context).cardColor,
         title: Text(l10n.selectPartTemplate),
         content: SizedBox(
-          width: double.maxFinite,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: templates.length,
-            itemBuilder: (context, index) {
-              final template = templates[index];
-              return ListTile(
-                leading: const Icon(Icons.queue_music),
-                title: Text(template.name),
-                subtitle:
-                    Text(l10n.partTemplateItemCount(template.items.length)),
-                onTap: () => Navigator.pop(dialogContext, template),
-              );
-            },
-          ),
+          width: 380,
+          child: widget.templatesLoading
+              ? const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              : templates.isEmpty
+                  ? _NoTemplatesYet(onCreate: () {
+                      Navigator.pop(dialogContext);
+                      navigator.push(
+                        MaterialPageRoute(
+                          builder: (_) => const PartTemplatesPage(),
+                        ),
+                      );
+                    })
+                  : ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: templates.length,
+                      itemBuilder: (context, index) {
+                        final template = templates[index];
+                        return ListTile(
+                          leading: const Icon(Icons.queue_music),
+                          title: Text(template.name),
+                          subtitle: Text(
+                            l10n.partTemplateItemCount(template.items.length),
+                          ),
+                          onTap: () => Navigator.pop(dialogContext, template),
+                        );
+                      },
+                    ),
         ),
         actions: [
           TextButton(
@@ -1042,6 +1054,37 @@ class _BulkActionBar extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Empty state inside the template picker, with the way out of it.
+class _NoTemplatesYet extends StatelessWidget {
+  final VoidCallback onCreate;
+
+  const _NoTemplatesYet({required this.onCreate});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(l10n.noPartTemplatesYet,
+            style: Theme.of(context).textTheme.titleSmall),
+        const SizedBox(height: 8),
+        Text(
+          l10n.createFirstPartTemplate,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        const SizedBox(height: 16),
+        FilledButton.icon(
+          onPressed: onCreate,
+          icon: const Icon(Icons.add, size: 18),
+          label: Text(l10n.createPartTemplate),
+        ),
+      ],
     );
   }
 }
