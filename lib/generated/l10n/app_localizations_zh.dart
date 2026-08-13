@@ -1927,6 +1927,45 @@ class AppLocalizationsZh extends AppLocalizations {
   String get themeSettingDescription => '应用程序的配色主题。';
 
   @override
+  String get waveformStyle => '波形样式';
+
+  @override
+  String get waveformStyleSettingDescription => '音频预览波形的绘制方式。';
+
+  @override
+  String get waveformStyleDetailed => '精细';
+
+  @override
+  String get waveformStyleDetailedDescription => '逐像素条形并带阴影主体，类似 DAW。';
+
+  @override
+  String get waveformStyleClassic => '经典';
+
+  @override
+  String get waveformStyleClassicDescription => '单一填充轮廓。';
+
+  @override
+  String get waveformChannels => '声道';
+
+  @override
+  String get waveformChannelsSettingDescription => '波形是否将立体声分为两条轨道。';
+
+  @override
+  String get waveformChannelsSingle => '单条';
+
+  @override
+  String get waveformChannelsDual => '双条';
+
+  @override
+  String get waveformChannelsSingleDescription => '一条轨道显示立体声混音。';
+
+  @override
+  String get waveformChannelsDualDescription => '左右声道分为上下两条轨道。';
+
+  @override
+  String get waveformChannelsUnavailable => '此文件只有一个声道';
+
+  @override
   String get support => '支持';
 
   @override

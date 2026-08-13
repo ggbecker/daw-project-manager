@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../generated/l10n/app_localizations.dart';
 import '../models/scan_mode.dart';
+import '../models/waveform_style.dart';
 import '../models/scan_root.dart';
 import '../providers/providers.dart';
 import '../providers/theme_provider.dart';
@@ -1004,6 +1005,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         _SearchEntry(SettingsSection.general, Icons.table_chart_outlined, l10n.metadataExtractionTitle, l10n.metadataExtractionSubtitle),
         _SearchEntry(SettingsSection.general, Icons.restart_alt, l10n.resetOnboarding, null),
         _SearchEntry(SettingsSection.appearance, Icons.palette_outlined, l10n.theme, l10n.themeSettingDescription),
+        _SearchEntry(SettingsSection.appearance, Icons.graphic_eq, l10n.waveformStyle, l10n.waveformStyleSettingDescription),
+        _SearchEntry(SettingsSection.appearance, Icons.equalizer, l10n.waveformChannels, l10n.waveformChannelsSettingDescription),
         _SearchEntry(SettingsSection.appearance, Icons.tab_outlined, l10n.customizeTabs, l10n.customizeTabsDescription),
         _SearchEntry(SettingsSection.appearance, Icons.view_sidebar_outlined, l10n.tabPosition, null),
         _SearchEntry(SettingsSection.appearance, Icons.event_busy_outlined, l10n.hideDatesInNames, l10n.hideDatesInNamesDescription),
@@ -2626,6 +2629,94 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   selected: {themeType},
                   onSelectionChanged: (s) =>
                       ref.read(themeTypeProvider.notifier).setThemeType(s.first),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        // Waveform rendering used by every audio preview player.
+        Card(
+          clipBehavior: Clip.antiAlias,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.graphic_eq),
+                    const SizedBox(width: 10),
+                    Text(l10n.waveformStyle,
+                        style: Theme.of(context).textTheme.titleMedium),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(l10n.waveformStyleSettingDescription,
+                    style: Theme.of(context).textTheme.bodySmall),
+                const SizedBox(height: 12),
+                SegmentedButton<WaveformStyle>(
+                  segments: [
+                    ButtonSegment(
+                      value: WaveformStyle.detailed,
+                      icon: const Icon(Icons.graphic_eq, size: 16),
+                      label: Text(l10n.waveformStyleDetailed),
+                    ),
+                    ButtonSegment(
+                      value: WaveformStyle.classic,
+                      icon: const Icon(Icons.show_chart, size: 16),
+                      label: Text(l10n.waveformStyleClassic),
+                    ),
+                  ],
+                  selected: {ref.watch(waveformStyleProvider)},
+                  onSelectionChanged: (s) =>
+                      ref.read(waveformStyleProvider.notifier).set(s.first),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  ref.watch(waveformStyleProvider) == WaveformStyle.detailed
+                      ? l10n.waveformStyleDetailedDescription
+                      : l10n.waveformStyleClassicDescription,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                // Applies to both renderings — each simply draws its own
+                // shape twice, in two bands.
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    const Icon(Icons.equalizer, size: 20),
+                    const SizedBox(width: 10),
+                    Text(l10n.waveformChannels,
+                        style: Theme.of(context).textTheme.titleSmall),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(l10n.waveformChannelsSettingDescription,
+                    style: Theme.of(context).textTheme.bodySmall),
+                const SizedBox(height: 12),
+                SegmentedButton<bool>(
+                  segments: [
+                    ButtonSegment(
+                      value: false,
+                      icon: const Icon(Icons.remove, size: 16),
+                      label: Text(l10n.waveformChannelsSingle),
+                    ),
+                    ButtonSegment(
+                      value: true,
+                      icon: const Icon(Icons.drag_handle, size: 16),
+                      label: Text(l10n.waveformChannelsDual),
+                    ),
+                  ],
+                  selected: {ref.watch(waveformStereoProvider)},
+                  onSelectionChanged: (s) =>
+                      ref.read(waveformStereoProvider.notifier).set(s.first),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  ref.watch(waveformStereoProvider)
+                      ? l10n.waveformChannelsDualDescription
+                      : l10n.waveformChannelsSingleDescription,
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
             ),

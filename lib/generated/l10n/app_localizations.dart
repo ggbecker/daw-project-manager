@@ -3293,6 +3293,84 @@ abstract class AppLocalizations {
   /// **'The app\'s color theme.'**
   String get themeSettingDescription;
 
+  /// Appearance setting: which waveform rendering the audio preview uses
+  ///
+  /// In en, this message translates to:
+  /// **'Waveform Style'**
+  String get waveformStyle;
+
+  /// Subtitle under the Waveform Style setting
+  ///
+  /// In en, this message translates to:
+  /// **'How the audio preview waveform is drawn.'**
+  String get waveformStyleSettingDescription;
+
+  /// Waveform style option: the per-pixel bar rendering with an RMS body
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed'**
+  String get waveformStyleDetailed;
+
+  /// No description provided for @waveformStyleDetailedDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Per-pixel bars with a shaded body, like a DAW.'**
+  String get waveformStyleDetailedDescription;
+
+  /// Waveform style option: the original filled envelope rendering
+  ///
+  /// In en, this message translates to:
+  /// **'Classic'**
+  String get waveformStyleClassic;
+
+  /// No description provided for @waveformStyleClassicDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'A single filled outline.'**
+  String get waveformStyleClassicDescription;
+
+  /// Appearance setting and waveform context menu: single vs dual channel lanes
+  ///
+  /// In en, this message translates to:
+  /// **'Channels'**
+  String get waveformChannels;
+
+  /// Subtitle under the Channels setting
+  ///
+  /// In en, this message translates to:
+  /// **'Whether the waveform splits stereo into two lanes.'**
+  String get waveformChannelsSettingDescription;
+
+  /// Channel option: one lane showing the stereo mixdown
+  ///
+  /// In en, this message translates to:
+  /// **'Single'**
+  String get waveformChannelsSingle;
+
+  /// Channel option: left and right drawn as separate stacked lanes
+  ///
+  /// In en, this message translates to:
+  /// **'Dual'**
+  String get waveformChannelsDual;
+
+  /// No description provided for @waveformChannelsSingleDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'One lane showing the stereo mixdown.'**
+  String get waveformChannelsSingleDescription;
+
+  /// No description provided for @waveformChannelsDualDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Left and right stacked as separate lanes.'**
+  String get waveformChannelsDualDescription;
+
+  /// Shown in the waveform context menu when the file is mono
+  ///
+  /// In en, this message translates to:
+  /// **'This file has only one channel'**
+  String get waveformChannelsUnavailable;
+
   /// No description provided for @support.
   ///
   /// In en, this message translates to:

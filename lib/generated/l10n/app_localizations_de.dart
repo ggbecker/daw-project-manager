@@ -1995,6 +1995,51 @@ class AppLocalizationsDe extends AppLocalizations {
   String get themeSettingDescription => 'Das Farbthema der App.';
 
   @override
+  String get waveformStyle => 'Wellenform-Stil';
+
+  @override
+  String get waveformStyleSettingDescription =>
+      'Wie die Wellenform der Audiovorschau gezeichnet wird.';
+
+  @override
+  String get waveformStyleDetailed => 'Detailliert';
+
+  @override
+  String get waveformStyleDetailedDescription =>
+      'Balken pro Pixel mit schattiertem Körper, wie in einer DAW.';
+
+  @override
+  String get waveformStyleClassic => 'Klassisch';
+
+  @override
+  String get waveformStyleClassicDescription =>
+      'Eine einzelne gefüllte Kontur.';
+
+  @override
+  String get waveformChannels => 'Kanäle';
+
+  @override
+  String get waveformChannelsSettingDescription =>
+      'Ob die Wellenform Stereo in zwei Spuren aufteilt.';
+
+  @override
+  String get waveformChannelsSingle => 'Einzeln';
+
+  @override
+  String get waveformChannelsDual => 'Zweikanalig';
+
+  @override
+  String get waveformChannelsSingleDescription =>
+      'Eine Spur mit der Stereo-Summe.';
+
+  @override
+  String get waveformChannelsDualDescription =>
+      'Links und rechts als getrennte Spuren übereinander.';
+
+  @override
+  String get waveformChannelsUnavailable => 'Diese Datei hat nur einen Kanal';
+
+  @override
   String get support => 'Unterstützen';
 
   @override
