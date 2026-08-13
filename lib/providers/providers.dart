@@ -503,10 +503,12 @@ final projectsProvider = Provider<List<MusicProject>>((ref) {
         if (projectsSearch.trim().isNotEmpty) {
           projects = projects
               .where(
-                (p) =>
-                    fuzzyMatchAll(p.displayName, projectsSearch) ||
-                    (p.notes != null &&
-                        fuzzyMatchAll(p.notes!, projectsSearch)),
+                (p) => fuzzyMatchAny(
+                  // projectNotes are the read-only notes extracted from the
+                  // DAW file itself — real user content, so searchable too.
+                  [p.displayName, p.notes, p.projectNotes],
+                  projectsSearch,
+                ),
               )
               .toList();
         }

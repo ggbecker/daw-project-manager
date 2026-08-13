@@ -3155,6 +3155,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get matchedInDescription => 'Correspondance dans la description';
 
   @override
+  String get matchedInProjectNotes =>
+      'Correspondance dans les notes de projet du DAW';
+
+  @override
   String get relocateFolderDialogTitle => 'Déplacer le dossier';
 
   @override

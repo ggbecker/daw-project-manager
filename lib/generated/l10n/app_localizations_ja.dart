@@ -3058,6 +3058,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get matchedInDescription => '説明文でマッチ';
 
   @override
+  String get matchedInProjectNotes => 'DAWプロジェクトノートでマッチ';
+
+  @override
   String get relocateFolderDialogTitle => 'フォルダを移動';
 
   @override

@@ -3139,6 +3139,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get matchedInDescription => 'In Beschreibung gefunden';
 
   @override
+  String get matchedInProjectNotes => 'In DAW-Projektnotizen gefunden';
+
+  @override
   String get relocateFolderDialogTitle => 'Ordner verschieben';
 
   @override
