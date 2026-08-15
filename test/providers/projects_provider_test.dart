@@ -258,6 +258,54 @@ void main() {
 
       expect((await _readProjects(c)).length, 2);
     });
+
+    test('search filters by user notes', () async {
+      final c = _makeContainer([
+        TestFactories.makeProject(
+            id: 'withnotes', fileName: 'A.als', notes: 'needs more reverb'),
+        TestFactories.makeProject(id: 'plain', fileName: 'B.als'),
+      ]);
+      addTearDown(c.dispose);
+      c.read(projectsSearchProvider.notifier).setSearchText('reverb');
+
+      expect(
+          (await _readProjects(c)).map((p) => p.id).toList(), ['withnotes']);
+    });
+
+    test('search filters by DAW-extracted projectNotes', () async {
+      // Issue #102 part 2: projectNotes is real user content pulled out of the
+      // DAW file (REAPER's Notes tab, Cubase's Notepad) and used to be
+      // invisible to search.
+      final c = _makeContainer([
+        TestFactories.makeProject(
+            id: 'dawnotes',
+            fileName: 'A.als',
+            projectNotes: 'mixed on the shared monitors'),
+        TestFactories.makeProject(id: 'plain', fileName: 'B.als'),
+      ]);
+      addTearDown(c.dispose);
+      c.read(projectsSearchProvider.notifier).setSearchText('shared');
+
+      expect((await _readProjects(c)).map((p) => p.id).toList(), ['dawnotes']);
+    });
+
+    test('search does not match unrelated projects by scavenged letters',
+        () async {
+      // Issue #102 part 1: "shared" used to match this filename because
+      // s-h-a-r-e-d appear in order across six unrelated words.
+      final c = _makeContainer([
+        TestFactories.makeProject(
+            id: 'royksopp',
+            fileName:
+                '2026_022_01 - Royksopp - What Else is There (Audio Crawler Remix).cpr'),
+        TestFactories.makeProject(
+            id: 'shortnotes', fileName: 'B.als', notes: 'sh'),
+      ]);
+      addTearDown(c.dispose);
+      c.read(projectsSearchProvider.notifier).setSearchText('shared');
+
+      expect((await _readProjects(c)).map((p) => p.id).toList(), isEmpty);
+    });
   });
 
   group('projectsProvider — sort order', () {

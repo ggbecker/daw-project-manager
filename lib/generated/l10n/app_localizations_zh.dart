@@ -3028,6 +3028,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get matchedInDescription => '在描述中匹配';
 
   @override
+  String get matchedInProjectNotes => '在 DAW 项目备注中匹配';
+
+  @override
   String get relocateFolderDialogTitle => '重新定位文件夹';
 
   @override

@@ -3126,6 +3126,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get matchedInDescription => 'Совпадение в описании';
 
   @override
+  String get matchedInProjectNotes => 'Совпадение в заметках проекта DAW';
+
+  @override
   String get relocateFolderDialogTitle => 'Переместить папку';
 
   @override

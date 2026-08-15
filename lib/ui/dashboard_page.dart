@@ -7000,11 +7000,18 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable>
               .exists(project.filePath);
 
           final currentQuery = ref.read(projectsSearchProvider);
-          final isNotesMatch =
+          final matchedOutsideName =
               currentQuery.trim().isNotEmpty &&
-              !fuzzyMatchAll(project.displayName, currentQuery) &&
+              !fuzzyMatchAll(project.displayName, currentQuery);
+          final isNotesMatch =
+              matchedOutsideName &&
               project.notes != null &&
               fuzzyMatchAll(project.notes!, currentQuery);
+          final isProjectNotesMatch =
+              matchedOutsideName &&
+              !isNotesMatch &&
+              project.projectNotes != null &&
+              fuzzyMatchAll(project.projectNotes!, currentQuery);
 
           final isNewlyDiscovered = ref
               .watch(recentlyDiscoveredProjectsProvider)
@@ -7050,6 +7057,20 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable>
                     padding: const EdgeInsets.only(left: 6),
                     child: Icon(
                       Icons.notes,
+                      size: 14,
+                      color: Colors.amber.shade600,
+                    ),
+                  ),
+                ),
+              if (isProjectNotesMatch)
+                Tooltip(
+                  message: AppLocalizations.of(
+                    context,
+                  )!.matchedInProjectNotes,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 6),
+                    child: Icon(
+                      Icons.description_outlined,
                       size: 14,
                       color: Colors.amber.shade600,
                     ),
@@ -10579,11 +10600,18 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                 final project = sortedProjects[index];
                 final isSelected = _selectedProjectIds.contains(project.id);
                 final searchQuery = ref.read(projectsSearchProvider);
-                final isNotesMatch =
+                final matchedOutsideName =
                     searchQuery.trim().isNotEmpty &&
-                    !fuzzyMatchAll(project.displayName, searchQuery) &&
+                    !fuzzyMatchAll(project.displayName, searchQuery);
+                final isNotesMatch =
+                    matchedOutsideName &&
                     project.notes != null &&
                     fuzzyMatchAll(project.notes!, searchQuery);
+                final isProjectNotesMatch =
+                    matchedOutsideName &&
+                    !isNotesMatch &&
+                    project.projectNotes != null &&
+                    fuzzyMatchAll(project.projectNotes!, searchQuery);
 
                 return Card(
                   margin: const EdgeInsets.symmetric(
@@ -10627,6 +10655,20 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
                               padding: const EdgeInsets.only(left: 4),
                               child: Icon(
                                 Icons.notes,
+                                size: 14,
+                                color: Colors.amber.shade600,
+                              ),
+                            ),
+                          ),
+                        if (isProjectNotesMatch)
+                          Tooltip(
+                            message: AppLocalizations.of(
+                              context,
+                            )!.matchedInProjectNotes,
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 4),
+                              child: Icon(
+                                Icons.description_outlined,
                                 size: 14,
                                 color: Colors.amber.shade600,
                               ),

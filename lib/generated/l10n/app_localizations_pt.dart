@@ -3128,6 +3128,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get matchedInDescription => 'Encontrado na descrição';
 
   @override
+  String get matchedInProjectNotes => 'Encontrado nas notas do projeto do DAW';
+
+  @override
   String get relocateFolderDialogTitle => 'Realocar pasta';
 
   @override

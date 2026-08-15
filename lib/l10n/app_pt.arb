@@ -2171,6 +2171,7 @@
     }
   },
   "matchedInDescription": "Encontrado na descrição",
+  "matchedInProjectNotes": "Encontrado nas notas do projeto do DAW",
   "newerExportFound": "Exportação mais recente encontrada",
   "newerExportFoundMessage": "Um arquivo mais recente foi encontrado na mesma pasta:\n{filename}\n\nSubstituir a música de pré-visualização?",
   "replaceAndPlay": "Substituir e reproduzir",

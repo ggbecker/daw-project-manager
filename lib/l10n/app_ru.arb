@@ -2147,6 +2147,7 @@
     }
   },
   "matchedInDescription": "Совпадение в описании",
+  "matchedInProjectNotes": "Совпадение в заметках проекта DAW",
   "newerExportFound": "Найден более новый экспорт",
   "newerExportFoundMessage": "В той же папке найден более новый файл:\n{filename}\n\nЗаменить песню для предпросмотра?",
   "replaceAndPlay": "Заменить и воспроизвести",

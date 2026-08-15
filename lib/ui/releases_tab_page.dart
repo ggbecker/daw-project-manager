@@ -125,8 +125,10 @@ class _ReleasesTabPageState extends ConsumerState<ReleasesTabPage> {
         var filteredReleases = releases;
         if (releasesSearch.trim().isNotEmpty) {
           filteredReleases = releases.where((release) {
-            return fuzzyMatchAll(release.title, releasesSearch) ||
-                fuzzyMatchAll(release.description ?? '', releasesSearch);
+            return fuzzyMatchAny(
+              [release.title, release.description],
+              releasesSearch,
+            );
           }).toList();
         }
 

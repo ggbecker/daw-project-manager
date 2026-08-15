@@ -3260,6 +3260,7 @@
   "close": "Close",
   "autoDetected": "Auto-detected",
   "matchedInDescription": "Matched in description",
+  "matchedInProjectNotes": "Matched in DAW project notes",
   "relocateFolderDialogTitle": "Relocate Folder",
   "relocateFolderSuccess": "{count, plural, =1{1 project path updated} other{{count} project paths updated}}",
   "@relocateFolderSuccess": {

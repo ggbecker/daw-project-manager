@@ -5255,6 +5255,12 @@ abstract class AppLocalizations {
   /// **'Matched in description'**
   String get matchedInDescription;
 
+  /// No description provided for @matchedInProjectNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Matched in DAW project notes'**
+  String get matchedInProjectNotes;
+
   /// No description provided for @relocateFolderDialogTitle.
   ///
   /// In en, this message translates to:

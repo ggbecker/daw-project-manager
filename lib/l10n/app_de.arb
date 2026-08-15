@@ -2147,6 +2147,7 @@
     }
   },
   "matchedInDescription": "In Beschreibung gefunden",
+  "matchedInProjectNotes": "In DAW-Projektnotizen gefunden",
   "newerExportFound": "Neuerer Export gefunden",
   "newerExportFoundMessage": "Im selben Ordner wurde eine neuere Datei gefunden:\n{filename}\n\nVorschausong ersetzen?",
   "replaceAndPlay": "Ersetzen & Abspielen",

@@ -12,9 +12,19 @@ void main() {
       expect(fuzzyContains('chillout vibes', 'chillout vibes'), isTrue);
     });
 
-    test('characters in order with gaps match', () {
-      // 'chilvib' matches 'Chillout Vibes' (c-h-i-l-...-v-i-b)
+    test('plain substring match returns true', () {
+      expect(fuzzyContains('chillout vibes', 'llout vi'), isTrue);
+    });
+
+    test('word-anchored chunks with gaps match', () {
+      // 'chilvib' matches 'chillout vibes' as chil|lout + vib|es — each chunk
+      // starts on a word's first character.
       expect(fuzzyContains('chillout vibes', 'chilvib'), isTrue);
+    });
+
+    test('characters may be skipped inside a single word', () {
+      // 'chl' is c-h-l within 'chillout', anchored at its first character.
+      expect(fuzzyContains('chillout vibes', 'chl'), isTrue);
     });
 
     test('characters out of order do not match', () {
@@ -41,6 +51,80 @@ void main() {
     test('single non-matching character returns false', () {
       expect(fuzzyContains('bass', 'z'), isFalse);
     });
+
+    test('a chunk may not start mid-word', () {
+      // 'hilvib': 'hil' is inside 'chillout' but does not start it, and the
+      // whole pattern is not a substring either.
+      expect(fuzzyContains('chillout vibes', 'hilvib'), isFalse);
+    });
+
+    test('a chunk must come from a later word than the previous one', () {
+      // 'drumdrum' would need the single word 'drum' to supply both chunks.
+      expect(fuzzyContains('drum loop', 'drumdrum'), isFalse);
+      // …but two separate words can.
+      expect(fuzzyContains('drum drums', 'drumdrum'), isTrue);
+    });
+
+    test('single-character chunks are rejected (no acronym matching)', () {
+      // s-h-a-r-e-d as one letter per word is exactly the class of false
+      // positive this matcher exists to prevent.
+      expect(
+        fuzzyContains('super happy awesome rock elephant dance', 'shared'),
+        isFalse,
+      );
+    });
+
+    test('separators other than whitespace start words', () {
+      expect(fuzzyContains('bass_track-01 (final).als', 'batr'), isTrue);
+      expect(fuzzyContains('bass_track-01 (final).als', 'baalsx'), isFalse);
+    });
+
+    test('very long query words still match as a plain substring', () {
+      // Past the fuzzy fallback's length cap, substring matching must still
+      // work rather than silently returning false.
+      final long = 'a' * 40;
+      expect(fuzzyContains('prefix $long suffix', long), isTrue);
+      expect(fuzzyContains('prefix suffix', long), isFalse);
+    });
+  });
+
+  group('regression: issue #102 false positives', () {
+    const royksopp =
+        '2026_022_01 - royksopp - what else is there (audio crawler remix).cpr';
+
+    test('"shared" does not match an unrelated project filename', () {
+      // Reported case: a pure subsequence test scavenged s-h-a-r-e-d out of
+      // roykSopp / wHat / whAt / theRe / therE / auDio — six unrelated words.
+      expect(fuzzyContains(royksopp, 'shared'), isFalse);
+      expect(fuzzyMatchAll(royksopp, 'shared'), isFalse);
+    });
+
+    test('"shared" does not match a description containing only "sh"', () {
+      expect(fuzzyContains('sh', 'shared'), isFalse);
+      expect(fuzzyMatchAll('sh', 'shared'), isFalse);
+      expect(fuzzyMatchAll('sh and other words here', 'shared'), isFalse);
+    });
+
+    test('longer queries narrow the results instead of widening them', () {
+      // Under the old subsequence test, every one of these got *more* likely
+      // to match as the query grew, because a long filename has more spare
+      // letters to scavenge.
+      expect(fuzzyMatchAll(royksopp, 'what'), isTrue);
+      expect(fuzzyMatchAll(royksopp, 'whatever'), isFalse);
+      expect(fuzzyMatchAll(royksopp, 'audio'), isTrue);
+      expect(fuzzyMatchAll(royksopp, 'audiophile'), isFalse);
+    });
+
+    test('the documented good case still matches', () {
+      expect(fuzzyContains('chillout vibes', 'chilvib'), isTrue);
+      expect(fuzzyMatchAll('Chillout Vibes', 'chilvib'), isTrue);
+    });
+
+    test('a real word in the filename still matches', () {
+      expect(fuzzyMatchAll(royksopp, 'crawler'), isTrue);
+      expect(fuzzyMatchAll(royksopp, 'audio crawler'), isTrue);
+      expect(fuzzyMatchAll(royksopp, 'royksopp remix'), isTrue);
+    });
   });
 
   group('fuzzyMatchAll', () {
@@ -52,7 +136,7 @@ void main() {
       expect(fuzzyMatchAll('Bass Track', '   '), isTrue);
     });
 
-    test('single word fuzzy-matches', () {
+    test('single word matches', () {
       expect(fuzzyMatchAll('BassTrack 2025', 'bass'), isTrue);
     });
 
@@ -61,7 +145,7 @@ void main() {
       expect(fuzzyMatchAll('MY DRUM LOOP', 'drum loop'), isTrue);
     });
 
-    test('multi-word query requires every word to fuzzy-match', () {
+    test('multi-word query requires every word to match', () {
       expect(fuzzyMatchAll('Chillout Vibes', 'chl vib'), isTrue);
     });
 
@@ -78,7 +162,7 @@ void main() {
       expect(fuzzyMatchAll('', 'bass'), isFalse);
     });
 
-    test('all words must independently fuzzy-match the same text', () {
+    test('all words must independently match the same text', () {
       // "idea" → matches "Idea project"; "proj" → matches "Idea project"
       expect(fuzzyMatchAll('Idea project', 'idea proj'), isTrue);
       // "zzz" → no match
@@ -100,6 +184,42 @@ void main() {
         expect(fuzzyMatchAll('Drum Loop', 'drum'), isTrue);
         expect(fuzzyMatchAll('Drum Loop', 'bass'), isFalse);
       }
+    });
+  });
+
+  group('fuzzyMatchAny', () {
+    test('matches when any single field matches', () {
+      expect(fuzzyMatchAny(['Bass Track', 'some notes'], 'bass'), isTrue);
+      expect(fuzzyMatchAny(['Bass Track', 'some notes'], 'notes'), isTrue);
+    });
+
+    test('null and empty fields are skipped', () {
+      expect(fuzzyMatchAny(['Bass Track', null, ''], 'bass'), isTrue);
+      expect(fuzzyMatchAny([null, '', 'reverb tail'], 'reverb'), isTrue);
+      expect(fuzzyMatchAny([null, ''], 'bass'), isFalse);
+    });
+
+    test('returns false when no field matches', () {
+      expect(fuzzyMatchAny(['Bass Track', 'some notes'], 'xyz'), isFalse);
+    });
+
+    test('every query word must match the SAME field', () {
+      // "bass" only appears in the title and "reverb" only in the notes —
+      // matching them across two different fields would be a false positive.
+      expect(
+        fuzzyMatchAny(['Bass Track', 'add reverb'], 'bass reverb'),
+        isFalse,
+      );
+      expect(
+        fuzzyMatchAny(['Bass Track', 'bass needs reverb'], 'bass reverb'),
+        isTrue,
+      );
+    });
+
+    test('empty query matches even with no searchable fields', () {
+      expect(fuzzyMatchAny([null, ''], ''), isTrue);
+      expect(fuzzyMatchAny([], ''), isTrue);
+      expect(fuzzyMatchAny([], 'bass'), isFalse);
     });
   });
 }
