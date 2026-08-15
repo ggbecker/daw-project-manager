@@ -23,6 +23,7 @@ import '../utils/phase_colors.dart';
 import '../generated/l10n/app_localizations.dart';
 import '../models/music_project.dart';
 import '../services/audio_analysis_service.dart';
+import '../services/thumbnail_toolbar_service.dart';
 import '../services/waveform_disk_cache.dart';
 import '../models/waveform_style.dart';
 import '../models/scan_root.dart';
@@ -2349,6 +2350,21 @@ final desktopIsPlayingProvider =
     NotifierProvider<DesktopIsPlayingNotifier, bool>(
       DesktopIsPlayingNotifier.new,
     );
+
+/// What the Windows taskbar thumbnail toolbar should show, derived from the
+/// desktop preview player.
+///
+/// Deliberately a single derived provider rather than two listeners on
+/// [desktopPlayerProvider] and [desktopIsPlayingProvider]: those two change
+/// together on every play/pause and every track switch, so listening to both
+/// fired the native shell call twice per user action. `Provider` only notifies
+/// when the computed value actually differs, which collapses that to one.
+/// See issue #119.
+final thumbnailToolbarStateProvider = Provider<ThumbnailToolbarState>((ref) {
+  final request = ref.watch(desktopPlayerProvider);
+  final isPlaying = ref.watch(desktopIsPlayingProvider);
+  return ThumbnailToolbarState(visible: request != null, isPlaying: isPlaying);
+});
 
 /// Live playback position of the desktop player's current track, kept in
 /// sync by _DesktopPlayerBarState. Lets other widgets that don't own the

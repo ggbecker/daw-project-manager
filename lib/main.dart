@@ -40,6 +40,7 @@ import 'services/tray_notice.dart';
 import 'services/tray_service.dart';
 import 'services/folder_watcher_service.dart';
 import 'services/auto_start_service.dart';
+import 'services/thumbnail_toolbar_service.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'models/auto_backup_interval.dart';
 import 'utils/app_paths.dart';
@@ -1039,39 +1040,13 @@ void _registerThumbnailToolbarHandler() {
   });
 }
 
-/// Updates the Windows taskbar thumbnail toolbar (a single hover-preview
-/// play/pause button) to reflect the current preview player state. Hidden
-/// entirely when nothing is loaded.
-void _updateThumbnailToolbar(WidgetRef ref) {
-  if (kIsWeb || !Platform.isWindows) return;
-  final request = ref.read(desktopPlayerProvider);
-  if (request == null) {
-    _taskbarChannel
-        .invokeMethod('ResetThumbnailToolbar', <String, Object?>{})
-        .catchError((Object e) {
-          if (kDebugMode)
-            print('[ThumbnailToolbar] ResetThumbnailToolbar failed: $e');
-        });
-    return;
-  }
-  final isPlaying = ref.read(desktopIsPlayingProvider);
-  final playPausePath = _taskbarIconPaths[isPlaying ? 'pause' : 'play'];
-  if (playPausePath == null) return;
-  _taskbarChannel
-      .invokeMethod('SetThumbnailToolbar', <String, Object?>{
-        'buttons': [
-          {
-            'icon': playPausePath,
-            'tooltip': isPlaying ? 'Pause' : 'Play',
-            'mode': 0,
-          },
-        ],
-      })
-      .catchError((Object e) {
-        if (kDebugMode)
-          print('[ThumbnailToolbar] SetThumbnailToolbar failed: $e');
-      });
-}
+/// Pushes thumbnail toolbar state (a single hover-preview play/pause button)
+/// to the Windows shell, deduplicated and debounced — see the class docs and
+/// issue #119 for why both matter.
+final _thumbnailToolbar = ThumbnailToolbarController(
+  channel: _taskbarChannel,
+  resolveIcon: (isPlaying) => _taskbarIconPaths[isPlaying ? 'pause' : 'play'],
+);
 
 /// Updates the Windows taskbar overlay icon to reflect session state.
 void _updateTaskbarStatus({required bool hasSession, required bool isPaused}) {
@@ -1237,10 +1212,12 @@ class _DawProjectManagerAppState extends ConsumerState<DawProjectManagerApp>
       });
       // Thumbnail toolbar: a single hover-preview play/pause button —
       // reflects the desktop preview player, not the work-session timer.
-      ref.listen(desktopPlayerProvider, (_, _) => _updateThumbnailToolbar(ref));
+      // One listener on the derived state, not one per input provider: the
+      // two inputs change together, and pushing twice per user action is what
+      // made the shell fall over (#119).
       ref.listen(
-        desktopIsPlayingProvider,
-        (_, _) => _updateThumbnailToolbar(ref),
+        thumbnailToolbarStateProvider,
+        (_, next) => _thumbnailToolbar.update(next),
       );
     }
 
