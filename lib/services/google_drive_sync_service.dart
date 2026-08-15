@@ -4699,6 +4699,29 @@ class GoogleDriveSyncService {
       }
     }
 
+    // Merge TODO templates (global, not per-profile) - same newer-wins rule as
+    // project templates below. These are uploaded in every backup under
+    // 'templates'; without this block they were silently dropped on restore.
+    if (remoteData['templates'] != null) {
+      try {
+        final remoteTemplates = (remoteData['templates'] as List)
+            .map((t) => _deserializeTemplate(t as Map<String, dynamic>))
+            .toList();
+        final templatesBox = await Hive.openBox<TodoTemplate>('todoTemplates');
+        for (final remoteTemplate in remoteTemplates) {
+          final localTemplate = templatesBox.get(remoteTemplate.id);
+          if (localTemplate == null || remoteTemplate.updatedAt.isAfter(localTemplate.updatedAt)) {
+            await templatesBox.put(remoteTemplate.id, remoteTemplate);
+          }
+        }
+        if (kDebugMode) {
+          print('  TODO templates: ${templatesBox.length} after merge');
+        }
+      } catch (e) {
+        if (kDebugMode) print('Error merging TODO templates: $e');
+      }
+    }
+
     // Merge project templates (global, not per-profile) - remote wins per id only
     // when it's newer, so a local template created/edited since the last backup
     // isn't clobbered by an older remote copy.

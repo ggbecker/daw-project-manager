@@ -10,6 +10,7 @@ import 'package:hive_ce/hive.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 import 'package:daw_project_manager/models/profile.dart';
+import 'package:daw_project_manager/models/todo_template.dart';
 import 'package:daw_project_manager/repository/profile_repository.dart';
 import 'package:daw_project_manager/repository/project_repository.dart';
 import 'package:daw_project_manager/services/google_drive_sync_service.dart';
@@ -310,6 +311,211 @@ void main() {
         jsonDecode(appSettingsBox.get('${profile.id}_phases')!),
         ['Local Idea', 'Local Done'],
       );
+    });
+  });
+
+  group('GoogleDriveSyncService.mergeData - TODO templates', () {
+    // Regression for #96: TODO templates were serialized into every backup
+    // under 'templates', but mergeData had no block reading that key back —
+    // _deserializeTemplate had no caller at all. Restoring onto a fresh
+    // machine brought back everything except the user's TODO templates.
+    late Directory tempDir;
+    late ProjectRepository projectRepo;
+    late ProfileRepository profileRepo;
+    late Box<TodoTemplate> templatesBox;
+
+    /// The wire shape produced by `_serializeTemplate` on the upload side.
+    Map<String, dynamic> remoteTemplate({
+      required String id,
+      required String name,
+      required List<String> items,
+      required DateTime updatedAt,
+    }) {
+      return {
+        'id': id,
+        'name': name,
+        'items': items,
+        'createdAt': DateTime(2025, 1, 1).toIso8601String(),
+        'updatedAt': updatedAt.toIso8601String(),
+      };
+    }
+
+    setUp(() async {
+      tempDir = await HiveTestHelper.setUp();
+      if (!Hive.isAdapterRegistered(5)) Hive.registerAdapter(ProfileAdapter());
+      projectRepo = await HiveTestHelper.createRepository();
+      final profilesBox = await Hive.openBox<Profile>('profiles');
+      final settingsBox = await Hive.openBox<String>('settings');
+      profileRepo = ProfileRepository(profilesBox: profilesBox, settingsBox: settingsBox);
+      await profileRepo.createProfile('Test Profile');
+      templatesBox = await Hive.openBox<TodoTemplate>('todoTemplates');
+    });
+
+    tearDown(() async {
+      await HiveTestHelper.tearDown(tempDir);
+    });
+
+    test('restores TODO templates onto a machine that has none', () async {
+      final service = GoogleDriveSyncService();
+      await service.mergeData(
+        remoteData: {
+          'templates': [
+            remoteTemplate(
+              id: 'tpl-1',
+              name: 'Mixing checklist',
+              items: ['Balance levels', 'Check mono'],
+              updatedAt: DateTime(2025, 6, 1),
+            ),
+          ],
+        },
+        projectRepo: projectRepo,
+        profileRepo: profileRepo,
+      );
+
+      final restored = templatesBox.get('tpl-1');
+      expect(restored, isNotNull);
+      expect(restored!.name, 'Mixing checklist');
+      expect(restored.items, ['Balance levels', 'Check mono']);
+      expect(restored.createdAt, DateTime(2025, 1, 1));
+      expect(restored.updatedAt, DateTime(2025, 6, 1));
+    });
+
+    test('is keyed by template id so a re-merge updates in place', () async {
+      final service = GoogleDriveSyncService();
+      final payload = {
+        'templates': [
+          remoteTemplate(
+            id: 'tpl-1',
+            name: 'Mixing checklist',
+            items: ['Balance levels'],
+            updatedAt: DateTime(2025, 6, 1),
+          ),
+        ],
+      };
+
+      await service.mergeData(
+          remoteData: payload, projectRepo: projectRepo, profileRepo: profileRepo);
+      await service.mergeData(
+          remoteData: payload, projectRepo: projectRepo, profileRepo: profileRepo);
+
+      expect(templatesBox.length, 1);
+    });
+
+    test('a newer remote template overwrites the local copy', () async {
+      await templatesBox.put(
+        'tpl-1',
+        TodoTemplate(
+          id: 'tpl-1',
+          name: 'Old name',
+          items: ['Old item'],
+          createdAt: DateTime(2025, 1, 1),
+          updatedAt: DateTime(2025, 3, 1),
+        ),
+      );
+
+      final service = GoogleDriveSyncService();
+      await service.mergeData(
+        remoteData: {
+          'templates': [
+            remoteTemplate(
+              id: 'tpl-1',
+              name: 'New name',
+              items: ['New item'],
+              updatedAt: DateTime(2025, 6, 1),
+            ),
+          ],
+        },
+        projectRepo: projectRepo,
+        profileRepo: profileRepo,
+      );
+
+      expect(templatesBox.get('tpl-1')!.name, 'New name');
+    });
+
+    test('an older remote template does not clobber a locally edited one', () async {
+      await templatesBox.put(
+        'tpl-1',
+        TodoTemplate(
+          id: 'tpl-1',
+          name: 'Edited locally',
+          items: ['Local item'],
+          createdAt: DateTime(2025, 1, 1),
+          updatedAt: DateTime(2025, 9, 1),
+        ),
+      );
+
+      final service = GoogleDriveSyncService();
+      await service.mergeData(
+        remoteData: {
+          'templates': [
+            remoteTemplate(
+              id: 'tpl-1',
+              name: 'Stale backup copy',
+              items: ['Stale item'],
+              updatedAt: DateTime(2025, 6, 1),
+            ),
+          ],
+        },
+        projectRepo: projectRepo,
+        profileRepo: profileRepo,
+      );
+
+      final kept = templatesBox.get('tpl-1')!;
+      expect(kept.name, 'Edited locally');
+      expect(kept.items, ['Local item']);
+    });
+
+    test('keeps local-only templates that are absent from the backup', () async {
+      await templatesBox.put(
+        'local-only',
+        TodoTemplate(
+          id: 'local-only',
+          name: 'Never backed up',
+          items: ['x'],
+          createdAt: DateTime(2025, 1, 1),
+          updatedAt: DateTime(2025, 1, 1),
+        ),
+      );
+
+      final service = GoogleDriveSyncService();
+      await service.mergeData(
+        remoteData: {
+          'templates': [
+            remoteTemplate(
+              id: 'tpl-1',
+              name: 'From backup',
+              items: ['y'],
+              updatedAt: DateTime(2025, 6, 1),
+            ),
+          ],
+        },
+        projectRepo: projectRepo,
+        profileRepo: profileRepo,
+      );
+
+      expect(templatesBox.keys.toSet(), {'local-only', 'tpl-1'});
+    });
+
+    test('a backup with no templates key leaves local templates untouched', () async {
+      await templatesBox.put(
+        'tpl-1',
+        TodoTemplate(
+          id: 'tpl-1',
+          name: 'Kept',
+          items: ['x'],
+          createdAt: DateTime(2025, 1, 1),
+          updatedAt: DateTime(2025, 1, 1),
+        ),
+      );
+
+      final service = GoogleDriveSyncService();
+      await service.mergeData(
+        remoteData: {},
+        projectRepo: projectRepo,
+        profileRepo: profileRepo,
+      );
+
+      expect(templatesBox.get('tpl-1')!.name, 'Kept');
     });
   });
 
