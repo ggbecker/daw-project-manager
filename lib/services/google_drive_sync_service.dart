@@ -25,7 +25,14 @@ import '../models/template_root.dart';
 import '../models/backup_progress.dart';
 import '../repository/profile_repository.dart';
 import '../repository/project_repository.dart';
-import '../utils/app_paths.dart' show ensureHiveInitialized, getLocalAppDataPath, getPreviewSongsPath, getReleaseArtworkPath;
+import '../utils/app_paths.dart'
+    show
+        appDataDirName,
+        ensureHiveInitialized,
+        getLocalAppDataPath,
+        getPreviewSongsPath,
+        getReleaseArtworkPath,
+        isUsingIsolatedAppData;
 import '../config/oauth_config.dart' show desktopClientSecret, desktopClientId, androidWebClientId;
 
 /// Exception thrown when user cancels an upload operation
@@ -76,7 +83,16 @@ class GoogleDriveSyncService {
   }) =>
       isLinux && flatpakInfoExists;
 
-  static const String _appDataFolderName = 'DAW Project Manager';
+  /// Drive folder this build syncs into.
+  ///
+  /// An isolated build (a pull-request build handed to a tester, or a local
+  /// dev run — see [appDataDirName]) gets its own folder. Without this, a
+  /// tester signing in from a PR build would overwrite the real
+  /// `database_backup.json` of the stable app they already use: isolating the
+  /// on-disk library alone would still leave their cloud backup exposed.
+  static String get _appDataFolderName => isUsingIsolatedAppData
+      ? 'DAW Project Manager ($appDataDirName)'
+      : 'DAW Project Manager';
   static const String _databaseFileName = 'database_backup.json';
   static const String _metadataFileName = 'sync_metadata.json';
   static const String _credentialsStorageKey = 'google_drive_credentials_json';

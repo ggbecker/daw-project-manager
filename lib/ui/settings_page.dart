@@ -14,6 +14,8 @@ import '../providers/theme_provider.dart';
 import '../repository/project_repository.dart';
 import '../services/auto_start_service.dart';
 import '../services/backup_service.dart';
+import '../utils/app_paths.dart' show canPickAppDataDir;
+import 'dev_library_picker.dart' show DevLibraryCard;
 import '../services/crash_logger.dart';
 import '../services/google_drive_sync_service.dart' show GoogleDriveSyncService;
 import '../services/mixdown_detector_service.dart';
@@ -1260,7 +1262,18 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     final startMinimized = ref.watch(startMinimizedProvider);
     final currentLocale = ref.watch(localeProvider);
 
-    return Card(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Only ever built in a build that may choose its library, i.e. run
+        // from source. Release builds — including the pull-request builds
+        // handed to testers, which are pinned to their own directory — never
+        // show the picker, so they have nothing to reset here either.
+        if (canPickAppDataDir) ...[
+          const DevLibraryCard(),
+          const SizedBox(height: 12),
+        ],
+        Card(
       clipBehavior: Clip.antiAlias,
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -1430,6 +1443,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           ],
         ),
       ),
+        ),
+      ],
     );
   }
 

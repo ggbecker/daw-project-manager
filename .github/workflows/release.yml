@@ -25,6 +25,15 @@ env:
   # Check https://github.com/TheAppgineer/flatpak-flutter/releases before bumping.
   FLATPAK_FLUTTER_VERSION: '0.15.0'
 
+  # Pull-request builds are uploaded as real installers for testers, and they
+  # are --release builds, so nothing about the build mode keeps them away from
+  # the library of the stable app a tester already has installed. A newer Hive
+  # type written by a PR build makes that stable app unreadable ("Cannot read,
+  # unknown typeId"), so every PR build is pinned to its own app-data
+  # directory — and, via the same name, its own Drive folder. Empty on the
+  # far side of the equals sign for tag builds, which must stay on the real one.
+  DATA_DIR_ARG: "${{ github.event_name == 'pull_request' && format('--dart-define=DPM_DATA_DIR=daw_project_manager_pr{0}', github.event.number) || '' }}"
+
 # 2. Jobs
 jobs:
   # Unit Tests — runs on PRs, push to main, and tag releases
@@ -130,7 +139,7 @@ jobs:
         run: flutter precache
 
       - name: Build Test
-        run: flutter build windows --release
+        run: flutter build windows --release ${{ env.DATA_DIR_ARG }}
 
 
   # Job UNIFICADO de Release/Upload (usando Matrix para Windows e macOS)
@@ -318,7 +327,9 @@ jobs:
           VERSION_NAME="${{ steps.build_version.outputs.version_name }}"
           VERSION_CODE="${{ steps.build_version.outputs.version_code }}"
           EXTRA_ARGS="--build-name=${VERSION_NAME} --build-number=${VERSION_CODE} --dart-define=APP_VERSION=${VERSION_NAME}"
-          ${{ matrix.command }} ${EXTRA_ARGS}
+          # DATA_DIR_ARG is empty for tag builds and pins PR builds to their
+          # own app-data directory; see the workflow-level env block.
+          ${{ matrix.command }} ${EXTRA_ARGS} ${DATA_DIR_ARG}
       
       # 4a. Code Sign macOS App Bundle (for DMG and ZIP) - MUST BE BEFORE ZIP/DMG CREATION
       # Note: If secrets are not set, signing will be skipped (useful for testing)
@@ -645,7 +656,7 @@ jobs:
         run: |
           VERSION_NAME="${{ steps.build_version.outputs.version_name }}"
           VERSION_CODE="${{ steps.build_version.outputs.version_code }}"
-          flutter build linux --release --build-name="${VERSION_NAME}" --build-number="${VERSION_CODE}" --dart-define=APP_VERSION="${VERSION_NAME}"
+          flutter build linux --release --build-name="${VERSION_NAME}" --build-number="${VERSION_CODE}" --dart-define=APP_VERSION="${VERSION_NAME}" ${DATA_DIR_ARG}
 
       - name: Package tarball
         id: package
@@ -1073,7 +1084,7 @@ jobs:
       - name: Build Android APK - PR Test (unsigned)
         if: github.event_name == 'pull_request'
         run: |
-          flutter build apk --debug --build-name "${{ steps.version.outputs.version_name }}" --build-number "${{ steps.version.outputs.version_code }}" --dart-define=APP_VERSION="${{ steps.version.outputs.version_name }}"
+          flutter build apk --debug --build-name "${{ steps.version.outputs.version_name }}" --build-number "${{ steps.version.outputs.version_code }}" --dart-define=APP_VERSION="${{ steps.version.outputs.version_name }}" ${DATA_DIR_ARG}
         continue-on-error: true
 
       - name: Build Android APK - Release (for testing)

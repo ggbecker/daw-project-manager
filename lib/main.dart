@@ -46,6 +46,7 @@ import 'utils/app_paths.dart';
 import 'utils/mobile_utils.dart';
 
 import 'ui/dashboard_page.dart';
+import 'ui/dev_library_picker.dart';
 import 'ui/dialogs/create_project_dialog.dart';
 import 'ui/onboarding_wizard_page.dart';
 import 'ui/project_detail_page.dart';
@@ -713,6 +714,12 @@ Future<void> _main(List<String> args) async {
       await windowManager.focus();
     });
   }
+
+  // Dev builds ask which library to open. This has to happen here — before
+  // the first ensureHiveInitialized() below — because every path the app uses
+  // is derived from the chosen directory. No-ops in release builds and in
+  // pull-request builds, which are pinned to their own directory instead.
+  await maybePickAppDataLibrary();
 
   // Pre-open the settings box so providers can read it synchronously on first build.
   await ensureHiveInitialized();

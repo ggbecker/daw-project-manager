@@ -1,0 +1,148 @@
+import 'dart:io';
+
+import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as p;
+
+import 'package:daw_project_manager/services/dev_library_service.dart';
+import 'package:daw_project_manager/utils/app_paths.dart';
+
+void main() {
+  late Directory root;
+
+  setUp(() async {
+    root = await Directory.systemTemp.createTemp('dev_library_test_');
+  });
+
+  tearDown(() async {
+    if (await root.exists()) await root.delete(recursive: true);
+  });
+
+  Directory makeLibrary(String name, {Map<String, int> boxes = const {}}) {
+    final dir = Directory(p.join(root.path, name))..createSync(recursive: true);
+    boxes.forEach((fileName, size) {
+      File(p.join(dir.path, fileName)).writeAsBytesSync(List.filled(size, 0));
+    });
+    return dir;
+  }
+
+  group('discover', () {
+    test('always offers the release and dev libraries, release first', () {
+      final found = DevLibraryService.discover(root);
+
+      expect(found.map((l) => l.dirName).take(2),
+          [defaultAppDataDirName, '${defaultAppDataDirName}_dev']);
+      expect(found.first.isRelease, isTrue);
+    });
+
+    test('marks libraries that do not exist yet', () {
+      final found = DevLibraryService.discover(root);
+
+      expect(found.every((l) => !l.exists), isTrue);
+    });
+
+    test('picks up per-pull-request directories left by tester builds', () {
+      makeLibrary('${defaultAppDataDirName}_pr90');
+      makeLibrary('${defaultAppDataDirName}_pr123');
+
+      final names = DevLibraryService.discover(root).map((l) => l.dirName);
+
+      expect(names, contains('${defaultAppDataDirName}_pr90'));
+      expect(names, contains('${defaultAppDataDirName}_pr123'));
+    });
+
+    test('ignores unrelated directories', () {
+      makeLibrary('some_other_app');
+      makeLibrary('daw_project_managerX'); // no underscore separator
+
+      final names = DevLibraryService.discover(root).map((l) => l.dirName);
+
+      expect(names, isNot(contains('some_other_app')));
+      expect(names, isNot(contains('daw_project_managerX')));
+    });
+
+    test('counts project boxes and total size', () {
+      makeLibrary(defaultAppDataDirName, boxes: {
+        'profile-a_projects.hive': 100,
+        'profile-b_projects.hive': 200,
+        'profile-a_releases.hive': 50,
+        'settings.hive': 25,
+      });
+
+      final release = DevLibraryService.discover(root)
+          .firstWhere((l) => l.dirName == defaultAppDataDirName);
+
+      expect(release.exists, isTrue);
+      expect(release.projectBoxCount, 2,
+          reason: 'only *_projects boxes count towards the project box count');
+      expect(release.totalBytes, 375);
+      expect(release.lastModified, isNotNull);
+    });
+
+    test('a library with no boxes reports zero rather than failing', () {
+      makeLibrary('${defaultAppDataDirName}_dev');
+
+      final dev = DevLibraryService.discover(root)
+          .firstWhere((l) => l.dirName == '${defaultAppDataDirName}_dev');
+
+      expect(dev.exists, isTrue);
+      expect(dev.projectBoxCount, 0);
+      expect(dev.totalBytes, 0);
+    });
+
+    test('an empty or missing root still yields the two defaults', () {
+      final missing = Directory(p.join(root.path, 'nope'));
+
+      expect(DevLibraryService.discover(missing).length, 2);
+    });
+  });
+
+  group('selection file', () {
+    test('returns null when nothing has been remembered', () {
+      expect(DevLibraryService.readSelection(root), isNull);
+    });
+
+    test('round-trips a remembered choice', () {
+      DevLibraryService.writeSelection(root, '${defaultAppDataDirName}_dev');
+
+      expect(DevLibraryService.readSelection(root),
+          '${defaultAppDataDirName}_dev');
+    });
+
+    test('is stored beside the libraries, not inside one', () {
+      // Which library is in play is exactly what this records, so it cannot
+      // live inside a library directory.
+      DevLibraryService.writeSelection(root, defaultAppDataDirName);
+
+      expect(
+        File(p.join(root.path, DevLibraryService.selectionFileName)).existsSync(),
+        isTrue,
+      );
+    });
+
+    test('writing null clears the choice so the picker asks again', () {
+      DevLibraryService.writeSelection(root, defaultAppDataDirName);
+      DevLibraryService.writeSelection(root, null);
+
+      expect(DevLibraryService.readSelection(root), isNull);
+    });
+
+    test('an empty file reads as no choice', () {
+      File(p.join(root.path, DevLibraryService.selectionFileName))
+          .writeAsStringSync('   ');
+
+      expect(DevLibraryService.readSelection(root), isNull);
+    });
+
+    test('clearing a choice that was never made is harmless', () {
+      expect(() => DevLibraryService.writeSelection(root, null), returnsNormally);
+    });
+  });
+
+  group('formatBytes', () {
+    test('scales through B, KB and MB', () {
+      expect(DevLibraryService.formatBytes(512), '512 B');
+      expect(DevLibraryService.formatBytes(2048), '2 KB');
+      expect(DevLibraryService.formatBytes(5 * 1024 * 1024), '5.0 MB');
+    });
+  });
+}
