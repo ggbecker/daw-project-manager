@@ -1949,6 +1949,45 @@ class AppLocalizationsJa extends AppLocalizations {
   String get themeSettingDescription => 'アプリのカラーテーマです。';
 
   @override
+  String get waveformStyle => '波形スタイル';
+
+  @override
+  String get waveformStyleSettingDescription => 'オーディオプレビューの波形の描画方法。';
+
+  @override
+  String get waveformStyleDetailed => '詳細';
+
+  @override
+  String get waveformStyleDetailedDescription => 'DAW のようなピクセル単位のバーと陰影のある本体。';
+
+  @override
+  String get waveformStyleClassic => 'クラシック';
+
+  @override
+  String get waveformStyleClassicDescription => '塗りつぶしの輪郭のみ。';
+
+  @override
+  String get waveformChannels => 'チャンネル';
+
+  @override
+  String get waveformChannelsSettingDescription => '波形でステレオを 2 段に分けて表示するかどうか。';
+
+  @override
+  String get waveformChannelsSingle => 'シングル';
+
+  @override
+  String get waveformChannelsDual => 'デュアル';
+
+  @override
+  String get waveformChannelsSingleDescription => 'ステレオをミックスした 1 段表示。';
+
+  @override
+  String get waveformChannelsDualDescription => '左右を別々の段に分けて表示。';
+
+  @override
+  String get waveformChannelsUnavailable => 'このファイルは 1 チャンネルのみです';
+
+  @override
   String get support => 'サポート';
 
   @override

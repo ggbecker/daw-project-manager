@@ -9264,6 +9264,19 @@ class _PreviewSongDialogState extends ConsumerState<_PreviewSongDialog> {
 
 // ─── Desktop embedded bottom player ──────────────────────────────────────────
 
+/// Smallest the desktop player bar may be dragged to.
+const double kDesktopPlayerMinHeight = 100.0;
+
+/// Tallest the desktop player bar may be dragged to, for a window of
+/// [windowHeight].
+///
+/// Proportional rather than a fixed number so a large display can actually
+/// give two stereo lanes room, while a short window can never end up with a
+/// player that leaves nothing for the project list. The absolute ceiling stops
+/// it running away on a very tall monitor.
+double desktopPlayerMaxHeight(double windowHeight) =>
+    (windowHeight * 0.6).clamp(kDesktopPlayerMinHeight + 20.0, 720.0);
+
 class _DesktopPlayerBar extends ConsumerStatefulWidget {
   final DesktopPlayerRequest request;
   const _DesktopPlayerBar({super.key, required this.request});
@@ -9701,10 +9714,16 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
           elevation: 8,
           color: theme.cardColor,
           child: SizedBox(
-            height: _barHeight,
+            height: _barHeight.clamp(
+              kDesktopPlayerMinHeight,
+              desktopPlayerMaxHeight(MediaQuery.sizeOf(context).height),
+            ),
             child: Column(
               children: [
-                // Resize grip — drag upward to make the player taller (max 300px)
+                // Resize grip — drag upward to make the player taller. The
+                // ceiling scales with the window rather than being a fixed
+                // 300 px: two stereo lanes plus the transport chrome need real
+                // height before each lane is worth reading.
                 MouseRegion(
                   cursor: SystemMouseCursors.resizeUpDown,
                   child: GestureDetector(
@@ -9712,8 +9731,9 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
                     onVerticalDragUpdate: (details) {
                       setState(() {
                         _barHeight = (_barHeight - details.delta.dy).clamp(
-                          100.0,
-                          300.0,
+                          kDesktopPlayerMinHeight,
+                          desktopPlayerMaxHeight(
+                              MediaQuery.sizeOf(context).height),
                         );
                       });
                     },

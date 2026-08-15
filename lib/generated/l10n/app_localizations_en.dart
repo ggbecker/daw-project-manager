@@ -1986,6 +1986,50 @@ class AppLocalizationsEn extends AppLocalizations {
   String get themeSettingDescription => 'The app\'s color theme.';
 
   @override
+  String get waveformStyle => 'Waveform Style';
+
+  @override
+  String get waveformStyleSettingDescription =>
+      'How the audio preview waveform is drawn.';
+
+  @override
+  String get waveformStyleDetailed => 'Detailed';
+
+  @override
+  String get waveformStyleDetailedDescription =>
+      'Per-pixel bars with a shaded body, like a DAW.';
+
+  @override
+  String get waveformStyleClassic => 'Classic';
+
+  @override
+  String get waveformStyleClassicDescription => 'A single filled outline.';
+
+  @override
+  String get waveformChannels => 'Channels';
+
+  @override
+  String get waveformChannelsSettingDescription =>
+      'Whether the waveform splits stereo into two lanes.';
+
+  @override
+  String get waveformChannelsSingle => 'Single';
+
+  @override
+  String get waveformChannelsDual => 'Dual';
+
+  @override
+  String get waveformChannelsSingleDescription =>
+      'One lane showing the stereo mixdown.';
+
+  @override
+  String get waveformChannelsDualDescription =>
+      'Left and right stacked as separate lanes.';
+
+  @override
+  String get waveformChannelsUnavailable => 'This file has only one channel';
+
+  @override
   String get support => 'Support';
 
   @override

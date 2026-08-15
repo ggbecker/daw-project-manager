@@ -7,6 +7,8 @@ import 'package:flutter/services.dart' show MethodChannel;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import '../utils/mobile_utils.dart';
+
 /// Results of audio loudness & mastering analysis.
 class AudioAnalysisResult {
   /// Integrated loudness per ITU-R BS.1770-4 (LUFS / LKFS).
@@ -115,18 +117,16 @@ class AudioAnalysisService {
       }
     }
 
-    // Windows / Android / Linux — try ffmpeg if available in PATH.
+    // Windows / Linux — ffmpeg. Goes through [_runFfmpeg] so it picks up the
+    // copy bundled with the app on Windows; calling a bare `ffmpeg` here meant
+    // waveforms for these formats failed on every Windows machine without one
+    // on PATH, even though the installer ships the binary.
     const ffmpegSupported = {'mp3', 'flac', 'aif', 'aiff', 'ogg', 'aac', 'm4a'};
     if (ffmpegSupported.contains(ext)) {
       try {
-        final result = await Process.run('ffmpeg', [
+        return await _runFfmpeg([
           '-y', '-i', inputPath, '-ac', '1', '-f', 'wav', outputPath,
         ]);
-        if (result.exitCode != 0) {
-          debugPrint('[Mono] ffmpeg failed (${result.exitCode}): ${result.stderr}');
-          return false;
-        }
-        return true;
       } catch (e) {
         debugPrint('[Mono] ffmpeg not available: $e');
         return false;
@@ -194,7 +194,7 @@ class AudioAnalysisService {
 
     final result = await Process.run(await _resolveFfmpegCommand(), args);
     if (result.exitCode == 0) return true;
-    debugPrint('[ShareConvert] ffmpeg failed (${result.exitCode}): ${result.stderr}');
+    debugPrint('[ffmpeg] failed (${result.exitCode}): ${result.stderr}');
     return false;
   }
 
@@ -318,6 +318,59 @@ class AudioAnalysisService {
     return null;
   }
 
+  /// Test seam for the decode step of [extractWaveformPeaks]. Production
+  /// leaves this null, which selects [writeDecodedWavFile]; returning false
+  /// from it forces the decoder-free fallback even on a machine that has
+  /// ffmpeg installed. Reset to null in `tearDown`.
+  @visibleForTesting
+  static Future<bool> Function(String input, String output)? decoderOverride;
+
+  /// Decode [inputPath] to a WAV at [outputPath], keeping its channel layout.
+  ///
+  /// Distinct from [writeMonoWavFile], which downmixes on purpose for the
+  /// mono-compatibility check. Here the channels are the point: they are what
+  /// let the waveform renderer draw separate left/right lanes, and the decoded
+  /// PCM is what gives it true sample peaks and true RMS.
+  ///
+  /// Returns false when no decoder is reachable, which is the normal case on
+  /// Android and iOS — neither can spawn a subprocess.
+  static Future<bool> writeDecodedWavFile(
+    String inputPath,
+    String outputPath,
+  ) async {
+    final ext = inputPath.toLowerCase().split('.').last;
+    File(outputPath).parent.createSync(recursive: true);
+
+    if (Platform.isMacOS) {
+      const supported = {'mp3', 'flac', 'aif', 'aiff', 'aac', 'm4a'};
+      if (!supported.contains(ext)) return false;
+      try {
+        final result = await Process.run('afconvert', [
+          '-f', 'WAVE', '-d', 'LEI16', inputPath, outputPath,
+        ]);
+        if (result.exitCode == 0) return true;
+        debugPrint('[Decode] afconvert failed (${result.exitCode}): ${result.stderr}');
+      } catch (e) {
+        debugPrint('[Decode] afconvert exception: $e');
+      }
+      return false;
+    }
+
+    const ffmpegSupported = {
+      'mp3', 'flac', 'aif', 'aiff', 'ogg', 'aac', 'm4a',
+    };
+    if (!ffmpegSupported.contains(ext)) return false;
+    try {
+      // No -ac: whatever the source has is what we want to draw.
+      return await _runFfmpeg([
+        '-y', '-i', inputPath, '-f', 'wav', outputPath,
+      ]);
+    } catch (e) {
+      debugPrint('[Decode] ffmpeg not available: $e');
+      return false;
+    }
+  }
+
   /// Returns the channel count of a WAV file, or null for non-WAV / parse errors.
   static Future<int?> getChannelCount(String filePath) async {
     if (!filePath.toLowerCase().endsWith('.wav')) return null;
@@ -339,26 +392,25 @@ class AudioAnalysisService {
     }
   }
 
+  /// How many min/max frames a waveform is extracted at.
+  ///
+  /// The peaks are cached on disk under a key that is just the file path, so
+  /// this cannot adapt to the width of whatever widget ends up drawing them —
+  /// it has to be sized for the widest realistic case up front. 4096 gives at
+  /// least one frame per rendered column on a 4K-wide window, or a 1920 window
+  /// at 2× device-pixel ratio, which is what the per-pixel-column renderer in
+  /// `waveform_widget.dart` needs to look sharp rather than smeared.
+  static const int waveformFrameCount = 4096;
+
   /// Extract min/max peak data for waveform visualization.
   /// For MP3 files, uses a pure-Dart side-information parser (no ffmpeg required).
   /// For other non-WAV formats, converts to a temp mono WAV via ffmpeg/afconvert.
   /// Returns null if the file cannot be parsed.
   static Future<WaveformPeaks?> extractWaveformPeaks(
     String filePath, {
-    int targetFrames = 2000,
+    int targetFrames = waveformFrameCount,
   }) async {
     final ext = filePath.toLowerCase().split('.').last;
-
-    // Fast path: MP3 files are parsed directly from frame headers — no temp file,
-    // no external tools, works on every platform.
-    if (ext == 'mp3') {
-      try {
-        final peaks = await Isolate.run(
-            () => _extractMp3PeaksDirectIsolate(filePath, targetFrames));
-        if (peaks != null) return peaks;
-      } catch (_) {}
-      // Fall through to ffmpeg-based conversion if direct parsing failed.
-    }
 
     if (ext == 'wav') {
       try {
@@ -368,38 +420,140 @@ class AudioAnalysisService {
       }
     }
 
-    // Non-WAV, non-MP3: convert via afconvert (macOS) or ffmpeg (Windows/Linux).
-    final tmpDir = await getTemporaryDirectory();
-    final tmpPath = '${tmpDir.path}/wfpk_${filePath.hashCode.abs()}.wav';
-    final ok = await writeMonoWavFile(filePath, tmpPath);
-    if (!ok) return null;
-    try {
-      return await Isolate.run(() => _extractPeaksIsolate(tmpPath, targetFrames));
-    } catch (_) {
-      return null;
-    } finally {
-      try { File(tmpPath).deleteSync(); } catch (_) {}
+    // Everything else decodes to a temp WAV first, MP3 included.
+    //
+    // MP3 used to take a shortcut here, reading `global_gain` straight out of
+    // each granule's side information — no decoder, no temp file, works on
+    // mobile. The catch is that global_gain is a quantiser step, not an
+    // amplitude: it moves in fixed ~1.5 dB increments, one value per 576
+    // samples, so the envelope it produces is visibly stair-stepped and has
+    // none of the sample-level peak detail a real decode shows. That
+    // shortcut is now the *fallback*, taken only when no decoder can be
+    // reached — which on desktop means ffmpeg or afconvert is missing.
+    if (!MobileUtils.isMobile()) {
+      // Any failure here — no temp directory, no decoder, an unreadable
+      // result — must fall through to the decoder-free path rather than
+      // abort, so a broken toolchain costs quality, not the whole waveform.
+      try {
+        final tmpDir = await getTemporaryDirectory();
+        final tmpPath = '${tmpDir.path}/wfpk_${filePath.hashCode.abs()}.wav';
+        final decode = decoderOverride ?? writeDecodedWavFile;
+        if (await decode(filePath, tmpPath)) {
+          try {
+            final peaks = await Isolate.run(
+                () => _extractPeaksIsolate(tmpPath, targetFrames));
+            if (peaks != null) return peaks;
+          } finally {
+            try { File(tmpPath).deleteSync(); } catch (_) {}
+          }
+        }
+      } catch (e) {
+        debugPrint('[Waveform] decode path unavailable: $e');
+      }
     }
+
+    // No decoder available — every mobile build, and desktops without ffmpeg.
+    // MP3 is the only format that can still be approximated from headers.
+    if (ext == 'mp3') {
+      try {
+        return await Isolate.run(
+            () => _extractMp3PeaksDirectIsolate(filePath, targetFrames));
+      } catch (_) {
+        return null;
+      }
+    }
+    return null;
   }
 }
 
 // ─── Waveform peaks ──────────────────────────────────────────────────────────
 
+/// How many channels are kept as separate lanes. The renderer draws at most
+/// two (left/right); anything beyond that only exists in the mono mixdown.
+const int maxWaveformLanes = 2;
+
 /// Min/max peak data for each display frame, used to render a waveform.
 class WaveformPeaks {
   final List<double> minValues; // per-frame minimum sample (-1..0)
   final List<double> maxValues; // per-frame maximum sample (0..1)
+
+  /// Per-frame RMS (0..1), the *body* of the waveform as opposed to its peak
+  /// outline. Drawn as a second, inset layer — the gap between this and
+  /// [maxValues] is the crest factor, and it is what makes a dense mix read as
+  /// a solid mass with transients spiking out of it rather than as one flat
+  /// silhouette. Empty when the source could not supply it.
+  final List<double> rmsValues;
+
+  /// Per-channel envelopes, each the same length as [minValues], kept so the
+  /// renderer can draw left and right as separate lanes instead of collapsing
+  /// the stereo image into one shape. Empty for mono sources, and for formats
+  /// that reach the extractor through a mono temp WAV (FLAC/OGG/AIFF/M4A) —
+  /// callers must fall back to [minValues]/[maxValues] when it is.
+  final List<List<double>> channelMin;
+  final List<List<double>> channelMax;
+  final List<List<double>> channelRms;
+
   final int sampleRate;
   final double durationSeconds;
 
   const WaveformPeaks({
     required this.minValues,
     required this.maxValues,
+    this.rmsValues = const [],
+    this.channelMin = const [],
+    this.channelMax = const [],
+    this.channelRms = const [],
     required this.sampleRate,
     required this.durationSeconds,
   });
 
   int get frameCount => maxValues.length;
+
+  /// Whether there are enough separate channel envelopes to draw stereo lanes.
+  bool get hasChannelData =>
+      channelMin.length >= 2 && channelMax.length >= 2;
+
+  /// Whether an RMS body can be drawn for the mono mixdown.
+  bool get hasRms => rmsValues.length == frameCount;
+
+  /// Whether an RMS body can be drawn for lane [channel].
+  bool hasChannelRms(int channel) =>
+      channel < channelRms.length &&
+      channelRms[channel].length == frameCount;
+}
+
+/// Reduce [samples] to [frames] min/max/RMS triples.
+///
+/// Bin boundaries are proportional (`f * n ~/ frames`) rather than a truncated
+/// fixed bin width, so every sample lands in exactly one bin — a fixed width
+/// leaves up to `frames` samples of the file's tail covered by nothing, which
+/// both hides a final transient and drifts the drawn position away from the
+/// playhead.
+(List<double>, List<double>, List<double>) _binEnvelope(
+  List<double> samples,
+  int frames,
+) {
+  final n = samples.length;
+  final mins = List<double>.filled(frames, 0.0);
+  final maxs = List<double>.filled(frames, 0.0);
+  final rms = List<double>.filled(frames, 0.0);
+  for (int f = 0; f < frames; f++) {
+    final start = f * n ~/ frames;
+    final end = max(start + 1, (f + 1) * n ~/ frames);
+    double lo = 0, hi = 0, sumSq = 0;
+    int count = 0;
+    for (int i = start; i < end && i < n; i++) {
+      final s = samples[i];
+      if (s < lo) lo = s;
+      if (s > hi) hi = s;
+      sumSq += s * s;
+      count++;
+    }
+    mins[f] = lo;
+    maxs[f] = hi;
+    rms[f] = count > 0 ? sqrt(sumSq / count) : 0.0;
+  }
+  return (mins, maxs, rms);
 }
 
 WaveformPeaks? _extractPeaksIsolate(String wavPath, int targetFrames) {
@@ -421,25 +575,27 @@ WaveformPeaks? _extractPeaksIsolate(String wavPath, int targetFrames) {
         });
 
   final frames = targetFrames.clamp(1, numSamples);
-  final frameSize = numSamples ~/ frames;
-  final minValues = List<double>.filled(frames, 0.0);
-  final maxValues = List<double>.filled(frames, 0.0);
+  final (minValues, maxValues, rmsValues) = _binEnvelope(mono, frames);
 
-  for (int f = 0; f < frames; f++) {
-    final start = f * frameSize;
-    final end = min(start + frameSize, numSamples);
-    double minV = 0, maxV = 0;
-    for (int i = start; i < end; i++) {
-      if (mono[i] < minV) minV = mono[i];
-      if (mono[i] > maxV) maxV = mono[i];
+  final channelMin = <List<double>>[];
+  final channelMax = <List<double>>[];
+  final channelRms = <List<double>>[];
+  if (channels.length > 1) {
+    for (int ch = 0; ch < min(channels.length, maxWaveformLanes); ch++) {
+      final (lo, hi, r) = _binEnvelope(channels[ch], frames);
+      channelMin.add(lo);
+      channelMax.add(hi);
+      channelRms.add(r);
     }
-    minValues[f] = minV;
-    maxValues[f] = maxV;
   }
 
   return WaveformPeaks(
     minValues: minValues,
     maxValues: maxValues,
+    rmsValues: rmsValues,
+    channelMin: channelMin,
+    channelMax: channelMax,
+    channelRms: channelRms,
     sampleRate: info.sampleRate,
     durationSeconds: numSamples / info.sampleRate,
   );
@@ -470,6 +626,22 @@ WaveformPeaks? _extractPeaksIsolate(String wavPath, int targetFrames) {
 //   MPEG2/2.5 mono (9-byte side info):
 //     8 main_data_begin + 1 private = 9 bits preamble
 //     c0=30
+
+/// Which percentile of granule amplitudes is treated as full scale. See the
+/// normalisation comment in [_extractMp3PeaksDirectIsolate].
+const double _mp3GainPercentile = 0.99;
+
+/// Converts a granule's `global_gain` to a linear amplitude.
+///
+/// Layer-3 requantisation scales a granule's samples by
+/// `2^((global_gain − 210) / 4)`, so the field is *logarithmic*. Using its raw
+/// 0–255 value as an amplitude — as this parser originally did — squeezes a
+/// 30 dB range into a ratio of about 0.9, which is why every MP3 rendered as
+/// one near-solid slab with no dynamics: the quiet intro and the loudest drop
+/// came out within a few percent of each other.
+@visibleForTesting
+double mp3GainToAmplitude(int globalGain) =>
+    pow(2.0, (globalGain - 210) / 4.0).toDouble();
 
 /// Read [numBits] bits (MSB-first) from [bytes] starting at
 /// byte [byteOffset] + bit [bitOffset].
@@ -502,8 +674,12 @@ WaveformPeaks? _extractMp3PeaksDirectIsolate(String filePath, int targetFrames) 
     pos = 10 + id3Size;
   }
 
-  // One amplitude entry per granule (≈13 ms each at 44100 Hz).
+  // One amplitude entry per granule (≈13 ms each at 44100 Hz). [gains] is the
+  // louder of the two channels (the mono lane); [gainsL]/[gainsR] keep them
+  // apart so a stereo MP3 can be drawn as two lanes like a stereo WAV.
   final gains = <double>[];
+  final gainsL = <double>[];
+  final gainsR = <double>[];
   int srDetected = 44100;
   int totalSamples = 0;
 
@@ -553,20 +729,30 @@ WaveformPeaks? _extractMp3PeaksDirectIsolate(String filePath, int targetFrames) 
 
     if (isV1) {
       // MPEG1: 2 granules per frame.  Extract global_gain for each granule,
-      // take the louder channel when stereo.
+      // per channel; the mono lane takes the louder of the two.
       if (isMono) {
-        gains.add(max(_readBits(bytes, sb, 39, 8), _readBits(bytes, sb, 98, 8)).toDouble());
+        gains.add(mp3GainToAmplitude(_readBits(bytes, sb, 39, 8)));
+        gains.add(mp3GainToAmplitude(_readBits(bytes, sb, 98, 8)));
       } else {
-        gains.add(max(_readBits(bytes, sb, 41, 8), _readBits(bytes, sb, 100, 8)).toDouble());
-        gains.add(max(_readBits(bytes, sb, 159, 8), _readBits(bytes, sb, 218, 8)).toDouble());
+        final g0l = mp3GainToAmplitude(_readBits(bytes, sb, 41, 8));
+        final g0r = mp3GainToAmplitude(_readBits(bytes, sb, 100, 8));
+        final g1l = mp3GainToAmplitude(_readBits(bytes, sb, 159, 8));
+        final g1r = mp3GainToAmplitude(_readBits(bytes, sb, 218, 8));
+        gainsL..add(g0l)..add(g1l);
+        gainsR..add(g0r)..add(g1r);
+        gains..add(max(g0l, g0r))..add(max(g1l, g1r));
       }
       totalSamples += 1152; // 2 × 576
     } else {
       // MPEG2/2.5: 1 granule per frame.
       if (isMono) {
-        gains.add(_readBits(bytes, sb, 30, 8).toDouble());
+        gains.add(mp3GainToAmplitude(_readBits(bytes, sb, 30, 8)));
       } else {
-        gains.add(max(_readBits(bytes, sb, 31, 8), _readBits(bytes, sb, 94, 8)).toDouble());
+        final gl = mp3GainToAmplitude(_readBits(bytes, sb, 31, 8));
+        final gr = mp3GainToAmplitude(_readBits(bytes, sb, 94, 8));
+        gainsL.add(gl);
+        gainsR.add(gr);
+        gains.add(max(gl, gr));
       }
       totalSamples += 576;
     }
@@ -576,29 +762,74 @@ WaveformPeaks? _extractMp3PeaksDirectIsolate(String filePath, int targetFrames) 
 
   if (gains.isEmpty) return null;
 
-  // Normalise to 0..1 relative to the loudest granule in this file.
-  final maxGain = gains.reduce(max);
+  // Normalise against the 99th percentile, not the outright loudest granule.
+  // Real files carry a small number of granules that decode to a nonsense
+  // global_gain — one test file had 0.7% of them reading exactly 210, some
+  // 40 dB above everything else on the logarithmic scale. Dividing by that
+  // flattens the entire track into a hairline. The top percent clamps to full
+  // scale instead, which is the right answer for genuinely loud granules and
+  // harmless for spurious ones. Both channels share the divisor so their
+  // relative levels survive.
+  final sorted = List<double>.of(gains)..sort();
+  final reference =
+      sorted[min(sorted.length - 1, (sorted.length * _mp3GainPercentile).floor())];
+  final maxGain = reference > 0 ? reference : sorted.last;
   if (maxGain <= 0) return null;
-  final norm = gains.map((g) => (g / maxGain).clamp(0.0, 1.0)).toList();
 
-  // Subsample/bin into targetFrames, preserving the loudest value per bin.
-  final count = norm.length;
-  final minVals = List<double>.filled(targetFrames, 0.0);
-  final maxVals = List<double>.filled(targetFrames, 0.0);
-  for (int f = 0; f < targetFrames; f++) {
-    final s = f * count ~/ targetFrames;
-    final e = ((f + 1) * count ~/ targetFrames).clamp(s + 1, count);
-    double v = 0;
-    for (int k = s; k < e; k++) {
-      if (norm[k] > v) v = norm[k];
+  final frames = targetFrames.clamp(1, gains.length);
+
+  /// Bin [src] down to [frames], mirroring it into a symmetric envelope.
+  /// Boundaries are proportional for the same reason as [_binEnvelope].
+  ///
+  /// There are no samples here to take a true RMS of, so the body is the
+  /// *mean* granule level in the bin against the *loudest* as the peak. That
+  /// is the same peak-versus-average relationship real RMS expresses, at the
+  /// ~13 ms granule resolution this decoder-free parser works at, so an MP3
+  /// gets the same layered look as a WAV instead of a flat outline.
+  (List<double>, List<double>, List<double>) binGains(List<double> src) {
+    final count = src.length;
+    final minVals = List<double>.filled(frames, 0.0);
+    final maxVals = List<double>.filled(frames, 0.0);
+    final rmsVals = List<double>.filled(frames, 0.0);
+    for (int f = 0; f < frames; f++) {
+      final s = f * count ~/ frames;
+      final e = max(s + 1, (f + 1) * count ~/ frames);
+      double peak = 0, sum = 0;
+      int n = 0;
+      for (int k = s; k < e && k < count; k++) {
+        final g = (src[k] / maxGain).clamp(0.0, 1.0);
+        if (g > peak) peak = g;
+        sum += g;
+        n++;
+      }
+      maxVals[f] = peak;
+      minVals[f] = -peak; // Symmetric envelope
+      rmsVals[f] = n > 0 ? sum / n : 0.0;
     }
-    maxVals[f] = v;
-    minVals[f] = -v; // Symmetric envelope
+    return (minVals, maxVals, rmsVals);
+  }
+
+  final (minVals, maxVals, rmsVals) = binGains(gains);
+
+  final channelMin = <List<double>>[];
+  final channelMax = <List<double>>[];
+  final channelRms = <List<double>>[];
+  if (gainsL.length == gains.length && gainsR.length == gains.length) {
+    for (final src in [gainsL, gainsR]) {
+      final (lo, hi, r) = binGains(src);
+      channelMin.add(lo);
+      channelMax.add(hi);
+      channelRms.add(r);
+    }
   }
 
   return WaveformPeaks(
     minValues: minVals,
     maxValues: maxVals,
+    rmsValues: rmsVals,
+    channelMin: channelMin,
+    channelMax: channelMax,
+    channelRms: channelRms,
     sampleRate: srDetected,
     durationSeconds: totalSamples / srDetected,
   );

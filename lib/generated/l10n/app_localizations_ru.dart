@@ -1991,6 +1991,50 @@ class AppLocalizationsRu extends AppLocalizations {
   String get themeSettingDescription => 'Цветовая тема приложения.';
 
   @override
+  String get waveformStyle => 'Стиль волновой формы';
+
+  @override
+  String get waveformStyleSettingDescription =>
+      'Как отрисовывается волновая форма предпросмотра аудио.';
+
+  @override
+  String get waveformStyleDetailed => 'Детальный';
+
+  @override
+  String get waveformStyleDetailedDescription =>
+      'Столбцы по пикселям с затенённым телом, как в DAW.';
+
+  @override
+  String get waveformStyleClassic => 'Классический';
+
+  @override
+  String get waveformStyleClassicDescription => 'Один заливной контур.';
+
+  @override
+  String get waveformChannels => 'Каналы';
+
+  @override
+  String get waveformChannelsSettingDescription =>
+      'Разделять ли стерео на две дорожки на волновой форме.';
+
+  @override
+  String get waveformChannelsSingle => 'Один';
+
+  @override
+  String get waveformChannelsDual => 'Два';
+
+  @override
+  String get waveformChannelsSingleDescription =>
+      'Одна дорожка со стереомиксом.';
+
+  @override
+  String get waveformChannelsDualDescription =>
+      'Левый и правый каналы отдельными дорожками.';
+
+  @override
+  String get waveformChannelsUnavailable => 'В этом файле только один канал';
+
+  @override
   String get support => 'Поддержать';
 
   @override

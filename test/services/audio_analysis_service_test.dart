@@ -183,6 +183,167 @@ void main() {
   // AVAssetExportSession on iOS, one channel and one Dart path for both.
   // convertForSharing() only routes there on Android/iOS, which no test host
   // satisfies, hence calling convertWithMobileCodec directly.
+  group('AudioAnalysisService.writeMonoWavFile', () {
+    // The waveform extractor routes every non-WAV, non-MP3 format through
+    // here, so this is what decides whether a FLAC/OGG/M4A gets a waveform.
+    final onFfmpegPlatform =
+        !Platform.isMacOS && !Platform.isAndroid && !Platform.isIOS;
+
+    late Directory tempDir;
+
+    setUp(() async {
+      tempDir = await Directory.systemTemp.createTemp('mono_wav_test_');
+    });
+
+    tearDown(() async {
+      AudioAnalysisService.ffmpegRunnerOverride = null;
+      if (await tempDir.exists()) await tempDir.delete(recursive: true);
+    });
+
+    test('goes through the shared ffmpeg runner, so Windows can use the '
+        'bundled binary', () async {
+      if (!onFfmpegPlatform) return;
+      // Regression: this path used to invoke a bare `ffmpeg`, bypassing the
+      // resolver that prefers the copy shipped in the app bundle. Waveforms
+      // for these formats therefore failed on any Windows machine without
+      // ffmpeg on PATH — which is most of them.
+      List<String>? seenArgs;
+      AudioAnalysisService.ffmpegRunnerOverride = (args) async {
+        seenArgs = args;
+        return true;
+      };
+
+      final ok = await AudioAnalysisService.writeMonoWavFile(
+        p.join(tempDir.path, 'in.flac'),
+        p.join(tempDir.path, 'out.wav'),
+      );
+
+      expect(ok, isTrue);
+      expect(seenArgs, isNotNull);
+      expect(seenArgs, containsAllInOrder(['-ac', '1']));
+      expect(seenArgs, contains('wav'));
+      expect(seenArgs!.last, p.join(tempDir.path, 'out.wav'));
+    });
+
+    test('reports failure rather than throwing when ffmpeg is absent',
+        () async {
+      if (!onFfmpegPlatform) return;
+      AudioAnalysisService.ffmpegRunnerOverride =
+          (_) async => throw ProcessException('ffmpeg', [], 'not found');
+
+      expect(
+        await AudioAnalysisService.writeMonoWavFile(
+          p.join(tempDir.path, 'in.ogg'),
+          p.join(tempDir.path, 'out.wav'),
+        ),
+        isFalse,
+      );
+    });
+
+    test('refuses a format no converter on this platform handles', () async {
+      if (!onFfmpegPlatform) return;
+      var called = false;
+      AudioAnalysisService.ffmpegRunnerOverride = (_) async {
+        called = true;
+        return true;
+      };
+
+      expect(
+        await AudioAnalysisService.writeMonoWavFile(
+          p.join(tempDir.path, 'in.opus'),
+          p.join(tempDir.path, 'out.wav'),
+        ),
+        isFalse,
+      );
+      expect(called, isFalse, reason: 'should not have shelled out at all');
+    });
+  });
+
+  group('AudioAnalysisService.writeDecodedWavFile', () {
+    // The waveform extractor decodes through here rather than through
+    // writeMonoWavFile, so that a stereo source keeps its channels.
+    final onFfmpegPlatform =
+        !Platform.isMacOS && !Platform.isAndroid && !Platform.isIOS;
+
+    late Directory tempDir;
+
+    setUp(() async {
+      tempDir = await Directory.systemTemp.createTemp('decoded_wav_test_');
+    });
+
+    tearDown(() async {
+      AudioAnalysisService.ffmpegRunnerOverride = null;
+      if (await tempDir.exists()) await tempDir.delete(recursive: true);
+    });
+
+    test('never downmixes — the channels are what the lanes are drawn from',
+        () async {
+      if (!onFfmpegPlatform) return;
+      List<String>? seenArgs;
+      AudioAnalysisService.ffmpegRunnerOverride = (args) async {
+        seenArgs = args;
+        return true;
+      };
+
+      final ok = await AudioAnalysisService.writeDecodedWavFile(
+        p.join(tempDir.path, 'song.mp3'),
+        p.join(tempDir.path, 'out.wav'),
+      );
+
+      expect(ok, isTrue);
+      expect(seenArgs, isNotNull);
+      expect(seenArgs, isNot(contains('-ac')),
+          reason: 'forcing a channel count would collapse the stereo image');
+      expect(seenArgs, contains('wav'));
+    });
+
+    test('accepts MP3, which now prefers a real decode over frame headers',
+        () async {
+      if (!onFfmpegPlatform) return;
+      AudioAnalysisService.ffmpegRunnerOverride = (_) async => true;
+      expect(
+        await AudioAnalysisService.writeDecodedWavFile(
+          p.join(tempDir.path, 'song.mp3'),
+          p.join(tempDir.path, 'out.wav'),
+        ),
+        isTrue,
+      );
+    });
+
+    test('refuses a format no decoder on this platform handles', () async {
+      if (!onFfmpegPlatform) return;
+      var called = false;
+      AudioAnalysisService.ffmpegRunnerOverride = (_) async {
+        called = true;
+        return true;
+      };
+
+      expect(
+        await AudioAnalysisService.writeDecodedWavFile(
+          p.join(tempDir.path, 'song.opus'),
+          p.join(tempDir.path, 'out.wav'),
+        ),
+        isFalse,
+      );
+      expect(called, isFalse);
+    });
+
+    test('reports failure rather than throwing when no decoder exists',
+        () async {
+      if (!onFfmpegPlatform) return;
+      AudioAnalysisService.ffmpegRunnerOverride =
+          (_) async => throw ProcessException('ffmpeg', [], 'not found');
+
+      expect(
+        await AudioAnalysisService.writeDecodedWavFile(
+          p.join(tempDir.path, 'song.mp3'),
+          p.join(tempDir.path, 'out.wav'),
+        ),
+        isFalse,
+      );
+    });
+  });
+
   group('AudioAnalysisService.convertWithMobileCodec', () {
     late Directory tempDir;
     late File input;

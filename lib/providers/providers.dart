@@ -24,6 +24,7 @@ import '../generated/l10n/app_localizations.dart';
 import '../models/music_project.dart';
 import '../services/audio_analysis_service.dart';
 import '../services/waveform_disk_cache.dart';
+import '../models/waveform_style.dart';
 import '../models/scan_root.dart';
 import '../models/ignored_path.dart';
 import '../models/release.dart';
@@ -2490,6 +2491,96 @@ final waveformCacheProvider =
     NotifierProvider<WaveformCacheNotifier, Map<String, WaveformPeaks>>(
       WaveformCacheNotifier.new,
     );
+
+// ─── Waveform rendering style ─────────────────────────────────────────────────
+
+/// Which waveform rendering the preview players use.
+///
+/// Stored in the same device-local `settings` box as the theme: it describes
+/// how this machine draws, so it is deliberately not synced or backed up.
+class WaveformStyleNotifier extends Notifier<WaveformStyle> {
+  static const _boxKey = 'waveformStyle';
+
+  @override
+  WaveformStyle build() {
+    SchedulerBinding.instance.addPostFrameCallback((_) => _load());
+    return WaveformStyle.detailed;
+  }
+
+  Future<void> _load() async {
+    try {
+      await ensureHiveInitialized();
+      final box = await Hive.openBox<String>('settings');
+      final saved = box.get(_boxKey);
+      if (saved == null || saved.isEmpty) return;
+      state = WaveformStyle.values.firstWhere(
+        (e) => e.name == saved,
+        orElse: () => WaveformStyle.detailed,
+      );
+    } catch (_) {
+      // Keep the default if the box cannot be read.
+    }
+  }
+
+  Future<void> set(WaveformStyle style) async {
+    state = style;
+    try {
+      await ensureHiveInitialized();
+      final box = await Hive.openBox<String>('settings');
+      await box.put(_boxKey, style.name);
+    } catch (e) {
+      debugPrint('[WaveformStyle] failed to save: $e');
+    }
+  }
+}
+
+final waveformStyleProvider =
+    NotifierProvider<WaveformStyleNotifier, WaveformStyle>(
+      WaveformStyleNotifier.new,
+    );
+
+/// Whether the waveform draws left and right as separate lanes.
+///
+/// Off by default: on a finished master the two channels correlate above 0.93,
+/// so two lanes redraw the same shape at half the vertical resolution. It
+/// earns its place on raw session recordings and stems, where the channels
+/// genuinely carry different content — hence a per-user toggle rather than
+/// always-on. Device-local, like [WaveformStyleNotifier].
+class WaveformStereoNotifier extends Notifier<bool> {
+  static const _boxKey = 'waveformStereo';
+
+  @override
+  bool build() {
+    SchedulerBinding.instance.addPostFrameCallback((_) => _load());
+    return false;
+  }
+
+  Future<void> _load() async {
+    try {
+      await ensureHiveInitialized();
+      final box = await Hive.openBox<String>('settings');
+      final saved = box.get(_boxKey);
+      if (saved == null || saved.isEmpty) return;
+      state = saved == 'true';
+    } catch (_) {
+      // Keep the default if the box cannot be read.
+    }
+  }
+
+  Future<void> set(bool dual) async {
+    state = dual;
+    try {
+      await ensureHiveInitialized();
+      final box = await Hive.openBox<String>('settings');
+      await box.put(_boxKey, dual.toString());
+    } catch (e) {
+      debugPrint('[WaveformStereo] failed to save: $e');
+    }
+  }
+}
+
+final waveformStereoProvider =
+    NotifierProvider<WaveformStereoNotifier, bool>(WaveformStereoNotifier.new);
 
 // ---------------------------------------------------------------------------
 // Mobile Preview Player (global singleton — persists across navigation)
