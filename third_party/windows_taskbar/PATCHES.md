@@ -59,11 +59,30 @@ app), though that remains unconfirmed — see the issue.
 
 Find it in the source with `grep -n "LOCAL PATCH" windows/windows_taskbar.cc`.
 
-## Getting rid of this directory
+## Status: staying vendored
 
-1. Send patch 1/1 upstream.
-2. When a release lands on pub.dev that contains both PR #23 and patch 1/1,
-   bump the `windows_taskbar` constraint in the root `pubspec.yaml`, delete the
+Upstreaming patch 1/1 was considered and **deliberately deferred** (decided
+2026-08-16). No patch has been sent to `alexmercerind/windows_taskbar`, and none
+is awaiting review there — so don't wait on one, and don't assume this
+directory is about to go away.
+
+The reasoning for staying vendored rather than tracking upstream by git ref:
+a git dependency cannot carry patch 1/1 at all, and a path dependency is pinned
+by content in-repo, which the Flatpak build wants since it resolves packages
+offline.
+
+What that costs us, stated plainly so it isn't a surprise later: we own this
+code now. No upstream fixes arrive automatically, `flutter pub outdated` and
+Dependabot will not flag it, and `dependency_overrides` wins globally and
+silently — if anything ever depends on `windows_taskbar` with a different
+constraint, pub will not warn. It is Windows-only code and under ~1,000 lines,
+so the blast radius is contained.
+
+## If we ever want to get rid of this directory
+
+1. Send patch 1/1 upstream (not done — see above).
+2. When a release lands on pub.dev containing both PR #23 and patch 1/1, bump
+   the `windows_taskbar` constraint in the root `pubspec.yaml`, delete the
    `dependency_overrides` entry, and delete this directory.
 
 Until then, re-vendoring means re-downloading `master` and re-applying the one
