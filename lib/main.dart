@@ -612,8 +612,14 @@ Future<void> _main(List<String> args) async {
   // 1c. Generate taskbar overlay icons (Windows only)
   if (!kIsWeb && Platform.isWindows) {
     await _initTaskbarOverlayIcons();
-    await _initThumbnailToolbarIcons();
-    _registerThumbnailToolbarHandler();
+    // Thumbnail toolbar is off — see kThumbnailToolbarEnabled and #119. Skip
+    // writing its icons and registering its click handler too, rather than
+    // only skipping the pushes: with the button never shown, the handler
+    // could not fire anyway, and the .ico files would be dead files on disk.
+    if (kThumbnailToolbarEnabled) {
+      await _initThumbnailToolbarIcons();
+      _registerThumbnailToolbarHandler();
+    }
   }
 
   // 2. Initialize notification services
@@ -1046,6 +1052,7 @@ void _registerThumbnailToolbarHandler() {
 final _thumbnailToolbar = ThumbnailToolbarController(
   channel: _taskbarChannel,
   resolveIcon: (isPlaying) => _taskbarIconPaths[isPlaying ? 'pause' : 'play'],
+  enabled: kThumbnailToolbarEnabled,
 );
 
 /// Updates the Windows taskbar overlay icon to reflect session state.
@@ -1214,11 +1221,18 @@ class _DawProjectManagerAppState extends ConsumerState<DawProjectManagerApp>
       // reflects the desktop preview player, not the work-session timer.
       // One listener on the derived state, not one per input provider: the
       // two inputs change together, and pushing twice per user action is what
-      // made the shell fall over (#119).
-      ref.listen(
-        thumbnailToolbarStateProvider,
-        (_, next) => _thumbnailToolbar.update(next),
-      );
+      // first drew attention to this path (#119).
+      //
+      // Currently disabled — see kThumbnailToolbarEnabled. The controller
+      // ignores updates while off, so this listener would be harmless, but
+      // there is no reason to keep a subscription alive that can only ever
+      // no-op.
+      if (kThumbnailToolbarEnabled) {
+        ref.listen(
+          thumbnailToolbarStateProvider,
+          (_, next) => _thumbnailToolbar.update(next),
+        );
+      }
     }
 
     return MaterialApp(

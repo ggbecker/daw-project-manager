@@ -171,6 +171,35 @@ void main() {
     });
   });
 
+  group('kill switch', () {
+    // #119: Windows 11's XAML taskbar crashes explorer.exe, and this button is
+    // not worth the user's shell. The feature is off; these pin that the guard
+    // actually prevents shell calls rather than merely hiding the button.
+    test('a disabled controller never touches the channel', () async {
+      controller.dispose();
+      controller = ThumbnailToolbarController(
+        channel: channel,
+        resolveIcon: (isPlaying) => 'play.ico',
+        debounce: Duration.zero,
+        enabled: false,
+      );
+
+      controller.update(ThumbnailToolbarState(visible: true, isPlaying: true));
+      controller.update(ThumbnailToolbarState(visible: true, isPlaying: false));
+      controller.update(ThumbnailToolbarState.hidden);
+      await settle();
+
+      expect(calls, isEmpty);
+      expect(controller.nativeCallCount, 0);
+    });
+
+    test('the shipped default is off', () {
+      // Deliberate: flipping this back on is a decision that needs #119
+      // re-checked against current Windows, not something to do casually.
+      expect(kThumbnailToolbarEnabled, isFalse);
+    });
+  });
+
   group('failure handling', () {
     test('a failed push is retried on the next change', () async {
       failNextCalls = true;
