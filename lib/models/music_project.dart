@@ -218,6 +218,42 @@ class MusicProject {
   @HiveField(31)
   final String? sourceTemplateId; // ProjectTemplate.id this project was created from, if any (dangling if the template was later deleted)
 
+  // Version stacking (#94). Index 32 is deliberately skipped: it is claimed by
+  // the parts feature on the project-manage branch, and two branches taking the
+  // same Hive index is a silent corruption bug — nothing fails at merge time,
+  // existing boxes just start misreading. Leaving the gap lets either land
+  // first.
+
+  @HiveField(33)
+  /// True when this row is a *stack* rather than a scanned file: a virtual
+  /// project that owns the shared metadata for several version files and has
+  /// no file of its own on disk.
+  ///
+  /// Virtual projects synthesize [filePath]/[fileName] from the folder they
+  /// represent, so anything that treats a non-resolving path as "the file went
+  /// away" must exclude them — see `isMissingFileCandidate`.
+  final bool isVirtual;
+
+  @HiveField(34)
+  /// Ids of the real projects this stack contains, in display order. Empty for
+  /// real projects.
+  final List<String> memberProjectIds;
+
+  @HiveField(35)
+  /// Member nominated to launch when the user hits "Launch in DAW" on the
+  /// stack itself. Null means ask which version to open.
+  final String? defaultLaunchMemberId;
+
+  @HiveField(36)
+  /// For a real project, the id of the stack it belongs to. Null when it
+  /// stands alone.
+  ///
+  /// Denormalized against [memberProjectIds] on purpose: the projects grid has
+  /// to decide "is this row nested under a stack?" for every row on every
+  /// rebuild, and walking every virtual project's member list to answer that
+  /// is quadratic in library size.
+  final String? stackId;
+
   const MusicProject({
     required this.id,
     required this.filePath,
@@ -251,7 +287,26 @@ class MusicProject {
     this.ignoredNewerSongPath,
     this.projectNotes,
     this.sourceTemplateId,
+    this.isVirtual = false,
+    this.memberProjectIds = const [],
+    this.defaultLaunchMemberId,
+    this.stackId,
   });
+
+  /// Number of version files this stack holds. 0 for a real project.
+  int get versionCount => isVirtual ? memberProjectIds.length : 0;
+
+  /// True when this project is a version inside a stack.
+  bool get isStackMember => stackId != null;
+
+  /// Whether a non-resolving [filePath] on this project means "the file was
+  /// deleted or moved".
+  ///
+  /// False for stacks: their path is synthesized from the folder they
+  /// represent and may never resolve to a file. Without this, "Delete Missing"
+  /// would offer to delete the one row holding a stack's metadata — deleting
+  /// the shared notes, todos and accumulated work time for every version in it.
+  bool get isMissingFileCandidate => !isVirtual;
 
   /// Whether [displayName] hides date stamps DAWs bake into file names (see
   /// `lib/utils/name_date_parser.dart`). Off by default; mirrored here from
@@ -499,6 +554,12 @@ class MusicProject {
     String? projectNotes,
     String? sourceTemplateId,
     bool clearSourceTemplateId = false,
+    bool? isVirtual,
+    List<String>? memberProjectIds,
+    String? defaultLaunchMemberId,
+    bool clearDefaultLaunchMemberId = false,
+    String? stackId,
+    bool clearStackId = false,
   }) {
     return MusicProject(
       id: id ?? this.id,
@@ -533,6 +594,12 @@ class MusicProject {
       ignoredNewerSongPath: clearIgnoredNewerSongPath ? null : (ignoredNewerSongPath ?? this.ignoredNewerSongPath),
       projectNotes: projectNotes ?? this.projectNotes,
       sourceTemplateId: clearSourceTemplateId ? null : (sourceTemplateId ?? this.sourceTemplateId),
+      isVirtual: isVirtual ?? this.isVirtual,
+      memberProjectIds: memberProjectIds ?? this.memberProjectIds,
+      defaultLaunchMemberId: clearDefaultLaunchMemberId
+          ? null
+          : (defaultLaunchMemberId ?? this.defaultLaunchMemberId),
+      stackId: clearStackId ? null : (stackId ?? this.stackId),
     );
   }
 }
@@ -588,13 +655,21 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
       ignoredNewerSongPath: fields.containsKey(29) ? fields[29] as String? : null,
       projectNotes: fields.containsKey(30) ? fields[30] as String? : null,
       sourceTemplateId: fields.containsKey(31) ? fields[31] as String? : null,
+      // 32 is claimed by the parts feature on another branch — see the field
+      // declarations. Version stacking starts at 33.
+      isVirtual: fields.containsKey(33) ? (fields[33] as bool? ?? false) : false,
+      memberProjectIds: fields.containsKey(34)
+          ? ((fields[34] as List?)?.cast<String>() ?? const <String>[])
+          : const <String>[],
+      defaultLaunchMemberId: fields.containsKey(35) ? fields[35] as String? : null,
+      stackId: fields.containsKey(36) ? fields[36] as String? : null,
     );
   }
 
   @override
   void write(BinaryWriter writer, MusicProject obj) {
     writer
-      ..writeByte(32) // 32 fields (0-31)
+      ..writeByte(36) // 36 fields written: 0-31 plus 33-36 (32 is skipped)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -658,6 +733,15 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
       ..writeByte(30)
       ..write(obj.projectNotes)
       ..writeByte(31)
-      ..write(obj.sourceTemplateId);
+      ..write(obj.sourceTemplateId)
+      // 32 skipped — claimed by the parts feature on another branch.
+      ..writeByte(33)
+      ..write(obj.isVirtual)
+      ..writeByte(34)
+      ..write(obj.memberProjectIds)
+      ..writeByte(35)
+      ..write(obj.defaultLaunchMemberId)
+      ..writeByte(36)
+      ..write(obj.stackId);
   }
 }

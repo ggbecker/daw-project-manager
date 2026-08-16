@@ -4971,6 +4971,13 @@ class GoogleDriveSyncService {
       'ignoredNewerSongPath': project.ignoredNewerSongPath,
       'projectNotes': project.projectNotes,
       'sourceTemplateId': project.sourceTemplateId,
+      // Version stacking (#94). A stack is a project row with no file, so if
+      // these are skipped every stack silently dissolves on restore, taking
+      // the shared metadata and work history of each song with it.
+      'isVirtual': project.isVirtual,
+      'memberProjectIds': project.memberProjectIds,
+      'defaultLaunchMemberId': project.defaultLaunchMemberId,
+      'stackId': project.stackId,
     };
   }
 
@@ -5022,6 +5029,12 @@ class GoogleDriveSyncService {
       ignoredNewerSongPath: data['ignoredNewerSongPath'] as String?,
       projectNotes: data['projectNotes'] as String?,
       sourceTemplateId: data['sourceTemplateId'] as String?,
+      isVirtual: data['isVirtual'] as bool? ?? false,
+      memberProjectIds:
+          (data['memberProjectIds'] as List?)?.cast<String>() ??
+          const <String>[],
+      defaultLaunchMemberId: data['defaultLaunchMemberId'] as String?,
+      stackId: data['stackId'] as String?,
     );
   }
 

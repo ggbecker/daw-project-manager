@@ -516,6 +516,7 @@ class ProjectRepository {
   /// the "Delete Missing" bulk action.
   Future<void> deleteProjectsPermanently(Iterable<String> projectIds) async {
     await projectsBox.deleteAll(projectIds);
+    await cleanUpDanglingStackLinks();
   }
 
   List<ScanRoot> getRoots() => rootsBox.values.toList(growable: false);
@@ -623,6 +624,48 @@ class ProjectRepository {
 
     if (projectsToDelete.isNotEmpty) {
       await projectsBox.deleteAll(projectsToDelete);
+      await cleanUpDanglingStackLinks();
+    }
+  }
+
+  /// Repairs stack links after projects have been deleted out from under them.
+  ///
+  /// Deletion here happens by id or by path prefix, neither of which knows
+  /// about stacks, so either side of the link can be left pointing at nothing:
+  /// a member whose stack is gone would keep deferring its metadata to a row
+  /// that no longer exists, and a stack listing deleted members would report
+  /// the wrong version count and work total. A stack left with fewer than two
+  /// versions is dissolved, for the same reason [removeFromStack] does it.
+  Future<void> cleanUpDanglingStackLinks() async {
+    for (final project in projectsBox.values.toList(growable: false)) {
+      if (project.isVirtual) {
+        final live = project.memberProjectIds
+            .where((id) => projectsBox.containsKey(id))
+            .toList();
+        if (live.length == project.memberProjectIds.length) continue;
+        if (live.length < 2) {
+          await unstack(project.id);
+          continue;
+        }
+        await projectsBox.put(
+          project.id,
+          project.copyWith(
+            memberProjectIds: live,
+            defaultLaunchMemberId:
+                live.contains(project.defaultLaunchMemberId)
+                ? project.defaultLaunchMemberId
+                : live.first,
+          ),
+        );
+      } else if (project.stackId case final stackId?) {
+        final stack = projectsBox.get(stackId);
+        if (stack == null || !stack.isVirtual) {
+          await projectsBox.put(
+            project.id,
+            project.copyWith(clearStackId: true),
+          );
+        }
+      }
     }
   }
 
@@ -873,6 +916,192 @@ class ProjectRepository {
 
   List<MusicProject> getAllProjects() =>
       projectsBox.values.toList(growable: false);
+
+  // ---------------------------------------------------------------------------
+  // Version stacking (#94)
+  //
+  // A "stack" is a virtual project: a row that owns the shared metadata for
+  // several version files of the same song and has no file of its own. Members
+  // keep their own metadata untouched but dormant, so unstacking can hand it
+  // back rather than losing it.
+  // ---------------------------------------------------------------------------
+
+  /// The members of [stack], in the order they are listed on it.
+  ///
+  /// Ids that no longer resolve are skipped rather than returned as nulls —
+  /// a member can be deleted from under a stack, and every caller here wants
+  /// "the versions that still exist".
+  List<MusicProject> stackMembers(MusicProject stack) => [
+    for (final id in stack.memberProjectIds)
+      if (projectsBox.get(id) case final m?) m,
+  ];
+
+  /// Total seconds worked across every version in [stack].
+  ///
+  /// Derived on read rather than stored. A rolled-up copy would need
+  /// invalidating on every timer tick, stack, unstack, member deletion and
+  /// Drive restore, and would drift silently the first time one was missed.
+  int stackTotalWorkSeconds(MusicProject stack) => stackMembers(
+    stack,
+  ).fold(0, (sum, m) => sum + m.totalWorkSeconds);
+
+  /// Every work session across [stack]'s versions, newest last.
+  List<SessionRecord> stackSessions(MusicProject stack) =>
+      stackMembers(stack).expand((m) => m.sessions).toList()
+        ..sort((a, b) => a.startedAt.compareTo(b.startedAt));
+
+  /// Groups [projects] by the directory their file sits in directly.
+  ///
+  /// Deliberately *not* [smartFolderGroupKey], which buckets by the top-level
+  /// folder under a scan root: for `Root/1-Active/SongA/SongA v3.cpr` that key
+  /// is `1-Active`, so reusing it would stack every song in `1-Active` into a
+  /// single entry. Version stacking wants the immediate parent — `SongA`.
+  ///
+  /// Virtual projects and projects already in a stack are excluded.
+  static Map<String, List<MusicProject>> groupByImmediateFolder(
+    Iterable<MusicProject> projects,
+  ) {
+    final byFolder = <String, List<MusicProject>>{};
+    for (final project in projects) {
+      if (project.isVirtual || project.isStackMember) continue;
+      final folder = p.dirname(p.normalize(project.filePath));
+      byFolder.putIfAbsent(folder, () => []).add(project);
+    }
+    return byFolder;
+  }
+
+  /// Makes a stack out of [members], promoting [metadataSourceId]'s metadata
+  /// onto it, and returns the new virtual project.
+  ///
+  /// The members keep every field they had — nothing is cleared — so
+  /// [unstack] can restore them exactly. What changes is that they now carry a
+  /// [MusicProject.stackId], and the UI reads the stack's metadata instead of
+  /// theirs.
+  ///
+  /// Throws [ArgumentError] for fewer than two members, or when a member is
+  /// already stacked: silently re-parenting would strand the previous stack's
+  /// metadata.
+  Future<MusicProject> stackProjects({
+    required List<String> memberIds,
+    String? metadataSourceId,
+  }) async {
+    if (memberIds.length < 2) {
+      throw ArgumentError('A stack needs at least two versions');
+    }
+    final members = [
+      for (final id in memberIds)
+        if (projectsBox.get(id) case final m?) m,
+    ];
+    if (members.length != memberIds.length) {
+      throw ArgumentError('One or more projects to stack no longer exist');
+    }
+    if (members.any((m) => m.isVirtual || m.isStackMember)) {
+      throw ArgumentError('A project can only belong to one stack');
+    }
+
+    // Default to the oldest member: when someone saves v1 → v2 → v3, the
+    // metadata they have been maintaining is on the one they started from.
+    final source = metadataSourceId != null
+        ? members.firstWhere(
+            (m) => m.id == metadataSourceId,
+            orElse: () => members.first,
+          )
+        : (members.toList()..sort((a, b) => a.createdAt.compareTo(b.createdAt)))
+              .first;
+
+    final now = DateTime.now();
+    final folder = p.dirname(p.normalize(source.filePath));
+    final stack = source.copyWith(
+      id: _uuid.v4(),
+      isVirtual: true,
+      memberProjectIds: members.map((m) => m.id).toList(),
+      defaultLaunchMemberId: source.id,
+      clearStackId: true,
+      // Synthesized: a stack has no file. The folder keeps the path
+      // meaningful for display and for anything that groups by directory.
+      filePath: folder,
+      fileName: p.basename(folder),
+      fileSizeBytes: 0,
+      createdAt: now,
+      updatedAt: now,
+      // Work time is summed from members on read, never stored here.
+      totalWorkSeconds: 0,
+      sessions: const [],
+    );
+
+    await projectsBox.put(stack.id, stack);
+    for (final member in members) {
+      await projectsBox.put(member.id, member.copyWith(stackId: stack.id));
+    }
+    return stack;
+  }
+
+  /// Dissolves [stackId], returning its members to independent projects.
+  ///
+  /// Members get their own metadata back untouched, because stacking never
+  /// cleared it. The stack row itself is deleted along with any edits made to
+  /// it — that is the lossy part, and the UI should say so before calling.
+  Future<void> unstack(String stackId) async {
+    final stack = projectsBox.get(stackId);
+    if (stack == null || !stack.isVirtual) return;
+    for (final member in stackMembers(stack)) {
+      await projectsBox.put(member.id, member.copyWith(clearStackId: true));
+    }
+    await projectsBox.delete(stackId);
+  }
+
+  /// Attaches [projectId] to [stackId] — used when a scan finds a new version
+  /// file in a folder that is already stacked, so it inherits the song's
+  /// metadata instead of arriving blank.
+  Future<void> addToStack({
+    required String stackId,
+    required String projectId,
+  }) async {
+    final stack = projectsBox.get(stackId);
+    final project = projectsBox.get(projectId);
+    if (stack == null || !stack.isVirtual || project == null) return;
+    if (project.isVirtual || stack.memberProjectIds.contains(projectId)) return;
+
+    await projectsBox.put(
+      stackId,
+      stack.copyWith(
+        memberProjectIds: [...stack.memberProjectIds, projectId],
+      ),
+    );
+    await projectsBox.put(projectId, project.copyWith(stackId: stackId));
+  }
+
+  /// Detaches [projectId] from whatever stack holds it.
+  ///
+  /// If that leaves the stack with a single version, the stack is dissolved
+  /// too: a "stack of one" is just a project wearing a badge, and leaving it
+  /// around means its metadata quietly outranks the file's own.
+  Future<void> removeFromStack(String projectId) async {
+    final project = projectsBox.get(projectId);
+    final stackId = project?.stackId;
+    if (project == null || stackId == null) return;
+    final stack = projectsBox.get(stackId);
+
+    await projectsBox.put(projectId, project.copyWith(clearStackId: true));
+    if (stack == null) return;
+
+    final remaining = stack.memberProjectIds
+        .where((id) => id != projectId)
+        .toList();
+    if (remaining.length < 2) {
+      await unstack(stackId);
+      return;
+    }
+    await projectsBox.put(
+      stackId,
+      stack.copyWith(
+        memberProjectIds: remaining,
+        defaultLaunchMemberId: stack.defaultLaunchMemberId == projectId
+            ? remaining.first
+            : stack.defaultLaunchMemberId,
+      ),
+    );
+  }
 
   Future<void> updateProject(MusicProject project) async {
     final updatedProject = project.copyWith(updatedAt: DateTime.now());
