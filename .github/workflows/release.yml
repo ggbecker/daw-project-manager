@@ -841,7 +841,20 @@ jobs:
       - name: Point manifest at the exact commit under test
         env:
           REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git
-          COMMIT_SHA: ${{ github.sha }}
+          # The PR head, not github.sha. On a pull_request event github.sha is
+          # GitHub's synthetic merge commit (refs/pull/N/merge) — an object no
+          # plain clone of REPO_URL contains, and one GitHub recomputes and
+          # orphans whenever the PR head or base moves. flatpak-builder clones
+          # REPO_URL and checks this commit out several minutes later, so a
+          # force-push landing in that window leaves it resolving a ref that
+          # has since been swapped, and it dies with
+          # "fatal: unable to read tree <sha>" (seen on #95).
+          # The PR head is a real commit on a real branch, so a clone always
+          # has it — and it is what a Flathub consumer could actually fetch,
+          # unlike a merge commit that exists only inside this repo's PR refs.
+          # Empty off pull_request (tag and main pushes), where github.sha is
+          # already a real commit.
+          COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
           # Only set on an actual tag push — empty on a PR run, where there's
           # no tag yet to pin to (github.ref_name on a PR is the PR number,
           # not a tag, so it's deliberately not used there at all).
