@@ -45,6 +45,32 @@ class ThumbnailToolbarState {
 /// have not been written to disk yet.
 typedef ThumbnailIconResolver = String? Function(bool isPlaying);
 
+/// Kill switch for the taskbar hover-preview play/pause button.
+///
+/// **Currently off (2026-08-17), deliberately and temporarily.**
+///
+/// Windows 11's XAML taskbar (`Taskbar.View.dll`) crashes explorer.exe with a
+/// stowed WinRT exception, taking the user's whole shell down. On the machine
+/// where this was investigated it had crashed 11 times in 30 days — at an
+/// identical fault offset, across two versions of that DLL, most of them with
+/// this app nowhere near it, and it is widely reported against unrelated
+/// software too. We cannot fix code inside the shell, and #120's handle-leak
+/// fixes did not stop it.
+///
+/// So we stop poking it. This button is a small convenience whose worst case
+/// is the user losing their desktop — a trade that does not favour shipping it
+/// on by default while the shell is this fragile.
+///
+/// Turning it back on is this one line. Nothing else was removed: the
+/// controller, its tests, the icon generation and the click handler are all
+/// intact. Before flipping it, check whether the shell crash is still
+/// reproducible on current Windows — see #119.
+///
+/// The taskbar *overlay* icon (work-session badge) and *progress* bar are
+/// separate APIs and are untouched. If shell crashes continue with this off,
+/// they are the next things to suspect.
+const bool kThumbnailToolbarEnabled = false;
+
 /// Pushes [ThumbnailToolbarState] to the Windows shell, coalescing bursts and
 /// skipping pushes that would not change what the shell is already showing.
 ///
@@ -63,13 +89,20 @@ class ThumbnailToolbarController {
     required MethodChannel channel,
     required ThumbnailIconResolver resolveIcon,
     Duration debounce = const Duration(milliseconds: 120),
+    bool enabled = true,
   }) : _channel = channel,
        _resolveIcon = resolveIcon,
-       _debounce = debounce;
+       _debounce = debounce,
+       _enabled = enabled;
 
   final MethodChannel _channel;
   final ThumbnailIconResolver _resolveIcon;
   final Duration _debounce;
+
+  /// When false, [update] never touches the channel. See
+  /// [kThumbnailToolbarEnabled] — the guard lives here as well as at the call
+  /// site so a future caller cannot re-enable the shell calls by accident.
+  final bool _enabled;
 
   /// The last state actually handed to the shell. Null means "unknown" — the
   /// next update pushes unconditionally.
@@ -88,6 +121,7 @@ class ThumbnailToolbarController {
   /// Otherwise the push is deferred by the debounce interval, so a burst of
   /// changes collapses into a single native call carrying the final state.
   void update(ThumbnailToolbarState next) {
+    if (!_enabled) return;
     if (next == _lastPushed) {
       // Already showing this. Drop any queued push — a burst that ends back
       // where it started should not touch the shell at all.
