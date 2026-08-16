@@ -106,6 +106,12 @@ dev_dependencies:
 
 dependency_overrides:
   yaml: ^3.0.0
+  # windows_taskbar from upstream master (1.1.4) plus one local patch. pub.dev
+  # has published nothing since 1.1.2 (2023-09-05), and the handle-leak fixes
+  # our taskbar play/pause button needs only exist on master. See
+  # third_party/windows_taskbar/PATCHES.md and issue #119.
+  windows_taskbar:
+    path: third_party/windows_taskbar
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
