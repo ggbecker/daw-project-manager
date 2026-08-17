@@ -12,6 +12,7 @@ import '../services/camelot_playlist_generator.dart';
 import '../utils/playback_todo_utils.dart';
 import 'camelot_wheel_widget.dart';
 import 'project_detail_page.dart';
+import 'widgets/project_notes_section.dart';
 
 enum _PlayerLoopMode { none, repeatAll, shuffle }
 
@@ -945,22 +946,24 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
                     );
                   }),
                 ],
-                // Notes
-                if (project.notes != null && project.notes!.isNotEmpty) ...[
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 4),
-                    child: Text(l10n.playerNotes,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: cs.onSurface.withValues(alpha: 0.5),
-                          letterSpacing: 0.8,
-                        )),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
-                    child: Text(
-                      project.notes!,
-                      style: theme.textTheme.bodySmall,
+                // Notes — what the user typed, and what was read out of the
+                // DAW file itself (#105). Both labelled, always in that order.
+                if (ProjectNotesSection.hasContent(
+                  userNotes: project.notes,
+                  dawNotes: project.projectNotes,
+                )) ...[
+                  ProjectNotesSection(
+                    userNotes: project.notes,
+                    dawNotes: project.projectNotes,
+                    userNotesLabel: l10n.playerNotes,
+                    dawNotesLabel: l10n.playerDawNotes,
+                    expandLabel: l10n.expand,
+                    collapseLabel: l10n.collapse,
+                    labelStyle: theme.textTheme.labelSmall?.copyWith(
+                      color: cs.onSurface.withValues(alpha: 0.5),
+                      letterSpacing: 0.8,
                     ),
+                    textStyle: theme.textTheme.bodySmall,
                   ),
                   const Divider(height: 1),
                 ],

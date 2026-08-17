@@ -5825,6 +5825,12 @@ abstract class AppLocalizations {
   /// **'NOTES'**
   String get playerNotes;
 
+  /// No description provided for @playerDawNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'DAW FILE NOTES'**
+  String get playerDawNotes;
+
   /// No description provided for @playerTasks.
   ///
   /// In en, this message translates to:

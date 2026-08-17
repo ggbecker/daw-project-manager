@@ -3463,6 +3463,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get playerNotes => 'NOTE';
 
   @override
+  String get playerDawNotes => 'NOTE DAL FILE DAW';
+
+  @override
   String get playerTasks => 'ATTIVITÀ';
 
   @override

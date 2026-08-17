@@ -2275,6 +2275,7 @@
   "playerRemoveFromQueue": "Убрать из очереди",
   "playerDismissDetail": "Закрыть детали",
   "playerNotes": "ЗАМЕТКИ",
+  "playerDawNotes": "ЗАМЕТКИ ИЗ ФАЙЛА DAW",
   "playerTasks": "ЗАДАЧИ",
   "playerNoTasks": "Задач пока нет.",
   "playerAddTaskHint": "Добавить задачу…",

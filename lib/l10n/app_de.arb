@@ -2275,6 +2275,7 @@
   "playerRemoveFromQueue": "Aus Warteschlange entfernen",
   "playerDismissDetail": "Detail ausblenden",
   "playerNotes": "NOTIZEN",
+  "playerDawNotes": "NOTIZEN AUS DAW-DATEI",
   "playerTasks": "AUFGABEN",
   "playerNoTasks": "Noch keine Aufgaben.",
   "playerAddTaskHint": "Aufgabe hinzufügen…",

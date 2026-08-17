@@ -2275,6 +2275,7 @@
   "playerRemoveFromQueue": "从队列移除",
   "playerDismissDetail": "关闭详情",
   "playerNotes": "备注",
+  "playerDawNotes": "DAW 文件备注",
   "playerTasks": "任务",
   "playerNoTasks": "暂无任务。",
   "playerAddTaskHint": "添加任务…",

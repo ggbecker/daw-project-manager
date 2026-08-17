@@ -14,6 +14,7 @@ import '../services/audio_analysis_service.dart';
 import 'preview_share.dart';
 import 'project_detail_page.dart';
 import 'widgets/conversion_progress_dialog.dart';
+import 'widgets/project_notes_section.dart';
 
 class MobilePlayerPage extends ConsumerStatefulWidget {
   const MobilePlayerPage({super.key});
@@ -672,6 +673,7 @@ class _TrackCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -758,16 +760,32 @@ class _TrackCard extends StatelessWidget {
                 ),
               ),
 
-            // Notes
-            if (project.notes != null && project.notes!.isNotEmpty)
+            // Notes — user-typed and DAW-extracted, same as the desktop
+            // player (#105). The big-display-name fallback below now applies
+            // only when neither has anything.
+            if (ProjectNotesSection.hasContent(
+              userNotes: project.notes,
+              dawNotes: project.projectNotes,
+            ))
               Expanded(
                 child: SingleChildScrollView(
-                  child: Text(
-                    project.notes!,
-                    style: theme.textTheme.bodyMedium?.copyWith(
+                  child: ProjectNotesSection(
+                    userNotes: project.notes,
+                    dawNotes: project.projectNotes,
+                    userNotesLabel: l10n.playerNotes,
+                    dawNotesLabel: l10n.playerDawNotes,
+                    expandLabel: l10n.expand,
+                    collapseLabel: l10n.collapse,
+                    labelStyle: theme.textTheme.labelSmall?.copyWith(
+                      color: cs.onSurface.withValues(alpha: 0.5),
+                      letterSpacing: 0.8,
+                    ),
+                    textStyle: theme.textTheme.bodyMedium?.copyWith(
                       color: cs.onSurface.withValues(alpha: 0.75),
                       height: 1.55,
                     ),
+                    labelPadding: const EdgeInsets.only(top: 12, bottom: 4),
+                    textPadding: const EdgeInsets.only(bottom: 8),
                   ),
                 ),
               )
