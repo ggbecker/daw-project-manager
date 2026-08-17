@@ -36,6 +36,10 @@ class TestFactories {
     String? ignoredNewerSongPath,
     String? projectNotes,
     String? sourceTemplateId,
+    bool isVirtual = false,
+    List<String> memberProjectIds = const [],
+    String? defaultLaunchMemberId,
+    String? stackId,
   }) {
     return MusicProject(
       id: id,
@@ -70,6 +74,10 @@ class TestFactories {
       ignoredNewerSongPath: ignoredNewerSongPath,
       projectNotes: projectNotes,
       sourceTemplateId: sourceTemplateId,
+      isVirtual: isVirtual,
+      memberProjectIds: memberProjectIds,
+      defaultLaunchMemberId: defaultLaunchMemberId,
+      stackId: stackId,
     );
   }
 

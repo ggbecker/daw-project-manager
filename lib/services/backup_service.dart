@@ -731,6 +731,13 @@ class BackupService {
       'ignoredNewerSongPath': project.ignoredNewerSongPath,
       'projectNotes': project.projectNotes,
       'sourceTemplateId': project.sourceTemplateId,
+      // See the same block in google_drive_sync_service.dart — this is
+      // Flatpak's only backup path, so a field skipped here cannot be backed
+      // up at all, not merely lost on a Drive restore.
+      'isVirtual': project.isVirtual,
+      'memberProjectIds': project.memberProjectIds,
+      'defaultLaunchMemberId': project.defaultLaunchMemberId,
+      'stackId': project.stackId,
     };
   }
 
@@ -771,6 +778,12 @@ class BackupService {
       ignoredNewerSongPath: json['ignoredNewerSongPath'] as String?,
       projectNotes: json['projectNotes'] as String?,
       sourceTemplateId: json['sourceTemplateId'] as String?,
+      isVirtual: json['isVirtual'] as bool? ?? false,
+      memberProjectIds:
+          (json['memberProjectIds'] as List?)?.cast<String>() ??
+          const <String>[],
+      defaultLaunchMemberId: json['defaultLaunchMemberId'] as String?,
+      stackId: json['stackId'] as String?,
     );
   }
 
