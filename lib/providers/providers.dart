@@ -25,6 +25,7 @@ import '../models/music_project.dart';
 import '../services/audio_analysis_service.dart';
 import '../services/thumbnail_toolbar_service.dart';
 import '../services/waveform_disk_cache.dart';
+import '../models/project_detail_layout.dart';
 import '../models/waveform_style.dart';
 import '../models/scan_root.dart';
 import '../models/ignored_path.dart';
@@ -2696,6 +2697,55 @@ class WaveformStyleNotifier extends Notifier<WaveformStyle> {
 final waveformStyleProvider =
     NotifierProvider<WaveformStyleNotifier, WaveformStyle>(
       WaveformStyleNotifier.new,
+    );
+
+// ─── Project detail page layout ───────────────────────────────────────────────
+
+/// Whether the project detail page shows one long scroll or a nav rail with
+/// one section at a time.
+///
+/// Device-local, in the same `settings` box as the theme and waveform style:
+/// it is a preference about this machine's screen, not project data, so it is
+/// deliberately not synced or backed up.
+class ProjectDetailLayoutNotifier extends Notifier<ProjectDetailLayout> {
+  static const _boxKey = 'projectDetailLayout';
+
+  @override
+  ProjectDetailLayout build() {
+    SchedulerBinding.instance.addPostFrameCallback((_) => _load());
+    return ProjectDetailLayout.classic;
+  }
+
+  Future<void> _load() async {
+    try {
+      await ensureHiveInitialized();
+      final box = await Hive.openBox<String>('settings');
+      final saved = box.get(_boxKey);
+      if (saved == null || saved.isEmpty) return;
+      state = ProjectDetailLayout.values.firstWhere(
+        (e) => e.name == saved,
+        orElse: () => ProjectDetailLayout.classic,
+      );
+    } catch (_) {
+      // Keep the default if the box cannot be read.
+    }
+  }
+
+  Future<void> set(ProjectDetailLayout layout) async {
+    state = layout;
+    try {
+      await ensureHiveInitialized();
+      final box = await Hive.openBox<String>('settings');
+      await box.put(_boxKey, layout.name);
+    } catch (e) {
+      debugPrint('[ProjectDetailLayout] failed to save: $e');
+    }
+  }
+}
+
+final projectDetailLayoutProvider =
+    NotifierProvider<ProjectDetailLayoutNotifier, ProjectDetailLayout>(
+      ProjectDetailLayoutNotifier.new,
     );
 
 /// Whether the waveform draws left and right as separate lanes.

@@ -7858,6 +7858,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add a preview song to jump to markers'**
   String get projectMarkerNoPreviewSong;
+
+  /// Appearance setting: how the project detail page is arranged
+  ///
+  /// In en, this message translates to:
+  /// **'Project Detail Layout'**
+  String get projectDetailLayout;
+
+  /// Subtitle under the Project Detail Layout setting
+  ///
+  /// In en, this message translates to:
+  /// **'How the project detail page is arranged.'**
+  String get projectDetailLayoutSettingDescription;
+
+  /// Layout option: everything in one scroll
+  ///
+  /// In en, this message translates to:
+  /// **'Classic'**
+  String get projectDetailLayoutClassic;
+
+  /// Description of the classic project detail layout
+  ///
+  /// In en, this message translates to:
+  /// **'Everything in one scroll.'**
+  String get projectDetailLayoutClassicDescription;
+
+  /// Layout option: a nav rail picks one section at a time
+  ///
+  /// In en, this message translates to:
+  /// **'Sections'**
+  String get projectDetailLayoutSectioned;
+
+  /// Description of the sectioned project detail layout
+  ///
+  /// In en, this message translates to:
+  /// **'A rail on the left picks one section at a time.'**
+  String get projectDetailLayoutSectionedDescription;
 }
 
 class _AppLocalizationsDelegate

@@ -4641,4 +4641,24 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get projectMarkerNoPreviewSong =>
       'Добавьте превью трека, чтобы переходить к маркерам';
+
+  @override
+  String get projectDetailLayout => 'Макет Деталей Проекта';
+
+  @override
+  String get projectDetailLayoutSettingDescription =>
+      'Как устроена страница деталей проекта.';
+
+  @override
+  String get projectDetailLayoutClassic => 'Классический';
+
+  @override
+  String get projectDetailLayoutClassicDescription => 'Всё в одной прокрутке.';
+
+  @override
+  String get projectDetailLayoutSectioned => 'Разделы';
+
+  @override
+  String get projectDetailLayoutSectionedDescription =>
+      'Панель слева выбирает по одному разделу.';
 }

@@ -2924,5 +2924,17 @@
 "projectMarkerNoPreviewSong": "マーカーにジャンプするにはプレビュー曲を追加してください",
 "@projectMarkerNoPreviewSong": {
       "description": "Tooltip on marker rows when the project has no preview song to seek in"
-  }
+  },
+  "projectDetailLayout": "プロジェクト詳細のレイアウト",
+  "@projectDetailLayout": {"description": "Appearance setting: how the project detail page is arranged"},
+  "projectDetailLayoutSettingDescription": "プロジェクト詳細ページの構成方法。",
+  "@projectDetailLayoutSettingDescription": {"description": "Subtitle under the Project Detail Layout setting"},
+  "projectDetailLayoutClassic": "クラシック",
+  "@projectDetailLayoutClassic": {"description": "Layout option: everything in one scroll"},
+  "projectDetailLayoutClassicDescription": "すべてを1つのスクロールで表示。",
+  "@projectDetailLayoutClassicDescription": {"description": "Description of the classic project detail layout"},
+  "projectDetailLayoutSectioned": "セクション",
+  "@projectDetailLayoutSectioned": {"description": "Layout option: a nav rail picks one section at a time"},
+  "projectDetailLayoutSectionedDescription": "左のバーでセクションを1つずつ選択。",
+  "@projectDetailLayoutSectionedDescription": {"description": "Description of the sectioned project detail layout"}
 }

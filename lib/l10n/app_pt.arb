@@ -2948,5 +2948,17 @@
 "projectMarkerNoPreviewSong": "Adicione uma música de prévia para pular para os marcadores",
 "@projectMarkerNoPreviewSong": {
       "description": "Tooltip on marker rows when the project has no preview song to seek in"
-  }
+  },
+  "projectDetailLayout": "Layout dos Detalhes do Projeto",
+  "@projectDetailLayout": {"description": "Appearance setting: how the project detail page is arranged"},
+  "projectDetailLayoutSettingDescription": "Como a página de detalhes do projeto é organizada.",
+  "@projectDetailLayoutSettingDescription": {"description": "Subtitle under the Project Detail Layout setting"},
+  "projectDetailLayoutClassic": "Clássico",
+  "@projectDetailLayoutClassic": {"description": "Layout option: everything in one scroll"},
+  "projectDetailLayoutClassicDescription": "Tudo em uma única rolagem.",
+  "@projectDetailLayoutClassicDescription": {"description": "Description of the classic project detail layout"},
+  "projectDetailLayoutSectioned": "Seções",
+  "@projectDetailLayoutSectioned": {"description": "Layout option: a nav rail picks one section at a time"},
+  "projectDetailLayoutSectionedDescription": "Uma barra à esquerda escolhe uma seção por vez.",
+  "@projectDetailLayoutSectionedDescription": {"description": "Description of the sectioned project detail layout"}
 }

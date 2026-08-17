@@ -4678,4 +4678,25 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get projectMarkerNoPreviewSong =>
       'Ajoutez une chanson d\'aperçu pour accéder aux marqueurs';
+
+  @override
+  String get projectDetailLayout => 'Disposition des Détails du Projet';
+
+  @override
+  String get projectDetailLayoutSettingDescription =>
+      'Comment la page de détails du projet est organisée.';
+
+  @override
+  String get projectDetailLayoutClassic => 'Classique';
+
+  @override
+  String get projectDetailLayoutClassicDescription =>
+      'Tout dans un seul défilement.';
+
+  @override
+  String get projectDetailLayoutSectioned => 'Sections';
+
+  @override
+  String get projectDetailLayoutSectionedDescription =>
+      'Une barre à gauche choisit une section à la fois.';
 }
