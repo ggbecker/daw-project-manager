@@ -27,6 +27,7 @@ import '../utils/mobile_utils.dart';
 import '../utils/file_launcher.dart';
 import '../utils/route_observer.dart';
 import '../generated/l10n/app_localizations.dart';
+import 'marker_navigation.dart';
 import 'session_actions.dart';
 import 'preview_share.dart';
 import 'dialogs/preview_song_not_found_dialog.dart';
@@ -39,6 +40,7 @@ import 'dialogs/save_as_template_dialog.dart';
 import 'widgets/conversion_progress_dialog.dart';
 import 'widgets/desktop_title_bar.dart';
 import 'widgets/project_detail_header.dart';
+import 'widgets/project_markers_section.dart';
 import 'widgets/resizable_text_field.dart';
 import 'widgets/parts_summary_card.dart';
 import 'widgets/todo_list_widget.dart';
@@ -999,6 +1001,35 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                 rightReadOnly: true,
                                 expandTooltip: AppLocalizations.of(context)!.expandNotes,
                                 collapseTooltip: AppLocalizations.of(context)!.collapseNotes,
+                              );
+                            }),
+
+                            // Markers and regions read out of the DAW project
+                            // file. Renders nothing at all when there are
+                            // none, which is every project from a DAW whose
+                            // format we don't parse markers out of yet.
+                            Builder(builder: (context) {
+                              final l10n = AppLocalizations.of(context)!;
+                              final canJump =
+                                  canJumpToProjectMarkers(updatedProject);
+                              return ProjectMarkersSection(
+                                markers: updatedProject.markers,
+                                title: l10n.projectMarkers,
+                                unnamedMarkerLabel: l10n.projectMarkerUnnamed,
+                                unnamedRegionLabel: l10n.projectRegionUnnamed,
+                                showAllLabel: l10n.showAll,
+                                collapseLabel: l10n.collapse,
+                                jumpTooltip: l10n.projectMarkerJumpTooltip,
+                                disabledTooltip:
+                                    l10n.projectMarkerNoPreviewSong,
+                                padding: EdgeInsets.zero,
+                                onTap: canJump
+                                    ? (marker) => jumpToProjectMarker(
+                                          ref,
+                                          updatedProject,
+                                          marker,
+                                        )
+                                    : null,
                               );
                             }),
 

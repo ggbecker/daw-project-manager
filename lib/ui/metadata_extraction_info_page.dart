@@ -17,12 +17,18 @@ class _DawExtractionInfo {
   final bool version;
   final bool notes;
 
+  /// Timeline markers and regions (#91). Only Reaper writes them somewhere
+  /// readable so far — every other format either has no equivalent or keeps
+  /// it in a binary blob nobody has reverse engineered yet.
+  final bool markers;
+
   const _DawExtractionInfo(
     this.name, {
     required this.bpm,
     required this.key,
     required this.version,
     required this.notes,
+    this.markers = false,
   });
 }
 
@@ -46,7 +52,7 @@ const _dawExtractionInfo = [
   _DawExtractionInfo('Nuendo', bpm: true, key: true, version: true, notes: true),
   _DawExtractionInfo('Pro Tools', bpm: false, key: false, version: false, notes: false),
   _DawExtractionInfo('Qtractor', bpm: false, key: false, version: false, notes: false),
-  _DawExtractionInfo('Reaper', bpm: true, key: true, version: true, notes: true),
+  _DawExtractionInfo('Reaper', bpm: true, key: true, version: true, notes: true, markers: true),
   _DawExtractionInfo('Reason', bpm: false, key: false, version: false, notes: false),
   _DawExtractionInfo('Renoise', bpm: false, key: false, version: false, notes: false),
   _DawExtractionInfo('Rosegarden', bpm: false, key: false, version: false, notes: false),
@@ -108,6 +114,7 @@ class MetadataExtractionInfoPage extends StatelessWidget {
                                 DataColumn(label: Text(l10n.metadataFieldKey)),
                                 DataColumn(label: Text(l10n.metadataFieldVersion)),
                                 DataColumn(label: Text(l10n.notes)),
+                                DataColumn(label: Text(l10n.projectMarkers)),
                               ],
                               rows: [
                                 for (final daw in _dawExtractionInfo)
@@ -118,6 +125,7 @@ class MetadataExtractionInfoPage extends StatelessWidget {
                                       DataCell(statusIcon(daw.key)),
                                       DataCell(statusIcon(daw.version)),
                                       DataCell(statusIcon(daw.notes)),
+                                      DataCell(statusIcon(daw.markers)),
                                     ],
                                   ),
                               ],

@@ -4634,4 +4634,25 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get reorderNeedsUnfilteredList =>
       'Suche, Filter und Sortierung zurücksetzen, um Parts zu verschieben';
+
+  @override
+  String get projectMarkers => 'Marker';
+
+  @override
+  String projectMarkerUnnamed(int index) {
+    return 'Marker $index';
+  }
+
+  @override
+  String projectRegionUnnamed(int index) {
+    return 'Region $index';
+  }
+
+  @override
+  String get projectMarkerJumpTooltip =>
+      'Zu dieser Stelle im Vorschau-Song springen';
+
+  @override
+  String get projectMarkerNoPreviewSong =>
+      'Vorschau-Song hinzufügen, um zu Markern zu springen';
 }

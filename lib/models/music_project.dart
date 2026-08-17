@@ -1,6 +1,7 @@
 import 'package:hive_ce/hive.dart';
 import 'package:path/path.dart' as p;
 import '../utils/name_date_parser.dart';
+import 'project_marker.dart';
 import 'project_part.dart';
 import 'todo_item.dart';
 
@@ -254,6 +255,9 @@ class MusicProject {
   /// is quadratic in library size.
   final String? stackId;
 
+  @HiveField(37)
+  final List<ProjectMarker> markers; // Timeline markers/regions read from the DAW project file (Reaper only so far)
+
   const MusicProject({
     required this.id,
     required this.filePath,
@@ -292,6 +296,7 @@ class MusicProject {
     this.memberProjectIds = const [],
     this.defaultLaunchMemberId,
     this.stackId,
+    this.markers = const [],
   });
 
   /// Number of version files this stack holds. 0 for a real project.
@@ -562,6 +567,7 @@ class MusicProject {
     bool clearDefaultLaunchMemberId = false,
     String? stackId,
     bool clearStackId = false,
+    List<ProjectMarker>? markers,
   }) {
     return MusicProject(
       id: id ?? this.id,
@@ -603,6 +609,7 @@ class MusicProject {
           ? null
           : (defaultLaunchMemberId ?? this.defaultLaunchMemberId),
       stackId: clearStackId ? null : (stackId ?? this.stackId),
+      markers: markers ?? this.markers,
     );
   }
 
@@ -673,13 +680,18 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
           : const <String>[],
       defaultLaunchMemberId: fields.containsKey(35) ? fields[35] as String? : null,
       stackId: fields.containsKey(36) ? fields[36] as String? : null,
+      markers: fields.containsKey(37)
+          ? ((fields[37] as List?) ?? const [])
+              .map((e) => ProjectMarker.fromMap(e as Map))
+              .toList()
+          : const [],
     );
   }
 
   @override
   void write(BinaryWriter writer, MusicProject obj) {
     writer
-      ..writeByte(37) // 37 fields (0-36)
+      ..writeByte(38) // 38 fields (0-37)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -753,6 +765,8 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
       ..writeByte(35)
       ..write(obj.defaultLaunchMemberId)
       ..writeByte(36)
-      ..write(obj.stackId);
+      ..write(obj.stackId)
+      ..writeByte(37)
+      ..write(obj.markers.map((m) => m.toMap()).toList());
   }
 }

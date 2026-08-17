@@ -4177,5 +4177,35 @@
   "noPartsMatchFilters": "No parts match these filters",
   "@noPartsMatchFilters": {"description": "Empty state when search or filters hide every part"},
   "reorderNeedsUnfilteredList": "Clear the search, filters and sorting to drag parts into order",
-  "@reorderNeedsUnfilteredList": {"description": "Explains that drag-reordering needs the unfiltered, unsorted list"}
+  "@reorderNeedsUnfilteredList": {"description": "Explains that drag-reordering needs the unfiltered, unsorted list"},
+"projectMarkers": "Markers",
+"@projectMarkers": {
+      "description": "Section heading for the timeline markers and regions read out of a DAW project file"
+  },
+"projectMarkerUnnamed": "Marker {index}",
+"@projectMarkerUnnamed": {
+      "description": "Fallback label for a marker the user never named",
+      "placeholders": {
+          "index": {
+              "type": "int"
+          }
+      }
+  },
+"projectRegionUnnamed": "Region {index}",
+"@projectRegionUnnamed": {
+      "description": "Fallback label for a region the user never named",
+      "placeholders": {
+          "index": {
+              "type": "int"
+          }
+      }
+  },
+"projectMarkerJumpTooltip": "Jump to this point in the preview song",
+"@projectMarkerJumpTooltip": {
+      "description": "Tooltip on a marker row that will seek the preview player"
+  },
+"projectMarkerNoPreviewSong": "Add a preview song to jump to markers",
+"@projectMarkerNoPreviewSong": {
+      "description": "Tooltip on marker rows when the project has no preview song to seek in"
+  }
 }

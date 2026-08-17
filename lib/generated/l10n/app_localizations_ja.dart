@@ -4498,4 +4498,23 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get reorderNeedsUnfilteredList =>
       '検索・絞り込み・並べ替えを解除するとパートをドラッグで並べ替えられます';
+
+  @override
+  String get projectMarkers => 'マーカー';
+
+  @override
+  String projectMarkerUnnamed(int index) {
+    return 'マーカー $index';
+  }
+
+  @override
+  String projectRegionUnnamed(int index) {
+    return 'リージョン $index';
+  }
+
+  @override
+  String get projectMarkerJumpTooltip => 'プレビュー曲のこの位置にジャンプ';
+
+  @override
+  String get projectMarkerNoPreviewSong => 'マーカーにジャンプするにはプレビュー曲を追加してください';
 }

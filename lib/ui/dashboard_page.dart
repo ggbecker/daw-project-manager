@@ -9402,7 +9402,12 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
         ref.read(desktopPlayerCompletedProvider.notifier).increment();
       }
     });
-    _player.play(DeviceFileSource(widget.request.resolvedPath));
+    _player.play(
+      DeviceFileSource(widget.request.resolvedPath),
+      // Non-null when the track was opened at a project marker rather
+      // than from the top.
+      position: widget.request.startAt,
+    );
     _loadBackgroundData();
   }
 
@@ -9429,7 +9434,10 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
         _fileInfo = null;
         _peaks = null;
       });
-      _player.play(DeviceFileSource(widget.request.resolvedPath));
+      _player.play(
+        DeviceFileSource(widget.request.resolvedPath),
+        position: widget.request.startAt,
+      );
       _loadBackgroundData();
     }
   }
@@ -9573,6 +9581,20 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
     await _player.seek(clamped);
   }
 
+  /// Jump to an absolute position — project markers, whose positions come from
+  /// the DAW timeline and can therefore sit past the end of a preview song
+  /// that only covers part of the session.
+  Future<void> _seekTo(Duration position) async {
+    final clamped = position.isNegative
+        ? Duration.zero
+        : (_duration > Duration.zero && position > _duration
+              ? _duration
+              : position);
+    await _player.seek(clamped);
+    setState(() => _position = clamped);
+    _positionNotifier.set(clamped);
+  }
+
   String _fmt(Duration d) {
     String two(int n) => n.toString().padLeft(2, '0');
     final h = d.inHours;
@@ -9652,6 +9674,13 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
     // project's row again while it's already loaded here).
     ref.listen(desktopPlayerToggleRequestProvider, (prev, next) {
       if (prev != null && prev != next) _togglePlayPause();
+    });
+    // Jump to a project marker clicked somewhere else in the app, on the
+    // track this bar already has loaded.
+    ref.listen(desktopPlayerSeekRequestProvider, (prev, next) {
+      if (next != null && prev?.generation != next.generation) {
+        _seekTo(next.position);
+      }
     });
     final queueNav = ref.watch(queueNavigationProvider);
     final isQueued = widget.request.isQueuedPlayback;

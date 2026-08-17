@@ -2894,5 +2894,35 @@
   "partsDeleted": "{count} 件のパートを削除しました",
   "@partsDeleted": {"placeholders": {"count": {"type": "int"}}},
   "noPartsMatchFilters": "この条件に合うパートはありません",
-  "reorderNeedsUnfilteredList": "検索・絞り込み・並べ替えを解除するとパートをドラッグで並べ替えられます"
+  "reorderNeedsUnfilteredList": "検索・絞り込み・並べ替えを解除するとパートをドラッグで並べ替えられます",
+"projectMarkers": "マーカー",
+"@projectMarkers": {
+      "description": "Section heading for the timeline markers and regions read out of a DAW project file"
+  },
+"projectMarkerUnnamed": "マーカー {index}",
+"@projectMarkerUnnamed": {
+      "description": "Fallback label for a marker the user never named",
+      "placeholders": {
+          "index": {
+              "type": "int"
+          }
+      }
+  },
+"projectRegionUnnamed": "リージョン {index}",
+"@projectRegionUnnamed": {
+      "description": "Fallback label for a region the user never named",
+      "placeholders": {
+          "index": {
+              "type": "int"
+          }
+      }
+  },
+"projectMarkerJumpTooltip": "プレビュー曲のこの位置にジャンプ",
+"@projectMarkerJumpTooltip": {
+      "description": "Tooltip on a marker row that will seek the preview player"
+  },
+"projectMarkerNoPreviewSong": "マーカーにジャンプするにはプレビュー曲を追加してください",
+"@projectMarkerNoPreviewSong": {
+      "description": "Tooltip on marker rows when the project has no preview song to seek in"
+  }
 }

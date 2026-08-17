@@ -4629,4 +4629,25 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get reorderNeedsUnfilteredList =>
       'Azzera ricerca, filtri e ordinamento per trascinare le parti';
+
+  @override
+  String get projectMarkers => 'Marcatori';
+
+  @override
+  String projectMarkerUnnamed(int index) {
+    return 'Marcatore $index';
+  }
+
+  @override
+  String projectRegionUnnamed(int index) {
+    return 'Regione $index';
+  }
+
+  @override
+  String get projectMarkerJumpTooltip =>
+      'Vai a questo punto del brano di anteprima';
+
+  @override
+  String get projectMarkerNoPreviewSong =>
+      'Aggiungi un brano di anteprima per saltare ai marcatori';
 }

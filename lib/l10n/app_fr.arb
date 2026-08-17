@@ -2894,5 +2894,35 @@
   "partsDeleted": "{count} parties supprimées",
   "@partsDeleted": {"placeholders": {"count": {"type": "int"}}},
   "noPartsMatchFilters": "Aucune partie ne correspond à ces filtres",
-  "reorderNeedsUnfilteredList": "Effacez la recherche, les filtres et le tri pour réorganiser les parties"
+  "reorderNeedsUnfilteredList": "Effacez la recherche, les filtres et le tri pour réorganiser les parties",
+"projectMarkers": "Marqueurs",
+"@projectMarkers": {
+      "description": "Section heading for the timeline markers and regions read out of a DAW project file"
+  },
+"projectMarkerUnnamed": "Marqueur {index}",
+"@projectMarkerUnnamed": {
+      "description": "Fallback label for a marker the user never named",
+      "placeholders": {
+          "index": {
+              "type": "int"
+          }
+      }
+  },
+"projectRegionUnnamed": "Région {index}",
+"@projectRegionUnnamed": {
+      "description": "Fallback label for a region the user never named",
+      "placeholders": {
+          "index": {
+              "type": "int"
+          }
+      }
+  },
+"projectMarkerJumpTooltip": "Aller à ce point de la chanson d'aperçu",
+"@projectMarkerJumpTooltip": {
+      "description": "Tooltip on a marker row that will seek the preview player"
+  },
+"projectMarkerNoPreviewSong": "Ajoutez une chanson d'aperçu pour accéder aux marqueurs",
+"@projectMarkerNoPreviewSong": {
+      "description": "Tooltip on marker rows when the project has no preview song to seek in"
+  }
 }

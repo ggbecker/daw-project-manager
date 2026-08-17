@@ -12,7 +12,9 @@ import '../services/camelot_playlist_generator.dart';
 import '../utils/playback_todo_utils.dart';
 import '../utils/project_freshness.dart';
 import 'camelot_wheel_widget.dart';
+import 'marker_navigation.dart';
 import 'project_detail_page.dart';
+import 'widgets/project_markers_section.dart';
 import 'widgets/project_notes_section.dart';
 
 enum _PlayerLoopMode { none, repeatAll, shuffle }
@@ -963,6 +965,28 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
                     ),
                     textStyle: theme.textTheme.bodySmall,
                   ),
+                  const Divider(height: 1),
+                ],
+                // Markers read out of the DAW file (#91) — a table of
+                // contents for sessions holding more than one song. Tapping
+                // one seeks this track, which is the point of them being here
+                // rather than only on the detail page.
+                if (project.markers.isNotEmpty) ...[
+                  ProjectMarkersSection(
+                    markers: project.markers,
+                    title: l10n.projectMarkers,
+                    unnamedMarkerLabel: l10n.projectMarkerUnnamed,
+                    unnamedRegionLabel: l10n.projectRegionUnnamed,
+                    showAllLabel: l10n.showAll,
+                    collapseLabel: l10n.collapse,
+                    jumpTooltip: l10n.projectMarkerJumpTooltip,
+                    disabledTooltip: l10n.projectMarkerNoPreviewSong,
+                    onTap: canJumpToProjectMarkers(project)
+                        ? (marker) =>
+                            jumpToProjectMarker(ref, project, marker)
+                        : null,
+                  ),
+                  const SizedBox(height: 8),
                   const Divider(height: 1),
                 ],
                 // Tasks header

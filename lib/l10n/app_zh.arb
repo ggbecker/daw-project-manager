@@ -2894,5 +2894,35 @@
   "partsDeleted": "已删除 {count} 个声部",
   "@partsDeleted": {"placeholders": {"count": {"type": "int"}}},
   "noPartsMatchFilters": "没有声部符合这些筛选条件",
-  "reorderNeedsUnfilteredList": "清除搜索、筛选和排序后即可拖动调整声部顺序"
+  "reorderNeedsUnfilteredList": "清除搜索、筛选和排序后即可拖动调整声部顺序",
+"projectMarkers": "标记",
+"@projectMarkers": {
+      "description": "Section heading for the timeline markers and regions read out of a DAW project file"
+  },
+"projectMarkerUnnamed": "标记 {index}",
+"@projectMarkerUnnamed": {
+      "description": "Fallback label for a marker the user never named",
+      "placeholders": {
+          "index": {
+              "type": "int"
+          }
+      }
+  },
+"projectRegionUnnamed": "区域 {index}",
+"@projectRegionUnnamed": {
+      "description": "Fallback label for a region the user never named",
+      "placeholders": {
+          "index": {
+              "type": "int"
+          }
+      }
+  },
+"projectMarkerJumpTooltip": "跳转到预览歌曲的此位置",
+"@projectMarkerJumpTooltip": {
+      "description": "Tooltip on a marker row that will seek the preview player"
+  },
+"projectMarkerNoPreviewSong": "添加预览歌曲以跳转到标记",
+"@projectMarkerNoPreviewSong": {
+      "description": "Tooltip on marker rows when the project has no preview song to seek in"
+  }
 }
