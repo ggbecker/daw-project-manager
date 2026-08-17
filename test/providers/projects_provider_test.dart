@@ -306,6 +306,35 @@ void main() {
 
       expect((await _readProjects(c)).map((p) => p.id).toList(), isEmpty);
     });
+
+    test('search matches a performer credited on a part', () async {
+      // "Which songs did Nina sing on?" has to be answerable from the list.
+      final c = _makeContainer([
+        TestFactories.makeProject(id: 'withNina', fileName: 'A.als', parts: [
+          TestFactories.makePart(id: 'p1', name: 'Lead Vocals', performer: 'Nina'),
+        ]),
+        TestFactories.makeProject(id: 'without', fileName: 'B.als', parts: [
+          TestFactories.makePart(id: 'p2', name: 'Drums', performer: 'Alex'),
+        ]),
+      ]);
+      addTearDown(c.dispose);
+      c.read(projectsSearchProvider.notifier).setSearchText('Nina');
+
+      expect((await _readProjects(c)).map((p) => p.id).toList(), ['withNina']);
+    });
+
+    test('search matches an instrument name in the parts list', () async {
+      final c = _makeContainer([
+        TestFactories.makeProject(id: 'hasRhodes', fileName: 'A.als', parts: [
+          TestFactories.makePart(id: 'p1', name: 'Rhodes', performer: null),
+        ]),
+        TestFactories.makeProject(id: 'noRhodes', fileName: 'B.als'),
+      ]);
+      addTearDown(c.dispose);
+      c.read(projectsSearchProvider.notifier).setSearchText('Rhodes');
+
+      expect((await _readProjects(c)).map((p) => p.id).toList(), ['hasRhodes']);
+    });
   });
 
   group('projectsProvider — sort order', () {

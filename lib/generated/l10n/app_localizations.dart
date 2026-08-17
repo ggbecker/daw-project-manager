@@ -7378,6 +7378,456 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Preview song (ZIP): {name}'**
   String sharePreviewSongZipText(String name);
+
+  /// Section title on the project detail page for the song's instruments/parts
+  ///
+  /// In en, this message translates to:
+  /// **'Instruments & Parts'**
+  String get songParts;
+
+  /// Progress summary for a song's parts: how many are on their final take
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} final takes'**
+  String partsProgress(int done, int total);
+
+  /// Empty state for the parts section
+  ///
+  /// In en, this message translates to:
+  /// **'No parts tracked yet'**
+  String get noPartsYet;
+
+  /// Explanation shown under the parts empty state
+  ///
+  /// In en, this message translates to:
+  /// **'List the instruments this song needs, who plays them, and how far each take has got.'**
+  String get noPartsYetHint;
+
+  /// Label of the field/button that adds a part to a song
+  ///
+  /// In en, this message translates to:
+  /// **'Add part'**
+  String get addPart;
+
+  /// Hint text for the add-part field
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Drums, Lead Vocals, Bass'**
+  String get addPartHint;
+
+  /// Field label for an instrument/role name
+  ///
+  /// In en, this message translates to:
+  /// **'Part'**
+  String get partNameLabel;
+
+  /// Validation message when a part is saved without a name
+  ///
+  /// In en, this message translates to:
+  /// **'A part name is required'**
+  String get partNameRequired;
+
+  /// Field label for who plays a part
+  ///
+  /// In en, this message translates to:
+  /// **'Performer'**
+  String get partPerformerLabel;
+
+  /// Hint text for the performer field
+  ///
+  /// In en, this message translates to:
+  /// **'Who plays it'**
+  String get partPerformerHint;
+
+  /// Field label for notes about a single part
+  ///
+  /// In en, this message translates to:
+  /// **'Part notes'**
+  String get partNotesLabel;
+
+  /// Field label for the take status of a part
+  ///
+  /// In en, this message translates to:
+  /// **'Take status'**
+  String get partStatusLabel;
+
+  /// Take status: the part is needed but nothing is recorded
+  ///
+  /// In en, this message translates to:
+  /// **'Needed'**
+  String get partStatusNeeded;
+
+  /// Take status: the part is currently being tracked
+  ///
+  /// In en, this message translates to:
+  /// **'Recording'**
+  String get partStatusRecording;
+
+  /// Take status: a scratch/reference take exists
+  ///
+  /// In en, this message translates to:
+  /// **'Early take'**
+  String get partStatusEarlyTake;
+
+  /// Take status: the keeper take is recorded
+  ///
+  /// In en, this message translates to:
+  /// **'Final take'**
+  String get partStatusFinalTake;
+
+  /// Dialog title / tooltip for editing a part
+  ///
+  /// In en, this message translates to:
+  /// **'Edit part'**
+  String get editPart;
+
+  /// Tooltip for deleting a part
+  ///
+  /// In en, this message translates to:
+  /// **'Delete part'**
+  String get deletePart;
+
+  /// Shown in place of a performer name when nobody is assigned to a part
+  ///
+  /// In en, this message translates to:
+  /// **'Unassigned'**
+  String get partsUnassignedPerformer;
+
+  /// Title of the part templates page
+  ///
+  /// In en, this message translates to:
+  /// **'Part Templates'**
+  String get partTemplates;
+
+  /// Tooltip for importing a saved lineup into a song
+  ///
+  /// In en, this message translates to:
+  /// **'Import parts from template'**
+  String get importPartsFromTemplate;
+
+  /// Tooltip that opens the part templates page
+  ///
+  /// In en, this message translates to:
+  /// **'Manage part templates'**
+  String get managePartTemplates;
+
+  /// Title of the dialog listing part templates to import from
+  ///
+  /// In en, this message translates to:
+  /// **'Select a part template'**
+  String get selectPartTemplate;
+
+  /// Snackbar shown when importing parts with no templates saved
+  ///
+  /// In en, this message translates to:
+  /// **'No part templates available'**
+  String get noPartTemplatesAvailable;
+
+  /// Empty state on the part templates page
+  ///
+  /// In en, this message translates to:
+  /// **'No part templates yet'**
+  String get noPartTemplatesYet;
+
+  /// Hint under the part templates empty state
+  ///
+  /// In en, this message translates to:
+  /// **'Create one to reuse the same lineup across songs'**
+  String get createFirstPartTemplate;
+
+  /// Dialog title for creating a part template
+  ///
+  /// In en, this message translates to:
+  /// **'Create part template'**
+  String get createPartTemplate;
+
+  /// Dialog title for editing a part template
+  ///
+  /// In en, this message translates to:
+  /// **'Edit part template'**
+  String get editPartTemplate;
+
+  /// Dialog title for deleting a part template
+  ///
+  /// In en, this message translates to:
+  /// **'Delete part template'**
+  String get deletePartTemplate;
+
+  /// Confirmation body when deleting a part template
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete the part template \"{name}\"?'**
+  String deletePartTemplateConfirm(String name);
+
+  /// Snackbar after creating a part template
+  ///
+  /// In en, this message translates to:
+  /// **'Part template created'**
+  String get partTemplateCreated;
+
+  /// Snackbar after updating a part template
+  ///
+  /// In en, this message translates to:
+  /// **'Part template updated'**
+  String get partTemplateUpdated;
+
+  /// Snackbar after deleting a part template
+  ///
+  /// In en, this message translates to:
+  /// **'Part template deleted'**
+  String get partTemplateDeleted;
+
+  /// Field label for the multi-line list of parts in a template
+  ///
+  /// In en, this message translates to:
+  /// **'Parts (one per line)'**
+  String get partTemplateItems;
+
+  /// Example content for the part template items field
+  ///
+  /// In en, this message translates to:
+  /// **'Drums — Alex\nBass — Sam\nLead Vocals'**
+  String get partTemplateItemsHint;
+
+  /// Helper text explaining the 'Part - Performer' line format
+  ///
+  /// In en, this message translates to:
+  /// **'One part per line. Name a performer after a dash: Drums — Alex'**
+  String get partTemplateItemsHelp;
+
+  /// Validation message when a part template has no items
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least one part'**
+  String get partTemplateItemsRequired;
+
+  /// Validation message when a part template is missing a name or items
+  ///
+  /// In en, this message translates to:
+  /// **'A name and at least one part are required'**
+  String get partTemplateNameAndItemsRequired;
+
+  /// Subtitle showing how many parts a template contains
+  ///
+  /// In en, this message translates to:
+  /// **'{count} part(s)'**
+  String partTemplateItemCount(int count);
+
+  /// Snackbar after importing a part template into a song
+  ///
+  /// In en, this message translates to:
+  /// **'Part template \"{name}\" imported ({count} parts)'**
+  String partTemplateImported(String name, int count);
+
+  /// Error state on the part templates page
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading part templates'**
+  String get errorLoadingPartTemplates;
+
+  /// Tooltip for exporting one song's parts to a CSV file
+  ///
+  /// In en, this message translates to:
+  /// **'Export parts as CSV'**
+  String get exportPartsCsv;
+
+  /// Settings entry exporting every project's parts to one CSV file
+  ///
+  /// In en, this message translates to:
+  /// **'Export all song parts as CSV'**
+  String get exportAllPartsCsv;
+
+  /// Subtitle of the export-all-parts settings entry
+  ///
+  /// In en, this message translates to:
+  /// **'One spreadsheet row per part, across every project — for sharing progress with collaborators'**
+  String get exportAllPartsCsvSubtitle;
+
+  /// Snackbar when a parts CSV export has nothing to write
+  ///
+  /// In en, this message translates to:
+  /// **'No parts to export'**
+  String get noPartsToExport;
+
+  /// Snackbar reporting how many parts were written to the CSV
+  ///
+  /// In en, this message translates to:
+  /// **'Exported {count} parts'**
+  String partsCsvExported(int count);
+
+  /// Heading of the parts block in the plain text project export
+  ///
+  /// In en, this message translates to:
+  /// **'Parts:'**
+  String get projectExportPartsLabel;
+
+  /// CSV column header: project name
+  ///
+  /// In en, this message translates to:
+  /// **'Project'**
+  String get csvHeaderProject;
+
+  /// CSV column header: instrument/part name
+  ///
+  /// In en, this message translates to:
+  /// **'Part'**
+  String get csvHeaderPart;
+
+  /// CSV column header: who plays the part
+  ///
+  /// In en, this message translates to:
+  /// **'Performer'**
+  String get csvHeaderPerformer;
+
+  /// CSV column header: take status
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get csvHeaderStatus;
+
+  /// CSV column header: notes
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get csvHeaderNotes;
+
+  /// Menu entry exporting one song's parts to an .xlsx workbook
+  ///
+  /// In en, this message translates to:
+  /// **'Export parts as Excel (.xlsx)'**
+  String get exportPartsXlsx;
+
+  /// Settings entry exporting every project's parts to one .xlsx workbook
+  ///
+  /// In en, this message translates to:
+  /// **'Export all song parts as Excel (.xlsx)'**
+  String get exportAllPartsXlsx;
+
+  /// Subtitle of the export-all-parts-to-Excel settings entry
+  ///
+  /// In en, this message translates to:
+  /// **'The same sheet as the CSV, with a frozen header row, column filters and colour-coded take statuses'**
+  String get exportAllPartsXlsxSubtitle;
+
+  /// Menu entry that reads a parts list back in from a CSV or Excel file
+  ///
+  /// In en, this message translates to:
+  /// **'Import parts from a spreadsheet'**
+  String get importPartsFromSpreadsheet;
+
+  /// Title of the file picker for importing parts
+  ///
+  /// In en, this message translates to:
+  /// **'Select a CSV or Excel file'**
+  String get partsImportPickerTitle;
+
+  /// Snackbar summarising how many parts an import added and updated
+  ///
+  /// In en, this message translates to:
+  /// **'{added} parts added, {updated} updated'**
+  String partsImported(int added, int updated);
+
+  /// Snackbar shown when an imported spreadsheet contained no usable parts
+  ///
+  /// In en, this message translates to:
+  /// **'No parts found in that file'**
+  String get partsImportNothingFound;
+
+  /// Snackbar shown when a spreadsheet could not be read
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read that spreadsheet: {error}'**
+  String partsImportFailed(String error);
+
+  /// Tooltip of the overflow menu in the parts section header
+  ///
+  /// In en, this message translates to:
+  /// **'More part actions'**
+  String get partsMoreActions;
+
+  /// Title bar of the full-page parts workspace for one project
+  ///
+  /// In en, this message translates to:
+  /// **'{name} — Parts'**
+  String partsPageTitle(String name);
+
+  /// Button on the project detail summary card that opens the parts workspace
+  ///
+  /// In en, this message translates to:
+  /// **'Manage parts'**
+  String get manageParts;
+
+  /// Shown on the summary card when it lists only the first few parts
+  ///
+  /// In en, this message translates to:
+  /// **'+{count} more'**
+  String partsMoreCount(int count);
+
+  /// Placeholder of the parts workspace search field
+  ///
+  /// In en, this message translates to:
+  /// **'Search parts'**
+  String get searchParts;
+
+  /// Take-status filter entry that applies no filtering
+  ///
+  /// In en, this message translates to:
+  /// **'All statuses'**
+  String get allStatuses;
+
+  /// Performer filter entry that applies no filtering
+  ///
+  /// In en, this message translates to:
+  /// **'All performers'**
+  String get allPerformers;
+
+  /// How many parts are currently multi-selected
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String partsSelectedCount(int count);
+
+  /// Bulk action: set the take status of every selected part
+  ///
+  /// In en, this message translates to:
+  /// **'Set status'**
+  String get setPartStatus;
+
+  /// Bulk action: assign one performer to every selected part
+  ///
+  /// In en, this message translates to:
+  /// **'Assign performer'**
+  String get assignPartPerformer;
+
+  /// Bulk action: delete every selected part
+  ///
+  /// In en, this message translates to:
+  /// **'Delete selected'**
+  String get deleteSelectedParts;
+
+  /// Confirmation body before deleting the selected parts
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {count} parts from this song?'**
+  String deleteSelectedPartsConfirm(int count);
+
+  /// Snackbar reporting how many parts were deleted
+  ///
+  /// In en, this message translates to:
+  /// **'{count} parts deleted'**
+  String partsDeleted(int count);
+
+  /// Empty state when search or filters hide every part
+  ///
+  /// In en, this message translates to:
+  /// **'No parts match these filters'**
+  String get noPartsMatchFilters;
+
+  /// Explains that drag-reordering needs the unfiltered, unsorted list
+  ///
+  /// In en, this message translates to:
+  /// **'Clear the search, filters and sorting to drag parts into order'**
+  String get reorderNeedsUnfilteredList;
 }
 
 class _AppLocalizationsDelegate

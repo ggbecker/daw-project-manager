@@ -12,6 +12,8 @@ import '../models/release_file.dart';
 import '../models/profile.dart';
 import '../models/todo_item.dart';
 import '../models/todo_template.dart';
+import '../models/part_template.dart';
+import '../models/project_part.dart';
 import '../models/project_template.dart';
 import '../models/template_root.dart';
 import '../repository/project_repository.dart';
@@ -39,6 +41,7 @@ class BackupService {
       // Drive — notably Flatpak, where Drive sync is unavailable — had no way
       // to back up their templates or phase customization at all.
       final templates = await _readGlobalTemplates();
+      final partTemplates = await _readGlobalPartTemplates();
       final projectTemplates = await _readGlobalProjectTemplates();
       final templateRoots = await _readGlobalTemplateRoots();
       final customMixdownFolders = await _readCustomMixdownFolders();
@@ -52,9 +55,10 @@ class BackupService {
       // Create backup data structure
       final backupData = {
         // 1.1 added templates/projectTemplates/templateRoots/
-        // customMixdownFolders/phaseSettings. Importing an older file still
-        // works — every new key is read with a null check on the way back in.
-        'version': '1.1',
+        // customMixdownFolders/phaseSettings. 1.2 added partTemplates (and, on
+        // each project, its parts). Importing an older file still works
+        // — every new key is read with a null check on the way back in.
+        'version': '1.2',
         'exportDate': DateTime.now().toIso8601String(),
         'profileId': profileId,
         'profile': profile != null ? await _profileToJson(profile) : null,
@@ -63,6 +67,7 @@ class BackupService {
         'ignoredPaths': ignoredPaths.map((ip) => _ignoredPathToJson(ip)).toList(),
         'releases': await Future.wait(releases.map((r) => _releaseToJson(r))),
         'templates': templates.map(_todoTemplateToJson).toList(),
+        'partTemplates': partTemplates.map((t) => t.toJson()).toList(),
         'projectTemplates': projectTemplates.map(_projectTemplateToJson).toList(),
         'templateRoots': templateRoots.map(_templateRootToJson).toList(),
         'customMixdownFolders': customMixdownFolders,
@@ -200,6 +205,18 @@ class BackupService {
         }
       }
 
+      final importedPartTemplates = <PartTemplate>[];
+      if (backupData['partTemplates'] != null) {
+        for (final templateJson in backupData['partTemplates'] as List) {
+          try {
+            importedPartTemplates
+                .add(PartTemplate.fromJson(templateJson as Map<String, dynamic>));
+          } catch (e) {
+            continue;
+          }
+        }
+      }
+
       final importedProjectTemplates = <ProjectTemplate>[];
       if (backupData['projectTemplates'] != null) {
         for (final templateJson in backupData['projectTemplates'] as List) {
@@ -319,6 +336,7 @@ class BackupService {
       // only mode-sensitive behavior is Replace clearing each box first, same
       // as targetRepo.clearAllData() does for the per-profile boxes above.
       await _writeGlobalTemplates(importedTemplates, importMode);
+      await _writeGlobalPartTemplates(importedPartTemplates, importMode);
       await _writeGlobalProjectTemplates(importedProjectTemplates, importMode);
       await _writeGlobalTemplateRoots(importedTemplateRoots, importMode);
       await _writeCustomMixdownFolders(importedCustomMixdownFolders);
@@ -374,6 +392,7 @@ class BackupService {
 
   static const String _appSettingsBoxName = 'app_settings';
   static const String _todoTemplatesBoxName = 'todoTemplates';
+  static const String _partTemplatesBoxName = 'partTemplates';
   static const String _projectTemplatesBoxName = 'projectTemplates';
   static const String _templateRootsBoxName = 'templateRoots';
   static const String _customMixdownFoldersKey = 'customMixdownFolders';
@@ -383,6 +402,15 @@ class BackupService {
   static Future<List<TodoTemplate>> _readGlobalTemplates() async {
     try {
       final box = await Hive.openBox<TodoTemplate>(_todoTemplatesBoxName);
+      return box.values.toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  static Future<List<PartTemplate>> _readGlobalPartTemplates() async {
+    try {
+      final box = await Hive.openBox<PartTemplate>(_partTemplatesBoxName);
       return box.values.toList();
     } catch (_) {
       return const [];
@@ -497,6 +525,20 @@ class BackupService {
       // A failed template restore shouldn't fail the whole import — the
       // projects/releases the user actually came for are already in.
     }
+  }
+
+  static Future<void> _writeGlobalPartTemplates(
+    List<PartTemplate> templates,
+    ImportMode importMode,
+  ) async {
+    if (templates.isEmpty) return;
+    try {
+      final box = await Hive.openBox<PartTemplate>(_partTemplatesBoxName);
+      if (importMode == ImportMode.replace) await box.clear();
+      for (final template in templates) {
+        await box.put(template.id, template);
+      }
+    } catch (_) {}
   }
 
   static Future<void> _writeGlobalProjectTemplates(
@@ -629,6 +671,16 @@ class BackupService {
       _writeGlobalTemplates(templates, mode);
 
   @visibleForTesting
+  static Future<List<PartTemplate>> readGlobalPartTemplatesForTest() =>
+      _readGlobalPartTemplates();
+  @visibleForTesting
+  static Future<void> writeGlobalPartTemplatesForTest(
+    List<PartTemplate> templates,
+    ImportMode mode,
+  ) =>
+      _writeGlobalPartTemplates(templates, mode);
+
+  @visibleForTesting
   static Future<List<ProjectTemplate>> readGlobalProjectTemplatesForTest() =>
       _readGlobalProjectTemplates();
   @visibleForTesting
@@ -717,6 +769,7 @@ class BackupService {
       'dawType': project.dawType,
       'dawVersion': project.dawVersion,
       'todos': project.todos.map((t) => _todoToJson(t)).toList(),
+      'parts': project.parts.map((part) => part.toJson()).toList(),
       'hidden': project.hidden,
       'previewSongPath': project.previewSongPath,
       'fileCreatedAt': project.fileCreatedAt?.toIso8601String(),
@@ -761,6 +814,10 @@ class BackupService {
       dawType: json['dawType'] as String?,
       dawVersion: json['dawVersion'] as String?,
       todos: (json['todos'] as List?)?.map((t) => _todoFromJson(t as Map<String, dynamic>)).toList() ?? [],
+      parts: (json['parts'] as List?)
+              ?.map((part) => ProjectPart.fromJson(part as Map<dynamic, dynamic>))
+              .toList() ??
+          const [],
       hidden: json['hidden'] as bool? ?? false,
       previewSongPath: json['previewSongPath'] as String?,
       fileCreatedAt: json['fileCreatedAt'] != null ? DateTime.parse(json['fileCreatedAt'] as String) : null,

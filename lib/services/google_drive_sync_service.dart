@@ -20,6 +20,8 @@ import '../models/release_file.dart';
 import '../models/scan_root.dart';
 import '../models/todo_item.dart';
 import '../models/todo_template.dart';
+import '../models/part_template.dart';
+import '../models/project_part.dart';
 import '../models/project_template.dart';
 import '../models/template_root.dart';
 import '../models/backup_progress.dart';
@@ -3001,6 +3003,20 @@ class GoogleDriveSyncService {
         }
       }
 
+      // Collect part templates (global, not per-profile)
+      final List<PartTemplate> allPartTemplates = [];
+      try {
+        final partTemplatesBox = await Hive.openBox<PartTemplate>('partTemplates');
+        allPartTemplates.addAll(partTemplatesBox.values);
+        if (kDebugMode) {
+          print('Collected ${allPartTemplates.length} part templates');
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error collecting part templates: $e');
+        }
+      }
+
       // Collect project templates (global, not per-profile)
       final List<ProjectTemplate> allProjectTemplates = [];
       try {
@@ -3069,6 +3085,7 @@ class GoogleDriveSyncService {
         'releases': allReleases.map((r) => _serializeRelease(r)).toList(),
         'roots': allRoots.map((r) => _serializeRoot(r)).toList(),
         'templates': allTemplates.map((t) => _serializeTemplate(t)).toList(),
+        'partTemplates': allPartTemplates.map((t) => t.toJson()).toList(),
         'projectTemplates': allProjectTemplates.map((t) => _serializeProjectTemplate(t)).toList(),
         'templateRoots': allTemplateRoots.map((r) => _serializeTemplateRoot(r)).toList(),
         // NEW: Custom mixdown folder names (global preference, not per-profile)
@@ -3128,6 +3145,7 @@ class GoogleDriveSyncService {
         print('Projects included: ${(data['projects'] as List).length}');
         print('Releases included: ${(data['releases'] as List).length}');
         print('Templates included: ${(data['templates'] as List).length}');
+        print('Part templates included: ${(data['partTemplates'] as List).length}');
         print('Project templates included: ${(data['projectTemplates'] as List).length}');
         print('Template roots included: ${(data['templateRoots'] as List).length}');
       }
@@ -3598,6 +3616,7 @@ class GoogleDriveSyncService {
     // and must be propagated to mobile — they are NOT derived from the Android filesystem.
     return remote.notes != local.notes ||
         !_todosEqual(remote.todos, local.todos) ||
+        !_listEquals(remote.parts, local.parts) ||
         remote.bpm != local.bpm ||
         remote.musicalKey != local.musicalKey ||
         remote.status != local.status ||
@@ -4121,6 +4140,7 @@ class GoogleDriveSyncService {
                     // Metadata fields from remote (user-editable)
                     notes: remoteProject.notes,
                     todos: remoteProject.todos,
+                    parts: remoteProject.parts,
                     bpm: remoteProject.bpm,
                     musicalKey: remoteProject.musicalKey,
                     status: remoteProject.status,
@@ -4169,6 +4189,9 @@ class GoogleDriveSyncService {
                     if (remoteProject.notes != localProject.notes) changes.add('notes');
                     if (!_todosEqual(remoteProject.todos, localProject.todos)) {
                       changes.add('todos (${remoteProject.todos.length} vs ${localProject.todos.length})');
+                    }
+                    if (!_listEquals(remoteProject.parts, localProject.parts)) {
+                      changes.add('parts (${remoteProject.parts.length} vs ${localProject.parts.length})');
                     }
                     if (remoteProject.bpm != localProject.bpm) changes.add('bpm');
                     if (remoteProject.musicalKey != localProject.musicalKey) changes.add('key');
@@ -4715,6 +4738,30 @@ class GoogleDriveSyncService {
       }
     }
 
+    // Merge part templates (global, not per-profile) - same newer-wins rule as
+    // project templates below, so a lineup edited locally since the last backup
+    // isn't clobbered by an older remote copy.
+    if (remoteData['partTemplates'] != null) {
+      try {
+        final remotePartTemplates = (remoteData['partTemplates'] as List)
+            .map((t) => PartTemplate.fromJson(t as Map<String, dynamic>))
+            .toList();
+        final partTemplatesBox = await Hive.openBox<PartTemplate>('partTemplates');
+        for (final remoteTemplate in remotePartTemplates) {
+          final localTemplate = partTemplatesBox.get(remoteTemplate.id);
+          if (localTemplate == null ||
+              remoteTemplate.updatedAt.isAfter(localTemplate.updatedAt)) {
+            await partTemplatesBox.put(remoteTemplate.id, remoteTemplate);
+          }
+        }
+        if (kDebugMode) {
+          print('  Part templates: ${partTemplatesBox.length} after merge');
+        }
+      } catch (e) {
+        if (kDebugMode) print('Error merging part templates: $e');
+      }
+    }
+
     // Merge TODO templates (global, not per-profile) - same newer-wins rule as
     // project templates below. These are uploaded in every backup under
     // 'templates'; without this block they were silently dropped on restore.
@@ -4956,6 +5003,7 @@ class GoogleDriveSyncService {
         'completed': t.completed,
         'createdAt': t.createdAt.toIso8601String(),
       }).toList(),
+      'parts': project.parts.map((p) => p.toJson()).toList(),
       'hidden': project.hidden,
       'previewSongPath': project.previewSongPath,
       'previewSongFileName': project.previewSongFileName,
@@ -5005,6 +5053,10 @@ class GoogleDriveSyncService {
         completed: t['completed'] as bool? ?? false,
         createdAt: DateTime.parse(t['createdAt'] as String),
       )).toList() ?? const [],
+      parts: (data['parts'] as List?)
+              ?.map((p) => ProjectPart.fromJson(p as Map<dynamic, dynamic>))
+              .toList() ??
+          const [],
       hidden: data['hidden'] as bool? ?? false,
       previewSongPath: data['previewSongPath'] as String?,
       previewSongFileName: data['previewSongFileName'] as String?,
@@ -5304,6 +5356,7 @@ class GoogleDriveSyncService {
       projectToSave = localProject.copyWith(
         notes: remoteProject.notes,
         todos: remoteProject.todos,
+        parts: remoteProject.parts,
         bpm: remoteProject.bpm,
         musicalKey: remoteProject.musicalKey,
         status: remoteProject.status,

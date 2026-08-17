@@ -1,5 +1,6 @@
 import '../generated/l10n/app_localizations.dart';
 import '../models/music_project.dart';
+import '../utils/part_status_display.dart';
 
 /// Formats [MusicProject] data as human-readable plain text, so a record of a
 /// project survives even after its DAW file and library entry are gone.
@@ -82,6 +83,28 @@ class ProjectTextExportService {
       for (final line in notes.split('\n')) {
         buffer.writeln('  $line');
       }
+    }
+
+    if (project.parts.isNotEmpty) {
+      buffer
+        ..writeln()
+        ..writeln(l10n.projectExportPartsLabel);
+      for (final part in project.parts) {
+        final performer = part.performer?.trim();
+        final who = performer != null && performer.isNotEmpty
+            ? performer
+            : l10n.partsUnassignedPerformer;
+        buffer.writeln('  ${part.name} — $who — ${part.status.label(l10n)}');
+        final notes = part.notes?.trim();
+        if (notes != null && notes.isNotEmpty) {
+          for (final line in notes.split('\n')) {
+            buffer.writeln('      $line');
+          }
+        }
+      }
+      buffer.writeln(
+        '  ${l10n.partsProgress(project.partsDoneCount, project.parts.length)}',
+      );
     }
 
     if (project.todos.isNotEmpty) {

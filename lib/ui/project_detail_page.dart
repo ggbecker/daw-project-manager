@@ -40,6 +40,7 @@ import 'widgets/conversion_progress_dialog.dart';
 import 'widgets/desktop_title_bar.dart';
 import 'widgets/project_detail_header.dart';
 import 'widgets/resizable_text_field.dart';
+import 'widgets/parts_summary_card.dart';
 import 'widgets/todo_list_widget.dart';
 import 'widgets/waveform_widget.dart';
 import 'project_statistics_page.dart';
@@ -1167,6 +1168,11 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                                 }
                               },
                             ),
+
+                            const SizedBox(height: 24),
+                            // Instruments & Parts — progress at a glance; the
+                            // editing workspace is a page of its own.
+                            PartsSummaryCard(project: updatedProject),
 
                             const SizedBox(height: 24),
                             // TODO List

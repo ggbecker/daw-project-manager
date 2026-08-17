@@ -4396,4 +4396,265 @@ class AppLocalizationsFr extends AppLocalizations {
   String sharePreviewSongZipText(String name) {
     return 'Chanson d\'aperçu (ZIP) : $name';
   }
+
+  @override
+  String get songParts => 'Instruments et parties';
+
+  @override
+  String partsProgress(int done, int total) {
+    return '$done sur $total prises finales';
+  }
+
+  @override
+  String get noPartsYet => 'Aucune partie enregistrée pour l\'instant';
+
+  @override
+  String get noPartsYetHint =>
+      'Listez les instruments dont le morceau a besoin, qui les joue et où en est chaque prise.';
+
+  @override
+  String get addPart => 'Ajouter une partie';
+
+  @override
+  String get addPartHint => 'ex. Batterie, Voix principale, Basse';
+
+  @override
+  String get partNameLabel => 'Partie';
+
+  @override
+  String get partNameRequired => 'Le nom de la partie est obligatoire';
+
+  @override
+  String get partPerformerLabel => 'Interprète';
+
+  @override
+  String get partPerformerHint => 'Qui la joue';
+
+  @override
+  String get partNotesLabel => 'Notes de la partie';
+
+  @override
+  String get partStatusLabel => 'État de la prise';
+
+  @override
+  String get partStatusNeeded => 'À faire';
+
+  @override
+  String get partStatusRecording => 'En cours d\'enregistrement';
+
+  @override
+  String get partStatusEarlyTake => 'Prise provisoire';
+
+  @override
+  String get partStatusFinalTake => 'Prise finale';
+
+  @override
+  String get editPart => 'Modifier la partie';
+
+  @override
+  String get deletePart => 'Supprimer la partie';
+
+  @override
+  String get partsUnassignedPerformer => 'Non attribuée';
+
+  @override
+  String get partTemplates => 'Modèles de parties';
+
+  @override
+  String get importPartsFromTemplate => 'Importer des parties depuis un modèle';
+
+  @override
+  String get managePartTemplates => 'Gérer les modèles de parties';
+
+  @override
+  String get selectPartTemplate => 'Sélectionnez un modèle de parties';
+
+  @override
+  String get noPartTemplatesAvailable => 'Aucun modèle de parties disponible';
+
+  @override
+  String get noPartTemplatesYet => 'Aucun modèle de parties pour l\'instant';
+
+  @override
+  String get createFirstPartTemplate =>
+      'Créez-en un pour réutiliser la même formation d\'un morceau à l\'autre';
+
+  @override
+  String get createPartTemplate => 'Créer un modèle de parties';
+
+  @override
+  String get editPartTemplate => 'Modifier le modèle de parties';
+
+  @override
+  String get deletePartTemplate => 'Supprimer le modèle de parties';
+
+  @override
+  String deletePartTemplateConfirm(String name) {
+    return 'Voulez-vous vraiment supprimer le modèle de parties « $name » ?';
+  }
+
+  @override
+  String get partTemplateCreated => 'Modèle de parties créé';
+
+  @override
+  String get partTemplateUpdated => 'Modèle de parties mis à jour';
+
+  @override
+  String get partTemplateDeleted => 'Modèle de parties supprimé';
+
+  @override
+  String get partTemplateItems => 'Parties (une par ligne)';
+
+  @override
+  String get partTemplateItemsHint =>
+      'Batterie — Alex\nBasse — Sam\nVoix principale';
+
+  @override
+  String get partTemplateItemsHelp =>
+      'Une partie par ligne. Indiquez l\'interprète après un tiret : Batterie — Alex';
+
+  @override
+  String get partTemplateItemsRequired => 'Ajoutez au moins une partie';
+
+  @override
+  String get partTemplateNameAndItemsRequired =>
+      'Un nom et au moins une partie sont requis';
+
+  @override
+  String partTemplateItemCount(int count) {
+    return '$count partie(s)';
+  }
+
+  @override
+  String partTemplateImported(String name, int count) {
+    return 'Modèle de parties « $name » importé ($count parties)';
+  }
+
+  @override
+  String get errorLoadingPartTemplates =>
+      'Erreur lors du chargement des modèles de parties';
+
+  @override
+  String get exportPartsCsv => 'Exporter les parties en CSV';
+
+  @override
+  String get exportAllPartsCsv =>
+      'Exporter les parties de tous les morceaux en CSV';
+
+  @override
+  String get exportAllPartsCsvSubtitle =>
+      'Une ligne de tableur par partie, pour tous les projets — pour partager l\'avancement avec vos collaborateurs';
+
+  @override
+  String get noPartsToExport => 'Aucune partie à exporter';
+
+  @override
+  String partsCsvExported(int count) {
+    return '$count parties exportées';
+  }
+
+  @override
+  String get projectExportPartsLabel => 'Parties :';
+
+  @override
+  String get csvHeaderProject => 'Projet';
+
+  @override
+  String get csvHeaderPart => 'Partie';
+
+  @override
+  String get csvHeaderPerformer => 'Interprète';
+
+  @override
+  String get csvHeaderStatus => 'État';
+
+  @override
+  String get csvHeaderNotes => 'Notes';
+
+  @override
+  String get exportPartsXlsx => 'Exporter les parties en Excel (.xlsx)';
+
+  @override
+  String get exportAllPartsXlsx =>
+      'Exporter les parties de tous les morceaux en Excel (.xlsx)';
+
+  @override
+  String get exportAllPartsXlsxSubtitle =>
+      'La même feuille que le CSV, avec en-tête figé, filtres de colonne et états de prise en couleur';
+
+  @override
+  String get importPartsFromSpreadsheet =>
+      'Importer des parties depuis un tableur';
+
+  @override
+  String get partsImportPickerTitle => 'Sélectionnez un fichier CSV ou Excel';
+
+  @override
+  String partsImported(int added, int updated) {
+    return '$added parties ajoutées, $updated mises à jour';
+  }
+
+  @override
+  String get partsImportNothingFound => 'Aucune partie trouvée dans ce fichier';
+
+  @override
+  String partsImportFailed(String error) {
+    return 'Impossible de lire ce tableur : $error';
+  }
+
+  @override
+  String get partsMoreActions => 'Autres actions sur les parties';
+
+  @override
+  String partsPageTitle(String name) {
+    return '$name — Parties';
+  }
+
+  @override
+  String get manageParts => 'Gérer les parties';
+
+  @override
+  String partsMoreCount(int count) {
+    return '+$count de plus';
+  }
+
+  @override
+  String get searchParts => 'Rechercher des parties';
+
+  @override
+  String get allStatuses => 'Tous les états';
+
+  @override
+  String get allPerformers => 'Tous les interprètes';
+
+  @override
+  String partsSelectedCount(int count) {
+    return '$count sélectionnées';
+  }
+
+  @override
+  String get setPartStatus => 'Définir l\'état';
+
+  @override
+  String get assignPartPerformer => 'Attribuer un interprète';
+
+  @override
+  String get deleteSelectedParts => 'Supprimer la sélection';
+
+  @override
+  String deleteSelectedPartsConfirm(int count) {
+    return 'Supprimer $count parties de ce morceau ?';
+  }
+
+  @override
+  String partsDeleted(int count) {
+    return '$count parties supprimées';
+  }
+
+  @override
+  String get noPartsMatchFilters => 'Aucune partie ne correspond à ces filtres';
+
+  @override
+  String get reorderNeedsUnfilteredList =>
+      'Effacez la recherche, les filtres et le tri pour réorganiser les parties';
 }

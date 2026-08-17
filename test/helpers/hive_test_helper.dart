@@ -4,7 +4,9 @@ import 'package:daw_project_manager/models/ignored_path.dart';
 import 'package:daw_project_manager/models/music_project.dart';
 import 'package:daw_project_manager/models/playlist.dart';
 import 'package:daw_project_manager/models/profile.dart';
+import 'package:daw_project_manager/models/part_template.dart';
 import 'package:daw_project_manager/models/project_event.dart';
+import 'package:daw_project_manager/models/project_part.dart';
 import 'package:daw_project_manager/models/project_template.dart';
 import 'package:daw_project_manager/models/release.dart';
 import 'package:daw_project_manager/models/release_file.dart';
@@ -59,6 +61,8 @@ class HiveTestHelper {
     if (!Hive.isAdapterRegistered(11)) Hive.registerAdapter(ProjectEventAdapter());
     if (!Hive.isAdapterRegistered(12)) Hive.registerAdapter(ProjectTemplateAdapter());
     if (!Hive.isAdapterRegistered(13)) Hive.registerAdapter(TemplateRootAdapter());
+    if (!Hive.isAdapterRegistered(14)) Hive.registerAdapter(ProjectPartAdapter());
+    if (!Hive.isAdapterRegistered(15)) Hive.registerAdapter(PartTemplateAdapter());
   }
 
   /// Creates a [ProfileRepository] backed by the same temp Hive instance,

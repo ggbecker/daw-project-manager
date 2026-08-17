@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:daw_project_manager/generated/l10n/app_localizations_en.dart';
 import 'package:daw_project_manager/models/music_project.dart';
+import 'package:daw_project_manager/models/project_part.dart';
 import 'package:daw_project_manager/services/project_text_export_service.dart';
 import '../helpers/test_factories.dart';
 
@@ -77,6 +78,35 @@ void main() {
       expect(text, isNot(contains('Work sessions')));
       expect(text, isNot(contains('BPM:')));
       expect(text, isNot(contains('Key:')));
+      expect(text, isNot(contains('Parts:')));
+    });
+
+    test('lists each part with its performer, status and progress summary', () {
+      final project = TestFactories.makeProject(
+        parts: [
+          TestFactories.makePart(
+            id: 'p1',
+            name: 'Drums',
+            performer: 'Alex',
+            status: PartTakeStatus.finalTake,
+          ),
+          TestFactories.makePart(
+            id: 'p2',
+            name: 'Bass',
+            performer: null,
+            status: PartTakeStatus.recording,
+            notes: 'try the P-Bass',
+          ),
+        ],
+      );
+
+      final text = ProjectTextExportService.formatProject(project, l10n);
+
+      expect(text, contains('Parts:'));
+      expect(text, contains('Drums — Alex — Final take'));
+      expect(text, contains('Bass — Unassigned — Recording'));
+      expect(text, contains('try the P-Bass'));
+      expect(text, contains('1 of 2 final takes'));
     });
   });
 

@@ -20,6 +20,8 @@ import 'dev_library_picker.dart' show DevLibraryCard;
 import '../services/crash_logger.dart';
 import '../services/google_drive_sync_service.dart' show GoogleDriveSyncService;
 import '../services/mixdown_detector_service.dart';
+import '../services/project_parts_csv_export_service.dart';
+import '../services/project_parts_xlsx_export_service.dart';
 import '../services/project_text_export_service.dart';
 import '../services/scanner_service.dart';
 import '../services/update_check_service.dart';
@@ -416,6 +418,60 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       dawKey: existing.where((f) => f != folder).toList(),
     });
     ref.invalidate(customMixdownFoldersByDawProvider);
+  }
+
+  /// Every project's parts as one flat sheet — the shape people actually want
+  /// when handing recording progress to a bandmate or a studio. [asXlsx]
+  /// picks the formatted workbook over plain CSV.
+  Future<void> _exportAllParts({required bool asXlsx}) async {
+    final l10n = AppLocalizations.of(context)!;
+    final repo = await ref.read(repositoryProvider.future);
+    final projects = repo.getAllProjects();
+    final partCount = ProjectPartsCsvExportService.partCount(projects);
+
+    if (partCount == 0) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.noPartsToExport)),
+        );
+      }
+      return;
+    }
+
+    try {
+      final destPath = await FilePicker.saveFile(
+        dialogTitle: asXlsx ? l10n.exportAllPartsXlsx : l10n.exportAllPartsCsv,
+        fileName: asXlsx
+            ? ProjectPartsXlsxExportService.suggestedBulkFileName()
+            : ProjectPartsCsvExportService.suggestedBulkFileName(),
+        type: FileType.custom,
+        allowedExtensions: [asXlsx ? 'xlsx' : 'csv'],
+      );
+      if (destPath == null) return; // user cancelled
+
+      if (asXlsx) {
+        final workbook =
+            ProjectPartsXlsxExportService.buildWorkbook(projects, l10n);
+        if (workbook == null) return;
+        await File(destPath).writeAsBytes(workbook);
+      } else {
+        await File(destPath).writeAsString(
+          ProjectPartsCsvExportService.formatProjects(projects, l10n),
+        );
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.partsCsvExported(partCount))),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.failedToExportProjectInfo(e.toString()))),
+        );
+      }
+    }
   }
 
   Future<void> _exportAllProjectsInfo() async {
@@ -1019,6 +1075,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         _SearchEntry(SettingsSection.projectFolders, Icons.visibility_outlined, l10n.alwaysShowSmartFolders, l10n.alwaysShowSmartFoldersDescription),
         _SearchEntry(SettingsSection.projectFolders, Icons.block, l10n.excludedFoldersSectionTitle, l10n.excludedFoldersSectionSubtitle),
         _SearchEntry(SettingsSection.projectFolders, Icons.description_outlined, l10n.exportAllProjectsInfo, l10n.exportAllProjectsInfoSubtitle),
+        _SearchEntry(SettingsSection.projectFolders, Icons.table_view_outlined, l10n.exportAllPartsCsv, l10n.exportAllPartsCsvSubtitle),
+        _SearchEntry(SettingsSection.projectFolders, Icons.grid_on, l10n.exportAllPartsXlsx, l10n.exportAllPartsXlsxSubtitle),
         if (Platform.isLinux) ...[
           _SearchEntry(SettingsSection.dawLaunchCommands, Icons.terminal_outlined, l10n.dawLaunchCommandsTabLabel, l10n.dawLaunchCommandsSectionDescription),
         ],
@@ -1770,6 +1828,59 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   onPressed: _busy ? null : _exportAllProjectsInfo,
                   icon: const Icon(Icons.description_outlined),
                   label: Text(l10n.exportAllProjectsInfo),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        Card(
+          clipBehavior: Clip.antiAlias,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                const Icon(Icons.table_view_outlined),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(l10n.exportAllPartsCsv, style: Theme.of(context).textTheme.titleMedium),
+                      const SizedBox(height: 2),
+                      Text(
+                        l10n.exportAllPartsCsvSubtitle,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        l10n.exportAllPartsXlsxSubtitle,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    FilledButton.tonalIcon(
+                      onPressed:
+                          _busy ? null : () => _exportAllParts(asXlsx: false),
+                      icon: const Icon(Icons.table_view_outlined),
+                      label: const Text('CSV'),
+                    ),
+                    const SizedBox(height: 8),
+                    FilledButton.tonalIcon(
+                      onPressed:
+                          _busy ? null : () => _exportAllParts(asXlsx: true),
+                      icon: const Icon(Icons.grid_on),
+                      label: const Text('Excel (.xlsx)'),
+                    ),
+                  ],
                 ),
               ],
             ),

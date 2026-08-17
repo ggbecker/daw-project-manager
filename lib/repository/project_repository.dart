@@ -13,6 +13,8 @@ import '../models/scan_root.dart';
 import '../models/ignored_path.dart';
 import '../models/release.dart';
 import '../models/release_file.dart';
+import '../models/part_template.dart';
+import '../models/project_part.dart';
 import '../models/todo_item.dart';
 import '../models/todo_template.dart';
 import '../models/project_template.dart';
@@ -335,6 +337,12 @@ class ProjectRepository {
     }
     if (!Hive.isAdapterRegistered(13)) {
       Hive.registerAdapter(TemplateRootAdapter());
+    }
+    if (!Hive.isAdapterRegistered(14)) {
+      Hive.registerAdapter(ProjectPartAdapter());
+    }
+    if (!Hive.isAdapterRegistered(15)) {
+      Hive.registerAdapter(PartTemplateAdapter());
     }
 
     // Get current profile
@@ -1309,6 +1317,7 @@ class ProjectRepository {
     const globalBoxNames = [
       'settings', 'app_settings', 'notification_preferences',
       'todoTemplates',
+      'partTemplates',
       'projectTemplates',
       'templateRoots',
       'profiles',

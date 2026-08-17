@@ -32,6 +32,8 @@ import '../models/release.dart';
 import '../models/profile.dart';
 import '../models/playlist.dart';
 import '../models/todo_template.dart';
+import '../models/part_template.dart';
+import '../models/project_part.dart';
 import '../models/project_template.dart';
 import '../models/template_root.dart';
 import '../models/project_event.dart';
@@ -511,9 +513,19 @@ final projectsProvider = Provider<List<MusicProject>>((ref) {
           projects = projects
               .where(
                 (p) => fuzzyMatchAny(
-                  // projectNotes are the read-only notes extracted from the
-                  // DAW file itself — real user content, so searchable too.
-                  [p.displayName, p.notes, p.projectNotes],
+                  [
+                    p.displayName,
+                    p.notes,
+                    // projectNotes are the read-only notes extracted from the
+                    // DAW file itself — real user content, so searchable too.
+                    p.projectNotes,
+                    // Instrumentation is searchable too, so "who played bass
+                    // on which song" is answerable from the projects list.
+                    // Guarded because this runs per project per keystroke and
+                    // searchableText builds a string.
+                    if (p.parts.isNotEmpty)
+                      ProjectPart.searchableText(p.parts),
+                  ],
                   projectsSearch,
                 ),
               )
@@ -1381,6 +1393,49 @@ class TodoTemplatesNotifier extends Notifier<void> {
 final todoTemplatesNotifierProvider =
     NotifierProvider<TodoTemplatesNotifier, void>(() {
       return TodoTemplatesNotifier();
+    });
+
+// Part Templates Provider — reusable lineups (drums/bass/guitar/vocals…) a
+// song's parts list can be seeded from. Global (not per-profile), mirrors
+// TodoTemplate's box pattern.
+final partTemplatesProvider = StreamProvider<List<PartTemplate>>((ref) async* {
+  await ensureHiveInitialized();
+  final box = await Hive.openBox<PartTemplate>('partTemplates');
+
+  yield box.values.toList()..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+
+  await for (final _ in box.watch()) {
+    yield box.values.toList()
+      ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+  }
+});
+
+class PartTemplatesNotifier extends Notifier<void> {
+  @override
+  void build() {}
+
+  Future<void> addTemplate(PartTemplate template) async {
+    await ensureHiveInitialized();
+    final box = await Hive.openBox<PartTemplate>('partTemplates');
+    await box.put(template.id, template);
+  }
+
+  Future<void> updateTemplate(PartTemplate template) async {
+    await ensureHiveInitialized();
+    final box = await Hive.openBox<PartTemplate>('partTemplates');
+    await box.put(template.id, template);
+  }
+
+  Future<void> deleteTemplate(String id) async {
+    await ensureHiveInitialized();
+    final box = await Hive.openBox<PartTemplate>('partTemplates');
+    await box.delete(id);
+  }
+}
+
+final partTemplatesNotifierProvider =
+    NotifierProvider<PartTemplatesNotifier, void>(() {
+      return PartTemplatesNotifier();
     });
 
 // Project Templates Provider — "starter kit" folders a new project can be

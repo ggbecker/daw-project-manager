@@ -4348,4 +4348,260 @@ class AppLocalizationsEn extends AppLocalizations {
   String sharePreviewSongZipText(String name) {
     return 'Preview song (ZIP): $name';
   }
+
+  @override
+  String get songParts => 'Instruments & Parts';
+
+  @override
+  String partsProgress(int done, int total) {
+    return '$done of $total final takes';
+  }
+
+  @override
+  String get noPartsYet => 'No parts tracked yet';
+
+  @override
+  String get noPartsYetHint =>
+      'List the instruments this song needs, who plays them, and how far each take has got.';
+
+  @override
+  String get addPart => 'Add part';
+
+  @override
+  String get addPartHint => 'e.g. Drums, Lead Vocals, Bass';
+
+  @override
+  String get partNameLabel => 'Part';
+
+  @override
+  String get partNameRequired => 'A part name is required';
+
+  @override
+  String get partPerformerLabel => 'Performer';
+
+  @override
+  String get partPerformerHint => 'Who plays it';
+
+  @override
+  String get partNotesLabel => 'Part notes';
+
+  @override
+  String get partStatusLabel => 'Take status';
+
+  @override
+  String get partStatusNeeded => 'Needed';
+
+  @override
+  String get partStatusRecording => 'Recording';
+
+  @override
+  String get partStatusEarlyTake => 'Early take';
+
+  @override
+  String get partStatusFinalTake => 'Final take';
+
+  @override
+  String get editPart => 'Edit part';
+
+  @override
+  String get deletePart => 'Delete part';
+
+  @override
+  String get partsUnassignedPerformer => 'Unassigned';
+
+  @override
+  String get partTemplates => 'Part Templates';
+
+  @override
+  String get importPartsFromTemplate => 'Import parts from template';
+
+  @override
+  String get managePartTemplates => 'Manage part templates';
+
+  @override
+  String get selectPartTemplate => 'Select a part template';
+
+  @override
+  String get noPartTemplatesAvailable => 'No part templates available';
+
+  @override
+  String get noPartTemplatesYet => 'No part templates yet';
+
+  @override
+  String get createFirstPartTemplate =>
+      'Create one to reuse the same lineup across songs';
+
+  @override
+  String get createPartTemplate => 'Create part template';
+
+  @override
+  String get editPartTemplate => 'Edit part template';
+
+  @override
+  String get deletePartTemplate => 'Delete part template';
+
+  @override
+  String deletePartTemplateConfirm(String name) {
+    return 'Are you sure you want to delete the part template \"$name\"?';
+  }
+
+  @override
+  String get partTemplateCreated => 'Part template created';
+
+  @override
+  String get partTemplateUpdated => 'Part template updated';
+
+  @override
+  String get partTemplateDeleted => 'Part template deleted';
+
+  @override
+  String get partTemplateItems => 'Parts (one per line)';
+
+  @override
+  String get partTemplateItemsHint => 'Drums — Alex\nBass — Sam\nLead Vocals';
+
+  @override
+  String get partTemplateItemsHelp =>
+      'One part per line. Name a performer after a dash: Drums — Alex';
+
+  @override
+  String get partTemplateItemsRequired => 'Add at least one part';
+
+  @override
+  String get partTemplateNameAndItemsRequired =>
+      'A name and at least one part are required';
+
+  @override
+  String partTemplateItemCount(int count) {
+    return '$count part(s)';
+  }
+
+  @override
+  String partTemplateImported(String name, int count) {
+    return 'Part template \"$name\" imported ($count parts)';
+  }
+
+  @override
+  String get errorLoadingPartTemplates => 'Error loading part templates';
+
+  @override
+  String get exportPartsCsv => 'Export parts as CSV';
+
+  @override
+  String get exportAllPartsCsv => 'Export all song parts as CSV';
+
+  @override
+  String get exportAllPartsCsvSubtitle =>
+      'One spreadsheet row per part, across every project — for sharing progress with collaborators';
+
+  @override
+  String get noPartsToExport => 'No parts to export';
+
+  @override
+  String partsCsvExported(int count) {
+    return 'Exported $count parts';
+  }
+
+  @override
+  String get projectExportPartsLabel => 'Parts:';
+
+  @override
+  String get csvHeaderProject => 'Project';
+
+  @override
+  String get csvHeaderPart => 'Part';
+
+  @override
+  String get csvHeaderPerformer => 'Performer';
+
+  @override
+  String get csvHeaderStatus => 'Status';
+
+  @override
+  String get csvHeaderNotes => 'Notes';
+
+  @override
+  String get exportPartsXlsx => 'Export parts as Excel (.xlsx)';
+
+  @override
+  String get exportAllPartsXlsx => 'Export all song parts as Excel (.xlsx)';
+
+  @override
+  String get exportAllPartsXlsxSubtitle =>
+      'The same sheet as the CSV, with a frozen header row, column filters and colour-coded take statuses';
+
+  @override
+  String get importPartsFromSpreadsheet => 'Import parts from a spreadsheet';
+
+  @override
+  String get partsImportPickerTitle => 'Select a CSV or Excel file';
+
+  @override
+  String partsImported(int added, int updated) {
+    return '$added parts added, $updated updated';
+  }
+
+  @override
+  String get partsImportNothingFound => 'No parts found in that file';
+
+  @override
+  String partsImportFailed(String error) {
+    return 'Couldn\'t read that spreadsheet: $error';
+  }
+
+  @override
+  String get partsMoreActions => 'More part actions';
+
+  @override
+  String partsPageTitle(String name) {
+    return '$name — Parts';
+  }
+
+  @override
+  String get manageParts => 'Manage parts';
+
+  @override
+  String partsMoreCount(int count) {
+    return '+$count more';
+  }
+
+  @override
+  String get searchParts => 'Search parts';
+
+  @override
+  String get allStatuses => 'All statuses';
+
+  @override
+  String get allPerformers => 'All performers';
+
+  @override
+  String partsSelectedCount(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get setPartStatus => 'Set status';
+
+  @override
+  String get assignPartPerformer => 'Assign performer';
+
+  @override
+  String get deleteSelectedParts => 'Delete selected';
+
+  @override
+  String deleteSelectedPartsConfirm(int count) {
+    return 'Delete $count parts from this song?';
+  }
+
+  @override
+  String partsDeleted(int count) {
+    return '$count parts deleted';
+  }
+
+  @override
+  String get noPartsMatchFilters => 'No parts match these filters';
+
+  @override
+  String get reorderNeedsUnfilteredList =>
+      'Clear the search, filters and sorting to drag parts into order';
 }
