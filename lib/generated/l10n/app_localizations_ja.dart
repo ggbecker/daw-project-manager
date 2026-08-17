@@ -3373,9 +3373,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get playerNotes => 'メモ';
 
   @override
-  String get playerDawNotes => 'DAWファイルのノート';
-
-  @override
   String get playerTasks => 'タスク';
 
   @override

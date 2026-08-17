@@ -11,7 +11,9 @@ import 'package:daw_project_manager/ui/widgets/project_notes_section.dart';
 /// so these can run without opening Hive.
 void main() {
   const userLabel = 'NOTES';
-  const dawLabel = 'DAW FILE NOTES';
+  // The players label this block with the very string the project detail page
+  // uses for the same field (l10n.projectNotesFromDaw).
+  const dawLabel = 'Project Notes (from DAW file)';
 
   Widget wrap({String? userNotes, String? dawNotes, int lineLimit = 8}) =>
       MaterialApp(
@@ -125,6 +127,10 @@ void main() {
       expect(find.text('Collapse'), findsOneWidget);
       expect(find.text('Expand'), findsNothing);
 
+      // Expanded, the 40 lines push the toggle past the bottom of the 600px
+      // test viewport; tapping it there silently misses.
+      await tester.ensureVisible(find.text('Collapse'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Collapse'));
       await tester.pump();
       expect(find.text('Expand'), findsOneWidget);

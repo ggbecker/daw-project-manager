@@ -3457,9 +3457,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get playerNotes => 'NOTAS';
 
   @override
-  String get playerDawNotes => 'NOTAS DO ARQUIVO DAW';
-
-  @override
   String get playerTasks => 'TAREFAS';
 
   @override

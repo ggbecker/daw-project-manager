@@ -3338,9 +3338,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playerNotes => '备注';
 
   @override
-  String get playerDawNotes => 'DAW 文件备注';
-
-  @override
   String get playerTasks => '任务';
 
   @override

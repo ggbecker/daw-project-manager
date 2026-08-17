@@ -3455,9 +3455,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get playerNotes => 'ЗАМЕТКИ';
 
   @override
-  String get playerDawNotes => 'ЗАМЕТКИ ИЗ ФАЙЛА DAW';
-
-  @override
   String get playerTasks => 'ЗАДАЧИ';
 
   @override

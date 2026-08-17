@@ -2275,7 +2275,6 @@
   "playerRemoveFromQueue": "キューから削除",
   "playerDismissDetail": "詳細を閉じる",
   "playerNotes": "メモ",
-  "playerDawNotes": "DAWファイルのノート",
   "playerTasks": "タスク",
   "playerNoTasks": "タスクはまだありません。",
   "playerAddTaskHint": "タスクを追加…",

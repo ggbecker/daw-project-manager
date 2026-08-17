@@ -3468,9 +3468,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get playerNotes => 'NOTIZEN';
 
   @override
-  String get playerDawNotes => 'NOTIZEN AUS DAW-DATEI';
-
-  @override
   String get playerTasks => 'AUFGABEN';
 
   @override

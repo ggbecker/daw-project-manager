@@ -2275,7 +2275,6 @@
   "playerRemoveFromQueue": "Quitar de la cola",
   "playerDismissDetail": "Cerrar detalle",
   "playerNotes": "NOTAS",
-  "playerDawNotes": "NOTAS DEL ARCHIVO DAW",
   "playerTasks": "TAREAS",
   "playerNoTasks": "Sin tareas aún.",
   "playerAddTaskHint": "Añadir una tarea…",
