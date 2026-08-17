@@ -11,9 +11,11 @@ import '../models/todo_item.dart';
 import '../providers/providers.dart';
 import '../generated/l10n/app_localizations.dart';
 import '../services/audio_analysis_service.dart';
+import '../utils/project_freshness.dart';
 import 'preview_share.dart';
 import 'project_detail_page.dart';
 import 'widgets/conversion_progress_dialog.dart';
+import 'widgets/project_notes_section.dart';
 
 class MobilePlayerPage extends ConsumerStatefulWidget {
   const MobilePlayerPage({super.key});
@@ -423,8 +425,15 @@ class _MobilePlayerPageState extends ConsumerState<MobilePlayerPage> {
     // Bind the swipeable queue to the player's ordered queue so swiping follows
     // the play order (respecting shuffle); fall back to the dashboard list only
     // until playback has started.
-    final queue =
+    final orderedQueue =
         playerState.queue.isNotEmpty ? playerState.queue : providerQueue;
+    // The player's queue holds project snapshots taken when playback started,
+    // so an edit made since (notes, phase, name) would otherwise never show up
+    // here. Re-resolve each entry against the repository, keeping play order.
+    final latestProjects = ref.watch(allProjectsStreamProvider).asData?.value;
+    final queue = freshestProjects(orderedQueue, latestProjects);
+    final currentProject =
+        freshestProject(playerState.currentProject, latestProjects);
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -438,9 +447,9 @@ class _MobilePlayerPageState extends ConsumerState<MobilePlayerPage> {
       }
     });
 
-    final currentPath = playerState.currentProject?.previewSongPath?.isNotEmpty == true
-        ? playerState.currentProject!.previewSongPath
-        : playerState.currentProject?.previewSongAutoPath;
+    final currentPath = currentProject?.previewSongPath?.isNotEmpty == true
+        ? currentProject!.previewSongPath
+        : currentProject?.previewSongAutoPath;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -454,14 +463,14 @@ class _MobilePlayerPageState extends ConsumerState<MobilePlayerPage> {
         title: Text(l10n.nowPlaying, style: theme.textTheme.titleMedium),
         centerTitle: true,
         actions: [
-          if (playerState.currentProject != null)
+          if (currentProject != null)
             IconButton(
               icon: const Icon(Icons.info_outline_rounded),
               tooltip: l10n.projectDetails,
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => ProjectDetailPage(
-                    projectId: playerState.currentProject!.id,
+                    projectId: currentProject.id,
                   ),
                 ),
               ),
@@ -496,7 +505,7 @@ class _MobilePlayerPageState extends ConsumerState<MobilePlayerPage> {
                     children: [
                       // Track name
                       Text(
-                        playerState.currentProject?.displayName ?? '',
+                        currentProject?.displayName ?? '',
                         style: theme.textTheme.titleLarge
                             ?.copyWith(fontWeight: FontWeight.bold),
                         textAlign: TextAlign.center,
@@ -611,7 +620,7 @@ class _MobilePlayerPageState extends ConsumerState<MobilePlayerPage> {
                             const Spacer(),
 
                             // Add task at timestamp (left of Share)
-                            if (playerState.currentProject != null)
+                            if (currentProject != null)
                               IconButton(
                                 iconSize: 22,
                                 tooltip: l10n.addTaskAtTimestamp,
@@ -672,6 +681,7 @@ class _TrackCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -758,16 +768,34 @@ class _TrackCard extends StatelessWidget {
                 ),
               ),
 
-            // Notes
-            if (project.notes != null && project.notes!.isNotEmpty)
+            // Notes — user-typed and DAW-extracted, same as the desktop
+            // player (#105). The big-display-name fallback below now applies
+            // only when neither has anything.
+            if (ProjectNotesSection.hasContent(
+              userNotes: project.notes,
+              dawNotes: project.projectNotes,
+            ))
               Expanded(
                 child: SingleChildScrollView(
-                  child: Text(
-                    project.notes!,
-                    style: theme.textTheme.bodyMedium?.copyWith(
+                  child: ProjectNotesSection(
+                    userNotes: project.notes,
+                    dawNotes: project.projectNotes,
+                    userNotesLabel: l10n.playerNotes,
+                    // Same label the project detail page uses for this field,
+                    // verbatim — one name for one thing across the app.
+                    dawNotesLabel: l10n.projectNotesFromDaw,
+                    expandLabel: l10n.expand,
+                    collapseLabel: l10n.collapse,
+                    labelStyle: theme.textTheme.labelSmall?.copyWith(
+                      color: cs.onSurface.withValues(alpha: 0.5),
+                      letterSpacing: 0.8,
+                    ),
+                    textStyle: theme.textTheme.bodyMedium?.copyWith(
                       color: cs.onSurface.withValues(alpha: 0.75),
                       height: 1.55,
                     ),
+                    labelPadding: const EdgeInsets.only(top: 12, bottom: 4),
+                    textPadding: const EdgeInsets.only(bottom: 8),
                   ),
                 ),
               )

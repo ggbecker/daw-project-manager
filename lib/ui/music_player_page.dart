@@ -10,8 +10,10 @@ import '../models/todo_item.dart';
 import '../providers/providers.dart';
 import '../services/camelot_playlist_generator.dart';
 import '../utils/playback_todo_utils.dart';
+import '../utils/project_freshness.dart';
 import 'camelot_wheel_widget.dart';
 import 'project_detail_page.dart';
+import 'widgets/project_notes_section.dart';
 
 enum _PlayerLoopMode { none, repeatAll, shuffle }
 
@@ -126,22 +128,10 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
         .toList()
       ..sort((a, b) => b.lastModifiedAt.compareTo(a.lastModifiedAt));
 
-    // Skip rebuild when nothing the UI cares about has changed.
-    if (tracks.length == _tracks.length) {
-      bool same = true;
-      for (int i = 0; i < tracks.length && same; i++) {
-        final a = tracks[i], b = _tracks[i];
-        if (a.id != b.id ||
-            a.displayName != b.displayName ||
-            a.status != b.status ||
-            a.todos.length != b.todos.length ||
-            a.todos.where((t) => t.completed).length !=
-                b.todos.where((t) => t.completed).length) {
-          same = false;
-        }
-      }
-      if (same) return;
-    }
+    // Skip rebuild when nothing the UI cares about has changed. This compares
+    // updatedAt, so an edit made elsewhere — notes, DAW notes, BPM, phase —
+    // reaches the detail pane instead of being skipped as "same track list".
+    if (!trackListChanged(_tracks, tracks)) return;
 
     setState(() {
       final prevCurrentId = _current?.id;
@@ -149,6 +139,13 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
           ? _tracks[_selectedIndex].id
           : null;
       _tracks = tracks;
+      // The queue holds its own snapshots, taken when each track was queued.
+      // Re-resolve them against the new list so the queue panel shows the same
+      // up-to-date names and phases as the library, keeping queue order.
+      final refreshedQueue = freshestProjects(_playlist, tracks);
+      for (int i = 0; i < _playlist.length; i++) {
+        _playlist[i] = refreshedQueue[i];
+      }
       if (prevCurrentId != null) {
         final idx = _tracks.indexWhere((t) => t.id == prevCurrentId);
         _currentIndex = idx >= 0 ? idx : _currentIndex.clamp(-1, _tracks.length - 1);
@@ -945,22 +942,26 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
                     );
                   }),
                 ],
-                // Notes
-                if (project.notes != null && project.notes!.isNotEmpty) ...[
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 4),
-                    child: Text(l10n.playerNotes,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: cs.onSurface.withValues(alpha: 0.5),
-                          letterSpacing: 0.8,
-                        )),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
-                    child: Text(
-                      project.notes!,
-                      style: theme.textTheme.bodySmall,
+                // Notes — what the user typed, and what was read out of the
+                // DAW file itself (#105). Both labelled, always in that order.
+                if (ProjectNotesSection.hasContent(
+                  userNotes: project.notes,
+                  dawNotes: project.projectNotes,
+                )) ...[
+                  ProjectNotesSection(
+                    userNotes: project.notes,
+                    dawNotes: project.projectNotes,
+                    userNotesLabel: l10n.playerNotes,
+                    // Same label the project detail page uses for this field,
+                    // verbatim — one name for one thing across the app.
+                    dawNotesLabel: l10n.projectNotesFromDaw,
+                    expandLabel: l10n.expand,
+                    collapseLabel: l10n.collapse,
+                    labelStyle: theme.textTheme.labelSmall?.copyWith(
+                      color: cs.onSurface.withValues(alpha: 0.5),
+                      letterSpacing: 0.8,
                     ),
+                    textStyle: theme.textTheme.bodySmall,
                   ),
                   const Divider(height: 1),
                 ],
