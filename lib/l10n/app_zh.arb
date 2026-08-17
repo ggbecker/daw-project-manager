@@ -2789,5 +2789,35 @@
   "@sharePreviewSongZipText": {
     "description": "Message body accompanying a shared preview song zipped for transport",
     "placeholders": { "name": { "type": "String" } }
+  },
+  "projectMarkers": "标记",
+  "@projectMarkers": {
+      "description": "Section heading for the timeline markers and regions read out of a DAW project file"
+  },
+  "projectMarkerUnnamed": "标记 {index}",
+  "@projectMarkerUnnamed": {
+      "description": "Fallback label for a marker the user never named",
+      "placeholders": {
+          "index": {
+              "type": "int"
+          }
+      }
+  },
+  "projectRegionUnnamed": "区域 {index}",
+  "@projectRegionUnnamed": {
+      "description": "Fallback label for a region the user never named",
+      "placeholders": {
+          "index": {
+              "type": "int"
+          }
+      }
+  },
+  "projectMarkerJumpTooltip": "跳转到预览歌曲的此位置",
+  "@projectMarkerJumpTooltip": {
+      "description": "Tooltip on a marker row that will seek the preview player"
+  },
+  "projectMarkerNoPreviewSong": "添加预览歌曲以跳转到标记",
+  "@projectMarkerNoPreviewSong": {
+      "description": "Tooltip on marker rows when the project has no preview song to seek in"
   }
 }

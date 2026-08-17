@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:path/path.dart' as p;
 import '../models/music_project.dart';
+import '../models/project_marker.dart';
 import '../models/scan_root.dart';
 import '../models/ignored_path.dart';
 import '../models/release.dart';
@@ -731,6 +732,7 @@ class BackupService {
       'ignoredNewerSongPath': project.ignoredNewerSongPath,
       'projectNotes': project.projectNotes,
       'sourceTemplateId': project.sourceTemplateId,
+      'markers': project.markers.map((m) => m.toMap()).toList(),
     };
   }
 
@@ -771,6 +773,10 @@ class BackupService {
       ignoredNewerSongPath: json['ignoredNewerSongPath'] as String?,
       projectNotes: json['projectNotes'] as String?,
       sourceTemplateId: json['sourceTemplateId'] as String?,
+      markers: (json['markers'] as List?)
+              ?.map((e) => ProjectMarker.fromMap(e as Map))
+              .toList() ??
+          const [],
     );
   }
 

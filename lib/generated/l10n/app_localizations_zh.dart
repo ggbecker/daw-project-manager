@@ -4157,4 +4157,23 @@ class AppLocalizationsZh extends AppLocalizations {
   String sharePreviewSongZipText(String name) {
     return '预览歌曲（ZIP）：$name';
   }
+
+  @override
+  String get projectMarkers => '标记';
+
+  @override
+  String projectMarkerUnnamed(int index) {
+    return '标记 $index';
+  }
+
+  @override
+  String projectRegionUnnamed(int index) {
+    return '区域 $index';
+  }
+
+  @override
+  String get projectMarkerJumpTooltip => '跳转到预览歌曲的此位置';
+
+  @override
+  String get projectMarkerNoPreviewSong => '添加预览歌曲以跳转到标记';
 }

@@ -4204,4 +4204,23 @@ class AppLocalizationsJa extends AppLocalizations {
   String sharePreviewSongZipText(String name) {
     return 'プレビュー曲 (ZIP): $name';
   }
+
+  @override
+  String get projectMarkers => 'マーカー';
+
+  @override
+  String projectMarkerUnnamed(int index) {
+    return 'マーカー $index';
+  }
+
+  @override
+  String projectRegionUnnamed(int index) {
+    return 'リージョン $index';
+  }
+
+  @override
+  String get projectMarkerJumpTooltip => 'プレビュー曲のこの位置にジャンプ';
+
+  @override
+  String get projectMarkerNoPreviewSong => 'マーカーにジャンプするにはプレビュー曲を追加してください';
 }

@@ -4321,4 +4321,24 @@ class AppLocalizationsRu extends AppLocalizations {
   String sharePreviewSongZipText(String name) {
     return 'Превью (ZIP): $name';
   }
+
+  @override
+  String get projectMarkers => 'Маркеры';
+
+  @override
+  String projectMarkerUnnamed(int index) {
+    return 'Маркер $index';
+  }
+
+  @override
+  String projectRegionUnnamed(int index) {
+    return 'Регион $index';
+  }
+
+  @override
+  String get projectMarkerJumpTooltip => 'Перейти к этому месту в превью трека';
+
+  @override
+  String get projectMarkerNoPreviewSong =>
+      'Добавьте превью трека, чтобы переходить к маркерам';
 }

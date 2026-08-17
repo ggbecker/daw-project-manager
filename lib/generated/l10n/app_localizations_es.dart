@@ -4340,4 +4340,25 @@ class AppLocalizationsEs extends AppLocalizations {
   String sharePreviewSongZipText(String name) {
     return 'Canción de vista previa (ZIP): $name';
   }
+
+  @override
+  String get projectMarkers => 'Marcadores';
+
+  @override
+  String projectMarkerUnnamed(int index) {
+    return 'Marcador $index';
+  }
+
+  @override
+  String projectRegionUnnamed(int index) {
+    return 'Región $index';
+  }
+
+  @override
+  String get projectMarkerJumpTooltip =>
+      'Saltar a este punto de la canción de vista previa';
+
+  @override
+  String get projectMarkerNoPreviewSong =>
+      'Añade una canción de vista previa para saltar a los marcadores';
 }

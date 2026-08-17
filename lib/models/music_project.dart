@@ -1,6 +1,7 @@
 import 'package:hive_ce/hive.dart';
 import 'package:path/path.dart' as p;
 import '../utils/name_date_parser.dart';
+import 'project_marker.dart';
 import 'todo_item.dart';
 
 /// Converts a musical key (e.g. `'C#m'`, `'G#/Ab Major'`) to Camelot Wheel
@@ -218,6 +219,13 @@ class MusicProject {
   @HiveField(31)
   final String? sourceTemplateId; // ProjectTemplate.id this project was created from, if any (dangling if the template was later deleted)
 
+  // Indices 32-36 are claimed by branches that are open but not yet merged —
+  // 32 by the project management page, 33-36 by version stacking. Reusing one
+  // would not fail at merge time; it would quietly make existing boxes read
+  // the wrong field, so the next free index is 37.
+  @HiveField(37)
+  final List<ProjectMarker> markers; // Timeline markers/regions read from the DAW project file (Reaper only so far)
+
   const MusicProject({
     required this.id,
     required this.filePath,
@@ -251,6 +259,7 @@ class MusicProject {
     this.ignoredNewerSongPath,
     this.projectNotes,
     this.sourceTemplateId,
+    this.markers = const [],
   });
 
   /// Whether [displayName] hides date stamps DAWs bake into file names (see
@@ -499,6 +508,7 @@ class MusicProject {
     String? projectNotes,
     String? sourceTemplateId,
     bool clearSourceTemplateId = false,
+    List<ProjectMarker>? markers,
   }) {
     return MusicProject(
       id: id ?? this.id,
@@ -533,6 +543,7 @@ class MusicProject {
       ignoredNewerSongPath: clearIgnoredNewerSongPath ? null : (ignoredNewerSongPath ?? this.ignoredNewerSongPath),
       projectNotes: projectNotes ?? this.projectNotes,
       sourceTemplateId: clearSourceTemplateId ? null : (sourceTemplateId ?? this.sourceTemplateId),
+      markers: markers ?? this.markers,
     );
   }
 }
@@ -588,13 +599,18 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
       ignoredNewerSongPath: fields.containsKey(29) ? fields[29] as String? : null,
       projectNotes: fields.containsKey(30) ? fields[30] as String? : null,
       sourceTemplateId: fields.containsKey(31) ? fields[31] as String? : null,
+      markers: fields.containsKey(37)
+          ? ((fields[37] as List?) ?? const [])
+              .map((e) => ProjectMarker.fromMap(e as Map))
+              .toList()
+          : const [],
     );
   }
 
   @override
   void write(BinaryWriter writer, MusicProject obj) {
     writer
-      ..writeByte(32) // 32 fields (0-31)
+      ..writeByte(33) // 33 fields written: 0-31 plus 37 (32-36 are claimed by open branches)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -658,6 +674,8 @@ class MusicProjectAdapter extends TypeAdapter<MusicProject> {
       ..writeByte(30)
       ..write(obj.projectNotes)
       ..writeByte(31)
-      ..write(obj.sourceTemplateId);
+      ..write(obj.sourceTemplateId)
+      ..writeByte(37)
+      ..write(obj.markers.map((m) => m.toMap()).toList());
   }
 }

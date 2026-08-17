@@ -1,4 +1,5 @@
 import 'package:daw_project_manager/models/music_project.dart';
+import 'package:daw_project_manager/models/project_marker.dart';
 import 'package:daw_project_manager/models/todo_item.dart';
 
 /// Factory helpers for creating consistent test fixtures.
@@ -36,6 +37,7 @@ class TestFactories {
     String? ignoredNewerSongPath,
     String? projectNotes,
     String? sourceTemplateId,
+    List<ProjectMarker>? markers,
   }) {
     return MusicProject(
       id: id,
@@ -70,6 +72,7 @@ class TestFactories {
       ignoredNewerSongPath: ignoredNewerSongPath,
       projectNotes: projectNotes,
       sourceTemplateId: sourceTemplateId,
+      markers: markers ?? const [],
     );
   }
 

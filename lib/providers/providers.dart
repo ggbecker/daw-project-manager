@@ -508,7 +508,16 @@ final projectsProvider = Provider<List<MusicProject>>((ref) {
                 (p) => fuzzyMatchAny(
                   // projectNotes are the read-only notes extracted from the
                   // DAW file itself — real user content, so searchable too.
-                  [p.displayName, p.notes, p.projectNotes],
+                  // Marker names go in one entry each rather than joined:
+                  // fuzzyMatchAny requires every query word to hit the *same*
+                  // entry, so a joined string would match words picked out of
+                  // two unrelated markers.
+                  [
+                    p.displayName,
+                    p.notes,
+                    p.projectNotes,
+                    ...p.markers.map((m) => m.name),
+                  ],
                   projectsSearch,
                 ),
               )
@@ -2305,11 +2314,18 @@ class DesktopPlayerRequest {
   /// False for single-track previews (projects list, player bar quick-play).
   final bool isQueuedPlayback;
 
+  /// Where to start playing, for a track opened at a specific point — jumping
+  /// to a project marker on a project that isn't loaded yet. It has to travel
+  /// with the request rather than being a seek sent straight afterwards,
+  /// because the player bar doesn't exist yet when the request is made.
+  final Duration? startAt;
+
   const DesktopPlayerRequest({
     required this.project,
     required this.resolvedPath,
     required this.generation,
     this.isQueuedPlayback = false,
+    this.startAt,
   });
 }
 
@@ -2321,6 +2337,7 @@ class DesktopPlayerNotifier extends Notifier<DesktopPlayerRequest?> {
     MusicProject project,
     String resolvedPath, {
     bool isQueuedPlayback = false,
+    Duration? startAt,
   }) {
     final gen = (state?.generation ?? 0) + 1;
     state = DesktopPlayerRequest(
@@ -2328,6 +2345,7 @@ class DesktopPlayerNotifier extends Notifier<DesktopPlayerRequest?> {
       resolvedPath: resolvedPath,
       generation: gen,
       isQueuedPlayback: isQueuedPlayback,
+      startAt: startAt,
     );
   }
 
@@ -2395,6 +2413,42 @@ class DesktopPlayerToggleNotifier extends Notifier<int> {
 final desktopPlayerToggleRequestProvider =
     NotifierProvider<DesktopPlayerToggleNotifier, int>(
       DesktopPlayerToggleNotifier.new,
+    );
+
+/// A request to jump the desktop player to an absolute position in the track
+/// it already has loaded — sent by the project marker lists, which live on the
+/// project detail page and in the music player's detail pane and so have no
+/// access to the player bar's `AudioPlayer`.
+///
+/// [generation] rather than position alone, so that clicking the same marker
+/// twice is two distinguishable requests.
+class DesktopPlayerSeekRequest {
+  const DesktopPlayerSeekRequest({
+    required this.position,
+    required this.generation,
+  });
+
+  final Duration position;
+  final int generation;
+}
+
+class DesktopPlayerSeekNotifier extends Notifier<DesktopPlayerSeekRequest?> {
+  @override
+  DesktopPlayerSeekRequest? build() => null;
+
+  void seekTo(Duration position) {
+    state = DesktopPlayerSeekRequest(
+      position: position,
+      generation: (state?.generation ?? 0) + 1,
+    );
+  }
+
+  void clear() => state = null;
+}
+
+final desktopPlayerSeekRequestProvider =
+    NotifierProvider<DesktopPlayerSeekNotifier, DesktopPlayerSeekRequest?>(
+      DesktopPlayerSeekNotifier.new,
     );
 
 /// Incremented each time the desktop player finishes a track naturally.

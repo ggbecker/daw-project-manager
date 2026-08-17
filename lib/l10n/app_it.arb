@@ -2789,5 +2789,35 @@
   "@sharePreviewSongZipText": {
     "description": "Message body accompanying a shared preview song zipped for transport",
     "placeholders": { "name": { "type": "String" } }
+  },
+  "projectMarkers": "Marcatori",
+  "@projectMarkers": {
+      "description": "Section heading for the timeline markers and regions read out of a DAW project file"
+  },
+  "projectMarkerUnnamed": "Marcatore {index}",
+  "@projectMarkerUnnamed": {
+      "description": "Fallback label for a marker the user never named",
+      "placeholders": {
+          "index": {
+              "type": "int"
+          }
+      }
+  },
+  "projectRegionUnnamed": "Regione {index}",
+  "@projectRegionUnnamed": {
+      "description": "Fallback label for a region the user never named",
+      "placeholders": {
+          "index": {
+              "type": "int"
+          }
+      }
+  },
+  "projectMarkerJumpTooltip": "Vai a questo punto del brano di anteprima",
+  "@projectMarkerJumpTooltip": {
+      "description": "Tooltip on a marker row that will seek the preview player"
+  },
+  "projectMarkerNoPreviewSong": "Aggiungi un brano di anteprima per saltare ai marcatori",
+  "@projectMarkerNoPreviewSong": {
+      "description": "Tooltip on marker rows when the project has no preview song to seek in"
   }
 }

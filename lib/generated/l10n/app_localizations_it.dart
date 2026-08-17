@@ -4327,4 +4327,25 @@ class AppLocalizationsIt extends AppLocalizations {
   String sharePreviewSongZipText(String name) {
     return 'Brano di anteprima (ZIP): $name';
   }
+
+  @override
+  String get projectMarkers => 'Marcatori';
+
+  @override
+  String projectMarkerUnnamed(int index) {
+    return 'Marcatore $index';
+  }
+
+  @override
+  String projectRegionUnnamed(int index) {
+    return 'Regione $index';
+  }
+
+  @override
+  String get projectMarkerJumpTooltip =>
+      'Vai a questo punto del brano di anteprima';
+
+  @override
+  String get projectMarkerNoPreviewSong =>
+      'Aggiungi un brano di anteprima per saltare ai marcatori';
 }

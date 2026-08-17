@@ -4354,4 +4354,25 @@ class AppLocalizationsFr extends AppLocalizations {
   String sharePreviewSongZipText(String name) {
     return 'Chanson d\'aperçu (ZIP) : $name';
   }
+
+  @override
+  String get projectMarkers => 'Marqueurs';
+
+  @override
+  String projectMarkerUnnamed(int index) {
+    return 'Marqueur $index';
+  }
+
+  @override
+  String projectRegionUnnamed(int index) {
+    return 'Région $index';
+  }
+
+  @override
+  String get projectMarkerJumpTooltip =>
+      'Aller à ce point de la chanson d\'aperçu';
+
+  @override
+  String get projectMarkerNoPreviewSong =>
+      'Ajoutez une chanson d\'aperçu pour accéder aux marqueurs';
 }
