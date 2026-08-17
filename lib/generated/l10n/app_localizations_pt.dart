@@ -4340,4 +4340,25 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get projectMarkerNoPreviewSong =>
       'Adicione uma música de prévia para pular para os marcadores';
+
+  @override
+  String get projectDetailLayout => 'Layout dos Detalhes do Projeto';
+
+  @override
+  String get projectDetailLayoutSettingDescription =>
+      'Como a página de detalhes do projeto é organizada.';
+
+  @override
+  String get projectDetailLayoutClassic => 'Clássico';
+
+  @override
+  String get projectDetailLayoutClassicDescription =>
+      'Tudo em uma única rolagem.';
+
+  @override
+  String get projectDetailLayoutSectioned => 'Seções';
+
+  @override
+  String get projectDetailLayoutSectionedDescription =>
+      'Uma barra à esquerda escolhe uma seção por vez.';
 }

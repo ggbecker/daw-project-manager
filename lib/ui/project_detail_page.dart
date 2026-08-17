@@ -19,6 +19,7 @@ import 'package:archive/archive_io.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/music_project.dart';
+import '../models/project_detail_layout.dart';
 import '../models/project_event.dart';
 import '../providers/providers.dart';
 import '../repository/project_repository.dart';
@@ -40,6 +41,7 @@ import 'widgets/conversion_progress_dialog.dart';
 import 'widgets/desktop_title_bar.dart';
 import 'widgets/project_detail_header.dart';
 import 'widgets/project_markers_section.dart';
+import 'widgets/section_nav_rail.dart';
 import 'widgets/resizable_text_field.dart';
 import 'widgets/todo_list_widget.dart';
 import 'widgets/waveform_widget.dart';
@@ -56,6 +58,10 @@ class ProjectDetailPage extends ConsumerStatefulWidget {
 class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
   final _uuid = const Uuid();
   final _formKey = GlobalKey<FormState>();
+
+  /// Which section the nav rail has selected, in the sectioned layout.
+  /// Ignored entirely by the classic one-scroll layout.
+  int _activeSection = 0;
   late TextEditingController _nameCtrl;
   late TextEditingController _bpmCtrl;
   late TextEditingController _keyCtrl;
@@ -612,9 +618,12 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                 Expanded(
                   child: Form(
                     key: _formKey,
-                    child: ListView(
-                      padding: MobileUtils.getResponsivePadding(context),
-                      children: [
+                    child: Builder(builder: (context) {
+                      final l10n = AppLocalizations.of(context)!;
+
+                      // Page-level, so it stays above whichever section is
+                      // showing rather than belonging to one of them.
+                      final banner = <Widget>[
                     if (!sourceFileExists && !MobileUtils.isMobile())
                       Container(
                         margin: const EdgeInsets.only(bottom: 12),
@@ -638,6 +647,19 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                         ),
                       ),
                         const SizedBox(height: 16),
+                      ];
+
+                      // The page's content, cut into the sections the nav
+                      // rail offers. The classic layout renders every group
+                      // in this order in one scroll — the order the page has
+                      // always had, apart from the deadline field, which
+                      // moved up beside the phase dropdown so that each group
+                      // is one contiguous run.
+                      final sections = <_DetailSection>[
+                        _DetailSection(
+                          icon: Icons.tune_outlined,
+                          label: l10n.projectDetails,
+                          children: [
 
                         // Campo para editar o nome de exibição customizado
                             TextFormField(
@@ -955,7 +977,66 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                               },
                             ),
                             const SizedBox(height: 12),
+                            // Deadline field
+                            InkWell(
+                              onTap: () async {
+                                final DateTime? picked = await showDatePicker(
+                                  context: context,
+                                  initialDate: updatedProject.deadline ?? DateTime.now().add(const Duration(days: 30)),
+                                  firstDate: DateTime.now(),
+                                  lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
+                                );
+                                if (picked != null) {
+                                  final updated = updatedProject.copyWith(deadline: picked);
+                                  await repo.updateProject(updated);
+                                  if (mounted) {
+                                    ref.invalidate(allProjectsStreamProvider);
+                                  }
+                                }
+                              },
+                              child: InputDecorator(
+                                decoration: InputDecoration(
+                                  labelText: AppLocalizations.of(context)!.projectDeadline,
+                                  border: const OutlineInputBorder(),
+                                  suffixIcon: updatedProject.deadline != null
+                                      ? IconButton(
+                                          icon: const Icon(Icons.clear),
+                                          onPressed: () async {
+                                            final updated = updatedProject.copyWith(clearDeadline: true);
+                                            await repo.updateProject(updated);
+                                            if (mounted) {
+                                              ref.invalidate(allProjectsStreamProvider);
+                                            }
+                                          },
+                                        )
+                                      : const Icon(Icons.calendar_today),
+                                ),
+                                child: Text(
+                                  updatedProject.deadline != null
+                                      ? DateFormat('MMM dd, yyyy').format(updatedProject.deadline!)
+                                      : AppLocalizations.of(context)!.noDeadlineSet,
+                                  style: TextStyle(
+                                    color: updatedProject.deadline != null
+                                        ? (updatedProject.daysUntilDeadline! < 0
+                                            ? Colors.red
+                                            : updatedProject.daysUntilDeadline! == 0
+                                                ? Colors.red
+                                                : updatedProject.daysUntilDeadline! <= 7
+                                                    ? Colors.orange
+                                                    : Theme.of(context).textTheme.bodyLarge?.color)
+                                        : Theme.of(context).textTheme.bodyMedium?.color,
+                                  ),
+                                ),
+                              ),
+                            ),
 
+                            const SizedBox(height: 24),
+                          ],
+                        ),
+                        _DetailSection(
+                          icon: Icons.notes_outlined,
+                          label: l10n.notes,
+                          children: [
                             // NOVO: CAMPO DE NOTAS
                             Builder(builder: (context) {
                               final projectNotes = updatedProject.projectNotes;
@@ -1028,62 +1109,12 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                             }),
 
                             const SizedBox(height: 12),
-
-                            // Deadline field
-                            InkWell(
-                              onTap: () async {
-                                final DateTime? picked = await showDatePicker(
-                                  context: context,
-                                  initialDate: updatedProject.deadline ?? DateTime.now().add(const Duration(days: 30)),
-                                  firstDate: DateTime.now(),
-                                  lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
-                                );
-                                if (picked != null) {
-                                  final updated = updatedProject.copyWith(deadline: picked);
-                                  await repo.updateProject(updated);
-                                  if (mounted) {
-                                    ref.invalidate(allProjectsStreamProvider);
-                                  }
-                                }
-                              },
-                              child: InputDecorator(
-                                decoration: InputDecoration(
-                                  labelText: AppLocalizations.of(context)!.projectDeadline,
-                                  border: const OutlineInputBorder(),
-                                  suffixIcon: updatedProject.deadline != null
-                                      ? IconButton(
-                                          icon: const Icon(Icons.clear),
-                                          onPressed: () async {
-                                            final updated = updatedProject.copyWith(clearDeadline: true);
-                                            await repo.updateProject(updated);
-                                            if (mounted) {
-                                              ref.invalidate(allProjectsStreamProvider);
-                                            }
-                                          },
-                                        )
-                                      : const Icon(Icons.calendar_today),
-                                ),
-                                child: Text(
-                                  updatedProject.deadline != null
-                                      ? DateFormat('MMM dd, yyyy').format(updatedProject.deadline!)
-                                      : AppLocalizations.of(context)!.noDeadlineSet,
-                                  style: TextStyle(
-                                    color: updatedProject.deadline != null
-                                        ? (updatedProject.daysUntilDeadline! < 0
-                                            ? Colors.red
-                                            : updatedProject.daysUntilDeadline! == 0
-                                                ? Colors.red
-                                                : updatedProject.daysUntilDeadline! <= 7
-                                                    ? Colors.orange
-                                                    : Theme.of(context).textTheme.bodyLarge?.color)
-                                        : Theme.of(context).textTheme.bodyMedium?.color,
-                                  ),
-                                ),
-                              ),
-                            ),
-
-                            const SizedBox(height: 24),
-
+                          ],
+                        ),
+                        _DetailSection(
+                          icon: Icons.music_note_outlined,
+                          label: l10n.previewSong,
+                          children: [
                             // Preview Song Section
                             _PreviewSongPlayer(
                               key: ValueKey('${updatedProject.id}_${updatedProject.previewSongPath}'),
@@ -1195,6 +1226,12 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                             ),
 
                             const SizedBox(height: 24),
+                          ],
+                        ),
+                        _DetailSection(
+                          icon: Icons.checklist_outlined,
+                          label: l10n.todoList,
+                          children: [
                             // TODO List
                             // Use key to force widget rebuild when todos change
                             TodoListWidget(
@@ -1225,6 +1262,12 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                             ),
 
                             const SizedBox(height: 24),
+                          ],
+                        ),
+                        _DetailSection(
+                          icon: Icons.history_outlined,
+                          label: l10n.sessionHistory,
+                          children: [
                             _SessionHistorySection(
                               sessions: updatedProject.sessions,
                               onRemove: (session) async {
@@ -1254,8 +1297,64 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                             const SizedBox(height: 24),
                             _ProjectStatsButton(projectId: updatedProject.id),
                             const SizedBox(height: 16),
+                          ],
+                        ),
+                      ];
+
+                      // A phone has no room for a rail, so mobile always gets
+                      // the single scroll whatever the setting says.
+                      final sectioned = !isMobile &&
+                          ref.watch(projectDetailLayoutProvider) ==
+                              ProjectDetailLayout.sectioned;
+
+                      if (!sectioned) {
+                        return ListView(
+                          padding: MobileUtils.getResponsivePadding(context),
+                          children: [
+                            ...banner,
+                            for (final section in sections) ...section.children,
+                          ],
+                        );
+                      }
+
+                      final active =
+                          _activeSection.clamp(0, sections.length - 1);
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          SizedBox(
+                            width: 200,
+                            child: SectionNavRail(
+                              items: [
+                                for (final section in sections)
+                                  SectionNavItem(
+                                    icon: section.icon,
+                                    label: section.label,
+                                  ),
+                              ],
+                              activeIndex: active,
+                              onTap: (index) =>
+                                  setState(() => _activeSection = index),
+                            ),
+                          ),
+                          const VerticalDivider(width: 1),
+                          Expanded(
+                            child: ListView(
+                              // Keyed by section so switching starts the new
+                              // one at the top instead of inheriting the
+                              // previous section's scroll offset.
+                              key: ValueKey(active),
+                              padding:
+                                  MobileUtils.getResponsivePadding(context),
+                              children: [
+                                ...banner,
+                                ...sections[active].children,
+                              ],
+                            ),
+                          ),
                         ],
-                    ),
+                      );
+                    }),
                   ),
                 ),
               ],
@@ -3468,4 +3567,22 @@ class _EditSessionDialogState extends State<_EditSessionDialog> {
       ],
     );
   }
+}
+
+/// One group of the project detail page's content.
+///
+/// The classic layout concatenates every group into a single scroll; the
+/// sectioned layout renders one at a time with the nav rail choosing. Keeping
+/// them as data rather than as separate widgets means both layouts are fed by
+/// exactly the same children, so the two cannot drift apart.
+class _DetailSection {
+  const _DetailSection({
+    required this.icon,
+    required this.label,
+    required this.children,
+  });
+
+  final IconData icon;
+  final String label;
+  final List<Widget> children;
 }

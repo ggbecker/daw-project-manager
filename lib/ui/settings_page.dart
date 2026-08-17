@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../generated/l10n/app_localizations.dart';
 import '../models/scan_mode.dart';
+import '../models/project_detail_layout.dart';
 import '../models/waveform_style.dart';
 import '../models/scan_root.dart';
 import '../providers/providers.dart';
@@ -34,6 +35,7 @@ import 'metadata_extraction_info_page.dart';
 import 'notification_settings_page.dart' show WorkTimerSection;
 import 'onboarding_wizard_page.dart';
 import 'widgets/desktop_title_bar.dart';
+import 'widgets/section_nav_rail.dart';
 import 'widgets/language_switcher.dart' show LanguageSwitcher;
 import 'widgets/license_dialog.dart';
 import 'widgets/shortcuts_help_dialog.dart';
@@ -934,34 +936,34 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         SettingsSection.about,
       ];
 
-  _NavItem _navItemFor(SettingsSection id, AppLocalizations l10n) {
+  SectionNavItem _navItemFor(SettingsSection id, AppLocalizations l10n) {
     switch (id) {
       case SettingsSection.general:
-        return _NavItem(icon: Icons.tune_outlined, label: l10n.general);
+        return SectionNavItem(icon: Icons.tune_outlined, label: l10n.general);
       case SettingsSection.appearance:
-        return _NavItem(icon: Icons.palette_outlined, label: l10n.appearanceTabLabel);
+        return SectionNavItem(icon: Icons.palette_outlined, label: l10n.appearanceTabLabel);
       case SettingsSection.projectFolders:
-        return _NavItem(icon: Icons.folder_outlined, label: l10n.roots);
+        return SectionNavItem(icon: Icons.folder_outlined, label: l10n.roots);
       case SettingsSection.dawLaunchCommands:
-        return _NavItem(icon: Icons.terminal_outlined, label: l10n.dawLaunchCommandsTabLabel);
+        return SectionNavItem(icon: Icons.terminal_outlined, label: l10n.dawLaunchCommandsTabLabel);
       case SettingsSection.mixdownFolders:
-        return _NavItem(icon: Icons.audio_file_outlined, label: l10n.mixdownFoldersTabLabel);
+        return SectionNavItem(icon: Icons.audio_file_outlined, label: l10n.mixdownFoldersTabLabel);
       case SettingsSection.phases:
-        return _NavItem(icon: Icons.timeline_outlined, label: l10n.phases);
+        return SectionNavItem(icon: Icons.timeline_outlined, label: l10n.phases);
       case SettingsSection.workSessions:
-        return _NavItem(icon: Icons.bookmark_outlined, label: l10n.workSessionsTabLabel);
+        return SectionNavItem(icon: Icons.bookmark_outlined, label: l10n.workSessionsTabLabel);
       case SettingsSection.backup:
-        return _NavItem(icon: Icons.backup_outlined, label: l10n.backupTabLabel, newGroup: true);
+        return SectionNavItem(icon: Icons.backup_outlined, label: l10n.backupTabLabel, newGroup: true);
       case SettingsSection.dangerZone:
-        return _NavItem(icon: Icons.warning_amber_rounded, label: l10n.pathsSettingsDangerZoneTitle);
+        return SectionNavItem(icon: Icons.warning_amber_rounded, label: l10n.pathsSettingsDangerZoneTitle);
       case SettingsSection.shortcuts:
-        return _NavItem(icon: Icons.keyboard_outlined, label: l10n.keyboardShortcuts, newGroup: true);
+        return SectionNavItem(icon: Icons.keyboard_outlined, label: l10n.keyboardShortcuts, newGroup: true);
       case SettingsSection.about:
-        return _NavItem(icon: Icons.info_outline, label: l10n.aboutTabLabel);
+        return SectionNavItem(icon: Icons.info_outline, label: l10n.aboutTabLabel);
     }
   }
 
-  List<_NavItem> _navItems(AppLocalizations l10n) =>
+  List<SectionNavItem> _navItems(AppLocalizations l10n) =>
       _sectionOrder().map((id) => _navItemFor(id, l10n)).toList();
 
   Widget Function(AppLocalizations) _builderFor(SettingsSection id) {
@@ -1007,6 +1009,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         _SearchEntry(SettingsSection.general, Icons.table_chart_outlined, l10n.metadataExtractionTitle, l10n.metadataExtractionSubtitle),
         _SearchEntry(SettingsSection.general, Icons.restart_alt, l10n.resetOnboarding, null),
         _SearchEntry(SettingsSection.appearance, Icons.palette_outlined, l10n.theme, l10n.themeSettingDescription),
+        _SearchEntry(SettingsSection.appearance, Icons.view_sidebar_outlined, l10n.projectDetailLayout, l10n.projectDetailLayoutSettingDescription),
         _SearchEntry(SettingsSection.appearance, Icons.graphic_eq, l10n.waveformStyle, l10n.waveformStyleSettingDescription),
         _SearchEntry(SettingsSection.appearance, Icons.equalizer, l10n.waveformChannels, l10n.waveformChannelsSettingDescription),
         _SearchEntry(SettingsSection.appearance, Icons.tab_outlined, l10n.customizeTabs, l10n.customizeTabsDescription),
@@ -1067,7 +1070,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               children: [
                 SizedBox(
                   width: 240,
-                  child: _SettingsNavRail(
+                  child: SectionNavRail(
                     items: navItems,
                     activeIndex: _activeSection,
                     searchController: _searchController,
@@ -2650,6 +2653,59 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           ),
         ),
         const SizedBox(height: 12),
+        // How the project detail page arranges itself. Desktop only — a phone
+        // has no room for a nav rail, so mobile ignores this.
+        if (!MobileUtils.isMobile())
+          Card(
+            clipBehavior: Clip.antiAlias,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.view_sidebar_outlined),
+                      const SizedBox(width: 10),
+                      Text(l10n.projectDetailLayout,
+                          style: Theme.of(context).textTheme.titleMedium),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(l10n.projectDetailLayoutSettingDescription,
+                      style: Theme.of(context).textTheme.bodySmall),
+                  const SizedBox(height: 12),
+                  SegmentedButton<ProjectDetailLayout>(
+                    segments: [
+                      ButtonSegment(
+                        value: ProjectDetailLayout.classic,
+                        icon: const Icon(Icons.view_stream_outlined, size: 16),
+                        label: Text(l10n.projectDetailLayoutClassic),
+                      ),
+                      ButtonSegment(
+                        value: ProjectDetailLayout.sectioned,
+                        icon: const Icon(Icons.view_sidebar_outlined, size: 16),
+                        label: Text(l10n.projectDetailLayoutSectioned),
+                      ),
+                    ],
+                    selected: {ref.watch(projectDetailLayoutProvider)},
+                    onSelectionChanged: (s) => ref
+                        .read(projectDetailLayoutProvider.notifier)
+                        .set(s.first),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    ref.watch(projectDetailLayoutProvider) ==
+                            ProjectDetailLayout.classic
+                        ? l10n.projectDetailLayoutClassicDescription
+                        : l10n.projectDetailLayoutSectionedDescription,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        if (!MobileUtils.isMobile()) const SizedBox(height: 12),
         // Waveform rendering used by every audio preview player.
         Card(
           clipBehavior: Clip.antiAlias,
@@ -2945,20 +3001,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 // Picking a tab swaps which section renders on the right; it never scrolls.
 // ---------------------------------------------------------------------------
 
-class _NavItem {
-  final IconData icon;
-  final String label;
-  // Draws a divider in the nav rail immediately above this item, so the
-  // flat tab list reads as a few loose categories without needing headers.
-  final bool newGroup;
-
-  const _NavItem({
-    required this.icon,
-    required this.label,
-    this.newGroup = false,
-  });
-}
-
 /// One searchable setting, indexed only for the search box's flattened
 /// cross-section results — not connected to the live widget tree.
 class _SearchEntry {
@@ -2968,101 +3010,6 @@ class _SearchEntry {
   final String? subtitle;
 
   const _SearchEntry(this.section, this.icon, this.title, this.subtitle);
-}
-
-class _SettingsNavRail extends StatelessWidget {
-  final List<_NavItem> items;
-  final int activeIndex;
-  final TextEditingController searchController;
-  final String searchHint;
-  final ValueChanged<int> onTap;
-
-  const _SettingsNavRail({
-    required this.items,
-    required this.activeIndex,
-    required this.searchController,
-    required this.searchHint,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final searching = searchController.text.trim().isNotEmpty;
-    return Material(
-      color: Theme.of(context).cardColor,
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-            child: TextField(
-              controller: searchController,
-              decoration: InputDecoration(
-                hintText: searchHint,
-                prefixIcon: const Icon(Icons.search, size: 20),
-                suffixIcon: searching
-                    ? IconButton(
-                        icon: const Icon(Icons.clear, size: 18),
-                        onPressed: searchController.clear,
-                      )
-                    : null,
-                isDense: true,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-            ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              itemCount: items.length,
-              itemBuilder: (context, index) {
-                final item = items[index];
-                final selected = !searching && index == activeIndex;
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (item.newGroup)
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                        child: Divider(height: 1),
-                      ),
-                    InkWell(
-                      onTap: () => onTap(index),
-                      child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: selected ? cs.primaryContainer.withValues(alpha: 0.4) : null,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(item.icon, size: 20, color: selected ? cs.primary : cs.onSurfaceVariant),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            item.label,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-                              color: selected ? cs.primary : cs.onSurface,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _EmptyState extends StatelessWidget {

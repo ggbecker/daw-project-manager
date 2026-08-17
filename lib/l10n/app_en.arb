@@ -4039,5 +4039,17 @@
   "projectMarkerNoPreviewSong": "Add a preview song to jump to markers",
   "@projectMarkerNoPreviewSong": {
       "description": "Tooltip on marker rows when the project has no preview song to seek in"
-  }
+  },
+  "projectDetailLayout": "Project Detail Layout",
+  "@projectDetailLayout": {"description": "Appearance setting: how the project detail page is arranged"},
+  "projectDetailLayoutSettingDescription": "How the project detail page is arranged.",
+  "@projectDetailLayoutSettingDescription": {"description": "Subtitle under the Project Detail Layout setting"},
+  "projectDetailLayoutClassic": "Classic",
+  "@projectDetailLayoutClassic": {"description": "Layout option: everything in one scroll"},
+  "projectDetailLayoutClassicDescription": "Everything in one scroll.",
+  "@projectDetailLayoutClassicDescription": {"description": "Description of the classic project detail layout"},
+  "projectDetailLayoutSectioned": "Sections",
+  "@projectDetailLayoutSectioned": {"description": "Layout option: a nav rail picks one section at a time"},
+  "projectDetailLayoutSectionedDescription": "A rail on the left picks one section at a time.",
+  "@projectDetailLayoutSectionedDescription": {"description": "Description of the sectioned project detail layout"}
 }
