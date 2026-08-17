@@ -28,6 +28,8 @@ import '../utils/mobile_utils.dart';
 import '../utils/trina_grid_locale.dart';
 import 'widgets/trina_grid_menu_delegate.dart';
 import 'dialogs/create_project_dialog.dart';
+import 'dialogs/duplicate_template_dialog.dart';
+import 'template_detail_page.dart';
 import 'widgets/desktop_title_bar.dart';
 import 'widgets/filter_dropdown.dart';
 
@@ -263,6 +265,7 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
                 bpm: metadata?.bpm,
                 musicalKey: metadata?.key,
                 dawVersion: metadata?.dawVersion,
+                projectNotes: metadata?.projectNotes,
                 createdAt: DateTime.now(),
                 updatedAt: DateTime.now(),
               );
@@ -384,6 +387,7 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
         bpm: metadata?.bpm,
         musicalKey: metadata?.key,
         dawVersion: metadata?.dawVersion,
+        projectNotes: metadata?.projectNotes,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -480,10 +484,14 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
                               IconButton(
                                 icon: const Icon(Icons.folder_open_outlined),
                                 tooltip: l10n.openFolder,
-                                onPressed: () => FileLauncher.openFolder(root.path),
+                                onPressed: () =>
+                                    FileLauncher.openFolder(root.path),
                               ),
                               IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red),
+                                icon: const Icon(
+                                  Icons.delete,
+                                  color: Colors.red,
+                                ),
                                 tooltip: l10n.remove,
                                 onPressed: () => _removeTemplateRoot(root),
                               ),
@@ -518,85 +526,10 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
     );
   }
 
-  Future<void> _renameTemplate(ProjectTemplate template) async {
-    final l10n = AppLocalizations.of(context)!;
-    final nameController = TextEditingController(text: template.name);
-    final bpmController = TextEditingController(
-      text: template.bpm?.toString() ?? '',
-    );
-    final keyController = TextEditingController(
-      text: template.musicalKey ?? '',
-    );
-
-    await showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.editTemplate),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: InputDecoration(labelText: l10n.templateName),
-              autofocus: true,
-            ),
-            const SizedBox(height: 12),
-            // bpm/key aren't auto-detectable for every DAW format — this
-            // lets the user fill them in manually, same as a real project's
-            // bpm/key fields.
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: bpmController,
-                    decoration: InputDecoration(labelText: l10n.bpm),
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextField(
-                    controller: keyController,
-                    decoration: InputDecoration(labelText: l10n.key),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () {
-              final name = nameController.text.trim();
-              if (name.isEmpty) return;
-              final bpmText = bpmController.text.trim();
-              final keyText = keyController.text.trim();
-              ref
-                  .read(projectTemplatesNotifierProvider.notifier)
-                  .updateTemplate(
-                    template.copyWith(
-                      name: name,
-                      bpm: bpmText.isEmpty ? null : double.tryParse(bpmText),
-                      clearBpm: bpmText.isEmpty,
-                      musicalKey: keyText.isEmpty ? null : keyText,
-                      clearMusicalKey: keyText.isEmpty,
-                      updatedAt: DateTime.now(),
-                    ),
-                  );
-              Navigator.pop(dialogContext);
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text(l10n.templateUpdated)));
-            },
-            child: Text(l10n.save),
-          ),
-        ],
+  Future<void> _viewTemplateDetails(ProjectTemplate template) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => TemplateDetailPage(templateId: template.id),
       ),
     );
   }
@@ -642,6 +575,42 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
       context: context,
       builder: (_) => CreateProjectDialog(initialTemplate: template),
     );
+  }
+
+  void _duplicateTemplate(ProjectTemplate template) {
+    showDialog(
+      context: context,
+      builder: (_) => DuplicateTemplateDialog(template: template),
+    );
+  }
+
+  // Ids of templates currently re-extracting metadata — tracked here (rather
+  // than per-row widget state, which TrinaGrid rows don't have) so the
+  // actions column can show a per-row spinner and disable just that row's
+  // button while the extraction it triggered is in flight.
+  final Set<String> _extractingTemplateIds = {};
+
+  Future<void> _extractMetadata(ProjectTemplate template) async {
+    final l10n = AppLocalizations.of(context)!;
+    setState(() => _extractingTemplateIds.add(template.id));
+    try {
+      await ref
+          .read(projectTemplatesNotifierProvider.notifier)
+          .extractMetadataForTemplate(template.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.metadataExtractedSuccessfully)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.failedToExtractMetadata(e.toString()))),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _extractingTemplateIds.remove(template.id));
+    }
   }
 
   /// [orderedIds] is the current filtered/visible row order — needed by the
@@ -883,8 +852,8 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
         enableContextMenu: false,
         enableSorting: false,
         enableColumnDrag: false,
-        width: 150,
-        minWidth: 150,
+        width: 270,
+        minWidth: 270,
         renderer: (ctx) {
           final template = ctx.row.cells['data']!.value as ProjectTemplate;
           final fullPath = p.join(
@@ -892,10 +861,22 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
             template.mainFileRelativePath,
           );
           final sourceExists = File(fullPath).existsSync();
+          final extractionSupported = MetadataExtractor.supportsFullExtraction(
+            fullPath,
+          );
+          final isExtracting = _extractingTemplateIds.contains(template.id);
           final l10n = AppLocalizations.of(context)!;
           return Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              IconButton(
+                icon: const Icon(Icons.folder_open, size: 18),
+                tooltip: l10n.openFolder,
+                visualDensity: VisualDensity.compact,
+                onPressed: sourceExists
+                    ? () => FileLauncher.openFolder(template.sourceFolderPath)
+                    : null,
+              ),
               IconButton(
                 icon: const Icon(Icons.add_circle_outline, size: 18),
                 tooltip: l10n.useTemplate,
@@ -903,10 +884,32 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
                 onPressed: sourceExists ? () => _useTemplate(template) : null,
               ),
               IconButton(
-                icon: const Icon(Icons.edit, size: 18),
-                tooltip: l10n.edit,
+                icon: const Icon(Icons.assignment, size: 18),
+                tooltip: l10n.tooltipViewDetails,
                 visualDensity: VisualDensity.compact,
-                onPressed: () => _renameTemplate(template),
+                onPressed: () => _viewTemplateDetails(template),
+              ),
+              IconButton(
+                icon: const Icon(Icons.copy_outlined, size: 18),
+                tooltip: l10n.duplicateTemplate,
+                visualDensity: VisualDensity.compact,
+                onPressed: sourceExists
+                    ? () => _duplicateTemplate(template)
+                    : null,
+              ),
+              IconButton(
+                icon: isExtracting
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.search, size: 18),
+                tooltip: l10n.extract,
+                visualDensity: VisualDensity.compact,
+                onPressed: sourceExists && extractionSupported && !isExtracting
+                    ? () => _extractMetadata(template)
+                    : null,
               ),
               IconButton(
                 icon: const Icon(Icons.delete, size: 18, color: Colors.red),
@@ -1226,10 +1229,18 @@ class _ProjectTemplatesPageState extends ConsumerState<ProjectTemplatesPage> {
                                       _onTableStateManagerChanged,
                                     );
                                   },
+                                  onRowDoubleTap:
+                                      (
+                                        TrinaGridOnRowDoubleTapEvent event,
+                                      ) async {
+                                        final template =
+                                            event.row.cells['data']?.value
+                                                as ProjectTemplate?;
+                                        if (template == null) return;
+                                        await _viewTemplateDetails(template);
+                                      },
                                   configuration: TrinaGridConfiguration(
-                                    localeText: trinaGridLocaleTextFor(
-                                      context,
-                                    ),
+                                    localeText: trinaGridLocaleTextFor(context),
                                     style: TrinaGridStyleConfig(
                                       gridBackgroundColor:
                                           activeTheme.cardColor,

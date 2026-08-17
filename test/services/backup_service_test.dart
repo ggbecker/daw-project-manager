@@ -328,6 +328,8 @@ void main() {
         bpm: 128.0,
         musicalKey: 'A minor',
         dawVersion: '11.3',
+        notes: 'Great starting point for peak-time sets',
+        projectNotes: 'Author: DJ Example',
       );
 
       final restored =
@@ -342,6 +344,8 @@ void main() {
       expect(restored.bpm, 128.0);
       expect(restored.musicalKey, 'A minor');
       expect(restored.dawVersion, '11.3');
+      expect(restored.notes, 'Great starting point for peak-time sets');
+      expect(restored.projectNotes, 'Author: DJ Example');
     });
 
     test('ProjectTemplate preserves null optional metadata', () {
@@ -360,6 +364,8 @@ void main() {
       expect(restored.bpm, isNull);
       expect(restored.musicalKey, isNull);
       expect(restored.dawVersion, isNull);
+      expect(restored.notes, isNull);
+      expect(restored.projectNotes, isNull);
     });
 
     test('TemplateRoot preserves all fields', () {
@@ -389,6 +395,7 @@ void main() {
 
       expect(restored.lastRefreshedAt, isNull);
     });
+
   });
 
   group('BackupService global data — Hive read/write', () {

@@ -28,6 +28,8 @@ void main() {
     double? bpm,
     String? musicalKey,
     String? dawVersion,
+    String? notes,
+    String? projectNotes,
   }) {
     return ProjectTemplate(
       id: id,
@@ -39,6 +41,8 @@ void main() {
       bpm: bpm,
       musicalKey: musicalKey,
       dawVersion: dawVersion,
+      notes: notes,
+      projectNotes: projectNotes,
     );
   }
 
@@ -89,6 +93,16 @@ void main() {
       expect(copy.bpm, 128);
       expect(copy.musicalKey, 'C#m');
     });
+
+    test('sets notes when provided and clearNotes nulls it out', () {
+      final t = makeTemplate();
+      final withNotes = t.copyWith(notes: 'Great for peak-time sets');
+
+      expect(withNotes.notes, 'Great for peak-time sets');
+
+      final cleared = withNotes.copyWith(clearNotes: true);
+      expect(cleared.notes, isNull);
+    });
   });
 
   group('ProjectTemplateAdapter (Hive round-trip)', () {
@@ -98,6 +112,8 @@ void main() {
         bpm: 128,
         musicalKey: 'C#m',
         dawVersion: '11.3.20',
+        notes: 'Great for peak-time sets',
+        projectNotes: 'Author: DJ Example',
       );
 
       final box = await Hive.openBox<ProjectTemplate>('project_template_round_trip_test');
@@ -114,6 +130,8 @@ void main() {
       expect(restored.bpm, original.bpm);
       expect(restored.musicalKey, original.musicalKey);
       expect(restored.dawVersion, original.dawVersion);
+      expect(restored.notes, original.notes);
+      expect(restored.projectNotes, original.projectNotes);
     });
 
     test('reads a box entry written before bpm/key/dawVersion existed', () async {
@@ -127,6 +145,8 @@ void main() {
       expect(restored.bpm, isNull);
       expect(restored.musicalKey, isNull);
       expect(restored.dawVersion, isNull);
+      expect(restored.notes, isNull);
+      expect(restored.projectNotes, isNull);
     });
   });
 }

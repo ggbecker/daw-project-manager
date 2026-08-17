@@ -35,6 +35,7 @@ import '../services/metadata_extractor.dart';
 import '../services/metadata_sidecar_service.dart';
 import '../services/mixdown_detector_service.dart';
 import '../services/project_text_export_service.dart';
+import 'dialogs/save_as_template_dialog.dart';
 import 'widgets/conversion_progress_dialog.dart';
 import 'widgets/desktop_title_bar.dart';
 import 'widgets/project_detail_header.dart';
@@ -606,6 +607,10 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                     MaterialPageRoute(builder: (_) => ProjectStatisticsPage(projectId: updatedProject.id)),
                   ),
                   onExport: () => _exportProjectInfo(updatedProject),
+                  onSaveAsTemplate: () => showDialog(
+                    context: context,
+                    builder: (_) => SaveAsTemplateDialog(project: updatedProject),
+                  ),
                 ),
                 Expanded(
                   child: Form(
@@ -1275,6 +1280,7 @@ class _ProjectDetailActionBar extends ConsumerWidget {
   final VoidCallback onOpenInDaw;
   final VoidCallback onStats;
   final VoidCallback onExport;
+  final VoidCallback onSaveAsTemplate;
 
   const _ProjectDetailActionBar({
     required this.project,
@@ -1285,6 +1291,7 @@ class _ProjectDetailActionBar extends ConsumerWidget {
     required this.onOpenInDaw,
     required this.onStats,
     required this.onExport,
+    required this.onSaveAsTemplate,
   });
 
   @override
@@ -1372,6 +1379,12 @@ class _ProjectDetailActionBar extends ConsumerWidget {
               onPressed: onExport,
               icon: const Icon(Icons.description_outlined, size: 16),
               label: Text(l10n.exportProjectInfo),
+            ),
+            const SizedBox(width: 8),
+            OutlinedButton.icon(
+              onPressed: onSaveAsTemplate,
+              icon: const Icon(Icons.bookmark_add_outlined, size: 16),
+              label: Text(l10n.saveAsTemplate),
             ),
           ],
         ],

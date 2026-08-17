@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 
 import '../../generated/l10n/app_localizations.dart';
+import '../../models/music_project.dart';
 import '../../models/pending_folder.dart';
 import '../../models/project_template.dart';
 import '../../models/scan_root.dart';
@@ -108,6 +109,10 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
   bool _openedInDaw = false;
   bool _trackSessionFromNow = false;
   PendingFolder? _createdPendingFolder;
+  // Set only by the template flow, which never auto-launches the DAW (see
+  // _finishFromTemplate) — lets the success screen offer a manual "Open in
+  // DAW" button without needing to look the project back up.
+  MusicProject? _createdProjectForLaunch;
 
   @override
   void initState() {
@@ -433,6 +438,7 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
         _openedInDaw = false;
         _trackSessionFromNow = false;
         _createdPendingFolder = null;
+        _createdProjectForLaunch = createdProject;
       });
     }
   }
@@ -544,6 +550,13 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
                 label: Text(l10n.openFolder),
                 onPressed: () => _closeSuccess(openFolder: true),
               ),
+              if (_createdProjectForLaunch != null)
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.open_in_new, size: 18),
+                  label: Text(l10n.openInDaw),
+                  onPressed: () =>
+                      launchProjectInDaw(context, ref, _createdProjectForLaunch!),
+                ),
               FilledButton(onPressed: _closeSuccess, child: Text(l10n.close)),
             ],
           ),

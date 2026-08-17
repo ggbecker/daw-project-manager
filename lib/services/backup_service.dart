@@ -52,8 +52,8 @@ class BackupService {
       // Create backup data structure
       final backupData = {
         // 1.1 added templates/projectTemplates/templateRoots/
-        // customMixdownFolders/phaseSettings. Importing a 1.0 file still works
-        // — every new key is read with a null check on the way back in.
+        // customMixdownFolders/phaseSettings. Importing an older file still
+        // works — every new key is read with a null check on the way back in.
         'version': '1.1',
         'exportDate': DateTime.now().toIso8601String(),
         'profileId': profileId,
@@ -527,6 +527,7 @@ class BackupService {
     } catch (_) {}
   }
 
+
   /// Merges [folders] into the stored custom mixdown folder names. Union rather
   /// than overwrite, matching how Drive sync merges the same preference — these
   /// are additive folder names, so losing a local one to an older backup would
@@ -852,6 +853,8 @@ class BackupService {
       'bpm': template.bpm,
       'musicalKey': template.musicalKey,
       'dawVersion': template.dawVersion,
+      'notes': template.notes,
+      'projectNotes': template.projectNotes,
     };
   }
 
@@ -866,6 +869,8 @@ class BackupService {
       bpm: (json['bpm'] as num?)?.toDouble(),
       musicalKey: json['musicalKey'] as String?,
       dawVersion: json['dawVersion'] as String?,
+      notes: json['notes'] as String?,
+      projectNotes: json['projectNotes'] as String?,
     );
   }
 

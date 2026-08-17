@@ -26,13 +26,15 @@ class ProjectTemplateAdapter extends TypeAdapter<ProjectTemplate> {
       bpm: (fields[6] as num?)?.toDouble(),
       musicalKey: fields[7] as String?,
       dawVersion: fields[8] as String?,
+      notes: fields[9] as String?,
+      projectNotes: fields[10] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, ProjectTemplate obj) {
     writer
-      ..writeByte(9)
+      ..writeByte(11)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -50,7 +52,11 @@ class ProjectTemplateAdapter extends TypeAdapter<ProjectTemplate> {
       ..writeByte(7)
       ..write(obj.musicalKey)
       ..writeByte(8)
-      ..write(obj.dawVersion);
+      ..write(obj.dawVersion)
+      ..writeByte(9)
+      ..write(obj.notes)
+      ..writeByte(10)
+      ..write(obj.projectNotes);
   }
 
   @override

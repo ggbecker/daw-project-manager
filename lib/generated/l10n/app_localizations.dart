@@ -1907,6 +1907,84 @@ abstract class AppLocalizations {
   /// **'{count} template{plural} deleted'**
   String templatesDeleted(int count, String plural);
 
+  /// No description provided for @templateDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Template'**
+  String get templateDetailTitle;
+
+  /// No description provided for @templateNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Template not found'**
+  String get templateNotFound;
+
+  /// No description provided for @saveAsTemplate.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as Template'**
+  String get saveAsTemplate;
+
+  /// No description provided for @newTemplateNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Template name'**
+  String get newTemplateNameLabel;
+
+  /// No description provided for @savedAsTemplate.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved as template'**
+  String get savedAsTemplate;
+
+  /// No description provided for @duplicateTemplate.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate'**
+  String get duplicateTemplate;
+
+  /// No description provided for @templateDuplicated.
+  ///
+  /// In en, this message translates to:
+  /// **'Template duplicated'**
+  String get templateDuplicated;
+
+  /// No description provided for @fileInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'File Info'**
+  String get fileInfo;
+
+  /// No description provided for @fileSize.
+  ///
+  /// In en, this message translates to:
+  /// **'File Size'**
+  String get fileSize;
+
+  /// No description provided for @filePath.
+  ///
+  /// In en, this message translates to:
+  /// **'Path'**
+  String get filePath;
+
+  /// No description provided for @fileModified.
+  ///
+  /// In en, this message translates to:
+  /// **'Last Modified'**
+  String get fileModified;
+
+  /// No description provided for @projectsFromThisTemplate.
+  ///
+  /// In en, this message translates to:
+  /// **'Projects Created From This Template ({count})'**
+  String projectsFromThisTemplate(int count);
+
+  /// No description provided for @noProjectsFromThisTemplate.
+  ///
+  /// In en, this message translates to:
+  /// **'No projects created from this template yet'**
+  String get noProjectsFromThisTemplate;
+
   /// No description provided for @importTodos.
   ///
   /// In en, this message translates to:

@@ -980,6 +980,24 @@
       "plural": { "type": "String" }
     }
   },
+  "templateDetailTitle": "Template",
+  "templateNotFound": "Template not found",
+  "saveAsTemplate": "Save as Template",
+  "newTemplateNameLabel": "Template name",
+  "savedAsTemplate": "Saved as template",
+  "duplicateTemplate": "Duplicate",
+  "templateDuplicated": "Template duplicated",
+  "fileInfo": "File Info",
+  "fileSize": "File Size",
+  "filePath": "Path",
+  "fileModified": "Last Modified",
+  "projectsFromThisTemplate": "Projects Created From This Template ({count})",
+  "@projectsFromThisTemplate": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "noProjectsFromThisTemplate": "No projects created from this template yet",
   "importTodos": "Import Todos from File",
   "noTodosInFile": "No todos found in file",
   "todosImported": "{count} todo(s) imported successfully",
