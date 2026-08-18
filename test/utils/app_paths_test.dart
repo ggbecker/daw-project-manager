@@ -116,4 +116,70 @@ void main() {
       );
     });
   });
+
+  // A PR build handed to a tester is pinned to its own app-data directory,
+  // but the single-instance guard used to bind one fixed port regardless.
+  // Starting such a build while the installed app was open therefore just
+  // forwarded to the installed app and exited — the tester never saw the
+  // build at all, which is the opposite of being able to run it alongside.
+  group('resolveSingleInstancePort', () {
+    test('a non-isolated build keeps the fixed release port', () {
+      expect(
+        resolveSingleInstancePort(defaultAppDataDirName, isolated: false),
+        defaultSingleInstancePort,
+      );
+    });
+
+    test('the directory name is ignored when not isolated', () {
+      expect(
+        resolveSingleInstancePort('anything_at_all', isolated: false),
+        defaultSingleInstancePort,
+      );
+    });
+
+    test('an isolated build gets a port of its own', () {
+      final port = resolveSingleInstancePort(
+        'daw_project_manager_pr141',
+        isolated: true,
+      );
+      expect(port, isNot(defaultSingleInstancePort));
+    });
+
+    test('the same directory always resolves to the same port', () {
+      // A port that moved between launches would make every launch look like
+      // a first one, defeating the guard for that build entirely.
+      expect(
+        resolveSingleInstancePort('daw_project_manager_pr141', isolated: true),
+        resolveSingleInstancePort('daw_project_manager_pr141', isolated: true),
+      );
+    });
+
+    test('different PR builds do not share a port', () {
+      expect(
+        resolveSingleInstancePort('daw_project_manager_pr141', isolated: true),
+        isNot(resolveSingleInstancePort('daw_project_manager_pr142',
+            isolated: true)),
+      );
+    });
+
+    test('every derived port sits in the dynamic range, below the release one',
+        () {
+      // Staying under defaultSingleInstancePort is what guarantees a derived
+      // port can never collide with the real library's.
+      for (var i = 0; i < 500; i++) {
+        final port = resolveSingleInstancePort(
+          'daw_project_manager_pr$i',
+          isolated: true,
+        );
+        expect(port, greaterThanOrEqualTo(49152));
+        expect(port, lessThan(defaultSingleInstancePort));
+      }
+    });
+
+    test('an empty directory name still resolves to a usable port', () {
+      final port = resolveSingleInstancePort('', isolated: true);
+      expect(port, greaterThanOrEqualTo(49152));
+      expect(port, lessThan(defaultSingleInstancePort));
+    });
+  });
 }

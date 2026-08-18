@@ -52,6 +52,41 @@ void selectAppDataDir(String dirName) {
       resolveAppDataDirName(override: dirName, isRelease: kReleaseMode);
 }
 
+/// The loopback port the Windows single-instance guard binds.
+///
+/// A second launch that finds this port taken concludes the app is already
+/// running, hands its arguments to the instance that holds it, and exits.
+/// That is right for two copies of the *same* library and wrong for a build
+/// pinned to its own one: a PR build handed to a tester would be bounced
+/// into the stable app they already have open, never starting at all — so
+/// an isolated build gets its own port and can run alongside it.
+int get singleInstancePort =>
+    resolveSingleInstancePort(appDataDirName, isolated: isUsingIsolatedAppData);
+
+/// The port a shipping release binds. Isolated builds derive their own from
+/// [resolveSingleInstancePort] instead.
+const int defaultSingleInstancePort = 57321;
+
+/// Resolves the single-instance port for [dirName].
+///
+/// Isolated builds hash the directory name into the IANA dynamic/private
+/// range, deliberately stopping below [defaultSingleInstancePort] so a
+/// derived port can never collide with the real library's. Deterministic, so
+/// the same build binds the same port on every launch — a port that moved
+/// between runs would make each launch look like a first one and defeat the
+/// guard for that build entirely.
+///
+/// Pure — exposed for testing.
+@visibleForTesting
+int resolveSingleInstancePort(String dirName, {required bool isolated}) {
+  if (!isolated) return defaultSingleInstancePort;
+  var hash = 0;
+  for (final unit in dirName.codeUnits) {
+    hash = (hash * 31 + unit) & 0x7fffffff;
+  }
+  return 49152 + (hash % 8000);
+}
+
 /// Test-only: drop a runtime selection made by an earlier test.
 @visibleForTesting
 void resetSelectedAppDataDir() => _runtimeDirName = null;
