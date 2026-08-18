@@ -480,20 +480,21 @@ jobs:
       # \daw_project_manager data directory, so the app must be fully quit —
       # tray included — before starting this one, or the single-instance
       # socket just forwards to the copy already running.)
-      - name: Package portable Windows build (PR only)
-        if: matrix.is_installer == true && github.event_name == 'pull_request'
-        shell: pwsh
-        run: |
-          Compress-Archive `
-            -Path build/windows/x64/runner/Release/* `
-            -DestinationPath DAW_Project_Manager_Windows_Portable.zip
-
+      #
+      # The folder is handed to upload-artifact as-is rather than zipped
+      # first: the action always wraps an artifact in a zip of its own, so
+      # compressing here would produce a zip inside a zip and make whoever
+      # receives it unpack twice. Uploaded this way the download is
+      # DAW_Project_Manager_Windows_Portable_<ref>.zip with the .exe at its
+      # root, which is also why the artifact carries the full product name —
+      # it becomes the file name, and lands in a Downloads folder alongside
+      # the installer and MSIX built from the same run.
       - name: Upload portable Windows build (PR only)
         if: matrix.is_installer == true && github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
         with:
-          name: Windows_Portable_${{ steps.sanitize_ref.outputs.sanitized_ref }}
-          path: DAW_Project_Manager_Windows_Portable.zip
+          name: DAW_Project_Manager_Windows_Portable_${{ steps.sanitize_ref.outputs.sanitized_ref }}
+          path: build/windows/x64/runner/Release/
 
       # 5.5. Set correct asset paths based on sanitized ref name
       - name: Set asset paths
