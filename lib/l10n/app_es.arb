@@ -1,5 +1,12 @@
 {
   "@@locale": "es",
+  "launchFailureNoAssociation": "Windows no tiene ninguna aplicación configurada para abrir archivos {extension}, por lo que no puede abrir este proyecto. Configura una aplicación predeterminada para {extension} en la configuración de Windows, o abre el proyecto desde tu DAW.",
+  "launchDiagnosticsAction": "Detalles",
+  "launchDiagnosticsTitle": "Diagnóstico de inicio",
+  "launchDiagnosticsIntro": "Lo que la aplicación registró al intentar abrir este proyecto. Cópialo en un informe de error para ayudar a encontrar la causa.",
+  "launchDiagnosticsCopy": "Copiar",
+  "launchDiagnosticsCopied": "Diagnóstico de inicio copiado al portapapeles",
+  "launchDiagnosticsEmpty": "No se registró nada del último intento de inicio.",
   "appTitle": "Gestor de Proyectos DAW",
   "@appTitle": {
     "description": "The application title"

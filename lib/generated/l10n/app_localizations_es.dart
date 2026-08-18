@@ -9,6 +9,32 @@ class AppLocalizationsEs extends AppLocalizations {
   AppLocalizationsEs([String locale = 'es']) : super(locale);
 
   @override
+  String launchFailureNoAssociation(String extension) {
+    return 'Windows no tiene ninguna aplicación configurada para abrir archivos $extension, por lo que no puede abrir este proyecto. Configura una aplicación predeterminada para $extension en la configuración de Windows, o abre el proyecto desde tu DAW.';
+  }
+
+  @override
+  String get launchDiagnosticsAction => 'Detalles';
+
+  @override
+  String get launchDiagnosticsTitle => 'Diagnóstico de inicio';
+
+  @override
+  String get launchDiagnosticsIntro =>
+      'Lo que la aplicación registró al intentar abrir este proyecto. Cópialo en un informe de error para ayudar a encontrar la causa.';
+
+  @override
+  String get launchDiagnosticsCopy => 'Copiar';
+
+  @override
+  String get launchDiagnosticsCopied =>
+      'Diagnóstico de inicio copiado al portapapeles';
+
+  @override
+  String get launchDiagnosticsEmpty =>
+      'No se registró nada del último intento de inicio.';
+
+  @override
   String get appTitle => 'Gestor de Proyectos DAW';
 
   @override

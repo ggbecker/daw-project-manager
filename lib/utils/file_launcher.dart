@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 // The VM implementation uses macos_secure_bookmarks only when Platform.isMacOS.
 import 'file_launcher_platform_stub.dart'
     if (dart.library.io) 'file_launcher_platform_macos.dart' as platform;
+import 'launch_diagnostics.dart';
 
 /// Utilities for launching files and folders in the system file manager.
 ///
@@ -27,8 +28,13 @@ class FileLauncher {
       }
 
       return await platform.launchResolvedPath(result.path, isFolder);
-    } catch (e) {
+    } catch (e, stack) {
       if (kDebugMode) print('[FileLauncher] Error: $e');
+      LaunchDiagnostics.record('FAILED: FileLauncher.launch threw', {
+        'error': e,
+        'type': e.runtimeType,
+      });
+      LaunchDiagnostics.record('stack', {'trace': stack});
       return false;
     } finally {
       if (resourceToStop != null) {
@@ -59,8 +65,13 @@ class FileLauncher {
   ) async {
     try {
       return await platform.launchWithBinary(binaryPath, projectPath);
-    } catch (e) {
+    } catch (e, stack) {
       if (kDebugMode) print('[FileLauncher] Error: $e');
+      LaunchDiagnostics.record('FAILED: launchWithBinary threw', {
+        'error': e,
+        'type': e.runtimeType,
+      });
+      LaunchDiagnostics.record('stack', {'trace': stack});
       return false;
     }
   }

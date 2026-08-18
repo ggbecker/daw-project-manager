@@ -7,7 +7,12 @@ permissions:
 # 1. Gatilhos do Workflow
 on:
   pull_request:
-    branches: [ main ]
+    # 'release/**' as well as main: a fix or a test build aimed at an already
+    # released version is opened against a release/vX.Y.Z branch cut from its
+    # tag, and with main alone those PRs matched no trigger at all — they sat
+    # with no checks and, more to the point, produced no build artifact to
+    # hand to anyone.
+    branches: [ main, 'release/**' ]
     types: [ opened, synchronize, reopened ]
 
   push:
@@ -465,6 +470,31 @@ jobs:
             Write-Host "Warning: No installer file found in Output directory"
           }
         shell: pwsh
+
+      # 5.4b. Zip the unpacked Windows build as well, on pull requests only.
+      # A test build handed to someone who already has the app installed must
+      # not go through the installer: it shares its Inno AppId with the
+      # released build, so installing it replaces their working copy and its
+      # uninstall entry. This runs from a folder instead and leaves the
+      # installation alone. (It still uses the same %LOCALAPPDATA%
+      # \daw_project_manager data directory, so the app must be fully quit —
+      # tray included — before starting this one, or the single-instance
+      # socket just forwards to the copy already running.)
+      #
+      # The folder is handed to upload-artifact as-is rather than zipped
+      # first: the action always wraps an artifact in a zip of its own, so
+      # compressing here would produce a zip inside a zip and make whoever
+      # receives it unpack twice. Uploaded this way the download is
+      # DAW_Project_Manager_Windows_Portable_<ref>.zip with the .exe at its
+      # root, which is also why the artifact carries the full product name —
+      # it becomes the file name, and lands in a Downloads folder alongside
+      # the installer and MSIX built from the same run.
+      - name: Upload portable Windows build (PR only)
+        if: matrix.is_installer == true && github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: DAW_Project_Manager_Windows_Portable_${{ steps.sanitize_ref.outputs.sanitized_ref }}
+          path: build/windows/x64/runner/Release/
 
       # 5.5. Set correct asset paths based on sanitized ref name
       - name: Set asset paths

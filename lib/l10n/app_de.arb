@@ -1,5 +1,12 @@
 {
   "@@locale": "de",
+  "launchFailureNoAssociation": "Windows hat keine App zum Öffnen von {extension}-Dateien festgelegt und kann dieses Projekt daher nicht öffnen. Legen Sie in den Windows-Einstellungen eine Standard-App für {extension} fest oder öffnen Sie das Projekt direkt in Ihrer DAW.",
+  "launchDiagnosticsAction": "Details",
+  "launchDiagnosticsTitle": "Start-Diagnose",
+  "launchDiagnosticsIntro": "Was die App beim Versuch aufgezeichnet hat, dieses Projekt zu öffnen. Kopieren Sie es in einen Fehlerbericht, um die Ursache zu finden.",
+  "launchDiagnosticsCopy": "Kopieren",
+  "launchDiagnosticsCopied": "Start-Diagnose in die Zwischenablage kopiert",
+  "launchDiagnosticsEmpty": "Für den letzten Startversuch wurde nichts aufgezeichnet.",
   "appTitle": "DAW Projektmanager",
   "@appTitle": {
     "description": "The application title"
