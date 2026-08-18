@@ -9,6 +9,27 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
+  String get launchDiagnosticsAction => 'Подробности';
+
+  @override
+  String get launchDiagnosticsTitle => 'Диагностика запуска';
+
+  @override
+  String get launchDiagnosticsIntro =>
+      'Что приложение записало при попытке открыть этот проект. Скопируйте это в отчёт об ошибке, чтобы помочь найти причину.';
+
+  @override
+  String get launchDiagnosticsCopy => 'Копировать';
+
+  @override
+  String get launchDiagnosticsCopied =>
+      'Диагностика запуска скопирована в буфер обмена';
+
+  @override
+  String get launchDiagnosticsEmpty =>
+      'Для последней попытки запуска ничего не записано.';
+
+  @override
   String get appTitle => 'Менеджер проектов DAW';
 
   @override

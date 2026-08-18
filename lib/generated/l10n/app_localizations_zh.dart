@@ -9,6 +9,24 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
+  String get launchDiagnosticsAction => '详情';
+
+  @override
+  String get launchDiagnosticsTitle => '启动诊断';
+
+  @override
+  String get launchDiagnosticsIntro => '应用在尝试打开此项目时记录的内容。请将其复制到错误报告中，以帮助查找原因。';
+
+  @override
+  String get launchDiagnosticsCopy => '复制';
+
+  @override
+  String get launchDiagnosticsCopied => '启动诊断已复制到剪贴板';
+
+  @override
+  String get launchDiagnosticsEmpty => '上次启动尝试没有记录任何内容。';
+
+  @override
   String get appTitle => 'DAW项目管理器';
 
   @override

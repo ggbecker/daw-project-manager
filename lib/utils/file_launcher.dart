@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 // Platform.isMacOS, and has its own Windows and Linux branches.
 import 'file_launcher_platform_stub.dart'
     if (dart.library.io) 'file_launcher_platform_io.dart' as platform;
+import 'launch_diagnostics.dart';
 
 /// Utilities for launching files and folders in the system file manager.
 ///
@@ -28,8 +29,13 @@ class FileLauncher {
       }
 
       return await platform.launchResolvedPath(result.path, isFolder);
-    } catch (e) {
+    } catch (e, stack) {
       if (kDebugMode) print('[FileLauncher] Error: $e');
+      LaunchDiagnostics.record('FAILED: FileLauncher.launch threw', {
+        'error': e,
+        'type': e.runtimeType,
+      });
+      LaunchDiagnostics.record('stack', {'trace': stack});
       return false;
     } finally {
       if (resourceToStop != null) {
@@ -60,8 +66,13 @@ class FileLauncher {
   ) async {
     try {
       return await platform.launchWithBinary(binaryPath, projectPath);
-    } catch (e) {
+    } catch (e, stack) {
       if (kDebugMode) print('[FileLauncher] Error: $e');
+      LaunchDiagnostics.record('FAILED: launchWithBinary threw', {
+        'error': e,
+        'type': e.runtimeType,
+      });
+      LaunchDiagnostics.record('stack', {'trace': stack});
       return false;
     }
   }

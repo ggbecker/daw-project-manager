@@ -9,6 +9,27 @@ class AppLocalizationsFr extends AppLocalizations {
   AppLocalizationsFr([String locale = 'fr']) : super(locale);
 
   @override
+  String get launchDiagnosticsAction => 'Détails';
+
+  @override
+  String get launchDiagnosticsTitle => 'Diagnostic de lancement';
+
+  @override
+  String get launchDiagnosticsIntro =>
+      'Ce que l\'application a enregistré en essayant d\'ouvrir ce projet. Copiez-le dans un rapport de bogue pour aider à en trouver la cause.';
+
+  @override
+  String get launchDiagnosticsCopy => 'Copier';
+
+  @override
+  String get launchDiagnosticsCopied =>
+      'Diagnostic de lancement copié dans le presse-papiers';
+
+  @override
+  String get launchDiagnosticsEmpty =>
+      'Rien n\'a été enregistré pour la dernière tentative de lancement.';
+
+  @override
   String get appTitle => 'Gestionnaire de Projets DAW';
 
   @override

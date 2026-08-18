@@ -112,6 +112,42 @@ abstract class AppLocalizations {
     Locale('zh'),
   ];
 
+  /// No description provided for @launchDiagnosticsAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get launchDiagnosticsAction;
+
+  /// No description provided for @launchDiagnosticsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Launch diagnostics'**
+  String get launchDiagnosticsTitle;
+
+  /// No description provided for @launchDiagnosticsIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'What the app recorded while trying to open this project. Copy it into a bug report to help track down the cause.'**
+  String get launchDiagnosticsIntro;
+
+  /// No description provided for @launchDiagnosticsCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get launchDiagnosticsCopy;
+
+  /// No description provided for @launchDiagnosticsCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Launch diagnostics copied to clipboard'**
+  String get launchDiagnosticsCopied;
+
+  /// No description provided for @launchDiagnosticsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing was recorded for the last launch attempt.'**
+  String get launchDiagnosticsEmpty;
+
   /// The application title
   ///
   /// In en, this message translates to:

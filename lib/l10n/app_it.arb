@@ -1,5 +1,11 @@
 {
   "@@locale": "it",
+  "launchDiagnosticsAction": "Dettagli",
+  "launchDiagnosticsTitle": "Diagnostica di avvio",
+  "launchDiagnosticsIntro": "Ciò che l'app ha registrato durante il tentativo di aprire questo progetto. Copiala in una segnalazione di bug per aiutare a individuarne la causa.",
+  "launchDiagnosticsCopy": "Copia",
+  "launchDiagnosticsCopied": "Diagnostica di avvio copiata negli appunti",
+  "launchDiagnosticsEmpty": "Non è stato registrato nulla per l'ultimo tentativo di avvio.",
   "appTitle": "Gestore Progetti DAW",
   "@appTitle": {
     "description": "The application title"

@@ -1,5 +1,11 @@
 {
   "@@locale": "pt",
+  "launchDiagnosticsAction": "Detalhes",
+  "launchDiagnosticsTitle": "Diagnóstico de inicialização",
+  "launchDiagnosticsIntro": "O que o aplicativo registrou ao tentar abrir este projeto. Copie para um relatório de bug para ajudar a encontrar a causa.",
+  "launchDiagnosticsCopy": "Copiar",
+  "launchDiagnosticsCopied": "Diagnóstico de inicialização copiado para a área de transferência",
+  "launchDiagnosticsEmpty": "Nada foi registrado na última tentativa de inicialização.",
   "appTitle": "Gerenciador de Projetos DAW",
   "@appTitle": {
     "description": "The application title"

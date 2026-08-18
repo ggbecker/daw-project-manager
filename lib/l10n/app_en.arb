@@ -1,5 +1,11 @@
 {
   "@@locale": "en",
+  "launchDiagnosticsAction": "Details",
+  "launchDiagnosticsTitle": "Launch diagnostics",
+  "launchDiagnosticsIntro": "What the app recorded while trying to open this project. Copy it into a bug report to help track down the cause.",
+  "launchDiagnosticsCopy": "Copy",
+  "launchDiagnosticsCopied": "Launch diagnostics copied to clipboard",
+  "launchDiagnosticsEmpty": "Nothing was recorded for the last launch attempt.",
   "appTitle": "DAW Project Manager",
   "@appTitle": {
     "description": "The application title"

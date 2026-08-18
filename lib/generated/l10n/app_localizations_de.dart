@@ -9,6 +9,27 @@ class AppLocalizationsDe extends AppLocalizations {
   AppLocalizationsDe([String locale = 'de']) : super(locale);
 
   @override
+  String get launchDiagnosticsAction => 'Details';
+
+  @override
+  String get launchDiagnosticsTitle => 'Start-Diagnose';
+
+  @override
+  String get launchDiagnosticsIntro =>
+      'Was die App beim Versuch aufgezeichnet hat, dieses Projekt zu öffnen. Kopieren Sie es in einen Fehlerbericht, um die Ursache zu finden.';
+
+  @override
+  String get launchDiagnosticsCopy => 'Kopieren';
+
+  @override
+  String get launchDiagnosticsCopied =>
+      'Start-Diagnose in die Zwischenablage kopiert';
+
+  @override
+  String get launchDiagnosticsEmpty =>
+      'Für den letzten Startversuch wurde nichts aufgezeichnet.';
+
+  @override
   String get appTitle => 'DAW Projektmanager';
 
   @override
