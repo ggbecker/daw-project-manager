@@ -25,6 +25,7 @@ import '../models/music_project.dart';
 import '../services/audio_analysis_service.dart';
 import '../services/thumbnail_toolbar_service.dart';
 import '../services/waveform_disk_cache.dart';
+import '../models/project_detail_layout.dart';
 import '../models/waveform_style.dart';
 import '../models/scan_root.dart';
 import '../models/ignored_path.dart';
@@ -525,6 +526,11 @@ final projectsProvider = Provider<List<MusicProject>>((ref) {
                     // searchableText builds a string.
                     if (p.parts.isNotEmpty)
                       ProjectPart.searchableText(p.parts),
+                    // Marker names go in one entry each rather than joined:
+                    // fuzzyMatchAny requires every query word to hit the *same*
+                    // entry, so a joined string would match words picked out of
+                    // two unrelated markers.
+                    ...p.markers.map((m) => m.name),
                   ],
                   projectsSearch,
                 ),
@@ -2398,11 +2404,18 @@ class DesktopPlayerRequest {
   /// False for single-track previews (projects list, player bar quick-play).
   final bool isQueuedPlayback;
 
+  /// Where to start playing, for a track opened at a specific point — jumping
+  /// to a project marker on a project that isn't loaded yet. It has to travel
+  /// with the request rather than being a seek sent straight afterwards,
+  /// because the player bar doesn't exist yet when the request is made.
+  final Duration? startAt;
+
   const DesktopPlayerRequest({
     required this.project,
     required this.resolvedPath,
     required this.generation,
     this.isQueuedPlayback = false,
+    this.startAt,
   });
 }
 
@@ -2414,6 +2427,7 @@ class DesktopPlayerNotifier extends Notifier<DesktopPlayerRequest?> {
     MusicProject project,
     String resolvedPath, {
     bool isQueuedPlayback = false,
+    Duration? startAt,
   }) {
     final gen = (state?.generation ?? 0) + 1;
     state = DesktopPlayerRequest(
@@ -2421,6 +2435,7 @@ class DesktopPlayerNotifier extends Notifier<DesktopPlayerRequest?> {
       resolvedPath: resolvedPath,
       generation: gen,
       isQueuedPlayback: isQueuedPlayback,
+      startAt: startAt,
     );
   }
 
@@ -2488,6 +2503,42 @@ class DesktopPlayerToggleNotifier extends Notifier<int> {
 final desktopPlayerToggleRequestProvider =
     NotifierProvider<DesktopPlayerToggleNotifier, int>(
       DesktopPlayerToggleNotifier.new,
+    );
+
+/// A request to jump the desktop player to an absolute position in the track
+/// it already has loaded — sent by the project marker lists, which live on the
+/// project detail page and in the music player's detail pane and so have no
+/// access to the player bar's `AudioPlayer`.
+///
+/// [generation] rather than position alone, so that clicking the same marker
+/// twice is two distinguishable requests.
+class DesktopPlayerSeekRequest {
+  const DesktopPlayerSeekRequest({
+    required this.position,
+    required this.generation,
+  });
+
+  final Duration position;
+  final int generation;
+}
+
+class DesktopPlayerSeekNotifier extends Notifier<DesktopPlayerSeekRequest?> {
+  @override
+  DesktopPlayerSeekRequest? build() => null;
+
+  void seekTo(Duration position) {
+    state = DesktopPlayerSeekRequest(
+      position: position,
+      generation: (state?.generation ?? 0) + 1,
+    );
+  }
+
+  void clear() => state = null;
+}
+
+final desktopPlayerSeekRequestProvider =
+    NotifierProvider<DesktopPlayerSeekNotifier, DesktopPlayerSeekRequest?>(
+      DesktopPlayerSeekNotifier.new,
     );
 
 /// Incremented each time the desktop player finishes a track naturally.
@@ -2646,6 +2697,55 @@ class WaveformStyleNotifier extends Notifier<WaveformStyle> {
 final waveformStyleProvider =
     NotifierProvider<WaveformStyleNotifier, WaveformStyle>(
       WaveformStyleNotifier.new,
+    );
+
+// ─── Project detail page layout ───────────────────────────────────────────────
+
+/// Whether the project detail page shows one long scroll or a nav rail with
+/// one section at a time.
+///
+/// Device-local, in the same `settings` box as the theme and waveform style:
+/// it is a preference about this machine's screen, not project data, so it is
+/// deliberately not synced or backed up.
+class ProjectDetailLayoutNotifier extends Notifier<ProjectDetailLayout> {
+  static const _boxKey = 'projectDetailLayout';
+
+  @override
+  ProjectDetailLayout build() {
+    SchedulerBinding.instance.addPostFrameCallback((_) => _load());
+    return ProjectDetailLayout.classic;
+  }
+
+  Future<void> _load() async {
+    try {
+      await ensureHiveInitialized();
+      final box = await Hive.openBox<String>('settings');
+      final saved = box.get(_boxKey);
+      if (saved == null || saved.isEmpty) return;
+      state = ProjectDetailLayout.values.firstWhere(
+        (e) => e.name == saved,
+        orElse: () => ProjectDetailLayout.classic,
+      );
+    } catch (_) {
+      // Keep the default if the box cannot be read.
+    }
+  }
+
+  Future<void> set(ProjectDetailLayout layout) async {
+    state = layout;
+    try {
+      await ensureHiveInitialized();
+      final box = await Hive.openBox<String>('settings');
+      await box.put(_boxKey, layout.name);
+    } catch (e) {
+      debugPrint('[ProjectDetailLayout] failed to save: $e');
+    }
+  }
+}
+
+final projectDetailLayoutProvider =
+    NotifierProvider<ProjectDetailLayoutNotifier, ProjectDetailLayout>(
+      ProjectDetailLayoutNotifier.new,
     );
 
 /// Whether the waveform draws left and right as separate lanes.

@@ -4177,5 +4177,47 @@
   "noPartsMatchFilters": "No parts match these filters",
   "@noPartsMatchFilters": {"description": "Empty state when search or filters hide every part"},
   "reorderNeedsUnfilteredList": "Clear the search, filters and sorting to drag parts into order",
-  "@reorderNeedsUnfilteredList": {"description": "Explains that drag-reordering needs the unfiltered, unsorted list"}
+  "@reorderNeedsUnfilteredList": {"description": "Explains that drag-reordering needs the unfiltered, unsorted list"},
+"projectMarkers": "Markers",
+"@projectMarkers": {
+      "description": "Section heading for the timeline markers and regions read out of a DAW project file"
+  },
+"projectMarkerUnnamed": "Marker {index}",
+"@projectMarkerUnnamed": {
+      "description": "Fallback label for a marker the user never named",
+      "placeholders": {
+          "index": {
+              "type": "int"
+          }
+      }
+  },
+"projectRegionUnnamed": "Region {index}",
+"@projectRegionUnnamed": {
+      "description": "Fallback label for a region the user never named",
+      "placeholders": {
+          "index": {
+              "type": "int"
+          }
+      }
+  },
+"projectMarkerJumpTooltip": "Jump to this point in the preview song",
+"@projectMarkerJumpTooltip": {
+      "description": "Tooltip on a marker row that will seek the preview player"
+  },
+"projectMarkerNoPreviewSong": "Add a preview song to jump to markers",
+"@projectMarkerNoPreviewSong": {
+      "description": "Tooltip on marker rows when the project has no preview song to seek in"
+  },
+  "projectDetailLayout": "Project Detail Layout",
+  "@projectDetailLayout": {"description": "Appearance setting: how the project detail page is arranged"},
+  "projectDetailLayoutSettingDescription": "How the project detail page is arranged.",
+  "@projectDetailLayoutSettingDescription": {"description": "Subtitle under the Project Detail Layout setting"},
+  "projectDetailLayoutClassic": "Classic",
+  "@projectDetailLayoutClassic": {"description": "Layout option: everything in one scroll"},
+  "projectDetailLayoutClassicDescription": "Everything in one scroll.",
+  "@projectDetailLayoutClassicDescription": {"description": "Description of the classic project detail layout"},
+  "projectDetailLayoutSectioned": "Sections",
+  "@projectDetailLayoutSectioned": {"description": "Layout option: a nav rail picks one section at a time"},
+  "projectDetailLayoutSectionedDescription": "A rail on the left picks one section at a time.",
+  "@projectDetailLayoutSectionedDescription": {"description": "Description of the sectioned project detail layout"}
 }

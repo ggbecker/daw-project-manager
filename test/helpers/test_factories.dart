@@ -1,4 +1,5 @@
 import 'package:daw_project_manager/models/music_project.dart';
+import 'package:daw_project_manager/models/project_marker.dart';
 import 'package:daw_project_manager/models/project_part.dart';
 import 'package:daw_project_manager/models/project_template.dart';
 import 'package:daw_project_manager/models/todo_item.dart';
@@ -43,6 +44,7 @@ class TestFactories {
     List<String> memberProjectIds = const [],
     String? defaultLaunchMemberId,
     String? stackId,
+    List<ProjectMarker>? markers,
   }) {
     return MusicProject(
       id: id,
@@ -82,6 +84,7 @@ class TestFactories {
       memberProjectIds: memberProjectIds,
       defaultLaunchMemberId: defaultLaunchMemberId,
       stackId: stackId,
+      markers: markers ?? const [],
     );
   }
 

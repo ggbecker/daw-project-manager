@@ -68,16 +68,16 @@ Not yet supported: Harrison Mixbus and SAWStudio/Pyramix/Zynewave Podium (no rel
 
 ## Metadata Extraction
 
-Deep Scan reads BPM, musical key, DAW version, and (Reaper only) project notes directly from certain project files. Everything else needs the field entered manually, or picked up from an optional `bpm.txt`/`key.txt` file dropped next to the project. See **Settings → Metadata Extraction** in the app for the full breakdown by DAW.
+Deep Scan reads BPM, musical key, DAW version, and (Reaper only) project notes and timeline markers directly from certain project files. Everything else needs the field entered manually, or picked up from an optional `bpm.txt`/`key.txt` file dropped next to the project. See **Settings → Metadata Extraction** in the app for the full breakdown by DAW.
 
-| Automatic extraction | BPM | Key | Version | Notes |
-|---|---|---|---|---|
-| Ableton Live | ✓ | ✓ | ✓ | |
-| Bitwig Studio | ✓ | ✓ | ✓ | |
-| Cubase / Nuendo | ✓ | ✓ | ✓ | |
-| FL Studio | ✓ | | ✓ | |
-| MAGDA | ✓ | ✓ | ✓ | |
-| Reaper | ✓ | ✓ | ✓ | ✓ |
+| Automatic extraction | BPM | Key | Version | Notes | Markers |
+|---|---|---|---|---|---|
+| Ableton Live | ✓ | ✓ | ✓ | | |
+| Bitwig Studio | ✓ | ✓ | ✓ | | |
+| Cubase / Nuendo | ✓ | ✓ | ✓ | ✓ | |
+| FL Studio | ✓ | | ✓ | | |
+| MAGDA | ✓ | ✓ | ✓ | | |
+| Reaper | ✓ | ✓ | ✓ | ✓ | ✓ |
 
 All other supported DAWs are detected and scanned but rely on manual entry today.
 

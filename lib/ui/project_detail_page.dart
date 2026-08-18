@@ -19,6 +19,7 @@ import 'package:archive/archive_io.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/music_project.dart';
+import '../models/project_detail_layout.dart';
 import '../models/project_event.dart';
 import '../providers/providers.dart';
 import '../repository/project_repository.dart';
@@ -27,6 +28,7 @@ import '../utils/mobile_utils.dart';
 import '../utils/file_launcher.dart';
 import '../utils/route_observer.dart';
 import '../generated/l10n/app_localizations.dart';
+import 'marker_navigation.dart';
 import 'session_actions.dart';
 import 'preview_share.dart';
 import 'dialogs/preview_song_not_found_dialog.dart';
@@ -39,6 +41,8 @@ import 'dialogs/save_as_template_dialog.dart';
 import 'widgets/conversion_progress_dialog.dart';
 import 'widgets/desktop_title_bar.dart';
 import 'widgets/project_detail_header.dart';
+import 'widgets/project_markers_section.dart';
+import 'widgets/section_nav_rail.dart';
 import 'widgets/resizable_text_field.dart';
 import 'widgets/parts_summary_card.dart';
 import 'widgets/todo_list_widget.dart';
@@ -56,6 +60,10 @@ class ProjectDetailPage extends ConsumerStatefulWidget {
 class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
   final _uuid = const Uuid();
   final _formKey = GlobalKey<FormState>();
+
+  /// Which section the nav rail has selected, in the sectioned layout.
+  /// Ignored entirely by the classic one-scroll layout.
+  int _activeSection = 0;
   late TextEditingController _nameCtrl;
   late TextEditingController _bpmCtrl;
   late TextEditingController _keyCtrl;
@@ -616,9 +624,12 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                 Expanded(
                   child: Form(
                     key: _formKey,
-                    child: ListView(
-                      padding: MobileUtils.getResponsivePadding(context),
-                      children: [
+                    child: Builder(builder: (context) {
+                      final l10n = AppLocalizations.of(context)!;
+
+                      // Page-level, so it stays above whichever section is
+                      // showing rather than belonging to one of them.
+                      final banner = <Widget>[
                     if (!sourceFileExists && !MobileUtils.isMobile())
                       Container(
                         margin: const EdgeInsets.only(bottom: 12),
@@ -642,6 +653,19 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                         ),
                       ),
                         const SizedBox(height: 16),
+                      ];
+
+                      // The page's content, cut into the sections the nav
+                      // rail offers. The classic layout renders every group
+                      // in this order in one scroll — the order the page has
+                      // always had, apart from the deadline field, which
+                      // moved up beside the phase dropdown so that each group
+                      // is one contiguous run.
+                      final sections = <_DetailSection>[
+                        _DetailSection(
+                          icon: Icons.tune_outlined,
+                          label: l10n.projectDetails,
+                          children: [
 
                         // Campo para editar o nome de exibição customizado
                             TextFormField(
@@ -959,51 +983,6 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                               },
                             ),
                             const SizedBox(height: 12),
-
-                            // NOVO: CAMPO DE NOTAS
-                            Builder(builder: (context) {
-                              final projectNotes = updatedProject.projectNotes;
-                              if (projectNotes == null || projectNotes.trim().isEmpty) {
-                                return ResizableTextField(
-                                  controller: _notesCtrl,
-                                  focusNode: _notesFocusNode,
-                                  labelText: AppLocalizations.of(context)!.notes,
-                                  expandTooltip: AppLocalizations.of(context)!.expandNotes,
-                                  collapseTooltip: AppLocalizations.of(context)!.collapseNotes,
-                                  onChanged: (_) => _scheduleAutoSave(),
-                                );
-                              }
-                              if (isMobile) {
-                                return Column(
-                                  children: [
-                                    ResizableTextField(
-                                      controller: _notesCtrl,
-                                      focusNode: _notesFocusNode,
-                                      labelText: AppLocalizations.of(context)!.notes,
-                                      expandTooltip: AppLocalizations.of(context)!.expandNotes,
-                                      collapseTooltip: AppLocalizations.of(context)!.collapseNotes,
-                                      onChanged: (_) => _scheduleAutoSave(),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    _buildProjectNotesField(),
-                                  ],
-                                );
-                              }
-                              return SyncedResizableTextFieldPair(
-                                leftController: _notesCtrl,
-                                leftFocusNode: _notesFocusNode,
-                                leftLabelText: AppLocalizations.of(context)!.notes,
-                                leftOnChanged: (_) => _scheduleAutoSave(),
-                                rightController: _projectNotesCtrl,
-                                rightLabelText: AppLocalizations.of(context)!.projectNotesFromDaw,
-                                rightReadOnly: true,
-                                expandTooltip: AppLocalizations.of(context)!.expandNotes,
-                                collapseTooltip: AppLocalizations.of(context)!.collapseNotes,
-                              );
-                            }),
-
-                            const SizedBox(height: 12),
-
                             // Deadline field
                             InkWell(
                               onTap: () async {
@@ -1058,7 +1037,90 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                             ),
 
                             const SizedBox(height: 24),
+                          ],
+                        ),
+                        _DetailSection(
+                          icon: Icons.notes_outlined,
+                          label: l10n.notes,
+                          children: [
+                            // NOVO: CAMPO DE NOTAS
+                            Builder(builder: (context) {
+                              final projectNotes = updatedProject.projectNotes;
+                              if (projectNotes == null || projectNotes.trim().isEmpty) {
+                                return ResizableTextField(
+                                  controller: _notesCtrl,
+                                  focusNode: _notesFocusNode,
+                                  labelText: AppLocalizations.of(context)!.notes,
+                                  expandTooltip: AppLocalizations.of(context)!.expandNotes,
+                                  collapseTooltip: AppLocalizations.of(context)!.collapseNotes,
+                                  onChanged: (_) => _scheduleAutoSave(),
+                                );
+                              }
+                              if (isMobile) {
+                                return Column(
+                                  children: [
+                                    ResizableTextField(
+                                      controller: _notesCtrl,
+                                      focusNode: _notesFocusNode,
+                                      labelText: AppLocalizations.of(context)!.notes,
+                                      expandTooltip: AppLocalizations.of(context)!.expandNotes,
+                                      collapseTooltip: AppLocalizations.of(context)!.collapseNotes,
+                                      onChanged: (_) => _scheduleAutoSave(),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    _buildProjectNotesField(),
+                                  ],
+                                );
+                              }
+                              return SyncedResizableTextFieldPair(
+                                leftController: _notesCtrl,
+                                leftFocusNode: _notesFocusNode,
+                                leftLabelText: AppLocalizations.of(context)!.notes,
+                                leftOnChanged: (_) => _scheduleAutoSave(),
+                                rightController: _projectNotesCtrl,
+                                rightLabelText: AppLocalizations.of(context)!.projectNotesFromDaw,
+                                rightReadOnly: true,
+                                expandTooltip: AppLocalizations.of(context)!.expandNotes,
+                                collapseTooltip: AppLocalizations.of(context)!.collapseNotes,
+                              );
+                            }),
 
+                            // Markers and regions read out of the DAW project
+                            // file. Renders nothing at all when there are
+                            // none, which is every project from a DAW whose
+                            // format we don't parse markers out of yet.
+                            Builder(builder: (context) {
+                              final l10n = AppLocalizations.of(context)!;
+                              final canJump =
+                                  canJumpToProjectMarkers(updatedProject);
+                              return ProjectMarkersSection(
+                                markers: updatedProject.markers,
+                                title: l10n.projectMarkers,
+                                unnamedMarkerLabel: l10n.projectMarkerUnnamed,
+                                unnamedRegionLabel: l10n.projectRegionUnnamed,
+                                showAllLabel: l10n.showAll,
+                                collapseLabel: l10n.collapse,
+                                jumpTooltip: l10n.projectMarkerJumpTooltip,
+                                disabledTooltip:
+                                    l10n.projectMarkerNoPreviewSong,
+                                padding: EdgeInsets.zero,
+                                onTap: canJump
+                                    ? (marker) => jumpToProjectMarker(
+                                          ref,
+                                          updatedProject,
+                                          marker,
+                                        )
+                                    : null,
+                              );
+                            }),
+
+                            const SizedBox(height: 12),
+                          ],
+                        ),
+                        _DetailSection(
+                          icon: Icons.music_note_outlined,
+                          label: l10n.previewSong,
+                          children: [
                             // Preview Song Section
                             _PreviewSongPlayer(
                               key: ValueKey('${updatedProject.id}_${updatedProject.previewSongPath}'),
@@ -1170,11 +1232,23 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                             ),
 
                             const SizedBox(height: 24),
+                          ],
+                        ),
+                        _DetailSection(
+                          icon: Icons.piano_outlined,
+                          label: l10n.songParts,
+                          children: [
                             // Instruments & Parts — progress at a glance; the
                             // editing workspace is a page of its own.
                             PartsSummaryCard(project: updatedProject),
 
                             const SizedBox(height: 24),
+                          ],
+                        ),
+                        _DetailSection(
+                          icon: Icons.checklist_outlined,
+                          label: l10n.todoList,
+                          children: [
                             // TODO List
                             // Use key to force widget rebuild when todos change
                             TodoListWidget(
@@ -1205,6 +1279,12 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                             ),
 
                             const SizedBox(height: 24),
+                          ],
+                        ),
+                        _DetailSection(
+                          icon: Icons.history_outlined,
+                          label: l10n.sessionHistory,
+                          children: [
                             _SessionHistorySection(
                               sessions: updatedProject.sessions,
                               onRemove: (session) async {
@@ -1234,8 +1314,64 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                             const SizedBox(height: 24),
                             _ProjectStatsButton(projectId: updatedProject.id),
                             const SizedBox(height: 16),
+                          ],
+                        ),
+                      ];
+
+                      // A phone has no room for a rail, so mobile always gets
+                      // the single scroll whatever the setting says.
+                      final sectioned = !isMobile &&
+                          ref.watch(projectDetailLayoutProvider) ==
+                              ProjectDetailLayout.sectioned;
+
+                      if (!sectioned) {
+                        return ListView(
+                          padding: MobileUtils.getResponsivePadding(context),
+                          children: [
+                            ...banner,
+                            for (final section in sections) ...section.children,
+                          ],
+                        );
+                      }
+
+                      final active =
+                          _activeSection.clamp(0, sections.length - 1);
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          SizedBox(
+                            width: 200,
+                            child: SectionNavRail(
+                              items: [
+                                for (final section in sections)
+                                  SectionNavItem(
+                                    icon: section.icon,
+                                    label: section.label,
+                                  ),
+                              ],
+                              activeIndex: active,
+                              onTap: (index) =>
+                                  setState(() => _activeSection = index),
+                            ),
+                          ),
+                          const VerticalDivider(width: 1),
+                          Expanded(
+                            child: ListView(
+                              // Keyed by section so switching starts the new
+                              // one at the top instead of inheriting the
+                              // previous section's scroll offset.
+                              key: ValueKey(active),
+                              padding:
+                                  MobileUtils.getResponsivePadding(context),
+                              children: [
+                                ...banner,
+                                ...sections[active].children,
+                              ],
+                            ),
+                          ),
                         ],
-                    ),
+                      );
+                    }),
                   ),
                 ),
               ],
@@ -3456,4 +3592,22 @@ class _EditSessionDialogState extends State<_EditSessionDialog> {
       ],
     );
   }
+}
+
+/// One group of the project detail page's content.
+///
+/// The classic layout concatenates every group into a single scroll; the
+/// sectioned layout renders one at a time with the nav rail choosing. Keeping
+/// them as data rather than as separate widgets means both layouts are fed by
+/// exactly the same children, so the two cannot drift apart.
+class _DetailSection {
+  const _DetailSection({
+    required this.icon,
+    required this.label,
+    required this.children,
+  });
+
+  final IconData icon;
+  final String label;
+  final List<Widget> children;
 }

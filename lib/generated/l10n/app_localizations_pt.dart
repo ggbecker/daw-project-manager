@@ -4622,4 +4622,46 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get reorderNeedsUnfilteredList =>
       'Limpe a busca, os filtros e a ordenação para arrastar as partes';
+
+  @override
+  String get projectMarkers => 'Marcadores';
+
+  @override
+  String projectMarkerUnnamed(int index) {
+    return 'Marcador $index';
+  }
+
+  @override
+  String projectRegionUnnamed(int index) {
+    return 'Região $index';
+  }
+
+  @override
+  String get projectMarkerJumpTooltip =>
+      'Ir para este ponto na música de prévia';
+
+  @override
+  String get projectMarkerNoPreviewSong =>
+      'Adicione uma música de prévia para pular para os marcadores';
+
+  @override
+  String get projectDetailLayout => 'Layout dos Detalhes do Projeto';
+
+  @override
+  String get projectDetailLayoutSettingDescription =>
+      'Como a página de detalhes do projeto é organizada.';
+
+  @override
+  String get projectDetailLayoutClassic => 'Clássico';
+
+  @override
+  String get projectDetailLayoutClassicDescription =>
+      'Tudo em uma única rolagem.';
+
+  @override
+  String get projectDetailLayoutSectioned => 'Seções';
+
+  @override
+  String get projectDetailLayoutSectionedDescription =>
+      'Uma barra à esquerda escolhe uma seção por vez.';
 }

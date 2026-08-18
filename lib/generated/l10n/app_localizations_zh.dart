@@ -4448,4 +4448,41 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get reorderNeedsUnfilteredList => '清除搜索、筛选和排序后即可拖动调整声部顺序';
+
+  @override
+  String get projectMarkers => '标记';
+
+  @override
+  String projectMarkerUnnamed(int index) {
+    return '标记 $index';
+  }
+
+  @override
+  String projectRegionUnnamed(int index) {
+    return '区域 $index';
+  }
+
+  @override
+  String get projectMarkerJumpTooltip => '跳转到预览歌曲的此位置';
+
+  @override
+  String get projectMarkerNoPreviewSong => '添加预览歌曲以跳转到标记';
+
+  @override
+  String get projectDetailLayout => '项目详情布局';
+
+  @override
+  String get projectDetailLayoutSettingDescription => '项目详情页面的排列方式。';
+
+  @override
+  String get projectDetailLayoutClassic => '经典';
+
+  @override
+  String get projectDetailLayoutClassicDescription => '所有内容在一个滚动页面中。';
+
+  @override
+  String get projectDetailLayoutSectioned => '分区';
+
+  @override
+  String get projectDetailLayoutSectionedDescription => '左侧栏每次选择一个分区。';
 }

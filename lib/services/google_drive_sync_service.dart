@@ -15,6 +15,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/profile.dart';
 import '../models/music_project.dart';
+import '../models/project_marker.dart';
 import '../models/release.dart';
 import '../models/release_file.dart';
 import '../models/scan_root.dart';
@@ -5026,6 +5027,7 @@ class GoogleDriveSyncService {
       'memberProjectIds': project.memberProjectIds,
       'defaultLaunchMemberId': project.defaultLaunchMemberId,
       'stackId': project.stackId,
+      'markers': project.markers.map((m) => m.toMap()).toList(),
     };
   }
 
@@ -5087,6 +5089,10 @@ class GoogleDriveSyncService {
           const <String>[],
       defaultLaunchMemberId: data['defaultLaunchMemberId'] as String?,
       stackId: data['stackId'] as String?,
+      markers: (data['markers'] as List?)
+              ?.map((e) => ProjectMarker.fromMap(e as Map))
+              .toList() ??
+          const [],
     );
   }
 

@@ -4657,4 +4657,46 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get reorderNeedsUnfilteredList =>
       'Effacez la recherche, les filtres et le tri pour réorganiser les parties';
+
+  @override
+  String get projectMarkers => 'Marqueurs';
+
+  @override
+  String projectMarkerUnnamed(int index) {
+    return 'Marqueur $index';
+  }
+
+  @override
+  String projectRegionUnnamed(int index) {
+    return 'Région $index';
+  }
+
+  @override
+  String get projectMarkerJumpTooltip =>
+      'Aller à ce point de la chanson d\'aperçu';
+
+  @override
+  String get projectMarkerNoPreviewSong =>
+      'Ajoutez une chanson d\'aperçu pour accéder aux marqueurs';
+
+  @override
+  String get projectDetailLayout => 'Disposition des Détails du Projet';
+
+  @override
+  String get projectDetailLayoutSettingDescription =>
+      'Comment la page de détails du projet est organisée.';
+
+  @override
+  String get projectDetailLayoutClassic => 'Classique';
+
+  @override
+  String get projectDetailLayoutClassicDescription =>
+      'Tout dans un seul défilement.';
+
+  @override
+  String get projectDetailLayoutSectioned => 'Sections';
+
+  @override
+  String get projectDetailLayoutSectionedDescription =>
+      'Une barre à gauche choisit une section à la fois.';
 }

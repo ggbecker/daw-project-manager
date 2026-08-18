@@ -7828,6 +7828,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clear the search, filters and sorting to drag parts into order'**
   String get reorderNeedsUnfilteredList;
+
+  /// Section heading for the timeline markers and regions read out of a DAW project file
+  ///
+  /// In en, this message translates to:
+  /// **'Markers'**
+  String get projectMarkers;
+
+  /// Fallback label for a marker the user never named
+  ///
+  /// In en, this message translates to:
+  /// **'Marker {index}'**
+  String projectMarkerUnnamed(int index);
+
+  /// Fallback label for a region the user never named
+  ///
+  /// In en, this message translates to:
+  /// **'Region {index}'**
+  String projectRegionUnnamed(int index);
+
+  /// Tooltip on a marker row that will seek the preview player
+  ///
+  /// In en, this message translates to:
+  /// **'Jump to this point in the preview song'**
+  String get projectMarkerJumpTooltip;
+
+  /// Tooltip on marker rows when the project has no preview song to seek in
+  ///
+  /// In en, this message translates to:
+  /// **'Add a preview song to jump to markers'**
+  String get projectMarkerNoPreviewSong;
+
+  /// Appearance setting: how the project detail page is arranged
+  ///
+  /// In en, this message translates to:
+  /// **'Project Detail Layout'**
+  String get projectDetailLayout;
+
+  /// Subtitle under the Project Detail Layout setting
+  ///
+  /// In en, this message translates to:
+  /// **'How the project detail page is arranged.'**
+  String get projectDetailLayoutSettingDescription;
+
+  /// Layout option: everything in one scroll
+  ///
+  /// In en, this message translates to:
+  /// **'Classic'**
+  String get projectDetailLayoutClassic;
+
+  /// Description of the classic project detail layout
+  ///
+  /// In en, this message translates to:
+  /// **'Everything in one scroll.'**
+  String get projectDetailLayoutClassicDescription;
+
+  /// Layout option: a nav rail picks one section at a time
+  ///
+  /// In en, this message translates to:
+  /// **'Sections'**
+  String get projectDetailLayoutSectioned;
+
+  /// Description of the sectioned project detail layout
+  ///
+  /// In en, this message translates to:
+  /// **'A rail on the left picks one section at a time.'**
+  String get projectDetailLayoutSectionedDescription;
 }
 
 class _AppLocalizationsDelegate

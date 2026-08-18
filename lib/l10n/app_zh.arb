@@ -2894,5 +2894,47 @@
   "partsDeleted": "已删除 {count} 个声部",
   "@partsDeleted": {"placeholders": {"count": {"type": "int"}}},
   "noPartsMatchFilters": "没有声部符合这些筛选条件",
-  "reorderNeedsUnfilteredList": "清除搜索、筛选和排序后即可拖动调整声部顺序"
+  "reorderNeedsUnfilteredList": "清除搜索、筛选和排序后即可拖动调整声部顺序",
+"projectMarkers": "标记",
+"@projectMarkers": {
+      "description": "Section heading for the timeline markers and regions read out of a DAW project file"
+  },
+"projectMarkerUnnamed": "标记 {index}",
+"@projectMarkerUnnamed": {
+      "description": "Fallback label for a marker the user never named",
+      "placeholders": {
+          "index": {
+              "type": "int"
+          }
+      }
+  },
+"projectRegionUnnamed": "区域 {index}",
+"@projectRegionUnnamed": {
+      "description": "Fallback label for a region the user never named",
+      "placeholders": {
+          "index": {
+              "type": "int"
+          }
+      }
+  },
+"projectMarkerJumpTooltip": "跳转到预览歌曲的此位置",
+"@projectMarkerJumpTooltip": {
+      "description": "Tooltip on a marker row that will seek the preview player"
+  },
+"projectMarkerNoPreviewSong": "添加预览歌曲以跳转到标记",
+"@projectMarkerNoPreviewSong": {
+      "description": "Tooltip on marker rows when the project has no preview song to seek in"
+  },
+  "projectDetailLayout": "项目详情布局",
+  "@projectDetailLayout": {"description": "Appearance setting: how the project detail page is arranged"},
+  "projectDetailLayoutSettingDescription": "项目详情页面的排列方式。",
+  "@projectDetailLayoutSettingDescription": {"description": "Subtitle under the Project Detail Layout setting"},
+  "projectDetailLayoutClassic": "经典",
+  "@projectDetailLayoutClassic": {"description": "Layout option: everything in one scroll"},
+  "projectDetailLayoutClassicDescription": "所有内容在一个滚动页面中。",
+  "@projectDetailLayoutClassicDescription": {"description": "Description of the classic project detail layout"},
+  "projectDetailLayoutSectioned": "分区",
+  "@projectDetailLayoutSectioned": {"description": "Layout option: a nav rail picks one section at a time"},
+  "projectDetailLayoutSectionedDescription": "左侧栏每次选择一个分区。",
+  "@projectDetailLayoutSectionedDescription": {"description": "Description of the sectioned project detail layout"}
 }

@@ -4,6 +4,8 @@ import 'dart:typed_data';
 import 'package:path/path.dart' as p;
 import 'package:xml/xml.dart';
 
+import '../models/project_marker.dart';
+
 /// Represents a scale pair (root note and scale type)
 class _ScalePair {
   final int root;
@@ -23,6 +25,23 @@ class _ScalePair {
   int get hashCode => root.hashCode ^ name.hashCode;
 }
 
+/// One parsed `MARKER` line, before region halves are paired up.
+class _RawMarker {
+  const _RawMarker({
+    required this.index,
+    required this.position,
+    required this.name,
+    required this.isRegion,
+    required this.hidden,
+  });
+
+  final int index;
+  final double position;
+  final String name;
+  final bool isRegion;
+  final bool hidden;
+}
+
 class ProjectMetadata {
   final double? bpm;
   final String? key;
@@ -30,12 +49,22 @@ class ProjectMetadata {
   final String? dawVersion;
   final String? projectNotes;
 
+  /// Timeline markers and regions read out of the project file.
+  ///
+  /// Null and empty mean different things on purpose. Null is "this extractor
+  /// didn't look" — a lightweight scan, a DAW with no marker support, or a
+  /// parse that threw — and callers must keep whatever they already had. An
+  /// empty list is "we parsed the file and it has none", which must overwrite,
+  /// or markers deleted in the DAW would live on in the app forever.
+  final List<ProjectMarker>? markers;
+
   ProjectMetadata({
     this.bpm,
     this.key,
     this.dawType,
     this.dawVersion,
     this.projectNotes,
+    this.markers,
   });
 }
 
@@ -86,6 +115,7 @@ class MetadataExtractor {
     String? key;
     String? dawVersion;
     String? projectNotes;
+    List<ProjectMarker>? markers;
 
     // Try to extract from project file first
     if (ext == '.als' || ext == '.alp') {
@@ -111,6 +141,7 @@ class MetadataExtractor {
       key = metadata.key ?? key;
       dawVersion = metadata.dawVersion ?? dawVersion;
       projectNotes = metadata.projectNotes;
+      markers = metadata.markers;
     } else if (ext == '.mgd') {
       final metadata = await _extractFromMagdaFile(filePath);
       bpm = metadata.bpm ?? bpm;
@@ -145,6 +176,7 @@ class MetadataExtractor {
       dawType: dawType,
       dawVersion: dawVersion,
       projectNotes: projectNotes,
+      markers: markers,
     );
   }
 
@@ -591,8 +623,15 @@ class MetadataExtractor {
       }
 
       final projectNotes = _extractReaperNotes(content);
+      final markers = extractReaperMarkers(content);
 
-      return ProjectMetadata(bpm: bpm, key: key, dawVersion: dawVersion, projectNotes: projectNotes);
+      return ProjectMetadata(
+        bpm: bpm,
+        key: key,
+        dawVersion: dawVersion,
+        projectNotes: projectNotes,
+        markers: markers,
+      );
     } catch (_) {
       return ProjectMetadata();
     }
@@ -660,6 +699,152 @@ class MetadataExtractor {
 
     final result = buffer.toString();
     return result.trim().isEmpty ? null : result;
+  }
+
+  /// Upper bound on how many markers are kept per project.
+  ///
+  /// The list is persisted to Hive, written into the local backup file and
+  /// uploaded as part of the single Drive sync document, so it is not free —
+  /// a post-production session can carry thousands of markers. A thousand is
+  /// far past any musical use of the feature while keeping the worst case to
+  /// tens of kilobytes per project.
+  static const int maxMarkersPerProject = 1000;
+
+  /// Matches one token of a Reaper `MARKER` line: the quoted forms Reaper
+  /// picks between (it uses the first of `"`, `'`, `` ` `` the value itself
+  /// doesn't contain) plus the bare form it writes for single words.
+  static final RegExp _rppToken =
+      RegExp('^\\s*(?:"([^"]*)"|\'([^\']*)\'|`([^`]*)`|(\\S+))');
+
+  static final RegExp _rppMarkerLine =
+      RegExp(r'^MARKER\s+(\d+)\s+(-?[0-9]+(?:\.[0-9]+)?)\s*(.*)$');
+
+  /// Reads Reaper's project markers and regions out of an `.rpp` state chunk.
+  ///
+  /// Line syntax (ReaTeam's State Chunk Definitions):
+  ///
+  ///     MARKER 1 2 "Edit Marker" 8 23514367 1 B {8C98...E6B} 0
+  ///             |  |      |      |
+  ///             |  |      |      +-- flags: &1 region, &8 selected, &16 hidden
+  ///             |  |      +--------- name
+  ///             |  +---------------- position, in seconds
+  ///             +------------------- index (markers and regions are numbered
+  ///                                  in separate sequences)
+  ///
+  /// A region is a *pair* of lines sharing one index, both with `&1` set; the
+  /// second carries the end position and an empty name:
+  ///
+  ///     MARKER 1 2 "Edit Region" 9 0 1 B {AFD8C34F-4325-2..} 0
+  ///     MARKER 1 4 "" 9
+  ///
+  /// Returns them sorted by position — file order is Reaper's own and is
+  /// usually but not reliably chronological.
+  ///
+  /// Public because it is a pure function of the chunk text: it lets the
+  /// parser be tested against fixture strings without writing project files
+  /// to disk.
+  static List<ProjectMarker> extractReaperMarkers(String content) {
+    final points = <ProjectMarker>[];
+    // Region halves, keyed by index and held until their partner shows up.
+    final openRegions = <int, _RawMarker>{};
+    final regions = <ProjectMarker>[];
+
+    for (final rawLine in const LineSplitter().convert(content)) {
+      final line = rawLine.trim();
+      if (!line.startsWith('MARKER')) continue;
+
+      final raw = _parseReaperMarkerLine(line);
+      // A marker hidden in Reaper's ruler was deliberately taken out of view;
+      // repeating it here would contradict what the user sees in the DAW.
+      if (raw == null || raw.hidden) continue;
+
+      if (!raw.isRegion) {
+        points.add(ProjectMarker(
+          index: raw.index,
+          name: raw.name,
+          positionSeconds: raw.position,
+        ));
+        continue;
+      }
+
+      final open = openRegions.remove(raw.index);
+      if (open == null) {
+        openRegions[raw.index] = raw;
+        continue;
+      }
+
+      // Don't trust which half came first: take the span they describe, and
+      // the name from whichever half actually carries one (Reaper writes it
+      // on the opening line and leaves the closing one empty).
+      final start = open.position <= raw.position ? open : raw;
+      final end = identical(start, open) ? raw : open;
+      regions.add(ProjectMarker(
+        index: raw.index,
+        name: open.name.isNotEmpty ? open.name : raw.name,
+        positionSeconds: start.position,
+        endSeconds: end.position,
+      ));
+    }
+
+    // A region whose partner line never appeared — a truncated or hand-edited
+    // file. Keeping it as a point marker loses the length but not the place.
+    for (final orphan in openRegions.values) {
+      points.add(ProjectMarker(
+        index: orphan.index,
+        name: orphan.name,
+        positionSeconds: orphan.position,
+      ));
+    }
+
+    final all = [...points, ...regions]..sort((a, b) {
+        final byPosition = a.positionSeconds.compareTo(b.positionSeconds);
+        if (byPosition != 0) return byPosition;
+        return a.index.compareTo(b.index);
+      });
+
+    return all.length > maxMarkersPerProject
+        ? all.sublist(0, maxMarkersPerProject)
+        : all;
+  }
+
+  /// Parses a single `MARKER` line, or null if it isn't one.
+  ///
+  /// Reaper always writes the name field, as `""` when empty, so the token
+  /// after the position is read as the name unconditionally.
+  static _RawMarker? _parseReaperMarkerLine(String line) {
+    final match = _rppMarkerLine.firstMatch(line);
+    if (match == null) return null;
+
+    final index = int.tryParse(match.group(1)!);
+    final position = double.tryParse(match.group(2)!);
+    if (index == null || position == null) return null;
+
+    var rest = match.group(3)!;
+
+    var name = '';
+    final nameMatch = _rppToken.firstMatch(rest);
+    if (nameMatch != null) {
+      name = nameMatch.group(1) ??
+          nameMatch.group(2) ??
+          nameMatch.group(3) ??
+          nameMatch.group(4) ??
+          '';
+      rest = rest.substring(nameMatch.end);
+    }
+
+    var flags = 0;
+    final flagsMatch = RegExp(r'^\s*(-?\d+)').firstMatch(rest);
+    if (flagsMatch != null) {
+      flags = int.tryParse(flagsMatch.group(1)!) ?? 0;
+    }
+
+    return _RawMarker(
+      index: index,
+      position: position,
+      name: name.trim(),
+      isRegion: flags & 1 != 0,
+      hidden: flags & 16 != 0,
+    );
   }
 
   /// Extracts version, BPM, and key signature from Bitwig Studio .bwproject file.

@@ -4621,4 +4621,44 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get reorderNeedsUnfilteredList =>
       'Сбросьте поиск, фильтры и сортировку, чтобы менять порядок партий';
+
+  @override
+  String get projectMarkers => 'Маркеры';
+
+  @override
+  String projectMarkerUnnamed(int index) {
+    return 'Маркер $index';
+  }
+
+  @override
+  String projectRegionUnnamed(int index) {
+    return 'Регион $index';
+  }
+
+  @override
+  String get projectMarkerJumpTooltip => 'Перейти к этому месту в превью трека';
+
+  @override
+  String get projectMarkerNoPreviewSong =>
+      'Добавьте превью трека, чтобы переходить к маркерам';
+
+  @override
+  String get projectDetailLayout => 'Макет Деталей Проекта';
+
+  @override
+  String get projectDetailLayoutSettingDescription =>
+      'Как устроена страница деталей проекта.';
+
+  @override
+  String get projectDetailLayoutClassic => 'Классический';
+
+  @override
+  String get projectDetailLayoutClassicDescription => 'Всё в одной прокрутке.';
+
+  @override
+  String get projectDetailLayoutSectioned => 'Разделы';
+
+  @override
+  String get projectDetailLayoutSectionedDescription =>
+      'Панель слева выбирает по одному разделу.';
 }

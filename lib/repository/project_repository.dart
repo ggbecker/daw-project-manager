@@ -827,6 +827,12 @@ class ProjectRepository {
     // it otherwise.
     final projectNotes =
         extractedMetadata?.projectNotes ?? existing?.projectNotes;
+    // Markers use null vs empty to tell "didn't look" from "looked, found
+    // none": a lightweight scan leaves them null and must not wipe what a
+    // previous deep scan found, while a deep scan of a file whose markers
+    // were deleted in the DAW returns an empty list, which must win.
+    final markers =
+        extractedMetadata?.markers ?? existing?.markers ?? const [];
 
     // Detect file creation date from filesystem
     // On Windows, stat.changed is the creation time
@@ -871,6 +877,7 @@ class ProjectRepository {
       notes: existing?.notes, // <--- NOVO: PRESERVA NOTAS
       projectNotes:
           projectNotes, // <--- USA EXISTENTE OU EXTRAÍDO DO ARQUIVO (ex: Reaper, Cubase/Nuendo)
+      markers: markers, // <--- EXTRAÍDO DO ARQUIVO (Reaper), PRESERVA EM SCAN LEVE
       todos: existing?.todos ?? const [], // <--- CRITICAL: PRESERVA TODOS
       hidden:
           existing?.hidden ?? false, // <--- CRITICAL: PRESERVA HIDDEN STATUS
@@ -1148,6 +1155,7 @@ class ProjectRepository {
         dawType: extractedMetadata.dawType ?? project.dawType,
         dawVersion: extractedMetadata.dawVersion ?? project.dawVersion,
         projectNotes: extractedMetadata.projectNotes ?? project.projectNotes,
+        markers: extractedMetadata.markers ?? project.markers,
         updatedAt: DateTime.now(),
       );
 

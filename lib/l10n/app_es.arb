@@ -2894,5 +2894,47 @@
   "partsDeleted": "{count} partes eliminadas",
   "@partsDeleted": {"placeholders": {"count": {"type": "int"}}},
   "noPartsMatchFilters": "Ninguna parte coincide con estos filtros",
-  "reorderNeedsUnfilteredList": "Borra la búsqueda, los filtros y la ordenación para arrastrar las partes"
+  "reorderNeedsUnfilteredList": "Borra la búsqueda, los filtros y la ordenación para arrastrar las partes",
+"projectMarkers": "Marcadores",
+"@projectMarkers": {
+      "description": "Section heading for the timeline markers and regions read out of a DAW project file"
+  },
+"projectMarkerUnnamed": "Marcador {index}",
+"@projectMarkerUnnamed": {
+      "description": "Fallback label for a marker the user never named",
+      "placeholders": {
+          "index": {
+              "type": "int"
+          }
+      }
+  },
+"projectRegionUnnamed": "Región {index}",
+"@projectRegionUnnamed": {
+      "description": "Fallback label for a region the user never named",
+      "placeholders": {
+          "index": {
+              "type": "int"
+          }
+      }
+  },
+"projectMarkerJumpTooltip": "Saltar a este punto de la canción de vista previa",
+"@projectMarkerJumpTooltip": {
+      "description": "Tooltip on a marker row that will seek the preview player"
+  },
+"projectMarkerNoPreviewSong": "Añade una canción de vista previa para saltar a los marcadores",
+"@projectMarkerNoPreviewSong": {
+      "description": "Tooltip on marker rows when the project has no preview song to seek in"
+  },
+  "projectDetailLayout": "Diseño de Detalles del Proyecto",
+  "@projectDetailLayout": {"description": "Appearance setting: how the project detail page is arranged"},
+  "projectDetailLayoutSettingDescription": "Cómo se organiza la página de detalles del proyecto.",
+  "@projectDetailLayoutSettingDescription": {"description": "Subtitle under the Project Detail Layout setting"},
+  "projectDetailLayoutClassic": "Clásico",
+  "@projectDetailLayoutClassic": {"description": "Layout option: everything in one scroll"},
+  "projectDetailLayoutClassicDescription": "Todo en un solo desplazamiento.",
+  "@projectDetailLayoutClassicDescription": {"description": "Description of the classic project detail layout"},
+  "projectDetailLayoutSectioned": "Secciones",
+  "@projectDetailLayoutSectioned": {"description": "Layout option: a nav rail picks one section at a time"},
+  "projectDetailLayoutSectionedDescription": "Una barra a la izquierda elige una sección a la vez.",
+  "@projectDetailLayoutSectionedDescription": {"description": "Description of the sectioned project detail layout"}
 }
