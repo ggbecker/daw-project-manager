@@ -926,6 +926,39 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String templatesCount(int count) {
+    return 'Plantillas: $count';
+  }
+
+  @override
+  String templatesHidden(int count, String plural) {
+    return '$count plantilla$plural ocultada$plural.';
+  }
+
+  @override
+  String templatesUnhidden(int count, String plural) {
+    return '$count plantilla$plural vuelta$plural a mostrar.';
+  }
+
+  @override
+  String failedToHideTemplates(String error) {
+    return 'Error al ocultar las plantillas: $error';
+  }
+
+  @override
+  String failedToUnhideTemplates(String error) {
+    return 'Error al volver a mostrar las plantillas: $error';
+  }
+
+  @override
+  String get deleteMissingTemplates => 'Eliminar Faltantes';
+
+  @override
+  String deleteMissingTemplatesConfirm(int count, String plural) {
+    return '$count plantilla$plural cuyo archivo no se encontró en este equipo se eliminará permanentemente. Solo se elimina la entrada; lo que quede de la carpeta de la plantilla en tu disco se conserva. Esto no se puede deshacer.';
+  }
+
+  @override
   String get templateName => 'Nombre de la Plantilla';
 
   @override
@@ -1073,14 +1106,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String templatesSelected(int count, String plural) {
     return '$count plantilla$plural seleccionada$plural';
-  }
-
-  @override
-  String get deleteSelectedTemplates => 'Eliminar selección';
-
-  @override
-  String deleteSelectedTemplatesConfirm(int count, String plural) {
-    return '¿Seguro que quieres eliminar $count plantilla$plural? Solo se eliminan las entradas de las plantillas; las carpetas de plantillas en tu disco se conservan.';
   }
 
   @override

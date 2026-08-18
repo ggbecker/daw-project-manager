@@ -745,6 +745,46 @@
       "path": { "type": "String" }
     }
   },
+  "templatesCount": "Vorlagen: {count}",
+  "@templatesCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "templatesHidden": "{count} Vorlage{plural} ausgeblendet.",
+  "@templatesHidden": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
+  "templatesUnhidden": "{count} Vorlage{plural} wieder eingeblendet.",
+  "@templatesUnhidden": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
+  "failedToHideTemplates": "Vorlagen konnten nicht ausgeblendet werden: {error}",
+  "@failedToHideTemplates": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "failedToUnhideTemplates": "Vorlagen konnten nicht wieder eingeblendet werden: {error}",
+  "@failedToUnhideTemplates": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "deleteMissingTemplates": "Fehlende Löschen",
+  "deleteMissingTemplatesConfirm": "{count} Vorlage{plural}, deren Datei auf diesem Computer nicht gefunden wurde, wird endgültig gelöscht. Nur der Eintrag wird entfernt — was vom Vorlagenordner auf Ihrer Festplatte übrig ist, bleibt erhalten. Dies kann nicht rückgängig gemacht werden.",
+  "@deleteMissingTemplatesConfirm": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
   "templateName": "Vorlagenname",
   "templateNameHint": "z.B. Mixing-Checkliste",
   "templateItems": "Vorlagenelemente",
@@ -804,14 +844,6 @@
   },
   "templatesSelected": "{count} Vorlage{plural} ausgewählt",
   "@templatesSelected": {
-    "placeholders": {
-      "count": { "type": "int" },
-      "plural": { "type": "String" }
-    }
-  },
-  "deleteSelectedTemplates": "Auswahl löschen",
-  "deleteSelectedTemplatesConfirm": "Möchten Sie {count} Vorlage{plural} wirklich löschen? Nur die Vorlageneinträge werden entfernt — die Vorlagenordner auf Ihrer Festplatte bleiben erhalten.",
-  "@deleteSelectedTemplatesConfirm": {
     "placeholders": {
       "count": { "type": "int" },
       "plural": { "type": "String" }

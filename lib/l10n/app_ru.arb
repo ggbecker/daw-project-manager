@@ -745,6 +745,46 @@
       "path": { "type": "String" }
     }
   },
+  "templatesCount": "Шаблоны: {count}",
+  "@templatesCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "templatesHidden": "Шаблонов скрыто: {count}{plural}.",
+  "@templatesHidden": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
+  "templatesUnhidden": "Шаблонов показано снова: {count}{plural}.",
+  "@templatesUnhidden": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
+  "failedToHideTemplates": "Не удалось скрыть шаблоны: {error}",
+  "@failedToHideTemplates": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "failedToUnhideTemplates": "Не удалось показать шаблоны снова: {error}",
+  "@failedToUnhideTemplates": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "deleteMissingTemplates": "Удалить отсутствующие",
+  "deleteMissingTemplatesConfirm": "Шаблоны, файлы которых не найдены на этом компьютере, будут удалены безвозвратно ({count}{plural}). Удаляется только запись — то, что осталось от папки шаблона на диске, сохраняется. Отменить это действие нельзя.",
+  "@deleteMissingTemplatesConfirm": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
   "templateName": "Название Шаблона",
   "templateNameHint": "напр. Чеклист Микширования",
   "templateItems": "Элементы Шаблона",
@@ -804,14 +844,6 @@
   },
   "templatesSelected": "Выбрано шаблонов: {count}{plural}",
   "@templatesSelected": {
-    "placeholders": {
-      "count": { "type": "int" },
-      "plural": { "type": "String" }
-    }
-  },
-  "deleteSelectedTemplates": "Удалить выбранное",
-  "deleteSelectedTemplatesConfirm": "Удалить выбранные шаблоны ({count}{plural})? Удаляются только записи о шаблонах — папки шаблонов на диске сохраняются.",
-  "@deleteSelectedTemplatesConfirm": {
     "placeholders": {
       "count": { "type": "int" },
       "plural": { "type": "String" }

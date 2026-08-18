@@ -927,6 +927,39 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String templatesCount(int count) {
+    return 'Modelli: $count';
+  }
+
+  @override
+  String templatesHidden(int count, String plural) {
+    return '$count modello$plural nascosto$plural.';
+  }
+
+  @override
+  String templatesUnhidden(int count, String plural) {
+    return '$count modello$plural di nuovo visibile.';
+  }
+
+  @override
+  String failedToHideTemplates(String error) {
+    return 'Impossibile nascondere i modelli: $error';
+  }
+
+  @override
+  String failedToUnhideTemplates(String error) {
+    return 'Impossibile mostrare di nuovo i modelli: $error';
+  }
+
+  @override
+  String get deleteMissingTemplates => 'Elimina Mancanti';
+
+  @override
+  String deleteMissingTemplatesConfirm(int count, String plural) {
+    return '$count modello$plural il cui file non è stato trovato su questo computer verrà eliminato definitivamente. Viene rimossa solo la voce — quel che resta della cartella del modello sul disco viene mantenuto. Questa azione non può essere annullata.';
+  }
+
+  @override
   String get templateName => 'Nome Modello';
 
   @override
@@ -1073,14 +1106,6 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String templatesSelected(int count, String plural) {
     return '$count modello$plural selezionato$plural';
-  }
-
-  @override
-  String get deleteSelectedTemplates => 'Elimina selezione';
-
-  @override
-  String deleteSelectedTemplatesConfirm(int count, String plural) {
-    return 'Eliminare $count modello$plural? Vengono rimosse solo le voci dei modelli — le cartelle dei modelli sul disco vengono mantenute.';
   }
 
   @override

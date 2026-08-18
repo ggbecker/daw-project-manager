@@ -886,6 +886,46 @@
       "path": { "type": "String" }
     }
   },
+  "templatesCount": "Templates: {count}",
+  "@templatesCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "templatesHidden": "{count} template{plural} hidden.",
+  "@templatesHidden": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
+  "templatesUnhidden": "{count} template{plural} unhidden.",
+  "@templatesUnhidden": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
+  "failedToHideTemplates": "Failed to hide templates: {error}",
+  "@failedToHideTemplates": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "failedToUnhideTemplates": "Failed to unhide templates: {error}",
+  "@failedToUnhideTemplates": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "deleteMissingTemplates": "Delete Missing",
+  "deleteMissingTemplatesConfirm": "{count} template{plural} whose file could not be found on this machine will be permanently deleted. Only the entry is removed — whatever is left of the template folder on your disk is kept. This can't be undone.",
+  "@deleteMissingTemplatesConfirm": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
   "templateName": "Template Name",
   "templateNameHint": "e.g., Mixing Checklist",
   "templateItems": "Template Items",
@@ -966,14 +1006,6 @@
   },
   "templatesSelected": "{count} template{plural} selected",
   "@templatesSelected": {
-    "placeholders": {
-      "count": { "type": "int" },
-      "plural": { "type": "String" }
-    }
-  },
-  "deleteSelectedTemplates": "Delete Selected",
-  "deleteSelectedTemplatesConfirm": "Are you sure you want to delete {count} template{plural}? Only the template entries are removed — the template folders on your disk are kept.",
-  "@deleteSelectedTemplatesConfirm": {
     "placeholders": {
       "count": { "type": "int" },
       "plural": { "type": "String" }

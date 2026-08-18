@@ -909,6 +909,39 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String templatesCount(int count) {
+    return '模板：$count';
+  }
+
+  @override
+  String templatesHidden(int count, String plural) {
+    return '已隐藏$count个模板$plural。';
+  }
+
+  @override
+  String templatesUnhidden(int count, String plural) {
+    return '已恢复显示$count个模板$plural。';
+  }
+
+  @override
+  String failedToHideTemplates(String error) {
+    return '隐藏模板失败：$error';
+  }
+
+  @override
+  String failedToUnhideTemplates(String error) {
+    return '恢复显示模板失败：$error';
+  }
+
+  @override
+  String get deleteMissingTemplates => '删除缺失项';
+
+  @override
+  String deleteMissingTemplatesConfirm(int count, String plural) {
+    return '将永久删除在本机上找不到文件的$count个模板$plural。仅删除记录，磁盘上残留的模板文件夹会保留。此操作无法撤销。';
+  }
+
+  @override
   String get templateName => '模板名称';
 
   @override
@@ -1047,14 +1080,6 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String templatesSelected(int count, String plural) {
     return '已选择$count个模板$plural';
-  }
-
-  @override
-  String get deleteSelectedTemplates => '删除所选';
-
-  @override
-  String deleteSelectedTemplatesConfirm(int count, String plural) {
-    return '确定要删除$count个模板$plural吗?仅删除模板记录，磁盘上的模板文件夹会保留。';
   }
 
   @override

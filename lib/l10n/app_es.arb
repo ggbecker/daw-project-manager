@@ -745,6 +745,46 @@
       "path": { "type": "String" }
     }
   },
+  "templatesCount": "Plantillas: {count}",
+  "@templatesCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "templatesHidden": "{count} plantilla{plural} ocultada{plural}.",
+  "@templatesHidden": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
+  "templatesUnhidden": "{count} plantilla{plural} vuelta{plural} a mostrar.",
+  "@templatesUnhidden": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
+  "failedToHideTemplates": "Error al ocultar las plantillas: {error}",
+  "@failedToHideTemplates": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "failedToUnhideTemplates": "Error al volver a mostrar las plantillas: {error}",
+  "@failedToUnhideTemplates": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "deleteMissingTemplates": "Eliminar Faltantes",
+  "deleteMissingTemplatesConfirm": "{count} plantilla{plural} cuyo archivo no se encontró en este equipo se eliminará permanentemente. Solo se elimina la entrada; lo que quede de la carpeta de la plantilla en tu disco se conserva. Esto no se puede deshacer.",
+  "@deleteMissingTemplatesConfirm": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plural": { "type": "String" }
+    }
+  },
   "templateName": "Nombre de la Plantilla",
   "templateNameHint": "ej. Lista de Mezcla",
   "templateItems": "Elementos de la Plantilla",
@@ -804,14 +844,6 @@
   },
   "templatesSelected": "{count} plantilla{plural} seleccionada{plural}",
   "@templatesSelected": {
-    "placeholders": {
-      "count": { "type": "int" },
-      "plural": { "type": "String" }
-    }
-  },
-  "deleteSelectedTemplates": "Eliminar selección",
-  "deleteSelectedTemplatesConfirm": "¿Seguro que quieres eliminar {count} plantilla{plural}? Solo se eliminan las entradas de las plantillas; las carpetas de plantillas en tu disco se conservan.",
-  "@deleteSelectedTemplatesConfirm": {
     "placeholders": {
       "count": { "type": "int" },
       "plural": { "type": "String" }

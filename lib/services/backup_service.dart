@@ -918,6 +918,7 @@ class BackupService {
       'dawVersion': template.dawVersion,
       'notes': template.notes,
       'projectNotes': template.projectNotes,
+      'hidden': template.hidden,
     };
   }
 
@@ -934,6 +935,7 @@ class BackupService {
       dawVersion: json['dawVersion'] as String?,
       notes: json['notes'] as String?,
       projectNotes: json['projectNotes'] as String?,
+      hidden: json['hidden'] as bool? ?? false,
     );
   }
 

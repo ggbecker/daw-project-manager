@@ -926,6 +926,39 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String templatesCount(int count) {
+    return 'Шаблоны: $count';
+  }
+
+  @override
+  String templatesHidden(int count, String plural) {
+    return 'Шаблонов скрыто: $count$plural.';
+  }
+
+  @override
+  String templatesUnhidden(int count, String plural) {
+    return 'Шаблонов показано снова: $count$plural.';
+  }
+
+  @override
+  String failedToHideTemplates(String error) {
+    return 'Не удалось скрыть шаблоны: $error';
+  }
+
+  @override
+  String failedToUnhideTemplates(String error) {
+    return 'Не удалось показать шаблоны снова: $error';
+  }
+
+  @override
+  String get deleteMissingTemplates => 'Удалить отсутствующие';
+
+  @override
+  String deleteMissingTemplatesConfirm(int count, String plural) {
+    return 'Шаблоны, файлы которых не найдены на этом компьютере, будут удалены безвозвратно ($count$plural). Удаляется только запись — то, что осталось от папки шаблона на диске, сохраняется. Отменить это действие нельзя.';
+  }
+
+  @override
   String get templateName => 'Название Шаблона';
 
   @override
@@ -1070,14 +1103,6 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String templatesSelected(int count, String plural) {
     return 'Выбрано шаблонов: $count$plural';
-  }
-
-  @override
-  String get deleteSelectedTemplates => 'Удалить выбранное';
-
-  @override
-  String deleteSelectedTemplatesConfirm(int count, String plural) {
-    return 'Удалить выбранные шаблоны ($count$plural)? Удаляются только записи о шаблонах — папки шаблонов на диске сохраняются.';
   }
 
   @override
