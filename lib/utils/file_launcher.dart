@@ -1,9 +1,10 @@
 import 'package:flutter/foundation.dart';
 
-// Conditional import: stub on web (no dart:io), macOS/VM implementation on desktop.
-// The VM implementation uses macos_secure_bookmarks only when Platform.isMacOS.
+// Conditional import: stub on web (no dart:io), shared native implementation
+// everywhere else. That implementation uses macos_secure_bookmarks only when
+// Platform.isMacOS, and has its own Windows and Linux branches.
 import 'file_launcher_platform_stub.dart'
-    if (dart.library.io) 'file_launcher_platform_macos.dart' as platform;
+    if (dart.library.io) 'file_launcher_platform_io.dart' as platform;
 
 /// Utilities for launching files and folders in the system file manager.
 ///

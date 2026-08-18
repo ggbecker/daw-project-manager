@@ -1,7 +1,10 @@
-// macOS implementation: uses security-scoped bookmarks.
-// Imported only when dart.library.io exists (VM). Contains macos_secure_bookmarks
-// so Windows/Linux builds may still compile this file; the plugin often
-// compiles on all platforms with no-op native code on non-macOS.
+// Shared dart:io implementation for every native platform — imported only when
+// dart.library.io exists (VM), with the web stub taking its place otherwise.
+// It covers macOS security-scoped bookmarks, the Windows ShellExecuteW
+// workaround, and the Linux direct-binary launch, each guarded by a Platform
+// check. Contains macos_secure_bookmarks so Windows/Linux builds may still
+// compile this file; the plugin often compiles on all platforms with no-op
+// native code on non-macOS.
 
 import 'dart:ffi';
 import 'dart:io';
@@ -56,14 +59,29 @@ Future<String> createBookmarkForPath(String path) async {
 /// going through url_launcher, on Windows.
 ///
 /// url_launcher_windows unescapes %-encoded file:// URLs before calling
-/// ShellExecuteW (to support UTF-8 paths). That reintroduces literal '#'
-/// characters into the still-"file://"-prefixed string, which ShellExecuteW
-/// then reparses as a URL, treating '#' as a fragment delimiter and silently
-/// truncating the path there. Only paths containing '#' hit this, so
-/// everything else keeps going through url_launcher unchanged.
+/// ShellExecuteW (to support UTF-8 paths), and ShellExecuteW then reparses the
+/// still-"file://"-prefixed string as a URL. Two kinds of character survive
+/// `Uri.file`'s encoding only to be misread on that second pass:
+///
+/// - '#' comes back from '%23' and is read as a fragment delimiter, silently
+///   truncating the path there.
+/// - '%' comes back from '%25', and ShellExecuteW's URL-to-path conversion
+///   percent-decodes a *second* time. A literal '%' followed by two hex digits
+///   — common in files saved straight from a download link, e.g.
+///   "My%20Track.cpr" — decodes into something else entirely, so the launch
+///   either fails or, worse, opens a different project that happens to match
+///   the decoded name (verified against ShellExecuteW/PathCreateFromUrlW:
+///   "100%25off.cpr" resolves to "100%off.cpr", "My%20Track.cpr" to
+///   "My Track.cpr").
+///
+/// Either character anywhere in the path — folder names included — is enough.
+/// '%' is matched on its own rather than only as a '%'-plus-two-hex-digits
+/// pair: the workaround is the more correct route for any path, so there is
+/// nothing to gain from being precise about which '%' are dangerous.
+/// Everything else keeps going through url_launcher unchanged.
 @visibleForTesting
 bool windowsNeedsDirectShellExecute(String path) =>
-    Platform.isWindows && path.contains('#');
+    Platform.isWindows && (path.contains('#') || path.contains('%'));
 
 /// Calls ShellExecuteW directly with the raw filesystem path — never a
 /// `file://` URI — so there is no percent-encode/unescape round-trip for
@@ -89,8 +107,8 @@ bool _shellExecuteOpen(String path) {
 }
 
 /// Checks existence and launches the path with url_launcher, except for
-/// Windows paths containing '#' which go through [_shellExecuteOpen] instead
-/// — see [windowsNeedsDirectShellExecute] for why.
+/// Windows paths containing '#' or '%' which go through [_shellExecuteOpen]
+/// instead — see [windowsNeedsDirectShellExecute] for why.
 Future<bool> launchResolvedPath(String path, bool isFolder) async {
   final entity = isFolder ? Directory(path) : File(path);
   if (!await entity.exists()) {
