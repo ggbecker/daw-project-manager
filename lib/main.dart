@@ -43,6 +43,7 @@ import 'services/auto_start_service.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'models/auto_backup_interval.dart';
 import 'utils/app_paths.dart';
+import 'utils/launch_diagnostics.dart';
 import 'utils/mobile_utils.dart';
 
 import 'ui/dashboard_page.dart';
@@ -544,6 +545,13 @@ Future<void> _main(List<String> args) async {
   // escape the root zone, logging them to disk so a crash that happens
   // while the app is backgrounded leaves a trace instead of vanishing.
   CrashLogger.installGlobalHandlers();
+
+  // Mirror every "Launch in DAW" diagnostic into the same on-disk log, so a
+  // tester who has diagnostic logging enabled can send the whole file rather
+  // than copying one attempt out of the failure dialog. LaunchDiagnostics
+  // keeps its own always-on in-memory buffer either way; CrashLogger.log
+  // no-ops unless the Settings toggle is on.
+  LaunchDiagnostics.sink = (entry) => unawaited(CrashLogger.log('launch', entry));
 
   // Replace the default red/gray error box with a small recoverable
   // placeholder — a single broken widget shouldn't look like the whole

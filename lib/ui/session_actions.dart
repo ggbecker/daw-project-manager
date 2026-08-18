@@ -7,7 +7,9 @@ import '../generated/l10n/app_localizations.dart';
 import '../models/music_project.dart';
 import '../providers/providers.dart';
 import '../utils/file_launcher.dart';
+import '../utils/launch_diagnostics.dart';
 import 'dialogs/daw_launch_command_dialog.dart';
+import 'dialogs/launch_diagnostics_dialog.dart';
 
 /// Launches [project] in its DAW, preferring a Linux-only registered binary
 /// override for its DAW type (see Settings > DAW Locations) over the OS
@@ -23,10 +25,27 @@ Future<void> launchProjectInDaw(
   WidgetRef ref,
   MusicProject project,
 ) async {
-  final exists =
-      File(project.filePath).existsSync() ||
-      Directory(project.filePath).existsSync();
+  // Start a fresh record so the "Details" dialog on a failure shows this
+  // attempt rather than every attempt since the app started.
+  LaunchDiagnostics.clear();
+  LaunchDiagnostics.record('launch requested', {
+    'os': Platform.operatingSystem,
+    'osVersion': Platform.operatingSystemVersion,
+    'dawType': project.dawType,
+    'dawVersion': project.dawVersion,
+  });
+
+  final fileExists = File(project.filePath).existsSync();
+  final directoryExists = Directory(project.filePath).existsSync();
+  final exists = fileExists || directoryExists;
+  LaunchDiagnostics.record('project path', {
+    'fileExists': fileExists,
+    'directoryExists': directoryExists,
+    ...LaunchDiagnostics.describePath(project.filePath),
+    'path': project.filePath,
+  });
   if (!exists) {
+    LaunchDiagnostics.record('FAILED: project path does not exist');
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context)!.fileMissing)),
@@ -38,6 +57,7 @@ Future<void> launchProjectInDaw(
   if (Platform.isLinux && project.dawType != null) {
     final repo = await ref.read(repositoryProvider.future);
     final binaryPath = repo.getDawLaunchCommand(project.dawType!);
+    LaunchDiagnostics.record('linux binary override', {'binaryPath': binaryPath});
     if (binaryPath == null) {
       // No override configured yet: on Linux there's no reliable OS-level
       // file association to fall back on for most DAWs (see the class doc
@@ -68,29 +88,48 @@ Future<void> launchProjectInDaw(
       binaryPath,
       project.filePath,
     );
+    LaunchDiagnostics.record('launch result', {'launched': launched});
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          launched
-              ? AppLocalizations.of(context)!.launchingProject(project.displayName)
-              : AppLocalizations.of(context)!.failedToLaunchProject(project.displayName),
-        ),
-      ),
-    );
+    _showLaunchResultSnackBar(context, project, launched);
     return;
   }
 
   final success = await FileLauncher.launchProject(project.filePath);
+  LaunchDiagnostics.record('launch result', {'launched': success});
 
   if (!context.mounted) return;
+  _showLaunchResultSnackBar(context, project, success);
+}
+
+/// Reports the outcome of a launch attempt. A failure additionally offers a
+/// "Details" action opening [showLaunchDiagnosticsDialog] — `Failed to
+/// launch [project]` on its own is the report we keep receiving and it says
+/// nothing about *why*, so the record of the attempt is put one tap away
+/// from the message instead of behind the Settings diagnostic-log toggle
+/// (which is off by default, and which a tester would have had to enable
+/// before hitting the bug to be of any use).
+void _showLaunchResultSnackBar(
+  BuildContext context,
+  MusicProject project,
+  bool launched,
+) {
+  final l10n = AppLocalizations.of(context)!;
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       content: Text(
-        success
-            ? AppLocalizations.of(context)!.launchingProject(project.displayName)
-            : AppLocalizations.of(context)!.failedToLaunchProject(project.displayName),
+        launched
+            ? l10n.launchingProject(project.displayName)
+            : l10n.failedToLaunchProject(project.displayName),
       ),
+      duration: launched
+          ? const Duration(seconds: 4)
+          : const Duration(seconds: 10),
+      action: launched
+          ? null
+          : SnackBarAction(
+              label: l10n.launchDiagnosticsAction,
+              onPressed: () => showLaunchDiagnosticsDialog(context),
+            ),
     ),
   );
 }

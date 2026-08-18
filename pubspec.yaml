@@ -80,6 +80,11 @@ dependencies:
   windows_taskbar: ^1.1.2
   super_drag_and_drop: ^0.9.1
   win32: ^5.15.0
+  # Read-only lookup of Windows file associations, for the "Launch in DAW"
+  # diagnostics (see lib/utils/windows_file_association.dart). Already present
+  # transitively via url_launcher_windows; depended on directly since we now
+  # import it ourselves.
+  win32_registry: ^2.1.0
   ffi: ^2.1.4
   launch_at_startup: ^0.5.1
 

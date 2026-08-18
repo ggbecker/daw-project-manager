@@ -9,6 +9,27 @@ class AppLocalizationsPt extends AppLocalizations {
   AppLocalizationsPt([String locale = 'pt']) : super(locale);
 
   @override
+  String get launchDiagnosticsAction => 'Detalhes';
+
+  @override
+  String get launchDiagnosticsTitle => 'Diagnóstico de inicialização';
+
+  @override
+  String get launchDiagnosticsIntro =>
+      'O que o aplicativo registrou ao tentar abrir este projeto. Copie para um relatório de bug para ajudar a encontrar a causa.';
+
+  @override
+  String get launchDiagnosticsCopy => 'Copiar';
+
+  @override
+  String get launchDiagnosticsCopied =>
+      'Diagnóstico de inicialização copiado para a área de transferência';
+
+  @override
+  String get launchDiagnosticsEmpty =>
+      'Nada foi registrado na última tentativa de inicialização.';
+
+  @override
   String get appTitle => 'Gerenciador de Projetos DAW';
 
   @override
