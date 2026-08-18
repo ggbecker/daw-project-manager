@@ -36,4 +36,58 @@ void main() {
       expect(described?['ext'], '(none)');
     }, testOn: 'windows');
   });
+
+  group('hasNoHandler', () {
+    test('is true when nothing is registered by any route', () {
+      // The '.rpp with no DAW registered' case: this is what turns into the
+      // plain-language message on the failure snackbar.
+      expect(
+        WindowsFileAssociation.hasNoHandler({
+          'ext': '.rpp',
+          'userChoiceProgId': null,
+          'classesRootProgId': null,
+          'openCommand': null,
+        }),
+        isTrue,
+      );
+    });
+
+    test('is false when the user has explicitly chosen an app', () {
+      expect(
+        WindowsFileAssociation.hasNoHandler({
+          'ext': '.rpp',
+          'userChoiceProgId': 'REAPER.ProjectFile',
+          'classesRootProgId': null,
+          'openCommand': r'"C:\Program Files\REAPER\reaper.exe" "%1"',
+        }),
+        isFalse,
+      );
+    });
+
+    test('is false when only the machine-wide association exists', () {
+      expect(
+        WindowsFileAssociation.hasNoHandler({
+          'ext': '.rpp',
+          'userChoiceProgId': null,
+          'classesRootProgId': 'REAPER.ProjectFile',
+          'openCommand': r'"C:\Program Files\REAPER\reaper.exe" "%1"',
+        }),
+        isFalse,
+      );
+    });
+
+    test('is false for a ProgId whose open command is missing', () {
+      // Registered but broken is a different diagnosis from unregistered,
+      // and must not be reported as "nothing is associated".
+      expect(
+        WindowsFileAssociation.hasNoHandler({
+          'ext': '.rpp',
+          'userChoiceProgId': null,
+          'classesRootProgId': 'REAPER.ProjectFile',
+          'openCommand': null,
+        }),
+        isFalse,
+      );
+    });
+  });
 }

@@ -19,6 +19,18 @@
 /// these records exist in a release build.
 library;
 
+/// A cause the diagnostics were able to identify outright, as opposed to
+/// evidence a human still has to read. Kept as an enum rather than a
+/// message so the UI can localise it — see `launchFailureNoAssociation`.
+enum LaunchFailureCause {
+  /// Windows has no application registered for the project's file type, so
+  /// there is nothing for the shell to open it with. The single most likely
+  /// explanation for a "Failed to launch" with no other symptom: DAWs that
+  /// install per-user, or that were installed before a Windows upgrade,
+  /// routinely leave their own extension unclaimed.
+  noFileAssociation,
+}
+
 /// Records the steps of "launch in DAW" attempts. All members are static —
 /// there is one launch pipeline and one buffer for it.
 class LaunchDiagnostics {
@@ -34,6 +46,21 @@ class LaunchDiagnostics {
   /// Optional persistent destination for every recorded entry, set once at
   /// startup. Never called for the buffer's own bookkeeping.
   static void Function(String entry)? sink;
+
+  /// A cause identified during this attempt, if any, and the detail that
+  /// names it (for [LaunchFailureCause.noFileAssociation], the extension).
+  /// The failure UI states this in the user's own language instead of
+  /// leaving them to find `openCommand=null` in the log.
+  static LaunchFailureCause? probableCause;
+  static String? probableCauseDetail;
+
+  /// Notes a cause and writes it into the log too, so a pasted report leads
+  /// with the finding rather than burying it.
+  static void recordCause(LaunchFailureCause cause, String detail) {
+    probableCause = cause;
+    probableCauseDetail = detail;
+    record('DIAGNOSIS', {'cause': cause.name, 'detail': detail});
+  }
 
   /// Formats one entry. Pure — exposed for testing.
   ///
@@ -77,10 +104,15 @@ class LaunchDiagnostics {
   /// copy button.
   static String get report => _entries.join('\n');
 
-  /// Drops the buffer. Called at the start of each attempt so the dialog
-  /// shows that attempt rather than an accumulated history the tester would
-  /// have to read backwards.
-  static void clear() => _entries.clear();
+  /// Drops the buffer and any identified cause. Called at the start of each
+  /// attempt so the dialog shows that attempt rather than an accumulated
+  /// history the tester would have to read backwards — and so a cause found
+  /// last time is never reported against this time.
+  static void clear() {
+    _entries.clear();
+    probableCause = null;
+    probableCauseDetail = null;
+  }
 
   /// A one-line summary of the properties of [path] that are known to break
   /// launching on Windows, so a report says *why* a path is unusual instead
@@ -96,7 +128,13 @@ class LaunchDiagnostics {
       // haven't opted into long-path support, which includes plenty of DAWs.
       'overMaxPath': path.length >= 260,
       'ext': _extensionOf(path),
+      // '#' routes the launch through ShellExecuteW directly rather than
+      // url_launcher — see windowsNeedsDirectShellExecute. '%' does not on
+      // this version and is a known cause of failed launches here: it
+      // survives Uri.file's encoding as '%25' and gets percent-decoded a
+      // second time, so "My%20Track.cpr" is looked up as "My Track.cpr".
       'hasHash': path.contains('#'),
+      'hasPercent': path.contains('%'),
       'nonAscii': path.runes.any((r) => r > 127),
       'unc': path.startsWith(r'\\'),
       'trailingSpaceOrDot': trimmed != path || path.endsWith('.'),

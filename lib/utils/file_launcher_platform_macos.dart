@@ -114,10 +114,19 @@ Future<bool> launchResolvedPath(String path, bool isFolder) async {
 
   if (Platform.isWindows && !isFolder) {
     final ext = LaunchDiagnostics.describePath(path)['ext'] as String;
-    LaunchDiagnostics.record(
-      'windows file association',
-      WindowsFileAssociation.describe(ext),
-    );
+    final association = WindowsFileAssociation.describe(ext);
+    LaunchDiagnostics.record('windows file association', association);
+    if (association != null &&
+        ext.isNotEmpty &&
+        WindowsFileAssociation.hasNoHandler(association)) {
+      // Nothing is registered to open this file type, so the launch below
+      // cannot succeed no matter which route it takes. Say so now rather
+      // than reporting only the shell's eventual refusal.
+      LaunchDiagnostics.recordCause(
+        LaunchFailureCause.noFileAssociation,
+        ext,
+      );
+    }
   }
 
   if (!exists) {
@@ -135,6 +144,15 @@ Future<bool> launchResolvedPath(String path, bool isFolder) async {
       'meaning': LaunchDiagnostics.describeShellExecuteResult(code),
       'launched': launched,
     });
+    if (code == LaunchDiagnostics.kShellExecuteNoAssociation) {
+      // The shell's own verdict, which beats the registry probe above: it
+      // is what actually refused, so record the cause even if the lookup
+      // found something that looked usable.
+      LaunchDiagnostics.recordCause(
+        LaunchFailureCause.noFileAssociation,
+        LaunchDiagnostics.describePath(path)['ext'] as String,
+      );
+    }
     return launched;
   }
 

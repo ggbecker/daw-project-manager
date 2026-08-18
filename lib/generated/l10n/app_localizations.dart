@@ -112,6 +112,12 @@ abstract class AppLocalizations {
     Locale('zh'),
   ];
 
+  /// Shown when Windows has no registered application for the project file type.
+  ///
+  /// In en, this message translates to:
+  /// **'Windows has no app set to open {extension} files, so it cannot open this project. Set a default app for {extension} in Windows Settings, or open the project from your DAW instead.'**
+  String launchFailureNoAssociation(String extension);
+
   /// No description provided for @launchDiagnosticsAction.
   ///
   /// In en, this message translates to:

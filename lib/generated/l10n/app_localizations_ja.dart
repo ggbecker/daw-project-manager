@@ -9,6 +9,11 @@ class AppLocalizationsJa extends AppLocalizations {
   AppLocalizationsJa([String locale = 'ja']) : super(locale);
 
   @override
+  String launchFailureNoAssociation(String extension) {
+    return 'Windows に $extension ファイルを開くアプリが設定されていないため、このプロジェクトを開けません。Windows の設定で $extension の既定のアプリを設定するか、DAW から直接プロジェクトを開いてください。';
+  }
+
+  @override
   String get launchDiagnosticsAction => '詳細';
 
   @override

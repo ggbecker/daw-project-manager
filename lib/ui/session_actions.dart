@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../generated/l10n/app_localizations.dart';
@@ -90,7 +91,7 @@ Future<void> launchProjectInDaw(
     );
     LaunchDiagnostics.record('launch result', {'launched': launched});
     if (!context.mounted) return;
-    _showLaunchResultSnackBar(context, project, launched);
+    showLaunchResultSnackBar(context, project, launched);
     return;
   }
 
@@ -98,38 +99,115 @@ Future<void> launchProjectInDaw(
   LaunchDiagnostics.record('launch result', {'launched': success});
 
   if (!context.mounted) return;
-  _showLaunchResultSnackBar(context, project, success);
+  showLaunchResultSnackBar(context, project, success);
 }
 
-/// Reports the outcome of a launch attempt. A failure additionally offers a
-/// "Details" action opening [showLaunchDiagnosticsDialog] — `Failed to
-/// launch [project]` on its own is the report we keep receiving and it says
-/// nothing about *why*, so the record of the attempt is put one tap away
-/// from the message instead of behind the Settings diagnostic-log toggle
-/// (which is off by default, and which a tester would have had to enable
-/// before hitting the bug to be of any use).
-void _showLaunchResultSnackBar(
+/// Reports the outcome of a launch attempt.
+///
+/// A success is the plain one-line message it has always been. A failure
+/// carries the record of the attempt in the snackbar itself, with **Copy**
+/// in the action slot — `Failed to launch [project]` on its own is the
+/// report we keep receiving and it says nothing about *why*, and asking a
+/// tester to go and find a log file (behind a Settings toggle that is off
+/// by default, and that they would have had to enable *before* hitting the
+/// bug) loses most of them. Copying from the message that just appeared is
+/// the one step they will actually take.
+///
+/// The log sits in a scroll view rather than expanding to fit: a snackbar
+/// that grows to the height of a 20-line report covers the app. "Details"
+/// opens the same content in [showLaunchDiagnosticsDialog], which is
+/// selectable and comfortable to read at length.
+@visibleForTesting
+void showLaunchResultSnackBar(
   BuildContext context,
   MusicProject project,
   bool launched,
 ) {
   final l10n = AppLocalizations.of(context)!;
-  ScaffoldMessenger.of(context).showSnackBar(
+  final messenger = ScaffoldMessenger.of(context);
+
+  if (launched) {
+    messenger.showSnackBar(
+      SnackBar(content: Text(l10n.launchingProject(project.displayName))),
+    );
+    return;
+  }
+
+  final report = LaunchDiagnostics.report;
+  final cause = describeLaunchFailureCause(l10n);
+  // Long enough to read a few lines and reach the button, since the whole
+  // point is that the tester leaves with the text in their clipboard.
+  const failureDuration = Duration(seconds: 30);
+
+  messenger.showSnackBar(
     SnackBar(
-      content: Text(
-        launched
-            ? l10n.launchingProject(project.displayName)
-            : l10n.failedToLaunchProject(project.displayName),
-      ),
-      duration: launched
-          ? const Duration(seconds: 4)
-          : const Duration(seconds: 10),
-      action: launched
-          ? null
-          : SnackBarAction(
-              label: l10n.launchDiagnosticsAction,
-              onPressed: () => showLaunchDiagnosticsDialog(context),
+      duration: failureDuration,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l10n.failedToLaunchProject(project.displayName)),
+          // When the diagnostics identified the cause outright, lead with it
+          // in plain language — a tester should not have to spot
+          // `openCommand=null` in the log to learn that Windows has nothing
+          // registered to open their project files.
+          if (cause != null) ...[
+            const SizedBox(height: 6),
+            Text(cause, style: const TextStyle(fontWeight: FontWeight.w600)),
+          ],
+          if (report.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 132),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  // Tinted with the snackbar's own text colour so the panel
+                  // reads as inset whichever way round the theme puts the
+                  // snackbar (its surface is the *inverse* of the app's, so
+                  // a hardcoded black or white overlay is wrong half the
+                  // time).
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onInverseSurface
+                      .withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: SingleChildScrollView(
+                  child: Text(
+                    report,
+                    style: const TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 10,
+                      height: 1.45,
+                    ),
+                  ),
+                ),
+              ),
             ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () {
+                  messenger.hideCurrentSnackBar();
+                  if (context.mounted) showLaunchDiagnosticsDialog(context);
+                },
+                child: Text(l10n.launchDiagnosticsAction),
+              ),
+            ),
+          ],
+        ],
+      ),
+      action: SnackBarAction(
+        label: l10n.launchDiagnosticsCopy,
+        onPressed: () async {
+          await Clipboard.setData(ClipboardData(text: report));
+          messenger.showSnackBar(
+            SnackBar(content: Text(l10n.launchDiagnosticsCopied)),
+          );
+        },
+      ),
     ),
   );
 }

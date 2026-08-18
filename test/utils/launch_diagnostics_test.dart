@@ -94,6 +94,26 @@ void main() {
     });
   });
 
+  group('recordCause', () {
+    test('pins the cause and its detail, and writes it into the log', () {
+      LaunchDiagnostics.recordCause(LaunchFailureCause.noFileAssociation, '.rpp');
+      expect(LaunchDiagnostics.probableCause,
+          LaunchFailureCause.noFileAssociation);
+      expect(LaunchDiagnostics.probableCauseDetail, '.rpp');
+      expect(LaunchDiagnostics.report, contains('DIAGNOSIS'));
+      expect(LaunchDiagnostics.report, contains('cause=noFileAssociation'));
+      expect(LaunchDiagnostics.report, contains('detail=.rpp'));
+    });
+
+    test('clear drops the cause so it is never reported against a later attempt',
+        () {
+      LaunchDiagnostics.recordCause(LaunchFailureCause.noFileAssociation, '.rpp');
+      LaunchDiagnostics.clear();
+      expect(LaunchDiagnostics.probableCause, isNull);
+      expect(LaunchDiagnostics.probableCauseDetail, isNull);
+    });
+  });
+
   group('describePath', () {
     test('reports the lowercased extension of a Windows path', () {
       final facts = LaunchDiagnostics.describePath(r'C:\Music\Song.CPR');
@@ -122,6 +142,15 @@ void main() {
       final facts = LaunchDiagnostics.describePath(r'C:\Music\Project #1\a.flp');
       expect(facts['hasHash'], isTrue);
       expect(LaunchDiagnostics.describePath(r'C:\Music\a.flp')['hasHash'],
+          isFalse);
+    });
+
+    test('flags a path containing "%"', () {
+      // A '%' in the path is a known cause of a failed launch on this
+      // version — the report needs to say so on sight.
+      final facts = LaunchDiagnostics.describePath(r'C:\Music\My%20Track.cpr');
+      expect(facts['hasPercent'], isTrue);
+      expect(LaunchDiagnostics.describePath(r'C:\Music\a.flp')['hasPercent'],
           isFalse);
     });
 

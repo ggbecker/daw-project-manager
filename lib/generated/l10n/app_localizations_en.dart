@@ -9,6 +9,11 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String launchFailureNoAssociation(String extension) {
+    return 'Windows has no app set to open $extension files, so it cannot open this project. Set a default app for $extension in Windows Settings, or open the project from your DAW instead.';
+  }
+
+  @override
   String get launchDiagnosticsAction => 'Details';
 
   @override

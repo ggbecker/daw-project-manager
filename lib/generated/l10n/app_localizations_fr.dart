@@ -9,6 +9,11 @@ class AppLocalizationsFr extends AppLocalizations {
   AppLocalizationsFr([String locale = 'fr']) : super(locale);
 
   @override
+  String launchFailureNoAssociation(String extension) {
+    return 'Windows n\'a aucune application définie pour ouvrir les fichiers $extension et ne peut donc pas ouvrir ce projet. Définissez une application par défaut pour $extension dans les paramètres de Windows, ou ouvrez le projet depuis votre STAN.';
+  }
+
+  @override
   String get launchDiagnosticsAction => 'Détails';
 
   @override
