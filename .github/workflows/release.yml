@@ -507,6 +507,60 @@ jobs:
           name: DAW_Project_Manager_Windows_Portable_${{ steps.sanitize_ref.outputs.sanitized_ref }}
           path: build/windows/x64/runner/Release/
 
+      # 5.4c. A debug build of the same commit, on pull requests only.
+      #
+      # Debug is what makes kDebugMode prints run and assertions fire, which
+      # a release artifact cannot offer at any price. Two things to know
+      # before handing one to someone:
+      #
+      #  * It links the DEBUG CRT. windows/CMakeLists.txt never sets
+      #    CMAKE_MSVC_RUNTIME_LIBRARY, so the Debug config takes MSVC's
+      #    default /MDd and imports VCRUNTIME140D.dll, MSVCP140D.dll and
+      #    ucrtbased.dll. Those ship with Visual Studio and may not legally
+      #    be redistributed, so on a machine without VS this build is
+      #    expected to fail at launch with a missing-DLL box. The step below
+      #    prints the actual imports so each run says whether that is so
+      #    rather than leaving it to be discovered by the person testing.
+      #  * Its prints go nowhere unless it is started from a terminal.
+      #    windows/runner/main.cpp only attaches a console when one is
+      #    already present (AttachConsole(ATTACH_PARENT_PROCESS)) or a
+      #    debugger is, so double-clicking it shows no output at all. Run it
+      #    from PowerShell to see them.
+      #
+      # DATA_DIR_ARG is passed here too: the override wins over the _dev
+      # default, so this build shares the pull request's own library rather
+      # than opening a second one of its own.
+      - name: Build portable Windows debug build (PR only)
+        if: matrix.is_installer == true && github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          VERSION_NAME="${{ steps.build_version.outputs.version_name }}"
+          flutter build windows --debug --dart-define=APP_VERSION="${VERSION_NAME}" ${DATA_DIR_ARG}
+
+      - name: Report debug build's CRT dependencies (PR only)
+        if: matrix.is_installer == true && github.event_name == 'pull_request'
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $exe = 'build/windows/x64/runner/Debug/daw_project_manager.exe'
+          $dumpbin = Get-ChildItem -Recurse -Filter dumpbin.exe `
+            'C:/Program Files/Microsoft Visual Studio' -ErrorAction SilentlyContinue |
+            Select-Object -First 1
+          if (-not $dumpbin) { Write-Host 'dumpbin not found; skipping'; exit 0 }
+          $out = & $dumpbin.FullName /dependents $exe
+          Write-Host $out
+          $debugCrt = $out | Select-String -Pattern 'D\.dll|ucrtbased'
+          if ($debugCrt) {
+            Write-Host '::warning::This debug build imports the debug CRT and will not start on a machine without Visual Studio installed.'
+          }
+
+      - name: Upload portable Windows debug build (PR only)
+        if: matrix.is_installer == true && github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: DAW_Project_Manager_Windows_Debug_${{ steps.sanitize_ref.outputs.sanitized_ref }}
+          path: build/windows/x64/runner/Debug/
+
       # 5.5. Set correct asset paths based on sanitized ref name
       - name: Set asset paths
         id: set_asset_paths
