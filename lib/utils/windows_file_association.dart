@@ -58,6 +58,20 @@ class WindowsFileAssociation {
     };
   }
 
+  /// Whether [described] — a map from [describe] — shows nothing registered
+  /// to open the file type. True means the shell has no handler to hand the
+  /// project to, which is enough on its own to explain a failed launch.
+  ///
+  /// Requires *every* route to have come back empty: a ProgId with no
+  /// `shell\open\command` under it is broken rather than absent, and says
+  /// something different about the machine, so it is not folded in here.
+  ///
+  /// Pure — exposed for testing.
+  static bool hasNoHandler(Map<String, Object?> described) =>
+      described['userChoiceProgId'] == null &&
+      described['classesRootProgId'] == null &&
+      described['openCommand'] == null;
+
   /// Reads a single string value, treating "the key or value isn't there"
   /// as null rather than as an error — an absent association is the normal,
   /// expected finding here, not an exceptional one.

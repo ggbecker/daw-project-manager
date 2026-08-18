@@ -1,5 +1,6 @@
 {
   "@@locale": "fr",
+  "launchFailureNoAssociation": "Windows n'a aucune application définie pour ouvrir les fichiers {extension} et ne peut donc pas ouvrir ce projet. Définissez une application par défaut pour {extension} dans les paramètres de Windows, ou ouvrez le projet depuis votre STAN.",
   "launchDiagnosticsAction": "Détails",
   "launchDiagnosticsTitle": "Diagnostic de lancement",
   "launchDiagnosticsIntro": "Ce que l'application a enregistré en essayant d'ouvrir ce projet. Copiez-le dans un rapport de bogue pour aider à en trouver la cause.",

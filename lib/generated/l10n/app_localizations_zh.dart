@@ -9,6 +9,11 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
+  String launchFailureNoAssociation(String extension) {
+    return 'Windows 未设置用于打开 $extension 文件的应用，因此无法打开此项目。请在 Windows 设置中为 $extension 设置默认应用，或改从你的 DAW 中打开该项目。';
+  }
+
+  @override
   String get launchDiagnosticsAction => '详情';
 
   @override

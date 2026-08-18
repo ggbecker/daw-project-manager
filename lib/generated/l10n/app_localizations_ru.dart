@@ -9,6 +9,11 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
+  String launchFailureNoAssociation(String extension) {
+    return 'В Windows не назначено приложение для открытия файлов $extension, поэтому этот проект открыть не удаётся. Назначьте приложение по умолчанию для $extension в параметрах Windows или откройте проект из самой DAW.';
+  }
+
+  @override
   String get launchDiagnosticsAction => 'Подробности';
 
   @override

@@ -13,9 +13,26 @@ import '../../utils/launch_diagnostics.dart';
 /// which branch ran, what the path looked like, what Windows had registered
 /// for the file type, what the shell returned — somewhere they can copy it
 /// out of and paste into an issue, with nothing to enable first.
+/// The cause the diagnostics identified for the last attempt, in the user's
+/// language, or null if none was pinned down.
+///
+/// Lives here rather than beside the snackbar because both the snackbar and
+/// this dialog lead with it, and this file is the one they share.
+String? describeLaunchFailureCause(AppLocalizations l10n) {
+  final cause = LaunchDiagnostics.probableCause;
+  if (cause == null) return null;
+  switch (cause) {
+    case LaunchFailureCause.noFileAssociation:
+      return l10n.launchFailureNoAssociation(
+        LaunchDiagnostics.probableCauseDetail ?? '',
+      );
+  }
+}
+
 Future<void> showLaunchDiagnosticsDialog(BuildContext context) {
   final l10n = AppLocalizations.of(context)!;
   final report = LaunchDiagnostics.report;
+  final cause = describeLaunchFailureCause(l10n);
 
   return showDialog<void>(
     context: context,
@@ -27,6 +44,37 @@ Future<void> showLaunchDiagnosticsDialog(BuildContext context) {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (cause != null) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Theme.of(ctx)
+                      .colorScheme
+                      .errorContainer
+                      .withValues(alpha: 0.55),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.info_outline,
+                        size: 16, color: Theme.of(ctx).colorScheme.onErrorContainer),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        cause,
+                        style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(
+                              color: Theme.of(ctx).colorScheme.onErrorContainer,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
             Text(
               l10n.launchDiagnosticsIntro,
               style: Theme.of(ctx).textTheme.bodySmall,
