@@ -738,7 +738,13 @@
   "createTemplate": "Crea Modello",
   "editTemplate": "Modifica Modello",
   "deleteTemplate": "Elimina Modello",
-  "deleteTemplateConfirm": "Sei sicuro di voler eliminare il modello \"{name}\"?",
+  "deleteTemplateConfirm": "Sei sicuro di voler eliminare il modello \"{name}\"? Viene rimossa solo la voce del modello — la cartella del modello sul disco viene mantenuta.",
+  "deleteTemplateFolderKept": "Cartella mantenuta sul disco: {path}",
+  "@deleteTemplateFolderKept": {
+    "placeholders": {
+      "path": { "type": "String" }
+    }
+  },
   "templateName": "Nome Modello",
   "templateNameHint": "es. Lista di Mixaggio",
   "templateItems": "Elementi del Modello",
@@ -804,7 +810,7 @@
     }
   },
   "deleteSelectedTemplates": "Elimina selezione",
-  "deleteSelectedTemplatesConfirm": "Eliminare {count} modello{plural}?",
+  "deleteSelectedTemplatesConfirm": "Eliminare {count} modello{plural}? Vengono rimosse solo le voci dei modelli — le cartelle dei modelli sul disco vengono mantenute.",
   "@deleteSelectedTemplatesConfirm": {
     "placeholders": {
       "count": { "type": "int" },

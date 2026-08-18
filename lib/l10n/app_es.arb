@@ -738,7 +738,13 @@
   "createTemplate": "Crear Plantilla",
   "editTemplate": "Editar Plantilla",
   "deleteTemplate": "Eliminar Plantilla",
-  "deleteTemplateConfirm": "¿Estás seguro de eliminar la plantilla \"{name}\"?",
+  "deleteTemplateConfirm": "¿Estás seguro de eliminar la plantilla \"{name}\"? Solo se elimina la entrada de la plantilla; la carpeta de la plantilla en tu disco se conserva.",
+  "deleteTemplateFolderKept": "Carpeta conservada en el disco: {path}",
+  "@deleteTemplateFolderKept": {
+    "placeholders": {
+      "path": { "type": "String" }
+    }
+  },
   "templateName": "Nombre de la Plantilla",
   "templateNameHint": "ej. Lista de Mezcla",
   "templateItems": "Elementos de la Plantilla",
@@ -804,7 +810,7 @@
     }
   },
   "deleteSelectedTemplates": "Eliminar selección",
-  "deleteSelectedTemplatesConfirm": "¿Seguro que quieres eliminar {count} plantilla{plural}?",
+  "deleteSelectedTemplatesConfirm": "¿Seguro que quieres eliminar {count} plantilla{plural}? Solo se eliminan las entradas de las plantillas; las carpetas de plantillas en tu disco se conservan.",
   "@deleteSelectedTemplatesConfirm": {
     "placeholders": {
       "count": { "type": "int" },

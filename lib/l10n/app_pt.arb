@@ -738,7 +738,13 @@
   "createTemplate": "Criar Template",
   "editTemplate": "Editar Template",
   "deleteTemplate": "Excluir Template",
-  "deleteTemplateConfirm": "Tem certeza que deseja excluir o template \"{name}\"?",
+  "deleteTemplateConfirm": "Tem certeza que deseja excluir o template \"{name}\"? Apenas o registro do template é removido — a pasta do template no seu disco é mantida.",
+  "deleteTemplateFolderKept": "Pasta mantida no disco: {path}",
+  "@deleteTemplateFolderKept": {
+    "placeholders": {
+      "path": { "type": "String" }
+    }
+  },
   "templateName": "Nome do Template",
   "templateNameHint": "ex. Checklist de Mixagem",
   "templateItems": "Itens do Template",
@@ -804,7 +810,7 @@
     }
   },
   "deleteSelectedTemplates": "Excluir selecionados",
-  "deleteSelectedTemplatesConfirm": "Tem certeza de que deseja excluir {count} template{plural}?",
+  "deleteSelectedTemplatesConfirm": "Tem certeza de que deseja excluir {count} template{plural}? Apenas os registros dos templates são removidos — as pastas dos templates no seu disco são mantidas.",
   "@deleteSelectedTemplatesConfirm": {
     "placeholders": {
       "count": { "type": "int" },

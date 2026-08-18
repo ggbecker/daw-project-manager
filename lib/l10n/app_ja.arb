@@ -738,7 +738,13 @@
   "createTemplate": "テンプレート作成",
   "editTemplate": "テンプレート編集",
   "deleteTemplate": "テンプレート削除",
-  "deleteTemplateConfirm": "テンプレート「{name}」を削除してもよろしいですか？",
+  "deleteTemplateConfirm": "テンプレート「{name}」を削除してもよろしいですか？削除されるのはテンプレートの登録情報だけで、ディスク上のテンプレートフォルダは残ります。",
+  "deleteTemplateFolderKept": "ディスク上に残るフォルダ: {path}",
+  "@deleteTemplateFolderKept": {
+    "placeholders": {
+      "path": { "type": "String" }
+    }
+  },
   "templateName": "テンプレート名",
   "templateNameHint": "例：ミキシングチェックリスト",
   "templateItems": "テンプレート項目",
@@ -804,7 +810,7 @@
     }
   },
   "deleteSelectedTemplates": "選択項目を削除",
-  "deleteSelectedTemplatesConfirm": "{count}件のテンプレート{plural}を削除してもよろしいですか?",
+  "deleteSelectedTemplatesConfirm": "{count}件のテンプレート{plural}を削除してもよろしいですか?削除されるのはテンプレートの登録情報だけで、ディスク上のテンプレートフォルダは残ります。",
   "@deleteSelectedTemplatesConfirm": {
     "placeholders": {
       "count": { "type": "int" },

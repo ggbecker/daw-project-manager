@@ -738,7 +738,13 @@
   "createTemplate": "Vorlage Erstellen",
   "editTemplate": "Vorlage Bearbeiten",
   "deleteTemplate": "Vorlage Löschen",
-  "deleteTemplateConfirm": "Möchten Sie die Vorlage \"{name}\" wirklich löschen?",
+  "deleteTemplateConfirm": "Möchten Sie die Vorlage \"{name}\" wirklich löschen? Nur der Vorlageneintrag wird entfernt — der Vorlagenordner auf Ihrer Festplatte bleibt erhalten.",
+  "deleteTemplateFolderKept": "Ordner bleibt auf der Festplatte erhalten: {path}",
+  "@deleteTemplateFolderKept": {
+    "placeholders": {
+      "path": { "type": "String" }
+    }
+  },
   "templateName": "Vorlagenname",
   "templateNameHint": "z.B. Mixing-Checkliste",
   "templateItems": "Vorlagenelemente",
@@ -804,7 +810,7 @@
     }
   },
   "deleteSelectedTemplates": "Auswahl löschen",
-  "deleteSelectedTemplatesConfirm": "Möchten Sie {count} Vorlage{plural} wirklich löschen?",
+  "deleteSelectedTemplatesConfirm": "Möchten Sie {count} Vorlage{plural} wirklich löschen? Nur die Vorlageneinträge werden entfernt — die Vorlagenordner auf Ihrer Festplatte bleiben erhalten.",
   "@deleteSelectedTemplatesConfirm": {
     "placeholders": {
       "count": { "type": "int" },

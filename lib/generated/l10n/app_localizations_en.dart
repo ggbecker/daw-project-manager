@@ -915,7 +915,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String deleteTemplateConfirm(String name) {
-    return 'Are you sure you want to delete template \"$name\"?';
+    return 'Are you sure you want to delete template \"$name\"? Only the template entry is removed — the template folder on your disk is kept.';
+  }
+
+  @override
+  String deleteTemplateFolderKept(String path) {
+    return 'Folder kept on disk: $path';
   }
 
   @override
@@ -1070,7 +1075,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String deleteSelectedTemplatesConfirm(int count, String plural) {
-    return 'Are you sure you want to delete $count template$plural?';
+    return 'Are you sure you want to delete $count template$plural? Only the template entries are removed — the template folders on your disk are kept.';
   }
 
   @override

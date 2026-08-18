@@ -905,7 +905,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String deleteTemplateConfirm(String name) {
-    return 'テンプレート「$name」を削除してもよろしいですか？';
+    return 'テンプレート「$name」を削除してもよろしいですか？削除されるのはテンプレートの登録情報だけで、ディスク上のテンプレートフォルダは残ります。';
+  }
+
+  @override
+  String deleteTemplateFolderKept(String path) {
+    return 'ディスク上に残るフォルダ: $path';
   }
 
   @override
@@ -1054,7 +1059,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String deleteSelectedTemplatesConfirm(int count, String plural) {
-    return '$count件のテンプレート$pluralを削除してもよろしいですか?';
+    return '$count件のテンプレート$pluralを削除してもよろしいですか?削除されるのはテンプレートの登録情報だけで、ディスク上のテンプレートフォルダは残ります。';
   }
 
   @override

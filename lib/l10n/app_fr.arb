@@ -738,7 +738,13 @@
   "createTemplate": "Créer un Modèle",
   "editTemplate": "Modifier le Modèle",
   "deleteTemplate": "Supprimer le Modèle",
-  "deleteTemplateConfirm": "Êtes-vous sûr de vouloir supprimer le modèle \"{name}\" ?",
+  "deleteTemplateConfirm": "Êtes-vous sûr de vouloir supprimer le modèle \"{name}\" ? Seule l'entrée du modèle est supprimée — le dossier du modèle sur votre disque est conservé.",
+  "deleteTemplateFolderKept": "Dossier conservé sur le disque : {path}",
+  "@deleteTemplateFolderKept": {
+    "placeholders": {
+      "path": { "type": "String" }
+    }
+  },
   "templateName": "Nom du Modèle",
   "templateNameHint": "ex. Liste de Mixage",
   "templateItems": "Éléments du Modèle",
@@ -804,7 +810,7 @@
     }
   },
   "deleteSelectedTemplates": "Supprimer la sélection",
-  "deleteSelectedTemplatesConfirm": "Voulez-vous vraiment supprimer {count} modèle{plural} ?",
+  "deleteSelectedTemplatesConfirm": "Voulez-vous vraiment supprimer {count} modèle{plural} ? Seules les entrées des modèles sont supprimées — les dossiers des modèles sur votre disque sont conservés.",
   "@deleteSelectedTemplatesConfirm": {
     "placeholders": {
       "count": { "type": "int" },

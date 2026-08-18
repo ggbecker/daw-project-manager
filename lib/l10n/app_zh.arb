@@ -738,7 +738,13 @@
   "createTemplate": "创建模板",
   "editTemplate": "编辑模板",
   "deleteTemplate": "删除模板",
-  "deleteTemplateConfirm": "确定要删除模板「{name}」吗？",
+  "deleteTemplateConfirm": "确定要删除模板「{name}」吗？仅删除模板记录，磁盘上的模板文件夹会保留。",
+  "deleteTemplateFolderKept": "保留在磁盘上的文件夹：{path}",
+  "@deleteTemplateFolderKept": {
+    "placeholders": {
+      "path": { "type": "String" }
+    }
+  },
   "templateName": "模板名称",
   "templateNameHint": "例如：混音清单",
   "templateItems": "模板项目",
@@ -804,7 +810,7 @@
     }
   },
   "deleteSelectedTemplates": "删除所选",
-  "deleteSelectedTemplatesConfirm": "确定要删除{count}个模板{plural}吗?",
+  "deleteSelectedTemplatesConfirm": "确定要删除{count}个模板{plural}吗?仅删除模板记录，磁盘上的模板文件夹会保留。",
   "@deleteSelectedTemplatesConfirm": {
     "placeholders": {
       "count": { "type": "int" },

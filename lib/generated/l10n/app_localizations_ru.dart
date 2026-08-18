@@ -917,7 +917,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String deleteTemplateConfirm(String name) {
-    return 'Вы уверены, что хотите удалить шаблон \"$name\"?';
+    return 'Вы уверены, что хотите удалить шаблон \"$name\"? Удаляется только запись о шаблоне — папка шаблона на диске сохраняется.';
+  }
+
+  @override
+  String deleteTemplateFolderKept(String path) {
+    return 'Папка сохраняется на диске: $path';
   }
 
   @override
@@ -1072,7 +1077,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String deleteSelectedTemplatesConfirm(int count, String plural) {
-    return 'Удалить выбранные шаблоны ($count$plural)?';
+    return 'Удалить выбранные шаблоны ($count$plural)? Удаляются только записи о шаблонах — папки шаблонов на диске сохраняются.';
   }
 
   @override

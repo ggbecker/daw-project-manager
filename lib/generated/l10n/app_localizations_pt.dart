@@ -915,7 +915,12 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String deleteTemplateConfirm(String name) {
-    return 'Tem certeza que deseja excluir o template \"$name\"?';
+    return 'Tem certeza que deseja excluir o template \"$name\"? Apenas o registro do template é removido — a pasta do template no seu disco é mantida.';
+  }
+
+  @override
+  String deleteTemplateFolderKept(String path) {
+    return 'Pasta mantida no disco: $path';
   }
 
   @override
@@ -1073,7 +1078,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String deleteSelectedTemplatesConfirm(int count, String plural) {
-    return 'Tem certeza de que deseja excluir $count template$plural?';
+    return 'Tem certeza de que deseja excluir $count template$plural? Apenas os registros dos templates são removidos — as pastas dos templates no seu disco são mantidas.';
   }
 
   @override

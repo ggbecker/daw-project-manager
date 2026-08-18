@@ -917,7 +917,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String deleteTemplateConfirm(String name) {
-    return '¿Estás seguro de eliminar la plantilla \"$name\"?';
+    return '¿Estás seguro de eliminar la plantilla \"$name\"? Solo se elimina la entrada de la plantilla; la carpeta de la plantilla en tu disco se conserva.';
+  }
+
+  @override
+  String deleteTemplateFolderKept(String path) {
+    return 'Carpeta conservada en el disco: $path';
   }
 
   @override
@@ -1075,7 +1080,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String deleteSelectedTemplatesConfirm(int count, String plural) {
-    return '¿Seguro que quieres eliminar $count plantilla$plural?';
+    return '¿Seguro que quieres eliminar $count plantilla$plural? Solo se eliminan las entradas de las plantillas; las carpetas de plantillas en tu disco se conservan.';
   }
 
   @override

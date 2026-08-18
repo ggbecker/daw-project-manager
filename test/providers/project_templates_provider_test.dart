@@ -60,6 +60,38 @@ void main() {
       expect(box.length, 1);
     });
 
+    // A ProjectTemplate points at a folder the user owns and maintains — the
+    // app only ever copies it. Deleting the template must stay a Hive-only
+    // operation, so a user removing a bookmark can never lose the real work.
+    test('deleteTemplate leaves the template source folder on disk untouched', () async {
+      final sourceFolder = Directory('${tempDir.path}/Song Template')
+        ..createSync(recursive: true);
+      final mainFile = File('${sourceFolder.path}/Song Template.als')
+        ..writeAsStringSync('project data');
+
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final notifier = container.read(projectTemplatesNotifierProvider.notifier);
+
+      await notifier.addTemplate(
+        ProjectTemplate(
+          id: 'template-1',
+          name: 'Song Template',
+          sourceFolderPath: sourceFolder.path,
+          mainFileRelativePath: 'Song Template.als',
+          createdAt: DateTime(2025, 1, 1),
+          updatedAt: DateTime(2025, 1, 1),
+        ),
+      );
+      await notifier.deleteTemplate('template-1');
+
+      final box = await Hive.openBox<ProjectTemplate>('projectTemplates');
+      expect(box.get('template-1'), isNull);
+      expect(sourceFolder.existsSync(), isTrue);
+      expect(mainFile.existsSync(), isTrue);
+      expect(mainFile.readAsStringSync(), 'project data');
+    });
+
     test('deleteTemplate removes only the targeted template', () async {
       final container = ProviderContainer();
       addTearDown(container.dispose);

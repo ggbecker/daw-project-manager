@@ -922,7 +922,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String deleteTemplateConfirm(String name) {
-    return 'Êtes-vous sûr de vouloir supprimer le modèle \"$name\" ?';
+    return 'Êtes-vous sûr de vouloir supprimer le modèle \"$name\" ? Seule l\'entrée du modèle est supprimée — le dossier du modèle sur votre disque est conservé.';
+  }
+
+  @override
+  String deleteTemplateFolderKept(String path) {
+    return 'Dossier conservé sur le disque : $path';
   }
 
   @override
@@ -1079,7 +1084,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String deleteSelectedTemplatesConfirm(int count, String plural) {
-    return 'Voulez-vous vraiment supprimer $count modèle$plural ?';
+    return 'Voulez-vous vraiment supprimer $count modèle$plural ? Seules les entrées des modèles sont supprimées — les dossiers des modèles sur votre disque sont conservés.';
   }
 
   @override

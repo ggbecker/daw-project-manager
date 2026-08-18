@@ -870,7 +870,7 @@
   "createTemplate": "Create Template",
   "editTemplate": "Edit Template",
   "deleteTemplate": "Delete Template",
-  "deleteTemplateConfirm": "Are you sure you want to delete template \"{name}\"?",
+  "deleteTemplateConfirm": "Are you sure you want to delete template \"{name}\"? Only the template entry is removed — the template folder on your disk is kept.",
   "@deleteTemplateConfirm": {
     "placeholders": {
       "name": {
@@ -879,6 +879,12 @@
 }
     
 }
+  },
+  "deleteTemplateFolderKept": "Folder kept on disk: {path}",
+  "@deleteTemplateFolderKept": {
+    "placeholders": {
+      "path": { "type": "String" }
+    }
   },
   "templateName": "Template Name",
   "templateNameHint": "e.g., Mixing Checklist",
@@ -966,7 +972,7 @@
     }
   },
   "deleteSelectedTemplates": "Delete Selected",
-  "deleteSelectedTemplatesConfirm": "Are you sure you want to delete {count} template{plural}?",
+  "deleteSelectedTemplatesConfirm": "Are you sure you want to delete {count} template{plural}? Only the template entries are removed — the template folders on your disk are kept.",
   "@deleteSelectedTemplatesConfirm": {
     "placeholders": {
       "count": { "type": "int" },

@@ -900,7 +900,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String deleteTemplateConfirm(String name) {
-    return '确定要删除模板「$name」吗？';
+    return '确定要删除模板「$name」吗？仅删除模板记录，磁盘上的模板文件夹会保留。';
+  }
+
+  @override
+  String deleteTemplateFolderKept(String path) {
+    return '保留在磁盘上的文件夹：$path';
   }
 
   @override
@@ -1049,7 +1054,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String deleteSelectedTemplatesConfirm(int count, String plural) {
-    return '确定要删除$count个模板$plural吗?';
+    return '确定要删除$count个模板$plural吗?仅删除模板记录，磁盘上的模板文件夹会保留。';
   }
 
   @override

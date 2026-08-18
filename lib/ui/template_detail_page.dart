@@ -113,7 +113,18 @@ class _TemplateDetailPageState extends ConsumerState<TemplateDetailPage> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(l10n.deleteTemplate),
-        content: Text(l10n.deleteTemplateConfirm(template.name)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l10n.deleteTemplateConfirm(template.name)),
+            const SizedBox(height: 12),
+            Text(
+              l10n.deleteTemplateFolderKept(template.sourceFolderPath),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
@@ -121,7 +132,10 @@ class _TemplateDetailPageState extends ConsumerState<TemplateDetailPage> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
             child: Text(l10n.delete),
           ),
         ],

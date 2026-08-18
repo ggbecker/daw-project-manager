@@ -918,7 +918,12 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String deleteTemplateConfirm(String name) {
-    return 'Möchten Sie die Vorlage \"$name\" wirklich löschen?';
+    return 'Möchten Sie die Vorlage \"$name\" wirklich löschen? Nur der Vorlageneintrag wird entfernt — der Vorlagenordner auf Ihrer Festplatte bleibt erhalten.';
+  }
+
+  @override
+  String deleteTemplateFolderKept(String path) {
+    return 'Ordner bleibt auf der Festplatte erhalten: $path';
   }
 
   @override
@@ -1074,7 +1079,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String deleteSelectedTemplatesConfirm(int count, String plural) {
-    return 'Möchten Sie $count Vorlage$plural wirklich löschen?';
+    return 'Möchten Sie $count Vorlage$plural wirklich löschen? Nur die Vorlageneinträge werden entfernt — die Vorlagenordner auf Ihrer Festplatte bleiben erhalten.';
   }
 
   @override

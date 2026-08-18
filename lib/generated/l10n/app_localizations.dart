@@ -1628,8 +1628,14 @@ abstract class AppLocalizations {
   /// No description provided for @deleteTemplateConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Are you sure you want to delete template \"{name}\"?'**
+  /// **'Are you sure you want to delete template \"{name}\"? Only the template entry is removed — the template folder on your disk is kept.'**
   String deleteTemplateConfirm(String name);
+
+  /// No description provided for @deleteTemplateFolderKept.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder kept on disk: {path}'**
+  String deleteTemplateFolderKept(String path);
 
   /// No description provided for @templateName.
   ///
@@ -1898,7 +1904,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteSelectedTemplatesConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Are you sure you want to delete {count} template{plural}?'**
+  /// **'Are you sure you want to delete {count} template{plural}? Only the template entries are removed — the template folders on your disk are kept.'**
   String deleteSelectedTemplatesConfirm(int count, String plural);
 
   /// No description provided for @templatesDeleted.
