@@ -1,5 +1,12 @@
 {
   "@@locale": "zh",
+  "launchFailureNoAssociation": "Windows 未设置用于打开 {extension} 文件的应用，因此无法打开此项目。请在 Windows 设置中为 {extension} 设置默认应用，或改从你的 DAW 中打开该项目。",
+  "launchDiagnosticsAction": "详情",
+  "launchDiagnosticsTitle": "启动诊断",
+  "launchDiagnosticsIntro": "应用在尝试打开此项目时记录的内容。请将其复制到错误报告中，以帮助查找原因。",
+  "launchDiagnosticsCopy": "复制",
+  "launchDiagnosticsCopied": "启动诊断已复制到剪贴板",
+  "launchDiagnosticsEmpty": "上次启动尝试没有记录任何内容。",
   "appTitle": "DAW项目管理器",
   "@appTitle": {
     "description": "The application title"

@@ -1,5 +1,12 @@
 {
   "@@locale": "ru",
+  "launchFailureNoAssociation": "В Windows не назначено приложение для открытия файлов {extension}, поэтому этот проект открыть не удаётся. Назначьте приложение по умолчанию для {extension} в параметрах Windows или откройте проект из самой DAW.",
+  "launchDiagnosticsAction": "Подробности",
+  "launchDiagnosticsTitle": "Диагностика запуска",
+  "launchDiagnosticsIntro": "Что приложение записало при попытке открыть этот проект. Скопируйте это в отчёт об ошибке, чтобы помочь найти причину.",
+  "launchDiagnosticsCopy": "Копировать",
+  "launchDiagnosticsCopied": "Диагностика запуска скопирована в буфер обмена",
+  "launchDiagnosticsEmpty": "Для последней попытки запуска ничего не записано.",
   "appTitle": "Менеджер проектов DAW",
   "@appTitle": {
     "description": "The application title"

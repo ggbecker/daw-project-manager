@@ -9,6 +9,29 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
+  String launchFailureNoAssociation(String extension) {
+    return 'Windows 未设置用于打开 $extension 文件的应用，因此无法打开此项目。请在 Windows 设置中为 $extension 设置默认应用，或改从你的 DAW 中打开该项目。';
+  }
+
+  @override
+  String get launchDiagnosticsAction => '详情';
+
+  @override
+  String get launchDiagnosticsTitle => '启动诊断';
+
+  @override
+  String get launchDiagnosticsIntro => '应用在尝试打开此项目时记录的内容。请将其复制到错误报告中，以帮助查找原因。';
+
+  @override
+  String get launchDiagnosticsCopy => '复制';
+
+  @override
+  String get launchDiagnosticsCopied => '启动诊断已复制到剪贴板';
+
+  @override
+  String get launchDiagnosticsEmpty => '上次启动尝试没有记录任何内容。';
+
+  @override
   String get appTitle => 'DAW项目管理器';
 
   @override

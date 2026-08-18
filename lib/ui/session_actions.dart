@@ -1,13 +1,16 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../generated/l10n/app_localizations.dart';
 import '../models/music_project.dart';
 import '../providers/providers.dart';
 import '../utils/file_launcher.dart';
+import '../utils/launch_diagnostics.dart';
 import 'dialogs/daw_launch_command_dialog.dart';
+import 'dialogs/launch_diagnostics_dialog.dart';
 
 /// Launches [project] in its DAW, preferring a Linux-only registered binary
 /// override for its DAW type (see Settings > DAW Locations) over the OS
@@ -23,10 +26,27 @@ Future<void> launchProjectInDaw(
   WidgetRef ref,
   MusicProject project,
 ) async {
-  final exists =
-      File(project.filePath).existsSync() ||
-      Directory(project.filePath).existsSync();
+  // Start a fresh record so the "Details" dialog on a failure shows this
+  // attempt rather than every attempt since the app started.
+  LaunchDiagnostics.clear();
+  LaunchDiagnostics.record('launch requested', {
+    'os': Platform.operatingSystem,
+    'osVersion': Platform.operatingSystemVersion,
+    'dawType': project.dawType,
+    'dawVersion': project.dawVersion,
+  });
+
+  final fileExists = File(project.filePath).existsSync();
+  final directoryExists = Directory(project.filePath).existsSync();
+  final exists = fileExists || directoryExists;
+  LaunchDiagnostics.record('project path', {
+    'fileExists': fileExists,
+    'directoryExists': directoryExists,
+    ...LaunchDiagnostics.describePath(project.filePath),
+    'path': project.filePath,
+  });
   if (!exists) {
+    LaunchDiagnostics.record('FAILED: project path does not exist');
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context)!.fileMissing)),
@@ -38,6 +58,7 @@ Future<void> launchProjectInDaw(
   if (Platform.isLinux && project.dawType != null) {
     final repo = await ref.read(repositoryProvider.future);
     final binaryPath = repo.getDawLaunchCommand(project.dawType!);
+    LaunchDiagnostics.record('linux binary override', {'binaryPath': binaryPath});
     if (binaryPath == null) {
       // No override configured yet: on Linux there's no reliable OS-level
       // file association to fall back on for most DAWs (see the class doc
@@ -68,28 +89,124 @@ Future<void> launchProjectInDaw(
       binaryPath,
       project.filePath,
     );
+    LaunchDiagnostics.record('launch result', {'launched': launched});
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          launched
-              ? AppLocalizations.of(context)!.launchingProject(project.displayName)
-              : AppLocalizations.of(context)!.failedToLaunchProject(project.displayName),
-        ),
-      ),
-    );
+    showLaunchResultSnackBar(context, project, launched);
     return;
   }
 
   final success = await FileLauncher.launchProject(project.filePath);
+  LaunchDiagnostics.record('launch result', {'launched': success});
 
   if (!context.mounted) return;
-  ScaffoldMessenger.of(context).showSnackBar(
+  showLaunchResultSnackBar(context, project, success);
+}
+
+/// Reports the outcome of a launch attempt.
+///
+/// A success is the plain one-line message it has always been. A failure
+/// carries the record of the attempt in the snackbar itself, with **Copy**
+/// in the action slot — `Failed to launch [project]` on its own is the
+/// report we keep receiving and it says nothing about *why*, and asking a
+/// tester to go and find a log file (behind a Settings toggle that is off
+/// by default, and that they would have had to enable *before* hitting the
+/// bug) loses most of them. Copying from the message that just appeared is
+/// the one step they will actually take.
+///
+/// The log sits in a scroll view rather than expanding to fit: a snackbar
+/// that grows to the height of a 20-line report covers the app. "Details"
+/// opens the same content in [showLaunchDiagnosticsDialog], which is
+/// selectable and comfortable to read at length.
+@visibleForTesting
+void showLaunchResultSnackBar(
+  BuildContext context,
+  MusicProject project,
+  bool launched,
+) {
+  final l10n = AppLocalizations.of(context)!;
+  final messenger = ScaffoldMessenger.of(context);
+
+  if (launched) {
+    messenger.showSnackBar(
+      SnackBar(content: Text(l10n.launchingProject(project.displayName))),
+    );
+    return;
+  }
+
+  final report = LaunchDiagnostics.report;
+  final cause = describeLaunchFailureCause(l10n);
+  // Long enough to read a few lines and reach the button, since the whole
+  // point is that the tester leaves with the text in their clipboard.
+  const failureDuration = Duration(seconds: 30);
+
+  messenger.showSnackBar(
     SnackBar(
-      content: Text(
-        success
-            ? AppLocalizations.of(context)!.launchingProject(project.displayName)
-            : AppLocalizations.of(context)!.failedToLaunchProject(project.displayName),
+      duration: failureDuration,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l10n.failedToLaunchProject(project.displayName)),
+          // When the diagnostics identified the cause outright, lead with it
+          // in plain language — a tester should not have to spot
+          // `openCommand=null` in the log to learn that Windows has nothing
+          // registered to open their project files.
+          if (cause != null) ...[
+            const SizedBox(height: 6),
+            Text(cause, style: const TextStyle(fontWeight: FontWeight.w600)),
+          ],
+          if (report.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 132),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  // Tinted with the snackbar's own text colour so the panel
+                  // reads as inset whichever way round the theme puts the
+                  // snackbar (its surface is the *inverse* of the app's, so
+                  // a hardcoded black or white overlay is wrong half the
+                  // time).
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onInverseSurface
+                      .withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: SingleChildScrollView(
+                  child: Text(
+                    report,
+                    style: const TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 10,
+                      height: 1.45,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () {
+                  messenger.hideCurrentSnackBar();
+                  if (context.mounted) showLaunchDiagnosticsDialog(context);
+                },
+                child: Text(l10n.launchDiagnosticsAction),
+              ),
+            ),
+          ],
+        ],
+      ),
+      action: SnackBarAction(
+        label: l10n.launchDiagnosticsCopy,
+        onPressed: () async {
+          await Clipboard.setData(ClipboardData(text: report));
+          messenger.showSnackBar(
+            SnackBar(content: Text(l10n.launchDiagnosticsCopied)),
+          );
+        },
       ),
     ),
   );

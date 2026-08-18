@@ -112,6 +112,48 @@ abstract class AppLocalizations {
     Locale('zh'),
   ];
 
+  /// Shown when Windows has no registered application for the project file type.
+  ///
+  /// In en, this message translates to:
+  /// **'Windows has no app set to open {extension} files, so it cannot open this project. Set a default app for {extension} in Windows Settings, or open the project from your DAW instead.'**
+  String launchFailureNoAssociation(String extension);
+
+  /// No description provided for @launchDiagnosticsAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get launchDiagnosticsAction;
+
+  /// No description provided for @launchDiagnosticsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Launch diagnostics'**
+  String get launchDiagnosticsTitle;
+
+  /// No description provided for @launchDiagnosticsIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'What the app recorded while trying to open this project. Copy it into a bug report to help track down the cause.'**
+  String get launchDiagnosticsIntro;
+
+  /// No description provided for @launchDiagnosticsCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get launchDiagnosticsCopy;
+
+  /// No description provided for @launchDiagnosticsCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Launch diagnostics copied to clipboard'**
+  String get launchDiagnosticsCopied;
+
+  /// No description provided for @launchDiagnosticsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing was recorded for the last launch attempt.'**
+  String get launchDiagnosticsEmpty;
+
   /// The application title
   ///
   /// In en, this message translates to:
