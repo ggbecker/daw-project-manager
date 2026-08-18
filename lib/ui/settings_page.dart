@@ -35,6 +35,7 @@ import 'google_drive_sync_page.dart' show GoogleDriveSyncSection;
 import 'metadata_extraction_info_page.dart';
 import 'notification_settings_page.dart' show WorkTimerSection;
 import 'onboarding_wizard_page.dart';
+import 'widgets/parts_export_card.dart';
 import 'widgets/desktop_title_bar.dart';
 import 'widgets/language_switcher.dart' show LanguageSwitcher;
 import 'widgets/license_dialog.dart';
@@ -1836,55 +1837,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
         const SizedBox(height: 12),
 
-        Card(
-          clipBehavior: Clip.antiAlias,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                const Icon(Icons.table_view_outlined),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(l10n.exportAllPartsCsv, style: Theme.of(context).textTheme.titleMedium),
-                      const SizedBox(height: 2),
-                      Text(
-                        l10n.exportAllPartsCsvSubtitle,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        l10n.exportAllPartsXlsxSubtitle,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    FilledButton.tonalIcon(
-                      onPressed:
-                          _busy ? null : () => _exportAllParts(asXlsx: false),
-                      icon: const Icon(Icons.table_view_outlined),
-                      label: const Text('CSV'),
-                    ),
-                    const SizedBox(height: 8),
-                    FilledButton.tonalIcon(
-                      onPressed:
-                          _busy ? null : () => _exportAllParts(asXlsx: true),
-                      icon: const Icon(Icons.grid_on),
-                      label: const Text('Excel (.xlsx)'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
+        PartsExportCard(
+          busy: _busy,
+          onExport: ({required bool asXlsx}) =>
+              _exportAllParts(asXlsx: asXlsx),
         ),
       ],
     );
