@@ -1980,9 +1980,33 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          l10n.dawLaunchCommandsSectionDescription,
-          style: Theme.of(context).textTheme.bodySmall,
+        // Titled intro card. Kept separate from the DAW list below so more
+        // DAW Locations subsections can be added as their own cards later.
+        Card(
+          clipBehavior: Clip.antiAlias,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.terminal_outlined),
+                    const SizedBox(width: 10),
+                    Text(
+                      l10n.dawLaunchCommandsTabLabel,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  l10n.dawLaunchCommandsSectionDescription,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ),
         ),
         const SizedBox(height: 12),
         if (dawTypes.isEmpty)
