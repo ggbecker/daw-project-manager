@@ -5,7 +5,9 @@ import 'package:hive_ce/hive.dart';
 import 'package:trina_grid/trina_grid.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+// hide TextDirection: intl exports its own (LTR/RTL) which would shadow the
+// dart:ui one that TextPainter needs (see dawColumnWidth).
+import 'package:intl/intl.dart' hide TextDirection;
 import 'package:flutter/foundation.dart'
     show debugPrint, kDebugMode, kIsWeb, listEquals, visibleForTesting;
 import 'package:flutter/services.dart';
@@ -5537,6 +5539,41 @@ class _GroupOrderStableRowGroupDelegate extends TrinaRowGroupTreeDelegate {
 /// entire grid with a brand new [TrinaGridStateManager] whose groups start
 /// out collapsed by default, with nothing left to read the old expand state
 /// back from.
+/// The "DAW" grid column label for a project: `"<DAW> <version>"` when a
+/// version is known (e.g. `"Logic Pro 12.3.1"`), just the DAW name otherwise,
+/// or empty when the DAW is unknown.
+@visibleForTesting
+String dawDisplayLabel(String? dawType, String? dawVersion) {
+  if (dawType == null || dawType.isEmpty) return '';
+  if (dawVersion != null && dawVersion.isNotEmpty) return '$dawType $dawVersion';
+  return dawType;
+}
+
+/// Width for the "DAW" grid column, sized to the widest `"<DAW> <version>"`
+/// label actually present in [labels] — measured with a [TextPainter] since
+/// the cell font is proportional — plus room for the DAW logo and cell
+/// padding. Clamped so a library of one short-named DAW can't make it
+/// vanish, and a stray long label can't let it hog the table. Recomputed
+/// each time the grid is (re)built, so it tracks the visible rows: this is
+/// what keeps e.g. "Logic Pro 12.3.1" from being clipped at the old fixed
+/// 140px.
+@visibleForTesting
+double dawColumnWidth(Iterable<String> labels) {
+  const style = TextStyle(fontSize: 14); // TrinaGrid's default cell text size
+  const chrome = 16.0 /*logo*/ + 6.0 /*logo gap*/ + 30.0 /*cell padding + caret*/;
+  var widest = 0.0;
+  for (final label in labels.toSet()) {
+    if (label.isEmpty) continue;
+    final painter = TextPainter(
+      text: TextSpan(text: label, style: style),
+      textDirection: TextDirection.ltr,
+      maxLines: 1,
+    )..layout();
+    if (painter.width > widest) widest = painter.width;
+  }
+  return (widest + chrome).clamp(140.0, 280.0);
+}
+
 @visibleForTesting
 Set<String> expandedGroupNames(List<TrinaRow> rows) {
   return {
@@ -6630,11 +6667,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable>
       effectivePreviewPathFor(project);
 
   TrinaRow _projectToRow(MusicProject p) {
-    final dawDisplay = p.dawType != null
-        ? (p.dawVersion != null && p.dawVersion!.isNotEmpty
-              ? '${p.dawType} ${p.dawVersion}'
-              : p.dawType!)
-        : '';
+    final dawDisplay = dawDisplayLabel(p.dawType, p.dawVersion);
     return TrinaRow(
       cells: {
         'checkbox': TrinaCell(value: ''),
@@ -7175,7 +7208,9 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable>
         field: 'dawType',
         type: TrinaColumnType.text(),
         enableEditingMode: false,
-        width: 140,
+        width: dawColumnWidth(
+          widget.projects.map((p) => dawDisplayLabel(p.dawType, p.dawVersion)),
+        ),
         minWidth: 100,
         renderer: (rendererContext) {
           final project =

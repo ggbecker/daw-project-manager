@@ -42,6 +42,62 @@ TrinaRow _groupHeaderRow(
 }
 
 void main() {
+  // dawColumnWidth uses a TextPainter; text layout needs the test binding.
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  group('dawDisplayLabel', () {
+    test('combines DAW and version when a version is known', () {
+      expect(dawDisplayLabel('Logic Pro', '12.3.1'), 'Logic Pro 12.3.1');
+    });
+
+    test('is just the DAW name when the version is null or blank', () {
+      expect(dawDisplayLabel('Reaper', null), 'Reaper');
+      expect(dawDisplayLabel('Reaper', ''), 'Reaper');
+    });
+
+    test('is empty when the DAW is unknown', () {
+      expect(dawDisplayLabel(null, '1.0'), isEmpty);
+      expect(dawDisplayLabel('', '1.0'), isEmpty);
+    });
+  });
+
+  group('dawColumnWidth', () {
+    test('falls back to the clamp floor for no labels', () {
+      expect(dawColumnWidth(const []), 140.0);
+      expect(dawColumnWidth(const ['', '']), 140.0);
+    });
+
+    test('widens for a longer "<DAW> <version>" label', () {
+      final short = dawColumnWidth(const ['Reaper']);
+      final long = dawColumnWidth(const ['Logic Pro 12.3.1']);
+      expect(long, greaterThan(short));
+    });
+
+    test('sizes "Logic Pro 12.3.1" past the old fixed 140px', () {
+      // The whole point: the version used to be clipped at width: 140.
+      expect(dawColumnWidth(const ['Logic Pro 12.3.1']), greaterThan(140.0));
+    });
+
+    test('only the widest label matters, order and dupes do not', () {
+      final a = dawColumnWidth(const [
+        'Reaper 7.78',
+        'Logic Pro 12.3.1',
+        'Ableton Live 12.0',
+      ]);
+      final b = dawColumnWidth(const [
+        'Logic Pro 12.3.1',
+        'Logic Pro 12.3.1',
+        'Reaper 7.78',
+        'Ableton Live 12.0',
+      ]);
+      expect(a, b);
+    });
+
+    test('clamps a runaway label to the ceiling', () {
+      expect(dawColumnWidth(['X' * 500]), 280.0);
+    });
+  });
+
   group('RailAction', () {
     // Regression test: the left rail's trailing actions (Create Project,
     // Rescan, Settings, etc.) used to be a bare IconButton with a sibling
