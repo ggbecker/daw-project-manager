@@ -588,10 +588,15 @@ Future<void> _main(List<String> args) async {
   // 1b. Single-instance guard (Windows/Linux only).
   // macOS is handled natively in AppDelegate.swift before Dart starts.
   if (!kIsWeb && Platform.isWindows) {
+    // Not a fixed port: a build pinned to its own app-data directory binds
+    // its own, so it starts alongside the installed app instead of being
+    // forwarded into it. See singleInstancePort. Resolved before the try so
+    // the connect-to-the-existing-instance path below uses the same one.
+    final port = singleInstancePort;
     try {
       _singleInstanceSocket = await ServerSocket.bind(
         InternetAddress.loopbackIPv4,
-        57321,
+        port,
       );
       // Any connection on this port is a second launch attempt asking us to
       // surface the (possibly tray-hidden) window instead of starting fresh.
@@ -621,7 +626,7 @@ Future<void> _main(List<String> args) async {
       try {
         final socket = await Socket.connect(
           InternetAddress.loopbackIPv4,
-          57321,
+          port,
           timeout: const Duration(seconds: 2),
         );
         socket.add(utf8.encode(jsonEncode(args)));
