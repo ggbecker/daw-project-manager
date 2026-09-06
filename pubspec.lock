@@ -444,10 +444,9 @@ packages:
   ffmpeg_kit_flutter_new_audio:
     dependency: "direct main"
     description:
-      name: ffmpeg_kit_flutter_new_audio
-      sha256: "79e51732fa9bb5e88992ffdc84cbb78babbb44a773cd1f75f11290b295959c71"
-      url: "https://pub.dev"
-    source: hosted
+      path: "third_party/ffmpeg_kit_flutter_new_audio"
+      relative: true
+    source: path
     version: "2.5.2"
   ffmpeg_kit_flutter_platform_interface:
     dependency: transitive

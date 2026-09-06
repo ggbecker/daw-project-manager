@@ -137,6 +137,16 @@ dependency_overrides:
   # third_party/windows_taskbar/PATCHES.md and issue #119.
   windows_taskbar:
     path: third_party/windows_taskbar
+  # ffmpeg_kit_flutter_new_audio is only ever called in-process on Android and
+  # iOS (AudioAnalysisService._usesInProcessFfmpeg). Its published desktop
+  # native layers each download a ~19 MB prebuilt ffmpeg bundle at build time
+  # (linux/windows CMake) or vendor unsigned .framework bundles that fail
+  # CodeSign in CI (macos) — all for code no desktop build path calls. This
+  # vendored copy keeps android/ios identical to upstream and stubs
+  # linux/macos/windows to a no-op plugin. See
+  # third_party/ffmpeg_kit_flutter_new_audio/README-vendor.md.
+  ffmpeg_kit_flutter_new_audio:
+    path: third_party/ffmpeg_kit_flutter_new_audio
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
