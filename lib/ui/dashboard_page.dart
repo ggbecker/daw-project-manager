@@ -5560,7 +5560,7 @@ String dawDisplayLabel(String? dawType, String? dawVersion) {
 @visibleForTesting
 double dawColumnWidth(Iterable<String> labels) {
   const style = TextStyle(fontSize: 14); // TrinaGrid's default cell text size
-  const chrome = 16.0 /*logo*/ + 6.0 /*logo gap*/ + 30.0 /*cell padding + caret*/;
+  const chrome = 16.0 /*logo*/ + 6.0 /*logo gap*/ + 36.0 /*cell padding + slack*/;
   var widest = 0.0;
   for (final label in labels.toSet()) {
     if (label.isEmpty) continue;
@@ -5571,7 +5571,10 @@ double dawColumnWidth(Iterable<String> labels) {
     )..layout();
     if (painter.width > widest) widest = painter.width;
   }
-  return (widest + chrome).clamp(140.0, 280.0);
+  // 1.04×: TextPainter measures the raw glyph advance; the Text widget wants a
+  // hair more before it stops showing an ellipsis (sub-pixel rounding, the
+  // Flexible's constraint). A proportional bump keeps longer labels safe too.
+  return (widest * 1.04 + chrome).clamp(140.0, 280.0);
 }
 
 @visibleForTesting
