@@ -6,7 +6,9 @@ import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.media.MediaMuxer
 import java.io.File
+import java.io.RandomAccessFile
 import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 /**
  * Transcodes an audio file to AAC in an `.m4a` container, using only the
@@ -23,8 +25,12 @@ import java.nio.ByteBuffer
  * same reason — Apple ships no MP3 encoder either — so `.m4a` is a format
  * this app has been sending from Macs all along.
  *
- * Supported inputs are whatever `MediaExtractor` can open: WAV and FLAC yes,
- * AIFF no. Callers fall back to sharing the original file when this throws.
+ * WAV is read straight from its RIFF header rather than through
+ * `MediaExtractor` — that extractor rejects a lot of perfectly valid PCM
+ * WAV on many devices (`setDataSource failed`), and it never handles 24-bit
+ * or 32-bit-float bounces, which is what DAWs actually export. Everything
+ * else still goes through `MediaExtractor` (FLAC yes, AIFF no). Callers fall
+ * back to sharing the original file when this throws.
  */
 object AudioShareConverter {
 
@@ -46,10 +52,258 @@ object AudioShareConverter {
         val output = File(outputPath)
         output.parentFile?.mkdirs()
         try {
-            transcode(inputPath, outputPath)
+            if (inputPath.substringAfterLast('.', "").lowercase() == "wav") {
+                transcodeWav(inputPath, outputPath)
+            } else {
+                transcode(inputPath, outputPath)
+            }
         } catch (e: Throwable) {
             output.delete()
             throw e
+        }
+    }
+
+    // ── WAV path ────────────────────────────────────────────────────────────
+    // Parse the header ourselves, feed the PCM straight to the AAC encoder.
+
+    private data class WavInfo(
+        /** 1 = PCM integer, 3 = IEEE float. */
+        val audioFormat: Int,
+        val sampleRate: Int,
+        val channelCount: Int,
+        val bitsPerSample: Int,
+        val dataOffset: Long,
+        val dataSize: Long,
+    )
+
+    private fun leU16(b: ByteArray, off: Int): Int =
+        (b[off].toInt() and 0xFF) or ((b[off + 1].toInt() and 0xFF) shl 8)
+
+    private fun leU32(b: ByteArray, off: Int): Long =
+        (b[off].toLong() and 0xFF) or
+            ((b[off + 1].toLong() and 0xFF) shl 8) or
+            ((b[off + 2].toLong() and 0xFF) shl 16) or
+            ((b[off + 3].toLong() and 0xFF) shl 24)
+
+    private fun readWavInfo(path: String): WavInfo {
+        RandomAccessFile(path, "r").use { raf ->
+            val riff = ByteArray(12)
+            raf.readFully(riff)
+            require(
+                String(riff, 0, 4, Charsets.US_ASCII) == "RIFF" &&
+                    String(riff, 8, 4, Charsets.US_ASCII) == "WAVE",
+            ) { "Not a RIFF/WAVE file" }
+
+            var af = 1
+            var sr = 0
+            var ch = 0
+            var bps = 0
+            var dataOffset = -1L
+            var dataSize = -1L
+
+            val hdr = ByteArray(8)
+            while (raf.filePointer + 8 <= raf.length()) {
+                raf.readFully(hdr)
+                val id = String(hdr, 0, 4, Charsets.US_ASCII)
+                val size = leU32(hdr, 4)
+                val bodyStart = raf.filePointer
+                when (id) {
+                    "fmt " -> {
+                        val body = ByteArray(size.toInt().coerceAtLeast(16))
+                        raf.readFully(body, 0, minOf(size.toInt(), body.size))
+                        af = leU16(body, 0)
+                        ch = leU16(body, 2)
+                        sr = leU32(body, 4).toInt()
+                        bps = leU16(body, 14)
+                        // WAVE_FORMAT_EXTENSIBLE — the real format tag is the
+                        // first 2 bytes of the SubFormat GUID.
+                        if (af == 0xFFFE && size >= 26) af = leU16(body, 24)
+                    }
+                    "data" -> {
+                        dataOffset = bodyStart
+                        dataSize = size
+                    }
+                }
+                // RIFF chunks are word-aligned.
+                raf.seek(bodyStart + size + (size and 1L))
+                if (dataOffset >= 0 && sr > 0) break
+            }
+
+            require(sr > 0 && ch > 0 && bps > 0 && dataOffset >= 0) {
+                "Malformed WAV header (rate=$sr ch=$ch bits=$bps)"
+            }
+            if (dataSize <= 0 || dataOffset + dataSize > raf.length()) {
+                dataSize = raf.length() - dataOffset
+            }
+            return WavInfo(af, sr, ch, bps, dataOffset, dataSize)
+        }
+    }
+
+    /** Converts [len] bytes of interleaved WAV samples in [src] to 16-bit LE PCM. */
+    private fun toPcm16(src: ByteArray, len: Int, wav: WavInfo): ByteArray {
+        val srcBps = wav.bitsPerSample / 8
+        if (wav.audioFormat == 1 && wav.bitsPerSample == 16) {
+            return if (len == src.size) src else src.copyOf(len)
+        }
+        val samples = len / srcBps
+        val out = ByteArray(samples * 2)
+        val ob = ByteBuffer.wrap(out).order(ByteOrder.LITTLE_ENDIAN)
+        when {
+            wav.audioFormat == 3 && wav.bitsPerSample == 32 -> {
+                val fb = ByteBuffer.wrap(src, 0, len).order(ByteOrder.LITTLE_ENDIAN)
+                repeat(samples) {
+                    val v = (fb.float.coerceIn(-1f, 1f) * 32767f).toInt()
+                    ob.putShort(v.toShort())
+                }
+            }
+            wav.audioFormat == 1 && wav.bitsPerSample == 24 -> {
+                var p = 0
+                repeat(samples) {
+                    val s24 = (src[p + 2].toInt() shl 16) or
+                        ((src[p + 1].toInt() and 0xFF) shl 8) or
+                        (src[p].toInt() and 0xFF)
+                    ob.putShort((s24 shr 8).toShort())
+                    p += 3
+                }
+            }
+            wav.audioFormat == 1 && wav.bitsPerSample == 32 -> {
+                val ib = ByteBuffer.wrap(src, 0, len).order(ByteOrder.LITTLE_ENDIAN)
+                repeat(samples) { ob.putShort((ib.int shr 16).toShort()) }
+            }
+            wav.audioFormat == 1 && wav.bitsPerSample == 8 -> {
+                var p = 0
+                repeat(samples) {
+                    ob.putShort((((src[p].toInt() and 0xFF) - 128) shl 8).toShort())
+                    p++
+                }
+            }
+            else -> throw IllegalArgumentException(
+                "Unsupported WAV sample format ${wav.audioFormat}/${wav.bitsPerSample}-bit",
+            )
+        }
+        return out
+    }
+
+    private fun transcodeWav(inputPath: String, outputPath: String) {
+        val wav = readWavInfo(inputPath)
+        var encoder: MediaCodec? = null
+        var muxer: MediaMuxer? = null
+        RandomAccessFile(inputPath, "r").use { raf ->
+            try {
+                encoder = MediaCodec.createEncoderByType(OUTPUT_MIME).apply {
+                    configure(
+                        MediaFormat.createAudioFormat(
+                            OUTPUT_MIME, wav.sampleRate, wav.channelCount,
+                        ).apply {
+                            setInteger(
+                                MediaFormat.KEY_AAC_PROFILE,
+                                MediaCodecInfo.CodecProfileLevel.AACObjectLC,
+                            )
+                            setInteger(
+                                MediaFormat.KEY_BIT_RATE, bitRateFor(wav.channelCount),
+                            )
+                        },
+                        null, null, MediaCodec.CONFIGURE_FLAG_ENCODE,
+                    )
+                    start()
+                }
+                muxer = MediaMuxer(outputPath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
+                pumpWav(raf, wav, encoder!!, muxer!!)
+            } finally {
+                runCatching { encoder?.stop() }
+                runCatching { encoder?.release() }
+                runCatching { muxer?.stop() }
+                runCatching { muxer?.release() }
+            }
+        }
+    }
+
+    private fun pumpWav(
+        raf: RandomAccessFile,
+        wav: WavInfo,
+        encoder: MediaCodec,
+        muxer: MediaMuxer,
+    ) {
+        val srcBlock = (wav.bitsPerSample / 8) * wav.channelCount
+        val outBytesPerFrame = wav.channelCount * 2
+        val readBuf = ByteArray((64 * 1024 / srcBlock) * srcBlock)
+
+        raf.seek(wav.dataOffset)
+        var remaining = wav.dataSize
+        var framesSubmitted = 0L
+        fun ptsUs(): Long = framesSubmitted * 1_000_000L / wav.sampleRate
+
+        // Converted PCM16 waiting to be handed to the encoder — an encoder
+        // input buffer is usually smaller than one readBuf's worth.
+        var pending: ByteArray? = null
+        var pendingPos = 0
+
+        var inputDone = false
+        var encoderDone = false
+        var muxerTrack = -1
+        var muxerStarted = false
+        val info = MediaCodec.BufferInfo()
+
+        while (!encoderDone) {
+            if (!inputDone) {
+                val index = encoder.dequeueInputBuffer(TIMEOUT_US)
+                if (index >= 0) {
+                    if (pending == null && remaining > 0) {
+                        val toRead = minOf(remaining, readBuf.size.toLong()).toInt()
+                        raf.readFully(readBuf, 0, toRead)
+                        remaining -= toRead
+                        pending = toPcm16(readBuf, toRead, wav)
+                        pendingPos = 0
+                    }
+                    val p = pending
+                    if (p == null) {
+                        encoder.queueInputBuffer(
+                            index, 0, 0, ptsUs(), MediaCodec.BUFFER_FLAG_END_OF_STREAM,
+                        )
+                        inputDone = true
+                    } else {
+                        val dst = encoder.getInputBuffer(index)!!
+                        var n = minOf(dst.remaining(), p.size - pendingPos)
+                        n -= n % outBytesPerFrame // keep frames whole for the PTS
+                        if (n > 0) {
+                            dst.put(p, pendingPos, n)
+                            encoder.queueInputBuffer(index, 0, n, ptsUs(), 0)
+                            framesSubmitted += n / outBytesPerFrame
+                            pendingPos += n
+                        }
+                        if (pendingPos >= p.size) pending = null
+                    }
+                }
+            }
+
+            when (val index = encoder.dequeueOutputBuffer(info, TIMEOUT_US)) {
+                MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> {
+                    if (muxerStarted) throw IllegalStateException("Encoder format changed twice")
+                    muxerTrack = muxer.addTrack(encoder.outputFormat)
+                    muxer.start()
+                    muxerStarted = true
+                }
+                MediaCodec.INFO_TRY_AGAIN_LATER -> Unit
+                else -> if (index >= 0) {
+                    val isConfig = info.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG != 0
+                    if (info.size > 0 && !isConfig) {
+                        if (!muxerStarted) throw IllegalStateException("Muxer not started")
+                        val buffer = encoder.getOutputBuffer(index)!!.apply {
+                            position(info.offset)
+                            limit(info.offset + info.size)
+                        }
+                        muxer.writeSampleData(muxerTrack, buffer, info)
+                    }
+                    encoder.releaseOutputBuffer(index, false)
+                    if (info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) {
+                        encoderDone = true
+                    }
+                }
+            }
+        }
+
+        if (!muxerStarted) {
+            throw IllegalStateException("Encoder produced no output for the WAV input")
         }
     }
 
