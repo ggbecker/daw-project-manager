@@ -26,6 +26,7 @@ import '../repository/project_repository.dart';
 import '../utils/daw_logo.dart';
 import '../utils/mobile_utils.dart';
 import '../utils/file_launcher.dart';
+import '../utils/playback_seek.dart';
 import '../utils/route_observer.dart';
 import '../generated/l10n/app_localizations.dart';
 import 'marker_navigation.dart';
@@ -2080,11 +2081,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer>
   }
 
   Future<void> _seek(int seconds) async {
-    final target = _position + Duration(seconds: seconds);
-    final clamped = target.isNegative
-        ? Duration.zero
-        : (_duration > Duration.zero && target > _duration ? _duration : target);
-    await _audioPlayer.seek(clamped);
+    await _audioPlayer.seek(seekTarget(_position, seconds, _duration));
   }
 
   Future<void> _sharePreviewSong() async {
@@ -2761,7 +2758,11 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Transport + volume row
+                            // Transport + volume row. The volume slider is
+                            // Flexible and the time moved to its own line
+                            // below, so this never overflows the card on a
+                            // narrow (sectioned) detail layout — the elapsed /
+                            // total used to be pushed off the right edge.
                             Row(
                               children: [
                                 IconButton(
@@ -2790,6 +2791,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer>
                                   tooltip: Platform.isMacOS ? '→ +5s  •  ⌘+→ +30s' : '→ +5s  •  Ctrl+→ +30s',
                                   onPressed: () => _seek(5),
                                 ),
+                                const Spacer(),
                                 IconButton(
                                   icon: Icon(
                                     _volume == 0 ? Icons.volume_off : (_volume < 0.5 ? Icons.volume_down : Icons.volume_up),
@@ -2808,27 +2810,45 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer>
                                   tooltip: _volume == 0 ? AppLocalizations.of(context)!.volumeUnmute : AppLocalizations.of(context)!.volumeMute,
                                   color: Theme.of(context).textTheme.bodySmall?.color,
                                 ),
-                                SizedBox(
-                                  width: 120,
-                                  child: Slider(
-                                    value: _volume,
-                                    min: 0.0,
-                                    max: 1.0,
-                                    onChanged: (value) async {
-                                      setState(() { _volume = value; });
-                                      await _audioPlayer.setVolume(value);
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  '${_formatDuration(_position)} / ${_formatDuration(_duration)}',
-                                  style: TextStyle(
-                                    color: Theme.of(context).textTheme.bodySmall?.color,
-                                    fontSize: 12,
+                                Flexible(
+                                  child: SizedBox(
+                                    width: 120,
+                                    child: Slider(
+                                      value: _volume,
+                                      min: 0.0,
+                                      max: 1.0,
+                                      onChanged: (value) async {
+                                        setState(() { _volume = value; });
+                                        await _audioPlayer.setVolume(value);
+                                      },
+                                    ),
                                   ),
                                 ),
                               ],
+                            ),
+                            // Elapsed / total — its own line, spread to the
+                            // edges so both ends stay inside the card.
+                            Padding(
+                              padding: const EdgeInsets.only(left: 4, right: 4, bottom: 2),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    _formatDuration(_position),
+                                    style: TextStyle(
+                                      color: Theme.of(context).textTheme.bodySmall?.color,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  Text(
+                                    _formatDuration(_duration),
+                                    style: TextStyle(
+                                      color: Theme.of(context).textTheme.bodySmall?.color,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                             // Waveform
                             WaveformWidget(
