@@ -1,5 +1,6 @@
 package com.bandpassrecords.dpm
 
+import android.media.AudioFormat
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaExtractor
@@ -271,6 +272,16 @@ object AudioShareConverter {
                             MediaCodecInfo.CodecProfileLevel.AACObjectLC,
                         )
                         setInteger(MediaFormat.KEY_BIT_RATE, bitRateFor(channelCount))
+                        // The Codec2 AAC encoder on newer Android otherwise
+                        // rejected every raw-PCM input buffer ("discarded an
+                        // unknown buffer", 0-byte output): it needs the input
+                        // PCM encoding spelled out, and a max input size big
+                        // enough that we're not fighting the 2 KB default.
+                        setInteger(
+                            MediaFormat.KEY_PCM_ENCODING,
+                            AudioFormat.ENCODING_PCM_16BIT,
+                        )
+                        setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 64 * 1024)
                     },
                     null,
                     null,
