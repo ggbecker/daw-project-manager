@@ -11,11 +11,40 @@ import '../models/todo_item.dart';
 import '../providers/providers.dart';
 import '../generated/l10n/app_localizations.dart';
 import '../services/audio_analysis_service.dart';
+import '../utils/mobile_utils.dart';
 import '../utils/project_freshness.dart';
 import 'preview_share.dart';
 import 'project_detail_page.dart';
 import 'widgets/conversion_progress_dialog.dart';
 import 'widgets/project_notes_section.dart';
+
+/// Route for the full mobile player. On Android it slides up from the bottom
+/// on push and back down on pop (the "now playing" sheet gesture) instead of
+/// the platform default zoom/fade; other platforms keep their native page
+/// transition.
+Route<void> mobilePlayerPageRoute() =>
+    buildMobilePlayerRoute(android: MobileUtils.isAndroid());
+
+@visibleForTesting
+Route<void> buildMobilePlayerRoute({required bool android}) {
+  if (!android) {
+    return MaterialPageRoute(builder: (_) => const MobilePlayerPage());
+  }
+  return PageRouteBuilder<void>(
+    transitionDuration: const Duration(milliseconds: 300),
+    reverseTransitionDuration: const Duration(milliseconds: 250),
+    pageBuilder: (context, animation, secondaryAnimation) =>
+        const MobilePlayerPage(),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+        SlideTransition(
+          position: animation.drive(
+            Tween(begin: const Offset(0, 1), end: Offset.zero)
+                .chain(CurveTween(curve: Curves.easeOutCubic)),
+          ),
+          child: child,
+        ),
+  );
+}
 
 class MobilePlayerPage extends ConsumerStatefulWidget {
   const MobilePlayerPage({super.key});
