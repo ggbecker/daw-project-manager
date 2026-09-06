@@ -30,6 +30,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get confirm => 'Confirm';
 
   @override
+  String get undo => 'Undo';
+
+  @override
   String get customInterval => 'Custom';
 
   @override

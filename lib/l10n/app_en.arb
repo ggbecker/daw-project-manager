@@ -10,6 +10,8 @@
   "enable": "Enable",
   "cancel": "Cancel",
   "confirm": "Confirm",
+  "undo": "Undo",
+  "@undo": { "description": "Snackbar action to reverse the action just performed (e.g. hiding projects)" },
   "customInterval": "Custom",
   "close": "Close",
   "launch": "Launch",

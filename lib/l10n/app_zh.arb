@@ -9,6 +9,7 @@
   "save": "保存",
   "enable": "启用",
   "cancel": "取消",
+  "undo": "撤销",
   "confirm": "确认",
   "customInterval": "自定义",
   "close": "关闭",

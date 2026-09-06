@@ -9,6 +9,7 @@
   "save": "Salvar",
   "enable": "Ativar",
   "cancel": "Cancelar",
+  "undo": "Desfazer",
   "confirm": "Confirmar",
   "customInterval": "Personalizado",
   "close": "Fechar",

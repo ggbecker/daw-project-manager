@@ -154,6 +154,12 @@ abstract class AppLocalizations {
   /// **'Confirm'**
   String get confirm;
 
+  /// Snackbar action to reverse the action just performed (e.g. hiding projects)
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get undo;
+
   /// No description provided for @customInterval.
   ///
   /// In en, this message translates to:

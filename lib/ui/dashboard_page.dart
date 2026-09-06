@@ -1112,8 +1112,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
   Future<void> _hideProjects(
     BuildContext context,
     WidgetRef ref,
-    List<String> selectedProjectIds,
-  ) async {
+    List<String> selectedProjectIds, {
+    // False when this call is itself the "Undo" of an unhide — the resulting
+    // snackbar then omits its own Undo action so the two don't ping-pong.
+    bool allowUndo = true,
+  }) async {
     try {
       final repo = await ref.read(repositoryProvider.future);
       final allProjectsAsync = ref.read(allProjectsStreamProvider);
@@ -1126,14 +1129,26 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       }
 
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              AppLocalizations.of(context)!.projectsHidden(
+              l10n.projectsHidden(
                 selectedProjectIds.length,
                 selectedProjectIds.length == 1 ? '' : 's',
               ),
             ),
+            action: allowUndo
+                ? SnackBarAction(
+                    label: l10n.undo,
+                    onPressed: () => _unhideProjects(
+                      context,
+                      ref,
+                      selectedProjectIds,
+                      allowUndo: false,
+                    ),
+                  )
+                : null,
           ),
         );
         // Invalidate to refresh the list
@@ -1155,8 +1170,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
   Future<void> _unhideProjects(
     BuildContext context,
     WidgetRef ref,
-    List<String> selectedProjectIds,
-  ) async {
+    List<String> selectedProjectIds, {
+    // False when this call is itself the "Undo" of a hide (see _hideProjects).
+    bool allowUndo = true,
+  }) async {
     try {
       final repo = await ref.read(repositoryProvider.future);
       final allProjectsAsync = ref.read(allProjectsStreamProvider);
@@ -1206,14 +1223,26 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       }
 
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              AppLocalizations.of(context)!.projectsUnhidden(
+              l10n.projectsUnhidden(
                 selectedProjectIds.length,
                 selectedProjectIds.length == 1 ? '' : 's',
               ),
             ),
+            action: allowUndo
+                ? SnackBarAction(
+                    label: l10n.undo,
+                    onPressed: () => _hideProjects(
+                      context,
+                      ref,
+                      selectedProjectIds,
+                      allowUndo: false,
+                    ),
+                  )
+                : null,
           ),
         );
       }

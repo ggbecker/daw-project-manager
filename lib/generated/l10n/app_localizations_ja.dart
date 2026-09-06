@@ -30,6 +30,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get confirm => '確認';
 
   @override
+  String get undo => '元に戻す';
+
+  @override
   String get customInterval => 'カスタム';
 
   @override

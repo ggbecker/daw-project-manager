@@ -30,6 +30,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get confirm => 'Bestätigen';
 
   @override
+  String get undo => 'Rückgängig';
+
+  @override
   String get customInterval => 'Benutzerdefiniert';
 
   @override

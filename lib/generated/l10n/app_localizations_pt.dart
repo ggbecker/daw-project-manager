@@ -30,6 +30,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get confirm => 'Confirmar';
 
   @override
+  String get undo => 'Desfazer';
+
+  @override
   String get customInterval => 'Personalizado';
 
   @override
