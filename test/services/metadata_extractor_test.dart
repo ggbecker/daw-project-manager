@@ -840,13 +840,13 @@ TEMPO 120 4 4 0
   });
 
   group('MetadataExtractor.supportsFullExtraction', () {
-    for (final ext in ['.als', '.alp', '.cpr', '.npr', '.bwproject', '.rpp', '.mgd', '.flp']) {
+    for (final ext in ['.als', '.alp', '.cpr', '.npr', '.bwproject', '.rpp', '.mgd', '.flp', '.logicx']) {
       test('$ext is supported', () {
         expect(MetadataExtractor.supportsFullExtraction('/fake/project$ext'), isTrue);
       });
     }
 
-    for (final ext in ['.logicx', '.ptx', '.pts', '.song', '.cwp', '.ardour', '.band', '.aup3']) {
+    for (final ext in ['.ptx', '.pts', '.song', '.cwp', '.ardour', '.band', '.aup3']) {
       test('$ext is not supported', () {
         expect(MetadataExtractor.supportsFullExtraction('/fake/project$ext'), isFalse);
       });

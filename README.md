@@ -76,6 +76,7 @@ Deep Scan reads BPM, musical key, DAW version, and (Reaper only) project notes a
 | Bitwig Studio | ✓ | ✓ | ✓ | | |
 | Cubase / Nuendo | ✓ | ✓ | ✓ | ✓ | |
 | FL Studio | ✓ | | ✓ | | |
+| Logic Pro *(macOS)* | ✓ | ✓ | ✓ | | |
 | MAGDA | ✓ | ✓ | ✓ | | |
 | Reaper | ✓ | ✓ | ✓ | ✓ | ✓ |
 
