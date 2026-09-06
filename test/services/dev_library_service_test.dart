@@ -89,6 +89,32 @@ void main() {
       expect(release.lastModified, isNotNull);
     });
 
+    test('detects the release library when its boxes sit directly in root', () {
+      // Regression: on macOS/Linux the release build keeps its Hive boxes in
+      // the app-support directory itself (= the picker root), not in a
+      // daw_project_manager/ subdirectory, so discover never listed it and it
+      // always showed "Does not exist yet — will be created empty".
+      File(p.join(root.path, 'profile-a_projects.hive'))
+          .writeAsBytesSync(List.filled(120, 0));
+      File(p.join(root.path, 'settings.hive')).writeAsBytesSync(List.filled(30, 0));
+
+      final release =
+          DevLibraryService.discover(root).firstWhere((l) => l.isRelease);
+
+      expect(release.exists, isTrue);
+      expect(release.projectBoxCount, 1);
+      expect(release.totalBytes, 150);
+    }, testOn: '!windows');
+
+    test('release library still reads as absent when root holds no boxes', () {
+      // root exists (it is the OS app-support dir) but nothing has written a
+      // library into it yet — keep the "will be created empty" affordance.
+      final release =
+          DevLibraryService.discover(root).firstWhere((l) => l.isRelease);
+
+      expect(release.exists, isFalse);
+    }, testOn: '!windows');
+
     test('a library with no boxes reports zero rather than failing', () {
       makeLibrary('${defaultAppDataDirName}_dev');
 
