@@ -463,13 +463,14 @@ class BackupService {
     }
   }
 
-  /// Linux-only "Launch in DAW" binary overrides, keyed by DAW display name.
-  /// Global (device-local), not per-profile — see
-  /// ProjectRepository.getDawLaunchCommands. Deliberately NOT included in
-  /// Google Drive sync (google_drive_sync_service.dart): these are raw
-  /// filesystem paths specific to this machine, and Drive sync isn't offered
-  /// on Linux — the only platform where this setting is ever non-empty —
-  /// anyway.
+  /// "Launch in DAW" executable overrides, keyed by DAW display name. Global
+  /// (device-local), not per-profile — see
+  /// ProjectRepository.getDawLaunchCommands. Included in local backup (also
+  /// per-machine) but deliberately NOT in Google Drive sync
+  /// (google_drive_sync_service.dart): these are raw filesystem paths to
+  /// programs installed on this specific machine (and a macOS `.app` path
+  /// wouldn't resolve on Windows/Linux and vice versa), so pushing them to
+  /// other devices would only ever point at the wrong place.
   static Future<Map<String, String>> _readDawLaunchCommands() async {
     try {
       final box = await Hive.openBox<String>(_appSettingsBoxName);

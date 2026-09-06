@@ -139,12 +139,13 @@ class ProjectRepository {
     }
   }
 
-  // Linux-only "Launch in DAW" binary override, keyed by the same DAW
-  // display-name strings MetadataExtractor produces (project.dawType) —
-  // global (device-local), not per-profile: it describes what's physically
+  // "Launch in DAW" executable override, keyed by the same DAW display-name
+  // strings MetadataExtractor produces (project.dawType) — global
+  // (device-local), not per-profile: it describes what's physically
   // installed on this machine, not anything about a music profile's
-  // identity. Windows/macOS don't need this (OS file association already
-  // works there), so nothing reads these keys on those platforms.
+  // identity. Used on every desktop platform: always on Linux (no
+  // dependable OS file association for most DAWs), and on Windows/macOS as a
+  // fallback the user can configure when the standard launch fails.
   String? getDawLaunchCommand(String dawType) =>
       getDawLaunchCommands()[dawType];
 

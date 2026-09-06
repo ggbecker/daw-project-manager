@@ -3026,7 +3026,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get dawLaunchCommandsSectionDescription =>
-      'Linux has no reliable file-type association for most DAWs, so \"Launch in DAW\" needs to be told exactly which program to run for each one you use. Configure it once per DAW below — the app will use it for every project of that type from then on.';
+      '\"Launch in DAW\" normally hands the project to the system\'s default application. When that doesn\'t work, point it here at the exact DAW program to run — an executable on Windows and Linux (or an AppImage), or the .app on macOS — and the app will open projects of that type with it directly. On Linux this is usually required; on Windows and macOS it\'s a fallback for when the standard launch fails.';
 
   @override
   String get dawLaunchCommandNotConfigured => 'Not configured';
@@ -3044,7 +3044,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String dawLaunchCommandDialogBody(String dawType) {
-    return 'Point this at the $dawType executable (or AppImage). The app will run it directly with the project file as its only argument.';
+    return 'Point this at the $dawType program — an executable on Windows and Linux (or an AppImage), or the .app on macOS. The app will run it directly with the project file as its only argument.';
+  }
+
+  @override
+  String dawLaunchCommandDialogLaunchFailedBanner(String dawType) {
+    return 'DAW Project Manager couldn\'t open this project through the system. Point it at the $dawType program below and it will try launching the project with it directly.';
   }
 
   @override

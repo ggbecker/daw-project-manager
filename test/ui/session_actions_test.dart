@@ -150,6 +150,118 @@ void main() {
     );
   });
 
+  group('resolveDawLaunchAction', () {
+    test('no DAW type → always the OS default handler', () {
+      for (final linux in [true, false]) {
+        expect(
+          resolveDawLaunchAction(
+            dawType: null,
+            overridePath: '/opt/whatever',
+            overridePathExists: true,
+            isLinux: linux,
+          ),
+          DawLaunchAction.systemDefault,
+        );
+      }
+    });
+
+    test('override configured and present → run it (every platform)', () {
+      for (final linux in [true, false]) {
+        expect(
+          resolveDawLaunchAction(
+            dawType: 'Ableton Live',
+            overridePath: '/Applications/Ableton Live.app',
+            overridePathExists: true,
+            isLinux: linux,
+          ),
+          DawLaunchAction.useOverride,
+        );
+      }
+    });
+
+    test('override configured but path gone → open the "missing" dialog', () {
+      for (final linux in [true, false]) {
+        expect(
+          resolveDawLaunchAction(
+            dawType: 'Ableton Live',
+            overridePath: '/gone/Ableton Live.exe',
+            overridePathExists: false,
+            isLinux: linux,
+          ),
+          DawLaunchAction.overrideMissing,
+        );
+      }
+    });
+
+    test('no override on Linux → prompt to configure one up front', () {
+      expect(
+        resolveDawLaunchAction(
+          dawType: 'Bitwig Studio',
+          overridePath: null,
+          overridePathExists: false,
+          isLinux: true,
+        ),
+        DawLaunchAction.promptConfigure,
+      );
+    });
+
+    test('no override on Windows/macOS → try the OS default first', () {
+      expect(
+        resolveDawLaunchAction(
+          dawType: 'Logic Pro',
+          overridePath: null,
+          overridePathExists: false,
+          isLinux: false,
+        ),
+        DawLaunchAction.systemDefault,
+      );
+    });
+  });
+
+  group('shouldPromptDawLocationAfterFailedLaunch', () {
+    test('offered on Windows/macOS when the DAW type is known', () {
+      expect(
+        shouldPromptDawLocationAfterFailedLaunch(
+          dawType: 'Logic Pro',
+          isMacOS: true,
+          isWindows: false,
+        ),
+        isTrue,
+      );
+      expect(
+        shouldPromptDawLocationAfterFailedLaunch(
+          dawType: 'Cubase',
+          isMacOS: false,
+          isWindows: true,
+        ),
+        isTrue,
+      );
+    });
+
+    test('not offered without a DAW type', () {
+      expect(
+        shouldPromptDawLocationAfterFailedLaunch(
+          dawType: null,
+          isMacOS: true,
+          isWindows: false,
+        ),
+        isFalse,
+      );
+    });
+
+    test('not offered on Linux (it already prompts before launching) or mobile',
+        () {
+      expect(
+        shouldPromptDawLocationAfterFailedLaunch(
+          dawType: 'Bitwig Studio',
+          isMacOS: false,
+          isWindows: false,
+        ),
+        isFalse,
+      );
+    });
+  });
+
   group('confirmEndSession', () {
     testWidgets('no active project — does nothing (no dialog)',
         (tester) async {

@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,9 +14,11 @@ import '../../utils/file_launcher.dart';
 /// anything with the result; re-read [dawLaunchCommandsProvider] (or just
 /// retry the launch) to see the effect.
 ///
-/// Used both from Settings (edit/add an entry) and in-context, the first
-/// time "Launch in DAW" fails for a DAW with no override configured yet, or
-/// when a previously-configured binary no longer exists ([pathMissing]).
+/// Used both from Settings (edit/add an entry) and in-context: on Linux the
+/// first time "Launch in DAW" runs for a DAW with no override configured
+/// yet, on Windows/macOS after the standard launch actually failed
+/// ([launchFailed]), or on any platform when a previously-configured path no
+/// longer exists ([pathMissing]).
 /// When [project] is given (the in-context cases — Settings has no specific
 /// project to launch), the primary button reads "Save & Launch" and, once
 /// the path is saved, immediately launches [project] with it instead of
@@ -28,6 +28,7 @@ Future<void> showDawLaunchCommandDialog(
   required String dawType,
   String? currentPath,
   bool pathMissing = false,
+  bool launchFailed = false,
   MusicProject? project,
 }) {
   return showDialog<void>(
@@ -36,6 +37,7 @@ Future<void> showDawLaunchCommandDialog(
       dawType: dawType,
       currentPath: currentPath,
       pathMissing: pathMissing,
+      launchFailed: launchFailed,
       project: project,
     ),
   );
@@ -45,6 +47,7 @@ class DawLaunchCommandDialog extends ConsumerStatefulWidget {
   final String dawType;
   final String? currentPath;
   final bool pathMissing;
+  final bool launchFailed;
   final MusicProject? project;
 
   const DawLaunchCommandDialog({
@@ -52,6 +55,7 @@ class DawLaunchCommandDialog extends ConsumerStatefulWidget {
     required this.dawType,
     this.currentPath,
     this.pathMissing = false,
+    this.launchFailed = false,
     this.project,
   });
 
@@ -109,7 +113,7 @@ class _DawLaunchCommandDialogState
   Future<void> _save() async {
     final l10n = AppLocalizations.of(context)!;
     final path = _pathController.text.trim();
-    if (path.isEmpty || !File(path).existsSync()) {
+    if (path.isEmpty || !FileLauncher.targetExists(path)) {
       setState(() => _errorText = l10n.dawLaunchCommandDialogInvalidPath);
       return;
     }
@@ -213,6 +217,43 @@ class _DawLaunchCommandDialogState
                         l10n.dawLaunchCommandDialogMissingBanner(
                           widget.dawType,
                           widget.currentPath!,
+                        ),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+            ] else if (widget.launchFailed) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primary
+                      .withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.35),
+                  ),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        l10n.dawLaunchCommandDialogLaunchFailedBanner(
+                          widget.dawType,
                         ),
                         style: Theme.of(context).textTheme.bodySmall,
                       ),

@@ -60,7 +60,7 @@ Instructions for AI assistants working on this codebase.
 
 ### Launching a project in its DAW always goes through `launchProjectInDaw`
 - Use `launchProjectInDaw(context, ref, project)` from `lib/ui/session_actions.dart` for every "open/launch in DAW" button — never call `FileLauncher.launchProject`/`launchWithBinary` directly from UI code.
-- Why: this is the one place that knows about the Linux binary-override system (`ProjectRepository.getDawLaunchCommand`), its missing-binary remediation, and the first-run "configure a launch command" prompt (`showDawLaunchCommandDialog`). A direct `FileLauncher` call bypasses all of that silently on Linux.
+- Why: this is the one place that knows about the DAW executable-override system (`ProjectRepository.getDawLaunchCommand`, Settings > DAW Locations — every desktop platform), its missing-path remediation, and the configure prompt (`showDawLaunchCommandDialog`). The prompt fires up front on Linux (no dependable OS file association) and only after a failed standard launch on Windows/macOS. A direct `FileLauncher` call bypasses all of that. The decision lives in the pure `resolveDawLaunchAction` / `shouldPromptDawLocationAfterFailedLaunch` helpers.
 
 ### Destructive confirm-dialog buttons need an explicit `foregroundColor`
 - Any `ElevatedButton`/`FilledButton` styled with a hardcoded red `backgroundColor` (delete/remove/reset confirmations) must also set `foregroundColor` — Flutter does not derive readable text contrast from an arbitrary `backgroundColor` on its own, and the default has been wrong before.

@@ -9,87 +9,166 @@ import '../providers/providers.dart';
 import '../utils/file_launcher.dart';
 import 'dialogs/daw_launch_command_dialog.dart';
 
-/// Launches [project] in its DAW, preferring a Linux-only registered binary
-/// override for its DAW type (see Settings > DAW Locations) over the OS
-/// default file-type handler, which has no reliable association for most
-/// DAWs there. Shared by every "launch in DAW" entry point in the app (the
-/// main projects grid, the active-session chip, the idle-session
-/// suggestions, project/release detail pages) so the override — and its
-/// missing-binary remediation / first-run configure prompt — behaves
-/// identically everywhere instead of only from wherever it was implemented
-/// first.
+/// What [launchProjectInDaw] should do for a project, once its DAW type and
+/// any configured executable override are known. Pure decision, split out so
+/// the branching is unit-testable without a widget tree or a real launcher.
+enum DawLaunchAction {
+  /// Run the configured override directly with [FileLauncher.launchWithBinary].
+  useOverride,
+
+  /// An override is configured but its path is gone — open the configure
+  /// dialog in "path missing" mode.
+  overrideMissing,
+
+  /// No override and no dependable OS fallback (Linux) — open the configure
+  /// dialog so the user can set one now.
+  promptConfigure,
+
+  /// Hand the project to the OS default application handler.
+  systemDefault,
+}
+
+/// Resolves the launch strategy. [overridePath] is the stored executable
+/// override for the project's DAW type (null if none); [overridePathExists]
+/// is whether that path still resolves on disk. [isLinux] gets its own
+/// branch because Linux has no dependable file association for most DAWs and
+/// `xdg-open` reports success even when nothing opens — so there's no
+/// "it failed, ask now" signal to wait for, unlike Windows/macOS.
+@visibleForTesting
+DawLaunchAction resolveDawLaunchAction({
+  required String? dawType,
+  required String? overridePath,
+  required bool overridePathExists,
+  required bool isLinux,
+}) {
+  if (dawType == null) return DawLaunchAction.systemDefault;
+  if (overridePath != null) {
+    return overridePathExists
+        ? DawLaunchAction.useOverride
+        : DawLaunchAction.overrideMissing;
+  }
+  return isLinux
+      ? DawLaunchAction.promptConfigure
+      : DawLaunchAction.systemDefault;
+}
+
+/// Whether, after the OS default launch reported failure, the user should be
+/// offered the "configure a DAW executable" dialog as a fallback. Only on
+/// Windows/macOS with a known DAW type: Linux already prompts up front
+/// ([DawLaunchAction.promptConfigure]) and mobile has no such dialog.
+@visibleForTesting
+bool shouldPromptDawLocationAfterFailedLaunch({
+  required String? dawType,
+  required bool isMacOS,
+  required bool isWindows,
+}) =>
+    dawType != null && (isMacOS || isWindows);
+
+/// Launches [project] in its DAW.
+///
+/// Preference order: a user-registered executable override for the DAW type
+/// (Settings > DAW Locations) → the OS default file-type handler. The
+/// override is always used on Linux (no dependable association there); on
+/// Windows/macOS it's a fallback offered via a dialog when the standard
+/// launch fails.
+///
+/// Shared by every "launch in DAW" entry point in the app (the main
+/// projects grid, the active-session chip, the idle-session suggestions,
+/// project/release detail pages) so the override — and its missing-binary
+/// remediation / configure prompt — behaves identically everywhere instead
+/// of only from wherever it was implemented first.
 Future<void> launchProjectInDaw(
   BuildContext context,
   WidgetRef ref,
   MusicProject project,
 ) async {
-  final exists =
-      File(project.filePath).existsSync() ||
-      Directory(project.filePath).existsSync();
-  if (!exists) {
+  final l10n = AppLocalizations.of(context)!;
+
+  if (!FileLauncher.targetExists(project.filePath)) {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.fileMissing)),
+        SnackBar(content: Text(l10n.fileMissing)),
       );
     }
     return;
   }
 
-  if (Platform.isLinux && project.dawType != null) {
+  final dawType = project.dawType;
+
+  if (dawType != null) {
     final repo = await ref.read(repositoryProvider.future);
-    final binaryPath = repo.getDawLaunchCommand(project.dawType!);
-    if (binaryPath == null) {
-      // No override configured yet: on Linux there's no reliable OS-level
-      // file association to fall back on for most DAWs (see the class doc
-      // above), and xdg-open reports success even when nothing actually
-      // opens — so there's no "it failed, ask now" signal to wait for.
-      // Go straight to the configure-a-binary prompt instead of silently
-      // doing nothing.
-      if (!context.mounted) return;
-      await showDawLaunchCommandDialog(
-        context,
-        dawType: project.dawType!,
-        project: project,
-      );
-      return;
-    }
-    if (!File(binaryPath).existsSync()) {
-      if (!context.mounted) return;
-      await showDawLaunchCommandDialog(
-        context,
-        dawType: project.dawType!,
-        currentPath: binaryPath,
-        pathMissing: true,
-        project: project,
-      );
-      return;
-    }
-    final launched = await FileLauncher.launchWithBinary(
-      binaryPath,
-      project.filePath,
+    final overridePath = repo.getDawLaunchCommand(dawType);
+    final action = resolveDawLaunchAction(
+      dawType: dawType,
+      overridePath: overridePath,
+      overridePathExists:
+          overridePath != null && FileLauncher.targetExists(overridePath),
+      isLinux: Platform.isLinux,
     );
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          launched
-              ? AppLocalizations.of(context)!.launchingProject(project.displayName)
-              : AppLocalizations.of(context)!.failedToLaunchProject(project.displayName),
-        ),
-      ),
-    );
-    return;
+
+    switch (action) {
+      case DawLaunchAction.useOverride:
+        final launched =
+            await FileLauncher.launchWithBinary(overridePath!, project.filePath);
+        if (!context.mounted) return;
+        _showLaunchResultSnackBar(context, l10n, project, launched);
+        return;
+      case DawLaunchAction.overrideMissing:
+        if (!context.mounted) return;
+        await showDawLaunchCommandDialog(
+          context,
+          dawType: dawType,
+          currentPath: overridePath,
+          pathMissing: true,
+          project: project,
+        );
+        return;
+      case DawLaunchAction.promptConfigure:
+        if (!context.mounted) return;
+        await showDawLaunchCommandDialog(
+          context,
+          dawType: dawType,
+          project: project,
+        );
+        return;
+      case DawLaunchAction.systemDefault:
+        break;
+    }
   }
 
   final success = await FileLauncher.launchProject(project.filePath);
-
   if (!context.mounted) return;
+
+  if (!success &&
+      shouldPromptDawLocationAfterFailedLaunch(
+        dawType: dawType,
+        isMacOS: Platform.isMacOS,
+        isWindows: Platform.isWindows,
+      )) {
+    await showDawLaunchCommandDialog(
+      context,
+      dawType: dawType!,
+      project: project,
+      launchFailed: true,
+    );
+    return;
+  }
+
+  _showLaunchResultSnackBar(context, l10n, project, success);
+}
+
+void _showLaunchResultSnackBar(
+  BuildContext context,
+  AppLocalizations l10n,
+  MusicProject project,
+  bool launched,
+) {
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       content: Text(
-        success
-            ? AppLocalizations.of(context)!.launchingProject(project.displayName)
-            : AppLocalizations.of(context)!.failedToLaunchProject(project.displayName),
+        launched
+            ? l10n.launchingProject(project.displayName)
+            : l10n.failedToLaunchProject(project.displayName),
       ),
     ),
   );

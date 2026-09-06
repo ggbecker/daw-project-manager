@@ -64,7 +64,7 @@ enum SettingsSection {
   general,
   appearance,
   projectFolders,
-  // Linux-only — see Platform.isLinux gate in _sectionOrder().
+  // Desktop-only — see the MobileUtils.isDesktop() gate in _sectionOrder().
   dawLaunchCommands,
   mixdownFolders,
   phases,
@@ -965,9 +965,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         SettingsSection.general,
         SettingsSection.appearance,
         SettingsSection.projectFolders,
-        // Linux only — Windows/macOS already have working OS file
-        // association, so there's nothing for this section to do there.
-        if (Platform.isLinux) SettingsSection.dawLaunchCommands,
+        // Desktop only. On Linux this is usually required (no dependable OS
+        // file association for most DAWs); on Windows/macOS it's a fallback
+        // for when the standard "Launch in DAW" fails. Mobile has no DAW to
+        // point at.
+        if (MobileUtils.isDesktop()) SettingsSection.dawLaunchCommands,
         SettingsSection.mixdownFolders,
         SettingsSection.phases,
         SettingsSection.workSessions,
@@ -1065,7 +1067,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         _SearchEntry(SettingsSection.projectFolders, Icons.description_outlined, l10n.exportAllProjectsInfo, l10n.exportAllProjectsInfoSubtitle),
         _SearchEntry(SettingsSection.projectFolders, Icons.table_view_outlined, l10n.exportAllPartsCsv, l10n.exportAllPartsCsvSubtitle),
         _SearchEntry(SettingsSection.projectFolders, Icons.grid_on, l10n.exportAllPartsXlsx, l10n.exportAllPartsXlsxSubtitle),
-        if (Platform.isLinux) ...[
+        if (MobileUtils.isDesktop()) ...[
           _SearchEntry(SettingsSection.dawLaunchCommands, Icons.terminal_outlined, l10n.dawLaunchCommandsTabLabel, l10n.dawLaunchCommandsSectionDescription),
         ],
         _SearchEntry(SettingsSection.mixdownFolders, Icons.audio_file_outlined, l10n.mixdownFoldersTabLabel, l10n.mixdownFoldersSectionDescription),
@@ -3239,7 +3241,7 @@ class _DawLaunchCommandTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final logoPath = getDawLogoPath(dawType);
     final path = configuredPath;
-    final missing = path != null && !File(path).existsSync();
+    final missing = path != null && !FileLauncher.targetExists(path);
 
     return ListTile(
       leading: logoPath != null
