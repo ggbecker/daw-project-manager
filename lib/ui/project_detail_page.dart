@@ -30,6 +30,7 @@ import '../utils/route_observer.dart';
 import '../generated/l10n/app_localizations.dart';
 import 'marker_navigation.dart';
 import 'session_actions.dart';
+import 'settings_page.dart' show SettingsPage, SettingsSection;
 import 'preview_share.dart';
 import 'dialogs/preview_song_not_found_dialog.dart';
 import '../services/audio_analysis_service.dart';
@@ -1616,9 +1617,26 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer>
     }
   }
 
-  /// User-initiated mixdown search (the "Find automatically" button) — the
-  /// only place that scans the mixdown folders. Runs a fresh scan, persists
-  /// the hit as the auto preview, and reports the outcome.
+  /// Snackbar shown when a mixdown scan turns up nothing: the message plus a
+  /// shortcut into Settings › Mixdown Folders so the user can check or add
+  /// the folder names being searched.
+  SnackBar _noMixdownFoundSnackBar(AppLocalizations l10n) => SnackBar(
+        content: Text(l10n.noPreviewSongFoundAutomatically),
+        action: SnackBarAction(
+          label: l10n.mixdownFoldersTabLabel,
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => const SettingsPage(
+                initialSection: SettingsSection.mixdownFolders,
+              ),
+            ),
+          ),
+        ),
+      );
+
+  /// User-initiated mixdown search (the "Auto-Find" button) — the only place
+  /// that scans the mixdown folders. Runs a fresh scan, persists the hit as
+  /// the auto preview, and reports the outcome.
   Future<void> _findMixdownNow() async {
     final l10n = AppLocalizations.of(context)!;
     final messenger = ScaffoldMessenger.of(context);
@@ -1631,9 +1649,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer>
     );
     if (!mounted) return;
     if (file == null) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(l10n.noPreviewSongFoundAutomatically)),
-      );
+      messenger.showSnackBar(_noMixdownFoundSnackBar(l10n));
       return;
     }
     setState(() => _autoDetectedPath = file.path);
@@ -1953,11 +1969,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer>
                     await clearAndAutoFindPreview(ref, widget.project);
                 if (!mounted) return;
                 if (found == null) {
-                  messenger.showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.noPreviewSongFoundAutomatically),
-                    ),
-                  );
+                  messenger.showSnackBar(_noMixdownFoundSnackBar(l10n));
                   return;
                 }
                 setState(() => _replacedPreviewPath = found);

@@ -83,7 +83,7 @@ void main() {
     expect(find.text('Preview song file not found'), findsOneWidget);
     expect(find.text('Cancel'), findsOneWidget);
     expect(find.text('Remove preview song'), findsOneWidget);
-    expect(find.text('Find automatically'), findsOneWidget);
+    expect(find.text('Auto-Find'), findsOneWidget);
     expect(find.text('Select New File'), findsOneWidget);
   });
 
@@ -93,7 +93,7 @@ void main() {
     // would only ever report "nothing found".
     await pumpAndOpen(tester, canAutoFind: false);
 
-    expect(find.text('Find automatically'), findsNothing);
+    expect(find.text('Auto-Find'), findsNothing);
     expect(find.text('Remove preview song'), findsOneWidget);
     expect(find.text('Select New File'), findsOneWidget);
   });
@@ -105,9 +105,9 @@ void main() {
     );
   });
 
-  testWidgets('"Find automatically" returns autoFind', (tester) async {
+  testWidgets('"Auto-Find" returns autoFind', (tester) async {
     expect(
-      await tapAndRead(tester, 'Find automatically'),
+      await tapAndRead(tester, 'Auto-Find'),
       PreviewNotFoundAction.autoFind,
     );
   });
