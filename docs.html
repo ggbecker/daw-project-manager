@@ -1536,7 +1536,7 @@
             ================================================================ -->
             <div class="docs-section" id="supported-daws">
                 <h2>Supported DAWs</h2>
-                <p>DAW Project Manager detects project files by extension. The following 14 DAWs get full treatment — deep metadata extraction is available for six of them (see <a href="#metadata-extraction">Metadata Extraction</a> below); the rest are detected and scanned the same way, just with BPM/key entered manually.</p>
+                <p>DAW Project Manager detects project files by extension. The following 14 DAWs get full treatment — deep metadata extraction is available for seven of them (see <a href="#metadata-extraction">Metadata Extraction</a> below); the rest are detected and scanned the same way, just with BPM/key entered manually.</p>
 
                 <div class="docs-table-wrap">
                     <table class="docs-table">
@@ -1576,7 +1576,7 @@
                             <tr>
                                 <td>Logic Pro</td>
                                 <td><code class="daw-ext">.logicx</code></td>
-                                <td>Directory bundle (macOS only). No automatic extraction yet.</td>
+                                <td>Directory bundle (macOS only). BPM, key, and version extracted during deep scan when running on macOS.</td>
                             </tr>
                             <tr>
                                 <td>MAGDA</td>
@@ -1623,7 +1623,7 @@
                 </div>
 
                 <h3>Additional DAWs</h3>
-                <p>These are detected and scanned exactly like the DAWs above — they just don't have automatic metadata extraction yet, same as Logic Pro or Pro Tools.</p>
+                <p>These are detected and scanned exactly like the DAWs above — they just don't have automatic metadata extraction yet, same as Maschine or Pro Tools.</p>
 
                 <div class="docs-table-wrap">
                     <table class="docs-table">
@@ -1658,6 +1658,7 @@
 
                 <h3>Logic Pro Note (macOS)</h3>
                 <p>Logic Pro project packages end in <code class="daw-ext">.logicx</code> and are actually directories (bundles) on macOS — same for Universal Audio LUNA (<code class="daw-ext">.luna</code>) and GarageBand (<code class="daw-ext">.band</code>). The app detects all three correctly and treats each bundle as a single project entry.</p>
+                <p>Deep Scan reads <strong>BPM, musical key, and the Logic Pro version</strong> the project was last saved from straight out of the bundle's property lists. This runs on macOS only — it uses a system tool that ships with macOS — so a <code class="daw-ext">.logicx</code> project synced onto a Windows or Linux machine is still detected and scanned, just with those fields left for manual entry.</p>
 
                 <h3>BPM and Key Override</h3>
                 <p>If deep scan cannot extract BPM or key from a particular file, or if the extracted value is wrong, you can always override it manually in the Project Detail page. Manual values are stored in the app database and take precedence over future deep scans.</p>
@@ -1686,12 +1687,14 @@
                             <tr><td>Bitwig Studio</td><td>✓</td><td>✓</td><td>✓</td><td></td></tr>
                             <tr><td>Cubase / Nuendo</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
                             <tr><td>FL Studio</td><td>✓</td><td></td><td>✓</td><td></td></tr>
+                            <tr><td>Logic Pro *</td><td>✓</td><td>✓</td><td>✓</td><td></td></tr>
                             <tr><td>MAGDA</td><td>✓</td><td>✓</td><td>✓</td><td></td></tr>
                             <tr><td>Reaper</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
                         </tbody>
                     </table>
                 </div>
 
+                <p>* Logic Pro extraction runs on macOS only — see <a href="#supported-daws">Logic Pro Note</a> above.</p>
                 <p>All other supported DAWs — including the 14 <a href="#supported-daws">additional DAWs</a> above — are detected and scanned but rely on manual entry today.</p>
             </div>
 
