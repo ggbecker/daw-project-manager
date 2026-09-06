@@ -1538,6 +1538,51 @@ class _ProjectDetailActionBar extends ConsumerWidget {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
+/// What the preview player should do when the project's preview fields change
+/// under it (see `_PreviewSongPlayerState.didUpdateWidget`).
+enum PreviewChangeAction {
+  /// Run a fresh mixdown-folder scan (project switched, or a genuine change
+  /// that isn't a removal).
+  rescanMixdown,
+
+  /// The user just removed their manual pick, but an auto-detected path is
+  /// still on record — show that, without scanning.
+  adoptKnownAutoPath,
+
+  /// The user just removed a preview on purpose and there's nothing to fall
+  /// back to — leave the player empty. Re-detection is now an explicit action
+  /// (the "Find automatically" button).
+  doNothing,
+}
+
+/// Pure decision behind the player's `didUpdateWidget`. Extracted so the
+/// removal-doesn't-re-detect rule is unit-testable — the widget itself, with
+/// its audio player / Hive / Riverpod wiring, is not.
+///
+/// Assumes it's only called when at least one of the inputs actually changed.
+@visibleForTesting
+PreviewChangeAction previewChangeAction({
+  required bool idChanged,
+  required String? oldManualPath,
+  required String? newManualPath,
+  required String? oldAutoPath,
+  required String? newAutoPath,
+}) {
+  if (idChanged) return PreviewChangeAction.rescanMixdown;
+
+  bool empty(String? s) => s == null || s.isEmpty;
+  final manualJustRemoved = oldManualPath != newManualPath && empty(newManualPath);
+  final autoJustRemoved = oldAutoPath != newAutoPath && newAutoPath == null;
+
+  if (manualJustRemoved) {
+    return newAutoPath != null
+        ? PreviewChangeAction.adoptKnownAutoPath
+        : PreviewChangeAction.doNothing;
+  }
+  if (autoJustRemoved) return PreviewChangeAction.doNothing;
+  return PreviewChangeAction.rescanMixdown;
+}
+
 class _PreviewSongPlayer extends ConsumerStatefulWidget {
   final MusicProject project;
   final Future<void> Function() onSongRemoved;
@@ -1628,6 +1673,38 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer>
     });
   }
 
+  /// User-initiated mixdown search (the "Find automatically" button). Unlike
+  /// [_detectMixdown] this always runs a fresh scan and reports the outcome,
+  /// so it's the deliberate way back to an auto preview after the user has
+  /// removed one — removal itself no longer re-scans.
+  Future<void> _findMixdownNow() async {
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    final customFolders = ref.read(customMixdownFoldersProvider).value;
+    final customFoldersByDaw = ref.read(customMixdownFoldersByDawProvider).value;
+    final file = MixdownDetectorService.findLatestMixdown(
+      widget.project,
+      customFolders: customFolders,
+      customFoldersByDaw: customFoldersByDaw,
+    );
+    if (!mounted) return;
+    if (file == null) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.noPreviewSongFoundAutomatically)),
+      );
+      return;
+    }
+    setState(() => _autoDetectedPath = file.path);
+    final repo = await ref.read(repositoryProvider.future);
+    await repo.updateProject(
+      widget.project.copyWith(previewSongAutoPath: file.path),
+    );
+    if (!mounted) return;
+    ref.invalidate(allProjectsStreamProvider);
+    _startBackgroundPrep();
+    messenger.showSnackBar(SnackBar(content: Text(l10n.previewSongAdded)));
+  }
+
   void _attachListeners(AudioPlayer player, int gen) {
     player.onPlayerStateChanged.listen((state) {
       if (gen != _playerGen || !mounted) return;
@@ -1681,13 +1758,23 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer>
         _peaks = null;
         _autoDetectedPath = null;
       });
-      // Don't immediately re-detect when the auto path was just cleared by the
-      // user removing it — that would put it straight back. Re-detection still
-      // happens on project change (idChanged) or on the next explicit trigger
-      // (play button / refresh / rescan).
-      final autoJustRemoved = autoPathChanged && widget.project.previewSongAutoPath == null && !idChanged;
-      if (!autoJustRemoved) {
-        _detectMixdown();
+      // Don't immediately re-detect when the user just removed a preview on
+      // purpose. Putting a mixdown straight back is exactly what they were
+      // trying to undo — a fresh scan is now an explicit action ("Find
+      // automatically", or switching projects). See [previewChangeAction].
+      switch (previewChangeAction(
+        idChanged: idChanged,
+        oldManualPath: oldWidget.project.previewSongPath,
+        newManualPath: widget.project.previewSongPath,
+        oldAutoPath: oldWidget.project.previewSongAutoPath,
+        newAutoPath: widget.project.previewSongAutoPath,
+      )) {
+        case PreviewChangeAction.rescanMixdown:
+          _detectMixdown();
+        case PreviewChangeAction.adoptKnownAutoPath:
+          _autoDetectedPath = widget.project.previewSongAutoPath;
+        case PreviewChangeAction.doNothing:
+          break;
       }
       _startBackgroundPrep();
     }
@@ -2953,6 +3040,19 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer>
                                   : AppLocalizations.of(context)!.selectPreviewSong,
                             ),
                           ),
+                          // Deliberate re-scan of the mixdown folders. Removal
+                          // no longer auto-detects, so this is how the user
+                          // opts back into an auto preview. Only meaningful
+                          // when they haven't set a manual pick.
+                          if (widget.project.previewSongPath?.isNotEmpty != true)
+                            OutlinedButton.icon(
+                              onPressed: _findMixdownNow,
+                              icon: const Icon(Icons.travel_explore),
+                              label: Text(
+                                AppLocalizations.of(context)!
+                                    .findPreviewAutomatically,
+                              ),
+                            ),
                           if (_effectivePreviewPath != null &&
                               _effectivePreviewPath!.isNotEmpty &&
                               !_effectivePreviewPath!.startsWith('drive://')) ...[
