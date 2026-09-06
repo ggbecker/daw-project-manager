@@ -115,7 +115,22 @@ modules:
       # version matches the tag" step fails the workflow if that's
       # forgotten, so this can't silently go stale the way a hardcoded
       # value here once did.
-      - APP_VERSION=$(grep -o '<release version="[^"]*"' flatpak/com.bandpassrecords.dpm.metainfo.xml | head -1 | sed -E 's/.*version="([^"]*)".*/\1/');
+      #
+      # The `cp` before the build swaps ffmpeg_kit_flutter_new_audio's Linux
+      # native side for the no-op stub in flatpak/ffmpeg_kit_linux_stub/: the
+      # real CMakeLists downloads a ~19 MB prebuilt ffmpeg bundle from GitHub
+      # at *configure* time and FATAL_ERRORs without network, which this
+      # sandboxed offline build can't do. The app never calls ffmpeg-kit on
+      # Linux anyway — AudioAnalysisService.convertForSharing shells out to a
+      # PATH ffmpeg there, not the in-process library. Kept in this same
+      # command (after the flatpak-flutter-inserted setup-flutter.sh, which
+      # is what populates PUB_CACHE) so the vendored package exists by the
+      # time we patch it. The wildcard tolerates a pubspec.lock version bump;
+      # the plugin's public header is left untouched.
+      - FK="$(echo "$PUB_CACHE"/hosted/pub.dev/ffmpeg_kit_flutter_new_audio-*/linux)";
+        cp flatpak/ffmpeg_kit_linux_stub/CMakeLists.txt "$FK/CMakeLists.txt";
+        cp flatpak/ffmpeg_kit_linux_stub/ffmpeg_kit_flutter_plugin_stub.cc "$FK/ffmpeg_kit_flutter_plugin_stub.cc";
+        APP_VERSION=$(grep -o '<release version="[^"]*"' flatpak/com.bandpassrecords.dpm.metainfo.xml | head -1 | sed -E 's/.*version="([^"]*)".*/\1/');
         flutter build linux --release --no-pub --dart-define=APP_VERSION=${APP_VERSION:-0.0.0}
       # `flutter build linux` names the bundle directory after the *host*
       # architecture (build/linux/x64/... on x86_64, build/linux/arm64/... on

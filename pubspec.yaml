@@ -88,9 +88,14 @@ dependencies:
   # CAUTION: this plugin also declares windows/linux/macos. Their CMakeLists
   # download a ~19 MB prebuilt ffmpeg bundle from GitHub at *configure* time
   # and hard-fail (FATAL_ERROR) if that download can't happen, so a desktop
-  # build now needs network at build time. That breaks the network-isolated
-  # Flathub build specifically — see flatpak/README.md and the
-  # FFMPEGKIT_LOCAL_DIR escape hatch in the plugin's CMakeLists.
+  # build now needs network at build time. CI's Windows/macOS/Linux-tarball
+  # builds have network, so they just get slower and ~15 MB fatter with
+  # ffmpeg libs nothing calls. The offline Flathub build can't download at
+  # all — it swaps this plugin's Linux native side for a no-op stub (see
+  # flatpak/ffmpeg_kit_linux_stub/ and the `cp` in
+  # flatpak/com.bandpassrecords.dpm.yml), which is safe because nothing
+  # calls ffmpeg-kit on Linux (AudioAnalysisService.convertForSharing shells
+  # out to a PATH ffmpeg there instead).
   ffmpeg_kit_flutter_new_audio: ^2.5.2
   flutter_secure_storage: ^10.0.0
   flutter_local_notifications: ^22.0.0
