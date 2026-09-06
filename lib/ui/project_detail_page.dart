@@ -1538,51 +1538,6 @@ class _ProjectDetailActionBar extends ConsumerWidget {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-/// What the preview player should do when the project's preview fields change
-/// under it (see `_PreviewSongPlayerState.didUpdateWidget`).
-enum PreviewChangeAction {
-  /// Run a fresh mixdown-folder scan (project switched, or a genuine change
-  /// that isn't a removal).
-  rescanMixdown,
-
-  /// The user just removed their manual pick, but an auto-detected path is
-  /// still on record — show that, without scanning.
-  adoptKnownAutoPath,
-
-  /// The user just removed a preview on purpose and there's nothing to fall
-  /// back to — leave the player empty. Re-detection is now an explicit action
-  /// (the "Find automatically" button).
-  doNothing,
-}
-
-/// Pure decision behind the player's `didUpdateWidget`. Extracted so the
-/// removal-doesn't-re-detect rule is unit-testable — the widget itself, with
-/// its audio player / Hive / Riverpod wiring, is not.
-///
-/// Assumes it's only called when at least one of the inputs actually changed.
-@visibleForTesting
-PreviewChangeAction previewChangeAction({
-  required bool idChanged,
-  required String? oldManualPath,
-  required String? newManualPath,
-  required String? oldAutoPath,
-  required String? newAutoPath,
-}) {
-  if (idChanged) return PreviewChangeAction.rescanMixdown;
-
-  bool empty(String? s) => s == null || s.isEmpty;
-  final manualJustRemoved = oldManualPath != newManualPath && empty(newManualPath);
-  final autoJustRemoved = oldAutoPath != newAutoPath && newAutoPath == null;
-
-  if (manualJustRemoved) {
-    return newAutoPath != null
-        ? PreviewChangeAction.adoptKnownAutoPath
-        : PreviewChangeAction.doNothing;
-  }
-  if (autoJustRemoved) return PreviewChangeAction.doNothing;
-  return PreviewChangeAction.rescanMixdown;
-}
-
 class _PreviewSongPlayer extends ConsumerStatefulWidget {
   final MusicProject project;
   final Future<void> Function() onSongRemoved;
@@ -1645,38 +1600,25 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer>
   void initState() {
     super.initState();
     _attachListeners(_audioPlayer, _playerGen);
-    _detectMixdown();
+    _adoptStoredAutoPath();
     _startBackgroundPrep();
   }
 
-  void _detectMixdown() {
+  /// Adopts an already-detected mixdown path if one is on record. Deliberately
+  /// does NOT scan: opening a project (or switching to another) shouldn't
+  /// silently walk its mixdown folders and persist a preview the user never
+  /// asked for. A fresh scan only happens when the user presses "Find
+  /// automatically" ([_findMixdownNow]).
+  void _adoptStoredAutoPath() {
     if (widget.project.previewSongPath?.isNotEmpty == true) return;
     if (widget.project.previewSongAutoPath != null) {
       _autoDetectedPath = widget.project.previewSongAutoPath;
-      return;
     }
-    Future.microtask(() async {
-      final customFolders = ref.read(customMixdownFoldersProvider).value;
-      final customFoldersByDaw = ref.read(customMixdownFoldersByDawProvider).value;
-      final file = MixdownDetectorService.findLatestMixdown(
-        widget.project,
-        customFolders: customFolders,
-        customFoldersByDaw: customFoldersByDaw,
-      );
-      if (mounted && file != null) {
-        setState(() => _autoDetectedPath = file.path);
-        final repo = await ref.read(repositoryProvider.future);
-        await repo.updateProject(widget.project.copyWith(previewSongAutoPath: file.path));
-        ref.invalidate(allProjectsStreamProvider);
-        _startBackgroundPrep();
-      }
-    });
   }
 
-  /// User-initiated mixdown search (the "Find automatically" button). Unlike
-  /// [_detectMixdown] this always runs a fresh scan and reports the outcome,
-  /// so it's the deliberate way back to an auto preview after the user has
-  /// removed one — removal itself no longer re-scans.
+  /// User-initiated mixdown search (the "Find automatically" button) — the
+  /// only place that scans the mixdown folders. Runs a fresh scan, persists
+  /// the hit as the auto preview, and reports the outcome.
   Future<void> _findMixdownNow() async {
     final l10n = AppLocalizations.of(context)!;
     final messenger = ScaffoldMessenger.of(context);
@@ -1758,24 +1700,11 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer>
         _peaks = null;
         _autoDetectedPath = null;
       });
-      // Don't immediately re-detect when the user just removed a preview on
-      // purpose. Putting a mixdown straight back is exactly what they were
-      // trying to undo — a fresh scan is now an explicit action ("Find
-      // automatically", or switching projects). See [previewChangeAction].
-      switch (previewChangeAction(
-        idChanged: idChanged,
-        oldManualPath: oldWidget.project.previewSongPath,
-        newManualPath: widget.project.previewSongPath,
-        oldAutoPath: oldWidget.project.previewSongAutoPath,
-        newAutoPath: widget.project.previewSongAutoPath,
-      )) {
-        case PreviewChangeAction.rescanMixdown:
-          _detectMixdown();
-        case PreviewChangeAction.adoptKnownAutoPath:
-          _autoDetectedPath = widget.project.previewSongAutoPath;
-        case PreviewChangeAction.doNothing:
-          break;
-      }
+      // Adopt an already-detected path if there is one, but never scan here —
+      // not on a project switch, and not after a removal (which would just
+      // undo what the user did). A fresh scan is only ever the "Find
+      // automatically" button ([_findMixdownNow]).
+      _adoptStoredAutoPath();
       _startBackgroundPrep();
     }
   }
