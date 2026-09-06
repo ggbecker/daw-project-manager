@@ -107,4 +107,36 @@ void main() {
       expect(name, 'Massive Attack - Teardrop (Audio Crawler Remix)');
     });
   });
+
+  group('primaryArtistWhenSwitchingToRemix', () {
+    // The primary-artist field is auto-filled with the profile name in the
+    // artist/collab schemes. Under remix it means the *original* track's
+    // artist, so switching to remix must not carry that auto-fill over —
+    // otherwise a new remix is silently credited to the person remixing it.
+    test('drops a carried-over profile-name auto-fill', () {
+      expect(primaryArtistWhenSwitchingToRemix('Audio Crawler', 'Audio Crawler'),
+          isEmpty);
+    });
+
+    test('ignores surrounding whitespace when matching the profile name', () {
+      expect(
+          primaryArtistWhenSwitchingToRemix('  Audio Crawler ', 'Audio Crawler'),
+          isEmpty);
+    });
+
+    test('keeps a real original-artist the user typed', () {
+      expect(
+          primaryArtistWhenSwitchingToRemix('Massive Attack', 'Audio Crawler'),
+          'Massive Attack');
+    });
+
+    test('leaves an already-empty field empty', () {
+      expect(primaryArtistWhenSwitchingToRemix('', 'Audio Crawler'), isEmpty);
+    });
+
+    test('no-ops when there is no profile name', () {
+      expect(primaryArtistWhenSwitchingToRemix('Audio Crawler', null),
+          'Audio Crawler');
+    });
+  });
 }

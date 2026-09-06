@@ -53,6 +53,25 @@ String buildRemixFolderName({
   return '$datePrefix$artist - $trackName$suffix';
 }
 
+/// The value the primary-artist field should keep when the user switches the
+/// naming scheme *to* remix.
+///
+/// In every other scheme that field is the profile's own artist and is
+/// auto-populated with the profile name. Under remix the same field means the
+/// *original* track's artist — someone else — so a carried-over profile-name
+/// auto-fill must be dropped, or a new remix silently credits the original
+/// song to you. Anything the user actually typed is left alone.
+@visibleForTesting
+String primaryArtistWhenSwitchingToRemix(String current, String? profileName) {
+  final trimmed = current.trim();
+  if (profileName != null &&
+      trimmed.isNotEmpty &&
+      trimmed == profileName.trim()) {
+    return '';
+  }
+  return current;
+}
+
 class CreateProjectDialog extends ConsumerStatefulWidget {
   /// Pre-selects a template and jumps straight to the template flow — used
   /// by "Use as new project" on [ProjectTemplatesPage] so the user doesn't
@@ -830,6 +849,16 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
                 label: l10n.createProjectSchemeRemix,
                 selected: _scheme == _NamingScheme.remix,
                 onTap: () => setState(() {
+                  // The primary-artist field is auto-filled with the profile
+                  // name in the other schemes; under remix it means the
+                  // original track's artist, so drop a carried-over auto-fill.
+                  final fixed = primaryArtistWhenSwitchingToRemix(
+                    _primaryArtistController.text,
+                    ref.read(currentProfileProvider).value?.name,
+                  );
+                  if (fixed != _primaryArtistController.text) {
+                    _primaryArtistController.text = fixed;
+                  }
                   _scheme = _NamingScheme.remix;
                   _validateFolderName();
                 }),
