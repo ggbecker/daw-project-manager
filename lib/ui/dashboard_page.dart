@@ -820,8 +820,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       }
 
       // Show session-reconciliation dialogs for any resolved folders that had
-      // an active session stamp.
+      // an active session stamp — but only while session mode is on. With it
+      // off there is no session UI, so the "end and record / continue" prompt
+      // would be meaningless; the folders are already resolved and removed
+      // above, we just skip the prompt (equivalent to "continue").
       for (final pf in pendingWithSession) {
+        if (!ref.read(sessionModeProvider)) break;
         if (!resolved.contains(pf.id)) continue;
         if (!mounted) break;
         final sessionStart = pf.sessionStartedAt!;
@@ -12473,7 +12477,13 @@ class _PendingFolderRow extends ConsumerWidget {
                 MusicProject? sessionProject;
                 bool shouldSetActive = false;
 
-                if (sessionStart != null && context.mounted) {
+                // Only reconcile the session interactively while session mode
+                // is on — otherwise there is no session UI for the "end and
+                // record / continue" prompt to belong to. The folder still
+                // resolves and is removed below via bump().
+                if (sessionStart != null &&
+                    context.mounted &&
+                    ref.read(sessionModeProvider)) {
                   sessionProject = repo
                       .getAllProjects()
                       .where((p) => p.filePath.startsWith(pf.path))
