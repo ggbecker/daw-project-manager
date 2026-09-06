@@ -75,7 +75,12 @@ class _DawLaunchCommandDialogState
   @override
   void initState() {
     super.initState();
-    _pathController = TextEditingController(text: widget.currentPath ?? '');
+    // In "path missing" mode currentPath is the (possibly multi-line) list of
+    // broken paths shown in the banner, not something to prefill the field
+    // with. The dialog always *adds* a new location now.
+    _pathController = TextEditingController(
+      text: widget.pathMissing ? '' : (widget.currentPath ?? ''),
+    );
     _loadDetectedCandidates();
   }
 
@@ -119,7 +124,17 @@ class _DawLaunchCommandDialogState
     }
     setState(() => _busy = true);
     final repo = await ref.read(repositoryProvider.future);
-    await repo.setDawLaunchCommand(widget.dawType, path);
+    await repo.addDawLaunchCommand(widget.dawType, path);
+    // "Fix it" flow: once a working location is added, drop the saved ones
+    // that no longer resolve so the DAW isn't left with dead entries.
+    if (widget.pathMissing) {
+      for (final stale in repo
+          .getDawLaunchCommandPaths(widget.dawType)
+          .where((p) => p != path && !FileLauncher.targetExists(p))
+          .toList()) {
+        await repo.removeDawLaunchCommand(widget.dawType, stale);
+      }
+    }
     ref.invalidate(dawLaunchCommandsProvider);
     if (!mounted) return;
 
@@ -145,39 +160,6 @@ class _DawLaunchCommandDialogState
         ),
       ),
     );
-  }
-
-  Future<void> _remove() async {
-    final l10n = AppLocalizations.of(context)!;
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Theme.of(ctx).cardColor,
-        title: Text(l10n.dawLaunchCommandRemoveConfirmTitle),
-        content: Text(
-          l10n.dawLaunchCommandRemoveConfirmMessage(widget.dawType),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.cancel),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text(l10n.remove),
-          ),
-        ],
-      ),
-    );
-    if (confirm != true || !mounted) return;
-
-    setState(() => _busy = true);
-    final repo = await ref.read(repositoryProvider.future);
-    await repo.setDawLaunchCommand(widget.dawType, null);
-    ref.invalidate(dawLaunchCommandsProvider);
-    if (!mounted) return;
-    Navigator.of(context).pop();
   }
 
   @override
@@ -329,12 +311,6 @@ class _DawLaunchCommandDialogState
         ),
       ),
       actions: [
-        if (widget.currentPath != null)
-          TextButton(
-            onPressed: _busy ? null : _remove,
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: Text(l10n.remove),
-          ),
         TextButton(
           onPressed: _busy ? null : () => Navigator.of(context).pop(),
           child: Text(l10n.cancel),

@@ -66,7 +66,7 @@ void main() {
   testWidgets('pathMissing mode shows the missing-path warning', (tester) async {
     await pump(tester, pathMissing: true, currentPath: '/gone/Logic Pro.app');
 
-    expect(find.textContaining('no longer exists'), findsOneWidget);
+    expect(find.textContaining('no longer exist'), findsOneWidget);
     expect(
       find.textContaining("couldn't open this project through the system"),
       findsNothing,

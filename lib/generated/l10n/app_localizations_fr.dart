@@ -3127,7 +3127,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get dawLaunchCommandsSectionDescription =>
-      '\"Launch in DAW\" normally hands the project to the system\'s default application. When that doesn\'t work, point it here at the exact DAW program to run — an executable on Windows and Linux (or an AppImage), or the .app on macOS — and the app will open projects of that type with it directly. On Linux this is usually required; on Windows and macOS it\'s a fallback for when the standard launch fails.';
+      '\"Launch in DAW\" normally hands the project to the system\'s default application. When that doesn\'t work, point it here at the exact DAW program to run — an executable on Windows and Linux (or an AppImage), or the .app on macOS — and the app will open projects of that type with it directly. On Linux this is usually required; on Windows and macOS it\'s a fallback for when the standard launch fails. You can add more than one location per DAW (e.g. two versions); the app asks which to use when you launch.';
 
   @override
   String get dawLaunchCommandNotConfigured => 'Not configured';
@@ -3137,6 +3137,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get dawLaunchCommandConfigureButton => 'Configure';
+
+  @override
+  String get dawLaunchCommandAddButton => 'Add location';
 
   @override
   String dawLaunchCommandDialogTitle(String dawType) {
@@ -3155,7 +3158,17 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String dawLaunchCommandDialogMissingBanner(String dawType, String path) {
-    return 'The previously configured location for $dawType no longer exists:\n$path';
+    return 'The saved location(s) for $dawType no longer exist:\n$path';
+  }
+
+  @override
+  String dawLaunchPickerTitle(String dawType) {
+    return 'Which $dawType?';
+  }
+
+  @override
+  String dawLaunchPickerBody(String dawType, String project) {
+    return 'Choose which $dawType location to open “$project” with.';
   }
 
   @override
@@ -3175,14 +3188,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get dawLaunchCommandDialogInvalidPath => 'This file doesn\'t exist';
-
-  @override
-  String get dawLaunchCommandRemoveConfirmTitle => 'Remove launch command?';
-
-  @override
-  String dawLaunchCommandRemoveConfirmMessage(String dawType) {
-    return 'Remove the configured launch command for $dawType? Launching a $dawType project will fall back to the system default (which may not work).';
-  }
 
   @override
   String get dawLaunchCommandsEmptyState =>

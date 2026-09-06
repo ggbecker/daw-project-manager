@@ -1966,8 +1966,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   Widget _buildDawLaunchCommandsSection(AppLocalizations l10n) {
-    final launchCommands =
-        ref.watch(dawLaunchCommandsProvider).value ?? const <String, String>{};
+    final launchCommands = ref.watch(dawLaunchCommandsProvider).value ??
+        const <String, List<String>>{};
     final projects = ref.watch(allProjectsStreamProvider).value ?? const [];
     final dawTypes =
         <String>{
@@ -2021,12 +2021,23 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               children: [
                 for (final dawType in dawTypes) ...[
                   if (dawType != dawTypes.first) const Divider(height: 1),
-                  _DawLaunchCommandTile(
+                  _DawLaunchCommandGroup(
                     dawType: dawType,
-                    configuredPath: launchCommands[dawType],
+                    configuredPaths:
+                        launchCommands[dawType] ?? const <String>[],
                     notConfiguredLabel: l10n.dawLaunchCommandNotConfigured,
                     missingTooltip: l10n.dawLaunchCommandMissingTooltip,
-                    configureLabel: l10n.dawLaunchCommandConfigureButton,
+                    addLabel: l10n.dawLaunchCommandAddButton,
+                    removeTooltip: l10n.remove,
+                    onAdd: () => showDawLaunchCommandDialog(
+                      context,
+                      dawType: dawType,
+                    ),
+                    onRemovePath: (path) async {
+                      final repo = await ref.read(repositoryProvider.future);
+                      await repo.removeDawLaunchCommand(dawType, path);
+                      ref.invalidate(dawLaunchCommandsProvider);
+                    },
                   ),
                 ],
               ],
@@ -3246,59 +3257,106 @@ class _MixdownDawTile extends StatelessWidget {
   }
 }
 
-class _DawLaunchCommandTile extends StatelessWidget {
+/// One DAW's block in the DAW Locations list: its name, every configured
+/// override path (each with a "no longer exists" warning and a remove
+/// button), and an "Add location" action. A DAW with several paths makes the
+/// launcher ask which to use.
+class _DawLaunchCommandGroup extends StatelessWidget {
   final String dawType;
-  final String? configuredPath;
+  final List<String> configuredPaths;
   final String notConfiguredLabel;
   final String missingTooltip;
-  final String configureLabel;
+  final String addLabel;
+  final String removeTooltip;
+  final VoidCallback onAdd;
+  final Future<void> Function(String path) onRemovePath;
 
-  const _DawLaunchCommandTile({
+  const _DawLaunchCommandGroup({
     required this.dawType,
-    required this.configuredPath,
+    required this.configuredPaths,
     required this.notConfiguredLabel,
     required this.missingTooltip,
-    required this.configureLabel,
+    required this.addLabel,
+    required this.removeTooltip,
+    required this.onAdd,
+    required this.onRemovePath,
   });
 
   @override
   Widget build(BuildContext context) {
     final logoPath = getDawLogoPath(dawType);
-    final path = configuredPath;
-    final missing = path != null && !FileLauncher.targetExists(path);
 
-    return ListTile(
-      leading: logoPath != null
-          ? Image.asset(logoPath, width: 24, height: 24)
-          : const Icon(Icons.piano_outlined),
-      title: Text(dawType),
-      subtitle: Text(
-        path ?? notConfiguredLabel,
-        style: Theme.of(context).textTheme.bodySmall,
-        overflow: TextOverflow.ellipsis,
-      ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 10, 8, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (missing)
-            Tooltip(
-              message: missingTooltip,
-              child: Icon(
-                Icons.warning_amber_rounded,
-                color: Colors.orange.shade400,
-                size: 20,
+          Row(
+            children: [
+              logoPath != null
+                  ? Image.asset(
+                      logoPath,
+                      width: 24,
+                      height: 24,
+                      errorBuilder: (context, error, stack) =>
+                          const Icon(Icons.piano_outlined),
+                    )
+                  : const Icon(Icons.piano_outlined),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  dawType,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
               ),
-            ),
-          const SizedBox(width: 8),
-          OutlinedButton(
-            onPressed: () => showDawLaunchCommandDialog(
-              context,
-              dawType: dawType,
-              currentPath: path,
-              pathMissing: missing,
-            ),
-            child: Text(configureLabel),
+              TextButton.icon(
+                onPressed: onAdd,
+                icon: const Icon(Icons.add, size: 18),
+                label: Text(addLabel),
+              ),
+            ],
           ),
+          if (configuredPaths.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(left: 34, top: 2),
+              child: Text(
+                notConfiguredLabel,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            )
+          else
+            for (final path in configuredPaths)
+              Padding(
+                padding: const EdgeInsets.only(left: 34),
+                child: Row(
+                  children: [
+                    if (!FileLauncher.targetExists(path)) ...[
+                      Tooltip(
+                        message: missingTooltip,
+                        child: Icon(
+                          Icons.warning_amber_rounded,
+                          color: Colors.orange.shade400,
+                          size: 18,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                    ],
+                    Expanded(
+                      child: Text(
+                        path,
+                        style: Theme.of(context).textTheme.bodySmall,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: removeTooltip,
+                      visualDensity: VisualDensity.compact,
+                      icon: const Icon(Icons.close, size: 18),
+                      onPressed: () => onRemovePath(path),
+                    ),
+                  ],
+                ),
+              ),
         ],
       ),
     );

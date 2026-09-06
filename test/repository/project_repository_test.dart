@@ -470,52 +470,85 @@ void main() {
   });
 
   group('ProjectRepository.DAW launch commands', () {
-    test('getDawLaunchCommand returns null when not configured', () async {
+    test('getDawLaunchCommandPaths is empty when not configured', () async {
       final repo = await HiveTestHelper.createRepository();
-      expect(repo.getDawLaunchCommand('Zrythm'), isNull);
+      expect(repo.getDawLaunchCommandPaths('Zrythm'), isEmpty);
     });
 
-    test('setDawLaunchCommand saves a trimmed path per DAW', () async {
+    test('addDawLaunchCommand saves a trimmed path per DAW', () async {
       final repo = await HiveTestHelper.createRepository();
-      await repo.setDawLaunchCommand('Zrythm', '  /opt/zrythm/zrythm  ');
-      expect(repo.getDawLaunchCommand('Zrythm'), '/opt/zrythm/zrythm');
-      expect(repo.getDawLaunchCommands(), {'Zrythm': '/opt/zrythm/zrythm'});
-    });
-
-    test('setDawLaunchCommand keeps entries for other DAWs independent', () async {
-      final repo = await HiveTestHelper.createRepository();
-      await repo.setDawLaunchCommand('Zrythm', '/opt/zrythm/zrythm');
-      await repo.setDawLaunchCommand('Ardour', '/opt/Ardour/Ardour.AppImage');
+      await repo.addDawLaunchCommand('Zrythm', '  /opt/zrythm/zrythm  ');
+      expect(repo.getDawLaunchCommandPaths('Zrythm'), ['/opt/zrythm/zrythm']);
       expect(repo.getDawLaunchCommands(), {
-        'Zrythm': '/opt/zrythm/zrythm',
-        'Ardour': '/opt/Ardour/Ardour.AppImage',
+        'Zrythm': ['/opt/zrythm/zrythm'],
       });
     });
 
-    test('setDawLaunchCommand with null removes only that DAW\'s entry', () async {
+    test('addDawLaunchCommand keeps several ordered paths for one DAW', () async {
       final repo = await HiveTestHelper.createRepository();
-      await repo.setDawLaunchCommand('Zrythm', '/opt/zrythm/zrythm');
-      await repo.setDawLaunchCommand('Ardour', '/opt/Ardour/Ardour.AppImage');
-      await repo.setDawLaunchCommand('Zrythm', null);
-      expect(repo.getDawLaunchCommand('Zrythm'), isNull);
+      await repo.addDawLaunchCommand('Ableton Live', '/Applications/Live 11.app');
+      await repo.addDawLaunchCommand('Ableton Live', '/Applications/Live 12.app');
+      expect(repo.getDawLaunchCommandPaths('Ableton Live'), [
+        '/Applications/Live 11.app',
+        '/Applications/Live 12.app',
+      ]);
+    });
+
+    test('addDawLaunchCommand ignores a duplicate and a blank path', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.addDawLaunchCommand('Zrythm', '/opt/zrythm/zrythm');
+      await repo.addDawLaunchCommand('Zrythm', '/opt/zrythm/zrythm');
+      await repo.addDawLaunchCommand('Zrythm', '   ');
+      expect(repo.getDawLaunchCommandPaths('Zrythm'), ['/opt/zrythm/zrythm']);
+    });
+
+    test('addDawLaunchCommand keeps entries for other DAWs independent', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.addDawLaunchCommand('Zrythm', '/opt/zrythm/zrythm');
+      await repo.addDawLaunchCommand('Ardour', '/opt/Ardour/Ardour.AppImage');
       expect(repo.getDawLaunchCommands(), {
-        'Ardour': '/opt/Ardour/Ardour.AppImage',
+        'Zrythm': ['/opt/zrythm/zrythm'],
+        'Ardour': ['/opt/Ardour/Ardour.AppImage'],
       });
     });
 
-    test('setDawLaunchCommand with an empty string removes the entry', () async {
+    test('removeDawLaunchCommand drops one path, keeping the rest', () async {
       final repo = await HiveTestHelper.createRepository();
-      await repo.setDawLaunchCommand('Zrythm', '/opt/zrythm/zrythm');
-      await repo.setDawLaunchCommand('Zrythm', '   ');
-      expect(repo.getDawLaunchCommand('Zrythm'), isNull);
+      await repo.addDawLaunchCommand('Ableton Live', '/a.app');
+      await repo.addDawLaunchCommand('Ableton Live', '/b.app');
+      await repo.removeDawLaunchCommand('Ableton Live', '/a.app');
+      expect(repo.getDawLaunchCommandPaths('Ableton Live'), ['/b.app']);
+    });
+
+    test('removing the last path drops the DAW and clears the setting', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.addDawLaunchCommand('Zrythm', '/opt/zrythm/zrythm');
+      await repo.removeDawLaunchCommand('Zrythm', '/opt/zrythm/zrythm');
       expect(repo.getDawLaunchCommands(), isEmpty);
+      expect(repo.appSettingsBox.get('dawLaunchCommandsByDaw'), isNull);
     });
 
-    test('removing the last entry deletes the underlying setting', () async {
+    test('clearDawLaunchCommands removes only that DAW', () async {
       final repo = await HiveTestHelper.createRepository();
-      await repo.setDawLaunchCommand('Zrythm', '/opt/zrythm/zrythm');
-      await repo.setDawLaunchCommand('Zrythm', null);
-      expect(repo.appSettingsBox.get('dawLaunchCommandsByDaw'), isNull);
+      await repo.addDawLaunchCommand('Zrythm', '/z1');
+      await repo.addDawLaunchCommand('Zrythm', '/z2');
+      await repo.addDawLaunchCommand('Ardour', '/a1');
+      await repo.clearDawLaunchCommands('Zrythm');
+      expect(repo.getDawLaunchCommands(), {
+        'Ardour': ['/a1'],
+      });
+    });
+
+    test('reads the legacy single-string-per-DAW JSON shape', () async {
+      final repo = await HiveTestHelper.createRepository();
+      await repo.appSettingsBox.put(
+        'dawLaunchCommandsByDaw',
+        '{"Zrythm":"/opt/zrythm/zrythm","Ardour":["/a1","/a2"]}',
+      );
+      expect(repo.getDawLaunchCommands(), {
+        'Zrythm': ['/opt/zrythm/zrythm'],
+        'Ardour': ['/a1', '/a2'],
+      });
     });
   });
 

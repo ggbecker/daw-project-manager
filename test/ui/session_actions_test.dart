@@ -156,8 +156,8 @@ void main() {
         expect(
           resolveDawLaunchAction(
             dawType: null,
-            overridePath: '/opt/whatever',
-            overridePathExists: true,
+            configuredPaths: const ['/opt/whatever'],
+            existingPaths: const ['/opt/whatever'],
             isLinux: linux,
           ),
           DawLaunchAction.systemDefault,
@@ -165,13 +165,13 @@ void main() {
       }
     });
 
-    test('override configured and present → run it (every platform)', () {
+    test('one override configured and present → run it (every platform)', () {
       for (final linux in [true, false]) {
         expect(
           resolveDawLaunchAction(
             dawType: 'Ableton Live',
-            overridePath: '/Applications/Ableton Live.app',
-            overridePathExists: true,
+            configuredPaths: const ['/Applications/Ableton Live.app'],
+            existingPaths: const ['/Applications/Ableton Live.app'],
             isLinux: linux,
           ),
           DawLaunchAction.useOverride,
@@ -179,13 +179,37 @@ void main() {
       }
     });
 
-    test('override configured but path gone → open the "missing" dialog', () {
+    test('two or more overrides resolve → ask which one', () {
+      expect(
+        resolveDawLaunchAction(
+          dawType: 'Ableton Live',
+          configuredPaths: const ['/a/Live 11.app', '/a/Live 12.app'],
+          existingPaths: const ['/a/Live 11.app', '/a/Live 12.app'],
+          isLinux: false,
+        ),
+        DawLaunchAction.chooseOverride,
+      );
+    });
+
+    test('several configured but only one resolves → run that one', () {
+      expect(
+        resolveDawLaunchAction(
+          dawType: 'Ableton Live',
+          configuredPaths: const ['/a/Live 11.app', '/gone/Live 12.app'],
+          existingPaths: const ['/a/Live 11.app'],
+          isLinux: false,
+        ),
+        DawLaunchAction.useOverride,
+      );
+    });
+
+    test('overrides configured but none resolve → open the "missing" dialog', () {
       for (final linux in [true, false]) {
         expect(
           resolveDawLaunchAction(
             dawType: 'Ableton Live',
-            overridePath: '/gone/Ableton Live.exe',
-            overridePathExists: false,
+            configuredPaths: const ['/gone/a.exe', '/gone/b.exe'],
+            existingPaths: const [],
             isLinux: linux,
           ),
           DawLaunchAction.overrideMissing,
@@ -197,8 +221,8 @@ void main() {
       expect(
         resolveDawLaunchAction(
           dawType: 'Bitwig Studio',
-          overridePath: null,
-          overridePathExists: false,
+          configuredPaths: const [],
+          existingPaths: const [],
           isLinux: true,
         ),
         DawLaunchAction.promptConfigure,
@@ -209,8 +233,8 @@ void main() {
       expect(
         resolveDawLaunchAction(
           dawType: 'Logic Pro',
-          overridePath: null,
-          overridePathExists: false,
+          configuredPaths: const [],
+          existingPaths: const [],
           isLinux: false,
         ),
         DawLaunchAction.systemDefault,

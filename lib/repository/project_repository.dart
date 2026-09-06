@@ -139,43 +139,90 @@ class ProjectRepository {
     }
   }
 
-  // "Launch in DAW" executable override, keyed by the same DAW display-name
+  // "Launch in DAW" executable overrides, keyed by the same DAW display-name
   // strings MetadataExtractor produces (project.dawType) — global
-  // (device-local), not per-profile: it describes what's physically
+  // (device-local), not per-profile: they describe what's physically
   // installed on this machine, not anything about a music profile's
   // identity. Used on every desktop platform: always on Linux (no
   // dependable OS file association for most DAWs), and on Windows/macOS as a
   // fallback the user can configure when the standard launch fails.
-  String? getDawLaunchCommand(String dawType) =>
-      getDawLaunchCommands()[dawType];
+  //
+  // A DAW maps to a *list* of paths (e.g. two Ableton versions): one → use
+  // it directly, several → the launcher asks which to run. The persisted
+  // JSON is `{"<daw>": ["<path>", ...]}`; the reader also accepts the legacy
+  // `{"<daw>": "<path>"}` single-string shape written before this.
 
-  Map<String, String> getDawLaunchCommands() {
+  /// Configured override paths for [dawType], in the order they were added.
+  /// Empty when none are configured.
+  List<String> getDawLaunchCommandPaths(String dawType) =>
+      getDawLaunchCommands()[dawType] ?? const [];
+
+  /// Every configured DAW mapped to its ordered list of override paths.
+  Map<String, List<String>> getDawLaunchCommands() {
     final raw = appSettingsBox.get(_keyDawLaunchCommandsByDaw);
     if (raw == null) return const {};
     try {
       final decoded = jsonDecode(raw) as Map;
-      return Map.unmodifiable(decoded.cast<String, String>());
+      final out = <String, List<String>>{};
+      decoded.forEach((key, value) {
+        final paths = <String>[
+          if (value is String)
+            value
+          else if (value is List)
+            for (final v in value) v.toString(),
+        ].map((p) => p.trim()).where((p) => p.isNotEmpty).toList();
+        if (paths.isNotEmpty) out[key as String] = paths;
+      });
+      return Map.unmodifiable(out);
     } catch (_) {
       return const {};
     }
   }
 
-  /// Sets (or, if [binaryPath] is null/empty, removes) the launch-command
-  /// override for [dawType].
-  Future<void> setDawLaunchCommand(String dawType, String? binaryPath) async {
-    final cleanedPath = binaryPath?.trim() ?? '';
-    final current = Map<String, String>.from(getDawLaunchCommands());
-    if (cleanedPath.isEmpty) {
-      current.remove(dawType);
-    } else {
-      current[dawType] = cleanedPath;
-    }
-    if (current.isEmpty) {
+  /// Appends [binaryPath] to [dawType]'s override list. No-op if blank or
+  /// already present.
+  Future<void> addDawLaunchCommand(String dawType, String binaryPath) async {
+    final cleaned = binaryPath.trim();
+    if (cleaned.isEmpty) return;
+    final current = _mutableDawLaunchCommands();
+    final list = current.putIfAbsent(dawType, () => <String>[]);
+    if (list.contains(cleaned)) return;
+    list.add(cleaned);
+    await _persistDawLaunchCommands(current);
+  }
+
+  /// Removes [binaryPath] from [dawType]'s override list, dropping the DAW
+  /// key entirely once its list is empty.
+  Future<void> removeDawLaunchCommand(String dawType, String binaryPath) async {
+    final current = _mutableDawLaunchCommands();
+    final list = current[dawType];
+    if (list == null || !list.remove(binaryPath.trim())) return;
+    if (list.isEmpty) current.remove(dawType);
+    await _persistDawLaunchCommands(current);
+  }
+
+  /// Removes every override configured for [dawType].
+  Future<void> clearDawLaunchCommands(String dawType) async {
+    final current = _mutableDawLaunchCommands();
+    if (current.remove(dawType) == null) return;
+    await _persistDawLaunchCommands(current);
+  }
+
+  Map<String, List<String>> _mutableDawLaunchCommands() => {
+        for (final entry in getDawLaunchCommands().entries)
+          entry.key: List<String>.from(entry.value),
+      };
+
+  Future<void> _persistDawLaunchCommands(
+    Map<String, List<String>> commands,
+  ) async {
+    commands.removeWhere((_, paths) => paths.isEmpty);
+    if (commands.isEmpty) {
       await appSettingsBox.delete(_keyDawLaunchCommandsByDaw);
     } else {
       await appSettingsBox.put(
         _keyDawLaunchCommandsByDaw,
-        jsonEncode(current),
+        jsonEncode(commands),
       );
     }
   }

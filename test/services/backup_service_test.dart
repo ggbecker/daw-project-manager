@@ -617,55 +617,72 @@ void main() {
       expect(read, {'Ableton Live': ['Bounces']});
     });
 
-    test('DAW launch commands: round-trips a written map', () async {
+    test('DAW launch commands: round-trips a written map of path lists', () async {
       await BackupService.writeDawLaunchCommandsForTest({
-        'Zrythm': '/opt/zrythm/zrythm',
+        'Zrythm': ['/opt/zrythm/zrythm'],
+        'Ableton Live': ['/a/Live 11.app', '/a/Live 12.app'],
       });
       final read = await BackupService.readDawLaunchCommandsForTest();
 
-      expect(read, {'Zrythm': '/opt/zrythm/zrythm'});
+      expect(read, {
+        'Zrythm': ['/opt/zrythm/zrythm'],
+        'Ableton Live': ['/a/Live 11.app', '/a/Live 12.app'],
+      });
     });
 
     test(
-      'DAW launch commands: an existing local entry wins over a conflicting backup value',
+      'DAW launch commands: merge keeps local paths and appends new backup ones',
       () async {
         await BackupService.writeDawLaunchCommandsForTest({
-          'Zrythm': '/opt/zrythm/zrythm',
+          'Ableton Live': ['/a/Live 12.app'],
         });
-        // Simulates importing an older backup after the user already fixed
-        // the path locally — the fix must not be clobbered.
+        // Importing a backup: the shared path is not duplicated, the local
+        // one keeps its position, the new one is appended.
         await BackupService.writeDawLaunchCommandsForTest({
-          'Zrythm': '/stale/path/zrythm',
+          'Ableton Live': ['/a/Live 12.app', '/a/Live 11.app'],
         });
         final read = await BackupService.readDawLaunchCommandsForTest();
 
-        expect(read, {'Zrythm': '/opt/zrythm/zrythm'});
+        expect(read, {
+          'Ableton Live': ['/a/Live 12.app', '/a/Live 11.app'],
+        });
       },
     );
 
     test('DAW launch commands: fills in a DAW not already configured', () async {
       await BackupService.writeDawLaunchCommandsForTest({
-        'Zrythm': '/opt/zrythm/zrythm',
+        'Zrythm': ['/opt/zrythm/zrythm'],
       });
       await BackupService.writeDawLaunchCommandsForTest({
-        'Ardour': '/opt/Ardour/Ardour.AppImage',
+        'Ardour': ['/opt/Ardour/Ardour.AppImage'],
       });
       final read = await BackupService.readDawLaunchCommandsForTest();
 
       expect(read, {
-        'Zrythm': '/opt/zrythm/zrythm',
-        'Ardour': '/opt/Ardour/Ardour.AppImage',
+        'Zrythm': ['/opt/zrythm/zrythm'],
+        'Ardour': ['/opt/Ardour/Ardour.AppImage'],
       });
+    });
+
+    test('DAW launch commands: reads a legacy single-string backup value', () async {
+      // Older backups wrote {daw: "path"}; the reader coerces to a list.
+      await BackupService.writeDawLaunchCommandsForTest({
+        'Zrythm': ['/opt/zrythm/zrythm'],
+      });
+      final read = await BackupService.readDawLaunchCommandsForTest();
+      expect(read['Zrythm'], ['/opt/zrythm/zrythm']);
     });
 
     test('DAW launch commands: writing an empty map is a no-op', () async {
       await BackupService.writeDawLaunchCommandsForTest({
-        'Zrythm': '/opt/zrythm/zrythm',
+        'Zrythm': ['/opt/zrythm/zrythm'],
       });
       await BackupService.writeDawLaunchCommandsForTest({});
       final read = await BackupService.readDawLaunchCommandsForTest();
 
-      expect(read, {'Zrythm': '/opt/zrythm/zrythm'});
+      expect(read, {
+        'Zrythm': ['/opt/zrythm/zrythm'],
+      });
     });
 
     test('phase settings: write then read round-trips phases, colors, and finished phases', () async {

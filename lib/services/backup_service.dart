@@ -254,11 +254,9 @@ class BackupService {
               ) ??
           const <String, List<String>>{};
 
-      final importedDawLaunchCommands =
-          (backupData['dawLaunchCommands'] as Map?)?.map(
-                (key, value) => MapEntry(key as String, value.toString()),
-              ) ??
-          const <String, String>{};
+      final importedDawLaunchCommands = _normalizeDawLaunchCommands(
+        (backupData['dawLaunchCommands'] as Map?) ?? const {},
+      );
 
       final importedPhaseSettings =
           (backupData['phaseSettings'] as Map?)?.cast<String, dynamic>() ?? const <String, dynamic>{};
@@ -471,17 +469,32 @@ class BackupService {
   /// programs installed on this specific machine (and a macOS `.app` path
   /// wouldn't resolve on Windows/Linux and vice versa), so pushing them to
   /// other devices would only ever point at the wrong place.
-  static Future<Map<String, String>> _readDawLaunchCommands() async {
+  static Future<Map<String, List<String>>> _readDawLaunchCommands() async {
     try {
       final box = await Hive.openBox<String>(_appSettingsBoxName);
       final raw = box.get(_dawLaunchCommandsByDawKey);
       if (raw == null) return const {};
-      return (jsonDecode(raw) as Map).map(
-        (key, value) => MapEntry(key as String, value.toString()),
-      );
+      return _normalizeDawLaunchCommands(jsonDecode(raw) as Map);
     } catch (_) {
       return const {};
     }
+  }
+
+  /// Coerces either JSON shape — `{daw: "path"}` (legacy) or
+  /// `{daw: ["path", ...]}` (current) — into the list form, dropping blanks
+  /// and empty DAWs. Mirrors ProjectRepository.getDawLaunchCommands.
+  static Map<String, List<String>> _normalizeDawLaunchCommands(Map decoded) {
+    final out = <String, List<String>>{};
+    decoded.forEach((key, value) {
+      final paths = <String>[
+        if (value is String)
+          value
+        else if (value is List)
+          for (final v in value) v.toString(),
+      ].map((p) => p.trim()).where((p) => p.isNotEmpty).toList();
+      if (paths.isNotEmpty) out[key as String] = paths;
+    });
+    return out;
   }
 
   /// Phase customization for [profileId]: custom phase names, their colors, and
@@ -619,27 +632,32 @@ class BackupService {
     } catch (_) {}
   }
 
-  /// Fills in any DAW from [commands] not already configured locally — a
-  /// single-value-per-DAW setting has no natural "union" the way a list of
-  /// folder names does, so an existing local override always wins over
-  /// whatever a backup says, rather than silently replacing a value the
-  /// user may have already fixed since that backup was taken.
+  /// Merges [commands] into the local overrides: per DAW, the local paths
+  /// are kept and any backup paths not already present are appended (a
+  /// per-DAW list has a natural union, like mixdown folder names). A local
+  /// path the user may have fixed since the backup is never dropped or
+  /// reordered.
   static Future<void> _writeDawLaunchCommands(
-    Map<String, String> commands,
+    Map<String, List<String>> commands,
   ) async {
     if (commands.isEmpty) return;
     try {
       final box = await Hive.openBox<String>(_appSettingsBoxName);
       final existingRaw = box.get(_dawLaunchCommandsByDawKey);
-      final merged = <String, String>{
-        if (existingRaw != null)
-          ...(jsonDecode(existingRaw) as Map).map(
-            (key, value) => MapEntry(key as String, value.toString()),
-          ),
+      final merged = <String, List<String>>{
+        for (final entry in _normalizeDawLaunchCommands(
+          existingRaw != null ? jsonDecode(existingRaw) as Map : const {},
+        ).entries)
+          entry.key: List<String>.from(entry.value),
       };
-      for (final entry in commands.entries) {
-        merged.putIfAbsent(entry.key, () => entry.value);
-      }
+      commands.forEach((daw, paths) {
+        final list = merged.putIfAbsent(daw, () => <String>[]);
+        for (final path in paths) {
+          final cleaned = path.trim();
+          if (cleaned.isNotEmpty && !list.contains(cleaned)) list.add(cleaned);
+        }
+      });
+      merged.removeWhere((_, paths) => paths.isEmpty);
       await box.put(_dawLaunchCommandsByDawKey, jsonEncode(merged));
     } catch (_) {}
   }
@@ -712,10 +730,12 @@ class BackupService {
       _writeCustomMixdownFoldersByDaw(foldersByDaw);
 
   @visibleForTesting
-  static Future<Map<String, String>> readDawLaunchCommandsForTest() =>
+  static Future<Map<String, List<String>>> readDawLaunchCommandsForTest() =>
       _readDawLaunchCommands();
   @visibleForTesting
-  static Future<void> writeDawLaunchCommandsForTest(Map<String, String> commands) =>
+  static Future<void> writeDawLaunchCommandsForTest(
+    Map<String, List<String>> commands,
+  ) =>
       _writeDawLaunchCommands(commands);
 
   @visibleForTesting

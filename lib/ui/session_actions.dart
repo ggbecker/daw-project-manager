@@ -8,16 +8,21 @@ import '../models/music_project.dart';
 import '../providers/providers.dart';
 import '../utils/file_launcher.dart';
 import 'dialogs/daw_launch_command_dialog.dart';
+import 'dialogs/daw_launch_picker_dialog.dart';
 
 /// What [launchProjectInDaw] should do for a project, once its DAW type and
-/// any configured executable override are known. Pure decision, split out so
+/// any configured executable overrides are known. Pure decision, split out so
 /// the branching is unit-testable without a widget tree or a real launcher.
 enum DawLaunchAction {
-  /// Run the configured override directly with [FileLauncher.launchWithBinary].
+  /// Exactly one configured override resolves — run it directly with
+  /// [FileLauncher.launchWithBinary].
   useOverride,
 
-  /// An override is configured but its path is gone — open the configure
-  /// dialog in "path missing" mode.
+  /// Two or more configured overrides resolve — ask the user which one.
+  chooseOverride,
+
+  /// Overrides are configured but none of them resolve on disk — open the
+  /// configure dialog in "path missing" mode.
   overrideMissing,
 
   /// No override and no dependable OS fallback (Linux) — open the configure
@@ -28,24 +33,24 @@ enum DawLaunchAction {
   systemDefault,
 }
 
-/// Resolves the launch strategy. [overridePath] is the stored executable
-/// override for the project's DAW type (null if none); [overridePathExists]
-/// is whether that path still resolves on disk. [isLinux] gets its own
-/// branch because Linux has no dependable file association for most DAWs and
-/// `xdg-open` reports success even when nothing opens — so there's no
-/// "it failed, ask now" signal to wait for, unlike Windows/macOS.
+/// Resolves the launch strategy. [configuredPaths] is every executable
+/// override stored for the project's DAW type; [existingPaths] is the subset
+/// that still resolves on disk. [isLinux] gets its own branch because Linux
+/// has no dependable file association for most DAWs and `xdg-open` reports
+/// success even when nothing opens — so there's no "it failed, ask now"
+/// signal to wait for, unlike Windows/macOS.
 @visibleForTesting
 DawLaunchAction resolveDawLaunchAction({
   required String? dawType,
-  required String? overridePath,
-  required bool overridePathExists,
+  required List<String> configuredPaths,
+  required List<String> existingPaths,
   required bool isLinux,
 }) {
   if (dawType == null) return DawLaunchAction.systemDefault;
-  if (overridePath != null) {
-    return overridePathExists
-        ? DawLaunchAction.useOverride
-        : DawLaunchAction.overrideMissing;
+  if (configuredPaths.isNotEmpty) {
+    if (existingPaths.length >= 2) return DawLaunchAction.chooseOverride;
+    if (existingPaths.length == 1) return DawLaunchAction.useOverride;
+    return DawLaunchAction.overrideMissing;
   }
   return isLinux
       ? DawLaunchAction.promptConfigure
@@ -97,19 +102,36 @@ Future<void> launchProjectInDaw(
 
   if (dawType != null) {
     final repo = await ref.read(repositoryProvider.future);
-    final overridePath = repo.getDawLaunchCommand(dawType);
+    final configuredPaths = repo.getDawLaunchCommandPaths(dawType);
+    final existingPaths =
+        configuredPaths.where(FileLauncher.targetExists).toList();
     final action = resolveDawLaunchAction(
       dawType: dawType,
-      overridePath: overridePath,
-      overridePathExists:
-          overridePath != null && FileLauncher.targetExists(overridePath),
+      configuredPaths: configuredPaths,
+      existingPaths: existingPaths,
       isLinux: Platform.isLinux,
     );
 
     switch (action) {
       case DawLaunchAction.useOverride:
+        final launched = await FileLauncher.launchWithBinary(
+          existingPaths.single,
+          project.filePath,
+        );
+        if (!context.mounted) return;
+        _showLaunchResultSnackBar(context, l10n, project, launched);
+        return;
+      case DawLaunchAction.chooseOverride:
+        if (!context.mounted) return;
+        final chosen = await showDawLaunchPickerDialog(
+          context,
+          dawType: dawType,
+          project: project,
+          paths: existingPaths,
+        );
+        if (chosen == null || !context.mounted) return;
         final launched =
-            await FileLauncher.launchWithBinary(overridePath!, project.filePath);
+            await FileLauncher.launchWithBinary(chosen, project.filePath);
         if (!context.mounted) return;
         _showLaunchResultSnackBar(context, l10n, project, launched);
         return;
@@ -118,7 +140,7 @@ Future<void> launchProjectInDaw(
         await showDawLaunchCommandDialog(
           context,
           dawType: dawType,
-          currentPath: overridePath,
+          currentPath: configuredPaths.join('\n'),
           pathMissing: true,
           project: project,
         );
