@@ -12,11 +12,13 @@ import '../providers/providers.dart';
 import '../generated/l10n/app_localizations.dart';
 import '../services/audio_analysis_service.dart';
 import '../utils/mobile_utils.dart';
+import '../utils/playback_seek.dart';
 import '../utils/project_freshness.dart';
 import 'preview_share.dart';
 import 'project_detail_page.dart';
 import 'widgets/conversion_progress_dialog.dart';
 import 'widgets/project_notes_section.dart';
+import 'widgets/waveform_widget.dart';
 
 /// Route for the full mobile player. On Android it slides up from the bottom
 /// on push and back down on pop (the "now playing" sheet gesture) instead of
@@ -399,6 +401,14 @@ class _MobilePlayerPageState extends ConsumerState<MobilePlayerPage> {
     }
   }
 
+  /// Jump [seconds] (±) from the current position, clamped to the track.
+  void _seekBy(int seconds) {
+    final s = ref.read(mobilePlayerProvider);
+    ref
+        .read(mobilePlayerProvider.notifier)
+        .seek(seekTarget(s.position, seconds, s.duration));
+  }
+
   Future<void> _toggleMono() async {
     final state = ref.read(mobilePlayerProvider);
     final project = state.currentProject;
@@ -554,19 +564,22 @@ class _MobilePlayerPageState extends ConsumerState<MobilePlayerPage> {
 
                       const SizedBox(height: 16),
 
-                      _ProgressBar(state: playerState),
+                      _ProgressBar(
+                        state: playerState,
+                        previewPath: currentPath,
+                      ),
 
                       const SizedBox(height: 12),
 
-                      // ── Linha 1: Shuffle / Prev / Play-Pause / Next / Repeat ─
+                      // ── Linha 1: Shuffle / Prev / −5s / Play / +5s / Next / Repeat ─
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             _ShuffleButton(mode: playerState.playbackMode),
                             IconButton(
-                              iconSize: 36,
+                              iconSize: 32,
                               icon: const Icon(Icons.skip_previous_rounded),
                               color: colorScheme.onSurface.withValues(
                                 alpha: _canSkipPrev(playerState) ? 1.0 : 0.3,
@@ -575,9 +588,21 @@ class _MobilePlayerPageState extends ConsumerState<MobilePlayerPage> {
                                   ? () => ref.read(mobilePlayerProvider.notifier).playPrev()
                                   : null,
                             ),
+                            IconButton(
+                              iconSize: 26,
+                              tooltip: '−5s',
+                              icon: const Icon(Icons.replay_5_rounded),
+                              onPressed: () => _seekBy(-5),
+                            ),
                             _PlayPauseButton(isPlaying: playerState.isPlaying),
                             IconButton(
-                              iconSize: 36,
+                              iconSize: 26,
+                              tooltip: '+5s',
+                              icon: const Icon(Icons.forward_5_rounded),
+                              onPressed: () => _seekBy(5),
+                            ),
+                            IconButton(
+                              iconSize: 32,
                               icon: const Icon(Icons.skip_next_rounded),
                               color: colorScheme.onSurface.withValues(
                                 alpha: _canSkipNext(playerState, queue) ? 1.0 : 0.3,
@@ -900,6 +925,13 @@ String formatDuration(Duration d) {
   return '$m:$s';
 }
 
+/// Whether a preview-song [path] is a real local file the waveform extractor
+/// can be pointed at — i.e. set, and not a `drive://` reference for a file
+/// that hasn't been downloaded to this device yet.
+@visibleForTesting
+bool isAnalyzablePreviewPath(String? path) =>
+    path != null && path.isNotEmpty && !path.startsWith('drive://');
+
 /// Builds the stored text for a todo added from the player, prefixing the
 /// playback position as `[m:ss] ` so the entry records exactly where in the
 /// track it was created.
@@ -909,36 +941,77 @@ String buildTimestampedTodoText(Duration position, String text) {
 
 // ── Progress bar ─────────────────────────────────────────────────────────────
 
-class _ProgressBar extends ConsumerWidget {
+class _ProgressBar extends ConsumerStatefulWidget {
   final MobilePlayerState state;
-  const _ProgressBar({required this.state});
+
+  /// The current track's preview file. Used to render a real waveform (the
+  /// same one the desktop players show) instead of a plain slider — falls
+  /// back to a thin seek bar while peaks load or when the file can't be
+  /// analysed (a not-yet-downloaded `drive://` reference, or a format with
+  /// no mobile decoder — only WAV and MP3 have one).
+  final String? previewPath;
+
+  const _ProgressBar({required this.state, required this.previewPath});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_ProgressBar> createState() => _ProgressBarState();
+}
+
+class _ProgressBarState extends ConsumerState<_ProgressBar> {
+  WaveformPeaks? _peaks;
+  String? _loadedFor;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPeaks();
+  }
+
+  @override
+  void didUpdateWidget(_ProgressBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.previewPath != oldWidget.previewPath) _loadPeaks();
+  }
+
+  void _loadPeaks() {
+    final path = widget.previewPath;
+    if (!isAnalyzablePreviewPath(path)) {
+      if (_peaks != null || _loadedFor != null) {
+        setState(() {
+          _peaks = null;
+          _loadedFor = null;
+        });
+      }
+      return;
+    }
+    if (path == _loadedFor) return;
+    _loadedFor = path;
+    setState(() => _peaks = null);
+    ref.read(waveformCacheProvider.notifier).getOrExtract(path!).then((peaks) {
+      if (mounted && _loadedFor == path) setState(() => _peaks = peaks);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = widget.state;
     final total = state.duration.inMilliseconds;
     final pos = state.position.inMilliseconds;
     final progress = total > 0 ? (pos / total).clamp(0.0, 1.0) : 0.0;
-    final colorScheme = Theme.of(context).colorScheme;
 
     return Column(
       children: [
-        SliderTheme(
-          data: SliderTheme.of(context).copyWith(
-            trackHeight: 3,
-            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-            overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
-          ),
-          child: Slider(
-            value: progress,
-            onChanged: total > 0
-                ? (v) => ref
-                    .read(mobilePlayerProvider.notifier)
-                    .seek(Duration(milliseconds: (v * total).round()))
-                : null,
-            activeColor: colorScheme.primary,
-            inactiveColor: colorScheme.onSurface.withValues(alpha: 0.15),
-          ),
+        WaveformWidget(
+          peaks: _peaks,
+          progress: progress,
+          height: 52,
+          onSeek: total > 0
+              ? (p) => ref
+                  .read(mobilePlayerProvider.notifier)
+                  .seek(Duration(milliseconds: (p * total).round()))
+              : null,
         ),
+        const SizedBox(height: 4),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8),
           child: Row(
