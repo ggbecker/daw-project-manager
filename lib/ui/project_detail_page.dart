@@ -2967,7 +2967,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer>
                               buttons.add(
                                 ElevatedButton.icon(
                                   onPressed: _sharePreviewSongAsZip,
-                                  icon: const Icon(Icons.archive),
+                                  icon: const Icon(Icons.folder_zip),
                                   label: Text(AppLocalizations.of(context)!.shareZip),
                                 ),
                               );

@@ -696,7 +696,7 @@ class _MobilePlayerPageState extends ConsumerState<MobilePlayerPage> {
                               IconButton(
                                 iconSize: 22,
                                 tooltip: l10n.shareZip,
-                                icon: const Icon(Icons.download_rounded),
+                                icon: const Icon(Icons.folder_zip_rounded),
                                 color: colorScheme.onSurface,
                                 onPressed: _sharePreviewSongAsZip,
                               ),
