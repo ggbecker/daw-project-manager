@@ -6175,10 +6175,11 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable>
   }
 
   Future<void> _openProjectFolder(MusicProject project) async {
-    final String projectPath = project.filePath;
-    final String folderPath = FileSystemEntity.isDirectorySync(projectPath)
-        ? projectPath // Se for um diretório, usa o próprio caminho
-        : path.dirname(projectPath); // Se for um arquivo, usa o diretório pai
+    // A package-bundle project (.logicx/.luna/.band) is a directory, but
+    // revealing it would just launch the DAW — resolve to its parent. See
+    // ScannerService.projectContainingFolder.
+    final String folderPath =
+        ScannerService.projectContainingFolder(project.filePath);
 
     final exists = Directory(folderPath).existsSync();
     if (!exists) {
@@ -10049,11 +10050,10 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
                         constraints: iconConstraints,
                         tooltip: l10n.openFolder,
                         onPressed: () async {
-                          final projectPath = project.filePath;
                           final folderPath =
-                              FileSystemEntity.isDirectorySync(projectPath)
-                              ? projectPath
-                              : path.dirname(projectPath);
+                              ScannerService.projectContainingFolder(
+                            project.filePath,
+                          );
                           if (Directory(folderPath).existsSync()) {
                             await FileLauncher.openFolder(folderPath);
                           }

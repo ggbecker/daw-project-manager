@@ -37,6 +37,7 @@ import '../services/metadata_extractor.dart';
 import '../services/metadata_sidecar_service.dart';
 import '../services/mixdown_detector_service.dart';
 import '../services/project_text_export_service.dart';
+import '../services/scanner_service.dart';
 import 'dialogs/save_as_template_dialog.dart';
 import 'widgets/conversion_progress_dialog.dart';
 import 'widgets/desktop_title_bar.dart';
@@ -260,11 +261,11 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
 
   // NOVO: Função para abrir o diretório pai
   Future<void> _openProjectFolder(String filePath) async {
-    // Determina o caminho da pasta: Se for um arquivo, pega o diretório pai. Se for um diretório, pega ele mesmo.
-    final folderPath =
-        (FileSystemEntity.typeSync(filePath) == FileSystemEntityType.file)
-        ? p.dirname(filePath)
-        : filePath;
+    // A single file resolves to its parent; a package-bundle project
+    // (.logicx/.luna/.band) also resolves to its parent — revealing the
+    // bundle itself just launches the DAW. See
+    // ScannerService.projectContainingFolder.
+    final folderPath = ScannerService.projectContainingFolder(filePath);
 
     final success = await FileLauncher.openFolder(folderPath);
     
