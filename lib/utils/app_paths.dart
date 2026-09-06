@@ -119,6 +119,23 @@ Future<void> ensureHiveInitialized() async {
   }
 }
 
+/// The OS application-support directory itself (on Windows: `%LOCALAPPDATA%`),
+/// unscoped and independent of any runtime library selection.
+///
+/// The dev-build candidate libraries — and the startup picker's
+/// remembered-choice file — all live directly under this. It is deliberately
+/// NOT derived from [getLocalAppDataPath]: that resolves to a path *inside*
+/// the chosen library and moves up a level once a non-isolated (release)
+/// library is selected, which made the picker write its choice to one
+/// directory and the settings card look for it in another.
+Future<Directory> getAppSupportRoot() async {
+  if (Platform.isWindows) {
+    final localAppData = Platform.environment['LOCALAPPDATA'];
+    if (localAppData != null) return Directory(localAppData);
+  }
+  return getApplicationSupportDirectory();
+}
+
 /// Gets the LocalAppData directory path for the application.
 /// On Windows, this returns %LocalAppData%\[appDataDirName]
 /// On other platforms, it returns the application support directory — with

@@ -2,9 +2,20 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
+import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
+import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import 'package:daw_project_manager/services/dev_library_service.dart';
 import 'package:daw_project_manager/utils/app_paths.dart';
+
+class _FakePathProvider extends PathProviderPlatform
+    with MockPlatformInterfaceMixin {
+  _FakePathProvider(this.supportPath);
+  final String supportPath;
+
+  @override
+  Future<String?> getApplicationSupportPath() async => supportPath;
+}
 
 void main() {
   late Directory root;
@@ -135,6 +146,46 @@ void main() {
 
     test('clearing a choice that was never made is harmless', () {
       expect(() => DevLibraryService.writeSelection(root, null), returnsNormally);
+    });
+  });
+
+  group('resolveRoot', () {
+    // Regression: the picker resolves the root *before* a library is chosen
+    // and writes the remembered choice there; the settings card resolves it
+    // again *after* the choice and reads it back. resolveRoot used to derive
+    // the root from getLocalAppDataPath(), which points inside the selected
+    // library — so once a non-isolated (release) library was picked it
+    // resolved one directory higher, the card never saw the file, and
+    // "Ask again next launch" stayed permanently disabled.
+    late Directory support;
+
+    setUp(() {
+      support = Directory(p.join(root.path, 'appsupport'))..createSync();
+      PathProviderPlatform.instance = _FakePathProvider(support.path);
+      resetSelectedAppDataDir();
+    });
+    tearDown(resetSelectedAppDataDir);
+
+    test('is the app-support dir and does not move when a library is selected',
+        () async {
+      final beforeChoice = await DevLibraryService.resolveRoot();
+
+      // The user picks the release library and it gets remembered.
+      selectAppDataDir(defaultAppDataDirName);
+      final afterChoice = await DevLibraryService.resolveRoot();
+
+      expect(p.equals(beforeChoice.path, support.path), isTrue);
+      expect(p.equals(afterChoice.path, beforeChoice.path), isTrue);
+    });
+
+    test('a choice written before selection is readable after it', () async {
+      final writeRoot = await DevLibraryService.resolveRoot();
+      DevLibraryService.writeSelection(writeRoot, defaultAppDataDirName);
+
+      selectAppDataDir(defaultAppDataDirName);
+      final readRoot = await DevLibraryService.resolveRoot();
+
+      expect(DevLibraryService.readSelection(readRoot), defaultAppDataDirName);
     });
   });
 

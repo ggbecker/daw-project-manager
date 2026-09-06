@@ -47,16 +47,15 @@ class DevLibraryService {
   static const String selectionFileName =
       '$defaultAppDataDirName.selected-library';
 
-  /// The directory the candidates live in: `%LOCALAPPDATA%` on Windows, the
-  /// parent of the application-support directory elsewhere.
-  static Future<Directory> resolveRoot() async {
-    if (Platform.isWindows) {
-      final localAppData = Platform.environment['LOCALAPPDATA'];
-      if (localAppData != null) return Directory(localAppData);
-    }
-    final appData = await getLocalAppDataPath();
-    return Directory(p.dirname(appData));
-  }
+  /// The directory the candidate libraries — and this build's remembered
+  /// choice — live directly under: `%LOCALAPPDATA%` on Windows, the OS
+  /// application-support directory elsewhere.
+  ///
+  /// Must not depend on the current library selection: the choice is written
+  /// here before one is made and read back here afterwards, so a moving root
+  /// silently loses it (and left "Ask again next launch" permanently
+  /// disabled). See [getAppSupportRoot].
+  static Future<Directory> resolveRoot() => getAppSupportRoot();
 
   /// Every candidate library under [root], release first, then the dev one,
   /// then any others (per-pull-request directories left by a tester build).
